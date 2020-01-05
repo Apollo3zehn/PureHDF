@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class ObjectReferenceCountMessage
+    public class ObjectReferenceCountMessage : Message
     {
         #region Constructors
 
-        public ObjectReferenceCountMessage()
+        public ObjectReferenceCountMessage(BinaryReader reader) : base(reader)
         {
             //
         }

@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class OldObjectModificationTimeMessage
+    public class OldObjectModificationTimeMessage : Message
     {
         #region Constructors
 
-        public OldObjectModificationTimeMessage()
+        public OldObjectModificationTimeMessage(BinaryReader reader) : base(reader)
         {
             //
         }

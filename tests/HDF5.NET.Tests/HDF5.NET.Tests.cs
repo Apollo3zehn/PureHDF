@@ -1,3 +1,6 @@
+using HDF.PInvoke;
+using System;
+using System.IO;
 using Xunit;
 
 namespace HDF5.NET.Tests
@@ -8,10 +11,17 @@ namespace HDF5.NET.Tests
         public void Dummy()
         {
             // Arrange
-            //var hdf5File = new Hdf5File();
+            var filePath = Path.GetTempFileName();
+            var fileId = H5F.open(filePath, H5F.ACC_RDWR);
+            var groupId = H5G.create(fileId, "Test");
 
-            //// Act
-            //Action action = () => hdf5File.Validate();
+            H5G.close(groupId);
+            H5F.close(fileId);
+
+            // Act
+            var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            //h5file.OpenGroup("/Test");
 
             //// Assert
             //Assert.Throws<FormatException>(action);

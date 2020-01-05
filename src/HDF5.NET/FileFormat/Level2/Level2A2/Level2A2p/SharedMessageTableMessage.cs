@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class SharedMessageTableMessage
+    public class SharedMessageTableMessage : Message
     {
         #region Constructors
 
-        public SharedMessageTableMessage()
+        public SharedMessageTableMessage(BinaryReader reader) : base(reader)
         {
             //
         }

@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace HDF5.NET
 {
-    public class ExternalFileListMessage
+    public class ExternalFileListMessage : Message
     {
         #region Constructors
 
-        public ExternalFileListMessage()
+        public ExternalFileListMessage(BinaryReader reader) : base(reader)
         {
             //
         }

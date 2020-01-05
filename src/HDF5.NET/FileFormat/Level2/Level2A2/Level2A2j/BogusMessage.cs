@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class BogusMessage
+    public class BogusMessage : Message
     {
         #region Constructors
 
-        public BogusMessage()
+        public BogusMessage(BinaryReader reader) : base(reader)
         {
             //
         }

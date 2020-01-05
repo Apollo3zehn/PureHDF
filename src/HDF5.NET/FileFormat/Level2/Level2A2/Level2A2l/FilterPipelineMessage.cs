@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace HDF5.NET
 {
-    public class FilterPipelineMessage
+    public class FilterPipelineMessage : Message
     {
         #region Constructors
 
-        public FilterPipelineMessage()
+        public FilterPipelineMessage(BinaryReader reader) : base(reader)
         {
             //
         }

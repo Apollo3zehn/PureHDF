@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class GroupInfoMessage
+    public class GroupInfoMessage : Message
     {
         #region Constructors
 
-        public GroupInfoMessage()
+        public GroupInfoMessage(BinaryReader reader) : base(reader)
         {
             //
         }

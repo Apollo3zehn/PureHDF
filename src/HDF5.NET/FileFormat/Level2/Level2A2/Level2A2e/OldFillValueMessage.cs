@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class OldFillValueMessage
+    public class OldFillValueMessage : Message
     {
         #region Constructors
 
-        public OldFillValueMessage()
+        public OldFillValueMessage(BinaryReader reader) : base(reader)
         {
             //
         }

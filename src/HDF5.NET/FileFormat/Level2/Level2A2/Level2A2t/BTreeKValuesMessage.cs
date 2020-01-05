@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class BTreeKValuesMessage
+    public class BTreeKValuesMessage : Message
     {
         #region Constructors
 
-        public BTreeKValuesMessage()
+        public BTreeKValuesMessage(BinaryReader reader) : base(reader)
         {
             //
         }

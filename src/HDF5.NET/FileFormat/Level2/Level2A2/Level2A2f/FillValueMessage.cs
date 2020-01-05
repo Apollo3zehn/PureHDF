@@ -1,12 +1,14 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class FillValueMessage
+    public class FillValueMessage : Message
     {
 #warning Remember to parse correctly depending on the version
 
         #region Constructors
 
-        public FillValueMessage()
+        public FillValueMessage(BinaryReader reader) : base(reader)
         {
             //
         }

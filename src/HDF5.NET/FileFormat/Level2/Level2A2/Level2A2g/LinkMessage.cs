@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class LinkMessage
+    public class LinkMessage : Message
     {
         #region Constructors
 
-        public LinkMessage()
+        public LinkMessage(BinaryReader reader) : base(reader)
         {
             //
         }

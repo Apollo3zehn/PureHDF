@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class DriverInfoMessage
+    public class DriverInfoMessage : Message
     {
         #region Constructors
 
-        public DriverInfoMessage()
+        public DriverInfoMessage(BinaryReader reader) : base(reader)
         {
             //
         }

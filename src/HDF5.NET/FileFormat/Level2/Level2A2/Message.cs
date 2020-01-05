@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    public abstract class ScratchPad : FileBlock
+    public abstract class Message : FileBlock
     {
         #region Constructors
 
-        public ScratchPad(BinaryReader reader) : base(reader)
+        public Message(BinaryReader reader) : base(reader)
         {
             //
         }

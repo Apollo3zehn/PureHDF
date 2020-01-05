@@ -1,11 +1,13 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class AttributeMessage
+    public class AttributeMessage : Message
     {
 #warning remember to parse different versions correctly
         #region Constructors
 
-        public AttributeMessage()
+        public AttributeMessage(BinaryReader reader) : base(reader)
         {
             //
         }

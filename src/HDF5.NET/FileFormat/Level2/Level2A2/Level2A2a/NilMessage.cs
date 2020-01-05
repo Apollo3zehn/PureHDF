@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class NilMessage
+    public class NilMessage : Message
     {
         #region Constructors
 
-        public NilMessage()
+        public NilMessage(BinaryReader reader) : base(reader)
         {
             //
         }

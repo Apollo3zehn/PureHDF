@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class ObjectHeaderContinuationMessage
+    public class ObjectHeaderContinuationMessage : Message
     {
         #region Constructors
 
-        public ObjectHeaderContinuationMessage()
+        public ObjectHeaderContinuationMessage(BinaryReader reader) : base(reader)
         {
             //
         }

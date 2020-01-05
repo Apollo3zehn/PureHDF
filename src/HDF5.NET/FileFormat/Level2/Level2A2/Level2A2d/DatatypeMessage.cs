@@ -1,12 +1,13 @@
 ﻿using System;
+using System.IO;
 
 namespace HDF5.NET
 {
-    public class DatatypeMessage
+    public class DatatypeMessage : Message
     {
         #region Constructors
 
-        public DatatypeMessage()
+        public DatatypeMessage(BinaryReader reader) : base(reader)
         {
             //
         }

@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace HDF5.NET
 {
-    public class DataspaceMessage
+    public class DataspaceMessage : Message
     {
 #warning remember to parse different versions correctly
         #region Constructors
 
-        public DataspaceMessage()
+        public DataspaceMessage(BinaryReader reader) : base(reader)
         {
             //
         }

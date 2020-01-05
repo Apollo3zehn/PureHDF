@@ -1,12 +1,15 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class ObjectHeaderScratchPad : ScratchPad
     {
         #region Constructors
 
-        public ObjectHeaderScratchPad()
+        public ObjectHeaderScratchPad(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            //
+            this.BTreeAddress = superblock.ReadLength();
+            this.NameHeapAddress = superblock.ReadLength();
         }
 
         #endregion

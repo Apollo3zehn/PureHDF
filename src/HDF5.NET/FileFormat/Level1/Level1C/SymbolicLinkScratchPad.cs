@@ -1,12 +1,14 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class SymbolicLinkScratchPad : ScratchPad
     {
         #region Constructors
 
-        public SymbolicLinkScratchPad()
+        public SymbolicLinkScratchPad(BinaryReader reader) : base(reader)
         {
-            //
+            this.LinkValueOffset = reader.ReadUInt32();
         }
 
         #endregion

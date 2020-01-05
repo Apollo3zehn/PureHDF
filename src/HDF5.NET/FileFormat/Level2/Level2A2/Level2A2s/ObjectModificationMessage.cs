@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class ObjectModificationMessage
+    public class ObjectModificationMessage : Message
     {
         #region Constructors
 
-        public ObjectModificationMessage()
+        public ObjectModificationMessage(BinaryReader reader) : base(reader)
         {
             //
         }
