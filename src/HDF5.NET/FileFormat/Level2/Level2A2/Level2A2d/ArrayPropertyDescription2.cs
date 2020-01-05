@@ -18,7 +18,7 @@ namespace HDF5.NET
         public byte Dimensionality { get; set; }
         public List<uint> DimensionSizes { get; set; }
         public List<uint> PermutationIndices { get; set; }
-        public DataypeMessage BaseType { get; set; }
+        public DatatypeMessage BaseType { get; set; }
 
         #endregion
     }
