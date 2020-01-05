@@ -15,7 +15,6 @@
 
         public MessageLocation MessageLocation { get; set; }
         public uint Hash { get; set; }
-        public byte Reserved { get; set; }
         public MessageType MessageType { get; set; }
         public ushort ObjectHeaderIndex { get; set; }
         public ulong ObjectHeaderAddress { get; set; }

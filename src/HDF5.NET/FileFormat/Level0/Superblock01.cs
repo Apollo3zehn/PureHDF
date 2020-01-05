@@ -17,16 +17,13 @@
         public byte SuperBlockVersion { get; set; }
         public byte FreeSpaceStorageVersion { get; set; }
         public byte RootGroupSymbolTableEntryVersion { get; set; }
-        public byte Reserved1 { get; set; }
         public byte SharedHeaderMessageFormatVersion { get; set; }
         public byte OffsetsSize { get; set; }
         public byte LengthsSize { get; set; }
-        public byte Reserved2 { get; set; }
         public ushort GroupLeafNodeK { get; set; }
         public ushort GroupInternalNodeK { get; set; }
         public uint FileConsistencyFlags { get; set; }
         public ushort IndexedStorageInternalNodeK { get; set; }
-        public ushort Reserved3 { get; set; }
         public ulong BaseAddress { get; set; }
         public ulong FreeSpaceInfoAddress { get; set; }
         public ulong EndOfFileAddress { get; set; }

@@ -2,13 +2,13 @@
 
 namespace HDF5.NET
 {
-    public class SymbolTableNode
+    public class GlobalHeapCollection
     {
         #region Constructors
 
-        public SymbolTableNode()
+        public GlobalHeapCollection()
         {
-
+            //
         }
 
         #endregion
@@ -17,9 +17,8 @@ namespace HDF5.NET
 
         public byte[] Signature { get; set; }
         public byte Version { get; set; }
-        public byte Reserved { get; set; }
-        public ushort SymbolCount { get; set; }
-        public List<SymbolTableEntry> GroupEntries { get; set; }
+        public ulong CollectionSize { get; set; }
+        public List<GlobalHeapObject> GlobalHeapObjects { get; set; }
 
         #endregion
     }

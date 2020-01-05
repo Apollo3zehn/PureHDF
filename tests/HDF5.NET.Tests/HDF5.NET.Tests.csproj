@@ -16,11 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\sample\ImcFamosFileSample\ImcFamosFileSample.csproj" />
-    <ProjectReference Include="..\..\src\ImcFamosFile\ImcFamosFile.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="ImcTestData\BusTrip.dat">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

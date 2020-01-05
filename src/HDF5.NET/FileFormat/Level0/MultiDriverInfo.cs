@@ -19,8 +19,6 @@
         public MemberMapping MemberMapping4 { get; set; }
         public MemberMapping MemberMapping5 { get; set; }
         public MemberMapping MemberMapping6 { get; set; }
-        public byte Reserved1 { get; set; }
-        public byte Reserved2 { get; set; }
         public byte[] RemainingData { get; set; }
 
         #endregion
