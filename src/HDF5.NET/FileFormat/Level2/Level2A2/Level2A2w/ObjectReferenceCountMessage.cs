@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    public class DriverInfoBlock
+    public class ObjectReferenceCountMessage
     {
         #region Constructors
 
-        public DriverInfoBlock()
+        public ObjectReferenceCountMessage()
         {
             //
         }
@@ -14,9 +14,7 @@
         #region Properties
 
         public byte Version { get; set; }
-        public uint DriverInfoSize { get; set; }
-        public ulong DriverId { get; set; }
-        public byte[] DriverInfo { get; set; }
+        public uint ReferenceCount { get; set; }
 
         #endregion
     }
