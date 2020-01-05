@@ -8,7 +8,7 @@ namespace HDF5.NET.Tests
         public void Dummy()
         {
             // Arrange
-            var hdf5File = new Hdf5File();
+            //var hdf5File = new Hdf5File();
 
             //// Act
             //Action action = () => hdf5File.Validate();
