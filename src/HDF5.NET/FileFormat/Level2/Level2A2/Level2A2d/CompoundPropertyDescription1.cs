@@ -20,7 +20,7 @@ namespace HDF5.NET
         public byte Dimensionality { get; set; }
         public uint DimensionPermuation { get; set; }
         public List<uint> DimensionSize { get; set; }
-        public DataypeMessage MemberTypeMessage { get; set; }
+        public DatatypeMessage MemberTypeMessage { get; set; }
 
         #endregion
     }

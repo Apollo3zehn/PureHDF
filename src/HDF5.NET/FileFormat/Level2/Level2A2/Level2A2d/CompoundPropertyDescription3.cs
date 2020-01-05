@@ -15,7 +15,7 @@
 
         public string Name { get; set; }
         public uint MemberByteOffset { get; set; }
-        public DataypeMessage MemberTypeMessage { get; set; }
+        public DatatypeMessage MemberTypeMessage { get; set; }
 
         #endregion
     }

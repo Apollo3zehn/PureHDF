@@ -13,7 +13,7 @@
 
         #region Properties
 
-        public DataypeMessage BaseType { get; set; }
+        public DatatypeMessage BaseType { get; set; }
 
         #endregion
     }
