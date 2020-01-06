@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -30,13 +31,18 @@ namespace HDF5.NET
             //
         }
 
-        private protected void ValidateSignature(byte[] actual, byte [] expected)
+        public virtual void Print(ILogger logger)
+        {
+            //
+        }
+
+        private protected void ValidateSignature(byte[] actual, byte[] expected)
         {
             var actualString = Encoding.ASCII.GetString(actual);
             var expectedString = Encoding.ASCII.GetString(expected);
 
             if (actualString != expectedString)
-                throw new Exception($"The actual signature '{actualString}' does not match the expected signature '{expected}'.");
+                throw new Exception($"The actual signature '{actualString}' does not match the expected signature '{expectedString}'.");
         }
 
         private protected ulong ReadUlong(byte byteCount)

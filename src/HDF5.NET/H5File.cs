@@ -13,7 +13,7 @@ namespace HDF5.NET
 
             // superblock
             var signature = this.Reader.ReadBytes(8);
-            this.ValidateSignature(signature);
+            this.ValidateSignature(signature, Superblock.FormatSignature);
 
             var version = this.Reader.ReadByte();
 
@@ -27,8 +27,6 @@ namespace HDF5.NET
             };
 
             this.Superblock.Validate();
-
-            var a = ((Superblock01)this.Superblock).RootGroupSymbolTableEntry.ObjectHeader;
         }
 
         #endregion
@@ -48,12 +46,12 @@ namespace HDF5.NET
             return new H5File(filePath, mode, fileAccess, fileShare);
         }
 
-        private void ValidateSignature(byte[] data)
+        private void ValidateSignature(byte[] actual, byte[] expected)
         {
-            if (data.Length == 8)
+            if (actual.Length == expected.Length)
             {
-                if (data[0] == 0x89 && data[1] == 0x48 && data[2] == 0x44 && data[3] == 0x46
-                 && data[4] == 0x0d && data[5] == 0x0a && data[6] == 0x1a && data[7] == 0x0a)
+                if (actual[0] == expected[0] && actual[1] == expected[1] && actual[2] == expected[2] && actual[3] == expected[3]
+                 && actual[4] == expected[4] && actual[5] == expected[5] && actual[6] == expected[6] && actual[7] == expected[7])
                 {
                     return;
                 }

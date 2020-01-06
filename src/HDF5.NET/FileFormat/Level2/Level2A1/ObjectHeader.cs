@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.IO;
 
 namespace HDF5.NET
 {
-    public class ObjectHeader : FileBlock
+    public abstract class ObjectHeader : FileBlock
     {
         #region Constructors
 
@@ -17,6 +18,34 @@ namespace HDF5.NET
         #region Properties
 
         public List<HeaderMessage> HeaderMessages { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public override void Print(ILogger logger)
+        {
+            logger.LogInformation("ObjectHeader");
+
+            base.Print(logger);
+
+            for (int i = 0; i < this.HeaderMessages.Count; i++)
+            {
+                logger.LogInformation($"ObjectHeader HeaderMessage[{i}]");
+                var message = this.HeaderMessages[i];
+                message.Print(logger);
+
+                if (message.Type == HeaderMessageType.SymbolTable)
+                {
+                    var symbolTableMessage = (SymbolTableMessage)message.Data;
+                    symbolTableMessage.Print(logger);
+                }
+                else
+                {
+                    logger.LogInformation($"ObjectHeader HeaderMessage Type = {message.Type} is not supported yet. Stopping.");
+                }
+            }
+        }
 
         #endregion
     }

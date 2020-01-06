@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -65,6 +66,29 @@ namespace HDF5.NET
                     2 => new ObjectHeader2(version, this.Reader),
                     _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
                 };
+            }
+        }
+
+        #endregion
+
+        #region Methods
+
+        public override void Print(ILogger logger)
+        {
+            logger.LogInformation($"SymbolTableEntry");
+
+            base.Print(logger);
+
+            logger.LogInformation($"SymbolTableEntry Cache Type: {this.CacheType}");
+            logger.LogInformation($"SymbolTableEntry LinkNameOffset: {this.LinkNameOffset}");
+
+            logger.LogInformation($"SymbolTableEntry ObjectHeader");
+            this.ObjectHeader.Print(logger);
+
+            if (this.ScratchPad != null)
+            {
+                logger.LogInformation($"SymbolTableEntry ScratchPad");
+                this.ScratchPad.Print(logger);
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -51,6 +52,23 @@ namespace HDF5.NET
         public ulong EndOfFileAddress { get; set; }
         public ulong DriverInformationBlockAddress { get; set; }
         public SymbolTableEntry RootGroupSymbolTableEntry { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public override void Print(ILogger logger)
+        {
+            logger.LogInformation("Superblock");
+
+            base.Print(logger);
+
+            logger.LogInformation($"Superblock GroupLeafNodeK: {this.GroupLeafNodeK}");
+            logger.LogInformation($"Superblock GroupInternalNodeK: {this.GroupInternalNodeK}");
+            logger.LogInformation($"Superblock IndexedStorageInternalNodeK: {this.IndexedStorageInternalNodeK}");
+
+            this.RootGroupSymbolTableEntry.Print(logger);
+        }
 
         #endregion
     }
