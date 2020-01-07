@@ -31,7 +31,17 @@ namespace HDF5.NET
             var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0xFC));
             this.SizeOfChunk0 = this.ReadUlong(chunkFieldSize);
 
-#warning read more (also from base class)
+            // read header messages
+            this.HeaderMessages = new List<HeaderMessage>();
+
+#warning read messages
+            //while (remainingBytes > 0)
+            //{
+            //    var message = new HeaderMessage(reader, superblock, 1);
+            //    this.HeaderMessages.Add(message);
+            //}
+
+#warning read gap and checksum
         }
 
         #endregion
@@ -49,7 +59,7 @@ namespace HDF5.NET
         public ushort MaximumCompactAttributesCount { get; set; }
         public ushort MinimumDenseAttributesCount { get; set; }
         public ulong SizeOfChunk0 { get; set; }
-        public List<ushort> HeaderMessageCreationOrder { get; set; }
+        public uint Checksum { get; set; }
 
         #endregion
     }

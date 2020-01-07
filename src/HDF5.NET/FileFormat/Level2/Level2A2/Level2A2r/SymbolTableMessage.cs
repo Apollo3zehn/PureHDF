@@ -54,10 +54,9 @@ namespace HDF5.NET
         public override void Print(ILogger logger)
         {
             logger.LogInformation("SymbolTableMessage");
+            logger.LogInformation($"SymbolTableMessage LocalHeap (Address: {this.LocalHeapAddress})");
+            logger.LogInformation($"SymbolTableMessage BTree1 (Address: {this.BTree1Address})");
 
-            base.Print(logger);
-
-            logger.LogInformation("SymbolTableMessage BTree1");
             this.BTree1.Print(logger);
         }
 

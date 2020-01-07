@@ -33,7 +33,7 @@ namespace HDF5.NET
 
         public virtual void Print(ILogger logger)
         {
-            //
+            logger.LogWarning($"Printing of file block type '{this.GetType()}' is not implemented.");
         }
 
         private protected void ValidateSignature(byte[] actual, byte[] expected)

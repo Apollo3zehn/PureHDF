@@ -26,7 +26,10 @@ namespace HDF5.NET
                 _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
             };
 
-            this.Superblock.Validate();
+            if (this.Superblock.GetType() == typeof(Superblock01))
+                this.Root = new H5Group(((Superblock01)this.Superblock).RootGroupSymbolTableEntry);
+            else
+                throw new NotSupportedException($"The superblock version '{version}' is not supported.");
         }
 
         #endregion
@@ -34,6 +37,8 @@ namespace HDF5.NET
         #region Properties
 
         public Superblock Superblock { get; set; }
+
+        public H5Group Root { get; set; }
 
         private BinaryReader Reader { get; set; }
 

@@ -1,10 +1,12 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class OpaqueBitFieldDescription : DatatypeBitFieldDescription
     {
         #region Constructors
 
-        public OpaqueBitFieldDescription()
+        public OpaqueBitFieldDescription(BinaryReader reader) : base(reader)
         {
             //
         }
@@ -13,7 +15,11 @@
 
         #region Properties
 
-        public byte AsciiTagByteLength { get; set; }
+        public byte AsciiTagByteLength
+        {
+            get { return this.Data[0]; }
+            set { this.Data[0] = value; }
+        }
 
         #endregion
     }

@@ -27,8 +27,6 @@ namespace HDF5.NET
         {
             logger.LogInformation("ObjectHeader");
 
-            base.Print(logger);
-
             for (int i = 0; i < this.HeaderMessages.Count; i++)
             {
                 logger.LogInformation($"ObjectHeader HeaderMessage[{i}]");

@@ -44,8 +44,6 @@ namespace HDF5.NET
         {
             logger.LogInformation($"SymbolTableNode");
 
-            base.Print(logger);
-
             for (int i = 0; i < this.SymbolCount; i++)
             {
                 logger.LogInformation($"SymbolTableNode Entry[{i}]");

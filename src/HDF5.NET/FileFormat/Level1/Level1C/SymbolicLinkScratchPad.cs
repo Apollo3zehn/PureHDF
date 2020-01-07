@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -16,6 +17,16 @@ namespace HDF5.NET
         #region Properties
 
         public uint LinkValueOffset { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public override void Print(ILogger logger)
+        {
+            logger.LogInformation($"SymbolicLinkScratchPad");
+            logger.LogInformation($"SymbolicLinkScratchPad LinkValueOffset: {this.LinkValueOffset}");
+        }
 
         #endregion
     }

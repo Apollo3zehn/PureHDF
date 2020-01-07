@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -18,6 +19,17 @@ namespace HDF5.NET
 
         public ulong BTreeAddress { get; set; }
         public ulong NameHeapAddress { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public override void Print(ILogger logger)
+        {
+            logger.LogInformation($"ObjectHeaderScratchPad");
+            logger.LogInformation($"ObjectHeaderScratchPad BTreeAddress: {this.BTreeAddress}");
+            logger.LogInformation($"ObjectHeaderScratchPad NameHeapAddress: {this.NameHeapAddress}");
+        }
 
         #endregion
     }

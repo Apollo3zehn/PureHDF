@@ -25,6 +25,9 @@ namespace HDF5.NET
             this.CacheType = (CacheType)reader.ReadUInt32();
             reader.ReadUInt32();
 
+            // scratch pad
+            var before = reader.BaseStream.Position;
+
             this.ScratchPad = this.CacheType switch
             {
                 CacheType.NoCache => null,
@@ -32,6 +35,12 @@ namespace HDF5.NET
                 CacheType.SymbolicLink => new SymbolicLinkScratchPad(reader),
                 _ => throw new NotSupportedException()
             };
+
+            var after = reader.BaseStream.Position;
+            var length = after - before;
+
+            // read as many bytes as needed to read a total of 16 bytes, even if the scratch pad is not used
+            reader.ReadBytes((int)(16 - length));
         }
 
         #endregion
@@ -76,20 +85,17 @@ namespace HDF5.NET
         public override void Print(ILogger logger)
         {
             logger.LogInformation($"SymbolTableEntry");
-
-            base.Print(logger);
-
             logger.LogInformation($"SymbolTableEntry Cache Type: {this.CacheType}");
             logger.LogInformation($"SymbolTableEntry LinkNameOffset: {this.LinkNameOffset}");
-
-            logger.LogInformation($"SymbolTableEntry ObjectHeader");
-            this.ObjectHeader.Print(logger);
 
             if (this.ScratchPad != null)
             {
                 logger.LogInformation($"SymbolTableEntry ScratchPad");
                 this.ScratchPad.Print(logger);
             }
+
+            logger.LogInformation($"SymbolTableEntry ObjectHeader");
+            this.ObjectHeader.Print(logger);
         }
 
         #endregion

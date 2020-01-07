@@ -60,9 +60,6 @@ namespace HDF5.NET
         public override void Print(ILogger logger)
         {
             logger.LogInformation("Superblock");
-
-            base.Print(logger);
-
             logger.LogInformation($"Superblock GroupLeafNodeK: {this.GroupLeafNodeK}");
             logger.LogInformation($"Superblock GroupInternalNodeK: {this.GroupInternalNodeK}");
             logger.LogInformation($"Superblock IndexedStorageInternalNodeK: {this.IndexedStorageInternalNodeK}");

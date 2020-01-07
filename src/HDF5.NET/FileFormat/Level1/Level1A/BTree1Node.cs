@@ -44,6 +44,8 @@ namespace HDF5.NET
                         this.ChildAddresses.Add(superblock.ReadOffset());
                     }
 
+                    this.Keys.Add(new BTree1GroupKey(reader, superblock));
+
                     break;
 
                 case BTree1NodeType.RawDataChunks:
@@ -54,6 +56,8 @@ namespace HDF5.NET
                         this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
                         this.ChildAddresses.Add(superblock.ReadOffset());
                     }
+
+                    this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
 
                     break;
 
@@ -113,41 +117,44 @@ namespace HDF5.NET
         public override void Print(ILogger logger)
         {
             logger.LogInformation($"BTree1Node");
-
-            base.Print(logger);
-
             logger.LogInformation($"BTree1Node NodeType: {this.NodeType}");
             logger.LogInformation($"BTree1Node Level {this.NodeLevel}");
 
-            if (this.NodeType == BTree1NodeType.Group)
+            // keys
+            for (int i = 0; i <= this.EntriesUsed; i++)
             {
-                for (int i = 0; i < this.EntriesUsed; i++)
+                logger.LogInformation($"BTree1Node Keys[{i}]");
+                this.Keys[i].Print(logger);
+            }
+
+            // child nodes
+            for (int i = 0; i < this.EntriesUsed; i++)
+            {
+                logger.LogInformation($"BTree1Node GetChildNode({i}) (Address: {this.ChildAddresses[i]})");
+
+                if (this.NodeLevel == 0)
                 {
-                    // key
-                    logger.LogInformation($"BTree1Node BTree1GroupKey[{i}]");
-                    var groupKey = (BTree1GroupKey)this.Keys[i];
-                    groupKey.Print(logger);
-
-                    // address
-                    logger.LogInformation($"BTree1Node ChildAddress[{i}] = {this.ChildAddresses[i]}");
-
-                    if (this.NodeLevel == 0)
+                    switch (this.NodeType)
                     {
-                        logger.LogInformation($"BTree1Node ChildNode[{i}]");
+                        case BTree1NodeType.Group:
 
-                        var symbolTableNode = this.GetSymbolTableNode(i);
-                        symbolTableNode.Print(logger);
-                    }
-                    else
-                    {
-                        logger.LogInformation($"BTree1 ChildNode[{i}]");
-                        this.GetChild(i).Print(logger);
+                            var symbolTableNode = this.GetSymbolTableNode(i);
+                            symbolTableNode.Print(logger);
+
+                            break;
+
+                        case BTree1NodeType.RawDataChunks:
+                             break;
+
+                        default:
+                            throw new NotSupportedException($"The version 1 B-tree node type '{this.NodeType}' is not supported.");
                     }
                 }
-            }
-            else
-            {
-                logger.LogInformation($"BTree1Node Type = {this.NodeType} is not supported yet. Stopping.");
+                else
+                {
+                    logger.LogInformation($"BTree1Node ChildNode[{i}]");
+                    this.GetChild(i).Print(logger);
+                }
             }
         }
 

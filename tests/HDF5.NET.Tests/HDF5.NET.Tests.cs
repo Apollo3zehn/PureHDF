@@ -2,8 +2,8 @@ using HDF.PInvoke;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using Xunit;
 
 namespace HDF5.NET.Tests
@@ -22,15 +22,21 @@ namespace HDF5.NET.Tests
             var logger = serviceProvider.GetService<ILoggerFactory>().CreateLogger("");
 
             var filePath = Path.GetTempFileName();
-            var fileId = H5F.open(filePath, H5F.ACC_RDWR);
-            var groupId1 = H5G.create(fileId, "G1.1");
-            var groupId2 = H5G.create(fileId, "G1.2");
-            var groupId3 = H5G.create(groupId1, "G1.1.1");
 
-            H5G.close(groupId3);
-            H5G.close(groupId2);
-            H5G.close(groupId1);
-            H5F.close(fileId);
+            var fileId = H5F.create(filePath, H5F.ACC_TRUNC);
+            var groupId1 = H5G.create(fileId, "G1");
+            var groupId2 = H5G.create(fileId, "G2");
+            var groupId3 = H5G.create(groupId1, "G1.1");
+            var dataspaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId = H5D.create(fileId, "D1", H5T.NATIVE_INT8, dataspaceId);
+
+            long res;
+            res = H5D.close(datasetId);
+            res = H5S.close(dataspaceId);
+            res = H5G.close(groupId3);
+            res = H5G.close(groupId2);
+            res = H5G.close(groupId1);
+            res = H5F.close(fileId);
 
             // Act
             var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);

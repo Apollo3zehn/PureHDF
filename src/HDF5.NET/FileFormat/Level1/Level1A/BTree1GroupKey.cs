@@ -25,9 +25,6 @@ namespace HDF5.NET
         public override void Print(ILogger logger)
         {
             logger.LogInformation($"BTree1GroupKey");
-
-            base.Print(logger);
-
             logger.LogInformation($"BTree1GroupKey LocalHeapByteOffset: {this.LocalHeapByteOffset}");
         }
 
