@@ -29,20 +29,25 @@ namespace HDF5.NET
 
             this.Size = reader.ReadUInt32();
 
-            this.Properties = this.Class switch
+            this.Properties = (this.Version, this.Class) switch
             {
-                DatatypeMessageClass.FixedPoint     => new FixedPointPropertyDescription(reader),
-                DatatypeMessageClass.FloatingPoint  => new FloatingPointPropertyDescription(reader),
-                DatatypeMessageClass.Time           => new TimePropertyDescription(reader),
-                DatatypeMessageClass.String         => null,
-                DatatypeMessageClass.BitField       => new BitFieldPropertyDescription(reader),
-                DatatypeMessageClass.Opaque         => new OpaquePropertyDescription(reader),
-                DatatypeMessageClass.Compount       => new CompoundPropertyDescription(reader),
-                DatatypeMessageClass.Reference      => null,
-                DatatypeMessageClass.Enumerated     => new EnumerationPropertyDescription(reader),
-                DatatypeMessageClass.VariableLength => new VariableLengthPropertyDescription(reader),
-                DatatypeMessageClass.Array          => new ArrayPropertyDescription(reader),
-                _                                   => throw new NotSupportedException($"The data type message class '{this.Class}' is not supported.")
+                (_, DatatypeMessageClass.FixedPoint)        => new FixedPointPropertyDescription(reader),
+                (_, DatatypeMessageClass.FloatingPoint)     => new FloatingPointPropertyDescription(reader),
+                (_, DatatypeMessageClass.Time)              => new TimePropertyDescription(reader),
+                (_, DatatypeMessageClass.String)            => null,
+                (_, DatatypeMessageClass.BitField)          => new BitFieldPropertyDescription(reader),
+                (_, DatatypeMessageClass.Opaque)            => new OpaquePropertyDescription(reader),
+                (1, DatatypeMessageClass.Compount)          => new CompoundPropertyDescription1(reader),
+                (2, DatatypeMessageClass.Compount)          => new CompoundPropertyDescription2(reader),
+                (3, DatatypeMessageClass.Compount)          => new CompoundPropertyDescription3(reader, this.Size),
+                (_, DatatypeMessageClass.Reference)         => null,
+                (1, DatatypeMessageClass.Enumerated)        => new EnumerationPropertyDescription12(reader, this.Size, this.GetMemberCount()),
+                (2, DatatypeMessageClass.Enumerated)        => new EnumerationPropertyDescription12(reader, this.Size, this.GetMemberCount()),
+                (3, DatatypeMessageClass.Enumerated)        => new EnumerationPropertyDescription3(reader, this.Size, this.GetMemberCount()),
+                (_, DatatypeMessageClass.VariableLength)    => new VariableLengthPropertyDescription(reader),
+                (2, DatatypeMessageClass.Array)             => new ArrayPropertyDescription2(reader),
+                (3, DatatypeMessageClass.Array)             => new ArrayPropertyDescription3(reader),
+                (_, _)                                      => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
             };
         }
 
@@ -51,22 +56,22 @@ namespace HDF5.NET
         #region Properties
 
         public DatatypeBitFieldDescription? BitFieldDescription { get; set; }
-        public ulong Size { get; set; }
+        public uint Size { get; set; }
         public DatatypePropertyDescription? Properties { get; set; }
 
         public byte Version
         {
             get
             {
-                return (byte)(this.ClassVersion & 0x0F);
+                return (byte)(this.ClassVersion >> 4);
             }
             set
             {
-                if (value > 0x0F)
-                    throw new Exception("The version number must be <= 15.");
+                if (!(1 <= value && value <= 15))
+                    throw new Exception("The version number must be in the range of 1..3.");
 
-                this.ClassVersion = (byte)(this.ClassVersion & 0xF0);
-                this.ClassVersion |= value;
+                this.ClassVersion &= 0x0F;                  // clear bits 4-7
+                this.ClassVersion |= (byte)(value << 4);    // set bits 4-7, depending on value
             }
         }
 
@@ -74,16 +79,33 @@ namespace HDF5.NET
         {
             get
             {
-                return (DatatypeMessageClass)((this.ClassVersion & 0xF0) >> 4);
+                return (DatatypeMessageClass)(this.ClassVersion & 0x0F);
             }
             set
             {
-                this.ClassVersion = (byte)(this.ClassVersion & 0x0F);
-                this.ClassVersion |= (byte)((byte)value << 4);
+                if (!(0 <= (byte)value && (byte)value <= 10))
+                    throw new Exception("The version number must be in the range of 1..3.");
+
+                this.ClassVersion &= 0xF0;          // clear bits 0-3
+                this.ClassVersion |= (byte)value;   // set bits 0-3, depending on value
             }
         }
 
         private byte ClassVersion { get; set; }
+
+        #endregion
+
+        #region Method
+
+        private ushort GetMemberCount()
+        {
+            var enumerationDescription = this.BitFieldDescription as EnumerationBitFieldDescription;
+
+            if (enumerationDescription != null)
+                return enumerationDescription.MemberCount;
+            else
+                throw new FormatException($"For enumeration types, the bit field description must be set to an instance of type '{nameof(EnumerationBitFieldDescription)}'.");
+        }
 
         #endregion
     }

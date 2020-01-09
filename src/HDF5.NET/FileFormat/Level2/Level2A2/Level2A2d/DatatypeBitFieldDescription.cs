@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -15,6 +16,7 @@ namespace HDF5.NET
 
         #region Properties
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         protected byte[] Data { get; }
 
         #endregion

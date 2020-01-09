@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -6,9 +7,24 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public ArrayPropertyDescription2()
+        public ArrayPropertyDescription2(BinaryReader reader) : base(reader)
         {
-            //
+            // dimensionality
+            this.Dimensionality = reader.ReadByte();
+
+            // reserved
+            reader.ReadBytes(3);
+
+            // dimension sizes
+            this.DimensionSizes = new List<uint>(this.Dimensionality);
+
+            for (int i = 0; i < this.Dimensionality; i++)
+            {
+                this.DimensionSizes.Add(reader.ReadUInt32());
+            }
+
+            // base type
+            this.BaseType = new DatatypeMessage(reader);
         }
 
         #endregion
@@ -17,7 +33,6 @@ namespace HDF5.NET
 
         public byte Dimensionality { get; set; }
         public List<uint> DimensionSizes { get; set; }
-        public List<uint> PermutationIndices { get; set; }
         public DatatypeMessage BaseType { get; set; }
 
         #endregion

@@ -1,12 +1,15 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class BitFieldPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public BitFieldPropertyDescription()
+        public BitFieldPropertyDescription(BinaryReader reader) : base(reader)
         {
-            //
+            this.BitOffset = reader.ReadUInt16();
+            this.BitPrecision = reader.ReadUInt16();
         }
 
         #endregion

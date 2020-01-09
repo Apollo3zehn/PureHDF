@@ -1,12 +1,14 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class OpaquePropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public OpaquePropertyDescription()
+        public OpaquePropertyDescription(BinaryReader reader) : base(reader)
         {
-            //
+            this.AsciiTag = H5Utils.ReadNullTerminatedString(reader, pad: true);
         }
 
         #endregion

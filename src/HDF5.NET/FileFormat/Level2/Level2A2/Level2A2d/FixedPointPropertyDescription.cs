@@ -1,12 +1,15 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class FixedPointPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public FixedPointPropertyDescription()
+        public FixedPointPropertyDescription(BinaryReader reader) : base(reader)
         {
-            //
+            this.BitOffset = reader.ReadUInt16();
+            this.BitPrecision = reader.ReadUInt16();
         }
 
         #endregion

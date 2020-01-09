@@ -1,12 +1,14 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class VariableLengthPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public VariableLengthPropertyDescription()
+        public VariableLengthPropertyDescription(BinaryReader reader) : base(reader)
         {
-            //
+            this.BaseType = new DatatypeMessage(reader);
         }
 
         #endregion

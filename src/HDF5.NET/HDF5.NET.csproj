@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An .h5 file reader and writer.</Description>
+    <Description>An managed .h5 file reader and writer without native dependencies.</Description>
     <PackageTags>HDF hierarchical data file H5</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.1</TargetFramework>
