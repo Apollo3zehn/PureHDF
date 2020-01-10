@@ -11,13 +11,20 @@ namespace HDF5.NET
 
         public SymbolTableNode(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            // signature
             var signature = reader.ReadBytes(4);
-            this.ValidateSignature(signature, SymbolTableNode.Signature);
+            H5Utils.ValidateSignature(signature, SymbolTableNode.Signature);
 
+            // version
             this.Version = reader.ReadByte();
+
+            // reserved
             reader.ReadByte();
+
+            // symbol count
             this.SymbolCount = reader.ReadUInt16();
 
+            // group entries
             this.GroupEntries = new List<SymbolTableEntry>();
 
             for (int i = 0; i < this.SymbolCount; i++)

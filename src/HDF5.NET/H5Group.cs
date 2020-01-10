@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class H5Group
     {

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
-using System.Linq;
 
 namespace HDF5.NET
 {
@@ -20,9 +19,16 @@ namespace HDF5.NET
         {
             _superblock = superblock;
 
+            // link name offset
             this.LinkNameOffset = superblock.ReadOffset();
+            
+            // object header address
             this.ObjectHeaderAddress = superblock.ReadOffset();
+
+            // cache type
             this.CacheType = (CacheType)reader.ReadUInt32();
+
+            // reserved
             reader.ReadUInt32();
 
             // scratch pad
@@ -57,24 +63,7 @@ namespace HDF5.NET
             get
             {
                 this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-
-                // get version
-                var version = this.Reader.ReadByte();
-
-                // must be a version 2+ object header
-                if (version != 1)
-                {
-                    var signature = new byte[] { version }.Concat(this.Reader.ReadBytes(3)).ToArray();
-                    this.ValidateSignature(signature, ObjectHeader2.Signature);
-                    version = this.Reader.ReadByte();
-                }
-
-                return version switch
-                {
-                    1 => new ObjectHeader1(version, this.Reader, _superblock),
-                    2 => new ObjectHeader2(version, this.Reader),
-                    _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
-                };
+                return ObjectHeader.Read(this.Reader, _superblock);
             }
         }
 

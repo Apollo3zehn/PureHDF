@@ -33,7 +33,7 @@ namespace HDF5.NET
             this.BaseAddress = this.ReadOffset();
             this.FreeSpaceInfoAddress = this.ReadOffset();
             this.EndOfFileAddress = this.ReadOffset();
-            this.DriverInformationBlockAddress = this.ReadOffset();
+            this.DriverInfoBlockAddress = this.ReadOffset();
             this.RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
         }
 
@@ -50,8 +50,23 @@ namespace HDF5.NET
         public ulong BaseAddress { get; set; }
         public ulong FreeSpaceInfoAddress { get; set; }
         public ulong EndOfFileAddress { get; set; }
-        public ulong DriverInformationBlockAddress { get; set; }
+        public ulong DriverInfoBlockAddress { get; set; }
         public SymbolTableEntry RootGroupSymbolTableEntry { get; set; }
+
+        #endregion
+
+        #region Properties
+
+        public DriverInfoBlock? DriverInfoBlock
+        {
+            get
+            {
+                if (this.IsUndefinedAddress(this.DriverInfoBlockAddress))
+                    return null;
+                else
+                    return new DriverInfoBlock(this.Reader);
+            }
+        }
 
         #endregion
 

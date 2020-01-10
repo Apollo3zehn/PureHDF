@@ -22,7 +22,7 @@ namespace HDF5.NET
             _superblock = superblock;
 
             var signature = reader.ReadBytes(4);
-            this.ValidateSignature(signature, BTree1Node.Signature);
+            H5Utils.ValidateSignature(signature, BTree1Node.Signature);
 
             this.NodeType = (BTree1NodeType)reader.ReadByte();
             this.NodeLevel = reader.ReadByte();

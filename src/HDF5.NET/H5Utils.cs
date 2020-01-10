@@ -1,10 +1,20 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace HDF5.NET
 {
     public static class H5Utils
     {
+        public static void ValidateSignature(byte[] actual, byte[] expected)
+        {
+            var actualString = Encoding.ASCII.GetString(actual);
+            var expectedString = Encoding.ASCII.GetString(expected);
+
+            if (actualString != expectedString)
+                throw new Exception($"The actual signature '{actualString}' does not match the expected signature '{expectedString}'.");
+        }
+
         public static bool IsPowerOfTwo(ulong x)
         {
             return (x != 0) && ((x & (x - 1)) == 0);
@@ -25,6 +35,11 @@ namespace HDF5.NET
                 result += 1;
 
             return result;
+        }
+
+        public static string ReadFixedLengthString(BinaryReader reader, int length)
+        {
+            return Encoding.ASCII.GetString(reader.ReadBytes(length));
         }
 
         public static string ReadNullTerminatedString(BinaryReader reader, bool pad)

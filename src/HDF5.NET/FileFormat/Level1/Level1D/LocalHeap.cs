@@ -9,14 +9,23 @@ namespace HDF5.NET
 
         public LocalHeap(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            // signature
             var signature = reader.ReadBytes(4);
-            this.ValidateSignature(signature, LocalHeap.Signature);
+            H5Utils.ValidateSignature(signature, LocalHeap.Signature);
 
+            // version
             this.Version = reader.ReadByte();
+
+            // reserved
             reader.ReadBytes(3);
 
+            // data segment size
             this.DataSegmentSize = superblock.ReadLength();
+
+            // free list head offset
             this.FreeListHeadOffset = superblock.ReadLength();
+
+            // data segment address
             this.DataSegmentAddress = superblock.ReadOffset();
         }
 

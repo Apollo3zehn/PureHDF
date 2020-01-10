@@ -63,6 +63,22 @@ namespace HDF5.NET
 
         #region Methods
 
+        public bool IsUndefinedAddress(ulong address)
+        {
+            return this.OffsetsSize switch
+            {
+                1 => (address & 0x00000000000000FF) == 0x00000000000000FF,
+                2 => (address & 0x000000000000FFFF) == 0x000000000000FFFF,
+                3 => (address & 0x0000000000FFFFFF) == 0x0000000000FFFFFF,
+                4 => (address & 0x00000000FFFFFFFF) == 0x00000000FFFFFFFF,
+                5 => (address & 0x000000FFFFFFFFFF) == 0x000000FFFFFFFFFF,
+                6 => (address & 0x0000FFFFFFFFFFFF) == 0x0000FFFFFFFFFFFF,
+                7 => (address & 0x00FFFFFFFFFFFFFF) == 0x00FFFFFFFFFFFFFF,
+                8 => (address & 0xFFFFFFFFFFFFFFFF) == 0xFFFFFFFFFFFFFFFF,
+                _ => throw new FormatException("The offset size byte count must be in the range of 1..8")
+            };
+        }
+
         public ulong ReadOffset()
         {
             return this.ReadUlong(this.OffsetsSize);

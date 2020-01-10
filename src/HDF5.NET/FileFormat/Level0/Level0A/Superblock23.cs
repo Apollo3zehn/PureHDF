@@ -29,6 +29,31 @@ namespace HDF5.NET
         public ulong RootGroupObjectHeaderAddress { get; set; }
         public uint SuperblockChecksum { get; set; }
 
+        public ObjectHeader? SuperblockExtension
+        {
+            get
+            {
+                if (this.IsUndefinedAddress(this.SuperblockExtensionAddress))
+                {
+                    return null;
+                }
+                else
+                {
+                    this.Reader.BaseStream.Seek((long)this.SuperblockExtensionAddress, SeekOrigin.Begin);
+                    return ObjectHeader.Read(this.Reader, this);
+                }
+            }
+        }
+
+        public ObjectHeader RootGroupObjectHeader
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.RootGroupObjectHeaderAddress, SeekOrigin.Begin);
+                return ObjectHeader.Read(this.Reader, this);
+            }
+        }
+
         #endregion
     }
 }

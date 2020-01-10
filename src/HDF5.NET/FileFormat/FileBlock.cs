@@ -2,7 +2,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 
 namespace HDF5.NET
 {
@@ -34,15 +33,6 @@ namespace HDF5.NET
         public virtual void Print(ILogger logger)
         {
             logger.LogWarning($"Printing of file block type '{this.GetType()}' is not implemented.");
-        }
-
-        private protected void ValidateSignature(byte[] actual, byte[] expected)
-        {
-            var actualString = Encoding.ASCII.GetString(actual);
-            var expectedString = Encoding.ASCII.GetString(expected);
-
-            if (actualString != expectedString)
-                throw new Exception($"The actual signature '{actualString}' does not match the expected signature '{expectedString}'.");
         }
 
         private protected ulong ReadUlong(byte byteCount)

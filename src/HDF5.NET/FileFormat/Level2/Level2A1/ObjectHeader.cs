@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace HDF5.NET
 {
@@ -22,6 +24,27 @@ namespace HDF5.NET
         #endregion
 
         #region Methods
+
+        public static ObjectHeader Read(BinaryReader reader, Superblock superblock)
+        {
+            // get version
+            var version = reader.ReadByte();
+
+            // must be a version 2+ object header
+            if (version != 1)
+            {
+                var signature = new byte[] { version }.Concat(reader.ReadBytes(3)).ToArray();
+                H5Utils.ValidateSignature(signature, ObjectHeader2.Signature);
+                version = reader.ReadByte();
+            }
+
+            return version switch
+            {
+                1 => new ObjectHeader1(version, reader, superblock),
+                2 => new ObjectHeader2(version, reader),
+                _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
+            };
+        }
 
         public override void Print(ILogger logger)
         {
