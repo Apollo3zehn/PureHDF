@@ -50,7 +50,7 @@ namespace HDF5.NET
                 HeaderMessageType.FillValue => new FillValueMessage(reader),
                 HeaderMessageType.Link => new LinkMessage(reader),
                 HeaderMessageType.ExternalDataFiles => new ExternalFileListMessage(reader),
-                //HeaderMessageType.DataLayout => new DataLayoutMessage(reader),
+                HeaderMessageType.DataLayout => new DataLayoutMessage(reader),
                 HeaderMessageType.Bogus => new BogusMessage(reader),
                 HeaderMessageType.GroupInfo => new GroupInfoMessage(reader),
                 HeaderMessageType.FilterPipeline => new FilterPipelineMessage(reader),

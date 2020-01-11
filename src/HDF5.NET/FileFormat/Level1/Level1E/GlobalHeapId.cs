@@ -1,27 +1,31 @@
-﻿using System.Collections.Generic;
+﻿using System.IO;
 
 namespace HDF5.NET
 {
-    public class VdsGlobalHeapBlock
+    public class GlobalHeapId : FileBlock
     {
         #region Constructors
 
-        public VdsGlobalHeapBlock()
+        public GlobalHeapId(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            //
+            this.CollectionAddress = superblock.ReadOffset();
+            this.ObjectIndex = reader.ReadUInt32();
         }
 
         #endregion
 
         #region Properties
 
-        public byte Version { get; set; }
-        public ulong EntryCount { get; set; }
-        public List<string> SourceFileNames { get; set; }
-        public List<string> SourceDatasets { get; set; }
-        public List<DataspaceSelection> SourceSelections { get; set; }
-        public List<DataspaceSelection> VirtualSelections { get; set; }
-        public uint Checksum { get; set; }
+        public ulong CollectionAddress { get; set; }
+        public uint ObjectIndex { get; set; }
+
+        public GlobalHeapCollection Collection
+        {
+            get
+            {
+                return new GlobalHeapCollection(this.Reader);
+            }
+        }
 
         #endregion
     }

@@ -8,7 +8,8 @@ namespace HDF5.NET
 
         public OldFillValueMessage(BinaryReader reader) : base(reader)
         {
-            //
+            this.Size = reader.ReadUInt32();
+            this.FillValue = reader.ReadBytes((int)this.Size);
         }
 
         #endregion

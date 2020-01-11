@@ -1,14 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System.IO;
 
 namespace HDF5.NET
 {
-    public abstract class HyperslabSelectionInfo1
+    public class HyperslabSelectionInfo1 : HyperslabSelectionInfo
     {
         #region Constructors
 
-        public HyperslabSelectionInfo1()
+        public HyperslabSelectionInfo1(BinaryReader reader) : base(reader)
         {
-            //
+            // reserved
+            reader.ReadBytes(4);
+
+            // length
+            this.Length = reader.ReadUInt32();
+
+            // rank
+            this.Rank = reader.ReadUInt32();
+
+            // block count
+            this.BlockCount = reader.ReadUInt32();
+
+            // block offsets
+            var totalOffsets = this.BlockCount * this.Rank;
+            this.BlockOffsets = new uint[totalOffsets];
+
+            for (uint i = 0; i < totalOffsets; i++)
+            {
+                this.BlockOffsets[i] = reader.ReadUInt32();
+            }
         }
 
         #endregion
@@ -18,7 +37,7 @@ namespace HDF5.NET
         public uint Length { get; set; }
         public uint Rank { get; set; }
         public uint BlockCount { get; set; }
-        public List<uint> BlockOffsets { get; set; }
+        public uint[] BlockOffsets { get; set; }
 
         #endregion
     }

@@ -51,7 +51,7 @@ namespace HDF5.NET
             get
             {
                 this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Read(this.Reader, _superblock);
+                return ObjectHeader.Construct(this.Reader, _superblock);
             }
         }
 

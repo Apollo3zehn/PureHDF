@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -37,20 +38,32 @@ namespace HDF5.NET
             return result;
         }
 
-        public static string ReadFixedLengthString(BinaryReader reader, int length)
+        public static string ReadFixedLengthString(BinaryReader reader, int length, CharacterSetEncoding characterSet = CharacterSetEncoding.ASCII)
         {
-            return Encoding.ASCII.GetString(reader.ReadBytes(length));
+            var data = reader.ReadBytes(length);
+
+            return characterSet switch
+            {
+                CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data),
+                CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data),
+                _                           => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
+            };
         }
 
-        public static string ReadNullTerminatedString(BinaryReader reader, bool pad)
+        public static string ReadNullTerminatedString(BinaryReader reader, bool pad, CharacterSetEncoding characterSet = CharacterSetEncoding.ASCII)
         {
-            var stringBuilder = new StringBuilder();
-            var c = reader.ReadChar();
+            var data = new List<byte>();
+            var byteValue = reader.ReadByte();
 
-            if (c != '\0')
-                stringBuilder.Append(c);
+            if (byteValue != '\0')
+                data.Add(byteValue);
 
-            var result = stringBuilder.ToString();
+            var result = characterSet switch
+            {
+                CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data.ToArray()),
+                CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data.ToArray()),
+                _                           => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
+            };
 
             if (pad)
             {

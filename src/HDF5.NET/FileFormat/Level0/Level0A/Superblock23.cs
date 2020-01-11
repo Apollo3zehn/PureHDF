@@ -40,7 +40,7 @@ namespace HDF5.NET
                 else
                 {
                     this.Reader.BaseStream.Seek((long)this.SuperblockExtensionAddress, SeekOrigin.Begin);
-                    return ObjectHeader.Read(this.Reader, this);
+                    return ObjectHeader.Construct(this.Reader, this);
                 }
             }
         }
@@ -50,7 +50,7 @@ namespace HDF5.NET
             get
             {
                 this.Reader.BaseStream.Seek((long)this.RootGroupObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Read(this.Reader, this);
+                return ObjectHeader.Construct(this.Reader, this);
             }
         }
 

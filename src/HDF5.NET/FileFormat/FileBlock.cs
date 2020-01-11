@@ -35,7 +35,7 @@ namespace HDF5.NET
             logger.LogWarning($"Printing of file block type '{this.GetType()}' is not implemented.");
         }
 
-        private protected ulong ReadUlong(byte byteCount)
+        private protected ulong ReadUlong(ulong byteCount)
         {
             return byteCount switch
             {

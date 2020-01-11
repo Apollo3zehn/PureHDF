@@ -1,12 +1,16 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
-    public class ExternalFileListSlot
+    public class ExternalFileListSlot : FileBlock
     {
         #region Constructors
 
-        public ExternalFileListSlot()
+        public ExternalFileListSlot(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            //
+            this.LocalHeapNameOffset = superblock.ReadLength();
+            this.ExternalDataFileOffset = superblock.ReadLength();
+            this.ExternalFileDataSize = superblock.ReadLength();
         }
 
         #endregion

@@ -25,7 +25,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public static ObjectHeader Read(BinaryReader reader, Superblock superblock)
+        public static ObjectHeader Construct(BinaryReader reader, Superblock superblock)
         {
             // get version
             var version = reader.ReadByte();
