@@ -20,7 +20,7 @@ namespace HDF5.NET
         {
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, BTree2LeafNode.Signature);
+            H5Utils.ValidateSignature(signature, GlobalHeapCollection.Signature);
 
             // version
             this.Version = reader.ReadByte();

@@ -2,7 +2,7 @@
 {
     public enum MessageLocation : byte
     {
-        SharedMessageIndexHeap = 0,
+        Heap = 0,
         ObjectHeader = 1
     }
 }
