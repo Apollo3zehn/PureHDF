@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -9,6 +10,7 @@ namespace HDF5.NET
 
 #warning is this OK?
         private Superblock _superblock;
+        private byte _version;
 
         #endregion
 
@@ -62,7 +64,21 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("BTHD");
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 0)
+                    throw new FormatException($"Only version 0 instances of type {nameof(BTree2Header)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public BTree2Type Type { get; set; }
         public uint NodeSize { get; set; }
         public ushort RecordSize { get; set; }

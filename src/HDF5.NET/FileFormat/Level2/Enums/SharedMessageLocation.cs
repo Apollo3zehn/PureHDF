@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum SharedMessageLocation
+    public enum SharedMessageLocation : byte
     {
         NotSharedNotShareable = 0,
         SharedObjectHeaderMessageHeap = 1,

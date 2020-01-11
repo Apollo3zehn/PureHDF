@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -6,13 +7,23 @@ namespace HDF5.NET
 {
     public class ObjectHeader2 : ObjectHeader
     {
+        #region Fields
+
+        private byte _version;
+
+        #endregion
+
         #region Constructors
 
         public ObjectHeader2(byte version, BinaryReader reader) : base(reader)
         {
+            // version
             this.Version = version;
+
+            // flags
             this.Flags = (ObjectHeaderFlags)reader.ReadByte();
 
+            // access time, modification time, change time and birth time
             if (this.Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
             {
                 this.AccessTime = reader.ReadUInt32();
@@ -21,16 +32,18 @@ namespace HDF5.NET
                 this.BirthTime = reader.ReadUInt32();
             }
 
+            // maximum compact attributes count and minimum dense attributes count
             if (this.Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
             {
                 this.MaximumCompactAttributesCount = reader.ReadUInt16();
                 this.MinimumDenseAttributesCount = reader.ReadUInt16();
             }
 
+            // size of chunk 0
             var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0xFC));
             this.SizeOfChunk0 = this.ReadUlong(chunkFieldSize);
 
-            // read header messages
+            // header messages
             this.HeaderMessages = new List<HeaderMessage>();
 
 #warning read messages
@@ -49,7 +62,21 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("OHDR");
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 2)
+                    throw new FormatException($"Only version 2 instances of type {nameof(ObjectHeader2)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public ObjectHeaderFlags Flags { get; set; }
         public uint AccessTime { get; set; }
         public uint ModificationTime { get; set; }

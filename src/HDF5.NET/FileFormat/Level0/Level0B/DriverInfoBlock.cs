@@ -5,6 +5,12 @@ namespace HDF5.NET
 {
     public class DriverInfoBlock : FileBlock
     {
+        #region Fields
+
+        private byte _version;
+
+        #endregion
+
         #region Constructors
 
         public DriverInfoBlock(BinaryReader reader) : base(reader)
@@ -34,7 +40,21 @@ namespace HDF5.NET
 
         #region Properties
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 0)
+                    throw new FormatException($"Only version 0 instances of type {nameof(DriverInfoBlock)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public uint DriverInfoSize { get; set; }
         public string DriverId { get; set; }
         public DriverInfo DriverInfo { get; set; }

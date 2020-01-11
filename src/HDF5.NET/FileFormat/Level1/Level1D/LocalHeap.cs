@@ -1,10 +1,17 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 
 namespace HDF5.NET
 {
     public class LocalHeap : FileBlock
     {
+        #region Fields
+
+        private byte _version;
+
+        #endregion
+
         #region Constructors
 
         public LocalHeap(BinaryReader reader, Superblock superblock) : base(reader)
@@ -35,7 +42,22 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; set; } = Encoding.ASCII.GetBytes("HEAP");
 
-        public byte Version { get; set; }
+
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 0)
+                    throw new FormatException($"Only version 0 instances of type {nameof(LocalHeap)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public ulong DataSegmentSize { get; set; }
         public ulong FreeListHeadOffset { get; set; }
         public ulong DataSegmentAddress { get; set; }

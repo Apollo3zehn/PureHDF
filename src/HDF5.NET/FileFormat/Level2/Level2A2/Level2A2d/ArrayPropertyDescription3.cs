@@ -28,7 +28,6 @@ namespace HDF5.NET
 
         #region Properties
 
-        public byte Version { get; set; }
         public byte Dimensionality { get; set; }
         public List<uint> DimensionSizes { get; set; }
         public DatatypeMessage BaseType { get; set; }

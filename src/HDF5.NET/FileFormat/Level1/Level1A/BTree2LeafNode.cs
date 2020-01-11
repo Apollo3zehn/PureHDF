@@ -7,6 +7,12 @@ namespace HDF5.NET
 {
     public class BTree2LeafNode : BTree2Node
     {
+        #region Fields
+
+        private byte _version;
+
+        #endregion
+
         #region Constructors
 
         public BTree2LeafNode(BinaryReader reader, BTree2Type type, ushort recordSize, ushort rootNodeRecordCount) : base(reader)
@@ -39,7 +45,21 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("BTLF");
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 0)
+                    throw new FormatException($"Only version 0 instances of type {nameof(BTree2LeafNode)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public BTree2Type Type { get; set; }
         public List<BTree2Record> Records { get; set; }
         public uint Checksum { get; set; }

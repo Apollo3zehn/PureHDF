@@ -9,6 +9,7 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private byte _version;
         private ulong _collectionSize;
 
         #endregion
@@ -43,7 +44,20 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("GCOL");
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 1)
+                    throw new FormatException($"Only version 1 instances of type {nameof(GlobalHeapCollection)} are supported.");
+
+                _version = value;
+            }
+        }
 
         public ulong CollectionSize
         {

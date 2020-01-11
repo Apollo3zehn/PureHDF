@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -7,6 +8,12 @@ namespace HDF5.NET
 {
     public class SymbolTableNode : FileBlock
     {
+        #region Fields
+
+        private byte _version;
+
+        #endregion
+
         #region Constructors
 
         public SymbolTableNode(BinaryReader reader, Superblock superblock) : base(reader)
@@ -39,7 +46,21 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; set; } = Encoding.ASCII.GetBytes("SNOD");
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 1)
+                    throw new FormatException($"Only version 1 instances of type {nameof(SymbolTableNode)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public ushort SymbolCount { get; set; }
         public List<SymbolTableEntry> GroupEntries { get; set; }
 
