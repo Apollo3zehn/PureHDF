@@ -4,6 +4,7 @@
     {
         Compact = 0,
         Contiguous = 1,
-        Chunked
+        Chunked = 2,
+        VirtualStorage = 3
     }
 }

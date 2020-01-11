@@ -46,7 +46,7 @@ namespace HDF5.NET
             {
                 CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data),
                 CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data),
-                _                           => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
+                _ => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
             };
         }
 
@@ -62,7 +62,7 @@ namespace HDF5.NET
             {
                 CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data.ToArray()),
                 CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data.ToArray()),
-                _                           => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
+                _ => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
             };
 
             if (pad)

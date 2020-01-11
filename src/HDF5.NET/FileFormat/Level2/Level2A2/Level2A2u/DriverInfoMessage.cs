@@ -29,7 +29,7 @@ namespace HDF5.NET
             {
                 "NCSAmulti" => new MultiDriverInfo(reader),
                 "NCSAfami"  => new FamilyDriverInfo(reader),
-                _           => throw new NotSupportedException($"The driver ID '{this.DriverId}' is not supported.")
+                _ => throw new NotSupportedException($"The driver ID '{this.DriverId}' is not supported.")
             };
         }
 

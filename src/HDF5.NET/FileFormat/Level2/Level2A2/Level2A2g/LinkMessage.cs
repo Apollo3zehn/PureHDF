@@ -53,7 +53,7 @@ namespace HDF5.NET
                 LinkType.Soft       => new SoftLinkInfo(reader),
                 LinkType.External   => new ExternalLinkInfo(reader),
                 _ when (65 <= (byte)this.LinkType && (byte)this.LinkType <= 255) => new UserDefinedLinkInfo(reader),
-                _                   => throw new NotSupportedException("The link message link type '{this.LinkType}' is not supported")
+                _ => throw new NotSupportedException("The link message link type '{this.LinkType}' is not supported")
             };
         }
 

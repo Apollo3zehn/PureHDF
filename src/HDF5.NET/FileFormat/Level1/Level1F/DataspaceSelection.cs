@@ -17,7 +17,7 @@ namespace HDF5.NET
                 SelectionType.H5S_SEL_POINTS    => new H5S_SEL_POINTS(reader),
                 SelectionType.H5S_SEL_HYPER     => new H5S_SEL_HYPER(reader),
                 SelectionType.H5S_SEL_ALL       => new H5S_SEL_ALL(reader),
-                _                               => throw new NotSupportedException($"The dataspace selection type '{this.SelectionType}' is not supported.")
+                _ => throw new NotSupportedException($"The dataspace selection type '{this.SelectionType}' is not supported.")
             };
         }
 

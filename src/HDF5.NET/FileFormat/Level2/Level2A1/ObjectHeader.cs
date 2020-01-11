@@ -40,8 +40,8 @@ namespace HDF5.NET
 
             return version switch
             {
-                1 => new ObjectHeader1(version, reader, superblock),
-                2 => new ObjectHeader2(version, reader),
+                1 => new ObjectHeader1(reader, superblock, version),
+                2 => new ObjectHeader2(reader, version),
                 _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
             };
         }

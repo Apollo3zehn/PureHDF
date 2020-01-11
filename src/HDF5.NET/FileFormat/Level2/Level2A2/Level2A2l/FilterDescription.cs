@@ -18,7 +18,7 @@ namespace HDF5.NET
                 1                                               => reader.ReadUInt16(),
                 2 when (ushort)this.FilterIdentifier >= 256     => reader.ReadUInt16(),
                 2 when (ushort)this.FilterIdentifier < 256      => 0,
-                _                                               => throw new NotSupportedException($"Only version 1 or 2 instances of the {nameof(FilterDescription)} type are supported.")
+                _ => throw new NotSupportedException($"Only version 1 or 2 instances of the {nameof(FilterDescription)} type are supported.")
             };
 
             // flags

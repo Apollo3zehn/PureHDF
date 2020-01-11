@@ -1,12 +1,18 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public class CompactStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 
-        public CompactStoragePropertyDescription()
+        public CompactStoragePropertyDescription(BinaryReader reader) : base(reader)
         {
-            //
+            // size
+            this.Size = reader.ReadUInt16();
+
+            // raw data
+            this.RawData = reader.ReadBytes((int)this.Size);
         }
 
         #endregion

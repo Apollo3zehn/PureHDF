@@ -24,7 +24,7 @@ namespace HDF5.NET
                 DatatypeMessageClass.Enumerated     => new EnumerationBitFieldDescription(reader),
                 DatatypeMessageClass.VariableLength => new VariableLengthBitFieldDescription(reader),
                 DatatypeMessageClass.Array          => null,
-                _                                   => throw new NotSupportedException($"The data type message class '{this.Class}' is not supported.")
+                _ => throw new NotSupportedException($"The data type message class '{this.Class}' is not supported.")
             };
 
             this.Size = reader.ReadUInt32();
@@ -47,7 +47,7 @@ namespace HDF5.NET
                 (_, DatatypeMessageClass.VariableLength)    => new VariableLengthPropertyDescription(reader),
                 (2, DatatypeMessageClass.Array)             => new ArrayPropertyDescription2(reader),
                 (3, DatatypeMessageClass.Array)             => new ArrayPropertyDescription3(reader),
-                (_, _)                                      => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
+                (_, _) => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
             };
         }
 

@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader1(byte version, BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeader1(BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
             this.Version = version;
