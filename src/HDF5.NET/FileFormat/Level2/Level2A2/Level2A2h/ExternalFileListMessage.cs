@@ -57,7 +57,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (_version != 1)
+                if (value != 1)
                     throw new FormatException($"Only version 1 instances of type {nameof(ExternalFileListMessage)} are supported.");
 
                 _version = value;

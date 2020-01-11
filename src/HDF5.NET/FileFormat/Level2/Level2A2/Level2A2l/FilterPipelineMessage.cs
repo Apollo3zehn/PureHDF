@@ -44,7 +44,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (!(1 <= _version && _version <= 2))
+                if (!(1 <= value && value <= 2))
                     throw new FormatException($"Only version 1 and 2 instances of type {nameof(FilterPipelineMessage)} are supported.");
 
                 _version = value;
@@ -59,7 +59,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (_filterCount > 32)
+                if (value > 32)
                     throw new FormatException($"An instance of type {nameof(FilterPipelineMessage)} can only contain a maximum of 32 filters.");
 
                 _filterCount = value;

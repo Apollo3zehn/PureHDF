@@ -8,7 +8,8 @@ namespace HDF5.NET
 
         public ObjectCommentMessage(BinaryReader reader) : base(reader)
         {
-            //
+            // comment
+            this.Comment = H5Utils.ReadNullTerminatedString(reader, pad: false);
         }
 
         #endregion

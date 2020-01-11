@@ -45,7 +45,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (_version != 0)
+                if (value != 0)
                     throw new FormatException($"Only version 0 instances of type {nameof(ExternalLinkInfo)} are supported.");
 
                 _version = value;
@@ -60,7 +60,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (_flags != 0)
+                if (value != 0)
                     throw new FormatException($"The flags of an {nameof(FillValueMessage)} instance must be equal to zero.");
 
                 _flags = value;

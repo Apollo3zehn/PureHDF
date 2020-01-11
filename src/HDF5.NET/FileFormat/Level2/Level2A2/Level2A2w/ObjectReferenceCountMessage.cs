@@ -1,21 +1,46 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace HDF5.NET
 {
     public class ObjectReferenceCountMessage : Message
     {
+        #region Fields
+
+        private byte _version;
+
+        #endregion
+
         #region Constructors
 
         public ObjectReferenceCountMessage(BinaryReader reader) : base(reader)
         {
-            //
+            // version
+            this.Version = reader.ReadByte();
+
+            // reference count
+            this.ReferenceCount = reader.ReadUInt32();
         }
 
         #endregion
 
         #region Properties
 
-        public byte Version { get; set; }
+        public byte Version
+        {
+            get
+            {
+                return _version;
+            }
+            set
+            {
+                if (value != 0)
+                    throw new FormatException($"Only version 0 instances of type {nameof(ObjectReferenceCountMessage)} are supported.");
+
+                _version = value;
+            }
+        }
+
         public uint ReferenceCount { get; set; }
 
         #endregion

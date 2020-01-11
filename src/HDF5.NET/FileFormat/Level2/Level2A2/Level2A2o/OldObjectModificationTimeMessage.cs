@@ -8,7 +8,16 @@ namespace HDF5.NET
 
         public OldObjectModificationTimeMessage(BinaryReader reader) : base(reader)
         {
-            //
+            // date / time
+            this.Year = H5Utils.ReadFixedLengthString(reader, 4);
+            this.Month = H5Utils.ReadFixedLengthString(reader, 2);
+            this.DayOfMonth = H5Utils.ReadFixedLengthString(reader, 2);
+            this.Hour = H5Utils.ReadFixedLengthString(reader, 2);
+            this.Minute = H5Utils.ReadFixedLengthString(reader, 2);
+            this.Second = H5Utils.ReadFixedLengthString(reader, 2);
+
+            // reserved
+            reader.ReadBytes(2);
         }
 
         #endregion

@@ -39,7 +39,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (!(1 <= _version && _version <= 2))
+                if (!(1 <= value && value <= 2))
                     throw new FormatException($"Only version 1 and version 2 instances of type {nameof(H5S_SEL_HYPER)} are supported.");
 
                 _version = value;

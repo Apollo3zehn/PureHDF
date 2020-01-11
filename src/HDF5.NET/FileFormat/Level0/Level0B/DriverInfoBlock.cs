@@ -25,8 +25,8 @@ namespace HDF5.NET
             this.DriverInfo = this.DriverId switch
             {
                 "NCSAmulti" => new MultiDriverInfo(reader),
-                "NCSAfami" => new FamilyDriverInfo(reader),
-                _ => throw new NotSupportedException($"The driver ID '{this.DriverId}' is not supported.")
+                "NCSAfami"  => new FamilyDriverInfo(reader),
+                _           => throw new NotSupportedException($"The driver ID '{this.DriverId}' is not supported.")
             };
         }
 

@@ -46,7 +46,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (_version != 0)
+                if (value != 0)
                     throw new FormatException($"Only version 0 instances of type {nameof(VdsGlobalHeapBlock)} are supported.");
 
                 _version = value;

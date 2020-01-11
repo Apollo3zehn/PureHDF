@@ -78,7 +78,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (!(1 <= _version && _version <= 3))
+                if (!(1 <= value && value <= 3))
                     throw new FormatException($"Only version 1-3 instances of type {nameof(FillValueMessage)} are supported.");
 
                 _version = value;
