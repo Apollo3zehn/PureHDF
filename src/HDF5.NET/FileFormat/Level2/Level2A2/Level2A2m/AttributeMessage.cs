@@ -18,11 +18,10 @@ namespace HDF5.NET
             // version
             this.Version = reader.ReadByte();
 
-            // flags (only version 2 and 3)
-            this.Flags = (AttributeMessageFlags)reader.ReadByte();
-
-            // reserved
-            reader.ReadByte();
+            if (this.Version == 1)
+                reader.ReadByte();
+            else
+                this.Flags = (AttributeMessageFlags)reader.ReadByte();
 
             // name size
             this.NameSize = reader.ReadUInt16();
@@ -34,22 +33,45 @@ namespace HDF5.NET
             this.DataspaceSize = reader.ReadUInt16();
 
             // name character set encoding
-            this.NameCharacterSetEncoding = (CharacterSetEncoding)reader.ReadByte();
-
+            if (this.Version == 3)
+                this.NameCharacterSetEncoding = (CharacterSetEncoding)reader.ReadByte();
+            
             // name
-            this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, this.NameCharacterSetEncoding);
+            if (this.Version == 1)
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, this.NameCharacterSetEncoding);
+            else
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, this.NameCharacterSetEncoding);
 
             // datatype
-#warning Insert padding bytes! But only if version == 1!
+#error: why is there a difference between "datatype_total" and this.DatatypeSize? (also for dataspace)
+            var datatype_before = reader.BaseStream.Position;
             this.Datatype = new DatatypeMessage(reader);
+            var datatype_after = reader.BaseStream.Position;
+
+            if (this.Version == 1)
+            {
+                var datatype_total = datatype_after - datatype_before;
+                var paddedSize = (int)(Math.Ceiling(this.DatatypeSize / 8.0) * 8);
+                var remainingSize = paddedSize - datatype_total;
+                this.Reader.BaseStream.Seek(remainingSize, SeekOrigin.Current);
+            }
 
             // dataspace 
-#warning Insert padding bytes! But only if version == 1!
+            var dataspace_before = reader.BaseStream.Position;
             this.Dataspace = new DataspaceMessage(reader, superblock);
+            var dataspace_after = reader.BaseStream.Position;
+
+            if (this.Version == 1)
+            {
+                var dataspace_total = dataspace_after - dataspace_before;
+                var paddedSize = (int)(Math.Ceiling(this.DataspaceSize / 8.0) * 8);
+                var remainingSize = paddedSize - dataspace_total;
+                this.Reader.BaseStream.Seek(remainingSize, SeekOrigin.Current);
+            }
 
             // data
 #warning determine size correctly from datatype and dataspace
-            this.Data = reader.ReadBytes(1);
+            this.Data = reader.ReadBytes(16);
         }
 
         #endregion

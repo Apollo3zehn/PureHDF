@@ -40,15 +40,14 @@ namespace HDF5.NET
 
         private List<H5Link> GetChildren()
         {
-            var symbolTableHeaderMessages = this.ObjectHeader.HeaderMessages
-                .Where(message => message.Type == HeaderMessageType.SymbolTable)
-                .ToList();
-
+            var symbolTableHeaderMessages = this.ObjectHeader.GetHeaderMessages<SymbolTableMessage>();
+            var headerContinuationMessages = this.ObjectHeader.GetHeaderMessages<ObjectHeaderContinuationMessage>();
+            
             var symbolTableEntries = symbolTableHeaderMessages.Count switch
             {
 #warning Validate all three paths against spec
                 0 => this.GetLinksFromLinkMessages(),
-                1 => this.GetLinksFromSymbolTable((SymbolTableMessage)symbolTableHeaderMessages[0].Data),
+                1 => this.GetLinksFromSymbolTable(symbolTableHeaderMessages[0]),
                 _ => throw new FormatException("The number of symbol table messages must be 0 or 1.")
             };
 
@@ -57,7 +56,7 @@ namespace HDF5.NET
                 if (entry.CacheType >= CacheType.SymbolicLink)
                     throw new NotImplementedException("Symbolic links are not supported yet.");
 
-                var isDataset = entry.ObjectHeader.HeaderMessages.Any(message => message.Type == HeaderMessageType.Dataspace);
+                var isDataset = entry.ObjectHeader.GetHeaderMessages<DataspaceMessage>().Any();
 
                 if (isDataset)
                     return (H5Link)new H5Dataset(entry.Name, entry.ObjectHeader);

@@ -19,16 +19,6 @@ namespace HDF5.NET
         public ulong Offset { get; set; }
         public ulong Length { get; set; }
 
-        public ObjectHeaderContinuationBlock2 ObjectHeaderContinuationBlock
-        {
-            get
-            {
-                this.Reader.BaseStream.Seek((long)this.Offset, SeekOrigin.Begin);
-#warning What if this is a version 1 ObjectHeaderContinuationBlock?
-                return new ObjectHeaderContinuationBlock2(this.Reader);
-            }
-        }
-
         #endregion
     }
 }

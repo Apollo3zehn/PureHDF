@@ -32,20 +32,13 @@ namespace HDF5.NET
             this.ObjectHeaderSize = reader.ReadUInt32();
 
             // header messages
-            this.HeaderMessages = new List<HeaderMessage>();
 
             // read padding bytes that align the following message to an 8 byte boundary
-            var remainingBytes = this.ObjectHeaderSize;
-
-            if (remainingBytes > 0)
+            if (this.ObjectHeaderSize > 0)
                 reader.ReadBytes(4);
 
-            while (remainingBytes > 0)
-            {
-                var message = new HeaderMessage(reader, superblock, 1);
-                remainingBytes -= (uint)message.DataSize + 2 + 2 + 1 + 3;
-                this.HeaderMessages.Add(message);
-            }
+            var messages = this.ReadHeaderMessages(reader, superblock, this.ObjectHeaderSize);
+            this.HeaderMessages.AddRange(messages);
         }
 
         #endregion
@@ -70,6 +63,37 @@ namespace HDF5.NET
         public ushort HeaderMessagesCount { get; set; }
         public uint ObjectReferenceCount { get; set; }
         public uint ObjectHeaderSize { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        private List<HeaderMessage> ReadHeaderMessages(BinaryReader reader, Superblock superblock, ulong objectHeaderSize)
+        {
+            var headerMessages = new List<HeaderMessage>();
+            var continuationMessages = new List<ObjectHeaderContinuationMessage>();
+            var remainingBytes = objectHeaderSize;
+
+            while (remainingBytes > 0)
+            {
+                var message = new HeaderMessage(reader, superblock, 1);
+                remainingBytes -= (uint)message.DataSize + 2 + 2 + 1 + 3;
+
+                if (message.Type == HeaderMessageType.ObjectHeaderContinuation)
+                    continuationMessages.Add((ObjectHeaderContinuationMessage)message.Data);
+                else
+                    headerMessages.Add(message);
+            }
+
+            foreach (var continuationMessage in continuationMessages)
+            {
+                this.Reader.BaseStream.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+                var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length);
+                headerMessages.AddRange(messages);
+            }
+
+            return headerMessages;
+        }
 
         #endregion
     }

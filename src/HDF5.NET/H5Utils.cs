@@ -55,8 +55,11 @@ namespace HDF5.NET
             var data = new List<byte>();
             var byteValue = reader.ReadByte();
 
-            if (byteValue != '\0')
+            while (byteValue != '\0')
+            {
                 data.Add(byteValue);
+                byteValue = reader.ReadByte();
+            }
 
             var result = characterSet switch
             {
@@ -67,7 +70,7 @@ namespace HDF5.NET
 
             if (pad)
             {
-                var paddingCount = result.Length % 8;
+                var paddingCount = 8 - (result.Length + 1) % 8;
                 reader.BaseStream.Seek(paddingCount, SeekOrigin.Current);
             }
 

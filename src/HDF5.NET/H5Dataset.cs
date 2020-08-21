@@ -6,14 +6,16 @@
 
         internal H5Dataset(string name, ObjectHeader header) : base(name, header)
         {
-            this.DataType = header.HeaderMessage<DatatypeMessage>();
+            //
         }
 
         #endregion
 
         #region Properties
 
-        public DatatypeMessage DataType { get; }
+        public DatatypeMessage DataType => this.ObjectHeader.GetHeaderMessage<DatatypeMessage>();
+
+        public DataspaceMessage DataSpace => this.ObjectHeader.GetHeaderMessage<DataspaceMessage>();
 
         #endregion
     }

@@ -21,7 +21,7 @@ namespace HDF5.NET
             this.Flags = (DataspaceMessageFlags)reader.ReadByte();
 
             if (this.Version == 1)
-                this.Reader.ReadByte();
+                reader.ReadBytes(5); 
             else if (this.Version == 2)
                 this.Flags = (DataspaceMessageFlags)reader.ReadByte();
 
@@ -35,12 +35,22 @@ namespace HDF5.NET
             for (int i = 0; i < this.Dimensionality; i++)
             {
                 this.DimensionSizes.Add(superblock.ReadLength());
+            }
 
-                if (dimensionMaxSizesArePresent)
+            if (dimensionMaxSizesArePresent)
+            {
+                for (int i = 0; i < this.Dimensionality; i++)
+                {
                     this.DimensionMaxSizes.Add(superblock.ReadLength());
+                }
+            }
 
-                if (permutationIndicesArePresent)
+            if (permutationIndicesArePresent)
+            {
+                for (int i = 0; i < this.Dimensionality; i++)
+                {
                     this.PermutationIndices.Add(superblock.ReadLength());
+                }
             }
         }
 

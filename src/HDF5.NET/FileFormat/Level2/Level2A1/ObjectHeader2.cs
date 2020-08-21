@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -44,9 +43,7 @@ namespace HDF5.NET
             this.SizeOfChunk0 = this.ReadUlong(chunkFieldSize);
 
             // header messages
-            this.HeaderMessages = new List<HeaderMessage>();
-
-#warning read messages
+#warning read messages and look for ObjectHeaderContinuationMessages (like in "ObjectHeader1")
             //while (remainingBytes > 0)
             //{
             //    var message = new HeaderMessage(reader, superblock, 1);

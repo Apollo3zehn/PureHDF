@@ -12,24 +12,33 @@ namespace HDF5.NET
 
         public ObjectHeader(BinaryReader reader) : base(reader)
         {
-            //
+            this.HeaderMessages = new List<HeaderMessage>();
         }
 
         #endregion
 
         #region Properties
 
-        public List<HeaderMessage> HeaderMessages { get; protected set; }
+        protected List<HeaderMessage> HeaderMessages { get; }
 
         #endregion
 
         #region Methods
 
-        public T HeaderMessage<T>() where T : Message
+        public T GetHeaderMessage<T>() where T : Message
         {
             return (T)this.HeaderMessages
                 .First(message => message.Data.GetType() == typeof(T))
                 .Data;
+        }
+
+        public List<T> GetHeaderMessages<T>() where T : Message
+        {
+            return this.HeaderMessages
+                .Where(message => message.Data.GetType() == typeof(T))
+                .Select(message => message.Data)
+                .Cast<T>()
+                .ToList();
         }
 
         public static ObjectHeader Construct(BinaryReader reader, Superblock superblock)
