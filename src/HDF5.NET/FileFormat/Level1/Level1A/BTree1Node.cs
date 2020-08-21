@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace HDF5.NET
@@ -10,7 +11,6 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning Correct?
         Superblock _superblock;
 
         #endregion
@@ -108,10 +108,45 @@ namespace HDF5.NET
             return new BTree1Node(this.Reader, _superblock);
         }
 
-        public SymbolTableNode GetSymbolTableNode(int index)
+        public Dictionary<uint, List<BTree1Node>> GetTree()
         {
-            this.Reader.BaseStream.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
-            return new SymbolTableNode(this.Reader, _superblock);
+            var nodeMap = new Dictionary<uint, List<BTree1Node>>();
+            var nodeLevel = this.NodeLevel;
+
+            nodeMap[nodeLevel] = new List<BTree1Node>() { this };
+
+            while (nodeLevel > 0)
+            {
+                var newNodes = new List<BTree1Node>();
+
+                foreach (var parentNode in nodeMap[nodeLevel])
+                {
+                    foreach (var address in parentNode.ChildAddresses)
+                    {
+                        this.Reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+                        newNodes.Add(new BTree1Node(this.Reader, _superblock));
+                    }
+                }
+
+                nodeLevel--;
+                nodeMap[nodeLevel] = newNodes;
+            }
+
+            return nodeMap;
+        }
+
+        public List<SymbolTableNode> GetSymbolTableNodes()
+        {
+            var nodeLevel = 0U;
+
+            return this.GetTree()[nodeLevel].SelectMany(node =>
+            {
+                return node.ChildAddresses.Select(address =>
+                {
+                    this.Reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+                    return new SymbolTableNode(this.Reader, _superblock);
+                });
+            }).ToList();
         }
 
         public override void Print(ILogger logger)
@@ -138,8 +173,8 @@ namespace HDF5.NET
                     {
                         case BTree1NodeType.Group:
 
-                            var symbolTableNode = this.GetSymbolTableNode(i);
-                            symbolTableNode.Print(logger);
+                            //var symbolTableNode = this.GetSymbolTableNode(i);
+                            //symbolTableNode.Print(logger);
 
                             break;
 

@@ -19,11 +19,18 @@ namespace HDF5.NET
 
         #region Properties
 
-        public List<HeaderMessage> HeaderMessages { get; set; }
+        public List<HeaderMessage> HeaderMessages { get; protected set; }
 
         #endregion
 
         #region Methods
+
+        public T HeaderMessage<T>() where T : Message
+        {
+            return (T)this.HeaderMessages
+                .First(message => message.Data.GetType() == typeof(T))
+                .Data;
+        }
 
         public static ObjectHeader Construct(BinaryReader reader, Superblock superblock)
         {

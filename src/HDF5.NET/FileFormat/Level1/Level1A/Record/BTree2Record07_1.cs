@@ -27,7 +27,7 @@ namespace HDF5.NET
             reader.ReadByte();
 
             // message type
-            this.MessageType = (MessageType)reader.ReadByte();
+            //this.MessageType = (MessageType)reader.ReadByte();
 
             // object header index
             this.ObjectHeaderIndex = reader.ReadUInt16();
@@ -42,7 +42,7 @@ namespace HDF5.NET
 
         public MessageLocation MessageLocation { get; set; }
         public byte[] Hash { get; set; }
-        public MessageType MessageType { get; set; }
+        //public MessageType MessageType { get; set; }
         public ushort ObjectHeaderIndex { get; set; }
         public ulong ObjectHeaderAddress { get; set; }
 

@@ -68,6 +68,19 @@ namespace HDF5.NET
 
         #region Methods
 
+        public void AssignNames(LocalHeap heap)
+        {
+            foreach (var entry in this.GroupEntries)
+            {
+                entry.Name = heap.GetObjectName(entry.LinkNameOffset);
+            }
+        }
+         
+        public void GetLinks(LocalHeap heap)
+        {
+
+        }
+
         public override void Print(ILogger logger)
         {
             logger.LogInformation($"SymbolTableNode");

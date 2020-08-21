@@ -5,6 +5,12 @@ namespace HDF5.NET
 {
     public class H5File
     {
+        /* Hierarchy
+         * (1) Superblock -> RootGroupSymbolTableEntry -> ObjectHeader -> (List<SymbolTable>)HeaderMessages -> First
+         *                -> (SymbolTableMessage)Data -> BTree -> GetSymbolTableNodes() -> SelectMany -> node.GroupEntries()        
+         * (2) Create H5Group or H5Dataset (both inherit from H5Link)
+         */
+
         #region Constructors
 
         private H5File(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
@@ -27,9 +33,14 @@ namespace HDF5.NET
             };
 
             if (this.Superblock.GetType() == typeof(Superblock01))
-                this.Root = new H5Group(((Superblock01)this.Superblock).RootGroupSymbolTableEntry);
+            {
+                var objectHeader = ((Superblock01)this.Superblock).RootGroupSymbolTableEntry.ObjectHeader;
+                this.Root = new H5Group("/", objectHeader);
+            }
             else
+            {
                 throw new NotSupportedException($"The superblock version '{version}' is not supported.");
+            }
         }
 
         #endregion

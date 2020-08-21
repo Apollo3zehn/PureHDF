@@ -41,6 +41,8 @@ namespace HDF5.NET.Tests
 
             h5file.Superblock.Print(logger);
 
+            var firstLevelChildren = h5file.Root.Children;
+
             //h5file.OpenGroup("/Test");
 
             //// Assert

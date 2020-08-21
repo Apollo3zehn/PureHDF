@@ -72,7 +72,7 @@ namespace HDF5.NET
             get
             {
                 this.Reader.BaseStream.Seek((long)this.FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
-                return new FreeSpaceManagerHeader(this.Reader, _superblock)
+                return new FreeSpaceManagerHeader(this.Reader, _superblock);
             }
         }
 

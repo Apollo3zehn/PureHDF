@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace HDF5.NET
@@ -9,6 +10,7 @@ namespace HDF5.NET
         #region Fields
 
         private byte _version;
+        private byte[] _data;
 
         #endregion
 
@@ -42,7 +44,6 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; set; } = Encoding.ASCII.GetBytes("HEAP");
 
-
         public byte Version
         {
             get
@@ -61,6 +62,32 @@ namespace HDF5.NET
         public ulong DataSegmentSize { get; set; }
         public ulong FreeListHeadOffset { get; set; }
         public ulong DataSegmentAddress { get; set; }
+
+        public byte[] Data
+        {
+            get
+            {
+                if (_data == null)
+                {
+                    this.Reader.BaseStream.Seek((long)this.DataSegmentAddress, SeekOrigin.Begin);
+                    _data = this.Reader.ReadBytes((int)this.DataSegmentSize);
+                }
+
+                return _data;
+            }
+        }
+
+        #endregion
+
+        #region Methods
+
+        public string GetObjectName(ulong offset)
+        {
+            var end = Array.IndexOf(this.Data, (byte)0, (int)offset);
+            var bytes = this.Data[(int)offset..end];
+
+            return Encoding.ASCII.GetString(bytes);           
+        }
 
         #endregion
     }

@@ -10,7 +10,7 @@ namespace HDF5.NET
         {
             // fractal heap indirect block offset
 #warning implement this correctly
-            this.FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
+            //this.FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
 
             // block start row
             this.BlockStartRow = reader.ReadUInt16();
