@@ -19,7 +19,9 @@ namespace HDF5.NET
 
         #region Properties
 
-        protected List<HeaderMessage> HeaderMessages { get; }
+        public List<HeaderMessage> HeaderMessages { get; }
+
+        public H5ObjectType ObjectType { get; protected set; }
 
         #endregion
 

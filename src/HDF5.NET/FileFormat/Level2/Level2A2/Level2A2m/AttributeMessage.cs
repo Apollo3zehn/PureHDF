@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace HDF5.NET
 {
@@ -34,44 +35,39 @@ namespace HDF5.NET
 
             // name character set encoding
             if (this.Version == 3)
-                this.NameCharacterSetEncoding = (CharacterSetEncoding)reader.ReadByte();
+                this.NameEncoding = (CharacterSetEncoding)reader.ReadByte();
             
             // name
             if (this.Version == 1)
-                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, this.NameCharacterSetEncoding);
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, encoding: this.NameEncoding);
             else
-                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, this.NameCharacterSetEncoding);
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, encoding: this.NameEncoding);
 
             // datatype
-#error: why is there a difference between "datatype_total" and this.DatatypeSize? (also for dataspace)
-            var datatype_before = reader.BaseStream.Position;
             this.Datatype = new DatatypeMessage(reader);
-            var datatype_after = reader.BaseStream.Position;
 
             if (this.Version == 1)
             {
-                var datatype_total = datatype_after - datatype_before;
                 var paddedSize = (int)(Math.Ceiling(this.DatatypeSize / 8.0) * 8);
-                var remainingSize = paddedSize - datatype_total;
+                var remainingSize = paddedSize - this.DatatypeSize;
                 this.Reader.BaseStream.Seek(remainingSize, SeekOrigin.Current);
             }
 
             // dataspace 
-            var dataspace_before = reader.BaseStream.Position;
             this.Dataspace = new DataspaceMessage(reader, superblock);
-            var dataspace_after = reader.BaseStream.Position;
 
             if (this.Version == 1)
             {
-                var dataspace_total = dataspace_after - dataspace_before;
                 var paddedSize = (int)(Math.Ceiling(this.DataspaceSize / 8.0) * 8);
-                var remainingSize = paddedSize - dataspace_total;
+                var remainingSize = paddedSize - this.DataspaceSize;
                 this.Reader.BaseStream.Seek(remainingSize, SeekOrigin.Current);
             }
 
             // data
-#warning determine size correctly from datatype and dataspace
-            this.Data = reader.ReadBytes(16);
+            var totalLength = this.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
+            totalLength *= this.Datatype.Size;
+
+            this.Data = reader.ReadBytes((int)totalLength);
         }
 
         #endregion
@@ -97,7 +93,7 @@ namespace HDF5.NET
         public ushort NameSize { get; set; }
         public ushort DatatypeSize { get; set; }
         public ushort DataspaceSize { get; set; }
-        public CharacterSetEncoding NameCharacterSetEncoding { get; set; }
+        public CharacterSetEncoding NameEncoding { get; set; }
         public string Name { get; set; }
         public DatatypeMessage Datatype { get; set; }
         public DataspaceMessage Dataspace { get; set; }

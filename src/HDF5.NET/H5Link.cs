@@ -9,16 +9,18 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private Superblock _superblock;
         private List<H5Attribute> _attributes;
 
         #endregion
 
         #region Constructors
 
-        internal H5Link(string name, ObjectHeader objectHeader)
+        internal H5Link(string name, ObjectHeader objectHeader, Superblock superblock)
         {
             this.Name = name;
             this.ObjectHeader = objectHeader;
+            _superblock = superblock;
         }
 
         #endregion
@@ -48,7 +50,7 @@ namespace HDF5.NET
         {
             return this.ObjectHeader
                 .GetHeaderMessages<AttributeMessage>()
-                .Select(message => new H5Attribute(message))
+                .Select(message => new H5Attribute(message, _superblock))
                 .ToList();
         }
 

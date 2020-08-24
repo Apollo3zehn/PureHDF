@@ -84,9 +84,19 @@ namespace HDF5.NET
             return this.ReadUlong(this.OffsetsSize);
         }
 
+        public ulong ReadOffset(BinaryReader reader)
+        {
+            return this.ReadUlong(this.OffsetsSize, reader);
+        }
+
         public ulong ReadLength()
         {
             return this.ReadUlong(this.LengthsSize);
+        }
+
+        public ulong ReadLength(BinaryReader reader)
+        {
+            return this.ReadUlong(this.LengthsSize, reader);
         }
 
         #endregion

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class H5File
+    public class H5File : IDisposable
     {
         /* Hierarchy
          * (1) Superblock -> RootGroupSymbolTableEntry -> ObjectHeader -> (List<SymbolTable>)HeaderMessages -> First
@@ -15,6 +15,9 @@ namespace HDF5.NET
 
         private H5File(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
         {
+            if (!BitConverter.IsLittleEndian)
+                throw new Exception("This library only works on little endian systems.");
+
             this.Reader = new BinaryReader(File.Open(filePath, mode, fileAccess, fileShare));
 
             // superblock
@@ -35,7 +38,7 @@ namespace HDF5.NET
             if (this.Superblock.GetType() == typeof(Superblock01))
             {
                 var objectHeader = ((Superblock01)this.Superblock).RootGroupSymbolTableEntry.ObjectHeader;
-                this.Root = new H5Group("/", objectHeader);
+                this.Root = new H5Group("/", objectHeader, this.Superblock);
             }
             else
             {
@@ -60,6 +63,11 @@ namespace HDF5.NET
         public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
         {
             return new H5File(filePath, mode, fileAccess, fileShare);
+        }
+
+        public void Dispose()
+        {
+            GlobalHeapCache.Clear(this.Superblock);
         }
 
         private void ValidateSignature(byte[] actual, byte[] expected)

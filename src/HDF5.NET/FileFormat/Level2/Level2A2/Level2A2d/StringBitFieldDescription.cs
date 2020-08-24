@@ -29,7 +29,7 @@ namespace HDF5.NET
             }
         }
 
-        public CharacterSetEncoding CharacterSet
+        public CharacterSetEncoding Encoding
         {
             get 
             {

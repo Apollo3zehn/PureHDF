@@ -47,6 +47,18 @@ namespace HDF5.NET
             };
         }
 
+        private protected ulong ReadUlong(ulong byteCount, BinaryReader reader)
+        {
+            return byteCount switch
+            {
+                1 => reader.ReadByte(),
+                2 => reader.ReadUInt16(),
+                4 => reader.ReadUInt32(),
+                8 => reader.ReadUInt64(),
+                _ => throw new NotSupportedException("The byte count is invalid.")
+            };
+        }
+
         #endregion
     }
 }

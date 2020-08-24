@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 
 namespace HDF5.NET
 {
+    [DebuggerDisplay("{Type}")]
     public class HeaderMessage : FileBlock
     {
         #region Fields

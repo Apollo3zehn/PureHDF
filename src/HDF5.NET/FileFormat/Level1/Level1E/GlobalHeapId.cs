@@ -4,11 +4,19 @@ namespace HDF5.NET
 {
     public class GlobalHeapId : FileBlock
     {
+        #region Fields
+
+        private Superblock _superblock;
+
+        #endregion
+
         #region Constructors
 
         public GlobalHeapId(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.CollectionAddress = superblock.ReadOffset();
+            _superblock = superblock;
+
+            this.CollectionAddress = superblock.ReadOffset(reader);
             this.ObjectIndex = reader.ReadUInt32();
         }
 
@@ -23,7 +31,9 @@ namespace HDF5.NET
         {
             get
             {
-                return new GlobalHeapCollection(this.Reader);
+#warning Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
+                var reader = _superblock.Reader;
+                return GlobalHeapCache.GetGlobalHeapObject(reader, _superblock, this.CollectionAddress);
             }
         }
 

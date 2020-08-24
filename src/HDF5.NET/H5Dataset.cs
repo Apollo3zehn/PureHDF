@@ -4,18 +4,43 @@
     {
         #region Constructors
 
-        internal H5Dataset(string name, ObjectHeader header) : base(name, header)
+        internal H5Dataset(string name, ObjectHeader header, Superblock superblock) 
+            : base(name, header, superblock)
         {
-            //
+            foreach (var message in this.ObjectHeader.HeaderMessages)
+            {
+                var type = message.GetType();
+
+                if (type == typeof(DataLayoutMessage))
+                    this.DataLayout = (DataLayoutMessage)message.Data;
+
+                else if (type == typeof(DataspaceMessage))
+                    this.Dataspace = (DataspaceMessage)message.Data;
+
+                else if (type == typeof(DatatypeMessage))
+                    this.DataType = (DatatypeMessage)message.Data;
+
+                else if (type == typeof(FillValueMessage))
+                    this.FillValue = (FillValueMessage)message.Data;
+
+                else if (type == typeof(ObjectModificationMessage))
+                    this.ObjectModification = (ObjectModificationMessage)message.Data;
+            }
         }
 
         #endregion
 
         #region Properties
 
-        public DatatypeMessage DataType => this.ObjectHeader.GetHeaderMessage<DatatypeMessage>();
+        public DataLayoutMessage DataLayout { get; }
 
-        public DataspaceMessage DataSpace => this.ObjectHeader.GetHeaderMessage<DataspaceMessage>();
+        public DataspaceMessage Dataspace { get; }
+
+        public DatatypeMessage DataType { get; }
+
+        public FillValueMessage FillValue { get; }
+
+        public ObjectModificationMessage ObjectModification { get; }
 
         #endregion
     }

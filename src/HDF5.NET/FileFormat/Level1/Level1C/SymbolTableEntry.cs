@@ -1,16 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
-using System.Diagnostics;
 using System.IO;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}")]
     public class SymbolTableEntry : FileBlock
     {
         #region Fields
 
-#warning OK like this?
         Superblock _superblock;
 
         #endregion
@@ -68,8 +65,6 @@ namespace HDF5.NET
                 return ObjectHeader.Construct(this.Reader, _superblock);
             }
         }
-
-        public string Name { get; set; }
 
         #endregion
 

@@ -14,7 +14,7 @@ namespace HDF5.NET
             this.ExponentSize = reader.ReadByte();
             this.MantissaLocation = reader.ReadByte();
             this.MantissaSize = reader.ReadByte();
-            this.ExponentBias = reader.ReadUInt16();
+            this.ExponentBias = reader.ReadUInt32();
         }
 
         #endregion

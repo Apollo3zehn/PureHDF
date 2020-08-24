@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -22,7 +23,10 @@ namespace HDF5.NET
 
             // object data
             this.ObjectData = reader.ReadBytes((int)this.ObjectSize);
-            reader.ReadBytes((int)(this.ObjectSize % 8));
+
+            var paddedSize = (int)(Math.Ceiling(this.ObjectSize / 8.0) * 8);
+            var remainingSize = paddedSize - (int)this.ObjectSize;
+            reader.ReadBytes(remainingSize);
         }
 
         #endregion

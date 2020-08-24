@@ -80,9 +80,19 @@ namespace HDF5.NET
                 remainingBytes -= (uint)message.DataSize + 2 + 2 + 1 + 3;
 
                 if (message.Type == HeaderMessageType.ObjectHeaderContinuation)
+                {
                     continuationMessages.Add((ObjectHeaderContinuationMessage)message.Data);
+                }
                 else
+                {
                     headerMessages.Add(message);
+
+                    if (message.Type == HeaderMessageType.SymbolTable)
+                        this.ObjectType = H5ObjectType.Group;
+
+                    else if (message.Type == HeaderMessageType.DataType)
+                        this.ObjectType = H5ObjectType.Dataset;
+                }
             }
 
             foreach (var continuationMessage in continuationMessages)

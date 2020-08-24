@@ -16,7 +16,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public GlobalHeapCollection(BinaryReader reader) : base(reader)
+        public GlobalHeapCollection(BinaryReader reader, Superblock superblock) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);
@@ -25,17 +25,28 @@ namespace HDF5.NET
             // version
             this.Version = reader.ReadByte();
 
+            // reserved
+            reader.ReadBytes(3);
+
             // collection size
-            this.Version = reader.ReadByte();
+            this.CollectionSize = superblock.ReadLength();
 
             // global heap objects
             this.GlobalHeapObjects = new List<GlobalHeapObject>();
 
-#warning Finish implementation.
-            //for (int i = 0; i < length; i++)
-            //{
+            var headerSize = 8UL + superblock.LengthsSize;
+            var remaining = this.CollectionSize;
 
-            //}
+            while (remaining >= headerSize)
+            {
+                var before = reader.BaseStream.Position;
+                var globalHeapObject = new GlobalHeapObject(reader, superblock);
+                this.GlobalHeapObjects.Add(globalHeapObject);
+                var after = reader.BaseStream.Position;
+                var consumed = (ulong)(after - before);
+
+                remaining -= consumed;
+            }
         }
 
         #endregion

@@ -38,19 +38,19 @@ namespace HDF5.NET
             return result;
         }
 
-        public static string ReadFixedLengthString(BinaryReader reader, int length, CharacterSetEncoding characterSet = CharacterSetEncoding.ASCII)
+        public static string ReadFixedLengthString(BinaryReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = reader.ReadBytes(length);
 
-            return characterSet switch
+            return encoding switch
             {
                 CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data),
                 CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data),
-                _ => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
+                _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
             };
         }
 
-        public static string ReadNullTerminatedString(BinaryReader reader, bool pad, CharacterSetEncoding characterSet = CharacterSetEncoding.ASCII)
+        public static string ReadNullTerminatedString(BinaryReader reader, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = new List<byte>();
             var byteValue = reader.ReadByte();
@@ -61,16 +61,16 @@ namespace HDF5.NET
                 byteValue = reader.ReadByte();
             }
 
-            var result = characterSet switch
+            var result = encoding switch
             {
                 CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data.ToArray()),
                 CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data.ToArray()),
-                _ => throw new FormatException($"The character set encoding '{characterSet}' is not supported.")
+                _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
             };
 
             if (pad)
             {
-                var paddingCount = 8 - (result.Length + 1) % 8;
+                var paddingCount = padSize - (result.Length + 1) % padSize;
                 reader.BaseStream.Seek(paddingCount, SeekOrigin.Current);
             }
 
