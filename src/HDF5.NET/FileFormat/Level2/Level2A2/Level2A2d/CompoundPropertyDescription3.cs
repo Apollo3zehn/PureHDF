@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class CompoundPropertyDescription3 : DatatypePropertyDescription
+    public class CompoundPropertyDescription3 : CompoundPropertyDescription
     {
         #region Constructors
 
@@ -30,14 +30,6 @@ namespace HDF5.NET
             // member type message
             this.MemberTypeMessage = new DatatypeMessage(reader);
         }
-
-        #endregion
-
-        #region Properties
-
-        public string Name { get; set; }
-        public ulong MemberByteOffset { get; set; }
-        public DatatypeMessage MemberTypeMessage { get; set; }
 
         #endregion
     }

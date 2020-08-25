@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class CompoundPropertyDescription2 : DatatypePropertyDescription
+    public class CompoundPropertyDescription2 : CompoundPropertyDescription
     {
         #region Constructors
 
@@ -17,14 +17,6 @@ namespace HDF5.NET
             // member type message
             this.MemberTypeMessage = new DatatypeMessage(reader);
         }
-
-        #endregion
-
-        #region Properties
-
-        public string Name { get; set; }
-        public uint MemberByteOffset { get; set; }
-        public DatatypeMessage MemberTypeMessage { get; set; }
 
         #endregion
     }

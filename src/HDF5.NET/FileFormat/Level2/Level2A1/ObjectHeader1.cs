@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace HDF5.NET
 {
@@ -90,7 +91,7 @@ namespace HDF5.NET
                     if (message.Type == HeaderMessageType.SymbolTable)
                         this.ObjectType = H5ObjectType.Group;
 
-                    else if (message.Type == HeaderMessageType.DataType)
+                    else if (message.Type == HeaderMessageType.DataLayout)
                         this.ObjectType = H5ObjectType.Dataset;
                 }
             }
@@ -101,6 +102,13 @@ namespace HDF5.NET
                 var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length);
                 headerMessages.AddRange(messages);
             }
+
+            var condition = this.ObjectType == H5ObjectType.Undefined
+                            && headerMessages.Count == 1
+                            && headerMessages[0].Type == HeaderMessageType.DataType;
+
+            if (condition)
+                this.ObjectType = H5ObjectType.CommitedDataType;
 
             return headerMessages;
         }

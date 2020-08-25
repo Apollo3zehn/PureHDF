@@ -8,7 +8,6 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private Superblock _superblock;
         private List<H5Link> _children;
 
         #endregion
@@ -17,7 +16,7 @@ namespace HDF5.NET
 
         internal H5Group(string name, ObjectHeader header, Superblock superblock) : base(name, header, superblock)
         {
-            _superblock = superblock;
+            //
         }
 
         #endregion
@@ -76,7 +75,7 @@ namespace HDF5.NET
             return true;
         }
 
-        public T GetDescendant<T>(string path) where T : H5Link
+        public T Get<T>(string path) where T : H5Link
         {
             if (!path.StartsWith('/'))
                 throw new Exception("A path must start with a forward slash, e.g. '/a/b/c'.");
@@ -112,9 +111,10 @@ namespace HDF5.NET
 
             return current.ObjectType switch
             {
-                H5ObjectType.Group => (T)(object)new H5Group(segments.Last(), current, _superblock),
-                H5ObjectType.Dataset => (T)(object)new H5Dataset(segments.Last(), current, _superblock),
-                _ => throw new Exception("Unknown object type.")
+                H5ObjectType.Group              => (T)(object)new H5Group(segments.Last(), current, this.Superblock),
+                H5ObjectType.Dataset            => (T)(object)new H5Dataset(segments.Last(), current, this.Superblock),
+                H5ObjectType.CommitedDataType   => (T)(object)new H5CommitedDataType(segments.Last(), current, this.Superblock),
+                _                               => throw new Exception("Unknown object type.")
             };
         }
 
@@ -137,9 +137,10 @@ namespace HDF5.NET
 
                 return namedEntry.Entry.ObjectHeader.ObjectType switch
                 {
-                    H5ObjectType.Group      => (H5Link)new H5Group(namedEntry.Name, namedEntry.Entry.ObjectHeader, _superblock),
-                    H5ObjectType.Dataset    => (H5Link)new H5Dataset(namedEntry.Name, namedEntry.Entry.ObjectHeader, _superblock),
-                    _                       => throw new Exception("Unknown object type.")
+                    H5ObjectType.Group              => (H5Link)new H5Group(namedEntry.Name, namedEntry.Entry.ObjectHeader, this.Superblock),
+                    H5ObjectType.Dataset            => (H5Link)new H5Dataset(namedEntry.Name, namedEntry.Entry.ObjectHeader, this.Superblock),
+                    H5ObjectType.CommitedDataType   => (H5Link)new H5CommitedDataType(namedEntry.Name, namedEntry.Entry.ObjectHeader, this.Superblock),
+                    _                               => throw new Exception("Unknown object type.")
                 };
             }).ToList();
         }
@@ -154,10 +155,9 @@ namespace HDF5.NET
             var btree = message.BTree1;
             var heap = message.LocalHeap;
 
-            var entries = btree.GetSymbolTableNodes().SelectMany(node =>
-            {
-                return this.GetNamedEntries(heap, node.GroupEntries);
-            }).ToList();
+            var entries = btree.GetSymbolTableNodes()
+                .SelectMany(node => this.GetNamedEntries(heap, node.GroupEntries))
+                .ToList();
 
             return entries;
         }

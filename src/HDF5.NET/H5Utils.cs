@@ -38,6 +38,77 @@ namespace HDF5.NET
             return result;
         }
 
+        public static string[] ReadString(DatatypeMessage datatype, Span<byte> data, Superblock superblock)
+        {
+            var isFixed = datatype.Class == DatatypeMessageClass.String;
+
+            if (!isFixed && datatype.Class != DatatypeMessageClass.VariableLength)
+                throw new Exception($"Attribute data type class '{datatype.Class}' cannot be read as string.");
+
+            var size = (int)datatype.Size;
+            var result = new List<string>();
+
+            if (isFixed)
+            {
+                var bitField = datatype.BitField as StringBitFieldDescription;
+
+                if (bitField == null)
+                    throw new Exception("String bit field desciption must not be null.");
+
+                if (bitField.PaddingType != PaddingType.NullTerminate)
+                    throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
+
+                var position = 0;
+
+                while (position != data.Length)
+                {
+                    var value = H5Utils.ReadFixedLengthString(data[position..(position + size)]);
+                    result.Add(value);
+                    position += size;
+                }
+            }
+            else
+            {
+                var bitField = datatype.BitField as VariableLengthBitFieldDescription;
+
+                if (bitField == null)
+                    throw new Exception("Variable-length bit field desciption must not be null.");
+
+                if (bitField.Type != VariableLengthType.String)
+                    throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
+
+                if (bitField.PaddingType != PaddingType.NullTerminate)
+                    throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
+
+                // see IV.B. Disk Format: Level 2B - Data Object Data Storage
+                using (var dataReader = new BinaryReader(new MemoryStream(data.ToArray())))
+                {
+                    while (dataReader.BaseStream.Position != data.Length)
+                    {
+                        var dataSize = dataReader.ReadUInt32(); // for what do we need this?
+                        var globalHeapId = new GlobalHeapId(dataReader, superblock);
+                        var globalHeapCollection = globalHeapId.Collection;
+                        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
+                        var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
+
+                        result.Add(value);
+                    }
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        {
+            return encoding switch
+            {
+                CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
+                CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
+                _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+            };
+        }
+
         public static string ReadFixedLengthString(BinaryReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = reader.ReadBytes(length);

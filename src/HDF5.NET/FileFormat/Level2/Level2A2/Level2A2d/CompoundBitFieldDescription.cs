@@ -19,7 +19,7 @@ namespace HDF5.NET
         {
             get
             {
-                return (ushort)(this.Data[0] + this.Data[1] << 8); 
+                return (ushort)(this.Data[0] + (this.Data[1] << 8)); 
             }
             set 
             {
