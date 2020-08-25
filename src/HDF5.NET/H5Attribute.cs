@@ -95,15 +95,16 @@ namespace HDF5.NET
                         var sourceIndexEnd = sourceIndex + fieldSize;
                         var targetIndex = fieldInfo.Offset.ToInt64();
                         var value = H5Utils.ReadString(property.MemberTypeMessage, sourceRawBytes[sourceIndex..sourceIndexEnd], _superblock);
-#error This is quick and dirty.
-                        var bytes = Encoding.UTF8.GetBytes(value[0]);
+#error This is quick and dirty. GCHandle is not released.
+                        var bytes = Encoding.UTF8.GetBytes(value[0]).Concat(new byte[] { 0 }).ToArray();
 
                         var a = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-                        var ptr = (byte*)a.AddrOfPinnedObject().ToPointer();
+                        var ptr = a.AddrOfPinnedObject().ToInt64();
+                        var ptrbytes = BitConverter.GetBytes(ptr);
 
-                        for (int j = 0; j < 8; j++)
+                        for (int j = 0; j < Marshal.SizeOf<IntPtr>(); j++)
                         {
-                            targetRawBytes[targetIndex + j] = ptr[j];
+                            targetRawBytes[targetIndex + j] = ptrbytes[j];
                         }
                     }
 #warning To be implemented.
@@ -133,7 +134,7 @@ namespace HDF5.NET
                 }
             }
 
-            throw new Exception();
+            return targetArray;
         }
 
         public string[] ReadString()
