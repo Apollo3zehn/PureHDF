@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace HDF5.NET
 {
@@ -62,8 +61,8 @@ namespace HDF5.NET
 
                 fieldInfoMap[name] = new FieldProperties()
                 {
-                    Offset = Marshal.OffsetOf(type, fieldInfo.Name),
-                    Type = fieldInfo.FieldType
+                    FieldInfo = fieldInfo,
+                    Offset = Marshal.OffsetOf(type, fieldInfo.Name)
                 };
             }
 
@@ -77,11 +76,14 @@ namespace HDF5.NET
 
             var targetArraySize = this.Message.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
             var targetArray = new T[targetArraySize];
-            var targetElementSize = (ulong)Marshal.SizeOf<T>();
+
+#warning Marshal.SizeOf returns size of unmanaged version of T. Might be a bug source.
+            var targetElementSize = Marshal.SizeOf<T>();
 
             for (int i = 0; i < targetArray.Length; i++)
             {
                 var targetRawBytes = new byte[targetElementSize];
+                var stringMap = new Dictionary<FieldProperties, string>();
 
                 foreach (var property in properties)
                 {
@@ -89,23 +91,14 @@ namespace HDF5.NET
                     var fieldSize = (int)property.MemberTypeMessage.Size;
 
                     // strings
-                    if (fieldInfo.Type == typeof(string))
+                    if (fieldInfo.FieldInfo.FieldType == typeof(string))
                     {
                         var sourceIndex = (int)(sourceOffset + property.MemberByteOffset);
                         var sourceIndexEnd = sourceIndex + fieldSize;
                         var targetIndex = fieldInfo.Offset.ToInt64();
                         var value = H5Utils.ReadString(property.MemberTypeMessage, sourceRawBytes[sourceIndex..sourceIndexEnd], _superblock);
-#error This is quick and dirty. GCHandle is not released.
-                        var bytes = Encoding.UTF8.GetBytes(value[0]).Concat(new byte[] { 0 }).ToArray();
-
-                        var a = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-                        var ptr = a.AddrOfPinnedObject().ToInt64();
-                        var ptrbytes = BitConverter.GetBytes(ptr);
-
-                        for (int j = 0; j < Marshal.SizeOf<IntPtr>(); j++)
-                        {
-                            targetRawBytes[targetIndex + j] = ptrbytes[j];
-                        }
+                        
+                        stringMap[fieldInfo] = value[0];
                     }
 #warning To be implemented.
                     // to be implemented (nested nullable structs)
@@ -130,7 +123,19 @@ namespace HDF5.NET
 
                 fixed (byte* ptr = targetRawBytes.AsSpan())
                 {
+                    // http://benbowen.blog/post/fun_with_makeref/
+                    // https://stackoverflow.com/questions/4764573/why-is-typedreference-behind-the-scenes-its-so-fast-and-safe-almost-magical
+                    // Both do not work because struct layout seems to be different with __makeref:
+                    // 1. Overall struct size is smaller.
+                    // 2. Ref types seems to be sorted to the beginning of the array.
+                    // Therefore stick with Marshal.PtrToStructure<T>().
                     targetArray[i] = Marshal.PtrToStructure<T>(new IntPtr(ptr));
+
+                    foreach (var entry in stringMap)
+                    {
+                        var reference = __makeref(targetArray[i]);
+                        entry.Key.FieldInfo.SetValueDirect(reference, entry.Value);
+                    }
                 }
             }
 
