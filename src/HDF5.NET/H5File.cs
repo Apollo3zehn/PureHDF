@@ -31,18 +31,23 @@ namespace HDF5.NET
                 0 => new Superblock01(this.Reader, version),
                 1 => new Superblock01(this.Reader, version),
                 2 => new Superblock23(this.Reader, version),
-                4 => new Superblock23(this.Reader, version),
+                3 => new Superblock23(this.Reader, version),
                 _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
             };
 
             if (this.Superblock.GetType() == typeof(Superblock01))
             {
-                var objectHeader = ((Superblock01)this.Superblock).RootGroupSymbolTableEntry.ObjectHeader;
-                this.Root = new H5Group("/", objectHeader, this.Superblock);
+                var superblock = this.Superblock as Superblock01;
+                var objectHeader = superblock.RootGroupSymbolTableEntry.ObjectHeader;
+                var rootNamedObject = new NamedObject("/", objectHeader);
+                this.Root = new H5Group(rootNamedObject, this.Superblock);
             }
             else
             {
-                throw new NotSupportedException($"The superblock version '{version}' is not supported.");
+                var superblock = this.Superblock as Superblock23;
+                var objectHeader = superblock.RootGroupObjectHeader;
+                var rootNamedObject = new NamedObject("/", objectHeader);
+                this.Root = new H5Group(rootNamedObject, this.Superblock);
             }
         }
 
@@ -68,6 +73,7 @@ namespace HDF5.NET
         public void Dispose()
         {
             GlobalHeapCache.Clear(this.Superblock);
+            this.Reader.Dispose();
         }
 
         private void ValidateSignature(byte[] actual, byte[] expected)

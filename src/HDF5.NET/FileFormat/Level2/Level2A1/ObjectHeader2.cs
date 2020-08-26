@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader2(BinaryReader reader, byte version) : base(reader)
+        public ObjectHeader2(BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
             this.Version = version;
@@ -39,16 +39,13 @@ namespace HDF5.NET
             }
 
             // size of chunk 0
-            var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0xFC));
+            var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0x03));
             this.SizeOfChunk0 = this.ReadUlong(chunkFieldSize);
 
             // header messages
-#warning read messages and look for ObjectHeaderContinuationMessages (like in "ObjectHeader1")
-            //while (remainingBytes > 0)
-            //{
-            //    var message = new HeaderMessage(reader, superblock, 1);
-            //    this.HeaderMessages.Add(message);
-            //}
+            var withCreationOrder = this.Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
+            var messages = this.ReadHeaderMessages(reader, superblock, this.SizeOfChunk0, version: 2, withCreationOrder);
+            this.HeaderMessages.AddRange(messages);
 
 #warning read gap and checksum
         }

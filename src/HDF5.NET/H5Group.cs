@@ -14,7 +14,8 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal H5Group(string name, ObjectHeader header, Superblock superblock) : base(name, header, superblock)
+        internal H5Group(NamedObject namedObject, Superblock superblock) 
+            : base(namedObject, superblock)
         {
             //
         }
@@ -54,22 +55,13 @@ namespace HDF5.NET
                 if (current.ObjectType != H5ObjectType.Group)
                     return false;
 
-                var symbolTableHeaderMessages = current.GetHeaderMessages<SymbolTableMessage>();
+                var namedObjects = this.EnumerateNamedObjects(current);
+                var namedObject = namedObjects.FirstOrDefault(namedObjects => namedObjects.Name == pathSegment);
 
-                var namedEntries = symbolTableHeaderMessages.Count switch
-                {
-#warning Validate all three paths against spec
-                    0 => this.GetNamedEntriesFromLinkMessages(),
-                    1 => this.GetNamedEntriesFromSymbolTable(symbolTableHeaderMessages[0]),
-                    _ => throw new FormatException("The number of symbol table messages must be 0 or 1.")
-                };
-
-                var namedEntry = namedEntries.FirstOrDefault(namedEntries => namedEntries.Name == pathSegment);
-
-                if (namedEntry == default)
+                if (namedObject.Equals(default(NamedObject)))
                     return false;
 
-                current = namedEntry.Entry.ObjectHeader;
+                current = namedObject.Header;
             }
 
             return true;
@@ -84,93 +76,114 @@ namespace HDF5.NET
                 return (T)(object)this;
 
             var segments = path.Split('/');
-            var current = this.ObjectHeader;
+            var current = new NamedObject(this.Name, this.ObjectHeader);
 
             foreach (var pathSegment in segments.Skip(1))
             {
-                if (current.ObjectType != H5ObjectType.Group)
-                    throw new Exception($"Path segment '{pathSegment}'. is not a group.");
+                if (current.Header.ObjectType != H5ObjectType.Group)
+                    throw new Exception($"Path segment '{pathSegment}' is not a group.");
 
-                var symbolTableHeaderMessages = current.GetHeaderMessages<SymbolTableMessage>();
+                var namedObjects = this.EnumerateNamedObjects(current.Header);
+                var namedObject = namedObjects.FirstOrDefault(namedObjects => namedObjects.Name == pathSegment);
 
-                var namedEntries = symbolTableHeaderMessages.Count switch
-                {
-#warning Validate all three paths against spec
-                    0 => this.GetNamedEntriesFromLinkMessages(),
-                    1 => this.GetNamedEntriesFromSymbolTable(symbolTableHeaderMessages[0]),
-                    _ => throw new FormatException("The number of symbol table messages must be 0 or 1.")
-                };
-
-                var namedEntry = namedEntries.FirstOrDefault(namedEntries => namedEntries.Name == pathSegment);
-
-                if (namedEntry == default)
+                if (namedObject.Equals(default(NamedObject)))
                     throw new Exception($"Could not find part of the path '{path}'.");
 
-                current = namedEntry.Entry.ObjectHeader;
+                current = namedObject;
             }
 
-            return current.ObjectType switch
+            return current.Header.ObjectType switch
             {
-                H5ObjectType.Group              => (T)(object)new H5Group(segments.Last(), current, this.Superblock),
-                H5ObjectType.Dataset            => (T)(object)new H5Dataset(segments.Last(), current, this.Superblock),
-                H5ObjectType.CommitedDataType   => (T)(object)new H5CommitedDataType(segments.Last(), current, this.Superblock),
+                H5ObjectType.Group              => (T)(object)new H5Group(current, this.Superblock),
+                H5ObjectType.Dataset            => (T)(object)new H5Dataset(current, this.Superblock),
+                H5ObjectType.CommitedDataType   => (T)(object)new H5CommitedDataType(current, this.Superblock),
                 _                               => throw new Exception("Unknown object type.")
             };
         }
 
         private List<H5Link> GetChildren()
         {
-            var symbolTableHeaderMessages = this.ObjectHeader.GetHeaderMessages<SymbolTableMessage>();
-            
-            var namedEntries = symbolTableHeaderMessages.Count switch
-            {
-#warning Validate all three paths against spec
-                0 => this.GetNamedEntriesFromLinkMessages(),
-                1 => this.GetNamedEntriesFromSymbolTable(symbolTableHeaderMessages[0]),
-                _ => throw new FormatException("The number of symbol table messages must be 0 or 1.")
-            };
+            var namedObjects = this.EnumerateNamedObjects(this.ObjectHeader);
 
-            return namedEntries.Select(namedEntry =>
+            return namedObjects.Select(namedObject =>
             {
-                if (namedEntry.Entry.CacheType >= CacheType.SymbolicLink)
-                    throw new NotImplementedException("Symbolic links are not supported yet.");
-
-                return namedEntry.Entry.ObjectHeader.ObjectType switch
+                return namedObject.Header.ObjectType switch
                 {
-                    H5ObjectType.Group              => (H5Link)new H5Group(namedEntry.Name, namedEntry.Entry.ObjectHeader, this.Superblock),
-                    H5ObjectType.Dataset            => (H5Link)new H5Dataset(namedEntry.Name, namedEntry.Entry.ObjectHeader, this.Superblock),
-                    H5ObjectType.CommitedDataType   => (H5Link)new H5CommitedDataType(namedEntry.Name, namedEntry.Entry.ObjectHeader, this.Superblock),
+                    H5ObjectType.Group              => (H5Link)new H5Group(namedObject, this.Superblock),
+                    H5ObjectType.Dataset            => (H5Link)new H5Dataset(namedObject, this.Superblock),
+                    H5ObjectType.CommitedDataType   => (H5Link)new H5CommitedDataType(namedObject, this.Superblock),
                     _                               => throw new Exception("Unknown object type.")
                 };
             }).ToList();
         }
 
-        private List<(string Name, SymbolTableEntry Entry)> GetNamedEntriesFromLinkMessages()
-        {
-            throw new NotImplementedException();
-        }
-
-        private List<(string Name, SymbolTableEntry Entry)> GetNamedEntriesFromSymbolTable(SymbolTableMessage message)
-        {
-            var btree = message.BTree1;
-            var heap = message.LocalHeap;
-
-            var entries = btree.GetSymbolTableNodes()
-                .SelectMany(node => this.GetNamedEntries(heap, node.GroupEntries))
-                .ToList();
-
-            return entries;
-        }
-
-        public List<(string Name, SymbolTableEntry Entry)> GetNamedEntries(LocalHeap heap, List<SymbolTableEntry> entries)
+        private IEnumerable<NamedObject> CreateNamedObjects(LocalHeap heap, List<SymbolTableEntry> entries)
         {
             return entries
                 .Select(entry =>
                 {
                     var name = heap.GetObjectName(entry.LinkNameOffset);
-                    return (name, entry);
-                })
-                .ToList();
+                    return new NamedObject(name, entry.ObjectHeader);
+                });
+        }
+
+        private IEnumerable<NamedObject> EnumerateNamedObjects(ObjectHeader header)
+        {
+#warning new NamedObject(..., objectHeader) loads the object header. Better use Lazy<T>?
+
+            // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
+            // section "Group implementations in HDF5"
+            var namedObjects = (IEnumerable<NamedObject>)new List<NamedObject>();
+
+            // original approach
+            var symbolTableHeaderMessages = header
+                .GetMessages<SymbolTableMessage>();
+
+            if (symbolTableHeaderMessages.Any())
+            {
+                namedObjects = namedObjects.Concat(symbolTableHeaderMessages
+                    .SelectMany(message =>
+                {
+                    return message.BTree1
+                        .GetSymbolTableNodes()
+                        .SelectMany(node => this.CreateNamedObjects(message.LocalHeap, node.GroupEntries));
+                }));
+            }
+
+            // new (1.8) indexed format (in combination with Group Info Message)
+            var linkInfoMessages = header
+                .GetMessages<LinkInfoMessage>();
+
+            if (linkInfoMessages.Any())
+            {
+                //namedObjects = namedObjects.AddRange(linkInfoMessages
+                //    .Where(message => !_superblock.IsUndefinedAddress(message.FractalHeapAddress))
+                //    .Select(message =>
+                //{
+                //    throw new NotImplementedException();
+                //    //return message.BTree1.GetSymbolTableNodes()
+                //    //    .SelectMany(node => this.CreateNamedObjects(message.LocalHeap, node.GroupEntries));
+                //}));
+            }
+
+            // new (1.8) compact format
+            // IV.A.2.g. The Link Message 
+            // A group is storing its links compactly when the fractal heap address in the Link Info Message is set to the “undefined address” value.
+            var linkMessages = header
+                .GetMessages<LinkMessage>();
+
+            if (linkMessages.Any())
+            {
+                namedObjects = namedObjects.Concat(linkMessages
+                    .Where(message => message.LinkType == LinkType.Hard)
+                    .Select(message =>
+                {
+                    var linkInfo = message.LinkInfo as HardLinkInfo;
+                    return new NamedObject(message.LinkName, linkInfo.ObjectHeader);
+                }));
+            }
+
+            return namedObjects;
         }
 
         #endregion

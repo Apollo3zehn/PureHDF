@@ -95,17 +95,20 @@ namespace HDF5.NET.Tests
         [InlineData("/G1/G?!", false)]
         public void CanCheckExists(string path, bool expected)
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile();
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var actual = root.LinkExists(path);
+                var actual = root.LinkExists(path);
 
-            // Assert
-            Assert.Equal(expected, actual);
+                // Assert
+                Assert.Equal(expected, actual);
+            });
         }
 
         [Theory]
@@ -114,17 +117,20 @@ namespace HDF5.NET.Tests
         [InlineData("/G1/G1.1", "G1.1")]
         public void CanOpenGroup(string path, string expected)
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile();
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var group = root.Get<H5Group>(path);
+                var group = root.Get<H5Group>(path);
 
-            // Assert
-            Assert.Equal(expected, group.Name);
+                // Assert
+                Assert.Equal(expected, group.Name);
+            });
         }
 
         [Theory]
@@ -133,17 +139,20 @@ namespace HDF5.NET.Tests
         [InlineData("/G1/G1.1/D1.1", "D1.1")]
         public void CanOpenDataset(string path, string expected)
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile();
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var group = root.Get<H5Dataset>(path);
+                var group = root.Get<H5Dataset>(path);
 
-            // Assert
-            Assert.Equal(expected, group.Name);
+                // Assert
+                Assert.Equal(expected, group.Name);
+            });
         }
 
         public static IList<object[]> CanReadNumericalAttributeTestData => new List<object[]>
@@ -164,52 +173,81 @@ namespace HDF5.NET.Tests
         [MemberData(nameof(HDF5Tests.CanReadNumericalAttributeTestData))]
         public void CanReadNumericalAttribute<T>(string name, T[] expected) where T : unmanaged
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile(withAttributes: true);
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var attribute = root.Attributes.First(attribute => attribute.Name == name);
-            var actual = attribute.Read<T>().ToArray();
+                var attribute = root.Attributes.First(attribute => attribute.Name == name);
+                var actual = attribute.Read<T>().ToArray();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(expected));
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
         }
 
         [Fact]
         public void CanReadNonNullableStructAttribute()
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile(withAttributes: true);
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var attribute = root.Attributes.First(attribute => attribute.Name == "A14");
-            var actual = attribute.Read<TestStructL1>().ToArray();
+                var attribute = root.Attributes.First(attribute => attribute.Name == "A14");
+                var actual = attribute.Read<TestStructL1>().ToArray();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.NonNullableTestStructData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.NonNullableTestStructData));
+            });
         }
 
         [Fact]
         public void CanReadNullableStructAttribute()
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile(withAttributes: true);
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var attribute = root.Attributes.First(attribute => attribute.Name == "A15");
-            var actual = attribute.ReadCompound<TestStructString>().ToArray();
+                var attribute = root.Attributes.First(attribute => attribute.Name == "A15");
+                var actual = attribute.ReadCompound<TestStructString>().ToArray();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.StringTestStructData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.StringTestStructData));
+            });
+        }
+
+        [Fact]
+        public void ThrowsForNestedNullableStructAttribute()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
+
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
+
+                var attribute = root.Attributes.First(attribute => attribute.Name == "A15");
+                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>().ToArray());
+
+                // Assert
+                Assert.Contains("Nested nullable fields are not supported.", exception.Message);
+            });
         }
 
         // Fixed-length string attribute (UTF8) is not supported because 
@@ -220,18 +258,21 @@ namespace HDF5.NET.Tests
         [InlineData("A13", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
         public void CanReadStringAttribute(string name, string[] expected)
         {
-            // Arrange
-            var filePath = TestUtils.PrepareTestFile(withAttributes: true);
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
 
-            // Act
-            using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var root = h5file.Root;
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var root = h5file.Root;
 
-            var attribute = root.Attributes.First(attribute => attribute.Name == name);
-            var actual = attribute.ReadString();
+                var attribute = root.Attributes.First(attribute => attribute.Name == name);
+                var actual = attribute.ReadString();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(expected));
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
         }
     }
 }

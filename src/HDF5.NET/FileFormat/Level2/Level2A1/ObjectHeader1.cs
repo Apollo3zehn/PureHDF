@@ -37,7 +37,7 @@ namespace HDF5.NET
             if (this.ObjectHeaderSize > 0)
                 reader.ReadBytes(4);
 
-            var messages = this.ReadHeaderMessages(reader, superblock, this.ObjectHeaderSize);
+            var messages = this.ReadHeaderMessages(reader, superblock, this.ObjectHeaderSize, 1);
             this.HeaderMessages.AddRange(messages);
         }
 
@@ -63,54 +63,6 @@ namespace HDF5.NET
         public ushort HeaderMessagesCount { get; set; }
         public uint ObjectReferenceCount { get; set; }
         public uint ObjectHeaderSize { get; set; }
-
-        #endregion
-
-        #region Methods
-
-        private List<HeaderMessage> ReadHeaderMessages(BinaryReader reader, Superblock superblock, ulong objectHeaderSize)
-        {
-            var headerMessages = new List<HeaderMessage>();
-            var continuationMessages = new List<ObjectHeaderContinuationMessage>();
-            var remainingBytes = objectHeaderSize;
-
-            while (remainingBytes > 0)
-            {
-                var message = new HeaderMessage(reader, superblock, 1);
-                remainingBytes -= (uint)message.DataSize + 2 + 2 + 1 + 3;
-
-                if (message.Type == HeaderMessageType.ObjectHeaderContinuation)
-                {
-                    continuationMessages.Add((ObjectHeaderContinuationMessage)message.Data);
-                }
-                else
-                {
-                    headerMessages.Add(message);
-
-                    if (message.Type == HeaderMessageType.SymbolTable)
-                        this.ObjectType = H5ObjectType.Group;
-
-                    else if (message.Type == HeaderMessageType.DataLayout)
-                        this.ObjectType = H5ObjectType.Dataset;
-                }
-            }
-
-            foreach (var continuationMessage in continuationMessages)
-            {
-                this.Reader.BaseStream.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
-                var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length);
-                headerMessages.AddRange(messages);
-            }
-
-            var condition = this.ObjectType == H5ObjectType.Undefined
-                            && headerMessages.Count == 1
-                            && headerMessages[0].Type == HeaderMessageType.DataType;
-
-            if (condition)
-                this.ObjectType = H5ObjectType.CommitedDataType;
-
-            return headerMessages;
-        }
 
         #endregion
     }

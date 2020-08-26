@@ -4,8 +4,8 @@
     {
         #region Constructors
 
-        internal H5Dataset(string name, ObjectHeader header, Superblock superblock) 
-            : base(name, header, superblock)
+        internal H5Dataset(NamedObject namedObject, Superblock superblock) 
+            : base(namedObject, superblock)
         {
             foreach (var message in this.ObjectHeader.HeaderMessages)
             {

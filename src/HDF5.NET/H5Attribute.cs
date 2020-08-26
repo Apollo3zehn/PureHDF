@@ -59,6 +59,12 @@ namespace HDF5.NET
             {
                 var name = getName(fieldInfo);
 
+                var isNotSupported = H5Utils.IsReferenceOrContainsReferences(fieldInfo.FieldType)
+                                  && fieldInfo.FieldType != typeof(string);
+
+                if (isNotSupported)
+                    throw new Exception("Nested nullable fields are not supported.");
+
                 fieldInfoMap[name] = new FieldProperties()
                 {
                     FieldInfo = fieldInfo,
@@ -76,8 +82,6 @@ namespace HDF5.NET
 
             var targetArraySize = this.Message.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
             var targetArray = new T[targetArraySize];
-
-#warning Marshal.SizeOf returns size of unmanaged version of T. Might be a bug source.
             var targetElementSize = Marshal.SizeOf<T>();
 
             for (int i = 0; i < targetArray.Length; i++)
@@ -100,12 +104,6 @@ namespace HDF5.NET
                         
                         stringMap[fieldInfo] = value[0];
                     }
-#warning To be implemented.
-                    // to be implemented (nested nullable structs)
-                    else if (false)
-                    {
-
-                    }
                     // other value types
                     else
                     {
@@ -125,10 +123,8 @@ namespace HDF5.NET
                 {
                     // http://benbowen.blog/post/fun_with_makeref/
                     // https://stackoverflow.com/questions/4764573/why-is-typedreference-behind-the-scenes-its-so-fast-and-safe-almost-magical
-                    // Both do not work because struct layout seems to be different with __makeref:
-                    // 1. Overall struct size is smaller.
-                    // 2. Ref types seems to be sorted to the beginning of the array.
-                    // Therefore stick with Marshal.PtrToStructure<T>().
+                    // Both do not work because struct layout is different with __makeref:
+                    // https://stackoverflow.com/questions/1918037/layout-of-net-value-type-in-memory
                     targetArray[i] = Marshal.PtrToStructure<T>(new IntPtr(ptr));
 
                     foreach (var entry in stringMap)

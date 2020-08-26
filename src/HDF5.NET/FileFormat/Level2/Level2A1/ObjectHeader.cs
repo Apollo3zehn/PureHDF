@@ -27,14 +27,14 @@ namespace HDF5.NET
 
         #region Methods
 
-        public T GetHeaderMessage<T>() where T : Message
+        public T GetMessage<T>() where T : Message
         {
             return (T)this.HeaderMessages
                 .First(message => message.Data.GetType() == typeof(T))
                 .Data;
         }
 
-        public List<T> GetHeaderMessages<T>() where T : Message
+        public List<T> GetMessages<T>() where T : Message
         {
             return this.HeaderMessages
                 .Where(message => message.Data.GetType() == typeof(T))
@@ -59,7 +59,7 @@ namespace HDF5.NET
             return version switch
             {
                 1 => new ObjectHeader1(reader, superblock, version),
-                2 => new ObjectHeader2(reader, version),
+                2 => new ObjectHeader2(reader, superblock, version),
                 _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
             };
         }
@@ -84,6 +84,67 @@ namespace HDF5.NET
                     logger.LogInformation($"ObjectHeader HeaderMessage Type = {message.Type} is not supported yet. Stopping.");
                 }
             }
+        }
+
+        protected List<HeaderMessage> ReadHeaderMessages(BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder = false)
+        {
+            var headerMessages = new List<HeaderMessage>();
+            var continuationMessages = new List<ObjectHeaderContinuationMessage>();
+            var remainingBytes = objectHeaderSize;
+
+            while (remainingBytes > 0)
+            {
+                var message = new HeaderMessage(reader, superblock, version, withCreationOrder);
+
+                remainingBytes -= message.DataSize + version switch
+                {
+                    1 => 8UL,
+                    2 => 4UL + (withCreationOrder ? 2UL : 0UL),
+                    _ => throw new Exception("The object header version number must be in the range of 1..2.")
+                };
+
+                if (message.Type == HeaderMessageType.ObjectHeaderContinuation)
+                {
+                    continuationMessages.Add((ObjectHeaderContinuationMessage)message.Data);
+                }
+                else
+                {
+                    headerMessages.Add(message);
+
+                    switch (message.Type)
+                    {
+                        case HeaderMessageType.LinkInfo:
+                        case HeaderMessageType.Link:
+                        case HeaderMessageType.GroupInfo:
+                        case HeaderMessageType.SymbolTable:
+                            this.ObjectType = H5ObjectType.Group;
+                            break;
+
+                        case HeaderMessageType.DataLayout:
+                            this.ObjectType = H5ObjectType.Dataset;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            foreach (var continuationMessage in continuationMessages)
+            {
+                this.Reader.BaseStream.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+                var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length, version);
+                headerMessages.AddRange(messages);
+            }
+
+            var condition = this.ObjectType == H5ObjectType.Undefined
+                            && headerMessages.Count == 1
+                            && headerMessages[0].Type == HeaderMessageType.DataType;
+
+            if (condition)
+                this.ObjectType = H5ObjectType.CommitedDataType;
+
+            return headerMessages;
         }
 
         #endregion

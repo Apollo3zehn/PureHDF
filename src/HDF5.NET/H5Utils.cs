@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace HDF5.NET
@@ -146,6 +148,16 @@ namespace HDF5.NET
             }
 
             return result;
+        }
+
+        public static bool IsReferenceOrContainsReferences(Type type)
+        {
+            var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
+            var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
+            var method = typeof(RuntimeHelpers).GetMethod(name, flags);
+            var generic = method.MakeGenericMethod(type);
+
+            return (bool)generic.Invoke(null, null);
         }
     }
 }

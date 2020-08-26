@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        internal H5CommitedDataType(string name, ObjectHeader header, Superblock superblock) 
-            : base(name, header, superblock)
+        internal H5CommitedDataType(NamedObject namedObject, Superblock superblock) 
+            : base(namedObject, superblock)
         {
-            this.DataType = header.GetHeaderMessage<DatatypeMessage>();
+            this.DataType = namedObject.Header.GetMessage<DatatypeMessage>();
         }
 
         #endregion

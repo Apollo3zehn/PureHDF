@@ -2,7 +2,7 @@
 
 namespace HDF5.NET.Tests
 {
-    [StructLayout(LayoutKind.Explicit, Size = 3)]
+    [StructLayout(LayoutKind.Explicit, Size = 5)]
     public struct TestStructL2
     {
         [FieldOffset(0)]
@@ -10,5 +10,8 @@ namespace HDF5.NET.Tests
 
         [FieldOffset(1)]
         public ushort UShortValue;
+
+        [FieldOffset(3)]
+        public TestEnum EnumValue;
     }
 }

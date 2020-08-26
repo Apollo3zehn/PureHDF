@@ -15,6 +15,9 @@ namespace HDF5.NET
 
         public LinkInfoMessage(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            // version
+            this.Version = reader.ReadByte();
+
             // flags
             this.Flags = (CreationOrderFlags)reader.ReadByte();
 

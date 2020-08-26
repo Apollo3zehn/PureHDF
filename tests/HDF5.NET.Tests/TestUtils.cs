@@ -18,7 +18,8 @@ namespace HDF5.NET.Tests
             L2Struct1 = new TestStructL2()
             {
                 ByteValue = 99,
-                UShortValue = 65535
+                UShortValue = 65535,
+                EnumValue = TestEnum.b,
             },
             SByteValue = 5,
             ShortValue = -6,
@@ -27,7 +28,7 @@ namespace HDF5.NET.Tests
             L2Struct2 = new TestStructL2()
             {
                 ByteValue = 9,
-                UShortValue = 10
+                EnumValue = TestEnum.b,
             }
         };
 
@@ -40,7 +41,8 @@ namespace HDF5.NET.Tests
             L2Struct1 = new TestStructL2()
             {
                 ByteValue = 99,
-                UShortValue = 65535
+                UShortValue = 65535,
+                EnumValue = TestEnum.a,
             },
             SByteValue = -10,
             ShortValue = 12,
@@ -49,7 +51,8 @@ namespace HDF5.NET.Tests
             L2Struct2 = new TestStructL2()
             {
                 ByteValue = 18,
-                UShortValue = 20
+                UShortValue = 20,
+                EnumValue = TestEnum.b,
             }
         };
 
@@ -59,7 +62,13 @@ namespace HDF5.NET.Tests
             StringValue1 = "Hello",
             StringValue2 = "World",
             ByteValue = 123,
-            ShortValue = -15521
+            ShortValue = -15521,
+            L2Struct = new TestStructL2()
+            {
+                ByteValue = 15,
+                UShortValue = 20,
+                EnumValue = TestEnum.a,
+            }
         };
 
         private static TestStructString _string_b = new TestStructString()
@@ -68,7 +77,13 @@ namespace HDF5.NET.Tests
             StringValue1 = "Hello!",
             StringValue2 = "World!",
             ByteValue = 0,
-            ShortValue = 15521
+            ShortValue = 15521,
+            L2Struct = new TestStructL2()
+            {
+                ByteValue = 18,
+                UShortValue = 21,
+                EnumValue = TestEnum.b,
+            }
         };
 
         static TestUtils()
@@ -77,17 +92,34 @@ namespace HDF5.NET.Tests
             TestUtils.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
         }
 
+        public static void RunForAllVersions(Action<H5F.libver_t> action)
+        {
+            var versions = new H5F.libver_t[] 
+            {
+                //H5F.libver_t.EARLIEST,
+                H5F.libver_t.V18,
+                //H5F.libver_t.V110
+            };
+
+            foreach (var version in versions)
+            {
+                action(version);
+            }
+        }
+
         public static TestStructL1[] NonNullableTestStructData { get; }
 
         public static TestStructString[] StringTestStructData { get; }
 
-        public static unsafe string PrepareTestFile(bool withAttributes = false)
+        public static unsafe string PrepareTestFile(H5F.libver_t version, bool withAttributes = false)
         {
             var filePath = Path.GetTempFileName();
             long res;
 
             // file
-            var fileId = H5F.create(filePath, H5F.ACC_TRUNC);
+            var faplId = H5P.create(H5P.FILE_ACCESS);
+            res = H5P.set_libver_bounds(faplId, version, version);
+            var fileId = H5F.create(filePath, H5F.ACC_TRUNC, 0, faplId);
 
             // groups
             var groupId1 = H5G.create(fileId, "G1");
@@ -96,18 +128,24 @@ namespace HDF5.NET.Tests
             // datasets
             var dataspaceId1 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
             var datasetId1 = H5D.create(fileId, "D", H5T.NATIVE_INT8, dataspaceId1);
+            var data1 = new byte[] { 1 };
 
-            var dataspaceId2 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
-            var datasetId2 = H5D.create(groupId1, "D1", H5T.NATIVE_INT8, dataspaceId1);
-
-            var dataspaceId3 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
-            var datasetId3 = H5D.create(groupId1_1, "D1.1", H5T.NATIVE_INT8, dataspaceId1);
+            fixed (void* ptr = data1)
+            {
+                res = H5D.write(datasetId1, H5T.NATIVE_INT8, dataspaceId1, dataspaceId1, 0, new IntPtr(ptr));
+            }
 
             res = H5D.close(datasetId1);
             res = H5S.close(dataspaceId1);
 
+            var dataspaceId2 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId2 = H5D.create(groupId1, "D1", H5T.NATIVE_INT8, dataspaceId2);
+
             res = H5D.close(datasetId2);
             res = H5S.close(dataspaceId2);
+
+            var dataspaceId3 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId3 = H5D.create(groupId1_1, "D1.1", H5T.NATIVE_INT8, dataspaceId3);
 
             res = H5D.close(datasetId3);
             res = H5S.close(dataspaceId3);
@@ -329,7 +367,6 @@ namespace HDF5.NET.Tests
             //
             res = H5G.close(groupId1_1);
             res = H5G.close(groupId1);
-
             res = H5F.close(fileId);
 
             return filePath;
@@ -342,35 +379,42 @@ namespace HDF5.NET.Tests
             if (elementType == typeof(bool))
                 return H5T.NATIVE_UINT8;
 
-            else if (elementType == typeof(Byte))
+            else if (elementType == typeof(byte))
                 return H5T.NATIVE_UINT8;
 
-            else if (elementType == typeof(SByte))
+            else if (elementType == typeof(sbyte))
                 return H5T.NATIVE_INT8;
 
-            else if (elementType == typeof(UInt16))
+            else if (elementType == typeof(ushort))
                 return H5T.NATIVE_UINT16;
 
-            else if (elementType == typeof(Int16))
+            else if (elementType == typeof(short))
                 return H5T.NATIVE_INT16;
 
-            else if (elementType == typeof(UInt32))
+            else if (elementType == typeof(uint))
                 return H5T.NATIVE_UINT32;
 
-            else if (elementType == typeof(Int32))
+            else if (elementType == typeof(int))
                 return H5T.NATIVE_INT32;
 
-            else if (elementType == typeof(UInt64))
+            else if (elementType == typeof(ulong))
                 return H5T.NATIVE_UINT64;
 
-            else if (elementType == typeof(Int64))
+            else if (elementType == typeof(long))
                 return H5T.NATIVE_INT64;
 
-            else if (elementType == typeof(Single))
+            else if (elementType == typeof(float))
                 return H5T.NATIVE_FLOAT;
 
-            else if (elementType == typeof(Double))
+            else if (elementType == typeof(double))
                 return H5T.NATIVE_DOUBLE;
+
+            // issues: https://en.wikipedia.org/wiki/Long_double
+            //else if (elementType == typeof(decimal))
+            //    return H5T.NATIVE_LDOUBLE;
+
+            else if (elementType.IsEnum)
+                return TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(elementType));
 
             else if (elementType == typeof(string) || elementType == typeof(IntPtr))
             {
@@ -381,7 +425,7 @@ namespace HDF5.NET.Tests
 
                 return typeId;
             }
-            else if (elementType.IsValueType && !elementType.IsPrimitive && !elementType.IsEnum)
+            else if (elementType.IsValueType && !elementType.IsPrimitive)
             {
                 var typeId = H5T.create(H5T.class_t.COMPOUND, new IntPtr(Marshal.SizeOf(elementType)));
 

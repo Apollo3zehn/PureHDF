@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 
 namespace HDF5.NET
 {
@@ -15,10 +17,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal H5Link(string name, ObjectHeader objectHeader, Superblock superblock)
+        internal H5Link(NamedObject namedObject, Superblock superblock)
         {
-            this.Name = name;
-            this.ObjectHeader = objectHeader;
+            this.Name = namedObject.Name;
+            this.ObjectHeader = namedObject.Header;
             this.Superblock = superblock;
         }
 
@@ -49,10 +51,24 @@ namespace HDF5.NET
 
         private List<H5Attribute> GetAttributes()
         {
-            return this.ObjectHeader
-                .GetHeaderMessages<AttributeMessage>()
-                .Select(message => new H5Attribute(message, this.Superblock))
-                .ToList();
+            var attributeMessages = this.ObjectHeader.GetMessages<AttributeMessage>();
+            var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+
+            var attributes = this.ObjectHeader
+                .GetMessages<AttributeMessage>()
+                .Select(message => new H5Attribute(message, this.Superblock));
+
+            var moreAttributes = attributeInfoMessages
+                    .SelectMany(message => this.GetAttributesFromAttributeInfo(message));
+
+            attributes = attributes.Concat(moreAttributes);
+            return attributes.ToList();
+        }
+
+        private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage message)
+        {
+#error Implement this.
+            throw new NotImplementedException();
         }
 
         #endregion
