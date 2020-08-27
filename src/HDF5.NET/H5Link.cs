@@ -70,6 +70,13 @@ namespace HDF5.NET
         {
             var reader = this.Superblock.Reader;
             reader.BaseStream.Seek((long)message.FractalHeapAddress, SeekOrigin.Begin);
+
+            // b-tree v2
+            reader.BaseStream.Seek((long)message.BTree2NameIndexAddress, SeekOrigin.Begin);
+            var btree2 = new BTree2Header(reader, this.Superblock);
+            var rootNode = btree2.RootNode;
+
+            // fractal heap
             var header = new FractalHeapHeader(reader, this.Superblock);
 
             if (!this.Superblock.IsUndefinedAddress(header.RootBlockAddress))
@@ -90,20 +97,19 @@ namespace HDF5.NET
                         reader.BaseStream.Seek((long)directBlockInfo.Address, SeekOrigin.Begin);
                         var directBlock = new FractalHeapDirectBlock(header, reader, this.Superblock);
 
-                        using var localReader = new BinaryReader(new MemoryStream(directBlock.ObjectData));
 #warning Check this.
-#error: superblock.ReadLength() pass always a reader!!
-                        var remainingBytes = (long)directBlock.ObjectData.Length;
+//#error: superblock.ReadLength() pass always a reader!!
+                        var remainingBytes = 1002;//(long)directBlock.ObjectData.Length;
                         var messages = new List<AttributeMessage>();
 
                         while (remainingBytes > 0)
                         {
-                            var before = localReader.BaseStream.Position;
-                            var attributeMessage = new AttributeMessage(localReader, this.Superblock);
-                            var after = localReader.BaseStream.Position;
+                            //var before = localReader.BaseStream.Position;
+                            var attributeMessage = new AttributeMessage(reader, this.Superblock);
+                            //var after = localReader.BaseStream.Position;
                             messages.Add(attributeMessage);
 
-                            remainingBytes -= (after - before);
+                            //remainingBytes -= (after - before);
                         }
 
                         var a = 1;

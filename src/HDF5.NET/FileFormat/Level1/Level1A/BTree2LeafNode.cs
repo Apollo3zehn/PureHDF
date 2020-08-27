@@ -32,6 +32,8 @@ namespace HDF5.NET
                 throw new FormatException($"The BTree2 leaf node type ('{this.Type}') does not match the type defined in the header ('{type}').");
 
             // records
+#error parse records
+
 #warning why is recordSize necessary?
             this.Records = new List<BTree2Record>(rootNodeRecordCount);
 

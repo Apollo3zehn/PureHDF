@@ -95,12 +95,17 @@ namespace HDF5.NET
             get
             {
                 if (_superblock.IsUndefinedAddress(this.RootNodeAddress))
+                {
                     return null;
+                }
                 else
-                    return (this.Depth == 1 
-                        ? (BTree2Node)new BTree2LeafNode(this.Reader, this.Type, this.RecordSize, this.RootNodeRecordCount) 
+                {
+                    this.Reader.BaseStream.Seek((long)this.RootNodeAddress, SeekOrigin.Begin);
+
+                    return (this.Depth == 0
+                        ? (BTree2Node)new BTree2LeafNode(this.Reader, this.Type, this.RecordSize, this.RootNodeRecordCount)
                         : new BTree2InternalNode(this.Reader, this.Type, this.RecordSize, this.RootNodeRecordCount));
-#warning is 'depth==1' correct?
+                }
             }
         }
 
