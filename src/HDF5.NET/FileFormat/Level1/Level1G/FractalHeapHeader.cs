@@ -108,6 +108,9 @@ namespace HDF5.NET
 
             // checksum
             this.Checksum = reader.ReadUInt32();
+
+            // cache some values
+            this.CalculateBlockSizeTables();
         }
 
         #endregion
@@ -163,6 +166,45 @@ namespace HDF5.NET
         public uint IOFilterMask { get; set; }
         public FilterPipelineMessage? IOFilterInfo { get; set; }
         public uint Checksum { get; set; }
+
+        public ulong[] RowBlockSizes { get; private set; }
+        public ulong[] RowBlockOffsets { get; private set; }
+
+        public ulong MaxDirectRows { get; private set; }
+        public ulong StartingBits { get; private set; }
+
+        #endregion
+
+        #region Methods
+
+        private void CalculateBlockSizeTables()
+        {
+            // from H5HFdtable.c
+            this.StartingBits = (ulong)Math.Log(this.StartingBlockSize, 2);
+            var firstRowBits = (ulong)(this.StartingBits + Math.Log(this.TableWidth, 2));
+
+            var maxDirectBits = (ulong)Math.Log(this.MaximumDirectBlockSize, 2);
+            this.MaxDirectRows = maxDirectBits - this.StartingBits + 2;
+
+            var maxRootRows = this.MaximumHeapSize - firstRowBits;
+
+            this.RowBlockSizes = new ulong[maxRootRows];
+            this.RowBlockOffsets = new ulong[maxRootRows];
+
+            var tmpBlockSize = this.StartingBlockSize;
+            var accumulatedBlockOffset = this.StartingBlockSize * this.TableWidth;
+
+            this.RowBlockSizes[0] = tmpBlockSize;
+            this.RowBlockOffsets[0] = 0;
+
+            for (ulong i = 0; i < maxRootRows; i++)
+            {
+                this.RowBlockSizes[i] = tmpBlockSize;
+                this.RowBlockOffsets[i] = accumulatedBlockOffset;
+                tmpBlockSize *= 2;
+                accumulatedBlockOffset *= 2;
+            }
+        }
 
         #endregion
     }

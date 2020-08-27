@@ -8,7 +8,6 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning OK like this?
         private Superblock _superblock;
         private byte _version;
 
@@ -16,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FractalHeapDirectBlock(BinaryReader reader, Superblock superblock) : base(reader)
+        public FractalHeapDirectBlock(FractalHeapHeader header, BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -29,11 +28,9 @@ namespace HDF5.NET
 
             // heap header address
             this.HeapHeaderAddress = superblock.ReadOffset();
-            var header = this.HeapHeader;
 
             // block offset
-#warning correct?
-            var blockOffsetFieldSize = (header.MaximumHeapSize + 1) / 8;
+            var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
             this.BlockOffset = this.ReadUlong((ulong)blockOffsetFieldSize);
 
             // checksum
@@ -41,8 +38,11 @@ namespace HDF5.NET
                 this.Checksum = reader.ReadUInt32();
 
             // object data
-#warning Dunno how to calculate the length yet.
-            this.ObjectData = reader.ReadBytes(1);
+#error Check this.
+            var row = 0UL;
+
+            var size = (int)header.RowBlockSizes[row];           
+            this.ObjectData = reader.ReadBytes(size);
         }
 
         #endregion

@@ -43,7 +43,7 @@ namespace HDF5.NET
                 2 => this.Reader.ReadUInt16(),
                 4 => this.Reader.ReadUInt32(),
                 8 => this.Reader.ReadUInt64(),
-                _ => throw new NotSupportedException("The byte count is invalid.")
+                _ => this.ReadUlongArbirtary(byteCount, this.Reader)
             };
         }
 
@@ -55,8 +55,23 @@ namespace HDF5.NET
                 2 => reader.ReadUInt16(),
                 4 => reader.ReadUInt32(),
                 8 => reader.ReadUInt64(),
-                _ => throw new NotSupportedException("The byte count is invalid.")
+                _ => this.ReadUlongArbirtary(byteCount, reader)
             };
+        }
+
+        private ulong ReadUlongArbirtary(ulong byteCount, BinaryReader reader)
+        {
+            var result = 0UL;
+            var shift = 0;
+
+            for (ulong i = 0; i < byteCount; i++)
+            {
+                var value = reader.ReadByte();
+                result += (ulong)(value << shift);
+                shift += 8;
+            }
+
+            return result;
         }
 
         #endregion

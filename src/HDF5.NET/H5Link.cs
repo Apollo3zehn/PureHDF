@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -67,8 +68,50 @@ namespace HDF5.NET
 
         private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage message)
         {
-#error Implement this.
-            throw new NotImplementedException();
+            var reader = this.Superblock.Reader;
+            reader.BaseStream.Seek((long)message.FractalHeapAddress, SeekOrigin.Begin);
+            var header = new FractalHeapHeader(reader, this.Superblock);
+
+            if (!this.Superblock.IsUndefinedAddress(header.RootBlockAddress))
+            {
+                var isDirectBlock = header.RootIndirectBlockRowsCount == 0;
+                reader.BaseStream.Seek((long)header.RootBlockAddress, SeekOrigin.Begin);
+
+                if (isDirectBlock)
+                {
+                    var directBlock = new FractalHeapDirectBlock(header, reader, this.Superblock);
+                }
+                else
+                {
+                    var indirectBlock = new FractalHeapIndirectBlock(header, reader, this.Superblock);
+
+                    foreach (var directBlockInfo in indirectBlock.DirectBlockInfos)
+                    {
+                        reader.BaseStream.Seek((long)directBlockInfo.Address, SeekOrigin.Begin);
+                        var directBlock = new FractalHeapDirectBlock(header, reader, this.Superblock);
+
+                        using var localReader = new BinaryReader(new MemoryStream(directBlock.ObjectData));
+#warning Check this.
+#error: superblock.ReadLength() pass always a reader!!
+                        var remainingBytes = (long)directBlock.ObjectData.Length;
+                        var messages = new List<AttributeMessage>();
+
+                        while (remainingBytes > 0)
+                        {
+                            var before = localReader.BaseStream.Position;
+                            var attributeMessage = new AttributeMessage(localReader, this.Superblock);
+                            var after = localReader.BaseStream.Position;
+                            messages.Add(attributeMessage);
+
+                            remainingBytes -= (after - before);
+                        }
+
+                        var a = 1;
+                    }
+                }
+            }
+
+            throw new NotFiniteNumberException();
         }
 
         #endregion

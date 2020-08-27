@@ -17,7 +17,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FractalHeapIndirectBlock(BinaryReader reader, Superblock superblock) : base(reader)
+        public FractalHeapIndirectBlock(FractalHeapHeader header, BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -30,14 +30,39 @@ namespace HDF5.NET
 
             // heap header address
             this.HeapHeaderAddress = superblock.ReadOffset();
-            var header = this.HeapHeader;
 
             // block offset
-#warning correct?
-            var blockOffsetFieldSize = (header.MaximumHeapSize + 1) / 8;
+            var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
             this.BlockOffset = this.ReadUlong((ulong)blockOffsetFieldSize);
 
-#warning read missing data
+            // direct and indirect block info
+            var K = Math.Min(header.RootIndirectBlockRowsCount, header.MaxDirectRows) * header.TableWidth;
+            var N = 0UL;
+
+            if (header.RootIndirectBlockRowsCount > header.MaxDirectRows)
+            {
+                N = K - (header.MaxDirectRows * header.TableWidth);
+            }
+
+            this.DirectBlockInfos = new FractalHeapDirectBlockInfo[K];
+
+            for (ulong i = 0; i < K; i++)
+            {
+                this.DirectBlockInfos[i].Address = _superblock.ReadOffset();
+
+                if (header.IOFilterEncodedLength > 0)
+                {
+                    this.DirectBlockInfos[i].FilteredSize = _superblock.ReadLength();
+                    this.DirectBlockInfos[i].FilterMask = reader.ReadUInt32();
+                }
+            }
+
+            this.IndirectBlockAddresses = new ulong[N];
+
+            for (ulong i = 0; i < N; i++)
+            {
+                this.IndirectBlockAddresses[i] = _superblock.ReadOffset();
+            }
 
             // checksum
             this.Checksum = reader.ReadUInt32();
@@ -79,6 +104,9 @@ namespace HDF5.NET
                 return new FractalHeapHeader(this.Reader, _superblock);
             }
         }
+
+        public FractalHeapDirectBlockInfo[] DirectBlockInfos { get; private set; }
+        public ulong[] IndirectBlockAddresses { get; private set; }
 
         #endregion
     }
