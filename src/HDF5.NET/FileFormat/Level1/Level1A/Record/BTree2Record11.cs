@@ -7,20 +7,20 @@ namespace HDF5.NET
     {
         #region Constructors
 
-#warning How to get rank? Is rank correct name?
-        public BTree2Record11(BinaryReader reader, Superblock superblock, int rank) : base(reader)
+        public BTree2Record11(BinaryReader reader, Superblock superblock, ushort recordSize) : base(reader)
         {
             // address
             this.Address = superblock.ReadOffset();
 
             // chunk size
 #warning how to correctly parse this field?
-            this.ChunkSize = reader.ReadByte();
+            this.ChunkSize = reader.ReadUInt64();
 
             // filter mask
             this.FilterMask = reader.ReadUInt32();
 
             // scaled offsets
+            var rank = recordSize - (superblock.OffsetsSize + 8 + 4);
             this.ScaledOffsets = new List<ulong>(rank);
 
             for (int i = 0; i < rank; i++)

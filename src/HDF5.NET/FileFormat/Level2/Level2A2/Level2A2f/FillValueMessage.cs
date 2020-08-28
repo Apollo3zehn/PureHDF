@@ -46,10 +46,11 @@ namespace HDF5.NET
 
                 case 3:
 
-                    this.SpaceAllocationTime = (SpaceAllocationTime)((reader.ReadByte() & 0x03) >> 0);  // take only bits 0 and 1
-                    this.FillValueWriteTime = (FillValueWriteTime)((reader.ReadByte() & 0x0B) >> 2);    // take only bits 2 and 3
-                    this.IsFillValueUndefined = (reader.ReadByte() & (1 << 4)) > 0;                     // take only bit 4
-                    this.IsFillValueDefined = (reader.ReadByte() & (1 << 5)) > 0;                       // take only bit 5
+                    var flags = reader.ReadByte();
+                    this.SpaceAllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);  // take only bits 0 and 1
+                    this.FillValueWriteTime = (FillValueWriteTime)((flags & 0x0C) >> 2);    // take only bits 2 and 3
+                    this.IsFillValueUndefined = (flags & (1 << 4)) > 0;                     // take only bit 4
+                    this.IsFillValueDefined = (flags & (1 << 5)) > 0;                       // take only bit 5
 
 #warning make sure that both bool values cannot be true at the same time
 

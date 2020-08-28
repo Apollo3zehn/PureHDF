@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace HDF5.NET
@@ -9,6 +10,7 @@ namespace HDF5.NET
         #region Fields
 
         private byte _version;
+        private Superblock _superblock;
 
         #endregion
 
@@ -16,6 +18,8 @@ namespace HDF5.NET
 
         public FractalHeapHeader(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            _superblock = superblock;
+
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, FractalHeapHeader.Signature);
@@ -170,23 +174,133 @@ namespace HDF5.NET
         public ulong[] RowBlockSizes { get; private set; }
         public ulong[] RowBlockOffsets { get; private set; }
 
-        public ulong MaxDirectRows { get; private set; }
-        public ulong StartingBits { get; private set; }
+        public uint StartingBits { get; private set; }
+        public uint FirstRowBits { get; private set; }
+        public uint MaxDirectRows { get; private set; }
 
         #endregion
 
         #region Methods
 
+        // from H5HF__man_op_real
+        public ulong GetAddress(ManagedObjectsFractalHeapId heapId)
+        {
+            FractalHeapDirectBlock directBlock;
+            ulong directBlockSize;
+            ulong directBlockAddress;
+
+            /* Check for root direct block */
+            var isDirectBlock = this.RootIndirectBlockRowsCount == 0;
+
+            if (isDirectBlock)
+            {
+                /* Set direct block info */
+                directBlockSize = this.StartingBlockSize;
+                directBlockAddress = this.RootBlockAddress;
+            }
+            else
+            {
+                /* Look up indirect block containing direct block */
+                var (indirectBlock, entry) = this.Locate(heapId.Offset);
+
+                /* Set direct block info */
+                directBlockSize = this.RowBlockSizes[entry / this.TableWidth];
+                directBlockAddress = indirectBlock.DirectBlockInfos[entry].Address;
+            }
+
+            this.Reader.BaseStream.Seek((long)directBlockAddress, SeekOrigin.Begin);
+            directBlock = new FractalHeapDirectBlock(this, this.Reader, _superblock);
+
+            /* Compute offset of object within block */
+            if (heapId.Offset >= directBlock.BlockOffset + directBlockSize)
+                throw new Exception("Object start offset overruns end of direct block.");
+
+            var blockOffset = heapId.Offset - directBlock.BlockOffset;
+
+            /* Check for object's offset in the direct block prefix information */
+            if (blockOffset < directBlock.HeaderSize)
+                throw new Exception("Object located in prefix of direct block.");
+
+            /* Check for object's length overrunning the end of the direct block */
+            if (blockOffset + heapId.Length > directBlockSize)
+                throw new Exception("Object overruns end of direct block.");
+
+            return directBlockAddress + blockOffset;
+        }
+
+        // from H5HF__man_dblock_locate
+        private (FractalHeapIndirectBlock IndirectBlock, ulong entry) Locate(ulong offset)
+        {
+            var (row, column) = this.Lookup(offset);
+
+            this.Reader.BaseStream.Seek((long)this.RootBlockAddress, SeekOrigin.Begin);
+            var indirectBlock = new FractalHeapIndirectBlock(this, this.Reader, _superblock, this.RootIndirectBlockRowsCount);
+
+            uint entry;
+
+            while (row >= this.MaxDirectRows)
+            {
+                /* Compute # of rows in child indirect block */
+                var nrows = (uint)Math.Log(this.RowBlockSizes[row], 2) - this.FirstRowBits + 1;
+
+                if (nrows >= indirectBlock.RowCount)
+                    throw new Exception("Child fractal heap block must be smaller than its parent.");
+
+                /* Compute indirect block's entry */
+                entry = row * this.TableWidth + column;
+
+                /* Locate child indirect block */
+#warning It could be that indirect AND direct block infos should be in a single array.
+                var indirectBlockAddress = indirectBlock.IndirectBlockAddresses[entry];
+ 
+                /* Use new indirect block */
+                this.Reader.BaseStream.Seek((long)indirectBlockAddress, SeekOrigin.Begin);
+                indirectBlock = new FractalHeapIndirectBlock(this, this.Reader, _superblock, nrows);
+
+                /* Look up row & column in new indirect block for object */
+                (row, column) = this.Lookup(offset - indirectBlock.BlockOffset);
+
+                if (row >= indirectBlock.RowCount)
+                    throw new Exception("Child fractal heap block must be smaller than its parent.");
+            }
+
+            entry = row * this.TableWidth + column;
+
+            return (indirectBlock, entry);
+        }
+
+        // from H5HF_dtable_lookup
+        private (uint Row, uint Column) Lookup(ulong offset)
+        {
+            uint row;
+            uint column;
+
+            if (offset < this.StartingBlockSize * this.TableWidth)
+            {
+                row = 0;
+                column = (uint)(offset / this.StartingBlockSize);
+            }
+            else
+            {
+                var highBit = (uint)Math.Log(offset, 2);
+                ulong offMask = (ulong)(1 << (int)highBit);
+                row = highBit - this.FirstRowBits + 1;
+                column = (uint)((offset - offMask) / this.RowBlockSizes[row]);
+            }
+
+            return (row, column);
+        }
+
         private void CalculateBlockSizeTables()
         {
             // from H5HFdtable.c
-            this.StartingBits = (ulong)Math.Log(this.StartingBlockSize, 2);
-            var firstRowBits = (ulong)(this.StartingBits + Math.Log(this.TableWidth, 2));
+            this.StartingBits = (uint)Math.Log(this.StartingBlockSize, 2);
+            this.FirstRowBits = (uint)(this.StartingBits + Math.Log(this.TableWidth, 2));
 
-            var maxDirectBits = (ulong)Math.Log(this.MaximumDirectBlockSize, 2);
+            var maxDirectBits = (uint)Math.Log(this.MaximumDirectBlockSize, 2);
             this.MaxDirectRows = maxDirectBits - this.StartingBits + 2;
 
-            var maxRootRows = this.MaximumHeapSize - firstRowBits;
+            var maxRootRows = this.MaximumHeapSize - this.FirstRowBits;
 
             this.RowBlockSizes = new ulong[maxRootRows];
             this.RowBlockOffsets = new ulong[maxRootRows];
@@ -197,7 +311,7 @@ namespace HDF5.NET
             this.RowBlockSizes[0] = tmpBlockSize;
             this.RowBlockOffsets[0] = 0;
 
-            for (ulong i = 0; i < maxRootRows; i++)
+            for (ulong i = 1; i < maxRootRows; i++)
             {
                 this.RowBlockSizes[i] = tmpBlockSize;
                 this.RowBlockOffsets[i] = accumulatedBlockOffset;

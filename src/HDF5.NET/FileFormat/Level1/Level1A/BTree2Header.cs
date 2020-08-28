@@ -8,7 +8,6 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning is this OK?
         private Superblock _superblock;
         private byte _version;
 
@@ -103,7 +102,7 @@ namespace HDF5.NET
                     this.Reader.BaseStream.Seek((long)this.RootNodeAddress, SeekOrigin.Begin);
 
                     return (this.Depth == 0
-                        ? (BTree2Node)new BTree2LeafNode(this.Reader, this.Type, this.RecordSize, this.RootNodeRecordCount)
+                        ? (BTree2Node)new BTree2LeafNode(this.Reader, _superblock, this.Type, this.RecordSize, this.RootNodeRecordCount)
                         : new BTree2InternalNode(this.Reader, this.Type, this.RecordSize, this.RootNodeRecordCount));
                 }
             }

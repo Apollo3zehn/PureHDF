@@ -2,13 +2,13 @@
 
 namespace HDF5.NET
 {
-    public class BTree2Record07_0 : BTree2Record
+    public class BTree2Record07_0 : BTree2Record07
     {
         #region Constructors
 
-        public BTree2Record07_0(BinaryReader reader) : base(reader)
+        internal BTree2Record07_0(BinaryReader reader, MessageLocation messageLocation)
+            : base(reader, messageLocation)
         {
-            this.MessageLocation = (MessageLocation)reader.ReadByte();
             this.Hash = reader.ReadBytes(4);
             this.ReferenceCount = reader.ReadUInt32();
             this.HeapId = reader.ReadBytes(8);
@@ -18,7 +18,6 @@ namespace HDF5.NET
 
         #region Properties
 
-        public MessageLocation MessageLocation { get; set; }
         public byte[] Hash { get; set; }
         public uint ReferenceCount { get; set; }
         public byte[] HeapId { get; set; }

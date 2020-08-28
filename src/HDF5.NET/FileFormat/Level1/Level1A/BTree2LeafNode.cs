@@ -15,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree2LeafNode(BinaryReader reader, BTree2Type type, ushort recordSize, ushort rootNodeRecordCount) : base(reader)
+        public BTree2LeafNode(BinaryReader reader, Superblock superblock, BTree2Type type, ushort recordSize, ulong recordCount) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);
@@ -25,17 +25,35 @@ namespace HDF5.NET
             this.Version = reader.ReadByte();
 
             // type
-#warning "It should always be the same as the B-tree type in the header."
             this.Type = (BTree2Type)reader.ReadByte();
 
             if (this.Type != type)
                 throw new FormatException($"The BTree2 leaf node type ('{this.Type}') does not match the type defined in the header ('{type}').");
 
             // records
-#error parse records
+            this.Records = new List<BTree2Record>((int)recordCount);
 
-#warning why is recordSize necessary?
-            this.Records = new List<BTree2Record>(rootNodeRecordCount);
+            for (ulong i = 0; i < recordCount; i++)
+            {
+                var record = (BTree2Record)(this.Type switch
+                {
+                    BTree2Type.IndexingIndirectlyAccessed_NonFilteredHugeFractalHeapObjects => new BTree2Record01(reader, superblock),
+                    BTree2Type.IndexingIndirectlyAccessed_FilteredHugeFractalHeapObjects => new BTree2Record02(reader, superblock),
+                    BTree2Type.IndexingDirectlyAccessed_NonFilteredHugeFractalHeapObjects => new BTree2Record03(reader, superblock),
+                    BTree2Type.IndexingDirectlyAccessed_FilteredHugeFractalHeapObjects => new BTree2Record04(reader, superblock),
+                    BTree2Type.IndexingNameField_Links => new BTree2Record05(reader),
+                    BTree2Type.IndexingCreationOrderField_Links => new BTree2Record06(reader),
+                    BTree2Type.IndexingSharedObjectHeaderMessages => BTree2Record07.Construct(reader, superblock),
+                    BTree2Type.IndexingNameField_Attributes => new BTree2Record08(reader),
+                    BTree2Type.IndexingCreationOrderField_Attributes => new BTree2Record09(reader),
+                    BTree2Type.IndexingChunksOfDatasets_WithoutFilters_WithMoreThanOneUnlimDim => new BTree2Record10(reader, superblock, recordSize),
+                    BTree2Type.IndexingChunksOfDatasets_WithFilters_WithMoreThanOneUnlimDim => new BTree2Record11(reader, superblock, recordSize),
+                    BTree2Type.Testing => throw new Exception($"Record type {nameof(BTree2Type.Testing)} should only be used for testing."),
+                    _ => throw new Exception($"Unknown record type '{this.Type}'.")
+                });
+
+                this.Records.Add(record);
+            }
 
             // checksum
             this.Checksum = reader.ReadUInt32();

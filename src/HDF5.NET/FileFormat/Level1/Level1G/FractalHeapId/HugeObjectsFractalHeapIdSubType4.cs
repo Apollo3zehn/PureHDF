@@ -30,8 +30,6 @@ namespace HDF5.NET
         public uint FilterMask { get; set; }
         public ulong DeFilteredSize { get; set; }
 
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Huge;
-
         #endregion
     }
 }

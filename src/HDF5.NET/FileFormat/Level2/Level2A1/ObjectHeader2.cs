@@ -40,7 +40,7 @@ namespace HDF5.NET
 
             // size of chunk 0
             var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0x03));
-            this.SizeOfChunk0 = this.ReadUlong(chunkFieldSize);
+            this.SizeOfChunk0 = H5Utils.ReadUlong(this.Reader, chunkFieldSize);
 
             // header messages
             var withCreationOrder = this.Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);

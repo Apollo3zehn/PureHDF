@@ -22,8 +22,6 @@ namespace HDF5.NET
         public ulong Address { get; set; }
         public ulong Length { get; set; }
 
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Huge;
-
         #endregion
     }
 }

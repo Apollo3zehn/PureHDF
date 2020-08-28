@@ -96,9 +96,9 @@ namespace HDF5.NET.Tests
         {
             var versions = new H5F.libver_t[] 
             {
-                //H5F.libver_t.EARLIEST,
+                H5F.libver_t.EARLIEST,
                 H5F.libver_t.V18,
-                //H5F.libver_t.V110
+                H5F.libver_t.V110
             };
 
             foreach (var version in versions)

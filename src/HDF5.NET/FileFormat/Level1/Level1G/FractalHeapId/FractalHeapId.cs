@@ -9,49 +9,35 @@ namespace HDF5.NET
 
         public FractalHeapId(BinaryReader reader) : base(reader)
         {
-            // first byte
-            this.FirstByte = reader.ReadByte();
+            //
         }
 
         #endregion
 
-        #region Properties
+        #region Methods
 
-        protected abstract FractalHeapIdType ExpectedType { get; }
-
-        public byte Version // bits 6-7
+        public static FractalHeapId Construct(BinaryReader reader, Superblock superblock, ulong offsetByteCount, ulong lengthByteCount)
         {
-            get
-            {
-                return (byte)((this.FirstByte & 0xB0) >> 6);                // take
-            }
-            set
-            {
-                if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(FractalHeapId)} are supported.");
+            var firstByte = reader.ReadByte();
 
-                this.FirstByte &= 0x3F;                                     // clear
-                this.FirstByte |= (byte)(value << 6);                       // set
-            }
+            // bits 6-7
+            var version = (byte)((firstByte & 0xB0) >> 6);
+
+            if (version != 0)
+                throw new FormatException($"Only version 0 instances of type {nameof(FractalHeapId)} are supported.");
+
+            // bits 4-5
+            var type = (FractalHeapIdType)((firstByte & 0x30) >> 4);
+
+#warning: How to determine correct subtype?
+            return (FractalHeapId)(type switch
+            {
+                FractalHeapIdType.Managed   => new ManagedObjectsFractalHeapId(reader, offsetByteCount, lengthByteCount),
+                FractalHeapIdType.Huge      => new HugeObjectsFractalHeapIdSubType1And2(reader, superblock),
+                FractalHeapIdType.Tiny      => new TinyObjectsFractalHeapIdSubType1(reader, firstByte),
+                _                           => throw new Exception($"Unknown heap ID type '{type}'.")
+            });
         }
-
-        public FractalHeapIdType Type // bits 4-5
-        {
-            get
-            {
-                return (FractalHeapIdType)((this.FirstByte & 0x30) >> 4);   // take
-            }
-            set
-            {
-                if (value != this.ExpectedType)
-                    throw new FormatException($"The fractal heap ID type is invalid.");
-
-                this.FirstByte &= 0xBF;                                     // clear
-                this.FirstByte |= (byte)((byte)value << 4);                 // set
-            }
-        }
-
-        protected byte FirstByte { get; set; }
 
         #endregion
     }

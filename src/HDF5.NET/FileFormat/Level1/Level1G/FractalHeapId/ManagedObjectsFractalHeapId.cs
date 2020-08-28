@@ -6,9 +6,11 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public ManagedObjectsFractalHeapId(BinaryReader reader) : base(reader)
+        public ManagedObjectsFractalHeapId(BinaryReader reader, ulong offsetByteCount, ulong lengthByteCount) 
+            : base(reader)
         {
-#warning implement this correctly
+            this.Offset = H5Utils.ReadUlong(reader, offsetByteCount);
+            this.Length = H5Utils.ReadUlong(reader, lengthByteCount);
         }
 
         #endregion
@@ -17,8 +19,6 @@ namespace HDF5.NET
 
         public ulong Offset { get; set; }
         public ulong Length { get; set; }
-
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Managed;
 
         #endregion
     }

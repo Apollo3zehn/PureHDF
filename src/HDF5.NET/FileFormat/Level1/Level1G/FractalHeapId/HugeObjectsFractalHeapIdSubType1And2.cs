@@ -18,8 +18,6 @@ namespace HDF5.NET
 
         public ulong BTree2Key { get; set; }
 
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Huge;
-
         #endregion
     }
 }

@@ -56,8 +56,6 @@ namespace HDF5.NET
 
         public byte[] Data { get; set; }
 
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Tiny;
-
         #endregion
     }
 }

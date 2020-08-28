@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 
 namespace HDF5.NET
 {
@@ -66,58 +65,50 @@ namespace HDF5.NET
             return attributes.ToList();
         }
 
-        private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage message)
+        private List<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage infoMessage)
         {
+            var attributes = new List<H5Attribute>();
+
+            // fractal heap header
             var reader = this.Superblock.Reader;
-            reader.BaseStream.Seek((long)message.FractalHeapAddress, SeekOrigin.Begin);
-
-            // b-tree v2
-            reader.BaseStream.Seek((long)message.BTree2NameIndexAddress, SeekOrigin.Begin);
-            var btree2 = new BTree2Header(reader, this.Superblock);
-            var rootNode = btree2.RootNode;
-
-            // fractal heap
+            reader.BaseStream.Seek((long)infoMessage.FractalHeapAddress, SeekOrigin.Begin);
             var header = new FractalHeapHeader(reader, this.Superblock);
 
+            // b-tree v2
+            reader.BaseStream.Seek((long)infoMessage.BTree2NameIndexAddress, SeekOrigin.Begin);
+            var btree2 = new BTree2Header(reader, this.Superblock);
+            var rootNode = btree2.RootNode;
+            var records = ((BTree2LeafNode)rootNode).Records
+                .Cast<BTree2Record08>()
+                .ToList();
+
+            var offsetByteCount = (ulong)Math.Ceiling(header.MaximumHeapSize / 8.0);
+#warning Is -1 correct?
+            var lengthByteCount = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1); 
+
+            var heapIds = records.Select(record =>
+            {
+                using (var localReader = new BinaryReader(new MemoryStream(record.HeapId)))
+                {
+                    return FractalHeapId.Construct(localReader, this.Superblock, offsetByteCount, lengthByteCount);
+                };
+            }).ToList();
+
+            // fractal heap
             if (!this.Superblock.IsUndefinedAddress(header.RootBlockAddress))
             {
-                var isDirectBlock = header.RootIndirectBlockRowsCount == 0;
-                reader.BaseStream.Seek((long)header.RootBlockAddress, SeekOrigin.Begin);
-
-                if (isDirectBlock)
+                foreach (var heapId in heapIds)
                 {
-                    var directBlock = new FractalHeapDirectBlock(header, reader, this.Superblock);
-                }
-                else
-                {
-                    var indirectBlock = new FractalHeapIndirectBlock(header, reader, this.Superblock);
+                    var address = header.GetAddress((ManagedObjectsFractalHeapId)heapId);
 
-                    foreach (var directBlockInfo in indirectBlock.DirectBlockInfos)
-                    {
-                        reader.BaseStream.Seek((long)directBlockInfo.Address, SeekOrigin.Begin);
-                        var directBlock = new FractalHeapDirectBlock(header, reader, this.Superblock);
-
-#warning Check this.
-//#error: superblock.ReadLength() pass always a reader!!
-                        var remainingBytes = 1002;//(long)directBlock.ObjectData.Length;
-                        var messages = new List<AttributeMessage>();
-
-                        while (remainingBytes > 0)
-                        {
-                            //var before = localReader.BaseStream.Position;
-                            var attributeMessage = new AttributeMessage(reader, this.Superblock);
-                            //var after = localReader.BaseStream.Position;
-                            messages.Add(attributeMessage);
-
-                            //remainingBytes -= (after - before);
-                        }
-
-                        var a = 1;
-                    }
+                    reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+                    var message = new AttributeMessage(reader, this.Superblock);
+                    var attribute = new H5Attribute(message, this.Superblock);
+                    attributes.Add(attribute);
                 }
             }
 
-            throw new NotFiniteNumberException();
+            return attributes;
         }
 
         #endregion

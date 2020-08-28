@@ -17,9 +17,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FractalHeapIndirectBlock(FractalHeapHeader header, BinaryReader reader, Superblock superblock) : base(reader)
+        public FractalHeapIndirectBlock(FractalHeapHeader header, BinaryReader reader, Superblock superblock, uint rowCount) : base(reader)
         {
             _superblock = superblock;
+            this.RowCount = rowCount;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -33,7 +34,7 @@ namespace HDF5.NET
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            this.BlockOffset = this.ReadUlong((ulong)blockOffsetFieldSize);
+            this.BlockOffset = H5Utils.ReadUlong(this.Reader, (ulong)blockOffsetFieldSize);
 
             // direct and indirect block info
             var K = Math.Min(header.RootIndirectBlockRowsCount, header.MaxDirectRows) * header.TableWidth;
@@ -107,6 +108,8 @@ namespace HDF5.NET
 
         public FractalHeapDirectBlockInfo[] DirectBlockInfos { get; private set; }
         public ulong[] IndirectBlockAddresses { get; private set; }
+
+        public uint RowCount { get; }
 
         #endregion
     }

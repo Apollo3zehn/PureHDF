@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class BTree2Record07_1 : BTree2Record
+    public class BTree2Record07_1 : BTree2Record07
     {
         #region Fields
 
@@ -13,12 +13,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree2Record07_1(BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree2Record07_1(BinaryReader reader, Superblock superblock, MessageLocation messageLocation) 
+            : base(reader, messageLocation)
         {
             _superblock = superblock;
-
-            // message location
-            this.MessageLocation = (MessageLocation)reader.ReadByte();
 
             // hash
             this.Hash = reader.ReadBytes(4);
@@ -27,7 +25,7 @@ namespace HDF5.NET
             reader.ReadByte();
 
             // message type
-            //this.MessageType = (MessageType)reader.ReadByte();
+            this.MessageType = (HeaderMessageType)reader.ReadByte();
 
             // object header index
             this.ObjectHeaderIndex = reader.ReadUInt16();
@@ -40,9 +38,8 @@ namespace HDF5.NET
 
         #region Properties
 
-        public MessageLocation MessageLocation { get; set; }
         public byte[] Hash { get; set; }
-        //public MessageType MessageType { get; set; }
+        public HeaderMessageType MessageType { get; set; }
         public ushort ObjectHeaderIndex { get; set; }
         public ulong ObjectHeaderAddress { get; set; }
 

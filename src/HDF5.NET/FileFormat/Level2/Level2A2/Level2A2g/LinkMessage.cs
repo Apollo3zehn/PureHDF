@@ -41,7 +41,7 @@ namespace HDF5.NET
 
             // link length
             var linkLengthFieldLength = (ulong)(1 << (this.Flags & 0x03));
-            this.LinkNameLength = this.ReadUlong(linkLengthFieldLength);
+            this.LinkNameLength = H5Utils.ReadUlong(this.Reader, linkLengthFieldLength);
 
             // link name
             this.LinkName = H5Utils.ReadFixedLengthString(reader, (int)this.LinkNameLength, this.LinkNameEncoding);

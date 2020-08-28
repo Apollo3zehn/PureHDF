@@ -18,7 +18,7 @@ namespace HDF5.NET
         public FractalHeapDirectBlock(FractalHeapHeader header, BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
-            var headerSize = 0;
+            var headerSize = 0UL;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -35,8 +35,8 @@ namespace HDF5.NET
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            this.BlockOffset = this.ReadUlong((ulong)blockOffsetFieldSize);
-            headerSize += blockOffsetFieldSize;
+            this.BlockOffset = H5Utils.ReadUlong(this.Reader, (ulong)blockOffsetFieldSize);
+            headerSize += (ulong)blockOffsetFieldSize;
 
             // checksum
             if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
@@ -45,35 +45,7 @@ namespace HDF5.NET
                 headerSize += 4;
             }
 
-            // object data
-#warning Check this.
-            var row = 0UL;
-
-            if (this.BlockOffset > header.StartingBlockSize * header.TableWidth)
-                row = (ulong)Math.Log(this.BlockOffset, 2) - header.StartingBits + 1;
-
-            var size = (int)header.RowBlockSizes[row];
-            size -= headerSize;
-
-            //this.ObjectData = reader.ReadBytes(headerSize);
-
-            // alternative:
-            //herr_t
-            //H5HF_dtable_lookup(const H5HF_dtable_t *dtable, hsize_t off, unsigned *row, unsigned *col)
-            //{
-            //    /* Check for offset in first row */
-            //    if(off < dtable->num_id_first_row) {
-            //        *row = 0;
-            //        H5_CHECKED_ASSIGN(*col, unsigned, (off / dtable->cparam.start_block_size), hsize_t);
-            //    } /* end if */
-            //    else {
-            //        unsigned high_bit = H5VM_log2_gen(off);  /* Determine the high bit in the offset */
-            //        hsize_t off_mask = ((hsize_t)1) << high_bit;       /* Compute mask for determining column */
-
-            //        *row = (high_bit - dtable->first_row_bits) + 1;
-            //        H5_CHECKED_ASSIGN(*col, unsigned, ((off - off_mask) / dtable->row_block_size[*row]), hsize_t);
-            //    } /* end else */
-            //} /* end H5HF_dtable_lookup() */
+            this.HeaderSize = headerSize;
         }
 
         #endregion
@@ -110,6 +82,8 @@ namespace HDF5.NET
                 return new FractalHeapHeader(this.Reader, _superblock);
             }
         }
+
+        public ulong HeaderSize { get; }
 
         #endregion
     }
