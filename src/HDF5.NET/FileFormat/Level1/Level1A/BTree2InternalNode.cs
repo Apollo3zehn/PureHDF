@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -7,37 +6,36 @@ namespace HDF5.NET
 {
     public class BTree2InternalNode : BTree2Node
     {
-        #region Fields
-
-        private byte _version;
-
-        #endregion
-
         #region Constructors
 
-        public BTree2InternalNode(BinaryReader reader, BTree2Type type, ushort recordSize, ushort rootNodeRecordCount) : base(reader)
+        public BTree2InternalNode(BinaryReader reader, Superblock superblock, BTree2Header header, ushort recordCount, int nodeLevel)
+            : base(reader, superblock, header, recordCount, BTree2LeafNode.Signature)
         {
-            // signature
-            var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, BTree2InternalNode.Signature);
+            this.ChildAddresses = new List<ulong>();
+            this.ChildRecordCounts = new List<ulong>();
+            this.TotalRecordCounts = new List<ulong>();
 
-            // version
-            this.Version = reader.ReadByte();
+            // H5B2cache.c (H5B2__cache_int_deserialize)
+            for (int i = 0; i < recordCount + 1; i++)
+            {
+                // child address
+                this.ChildAddresses.Add(superblock.ReadOffset());
 
-            // type
-#warning "It should always be the same as the B-tree type in the header."
-            this.Type = (BTree2Type)reader.ReadByte();
+                // child record count
+                var childRecordCount = H5Utils.ReadUlong(reader, header.MaxRecordCountSize);
+                this.ChildRecordCounts.Add(childRecordCount);
 
-            if (this.Type != type)
-                throw new FormatException($"The BTree2 internal node type ('{this.Type}') does not match the type defined in the header ('{type}').");
-
-            // records
-#warning why is recordSize necessary?
-            this.Records = new List<BTree2Record>(rootNodeRecordCount);
-
-#warning Finish implementation
-            // child nodes
-            //this.ChildNodes = new List<BTree2ChildNode>();
+                // total child record count
+                if (nodeLevel > 1)
+                {
+                    var totalChildRecordCount = H5Utils.ReadUlong(reader, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
+                    this.TotalRecordCounts.Add(totalChildRecordCount);
+                }
+                else
+                {
+                    this.TotalRecordCounts.Add(childRecordCount);
+                }
+            }
 
             // checksum
             this.Checksum = reader.ReadUInt32();
@@ -47,27 +45,11 @@ namespace HDF5.NET
 
         #region Properties
 
+        public List<ulong> ChildAddresses { get; }
+        public List<ulong> ChildRecordCounts { get; }
+        public List<ulong> TotalRecordCounts { get; }
+
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("BTIN");
-
-        public byte Version
-        {
-            get
-            {
-                return _version;
-            }
-            set
-            {
-                if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(BTree2InternalNode)} are supported.");
-
-                _version = value;
-            }
-        }
-
-        public BTree2Type Type { get; set; }
-        public List<BTree2Record> Records { get; set; }
-        //public List<BTree2ChildNode> ChildNodes { get; set; }
-        public uint Checksum { get; set; }
 
         #endregion
     }

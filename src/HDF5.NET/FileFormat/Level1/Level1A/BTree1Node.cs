@@ -72,13 +72,13 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
-        public BTree1NodeType NodeType { get; set; }
-        public byte NodeLevel { get; set; }
-        public ushort EntriesUsed { get; set; }
-        public ulong LeftSiblingAddress { get; set; }
-        public ulong RightSiblingAddress { get; set; }
-        public List<BTree1Key> Keys { get; set; }
-        public List<ulong> ChildAddresses { get; set; }
+        public BTree1NodeType NodeType { get; }
+        public byte NodeLevel { get;  }
+        public ushort EntriesUsed { get; }
+        public ulong LeftSiblingAddress { get; }
+        public ulong RightSiblingAddress { get; }
+        public List<BTree1Key> Keys { get; }
+        public List<ulong> ChildAddresses { get; }
 
         public BTree1Node LeftSibling
         {

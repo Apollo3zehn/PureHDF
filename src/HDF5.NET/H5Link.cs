@@ -78,6 +78,11 @@ namespace HDF5.NET
             reader.BaseStream.Seek((long)infoMessage.BTree2NameIndexAddress, SeekOrigin.Begin);
             var btree2 = new BTree2Header(reader, this.Superblock);
             var rootNode = btree2.RootNode;
+
+            var a = ((BTree2InternalNode)rootNode).Records
+                .Cast<BTree2Record08>()
+                .ToList();
+
             var records = ((BTree2LeafNode)rootNode).Records
                 .Cast<BTree2Record08>()
                 .ToList();

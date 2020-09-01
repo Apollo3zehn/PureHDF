@@ -111,7 +111,7 @@ namespace HDF5.NET.Tests
 
         public static TestStructString[] StringTestStructData { get; }
 
-        public static unsafe string PrepareTestFile(H5F.libver_t version, bool withAttributes = false)
+        public static unsafe string PrepareTestFile(H5F.libver_t version, bool withAttributes = false, bool withMassAttributes = false)
         {
             var filePath = Path.GetTempFileName();
             long res;
@@ -124,6 +124,7 @@ namespace HDF5.NET.Tests
             // groups
             var groupId1 = H5G.create(fileId, "G1");
             var groupId1_1 = H5G.create(groupId1, "G1.1");
+            var groupId_mass = H5G.create(fileId, "mass");
 
             // datasets
             var dataspaceId1 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
@@ -364,7 +365,27 @@ namespace HDF5.NET.Tests
                 H5S.close(attributeSpaceId);
             }
 
+            if (withMassAttributes)
+            {
+                for (int i = 0; i < 1000; i++)
+                {
+                    var attributeSpaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
+                    var attributeTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+                    var attributeId = H5A.create(groupId_mass, $"mass_{i.ToString("D4")}", attributeTypeId, attributeSpaceId);
+                    var attributeData = TestUtils.NonNullableTestStructData;
+
+                    fixed (void* ptr = attributeData)
+                    {
+                        res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
+                    }
+
+                    H5T.close(attributeTypeId);
+                    H5A.close(attributeId);
+                }
+            }
+
             //
+            res = H5G.close(groupId_mass);
             res = H5G.close(groupId1_1);
             res = H5G.close(groupId1);
             res = H5F.close(fileId);

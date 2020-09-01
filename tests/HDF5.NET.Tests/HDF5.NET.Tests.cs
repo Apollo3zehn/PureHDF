@@ -231,6 +231,35 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
+        public void CanReadMassAmountOfAttributes()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+                var expectedCount = 1000;
+
+                // Act
+                using (var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    var parent = h5file.Root.Get<H5Group>("/mass");
+
+                    foreach (var attribute in parent.Attributes)
+                    {
+                        var actual = attribute.ReadCompound<TestStructL1>().ToArray();
+
+                        // Assert
+                        Assert.True(actual.SequenceEqual(TestUtils.NonNullableTestStructData));
+                    }
+
+                    Assert.Equal(expectedCount, parent.Attributes.Count);
+                }
+
+                File.Delete(filePath);
+            });
+        }
+
+        [Fact]
         public void ThrowsForNestedNullableStructAttribute()
         {
             TestUtils.RunForAllVersions(version =>
