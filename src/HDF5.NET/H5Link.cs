@@ -59,9 +59,11 @@ namespace HDF5.NET
                 .Select(message => new H5Attribute(message, this.Superblock));
 
             var moreAttributes = attributeInfoMessages
-                    .SelectMany(message => this.GetAttributesFromAttributeInfo(message));
+                .SelectMany(message => this.GetAttributesFromAttributeInfo(message));
 
-            attributes = attributes.Concat(moreAttributes);
+            attributes = attributes
+                .Concat(moreAttributes);
+
             return attributes.ToList();
         }
 
@@ -76,20 +78,15 @@ namespace HDF5.NET
 
             // b-tree v2
             reader.BaseStream.Seek((long)infoMessage.BTree2NameIndexAddress, SeekOrigin.Begin);
-            var btree2 = new BTree2Header(reader, this.Superblock);
-            var rootNode = btree2.RootNode;
+            var btree2 = new BTree2Header<BTree2Record08>(reader, this.Superblock);
 
-            var a = ((BTree2InternalNode)rootNode).Records
-                .Cast<BTree2Record08>()
-                .ToList();
-
-            var records = ((BTree2LeafNode)rootNode).Records
-                .Cast<BTree2Record08>()
+            var records = btree2
+                .GetRecords()
                 .ToList();
 
             var offsetByteCount = (ulong)Math.Ceiling(header.MaximumHeapSize / 8.0);
 #warning Is -1 correct?
-            var lengthByteCount = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1); 
+            var lengthByteCount = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
 
             var heapIds = records.Select(record =>
             {

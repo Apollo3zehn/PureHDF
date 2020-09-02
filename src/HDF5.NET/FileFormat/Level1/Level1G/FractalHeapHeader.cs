@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace HDF5.NET
@@ -205,7 +204,7 @@ namespace HDF5.NET
 
                 /* Set direct block info */
                 directBlockSize = this.RowBlockSizes[entry / this.TableWidth];
-                directBlockAddress = indirectBlock.DirectBlockInfos[entry].Address;
+                directBlockAddress = indirectBlock.Entries[entry].Address;
             }
 
             this.Reader.BaseStream.Seek((long)directBlockAddress, SeekOrigin.Begin);
@@ -250,11 +249,10 @@ namespace HDF5.NET
                 entry = row * this.TableWidth + column;
 
                 /* Locate child indirect block */
-#warning It could be that indirect AND direct block infos should be in a single array.
-                var indirectBlockAddress = indirectBlock.IndirectBlockAddresses[entry];
+                var indirectBlockEntry = indirectBlock.Entries[entry];
  
                 /* Use new indirect block */
-                this.Reader.BaseStream.Seek((long)indirectBlockAddress, SeekOrigin.Begin);
+                this.Reader.BaseStream.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
                 indirectBlock = new FractalHeapIndirectBlock(this, this.Reader, _superblock, nrows);
 
                 /* Look up row & column in new indirect block for object */

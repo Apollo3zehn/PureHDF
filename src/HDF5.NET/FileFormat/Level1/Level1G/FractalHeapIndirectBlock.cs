@@ -36,33 +36,36 @@ namespace HDF5.NET
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
             this.BlockOffset = H5Utils.ReadUlong(this.Reader, (ulong)blockOffsetFieldSize);
 
-            // direct and indirect block info
-            var K = Math.Min(header.RootIndirectBlockRowsCount, header.MaxDirectRows) * header.TableWidth;
-            var N = 0UL;
+            // H5HFcache.c (H5HF__cache_iblock_deserialize)
+            var length = rowCount * header.TableWidth;
+            this.Entries = new FractalHeapEntry[length];
 
-            if (header.RootIndirectBlockRowsCount > header.MaxDirectRows)
+            for (uint i = 0; i < this.Entries.Length; i++)
             {
-                N = K - (header.MaxDirectRows * header.TableWidth);
-            }
+                /* Decode child block address */
+                this.Entries[i].Address = _superblock.ReadOffset();
 
-            this.DirectBlockInfos = new FractalHeapDirectBlockInfo[K];
-
-            for (ulong i = 0; i < K; i++)
-            {
-                this.DirectBlockInfos[i].Address = _superblock.ReadOffset();
-
+                /* Check for heap with I/O filters */
                 if (header.IOFilterEncodedLength > 0)
                 {
-                    this.DirectBlockInfos[i].FilteredSize = _superblock.ReadLength();
-                    this.DirectBlockInfos[i].FilterMask = reader.ReadUInt32();
+                    /* Decode extra information for direct blocks */
+                    if (i < (header.MaxDirectRows * header.TableWidth))
+                    {
+                        /* Size of filtered direct block */
+                        this.Entries[i].FilteredSize = _superblock.ReadLength();
+
+                        /* I/O filter mask for filtered direct block */
+                        this.Entries[i].FilterMask = reader.ReadUInt32();
+                    }
                 }
-            }
 
-            this.IndirectBlockAddresses = new ulong[N];
 
-            for (ulong i = 0; i < N; i++)
-            {
-                this.IndirectBlockAddresses[i] = _superblock.ReadOffset();
+                /* Count child blocks */
+                if (!superblock.IsUndefinedAddress(this.Entries[i].Address))
+                {
+                    this.ChildCount++;
+                    this.MaxChildIndex = i;
+                }
             }
 
             // checksum
@@ -92,9 +95,6 @@ namespace HDF5.NET
 
         public ulong HeapHeaderAddress { get; set; }
         public ulong BlockOffset { get; set; }
-        public List<ulong> ChildDirectBlockAdresses { get; set; }
-        public List<ulong> FilteredDirectBlockSizes { get; set; }
-        public List<ulong> DirectBlockFilterMask { get; set; }
         public uint Checksum { get; set; }
 
         public FractalHeapHeader HeapHeader
@@ -106,10 +106,10 @@ namespace HDF5.NET
             }
         }
 
-        public FractalHeapDirectBlockInfo[] DirectBlockInfos { get; private set; }
-        public ulong[] IndirectBlockAddresses { get; private set; }
-
+        public FractalHeapEntry[] Entries { get; private set; }
         public uint RowCount { get; }
+        public uint ChildCount { get; }
+        public uint MaxChildIndex { get; }
 
         #endregion
     }

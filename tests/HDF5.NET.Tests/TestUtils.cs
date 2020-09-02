@@ -90,6 +90,7 @@ namespace HDF5.NET.Tests
         {
             TestUtils.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
             TestUtils.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+            TestUtils.LargeData = Enumerable.Range(0, 10_000_000).ToArray();
         }
 
         public static void RunForAllVersions(Action<H5F.libver_t> action)
@@ -111,7 +112,12 @@ namespace HDF5.NET.Tests
 
         public static TestStructString[] StringTestStructData { get; }
 
-        public static unsafe string PrepareTestFile(H5F.libver_t version, bool withAttributes = false, bool withMassAttributes = false)
+        public static int[] LargeData { get; }
+
+        public static unsafe string PrepareTestFile(H5F.libver_t version,
+                                                    bool withTypedAttributes = false,
+                                                    bool withMassAttributes = false,
+                                                    bool withLargeAttribute = false)
         {
             var filePath = Path.GetTempFileName();
             long res;
@@ -124,7 +130,6 @@ namespace HDF5.NET.Tests
             // groups
             var groupId1 = H5G.create(fileId, "G1");
             var groupId1_1 = H5G.create(groupId1, "G1.1");
-            var groupId_mass = H5G.create(fileId, "mass");
 
             // datasets
             var dataspaceId1 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
@@ -151,7 +156,7 @@ namespace HDF5.NET.Tests
             res = H5D.close(datasetId3);
             res = H5S.close(dataspaceId3);
 
-            if (withAttributes)
+            if (withTypedAttributes)
             {
                 var attributeSpaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
 
@@ -164,7 +169,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId1, H5T.NATIVE_UINT8, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId1);
+                res = H5A.close(attributeId1);
 
                 var attributeData2 = new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
                 var attributeId2 = H5A.create(fileId, "A2", H5T.NATIVE_UINT16, attributeSpaceId);
@@ -174,7 +179,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId2, H5T.NATIVE_UINT16, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId2);
+                res = H5A.close(attributeId2);
 
                 var attributeId3 = H5A.create(fileId, "A3", H5T.NATIVE_UINT32, attributeSpaceId);
                 var attributeData3 = new uint[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
@@ -184,7 +189,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId3, H5T.NATIVE_UINT32, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId3);
+                res = H5A.close(attributeId3);
 
                 var attributeId4 = H5A.create(fileId, "A4", H5T.NATIVE_UINT64, attributeSpaceId);
                 var attributeData4 = new ulong[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
@@ -194,7 +199,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId4, H5T.NATIVE_UINT64, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId4);
+                res = H5A.close(attributeId4);
 
                 var attributeId5 = H5A.create(fileId, "A5", H5T.NATIVE_INT8, attributeSpaceId);
                 var attributeData5 = new sbyte[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
@@ -204,7 +209,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId5, H5T.NATIVE_INT8, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId5);
+                res = H5A.close(attributeId5);
 
                 var attributeId6 = H5A.create(fileId, "A6", H5T.NATIVE_INT16, attributeSpaceId);
                 var attributeData6 = new short[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
@@ -214,7 +219,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId6, H5T.NATIVE_INT16, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId6);
+                res = H5A.close(attributeId6);
 
                 var attributeId7 = H5A.create(fileId, "A7", H5T.NATIVE_INT32, attributeSpaceId);
                 var attributeData7 = new int[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
@@ -224,7 +229,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId7, H5T.NATIVE_INT32, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId7);
+                res = H5A.close(attributeId7);
 
                 var attributeId8 = H5A.create(fileId, "A8", H5T.NATIVE_INT64, attributeSpaceId);
                 var attributeData8 = new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
@@ -234,7 +239,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId8, H5T.NATIVE_INT64, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId8);
+                res = H5A.close(attributeId8);
 
                 var attributeId9 = H5A.create(fileId, "A9", H5T.NATIVE_FLOAT, attributeSpaceId);
                 var attributeData9 = new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 };
@@ -244,7 +249,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId9, H5T.NATIVE_FLOAT, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId9);
+                res = H5A.close(attributeId9);
 
                 var attributeId10 = H5A.create(fileId, "A10", H5T.NATIVE_DOUBLE, attributeSpaceId);
                 var attributeData10 = new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 };
@@ -254,7 +259,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId10, H5T.NATIVE_DOUBLE, new IntPtr(ptr));
                 }
 
-                H5A.close(attributeId10);
+                res = H5A.close(attributeId10);
 
                 // fixed length string attribute (ASCII)
                 var attributeTypeId11 = H5T.copy(H5T.C_S1);
@@ -272,8 +277,8 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId11, attributeTypeId11, new IntPtr(ptr));
                 }
 
-                H5T.close(attributeTypeId11);
-                H5A.close(attributeId11);
+                res = H5T.close(attributeTypeId11);
+                res = H5A.close(attributeId11);
 
                 // variable length string attribute (ASCII)
                 var attributeTypeId12 = H5T.copy(H5T.C_S1);
@@ -294,8 +299,8 @@ namespace HDF5.NET.Tests
                     Marshal.FreeCoTaskMem(ptr);
                 }
 
-                H5T.close(attributeTypeId12);
-                H5A.close(attributeId12);
+                res = H5T.close(attributeTypeId12);
+                res = H5A.close(attributeId12);
 
                 // variable length string attribute (UTF8)
                 var attributeTypeId13 = H5T.copy(H5T.C_S1);
@@ -316,8 +321,8 @@ namespace HDF5.NET.Tests
                     Marshal.FreeCoTaskMem(ptr);
                 }
 
-                H5T.close(attributeTypeId13);
-                H5A.close(attributeId13);
+                res = H5T.close(attributeTypeId13);
+                res = H5A.close(attributeId13);
 
                 // non-nullable struct
                 var attributeTypeId14 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
@@ -329,8 +334,8 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId14, attributeTypeId14, new IntPtr(ptr));
                 }
 
-                H5T.close(attributeTypeId14);
-                H5A.close(attributeId14);
+                res = H5T.close(attributeTypeId14);
+                res = H5A.close(attributeId14);
 
                 // nullable struct
                 var attributeTypeId15 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
@@ -358,15 +363,17 @@ namespace HDF5.NET.Tests
                 H5A.write(attributeId15, attributeTypeId15, attributeData15Ptr);
                 Marshal.FreeHGlobal(attributeData15Ptr);
 
-                H5T.close(attributeTypeId15);
-                H5A.close(attributeId15);
+                res = H5T.close(attributeTypeId15);
+                res = H5A.close(attributeId15);
 
                 //
-                H5S.close(attributeSpaceId);
+                res = H5S.close(attributeSpaceId);
             }
 
             if (withMassAttributes)
             {
+                var groupId_mass = H5G.create(fileId, "mass");
+
                 for (int i = 0; i < 1000; i++)
                 {
                     var attributeSpaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
@@ -379,13 +386,35 @@ namespace HDF5.NET.Tests
                         res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
                     }
 
-                    H5T.close(attributeTypeId);
-                    H5A.close(attributeId);
+                    res = H5T.close(attributeTypeId);
+                    res = H5A.close(attributeId);
                 }
+
+                res = H5G.close(groupId_mass);
+            }
+
+            if (withLargeAttribute)
+            {
+                var groupId_large = H5G.create(fileId, "large");
+                var length = version switch
+                {
+                    H5F.libver_t.EARLIEST => 16368UL, // max 64 kb in object header
+                    _ => 10_000_000UL,
+                };
+                var attributeSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+                var attributeId = H5A.create(groupId_large, "large", H5T.NATIVE_INT32, attributeSpaceId);
+                var attributeData = TestUtils.LargeData;
+
+                fixed (void* ptr = attributeData)
+                {
+                    res = H5A.write(attributeId, H5T.NATIVE_INT32, new IntPtr(ptr));
+                }
+
+                res = H5A.close(attributeId);
+                res = H5G.close(groupId_large);
             }
 
             //
-            res = H5G.close(groupId_mass);
             res = H5G.close(groupId1_1);
             res = H5G.close(groupId1);
             res = H5F.close(fileId);

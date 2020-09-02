@@ -4,23 +4,20 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public abstract class BTree2Node : FileBlock
+    public abstract class BTree2Node<T> : FileBlock where T : BTree2Record
     {
         #region Fields
 
         private byte _version;
-        private byte[] _signature;
 
         #endregion
 
-        public BTree2Node(BinaryReader reader, Superblock superblock, BTree2Header header, ushort recordCount, byte[] signature) 
+        public BTree2Node(BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, byte[] signature) 
             : base(reader)
         {
-            _signature = signature;
-
             // signature
             var actualSignature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(actualSignature, BTree2InternalNode.Signature);
+            H5Utils.ValidateSignature(actualSignature, signature);
 
             // version
             this.Version = reader.ReadByte();
@@ -32,7 +29,7 @@ namespace HDF5.NET
                 throw new FormatException($"The BTree2 internal node type ('{this.Type}') does not match the type defined in the header ('{header.Type}').");
 
             // records
-            this.Records = new List<BTree2Record>(recordCount);
+            this.Records = new List<T>(recordCount);
 
             for (ulong i = 0; i < recordCount; i++)
             {
@@ -53,7 +50,7 @@ namespace HDF5.NET
                     _ => throw new Exception($"Unknown record type '{this.Type}'.")
                 });
 
-                this.Records.Add(record);
+                this.Records.Add((T)record);
             }
         }
 
@@ -68,14 +65,14 @@ namespace HDF5.NET
             set
             {
                 if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(BTree2Node)} are supported.");
+                    throw new FormatException($"Only version 0 instances of type {nameof(BTree2Node<T>)} are supported.");
 
                 _version = value;
             }
         }
 
         public BTree2Type Type { get; }
-        public List<BTree2Record> Records { get; }
+        public List<T> Records { get; }
 
         public uint Checksum { get; protected set; }
 

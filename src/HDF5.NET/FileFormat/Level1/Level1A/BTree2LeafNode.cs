@@ -3,12 +3,12 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class BTree2LeafNode : BTree2Node
+    public class BTree2LeafNode<T> : BTree2Node<T> where T : BTree2Record
     {
         #region Constructors
 
-        public BTree2LeafNode(BinaryReader reader, Superblock superblock, BTree2Header header, ushort recordCount) 
-            : base(reader, superblock, header, recordCount, BTree2LeafNode.Signature)
+        public BTree2LeafNode(BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount) 
+            : base(reader, superblock, header, recordCount, BTree2LeafNode<T>.Signature)
         {
             // checksum
             this.Checksum = reader.ReadUInt32();

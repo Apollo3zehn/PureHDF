@@ -1,39 +1,36 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public class BTree2InternalNode : BTree2Node
+    public class BTree2InternalNode<T> : BTree2Node<T> where T : BTree2Record
     {
         #region Constructors
 
-        public BTree2InternalNode(BinaryReader reader, Superblock superblock, BTree2Header header, ushort recordCount, int nodeLevel)
-            : base(reader, superblock, header, recordCount, BTree2LeafNode.Signature)
+        public BTree2InternalNode(BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, int nodeLevel)
+            : base(reader, superblock, header, recordCount, BTree2InternalNode<T>.Signature)
         {
-            this.ChildAddresses = new List<ulong>();
-            this.ChildRecordCounts = new List<ulong>();
-            this.TotalRecordCounts = new List<ulong>();
+            this.NodePointers = new BTree2NodePointer[recordCount + 1];
 
             // H5B2cache.c (H5B2__cache_int_deserialize)
             for (int i = 0; i < recordCount + 1; i++)
             {
-                // child address
-                this.ChildAddresses.Add(superblock.ReadOffset());
+                // address
+                this.NodePointers[i].Address = superblock.ReadOffset();
 
-                // child record count
+                // record count
                 var childRecordCount = H5Utils.ReadUlong(reader, header.MaxRecordCountSize);
-                this.ChildRecordCounts.Add(childRecordCount);
+                this.NodePointers[i].RecordCount = (ushort)childRecordCount;
 
-                // total child record count
+                // total record count
                 if (nodeLevel > 1)
                 {
                     var totalChildRecordCount = H5Utils.ReadUlong(reader, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
-                    this.TotalRecordCounts.Add(totalChildRecordCount);
+                    this.NodePointers[i].TotalRecordCount = totalChildRecordCount;
                 }
                 else
                 {
-                    this.TotalRecordCounts.Add(childRecordCount);
+                    this.NodePointers[i].TotalRecordCount = childRecordCount;
                 }
             }
 
@@ -45,11 +42,9 @@ namespace HDF5.NET
 
         #region Properties
 
-        public List<ulong> ChildAddresses { get; }
-        public List<ulong> ChildRecordCounts { get; }
-        public List<ulong> TotalRecordCounts { get; }
-
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("BTIN");
+
+        public BTree2NodePointer[] NodePointers { get; }
 
         #endregion
     }

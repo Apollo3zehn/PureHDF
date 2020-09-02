@@ -176,7 +176,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -196,7 +196,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -216,7 +216,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -227,6 +227,29 @@ namespace HDF5.NET.Tests
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.StringTestStructData));
+            });
+        }
+
+        [Fact]
+        public void CanReadVeryLargeAttribute()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withLargeAttribute: true);
+
+                // Act
+                using (var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    var parent = h5file.Root.Get<H5Group>("/large");
+                    var attribute = parent.Attributes.First();
+                    var actual = attribute.Read<int>().ToArray();
+
+                    // Assert
+                    Assert.True(actual.SequenceEqual(TestUtils.LargeData[0..actual.Length]));
+                }
+
+                File.Delete(filePath);
             });
         }
 
@@ -265,7 +288,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -290,7 +313,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
