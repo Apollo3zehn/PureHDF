@@ -231,12 +231,35 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
+        public void CanReadTinyAttribute()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withTinyAttribute: true);
+
+                // Act
+                using (var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    var parent = h5file.Root.Get<H5Group>("/tiny");
+                    var attribute = parent.Attributes.First();
+                    var actual = attribute.Read<byte>().ToArray();
+
+                    // Assert
+                    Assert.True(actual.SequenceEqual(TestUtils.TinyData));
+                }
+
+                File.Delete(filePath);
+            });
+        }
+
+        [Fact]
         public void CanReadHugeAttribute()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withLargeAttribute: true);
+                var filePath = TestUtils.PrepareTestFile(version, withHugeAttribute: true);
 
                 // Act
                 using (var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -246,7 +269,7 @@ namespace HDF5.NET.Tests
                     var actual = attribute.Read<int>().ToArray();
 
                     // Assert
-                    Assert.True(actual.SequenceEqual(TestUtils.LargeData[0..actual.Length]));
+                    Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
                 }
 
                 File.Delete(filePath);
@@ -266,8 +289,9 @@ namespace HDF5.NET.Tests
                 using (var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     var parent = h5file.Root.Get<H5Group>("/mass");
+                    var attributes = parent.Attributes.ToList();
 
-                    foreach (var attribute in parent.Attributes)
+                    foreach (var attribute in attributes)
                     {
                         var actual = attribute.ReadCompound<TestStructL1>().ToArray();
 
@@ -275,7 +299,7 @@ namespace HDF5.NET.Tests
                         Assert.True(actual.SequenceEqual(TestUtils.NonNullableTestStructData));
                     }
 
-                    Assert.Equal(expectedCount, parent.Attributes.Count);
+                    Assert.Equal(expectedCount, attributes.Count);
                 }
 
                 File.Delete(filePath);

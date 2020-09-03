@@ -90,16 +90,17 @@ namespace HDF5.NET.Tests
         {
             TestUtils.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
             TestUtils.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
-            TestUtils.LargeData = Enumerable.Range(0, 10_000_000).ToArray();
+            TestUtils.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
+            TestUtils.TinyData = new byte[] { 99 };
         }
 
         public static void RunForAllVersions(Action<H5F.libver_t> action)
         {
             var versions = new H5F.libver_t[] 
             {
-                //H5F.libver_t.EARLIEST,
+                H5F.libver_t.EARLIEST,
                 H5F.libver_t.V18,
-                //H5F.libver_t.V110
+                H5F.libver_t.V110
             };
 
             foreach (var version in versions)
@@ -112,12 +113,14 @@ namespace HDF5.NET.Tests
 
         public static TestStructString[] StringTestStructData { get; }
 
-        public static int[] LargeData { get; }
+        public static int[] HugeData { get; }
+        public static byte[] TinyData { get; }
 
         public static unsafe string PrepareTestFile(H5F.libver_t version,
                                                     bool withTypedAttributes = false,
                                                     bool withMassAttributes = false,
-                                                    bool withLargeAttribute = false)
+                                                    bool withHugeAttribute = false,
+                                                    bool withTinyAttribute = false)
         {
             var filePath = Path.GetTempFileName();
             long res;
@@ -393,7 +396,7 @@ namespace HDF5.NET.Tests
                 res = H5G.close(groupId_mass);
             }
 
-            if (withLargeAttribute)
+            if (withHugeAttribute)
             {
                 var groupId_large = H5G.create(fileId, "large");
                 var length = version switch
@@ -404,7 +407,7 @@ namespace HDF5.NET.Tests
 
                 var attributeSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
                 var attributeId = H5A.create(groupId_large, "large", H5T.NATIVE_INT32, attributeSpaceId);
-                var attributeData = TestUtils.LargeData;
+                var attributeData = TestUtils.HugeData;
 
                 fixed (void* ptr = attributeData)
                 {
@@ -412,21 +415,28 @@ namespace HDF5.NET.Tests
                 }
 
                 res = H5A.close(attributeId);
+                res = H5G.close(groupId_large);
+            }
 
-                //remove
-                var attributeSpaceId2 = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
-                var attributeId2 = H5A.create(groupId_large, "large2", H5T.NATIVE_INT32, attributeSpaceId2);
-                var attributeData2 = TestUtils.LargeData;
+            if (withTinyAttribute)
+            {
+                var groupId_tiny = H5G.create(fileId, "tiny");
 
-                fixed (void* ptr = attributeData2)
+                for (int i = 0; i < 10; i++)
                 {
-                    res = H5A.write(attributeId2, H5T.NATIVE_INT32, new IntPtr(ptr));
+                    var attributeSpaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+                    var attributeId = H5A.create(groupId_tiny, $"tiny_{i.ToString("D2")}", H5T.NATIVE_UINT8, attributeSpaceId);
+                    var attributeData = TestUtils.TinyData;
+
+                    fixed (void* ptr = attributeData)
+                    {
+                        res = H5A.write(attributeId, H5T.NATIVE_UINT8, new IntPtr(ptr));
+                    }
+
+                    res = H5A.close(attributeId);
                 }
 
-                res = H5A.close(attributeId2);
-
-                // remove end
-                res = H5G.close(groupId_large);
+                res = H5G.close(groupId_tiny);
             }
 
             //

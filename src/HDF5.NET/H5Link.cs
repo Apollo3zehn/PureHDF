@@ -11,7 +11,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private List<H5Attribute> _attributes;
+        private IEnumerable<H5Attribute> _attributes;
 
         #endregion
 
@@ -34,7 +34,7 @@ namespace HDF5.NET
 
         public Superblock Superblock { get; }
 
-        public List<H5Attribute> Attributes
+        public IEnumerable<H5Attribute> Attributes
         {
             get
             {
@@ -49,22 +49,30 @@ namespace HDF5.NET
 
         #region Methods
 
-        private List<H5Attribute> GetAttributes()
+        private IEnumerable<H5Attribute> GetAttributes()
         {
+
+            // get attributes from attribute message
             var attributeMessages = this.ObjectHeader.GetMessages<AttributeMessage>();
-            var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
 
-            var attributes = this.ObjectHeader
-                .GetMessages<AttributeMessage>()
-                .Select(message => new H5Attribute(message, this.Superblock));
+            foreach (var message in attributeMessages)
+            {
+                var attribute = new H5Attribute(message, this.Superblock);
+                yield return attribute;
+            }
 
-            var moreAttributes = attributeInfoMessages
-                .SelectMany(message => this.GetAttributesFromAttributeInfo(message));
+            // get attributes from attribute info
+            var infoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
 
-            attributes = attributes
-                .Concat(moreAttributes);
+            foreach (var infoMessage in infoMessages)
+            {
+                var attributes = this.GetAttributesFromAttributeInfo(infoMessage);
 
-            return attributes.ToList();
+                foreach (var attribute in attributes)
+                {
+                    yield return attribute;
+                }
+            }
         }
 
         private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage infoMessage)
@@ -161,6 +169,12 @@ namespace HDF5.NET
                         throw new Exception("Filtered attributes are not supported.");
                     }
                 }
+            }
+
+            // find tiny attributes
+            if (heapHeader.HeapTinyObjectsCount > 0 )
+            {
+
             }
         }
 

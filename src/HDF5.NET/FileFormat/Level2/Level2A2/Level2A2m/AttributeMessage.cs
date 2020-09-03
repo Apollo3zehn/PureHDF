@@ -16,10 +16,11 @@ namespace HDF5.NET
 
         public AttributeMessage(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            //var a = reader.ReadBytes(200);
             // version
             this.Version = reader.ReadByte();
 
-            if (this.Version == 1)
+                if (this.Version == 1)
                 reader.ReadByte();
             else
                 this.Flags = (AttributeMessageFlags)reader.ReadByte();
@@ -39,6 +40,7 @@ namespace HDF5.NET
             
             // name
             if (this.Version == 1)
+#error: padding is implemented wrongly. Should pad zero, but pads 8
                 this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, encoding: this.NameEncoding);
             else
                 this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, encoding: this.NameEncoding);
@@ -50,7 +52,7 @@ namespace HDF5.NET
             {
                 var paddedSize = (int)(Math.Ceiling(this.DatatypeSize / 8.0) * 8);
                 var remainingSize = paddedSize - this.DatatypeSize;
-                this.Reader.BaseStream.Seek(remainingSize, SeekOrigin.Current);
+                reader.ReadBytes(remainingSize);
             }
 
             // dataspace 
