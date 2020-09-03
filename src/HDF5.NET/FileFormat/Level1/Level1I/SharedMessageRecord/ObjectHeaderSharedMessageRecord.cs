@@ -30,7 +30,7 @@ namespace HDF5.NET
             this.CreationIndex = reader.ReadUInt16();
 
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset();
+            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

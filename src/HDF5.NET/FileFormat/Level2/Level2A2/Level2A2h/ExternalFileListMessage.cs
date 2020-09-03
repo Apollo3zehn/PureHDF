@@ -34,7 +34,7 @@ namespace HDF5.NET
             this.UsedSlotCount = reader.ReadUInt16();
 
             // heap address
-            this.HeapAddress = superblock.ReadOffset();
+            this.HeapAddress = superblock.ReadOffset(reader);
 
             // slot definitions
             this.SlotDefinitions = new List<ExternalFileListSlot>(this.UsedSlotCount);

@@ -8,11 +8,11 @@ namespace HDF5.NET
 
         public BTree2Record02(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.FilteredHugeObjectAddress = superblock.ReadOffset();
-            this.FilteredHugeObjectLength = superblock.ReadLength();
+            this.FilteredHugeObjectAddress = superblock.ReadOffset(reader);
+            this.FilteredHugeObjectLength = superblock.ReadLength(reader);
             this.FilterMask = reader.ReadUInt32();
-            this.FilteredHugeObjectMemorySize = superblock.ReadLength();
-            this.HugeObjectId = superblock.ReadLength();
+            this.FilteredHugeObjectMemorySize = superblock.ReadLength(reader);
+            this.HugeObjectId = superblock.ReadLength(reader);
         }
 
         #endregion

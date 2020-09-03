@@ -22,7 +22,7 @@ namespace HDF5.NET
             this.Type = (SharedMessageLocation)reader.ReadByte();
 
             // address
-            this.Location = superblock.ReadOffset();
+            this.Location = superblock.ReadOffset(reader);
 #warning the content could also be an 8 byte fractal heap ID
         }
 

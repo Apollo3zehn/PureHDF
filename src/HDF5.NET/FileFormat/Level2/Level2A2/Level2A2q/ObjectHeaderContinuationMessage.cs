@@ -8,8 +8,8 @@ namespace HDF5.NET
 
         public ObjectHeaderContinuationMessage(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.Offset = superblock.ReadOffset();
-            this.Length = superblock.ReadLength();
+            this.Offset = superblock.ReadOffset(reader);
+            this.Length = superblock.ReadLength(reader);
         }
 
         #endregion

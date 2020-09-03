@@ -27,16 +27,16 @@ namespace HDF5.NET
             this.ClientId = (ClientId)reader.ReadByte();
 
             // total space tracked
-            this.TotalSpaceTracked = superblock.ReadLength();
+            this.TotalSpaceTracked = superblock.ReadLength(reader);
 
             // total sections count
-            this.TotalSectionsCount = superblock.ReadLength();
+            this.TotalSectionsCount = superblock.ReadLength(reader);
 
             // serialized sections count
-            this.SerializedSectionsCount = superblock.ReadLength();
+            this.SerializedSectionsCount = superblock.ReadLength(reader);
 
             // un-serialized sections count
-            this.UnSerializedSectionsCount = superblock.ReadLength();
+            this.UnSerializedSectionsCount = superblock.ReadLength(reader);
 
             // section classes count
             this.SectionClassesCount = reader.ReadUInt16();
@@ -51,16 +51,16 @@ namespace HDF5.NET
             this.AddressSpaceSize = reader.ReadUInt16();
 
             // maximum section size
-            this.MaximumSectionSize = superblock.ReadLength();
+            this.MaximumSectionSize = superblock.ReadLength(reader);
 
             // serialized section list address
-            this.SerializedSectionListAddress = superblock.ReadOffset();
+            this.SerializedSectionListAddress = superblock.ReadOffset(reader);
 
             // serialized section list used
-            this.SerializedSectionListUsed = superblock.ReadLength();
+            this.SerializedSectionListUsed = superblock.ReadLength(reader);
 
             // serialized section list allocated size
-            this.SerializedSectionListAllocatedSize = superblock.ReadLength();
+            this.SerializedSectionListAllocatedSize = superblock.ReadLength(reader);
 
             // checksum
             this.Checksum = reader.ReadUInt32();

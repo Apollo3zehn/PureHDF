@@ -9,7 +9,7 @@ namespace HDF5.NET
         public VirtualStoragePropertyDescription(BinaryReader reader, Superblock superblock) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // index
             this.Index = reader.ReadUInt32();

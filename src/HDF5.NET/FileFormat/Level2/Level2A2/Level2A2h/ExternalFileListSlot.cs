@@ -8,9 +8,9 @@ namespace HDF5.NET
 
         public ExternalFileListSlot(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.LocalHeapNameOffset = superblock.ReadLength();
-            this.ExternalDataFileOffset = superblock.ReadLength();
-            this.ExternalFileDataSize = superblock.ReadLength();
+            this.LocalHeapNameOffset = superblock.ReadLength(reader);
+            this.ExternalDataFileOffset = superblock.ReadLength(reader);
+            this.ExternalFileDataSize = superblock.ReadLength(reader);
         }
 
         #endregion

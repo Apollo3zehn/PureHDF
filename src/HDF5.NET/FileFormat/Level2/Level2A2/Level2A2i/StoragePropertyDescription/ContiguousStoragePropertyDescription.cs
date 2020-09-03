@@ -8,8 +8,8 @@ namespace HDF5.NET
 
         public ContiguousStoragePropertyDescription(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.Address = superblock.ReadOffset();
-            this.Size = superblock.ReadLength();
+            this.Address = superblock.ReadOffset(reader);
+            this.Size = superblock.ReadLength(reader);
         }
 
         #endregion

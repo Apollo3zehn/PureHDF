@@ -12,10 +12,10 @@ namespace HDF5.NET
             this.OffsetsSize = reader.ReadByte();
             this.LengthsSize = reader.ReadByte();
             this.FileConsistencyFlags = (FileConsistencyFlags)reader.ReadByte();
-            this.BaseAddress = this.ReadOffset();
-            this.SuperblockExtensionAddress = this.ReadOffset();
-            this.EndOfFileAddress = this.ReadOffset();
-            this.RootGroupObjectHeaderAddress = this.ReadOffset();
+            this.BaseAddress = this.ReadOffset(reader);
+            this.SuperblockExtensionAddress = this.ReadOffset(reader);
+            this.EndOfFileAddress = this.ReadOffset(reader);
+            this.RootGroupObjectHeaderAddress = this.ReadOffset(reader);
             this.SuperblockChecksum = reader.ReadUInt32();
         }
 

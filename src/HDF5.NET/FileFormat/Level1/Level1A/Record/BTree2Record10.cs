@@ -10,7 +10,7 @@ namespace HDF5.NET
         public BTree2Record10(BinaryReader reader, Superblock superblock, ushort recordSize) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // scaled offsets
             var rank = recordSize - superblock.OffsetsSize;

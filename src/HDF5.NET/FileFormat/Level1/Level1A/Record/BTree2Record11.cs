@@ -10,7 +10,7 @@ namespace HDF5.NET
         public BTree2Record11(BinaryReader reader, Superblock superblock, ushort recordSize) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // chunk size
 #warning how to correctly parse this field?

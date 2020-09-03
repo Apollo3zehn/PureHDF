@@ -9,7 +9,7 @@ namespace HDF5.NET
         public SingleChunkIndexingInformation(BinaryReader reader, Superblock superblock) : base(reader)
         {
             // filtered chunk size
-            this.FilteredChunkSize = superblock.ReadLength();
+            this.FilteredChunkSize = superblock.ReadLength(reader);
 
             // chunk filters
             this.ChunkFilters = reader.ReadUInt32();

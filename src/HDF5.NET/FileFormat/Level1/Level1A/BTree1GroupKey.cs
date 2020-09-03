@@ -9,7 +9,7 @@ namespace HDF5.NET
 
         public BTree1GroupKey(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.LocalHeapByteOffset = superblock.ReadLength();
+            this.LocalHeapByteOffset = superblock.ReadLength(reader);
         }
 
         #endregion

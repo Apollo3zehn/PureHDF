@@ -28,13 +28,13 @@ namespace HDF5.NET
             reader.ReadBytes(3);
 
             // data segment size
-            this.DataSegmentSize = superblock.ReadLength();
+            this.DataSegmentSize = superblock.ReadLength(reader);
 
             // free list head offset
-            this.FreeListHeadOffset = superblock.ReadLength();
+            this.FreeListHeadOffset = superblock.ReadLength(reader);
 
             // data segment address
-            this.DataSegmentAddress = superblock.ReadOffset();
+            this.DataSegmentAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

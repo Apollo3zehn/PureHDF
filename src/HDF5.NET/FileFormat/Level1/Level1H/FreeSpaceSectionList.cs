@@ -29,7 +29,7 @@ namespace HDF5.NET
             this.Version = reader.ReadByte();
 
             // free space manager header address
-            this.FreeSpaceManagerHeaderAddress = superblock.ReadOffset();
+            this.FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
 
 #warning implement everything
 

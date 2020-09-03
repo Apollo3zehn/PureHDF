@@ -34,14 +34,14 @@ namespace HDF5.NET
 
             for (int i = 0; i < this.Dimensionality; i++)
             {
-                this.DimensionSizes.Add(superblock.ReadLength());
+                this.DimensionSizes.Add(superblock.ReadLength(reader));
             }
 
             if (dimensionMaxSizesArePresent)
             {
                 for (int i = 0; i < this.Dimensionality; i++)
                 {
-                    this.DimensionMaxSizes.Add(superblock.ReadLength());
+                    this.DimensionMaxSizes.Add(superblock.ReadLength(reader));
                 }
             }
 
@@ -49,7 +49,7 @@ namespace HDF5.NET
             {
                 for (int i = 0; i < this.Dimensionality; i++)
                 {
-                    this.PermutationIndices.Add(superblock.ReadLength());
+                    this.PermutationIndices.Add(superblock.ReadLength(reader));
                 }
             }
         }

@@ -30,7 +30,7 @@ namespace HDF5.NET
             headerSize += 1;
 
             // heap header address
-            this.HeapHeaderAddress = superblock.ReadOffset();
+            this.HeapHeaderAddress = superblock.ReadOffset(reader);
             headerSize += superblock.OffsetsSize;
 
             // block offset

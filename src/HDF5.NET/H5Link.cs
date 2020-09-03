@@ -67,50 +67,101 @@ namespace HDF5.NET
             return attributes.ToList();
         }
 
-        private List<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage infoMessage)
+        private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage infoMessage)
         {
-            var attributes = new List<H5Attribute>();
-
             // fractal heap header
             var reader = this.Superblock.Reader;
             reader.BaseStream.Seek((long)infoMessage.FractalHeapAddress, SeekOrigin.Begin);
-            var header = new FractalHeapHeader(reader, this.Superblock);
+            var heapHeader = new FractalHeapHeader(reader, this.Superblock);
 
-            // b-tree v2
-            reader.BaseStream.Seek((long)infoMessage.BTree2NameIndexAddress, SeekOrigin.Begin);
-            var btree2 = new BTree2Header<BTree2Record08>(reader, this.Superblock);
-
-            var records = btree2
-                .GetRecords()
-                .ToList();
-
-            var offsetByteCount = (ulong)Math.Ceiling(header.MaximumHeapSize / 8.0);
-#warning Is -1 correct?
-            var lengthByteCount = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
-
-            var heapIds = records.Select(record =>
+            // find managed attributes
+            if (heapHeader.HeapManagedObjectsCount > 0)
             {
-                using (var localReader = new BinaryReader(new MemoryStream(record.HeapId)))
-                {
-                    return FractalHeapId.Construct(localReader, this.Superblock, offsetByteCount, lengthByteCount);
-                };
-            }).ToList();
+                // b-tree v2
+                reader.BaseStream.Seek((long)infoMessage.BTree2NameIndexAddress, SeekOrigin.Begin);
+                var btree2 = new BTree2Header<BTree2Record08>(reader, this.Superblock);
 
-            // fractal heap
-            if (!this.Superblock.IsUndefinedAddress(header.RootBlockAddress))
-            {
-                foreach (var heapId in heapIds)
-                {
-                    var address = header.GetAddress((ManagedObjectsFractalHeapId)heapId);
+                var records = btree2
+                    .GetRecords()
+                    .ToList();
 
-                    reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
-                    var message = new AttributeMessage(reader, this.Superblock);
-                    var attribute = new H5Attribute(message, this.Superblock);
-                    attributes.Add(attribute);
+                var heapIds = records.Select(record =>
+                {
+                    using (var localReader = new BinaryReader(new MemoryStream(record.HeapId)))
+                    {
+                        return FractalHeapId.Construct(localReader, this.Superblock, heapHeader);
+                    };
+                }).ToList();
+
+                if (!this.Superblock.IsUndefinedAddress(heapHeader.RootBlockAddress))
+                {
+                    foreach (var heapId in heapIds)
+                    {
+                        var address = heapHeader.GetAddress((ManagedObjectsFractalHeapId)heapId);
+
+                        reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+                        var message = new AttributeMessage(reader, this.Superblock);
+                        var attribute = new H5Attribute(message, this.Superblock);
+
+                        yield return attribute;
+                    }
                 }
             }
 
-            return attributes;
+            // find huge attributes
+            if (heapHeader.HeapHugeObjectsCount > 0)
+            {
+                reader.BaseStream.Seek((long)heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
+
+                // indirectly accessed, non-filtered
+                if (heapHeader.IOFilterEncodedLength == 0 && !heapHeader.HugeIdsAreDirect)
+                {
+                    var hugeBtree2 = new BTree2Header<BTree2Record01>(reader, this.Superblock);
+                    var hugeRecords = hugeBtree2.GetRecords();
+
+                    foreach (var hugeRecord in hugeRecords)
+                    {
+                        reader.BaseStream.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
+                        var message = new AttributeMessage(reader, this.Superblock);
+                        var attribute = new H5Attribute(message, this.Superblock);
+
+                        yield return attribute;
+                    }
+                }
+                // indirectly accessed, filtered
+                else if (heapHeader.IOFilterEncodedLength < 0 && !heapHeader.HugeIdsAreDirect)
+                {
+                    var hugeBtree2 = new BTree2Header<BTree2Record02>(reader, this.Superblock);
+                    var hugeRecords = hugeBtree2.GetRecords();
+
+                    foreach (var hugeRecord in hugeRecords)
+                    {
+                        throw new Exception("Filtered attributes are not supported.");
+                    }
+                }
+                // directly accessed, non-filtered
+                else if (heapHeader.IOFilterEncodedLength == 0 && heapHeader.HugeIdsAreDirect)
+                {
+                    var hugeBtree2 = new BTree2Header<BTree2Record03>(reader, this.Superblock);
+                    var hugeRecords = hugeBtree2.GetRecords();
+
+                    foreach (var hugeRecord in hugeRecords)
+                    {
+                        throw new Exception("Where is the difference to indirectly accessed objects?");
+                    }
+                }
+                // directly accessed, filtered
+                else if (heapHeader.IOFilterEncodedLength < 0 && heapHeader.HugeIdsAreDirect)
+                {
+                    var hugeBtree2 = new BTree2Header<BTree2Record04>(reader, this.Superblock);
+                    var hugeRecords = hugeBtree2.GetRecords();
+
+                    foreach (var hugeRecord in hugeRecords)
+                    {
+                        throw new Exception("Filtered attributes are not supported.");
+                    }
+                }
+            }
         }
 
         #endregion

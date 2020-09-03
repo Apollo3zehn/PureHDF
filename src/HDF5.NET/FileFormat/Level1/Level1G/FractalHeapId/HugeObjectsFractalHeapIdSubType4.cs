@@ -9,16 +9,16 @@ namespace HDF5.NET
         public HugeObjectsFractalHeapIdSubType4(BinaryReader reader, Superblock superblock) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // length
-            this.Length = superblock.ReadLength();
+            this.Length = superblock.ReadLength(reader);
 
             // filter mask
             this.FilterMask = reader.ReadUInt32();
 
             // de-filtered size
-            this.DeFilteredSize = superblock.ReadLength();
+            this.DeFilteredSize = superblock.ReadLength(reader);
         }
 
         #endregion

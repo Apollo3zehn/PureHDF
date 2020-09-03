@@ -231,7 +231,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanReadVeryLargeAttribute()
+        public void CanReadHugeAttribute()
         {
             TestUtils.RunForAllVersions(version =>
             {

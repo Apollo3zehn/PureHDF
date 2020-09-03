@@ -9,10 +9,10 @@ namespace HDF5.NET
         public HugeObjectsFractalHeapIdSubType3(BinaryReader reader, Superblock superblock) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // length
-            this.Length = superblock.ReadLength();
+            this.Length = superblock.ReadLength(reader);
         }
 
         #endregion

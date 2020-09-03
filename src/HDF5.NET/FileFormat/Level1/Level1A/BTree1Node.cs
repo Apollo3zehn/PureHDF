@@ -28,8 +28,8 @@ namespace HDF5.NET
             this.NodeLevel = reader.ReadByte();
             this.EntriesUsed = reader.ReadUInt16();
 
-            this.LeftSiblingAddress = superblock.ReadOffset();
-            this.RightSiblingAddress = superblock.ReadOffset();
+            this.LeftSiblingAddress = superblock.ReadOffset(reader);
+            this.RightSiblingAddress = superblock.ReadOffset(reader);
 
             this.Keys = new List<BTree1Key>();
             this.ChildAddresses = new List<ulong>();
@@ -41,7 +41,7 @@ namespace HDF5.NET
                     for (int i = 0; i < this.EntriesUsed; i++)
                     {
                         this.Keys.Add(new BTree1GroupKey(reader, superblock));
-                        this.ChildAddresses.Add(superblock.ReadOffset());
+                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
                     }
 
                     this.Keys.Add(new BTree1GroupKey(reader, superblock));
@@ -54,7 +54,7 @@ namespace HDF5.NET
                     {
 #warning How to correctly handle dimensionality?
                         this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
-                        this.ChildAddresses.Add(superblock.ReadOffset());
+                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
                     }
 
                     this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));

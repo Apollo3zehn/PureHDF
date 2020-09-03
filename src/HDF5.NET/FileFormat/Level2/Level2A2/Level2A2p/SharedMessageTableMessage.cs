@@ -19,7 +19,7 @@ namespace HDF5.NET
             this.Version = reader.ReadByte();
 
             // shared object header message table address
-            this.SharedObjectHeaderMessageTableAddress = superblock.ReadOffset();
+            this.SharedObjectHeaderMessageTableAddress = superblock.ReadOffset(reader);
 
             // index count
             this.IndexCount = reader.ReadByte();

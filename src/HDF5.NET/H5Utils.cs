@@ -150,24 +150,24 @@ namespace HDF5.NET
             return result;
         }
 
-        public static ulong ReadUlong(BinaryReader reader, ulong byteCount)
+        public static ulong ReadUlong(BinaryReader reader, ulong size)
         {
-            return byteCount switch
+            return size switch
             {
                 1 => reader.ReadByte(),
                 2 => reader.ReadUInt16(),
                 4 => reader.ReadUInt32(),
                 8 => reader.ReadUInt64(),
-                _ => H5Utils.ReadUlongArbirtary(byteCount, reader)
+                _ => H5Utils.ReadUlongArbitrary(reader, size)
             };
         }
 
-        private static ulong ReadUlongArbirtary(ulong byteCount, BinaryReader reader)
+        private static ulong ReadUlongArbitrary(BinaryReader reader, ulong size)
         {
             var result = 0UL;
             var shift = 0;
 
-            for (ulong i = 0; i < byteCount; i++)
+            for (ulong i = 0; i < size; i++)
             {
                 var value = reader.ReadByte();
                 result += (ulong)(value << shift);

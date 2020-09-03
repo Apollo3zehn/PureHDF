@@ -16,7 +16,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public static FractalHeapId Construct(BinaryReader reader, Superblock superblock, ulong offsetByteCount, ulong lengthByteCount)
+        public static FractalHeapId Construct(BinaryReader reader, Superblock superblock, FractalHeapHeader header)
         {
             var firstByte = reader.ReadByte();
 
@@ -29,13 +29,21 @@ namespace HDF5.NET
             // bits 4-5
             var type = (FractalHeapIdType)((firstByte & 0x30) >> 4);
 
-#warning: How to determine correct subtype?
-            return (FractalHeapId)(type switch
+            // offset and length Size (for managed objects fractal heap id)
+            var offsetSize = (ulong)Math.Ceiling(header.MaximumHeapSize / 8.0);
+#warning Is -1 correct?
+            var lengthSize = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
+
+            // H5HF.c (H5HF_op)
+            return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength) switch
             {
-                FractalHeapIdType.Managed   => new ManagedObjectsFractalHeapId(reader, offsetByteCount, lengthByteCount),
-                FractalHeapIdType.Huge      => new HugeObjectsFractalHeapIdSubType1And2(reader, superblock),
-                FractalHeapIdType.Tiny      => new TinyObjectsFractalHeapIdSubType1(reader, firstByte),
-                _                           => throw new Exception($"Unknown heap ID type '{type}'.")
+                (FractalHeapIdType.Managed, _, _)   => new ManagedObjectsFractalHeapId(reader, offsetSize, lengthSize),
+                // H5HFhuge.c (H5HF__huge_op_real)
+                (FractalHeapIdType.Huge, false, 0)  => new HugeObjectsFractalHeapIdSubType1And2(reader, header),
+                (FractalHeapIdType.Huge, true, 0)   => new HugeObjectsFractalHeapIdSubType3(reader, superblock),
+                (FractalHeapIdType.Huge, true, _)   => new HugeObjectsFractalHeapIdSubType4(reader, superblock),
+                (FractalHeapIdType.Tiny, _, _)      => new TinyObjectsFractalHeapIdSubType1(reader, firstByte),
+                _                                   => throw new Exception($"Unknown heap ID type '{type}'.")
             });
         }
 

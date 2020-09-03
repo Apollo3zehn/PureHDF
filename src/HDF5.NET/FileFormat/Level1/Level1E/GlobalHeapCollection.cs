@@ -29,7 +29,7 @@ namespace HDF5.NET
             reader.ReadBytes(3);
 
             // collection size
-            this.CollectionSize = superblock.ReadLength();
+            this.CollectionSize = superblock.ReadLength(reader);
 
             // global heap objects
             this.GlobalHeapObjects = new List<GlobalHeapObject>();

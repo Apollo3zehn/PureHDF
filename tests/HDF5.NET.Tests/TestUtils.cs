@@ -97,9 +97,9 @@ namespace HDF5.NET.Tests
         {
             var versions = new H5F.libver_t[] 
             {
-                H5F.libver_t.EARLIEST,
+                //H5F.libver_t.EARLIEST,
                 H5F.libver_t.V18,
-                H5F.libver_t.V110
+                //H5F.libver_t.V110
             };
 
             foreach (var version in versions)
@@ -401,6 +401,7 @@ namespace HDF5.NET.Tests
                     H5F.libver_t.EARLIEST => 16368UL, // max 64 kb in object header
                     _ => 10_000_000UL,
                 };
+
                 var attributeSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
                 var attributeId = H5A.create(groupId_large, "large", H5T.NATIVE_INT32, attributeSpaceId);
                 var attributeData = TestUtils.LargeData;
@@ -411,6 +412,20 @@ namespace HDF5.NET.Tests
                 }
 
                 res = H5A.close(attributeId);
+
+                //remove
+                var attributeSpaceId2 = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+                var attributeId2 = H5A.create(groupId_large, "large2", H5T.NATIVE_INT32, attributeSpaceId2);
+                var attributeData2 = TestUtils.LargeData;
+
+                fixed (void* ptr = attributeData2)
+                {
+                    res = H5A.write(attributeId2, H5T.NATIVE_INT32, new IntPtr(ptr));
+                }
+
+                res = H5A.close(attributeId2);
+
+                // remove end
                 res = H5G.close(groupId_large);
             }
 

@@ -18,7 +18,7 @@ namespace HDF5.NET
             _superblock = superblock;
 
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset();
+            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

@@ -26,7 +26,7 @@ namespace HDF5.NET
                 reader.ReadBytes(6);
 
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
         }
 
         #endregion

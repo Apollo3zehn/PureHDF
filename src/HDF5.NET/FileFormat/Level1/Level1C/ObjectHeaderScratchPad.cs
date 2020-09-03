@@ -9,8 +9,8 @@ namespace HDF5.NET
 
         public ObjectHeaderScratchPad(BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.BTreeAddress = superblock.ReadLength();
-            this.NameHeapAddress = superblock.ReadLength();
+            this.BTreeAddress = superblock.ReadLength(reader);
+            this.NameHeapAddress = superblock.ReadLength(reader);
         }
 
         #endregion

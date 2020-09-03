@@ -41,40 +41,40 @@ namespace HDF5.NET
             this.ManagedObjectsMaximumSize = reader.ReadUInt32();
 
             // next huge object id
-            this.NextHugeObjectId = superblock.ReadLength();
+            this.NextHugeObjectId = superblock.ReadLength(reader);
 
             // huge objects BTree2 address
-            this.HugeObjectsBTree2Address = superblock.ReadOffset();
+            this.HugeObjectsBTree2Address = superblock.ReadOffset(reader);
 
             // managed blocks free space amount
-            this.ManagedBlocksFreeSpaceAmount = superblock.ReadLength();
+            this.ManagedBlocksFreeSpaceAmount = superblock.ReadLength(reader);
 
             // managed block free space manager address
-            this.ManagedBlockFreeSpaceManagerAddress = superblock.ReadOffset();
+            this.ManagedBlockFreeSpaceManagerAddress = superblock.ReadOffset(reader);
 
             // heap managed space amount
-            this.HeapManagedSpaceAmount = superblock.ReadLength();
+            this.HeapManagedSpaceAmount = superblock.ReadLength(reader);
 
             // heap allocated managed space amount
-            this.HeapAllocatedManagedSpaceAmount = superblock.ReadLength();
+            this.HeapAllocatedManagedSpaceAmount = superblock.ReadLength(reader);
 
             // managed space direct block allocation iterator offset
-            this.ManagedSpaceDirectBlockAllocationIteratorOffset = superblock.ReadLength();
+            this.ManagedSpaceDirectBlockAllocationIteratorOffset = superblock.ReadLength(reader);
 
             // heap managed objects count
-            this.HeapManagedObjectsCount = superblock.ReadLength();
+            this.HeapManagedObjectsCount = superblock.ReadLength(reader);
 
             // heap huge objects size
-            this.HeapHugeObjectsSize = superblock.ReadLength();
+            this.HeapHugeObjectsSize = superblock.ReadLength(reader);
 
             // heap huge objects cound
-            this.HeapHugeObjectsCount = superblock.ReadLength();
+            this.HeapHugeObjectsCount = superblock.ReadLength(reader);
 
             // heap tiny objects size
-            this.HeapTinyObjectsSize = superblock.ReadLength();
+            this.HeapTinyObjectsSize = superblock.ReadLength(reader);
 
             // heap tiny objects count
-            this.HeapTinyObjectsCount = superblock.ReadLength();
+            this.HeapTinyObjectsCount = superblock.ReadLength(reader);
 
             /* next group */
 
@@ -82,10 +82,10 @@ namespace HDF5.NET
             this.TableWidth = reader.ReadUInt16();
 
             // starting block size
-            this.StartingBlockSize = superblock.ReadLength();
+            this.StartingBlockSize = superblock.ReadLength(reader);
 
             // maximum direct block size
-            this.MaximumDirectBlockSize = superblock.ReadLength();
+            this.MaximumDirectBlockSize = superblock.ReadLength(reader);
 
             // maximum heap size
             this.MaximumHeapSize = reader.ReadUInt16();
@@ -94,7 +94,7 @@ namespace HDF5.NET
             this.RootIndirectBlockRowsStartingNumber = reader.ReadUInt16();
 
             // root block address
-            this.RootBlockAddress = superblock.ReadOffset();
+            this.RootBlockAddress = superblock.ReadOffset(reader);
 
             // root indirect block rows count
             this.RootIndirectBlockRowsCount = reader.ReadUInt16();
@@ -104,7 +104,7 @@ namespace HDF5.NET
             // filtered root direct block size, I/O filter mask and I/O filter info
             if (this.IOFilterEncodedLength > 0)
             {
-                this.FilteredRootDirectBlockSize = superblock.ReadLength();
+                this.FilteredRootDirectBlockSize = superblock.ReadLength(reader);
                 this.IOFilterMask = reader.ReadUInt32();
                 this.IOFilterInfo = new FilterPipelineMessage(reader);
             }           
@@ -114,6 +114,7 @@ namespace HDF5.NET
 
             // cache some values
             this.CalculateBlockSizeTables();
+            this.CalculateHugeObjectsData();
         }
 
         #endregion
@@ -176,6 +177,10 @@ namespace HDF5.NET
         public uint StartingBits { get; private set; }
         public uint FirstRowBits { get; private set; }
         public uint MaxDirectRows { get; private set; }
+
+        public bool HugeIdsAreDirect { get; private set; }
+
+        public byte HugeIdsSize { get; private set; }
 
         #endregion
 
@@ -315,6 +320,63 @@ namespace HDF5.NET
                 this.RowBlockOffsets[i] = accumulatedBlockOffset;
                 tmpBlockSize *= 2;
                 accumulatedBlockOffset *= 2;
+            }
+        }
+
+        private void CalculateHugeObjectsData()
+        {
+            // H5HFhuge.c (H5HF_huge_init)
+
+            // with filter
+            if (this.IOFilterEncodedLength > 0)
+            {
+                // length of fractal heap id for huge objects (sub-type 4)
+                var actualLength = _superblock.OffsetsSize + _superblock.LengthsSize + 4 + _superblock.LengthsSize;
+
+                if ((this.HeapIdLength - 1) >= actualLength)
+                {
+                    /* Indicate that v2 B-tree doesn't have to be used to locate object */
+                    this.HugeIdsAreDirect = true;
+
+                    /* Set the size of 'huge' object IDs */
+#warning Correct? Why is here not "+4"?
+                    this.HugeIdsSize = (byte)(_superblock.OffsetsSize + _superblock.LengthsSize + _superblock.LengthsSize);
+                }
+                else
+                {
+                    /* Indicate that v2 B-tree must be used to access object */
+                    this.HugeIdsAreDirect = false;
+                }
+            }
+            // without filter
+            else
+            {
+                // length of fractal heap id for huge objects (sub-type 3)
+                var actualLength = _superblock.OffsetsSize + _superblock.LengthsSize;
+
+                if ((this.HeapIdLength - 1) >= actualLength)
+                {
+                    /* Indicate that v2 B-tree doesn't have to be used to locate object */
+                    this.HugeIdsAreDirect = true;
+
+                    /* Set the size of 'huge' object IDs */
+                    this.HugeIdsSize = (byte)actualLength;
+                }
+                else
+                {
+                    /* Indicate that v2 B-tree must be used to access object */
+                    this.HugeIdsAreDirect = false;
+                }
+            }
+
+            // set huge id size for indirect access
+            if (!this.HugeIdsAreDirect)
+            {
+                /* Set the size of 'huge' object ID */
+                if ((this.HeapIdLength - 1) < sizeof(ulong))
+                    this.HugeIdsSize = (byte)(this.HeapIdLength - 1);
+                else
+                    this.HugeIdsSize = sizeof(ulong);
             }
         }
 

@@ -26,14 +26,14 @@ namespace HDF5.NET
                 this.MaximumCreationIndex = reader.ReadUInt16();
 
             // fractal heap address
-            this.FractalHeapAddress = superblock.ReadOffset();
+            this.FractalHeapAddress = superblock.ReadOffset(reader);
 
             // b-tree 2 name index address
-            this.BTree2NameIndexAddress = superblock.ReadOffset();
+            this.BTree2NameIndexAddress = superblock.ReadOffset(reader);
 
             // b-tree 2 creation order index address
             if (this.Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-                this.BTree2NameIndexAddress = superblock.ReadOffset();
+                this.BTree2NameIndexAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

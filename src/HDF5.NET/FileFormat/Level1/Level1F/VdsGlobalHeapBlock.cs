@@ -20,7 +20,7 @@ namespace HDF5.NET
             this.Version = reader.ReadUInt32();
 
             // entry count
-            this.EntryCount = superblock.ReadLength();
+            this.EntryCount = superblock.ReadLength(reader);
 
             // vds dataset entries
             this.VdsDatasetEntries = new List<VdsDatasetEntry>((int)this.EntryCount);

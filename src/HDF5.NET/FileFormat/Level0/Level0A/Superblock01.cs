@@ -30,10 +30,10 @@ namespace HDF5.NET
                 reader.ReadUInt16();
             }
 
-            this.BaseAddress = this.ReadOffset();
-            this.FreeSpaceInfoAddress = this.ReadOffset();
-            this.EndOfFileAddress = this.ReadOffset();
-            this.DriverInfoBlockAddress = this.ReadOffset();
+            this.BaseAddress = this.ReadOffset(reader);
+            this.FreeSpaceInfoAddress = this.ReadOffset(reader);
+            this.EndOfFileAddress = this.ReadOffset(reader);
+            this.DriverInfoBlockAddress = this.ReadOffset(reader);
             this.RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
         }
 

@@ -12,7 +12,7 @@ namespace HDF5.NET
             this.Dimensionality = reader.ReadByte();
 
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // dimension sizes
             this.DimensionSizes = new uint[this.Dimensionality];

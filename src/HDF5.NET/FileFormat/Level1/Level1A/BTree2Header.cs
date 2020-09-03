@@ -47,13 +47,13 @@ namespace HDF5.NET
             this.MergePercent = reader.ReadByte();
 
             // root node address
-            this.RootNodeAddress = superblock.ReadOffset();
+            this.RootNodeAddress = superblock.ReadOffset(reader);
 
             // root node record count
             this.RootNodeRecordCount = reader.ReadUInt16();
 
             // b-tree total record count
-            this.BTreeTotalRecordCount = superblock.ReadLength();
+            this.BTreeTotalRecordCount = superblock.ReadLength(reader);
 
             // checksum
             this.Checksum = reader.ReadUInt32();

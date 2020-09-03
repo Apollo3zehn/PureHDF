@@ -79,19 +79,9 @@ namespace HDF5.NET
             };
         }
 
-        public ulong ReadOffset()
-        {
-            return H5Utils.ReadUlong(this.Reader, this.OffsetsSize);
-        }
-
         public ulong ReadOffset(BinaryReader reader)
         {
             return H5Utils.ReadUlong(reader, this.OffsetsSize);
-        }
-
-        public ulong ReadLength()
-        {
-            return H5Utils.ReadUlong(this.Reader, this.LengthsSize);
         }
 
         public ulong ReadLength(BinaryReader reader)

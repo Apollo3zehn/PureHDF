@@ -18,8 +18,8 @@ namespace HDF5.NET
         {
             _superblock = superblock;
 
-            this.BTree1Address = superblock.ReadOffset();
-            this.LocalHeapAddress = superblock.ReadOffset();
+            this.BTree1Address = superblock.ReadOffset(reader);
+            this.LocalHeapAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

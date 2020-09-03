@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -30,7 +29,7 @@ namespace HDF5.NET
             this.Version = reader.ReadByte();
 
             // heap header address
-            this.HeapHeaderAddress = superblock.ReadOffset();
+            this.HeapHeaderAddress = superblock.ReadOffset(reader);
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
@@ -43,7 +42,7 @@ namespace HDF5.NET
             for (uint i = 0; i < this.Entries.Length; i++)
             {
                 /* Decode child block address */
-                this.Entries[i].Address = _superblock.ReadOffset();
+                this.Entries[i].Address = _superblock.ReadOffset(reader);
 
                 /* Check for heap with I/O filters */
                 if (header.IOFilterEncodedLength > 0)
@@ -52,7 +51,7 @@ namespace HDF5.NET
                     if (i < (header.MaxDirectRows * header.TableWidth))
                     {
                         /* Size of filtered direct block */
-                        this.Entries[i].FilteredSize = _superblock.ReadLength();
+                        this.Entries[i].FilteredSize = _superblock.ReadLength(reader);
 
                         /* I/O filter mask for filtered direct block */
                         this.Entries[i].FilterMask = reader.ReadUInt32();

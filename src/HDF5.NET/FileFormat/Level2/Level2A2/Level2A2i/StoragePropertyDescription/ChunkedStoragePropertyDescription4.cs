@@ -41,7 +41,7 @@ namespace HDF5.NET
             };
 
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
         }
 
         #endregion

@@ -31,8 +31,8 @@ namespace HDF5.NET
             this.DataAddress = this.LayoutClass switch
             {
                 LayoutClass.Compact     => ulong.MaxValue, // invalid address
-                LayoutClass.Contiguous  => superblock.ReadOffset(),
-                LayoutClass.Chunked     => superblock.ReadOffset(),
+                LayoutClass.Contiguous  => superblock.ReadOffset(reader),
+                LayoutClass.Chunked     => superblock.ReadOffset(reader),
                 _ => throw new NotSupportedException($"The layout class '{this.LayoutClass}' is not supported.")
             };
 

@@ -19,10 +19,10 @@ namespace HDF5.NET
             _superblock = superblock;
 
             // link name offset
-            this.LinkNameOffset = superblock.ReadOffset();
+            this.LinkNameOffset = superblock.ReadOffset(reader);
             
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset();
+            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
 
             // cache type
             this.CacheType = (CacheType)reader.ReadUInt32();

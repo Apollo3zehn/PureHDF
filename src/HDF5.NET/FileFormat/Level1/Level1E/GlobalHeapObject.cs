@@ -19,7 +19,7 @@ namespace HDF5.NET
             reader.ReadBytes(4);
 
             // object size
-            this.ObjectSize = superblock.ReadLength();
+            this.ObjectSize = superblock.ReadLength(reader);
 
             // object data
             this.ObjectData = reader.ReadBytes((int)this.ObjectSize);

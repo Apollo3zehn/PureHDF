@@ -6,10 +6,10 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType1And2(BinaryReader reader, Superblock superblock) : base(reader)
+        public HugeObjectsFractalHeapIdSubType1And2(BinaryReader reader, FractalHeapHeader header) : base(reader)
         {
             // BTree2 key
-            this.BTree2Key = superblock.ReadLength();
+            this.BTree2Key = H5Utils.ReadUlong(reader, header.HugeIdsSize);
         }
 
         #endregion

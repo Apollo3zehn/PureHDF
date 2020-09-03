@@ -16,7 +16,7 @@ namespace HDF5.NET
             for (int i = 0; i < recordCount + 1; i++)
             {
                 // address
-                this.NodePointers[i].Address = superblock.ReadOffset();
+                this.NodePointers[i].Address = superblock.ReadOffset(reader);
 
                 // record count
                 var childRecordCount = H5Utils.ReadUlong(reader, header.MaxRecordCountSize);
