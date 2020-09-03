@@ -143,7 +143,7 @@ namespace HDF5.NET
 
             if (pad)
             {
-                var paddingCount = padSize - (result.Length + 1) % padSize;
+                var paddingCount = (padSize - (result.Length + 1) % padSize) % padSize;
                 reader.BaseStream.Seek(paddingCount, SeekOrigin.Current);
             }
 

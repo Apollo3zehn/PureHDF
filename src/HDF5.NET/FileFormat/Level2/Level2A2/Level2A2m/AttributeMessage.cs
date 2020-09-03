@@ -40,7 +40,6 @@ namespace HDF5.NET
             
             // name
             if (this.Version == 1)
-#error: padding is implemented wrongly. Should pad zero, but pads 8
                 this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, encoding: this.NameEncoding);
             else
                 this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, encoding: this.NameEncoding);
