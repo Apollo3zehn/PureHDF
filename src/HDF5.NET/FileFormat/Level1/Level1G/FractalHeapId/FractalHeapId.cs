@@ -35,15 +35,22 @@ namespace HDF5.NET
             var lengthSize = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
 
             // H5HF.c (H5HF_op)
-            return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength) switch
+            return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength, header.TinyObjectsAreExtended) switch
             {
-                (FractalHeapIdType.Managed, _, _)   => new ManagedObjectsFractalHeapId(reader, offsetSize, lengthSize),
+                (FractalHeapIdType.Managed, _, _, _)    => new ManagedObjectsFractalHeapId(reader, offsetSize, lengthSize),
+
                 // H5HFhuge.c (H5HF__huge_op_real)
-                (FractalHeapIdType.Huge, false, 0)  => new HugeObjectsFractalHeapIdSubType1And2(reader, header),
-                (FractalHeapIdType.Huge, true, 0)   => new HugeObjectsFractalHeapIdSubType3(reader, superblock),
-                (FractalHeapIdType.Huge, true, _)   => new HugeObjectsFractalHeapIdSubType4(reader, superblock),
-                (FractalHeapIdType.Tiny, _, _)      => new TinyObjectsFractalHeapIdSubType1(reader, firstByte),
-                _                                   => throw new Exception($"Unknown heap ID type '{type}'.")
+                (FractalHeapIdType.Huge, false, 0, _)   => new HugeObjectsFractalHeapIdSubType1(reader, header),
+                (FractalHeapIdType.Huge, false, _, _)   => new HugeObjectsFractalHeapIdSubType2(reader, header),
+                (FractalHeapIdType.Huge, true, 0, _)    => new HugeObjectsFractalHeapIdSubType3(reader, superblock),
+                (FractalHeapIdType.Huge, true, _, _)    => new HugeObjectsFractalHeapIdSubType4(reader, superblock),
+
+                // H5HFtiny.c (H5HF_tiny_op_real)
+                (FractalHeapIdType.Tiny, _, _, false)   => new TinyObjectsFractalHeapIdSubType1(reader, firstByte),
+                (FractalHeapIdType.Tiny, _, _, true)    => new TinyObjectsFractalHeapIdSubType2(reader, firstByte),
+
+                // default
+                _                                       => throw new Exception($"Unknown heap ID type '{type}'.")
             });
         }
 

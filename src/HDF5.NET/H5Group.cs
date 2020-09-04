@@ -133,7 +133,6 @@ namespace HDF5.NET
 
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
-            var namedObjects = (IEnumerable<NamedObject>)new List<NamedObject>();
 
             // original approach
             var symbolTableHeaderMessages = header
@@ -141,13 +140,17 @@ namespace HDF5.NET
 
             if (symbolTableHeaderMessages.Any())
             {
-                namedObjects = namedObjects.Concat(symbolTableHeaderMessages
-                    .SelectMany(message =>
+                foreach (var message in symbolTableHeaderMessages)
                 {
-                    return message.BTree1
+                    var namedObjects = message.BTree1
                         .GetSymbolTableNodes()
                         .SelectMany(node => this.CreateNamedObjects(message.LocalHeap, node.GroupEntries));
-                }));
+
+                    foreach (var namedObject in namedObjects)
+                    {
+                        yield return namedObject;
+                    }
+                }
             }
 
             // new (1.8) indexed format (in combination with Group Info Message)
@@ -174,16 +177,19 @@ namespace HDF5.NET
 
             if (linkMessages.Any())
             {
-                namedObjects = namedObjects.Concat(linkMessages
+                var namedObjects = linkMessages
                     .Where(message => message.LinkType == LinkType.Hard)
                     .Select(message =>
-                {
-                    var linkInfo = message.LinkInfo as HardLinkInfo;
-                    return new NamedObject(message.LinkName, linkInfo.ObjectHeader);
-                }));
-            }
+                    {
+                        var linkInfo = message.LinkInfo as HardLinkInfo;
+                        return new NamedObject(message.LinkName, linkInfo.ObjectHeader);
+                    });
 
-            return namedObjects;
+                foreach (var namedObject in namedObjects)
+                {
+                    yield return namedObject;
+                }
+            }
         }
 
         #endregion

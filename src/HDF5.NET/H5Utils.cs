@@ -143,6 +143,7 @@ namespace HDF5.NET
 
             if (pad)
             {
+                // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
                 var paddingCount = (padSize - (result.Length + 1) % padSize) % padSize;
                 reader.BaseStream.Seek(paddingCount, SeekOrigin.Current);
             }

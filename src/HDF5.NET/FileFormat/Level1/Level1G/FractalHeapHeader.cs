@@ -179,8 +179,9 @@ namespace HDF5.NET
         public uint MaxDirectRows { get; private set; }
 
         public bool HugeIdsAreDirect { get; private set; }
-
         public byte HugeIdsSize { get; private set; }
+
+        public bool TinyObjectsAreExtended { get; private set; }
 
         #endregion
 
@@ -377,6 +378,31 @@ namespace HDF5.NET
                     this.HugeIdsSize = (byte)(this.HeapIdLength - 1);
                 else
                     this.HugeIdsSize = sizeof(ulong);
+            }
+        }
+
+        private void CalculateTinyObjectsData()
+        {
+            // H5HFtiny.c (H5HF_tiny_init)
+
+            /* Compute information about 'tiny' objects for the heap */
+
+            /* Check if tiny objects need an extra byte for their length */
+            /* (account for boundary condition when length of an object would need an
+             *  extra byte, but using that byte means that the extra length byte is
+             *  unnecessary)
+             */
+            if ((this.HeapIdLength - 1) <= 16)
+            {
+                this.TinyObjectsAreExtended = false;
+            }
+            else if ((this.HeapIdLength - 1) <= (16 + 1))
+            {
+                this.TinyObjectsAreExtended = false;
+            }
+            else
+            {
+                this.TinyObjectsAreExtended = true;
             }
         }
 

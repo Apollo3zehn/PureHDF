@@ -28,7 +28,7 @@ namespace HDF5.NET
         {
             get
             {
-                return (byte)(((_firstByte & 0x07) >> 0) + 1);          // take
+                return (byte)(((_firstByte & 0x0F) >> 0) + 1);          // take
             }
         }
 

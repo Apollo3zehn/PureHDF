@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    public class HugeObjectsFractalHeapIdSubType1And2 : FractalHeapId
+    public class HugeObjectsFractalHeapIdSubType1 : FractalHeapId
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType1And2(BinaryReader reader, FractalHeapHeader header) : base(reader)
+        public HugeObjectsFractalHeapIdSubType1(BinaryReader reader, FractalHeapHeader header) : base(reader)
         {
             // BTree2 key
             this.BTree2Key = H5Utils.ReadUlong(reader, header.HugeIdsSize);

@@ -1,9 +1,7 @@
 ﻿using HDF.PInvoke;
-using Microsoft.Extensions.Logging;
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 

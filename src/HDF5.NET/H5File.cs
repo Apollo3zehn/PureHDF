@@ -5,16 +5,25 @@ namespace HDF5.NET
 {
     public class H5File : IDisposable
     {
-        /* Hierarchy
-         * (1) Superblock -> RootGroupSymbolTableEntry -> ObjectHeader -> (List<SymbolTable>)HeaderMessages -> First
-         *                -> (SymbolTableMessage)Data -> BTree -> GetSymbolTableNodes() -> SelectMany -> node.GroupEntries()        
-         * (2) Create H5Group or H5Dataset (both inherit from H5Link)
-         */
+        #region Fields
+
+        private string _filePath;
+        private bool _deleteOnClose;
+
+        #endregion
 
         #region Constructors
 
+        private H5File(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose)
+            : this(filePath, mode, fileAccess, fileShare)
+        {
+            _deleteOnClose = deleteOnClose;
+        }
+
         private H5File(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
         {
+            _filePath = filePath;
+
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
@@ -65,6 +74,11 @@ namespace HDF5.NET
 
         #region Methods
 
+        internal static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose)
+        {
+            return new H5File(filePath, mode, fileAccess, fileShare, deleteOnClose);
+        }
+
         public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
         {
             return new H5File(filePath, mode, fileAccess, fileShare);
@@ -74,6 +88,18 @@ namespace HDF5.NET
         {
             GlobalHeapCache.Clear(this.Superblock);
             this.Reader.Dispose();
+
+            if (_deleteOnClose)
+            {
+                try
+                {
+                    File.Delete(_filePath);
+                }
+                catch
+                {
+                    //
+                }
+            }    
         }
 
         private void ValidateSignature(byte[] actual, byte[] expected)
