@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 
 namespace HDF5.NET
@@ -11,22 +10,24 @@ namespace HDF5.NET
     {
         #region Fields
 
-        public ObjectHeaderScratchPad? _scratchPad;
+        private H5File _file;
+        private ObjectHeaderScratchPad? _scratchPad;
 
         #endregion
 
         #region Constructors
 
-        internal H5Group(BinaryReader reader, Superblock superblock, string name, ulong objectHeaderAddress, ObjectHeaderScratchPad? scratchPad)
-            : base(reader, superblock, name, objectHeaderAddress)
+        internal H5Group(H5File file, string name, ulong objectHeaderAddress, ObjectHeaderScratchPad? scratchPad)
+            : base(file.Reader, file.Superblock, name, objectHeaderAddress)
         {
+            _file = file;
             _scratchPad = scratchPad;
         }
 
-        internal H5Group(BinaryReader reader, Superblock superblock, string name, ObjectHeader objectHeader)
-            : base(reader, superblock, name, objectHeader)
+        internal H5Group(H5File file, string name, ObjectHeader objectHeader)
+            : base(file.Reader, file.Superblock, name, objectHeader)
         {
-            //
+            _file = file;
         }
 
         #endregion
@@ -80,24 +81,47 @@ namespace HDF5.NET
 
         public T Get<T>(string path) where T : H5Link
         {
-            if (!path.StartsWith('/'))
-                throw new Exception("A path must start with a forward slash, e.g. '/a/b/c'.");
+            return (T)this.Get(path);
+        }
 
+        public H5Link Get(string path)
+        {
             if (path == "/")
-                return (T)(H5Link)this;
+                return this;
 
-            var segments = path.Split('/');
-            var current = (H5Link)this;
+            var isRooted = path.StartsWith('/');
+            var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
+            var current = (H5Link)(isRooted ? _file.Root : this);
 
-            foreach (var pathSegment in segments.Skip(1))
+            H5SymbolicLink? symbolicLink;
+
+            for (int i = 0; i < segments.Length; i++)
             {
+                // either it is a group
                 var group = current as H5Group;
 
                 if (group == null)
-                    throw new Exception($"Path segment '{pathSegment}' is not a group.");
+                {
+                    // or it is a symbolic link to a group
+                    symbolicLink = current as H5SymbolicLink;
 
-                var links = group.EnumerateLinks();
-                var link = links.FirstOrDefault(link => link.Name == pathSegment);
+                    if (symbolicLink == null)
+                    {
+                        throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
+                    }
+                    else
+                    {
+                        group = symbolicLink.Target as H5Group;
+
+                        if (group == null)
+                            throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
+                    }
+                }
+
+#warning Improve this to traverse to specific link instead of enumeration
+                var link = group
+                    .EnumerateLinks()
+                    .FirstOrDefault(link => link.Name == segments[i]);
 
                 if (link == null)
                     throw new Exception($"Could not find part of the path '{path}'.");
@@ -105,7 +129,12 @@ namespace HDF5.NET
                 current = link;
             }
 
-            return (T)current;
+            symbolicLink = current as H5SymbolicLink;
+
+            if (symbolicLink != null)
+                current = symbolicLink.Target;
+
+            return current;
         }
 
         private IEnumerable<H5Link> InstantiateLinks(LocalHeap heap, List<SymbolTableEntry> entries)
@@ -116,8 +145,8 @@ namespace HDF5.NET
 
                 yield return entry.ScratchPad switch
                 {
-                    ObjectHeaderScratchPad objectScratch    => new H5Group(this.Reader, this.Superblock, name, entry.ObjectHeaderAddress, objectScratch),
-                    SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(this.Superblock, name, entry),
+                    ObjectHeaderScratchPad objectScratch    => new H5Group(_file, name, entry.ObjectHeaderAddress, objectScratch),
+                    SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
                     _                                       => this.InstantiateUncachedLink(name, entry.ObjectHeader)
                 };
             }
@@ -168,18 +197,12 @@ namespace HDF5.NET
 
             /* new (1.8) indexed format (in combination with Group Info Message) */
             var linkInfoMessages = this.ObjectHeader
-                .GetMessages<LinkInfoMessage>();
+                .GetMessages<LinkInfoMessage>()
+                .Where(message => !this.Superblock.IsUndefinedAddress(message.BTree2NameIndexAddress));
 
-            if (linkInfoMessages.Any())
+            foreach (var linkInfoMessage in linkInfoMessages)
             {
-                //namedObjects = namedObjects.AddRange(linkInfoMessages
-                //    .Where(message => !_superblock.IsUndefinedAddress(message.FractalHeapAddress))
-                //    .Select(message =>
-                //{
-                //    throw new NotImplementedException();
-                //    //return message.BTree1.GetSymbolTableNodes()
-                //    //    .SelectMany(node => this.CreateNamedObjects(message.LocalHeap, node.GroupEntries));
-                //}));
+                throw new Exception("Link info messages are not yet supported. Please provide a sample file to the package author.");
             }
 
             // new (1.8) compact format
@@ -193,8 +216,8 @@ namespace HDF5.NET
                 yield return linkMessage.LinkInfo switch
                 {
                     HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
-                    SoftLinkInfo soft => new H5SymbolicLink(this.Superblock, linkMessage),
-                    ExternalLinkInfo external => new H5SymbolicLink(this.Superblock, linkMessage),
+                    SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
+                    ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
                     _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
                 };
             }
@@ -206,7 +229,7 @@ namespace HDF5.NET
             {
                 return objectHeader.ObjectType switch
                 {
-                    H5ObjectType.Group => new H5Group(this.Reader, this.Superblock, name, objectHeader),
+                    H5ObjectType.Group => new H5Group(_file, name, objectHeader),
                     H5ObjectType.Dataset => new H5Dataset(this.Reader, this.Superblock, name, objectHeader),
                     H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
                     _ => throw new Exception("Unknown object type.")

@@ -4,21 +4,22 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class ObjectHeaderContinuationBlock2 : FileBlock
+    public class ObjectHeaderContinuationBlock2 : ObjectHeader
     {
         #region Constructors
 
-        public ObjectHeaderContinuationBlock2(BinaryReader reader) : base(reader)
+        public ObjectHeaderContinuationBlock2(BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
 
-#warning Parse also remaining parts
+            // header messages
+#error Why does -8 work? Signature + Checksum?
+            var messages = this.ReadHeaderMessages(reader, superblock, objectHeaderSize - 8, version, withCreationOrder);
+            this.HeaderMessages.AddRange(messages);
 
-
-            // checksum
-            this.Checksum = reader.ReadUInt32();
+#warning read gap and checksum
         }
 
         #endregion
@@ -27,11 +28,6 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("OCHK");
 
-        public List<HeaderMessageType> HeaderMessageTypes { get; set; }
-        public List<ushort> HeaderMessageDataSizes { get; set; }
-        public List<HeaderMessageFlags> HeaderMessageFlags { get; set; }
-        public List<ushort> HeaderMessageCreationOrder { get; set; }
-        public List<byte[]> HeaderMessageData { get; set; }
         public uint Checksum { get; set; }
 
         #endregion

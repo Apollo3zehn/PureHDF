@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.IO;
-using System.Net.Security;
+﻿using System.IO;
 
 namespace HDF5.NET
 {

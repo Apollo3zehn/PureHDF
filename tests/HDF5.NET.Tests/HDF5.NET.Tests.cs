@@ -272,7 +272,7 @@ namespace HDF5.NET.Tests
 
                 var dataset_hard_1 = root.Get<H5Dataset>("/links/hard_link_1/dataset");
                 var dataset_hard_2 = root.Get<H5Dataset>("/links/hard_link_2/dataset");
-                var dataset_hard_3 = root.Get<H5Dataset>("/links/soft_link/dataset");
+                var dataset_hard_3 = root.Get<H5Dataset>("/links/soft_link_2/dataset");
                 var dataset_hard_4 = root.Get<H5Dataset>("/links/dataset");
 
                 var a = 1;

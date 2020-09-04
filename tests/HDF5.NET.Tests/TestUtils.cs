@@ -484,12 +484,13 @@ namespace HDF5.NET.Tests
 
             var hardLinkId1 = H5G.create(groupId, "hard_link_1");
             res = H5L.create_hard(groupId, "hard_link_1", groupId, "hard_link_2");
-            res = H5L.create_soft("hard_link_2", groupId, "soft_link");
+            res = H5L.create_soft("hard_link_2", groupId, "soft_link_1");
+            res = H5L.create_soft("/links/soft_link_1", groupId, "soft_link_2");
 
             var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
             var datasetId = H5D.create(hardLinkId1, "dataset", H5T.NATIVE_INT, spaceId);
 
-            res = H5L.create_soft("/links/soft_link/dataset", groupId, "dataset");
+            res = H5L.create_soft("/links/soft_link_2/dataset", groupId, "dataset");
 
             res = H5S.close(spaceId);
             res = H5D.close(datasetId);

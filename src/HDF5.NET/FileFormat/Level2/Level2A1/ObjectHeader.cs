@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +7,7 @@ namespace HDF5.NET
 {
     public abstract class ObjectHeader : FileBlock
     {
+        private ulong gapSize;
         #region Constructors
 
         public ObjectHeader(BinaryReader reader) : base(reader)
@@ -63,65 +63,95 @@ namespace HDF5.NET
             };
         }
 
-        protected List<HeaderMessage> ReadHeaderMessages(BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder = false)
+        protected List<HeaderMessage> ReadHeaderMessages(BinaryReader reader,
+                                                         Superblock superblock,
+                                                         ulong objectHeaderSize,
+                                                         byte version,
+                                                         bool withCreationOrder = false)
         {
             var headerMessages = new List<HeaderMessage>();
             var continuationMessages = new List<ObjectHeaderContinuationMessage>();
             var remainingBytes = objectHeaderSize;
 
-            while (remainingBytes > 0)
+            ulong prefixSize;
+            ulong gapSize;
+
+            if (version == 1)
+            {
+                prefixSize = 8UL;
+                gapSize = 0;
+            }    
+            else if (version == 2)
+            {
+                prefixSize = 4UL + (withCreationOrder ? 2UL : 0UL);
+                gapSize = prefixSize;
+            }
+            else
+            {
+                throw new Exception("The object header version number must be in the range of 1..2.");
+            }
+
+            while (remainingBytes > gapSize)
             {
                 var message = new HeaderMessage(reader, superblock, version, withCreationOrder);
 
-                remainingBytes -= message.DataSize + version switch
-                {
-                    1 => 8UL,
-                    2 => 4UL + (withCreationOrder ? 2UL : 0UL),
-                    _ => throw new Exception("The object header version number must be in the range of 1..2.")
-                };
+                remainingBytes -= message.DataSize + prefixSize;
 
                 if (message.Type == HeaderMessageType.ObjectHeaderContinuation)
-                {
                     continuationMessages.Add((ObjectHeaderContinuationMessage)message.Data);
-                }
                 else
-                {
                     headerMessages.Add(message);
-
-                    switch (message.Type)
-                    {
-                        case HeaderMessageType.LinkInfo:
-                        case HeaderMessageType.Link:
-                        case HeaderMessageType.GroupInfo:
-                        case HeaderMessageType.SymbolTable:
-                            this.ObjectType = H5ObjectType.Group;
-                            break;
-
-                        case HeaderMessageType.DataLayout:
-                            this.ObjectType = H5ObjectType.Dataset;
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
             }
 
             foreach (var continuationMessage in continuationMessages)
             {
-                this.Reader.BaseStream.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
-                var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length, version);
-                headerMessages.AddRange(messages);
+                reader.BaseStream.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+
+                if (version == 1)
+                {
+                    var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length, version);
+                    headerMessages.AddRange(messages);
+                }
+                else if (version == 2)
+                {
+                    var continuationBlock = new ObjectHeaderContinuationBlock2(reader, superblock, continuationMessage.Length, version, withCreationOrder);
+                    var messages = continuationBlock.HeaderMessages;
+                    headerMessages.AddRange(messages);
+                }
             }
 
-            var condition = this.ObjectType == H5ObjectType.Undefined
-                            && headerMessages.Count == 1
-                            && headerMessages[0].Type == HeaderMessageType.DataType;
-
-            if (condition)
-                this.ObjectType = H5ObjectType.CommitedDataType;
+            this.ObjectType = this.DetermineObjectType(headerMessages);
 
             return headerMessages;
+        }
+
+        private H5ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
+        {
+            foreach (var message in headerMessages)
+            {
+                switch (message.Type)
+                {
+                    case HeaderMessageType.LinkInfo:
+                    case HeaderMessageType.Link:
+                    case HeaderMessageType.GroupInfo:
+                    case HeaderMessageType.SymbolTable:
+                        return H5ObjectType.Group;
+
+                    case HeaderMessageType.DataLayout:
+                        return H5ObjectType.Dataset;
+
+                    default:
+                        break;
+                }
+            }
+
+            var condition = headerMessages.Count == 1 &&
+                            headerMessages[0].Type == HeaderMessageType.DataType;
+
+            if (condition)
+                return H5ObjectType.CommitedDataType;
+            else
+                return H5ObjectType.Undefined;
         }
 
         #endregion

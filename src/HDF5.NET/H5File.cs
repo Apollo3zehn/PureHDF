@@ -44,17 +44,30 @@ namespace HDF5.NET
                 _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
             };
 
-            if (this.Superblock.GetType() == typeof(Superblock01))
+            var superblock01 = this.Superblock as Superblock01;
+
+            if (superblock01 != null)
             {
-                var superblock = this.Superblock as Superblock01;
-                var objectHeader = superblock.RootGroupSymbolTableEntry.ObjectHeader;
-                this.Root = new H5Group(this.Reader, this.Superblock, "/", objectHeader);
+                var objectHeader = superblock01.RootGroupSymbolTableEntry.ObjectHeader;
+
+                if (objectHeader != null)
+                    this.Root = new H5Group(this, "/", objectHeader);
+                else
+                    throw new Exception("The root group object header is not allocated.");
             }
             else
             {
-                var superblock = this.Superblock as Superblock23;
-                var objectHeader = superblock.RootGroupObjectHeader;
-                this.Root = new H5Group(this.Reader, this.Superblock, "/", objectHeader);
+                var superblock23 = this.Superblock as Superblock23;
+
+                if (superblock23 != null)
+                {
+                    var objectHeader = superblock23.RootGroupObjectHeader;
+                    this.Root = new H5Group(this, "/", objectHeader);
+                }
+                else
+                {
+                    throw new Exception($"The superblock of type '{this.Superblock.GetType().Name}' is not supported.");
+                }
             }
         }
 
@@ -66,7 +79,7 @@ namespace HDF5.NET
 
         public H5Group Root { get; set; }
 
-        private BinaryReader Reader { get; set; }
+        internal BinaryReader Reader { get; set; }
 
         #endregion
 

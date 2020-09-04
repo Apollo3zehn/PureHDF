@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 
 namespace HDF5.NET
 {
@@ -7,34 +8,65 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private SymbolTableEntry? _symbolTableEntry;
-
-        private LinkMessage? _linkMessage;
+        H5Link? _target;
 
         #endregion
 
         #region Constructors
 
-        internal H5SymbolicLink(Superblock superblock, string name, SymbolTableEntry symbolTableEntry) : base(name)
+        internal H5SymbolicLink(string name, string linkValue, H5Group parent) : base(name)
         {
-            _symbolTableEntry = symbolTableEntry;
-            this.Superblock = superblock;
+            this.LinkValue = linkValue;
+            this.Parent = parent;
         }
 
-        internal H5SymbolicLink(Superblock superblock, LinkMessage linkMessage) : base(linkMessage.LinkName)
+        internal H5SymbolicLink(LinkMessage linkMessage, H5Group parent) : base(linkMessage.LinkName)
         {
-            _linkMessage = linkMessage;
-            this.Superblock = superblock;
+            (this.LinkValue, this.FullObjectPath) = linkMessage.LinkInfo switch
+            {
+                SoftLinkInfo softLink           => (softLink.Value, null),
+                ExternalLinkInfo externalLink   => (externalLink.FileName, externalLink.FullObjectPath),
+                _                               => throw new Exception($"The link info type '{linkMessage.LinkInfo.GetType().Name}' is not supported.")
+            };
+
+            this.Parent = parent;
         }
 
         #endregion
 
         #region Properties
 
-        public Superblock Superblock { get; }
+        public string LinkValue { get; }
+
+        public string? FullObjectPath { get; }
+
+        public H5Link Target 
+        {
+            get
+            {
+                if (_target == null)
+                    _target = this.GetTarget();
+
+                return _target;
+            }
+        }
+
+        internal H5Group Parent { get; }
 
         #endregion
 
-        
+        #region Methods
+
+        private H5Link GetTarget()
+        {
+            if (this.FullObjectPath != null)
+            {
+                throw new Exception("External links are not yet supported.");
+            }
+
+            return this.Parent.Get(this.LinkValue);
+        }
+
+        #endregion
     }
 }
