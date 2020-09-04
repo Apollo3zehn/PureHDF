@@ -91,8 +91,8 @@ namespace HDF5.NET.Tests
 
         [Theory]
         [InlineData("/", true)]
-        [InlineData("/G1", true)]
-        [InlineData("/G1/G?!", false)]
+        [InlineData("/simple", true)]
+        [InlineData("/simple/sub?!", false)]
         public void CanCheckExists(string path, bool expected)
         {
             TestUtils.RunForAllVersions(version =>
@@ -113,8 +113,8 @@ namespace HDF5.NET.Tests
 
         [Theory]
         [InlineData("/", "/")]
-        [InlineData("/G1", "G1")]
-        [InlineData("/G1/G1.1", "G1.1")]
+        [InlineData("/simple", "simple")]
+        [InlineData("/simple/sub", "G1.1")]
         public void CanOpenGroup(string path, string expected)
         {
             TestUtils.RunForAllVersions(version =>
@@ -135,8 +135,8 @@ namespace HDF5.NET.Tests
 
         [Theory]
         [InlineData("/D", "D")]
-        [InlineData("/G1/D1", "D1")]
-        [InlineData("/G1/G1.1/D1.1", "D1.1")]
+        [InlineData("/simple/D1", "D1")]
+        [InlineData("/simple/sub/D1.1", "D1.1")]
         public void CanOpenDataset(string path, string expected)
         {
             TestUtils.RunForAllVersions(version =>
@@ -182,7 +182,7 @@ namespace HDF5.NET.Tests
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var root = h5file.Root;
 
-                var attribute = root.Attributes.First(attribute => attribute.Name == name);
+                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == name);
                 var actual = attribute.Read<T>().ToArray();
 
                 // Assert
@@ -202,7 +202,7 @@ namespace HDF5.NET.Tests
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var root = h5file.Root;
 
-                var attribute = root.Attributes.First(attribute => attribute.Name == "A14");
+                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A14");
                 var actual = attribute.Read<TestStructL1>().ToArray();
 
                 // Assert
@@ -222,7 +222,7 @@ namespace HDF5.NET.Tests
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var root = h5file.Root;
 
-                var attribute = root.Attributes.First(attribute => attribute.Name == "A15");
+                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A15");
                 var actual = attribute.ReadCompound<TestStructString>().ToArray();
 
                 // Assert
@@ -318,7 +318,7 @@ namespace HDF5.NET.Tests
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var root = h5file.Root;
 
-                var attribute = root.Attributes.First(attribute => attribute.Name == "A15");
+                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A15");
                 var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>().ToArray());
 
                 // Assert
@@ -343,7 +343,7 @@ namespace HDF5.NET.Tests
                 using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var root = h5file.Root;
 
-                var attribute = root.Attributes.First(attribute => attribute.Name == name);
+                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == name);
                 var actual = attribute.ReadString();
 
                 // Assert
