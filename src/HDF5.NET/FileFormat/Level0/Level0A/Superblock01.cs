@@ -69,19 +69,5 @@ namespace HDF5.NET
         }
 
         #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation("Superblock");
-            logger.LogInformation($"Superblock GroupLeafNodeK: {this.GroupLeafNodeK}");
-            logger.LogInformation($"Superblock GroupInternalNodeK: {this.GroupInternalNodeK}");
-            logger.LogInformation($"Superblock IndexedStorageInternalNodeK: {this.IndexedStorageInternalNodeK}");
-
-            this.RootGroupSymbolTableEntry.Print(logger);
-        }
-
-        #endregion
     }
 }

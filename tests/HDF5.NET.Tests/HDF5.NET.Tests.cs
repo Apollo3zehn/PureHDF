@@ -257,5 +257,29 @@ namespace HDF5.NET.Tests
                 Assert.True(actual.SequenceEqual(expected));
             });
         }
+
+        [Fact]
+        public void CanFollowLinks()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withLinks: true);
+
+                // Act
+                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var root = h5file.Root;
+
+                var dataset_hard_1 = root.Get<H5Dataset>("/links/hard_link_1/dataset");
+                var dataset_hard_2 = root.Get<H5Dataset>("/links/hard_link_2/dataset");
+                var dataset_hard_3 = root.Get<H5Dataset>("/links/soft_link/dataset");
+                var dataset_hard_4 = root.Get<H5Dataset>("/links/dataset");
+
+                var a = 1;
+
+                // Assert
+                //Assert.True(actual.SequenceEqual(expected));
+            });
+        }
     }
 }

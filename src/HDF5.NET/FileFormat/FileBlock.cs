@@ -21,14 +21,5 @@ namespace HDF5.NET
         internal BinaryReader Reader { get; }
 
         #endregion
-
-        #region Methods
-
-        public virtual void Print(ILogger logger)
-        {
-            logger.LogWarning($"Printing of file block type '{this.GetType()}' is not implemented.");
-        }
-
-        #endregion
     }
 }

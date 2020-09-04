@@ -19,15 +19,5 @@ namespace HDF5.NET
         public ulong LocalHeapByteOffset { get; set; }
 
         #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"BTree1GroupKey");
-            logger.LogInformation($"BTree1GroupKey LocalHeapByteOffset: {this.LocalHeapByteOffset}");
-        }
-
-        #endregion
     }
 }

@@ -48,15 +48,13 @@ namespace HDF5.NET
             {
                 var superblock = this.Superblock as Superblock01;
                 var objectHeader = superblock.RootGroupSymbolTableEntry.ObjectHeader;
-                var rootNamedObject = new NamedObject("/", objectHeader);
-                this.Root = new H5Group(rootNamedObject, this.Superblock);
+                this.Root = new H5Group(this.Reader, this.Superblock, "/", objectHeader);
             }
             else
             {
                 var superblock = this.Superblock as Superblock23;
                 var objectHeader = superblock.RootGroupObjectHeader;
-                var rootNamedObject = new NamedObject("/", objectHeader);
-                this.Root = new H5Group(rootNamedObject, this.Superblock);
+                this.Root = new H5Group(this.Reader, this.Superblock, "/", objectHeader);
             }
         }
 

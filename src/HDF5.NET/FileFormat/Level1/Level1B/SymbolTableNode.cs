@@ -65,20 +65,5 @@ namespace HDF5.NET
         public List<SymbolTableEntry> GroupEntries { get; set; }
 
         #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"SymbolTableNode");
-
-            for (int i = 0; i < this.SymbolCount; i++)
-            {
-                logger.LogInformation($"SymbolTableNode Entry[{i}]");
-                this.GroupEntries[i].Print(logger);
-            }
-        }
-
-        #endregion
     }
 }

@@ -19,15 +19,5 @@ namespace HDF5.NET
         public uint LinkValueOffset { get; set; }
 
         #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"SymbolicLinkScratchPad");
-            logger.LogInformation($"SymbolicLinkScratchPad LinkValueOffset: {this.LinkValueOffset}");
-        }
-
-        #endregion
     }
 }

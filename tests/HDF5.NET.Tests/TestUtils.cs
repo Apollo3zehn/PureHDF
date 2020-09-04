@@ -121,7 +121,8 @@ namespace HDF5.NET.Tests
                                                     bool withTypedAttributes = false,
                                                     bool withMassAttributes = false,
                                                     bool withHugeAttribute = false,
-                                                    bool withTinyAttribute = false)
+                                                    bool withTinyAttribute = false,
+                                                    bool withLinks = false)
         {
             var filePath = Path.GetTempFileName();
             long res;
@@ -145,6 +146,9 @@ namespace HDF5.NET.Tests
 
             if (withTinyAttribute)
                 TestUtils.AddTinyAttribute(fileId);
+
+            if (withLinks)
+                TestUtils.AddLinks(fileId);
 
             res = H5F.close(fileId);
 
@@ -470,6 +474,28 @@ namespace HDF5.NET.Tests
 
             res = H5A.close(attributeId);
             res = H5G.close(groupId);
+        }
+
+        private static void AddLinks(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "links");
+
+            var hardLinkId1 = H5G.create(groupId, "hard_link_1");
+            res = H5L.create_hard(groupId, "hard_link_1", groupId, "hard_link_2");
+            res = H5L.create_soft("hard_link_2", groupId, "soft_link");
+
+            var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId = H5D.create(hardLinkId1, "dataset", H5T.NATIVE_INT, spaceId);
+
+            res = H5L.create_soft("/links/soft_link/dataset", groupId, "dataset");
+
+            res = H5S.close(spaceId);
+            res = H5D.close(datasetId);
+
+            res = H5G.close(groupId);
+            res = H5G.close(hardLinkId1);
         }
 
         private static long GetHdfTypeIdFromType(Type type)

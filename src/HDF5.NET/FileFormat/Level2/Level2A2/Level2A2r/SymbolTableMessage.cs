@@ -48,18 +48,5 @@ namespace HDF5.NET
         }
 
         #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation("SymbolTableMessage");
-            logger.LogInformation($"SymbolTableMessage LocalHeap (Address: {this.LocalHeapAddress})");
-            logger.LogInformation($"SymbolTableMessage BTree1 (Address: {this.BTree1Address})");
-
-            this.BTree1.Print(logger);
-        }
-
-        #endregion
     }
 }

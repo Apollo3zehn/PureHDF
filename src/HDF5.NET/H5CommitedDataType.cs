@@ -1,13 +1,16 @@
-﻿namespace HDF5.NET
+﻿using System.Diagnostics;
+
+namespace HDF5.NET
 {
+    [DebuggerDisplay("{Name}: Class = '{DataType.Class}'")]
     public class H5CommitedDataType : H5Link
     {
         #region Constructors
 
-        internal H5CommitedDataType(NamedObject namedObject, Superblock superblock) 
-            : base(namedObject, superblock)
+        internal H5CommitedDataType(string name, ObjectHeader objectHeader) 
+            : base(name)
         {
-            this.DataType = namedObject.Header.GetMessage<DatatypeMessage>();
+            this.DataType = objectHeader.GetMessage<DatatypeMessage>();
         }
 
         #endregion

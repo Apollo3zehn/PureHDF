@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}")]
+    [DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
     public class H5Attribute
     {
         #region Fields

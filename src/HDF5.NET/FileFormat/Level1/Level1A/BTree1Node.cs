@@ -149,50 +149,6 @@ namespace HDF5.NET
             }).ToList();
         }
 
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"BTree1Node");
-            logger.LogInformation($"BTree1Node NodeType: {this.NodeType}");
-            logger.LogInformation($"BTree1Node Level {this.NodeLevel}");
-
-            // keys
-            for (int i = 0; i <= this.EntriesUsed; i++)
-            {
-                logger.LogInformation($"BTree1Node Keys[{i}]");
-                this.Keys[i].Print(logger);
-            }
-
-            // child nodes
-            for (int i = 0; i < this.EntriesUsed; i++)
-            {
-                logger.LogInformation($"BTree1Node GetChildNode({i}) (Address: {this.ChildAddresses[i]})");
-
-                if (this.NodeLevel == 0)
-                {
-                    switch (this.NodeType)
-                    {
-                        case BTree1NodeType.Group:
-
-                            //var symbolTableNode = this.GetSymbolTableNode(i);
-                            //symbolTableNode.Print(logger);
-
-                            break;
-
-                        case BTree1NodeType.RawDataChunks:
-                             break;
-
-                        default:
-                            throw new NotSupportedException($"The version 1 B-tree node type '{this.NodeType}' is not supported.");
-                    }
-                }
-                else
-                {
-                    logger.LogInformation($"BTree1Node ChildNode[{i}]");
-                    this.GetChild(i).Print(logger);
-                }
-            }
-        }
-
         #endregion
     }
 }

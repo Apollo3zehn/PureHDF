@@ -1,11 +1,15 @@
-﻿namespace HDF5.NET
+﻿using System.Diagnostics;
+using System.IO;
+
+namespace HDF5.NET
 {
-    public class H5Dataset : H5Link
+    [DebuggerDisplay("{Name}: Class = '{DataType.Class}'")]
+    public class H5Dataset : H5AttributableLink
     {
         #region Constructors
 
-        internal H5Dataset(NamedObject namedObject, Superblock superblock) 
-            : base(namedObject, superblock)
+        internal H5Dataset(BinaryReader reader, Superblock superblock, string name, ObjectHeader objectHeader) 
+            : base(reader, superblock, name, objectHeader)
         {
             foreach (var message in this.ObjectHeader.HeaderMessages)
             {

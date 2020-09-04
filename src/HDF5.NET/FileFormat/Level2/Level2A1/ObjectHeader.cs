@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -34,13 +34,12 @@ namespace HDF5.NET
                 .Data;
         }
 
-        public List<T> GetMessages<T>() where T : Message
+        public IEnumerable<T> GetMessages<T>() where T : Message
         {
             return this.HeaderMessages
                 .Where(message => message.Data.GetType() == typeof(T))
                 .Select(message => message.Data)
-                .Cast<T>()
-                .ToList();
+                .Cast<T>();
         }
 
         public static ObjectHeader Construct(BinaryReader reader, Superblock superblock)
@@ -62,28 +61,6 @@ namespace HDF5.NET
                 2 => new ObjectHeader2(reader, superblock, version),
                 _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
             };
-        }
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation("ObjectHeader");
-
-            for (int i = 0; i < this.HeaderMessages.Count; i++)
-            {
-                logger.LogInformation($"ObjectHeader HeaderMessage[{i}]");
-                var message = this.HeaderMessages[i];
-                message.Print(logger);
-
-                if (message.Type == HeaderMessageType.SymbolTable)
-                {
-                    var symbolTableMessage = (SymbolTableMessage)message.Data;
-                    symbolTableMessage.Print(logger);
-                }
-                else
-                {
-                    logger.LogInformation($"ObjectHeader HeaderMessage Type = {message.Type} is not supported yet. Stopping.");
-                }
-            }
         }
 
         protected List<HeaderMessage> ReadHeaderMessages(BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder = false)

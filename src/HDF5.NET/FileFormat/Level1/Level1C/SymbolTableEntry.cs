@@ -57,33 +57,20 @@ namespace HDF5.NET
         public CacheType CacheType { get; set; }
         public ScratchPad? ScratchPad { get; set; }
 
-        public ObjectHeader ObjectHeader
+        public ObjectHeader? ObjectHeader
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Construct(this.Reader, _superblock);
+                if (!_superblock.IsUndefinedAddress(this.ObjectHeaderAddress))
+                {
+                    this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+                    return ObjectHeader.Construct(this.Reader, _superblock);
+                }
+                else
+                {
+                    return null;
+                }
             }
-        }
-
-        #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"SymbolTableEntry");
-            logger.LogInformation($"SymbolTableEntry Cache Type: {this.CacheType}");
-            logger.LogInformation($"SymbolTableEntry LinkNameOffset: {this.LinkNameOffset}");
-
-            if (this.ScratchPad != null)
-            {
-                logger.LogInformation($"SymbolTableEntry ScratchPad");
-                this.ScratchPad.Print(logger);
-            }
-
-            logger.LogInformation($"SymbolTableEntry ObjectHeader");
-            this.ObjectHeader.Print(logger);
         }
 
         #endregion
