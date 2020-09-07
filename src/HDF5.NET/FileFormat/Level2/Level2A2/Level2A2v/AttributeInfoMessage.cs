@@ -7,6 +7,7 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private Superblock _superblock;
         private byte _version;
 
         #endregion
@@ -15,6 +16,8 @@ namespace HDF5.NET
 
         public AttributeInfoMessage(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            _superblock = superblock;
+
             // version
             this.Version = reader.ReadByte();
 
@@ -33,7 +36,7 @@ namespace HDF5.NET
 
             // b-tree 2 creation order index address
             if (this.Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-                this.BTree2NameIndexAddress = superblock.ReadOffset(reader);
+                this.BTree2CreationOrderIndexAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -61,7 +64,32 @@ namespace HDF5.NET
         public ulong BTree2NameIndexAddress { get; set; }
         public ulong BTree2CreationOrderIndexAddress { get; set; }
 
-#warning Add object references to fractal heap and BTree2
+        public FractalHeapHeader FractalHeap
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.FractalHeapAddress, SeekOrigin.Begin);
+                return new FractalHeapHeader(this.Reader, _superblock);
+            }
+        }
+
+        public BTree2Header<BTree2Record08> BTree2NameIndex
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record08>(this.Reader, _superblock);
+            }
+        }
+
+        public BTree2Header<BTree2Record09> BTree2CreationOrder
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record09>(this.Reader, _superblock);
+            }
+        }
 
         #endregion
     }

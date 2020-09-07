@@ -13,16 +13,16 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType2(BinaryReader reader, byte firstByte) 
-            : base(reader, firstByte)
+        public TinyObjectsFractalHeapIdSubType2(BinaryReader localReader, byte firstByte) 
+            : base(localReader, firstByte)
         {
             _firstByte = firstByte;
 
             // extendedLength
-            _extendedLength = reader.ReadByte();
+            _extendedLength = localReader.ReadByte();
 
             // data
-            this.Data = reader.ReadBytes(this.Length);
+            this.Data = localReader.ReadBytes(this.Length);
         }
 
         #endregion

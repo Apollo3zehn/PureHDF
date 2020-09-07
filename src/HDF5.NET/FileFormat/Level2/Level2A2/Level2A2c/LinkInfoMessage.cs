@@ -7,6 +7,7 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private Superblock _superblock;
         private byte _version;
 
         #endregion
@@ -15,6 +16,8 @@ namespace HDF5.NET
 
         public LinkInfoMessage(BinaryReader reader, Superblock superblock) : base(reader)
         {
+            _superblock = superblock;
+
             // version
             this.Version = reader.ReadByte();
 
@@ -60,6 +63,33 @@ namespace HDF5.NET
         public ulong FractalHeapAddress { get; set; }
         public ulong BTree2NameIndexAddress { get; set; }
         public ulong BTree2CreationOrderIndexAddress { get; set; }
+
+        public FractalHeapHeader FractalHeap
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.FractalHeapAddress, SeekOrigin.Begin);
+                return new FractalHeapHeader(this.Reader, _superblock);
+            }
+        }
+
+        public BTree2Header<BTree2Record05> BTree2NameIndex
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record05>(this.Reader, _superblock);
+            }
+        }
+
+        public BTree2Header<BTree2Record06> BTree2CreationOrder
+        {
+            get
+            {
+                this.Reader.BaseStream.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record06>(this.Reader, _superblock);
+            }
+        }
 
         #endregion
     }

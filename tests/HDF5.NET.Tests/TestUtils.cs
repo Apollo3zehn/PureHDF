@@ -118,6 +118,7 @@ namespace HDF5.NET.Tests
 
         public static unsafe string PrepareTestFile(H5F.libver_t version,
                                                     bool withSimple = false,
+                                                    bool withMassLinks = false,
                                                     bool withTypedAttributes = false,
                                                     bool withMassAttributes = false,
                                                     bool withHugeAttribute = false,
@@ -134,6 +135,9 @@ namespace HDF5.NET.Tests
 
             if (withSimple)
                 TestUtils.AddSimple(fileId);
+
+            if (withMassLinks)
+                TestUtils.AddMassLinks(fileId);
 
             if (withTypedAttributes)
                 TestUtils.AddTypedAttributes(fileId);
@@ -189,6 +193,21 @@ namespace HDF5.NET.Tests
 
             res = H5G.close(groupId);
             res = H5G.close(groupId_sub);
+        }
+
+        private static unsafe void AddMassLinks(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "mass_links");
+
+            for (int i = 0; i < 1000; i++)
+            {
+                var linkId = H5G.create(groupId, $"mass_{i.ToString("D4")}");
+                res = H5G.close(linkId);
+            }
+
+            res = H5G.close(groupId);
         }
 
         private static unsafe void AddTypedAttributes(long fileId)
@@ -413,7 +432,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var groupId = H5G.create(fileId, "mass");
+            var groupId = H5G.create(fileId, "mass_attributes");
 
             for (int i = 0; i < 1000; i++)
             {

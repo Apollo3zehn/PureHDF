@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace HDF5.NET
@@ -162,9 +163,7 @@ namespace HDF5.NET
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
 
-            /* original approach */
-
-            // use cached data
+            /* cached data */
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
@@ -177,54 +176,71 @@ namespace HDF5.NET
                     yield return link;
                 }
             }
-            // look up symbol table header messages
             else
             {
-                var symbolTableHeaderMessages = this.ObjectHeader
-                .GetMessages<SymbolTableMessage>();
+                var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
 
                 if (symbolTableHeaderMessages.Any())
                 {
-                    foreach (var message in symbolTableHeaderMessages)
-                    {
-                        var localHeap = message.LocalHeap;
-                        var links = message.BTree1
-                            .GetSymbolTableNodes()
-                            .SelectMany(node => this.InstantiateLinks(localHeap, node.GroupEntries));
+                    /* Original approach.
+                     * IV.A.2.r.: The Symbol Table Message
+                     * Required for "old style" groups; may not be repeated. */
 
-                        foreach (var link in links)
-                        {
-                            yield return link;
-                        }
+                    if (symbolTableHeaderMessages.Count() != 1)
+                        throw new Exception("There may be only a single symbol table header message.");
+
+                    var smessage = symbolTableHeaderMessages.First();
+                    var localHeap = smessage.LocalHeap;
+                    var links = smessage.BTree1
+                        .GetSymbolTableNodes()
+                        .SelectMany(node => this.InstantiateLinks(localHeap, node.GroupEntries));
+
+                    foreach (var link in links)
+                    {
+                        yield return link;
                     }
                 }
-            }
-
-            /* new (1.8) indexed format (in combination with Group Info Message) */
-            var linkInfoMessages = this.ObjectHeader
-                .GetMessages<LinkInfoMessage>()
-                .Where(message => !this.File.Superblock.IsUndefinedAddress(message.BTree2NameIndexAddress));
-
-            foreach (var linkInfoMessage in linkInfoMessages)
-            {
-                throw new Exception("Link info messages are not yet supported. Please provide a sample file to the package author.");
-            }
-
-            // new (1.8) compact format
-            // IV.A.2.g. The Link Message 
-            // A group is storing its links compactly when the fractal heap address in the Link Info Message is set to the “undefined address” value.
-            var linkMessages = this.ObjectHeader
-                .GetMessages<LinkMessage>();
-
-            foreach (var linkMessage in linkMessages)
-            {
-                yield return linkMessage.LinkInfo switch
+                else
                 {
-                    HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
-                    SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
-                    ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
-                    _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
-                };
+                    var linkInfoMessages = this.ObjectHeader.GetMessages<LinkInfoMessage>();
+
+                    if (linkInfoMessages.Any())
+                    {
+                        IEnumerable<LinkMessage> linkMessages;
+
+                        if (linkInfoMessages.Count() != 1)
+                            throw new Exception("There may be only a single link info message.");
+
+                        var lmessage = linkInfoMessages.First();
+
+                        /* New (1.8) indexed format (in combination with Group Info Message) 
+                         * IV.A.2.c. The Link Info Message 
+                         * Optional; may not be repeated. */
+                        if (!this.File.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                            linkMessages = this.GetLinksFromLinkInfoMessage(lmessage);
+                        /* New (1.8) compact format
+                         * IV.A.2.g. The Link Message 
+                         * A group is storing its links compactly when the fractal heap address 
+                         * in the Link Info Message is set to the "undefined address" value. */
+                        else
+                            linkMessages = this.ObjectHeader.GetMessages<LinkMessage>();
+
+                        foreach (var linkMessage in linkMessages)
+                        {
+                            yield return linkMessage.LinkInfo switch
+                            {
+                                HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
+                                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
+                                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
+                                _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
+                            };
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("No link information found in object header.");
+                    }
+                }
             }
         }
 
@@ -243,6 +259,30 @@ namespace HDF5.NET
             else
             {
                 throw new Exception("Unknown object type.");
+            }
+        }
+
+        private IEnumerable<LinkMessage> GetLinksFromLinkInfoMessage(LinkInfoMessage infoMessage)
+        {
+            var fractalHeap = infoMessage.FractalHeap;
+            var btree2NameIndex = infoMessage.BTree2NameIndex;
+            var records = btree2NameIndex
+                .GetRecords()
+                .ToList();
+
+            // local cache: indirectly accessed, non-filtered
+            IEnumerable<BTree2Record01>? record01Cache = null;
+
+            foreach (var record in records)
+            {
+                using var localReader = new BinaryReader(new MemoryStream(record.HeapId));
+                var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
+
+                yield return heapId.Read(reader =>
+                {
+                    var message = new LinkMessage(reader, this.File.Superblock);
+                    return message;
+                }, ref record01Cache);
             }
         }
 

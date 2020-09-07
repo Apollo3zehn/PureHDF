@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public static class H5Utils
+    internal static class H5Utils
     {
         public static void ValidateSignature(byte[] actual, byte[] expected)
         {
@@ -163,6 +164,16 @@ namespace HDF5.NET
             };
         }
 
+        public static bool IsReferenceOrContainsReferences(Type type)
+        {
+            var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
+            var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
+            var method = typeof(RuntimeHelpers).GetMethod(name, flags);
+            var generic = method.MakeGenericMethod(type);
+
+            return (bool)generic.Invoke(null, null);
+        }
+
         private static ulong ReadUlongArbitrary(BinaryReader reader, ulong size)
         {
             var result = 0UL;
@@ -176,16 +187,6 @@ namespace HDF5.NET
             }
 
             return result;
-        }
-
-        public static bool IsReferenceOrContainsReferences(Type type)
-        {
-            var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
-            var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
-            var method = typeof(RuntimeHelpers).GetMethod(name, flags);
-            var generic = method.MakeGenericMethod(type);
-
-            return (bool)generic.Invoke(null, null);
         }
     }
 }

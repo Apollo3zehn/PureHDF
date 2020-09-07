@@ -9,7 +9,7 @@ namespace HDF5.NET
         public BTree2Record06(BinaryReader reader) : base(reader)
         {
             this.CreationOrder = reader.ReadUInt64();
-            this.Id = reader.ReadBytes(7);
+            this.HeapId = reader.ReadBytes(7);
         }
 
         #endregion
@@ -17,7 +17,7 @@ namespace HDF5.NET
         #region Properties
 
         public ulong CreationOrder { get; set; }
-        public byte[] Id { get; set; }
+        public byte[] HeapId { get; set; }
 
         #endregion
     }

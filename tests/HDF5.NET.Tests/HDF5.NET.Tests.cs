@@ -48,6 +48,25 @@ namespace HDF5.NET.Tests
             });
         }
 
+        [Fact]
+        public void CanListMassAmountOfLinks()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withMassLinks: true);
+                var expected = 1000;
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var group = root.Get<H5Group>("mass_links");
+
+                // Assert
+                var actual = group.Children.Count();
+                Assert.Equal(expected, actual);
+            });
+        }
+
         [Theory]
         [InlineData("/D", "D")]
         [InlineData("/simple/D1", "D1")]
@@ -186,7 +205,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.Get<H5Group>("/mass");
+                var parent = root.Get<H5Group>("/mass_attributes");
                 var attributes = parent.Attributes.ToList();
 
                 foreach (var attribute in attributes)

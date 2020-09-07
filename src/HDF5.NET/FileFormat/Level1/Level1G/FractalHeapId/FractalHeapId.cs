@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace HDF5.NET
@@ -16,9 +18,9 @@ namespace HDF5.NET
 
         #region Methods
 
-        public static FractalHeapId Construct(BinaryReader reader, Superblock superblock, FractalHeapHeader header)
+        public static FractalHeapId Construct(BinaryReader reader, Superblock superblock, BinaryReader localReader, FractalHeapHeader header)
         {
-            var firstByte = reader.ReadByte();
+            var firstByte = localReader.ReadByte();
 
             // bits 6-7
             var version = (byte)((firstByte & 0xB0) >> 6);
@@ -37,22 +39,24 @@ namespace HDF5.NET
             // H5HF.c (H5HF_op)
             return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength, header.TinyObjectsAreExtended) switch
             {
-                (FractalHeapIdType.Managed, _, _, _)    => new ManagedObjectsFractalHeapId(reader, offsetSize, lengthSize),
+                (FractalHeapIdType.Managed, _, _, _)    => new ManagedObjectsFractalHeapId(reader, localReader, header, offsetSize, lengthSize),
 
                 // H5HFhuge.c (H5HF__huge_op_real)
-                (FractalHeapIdType.Huge, false, 0, _)   => new HugeObjectsFractalHeapIdSubType1(reader, header),
-                (FractalHeapIdType.Huge, false, _, _)   => new HugeObjectsFractalHeapIdSubType2(reader, header),
-                (FractalHeapIdType.Huge, true, 0, _)    => new HugeObjectsFractalHeapIdSubType3(reader, superblock),
-                (FractalHeapIdType.Huge, true, _, _)    => new HugeObjectsFractalHeapIdSubType4(reader, superblock),
+                (FractalHeapIdType.Huge, false, 0, _)   => new HugeObjectsFractalHeapIdSubType1(reader, superblock, localReader, header),
+                (FractalHeapIdType.Huge, false, _, _)   => new HugeObjectsFractalHeapIdSubType2(reader, superblock, localReader, header),
+                (FractalHeapIdType.Huge, true, 0, _)    => new HugeObjectsFractalHeapIdSubType3(reader, superblock, localReader),
+                (FractalHeapIdType.Huge, true, _, _)    => new HugeObjectsFractalHeapIdSubType4(reader, superblock, localReader),
 
                 // H5HFtiny.c (H5HF_tiny_op_real)
-                (FractalHeapIdType.Tiny, _, _, false)   => new TinyObjectsFractalHeapIdSubType1(reader, firstByte),
-                (FractalHeapIdType.Tiny, _, _, true)    => new TinyObjectsFractalHeapIdSubType2(reader, firstByte),
+                (FractalHeapIdType.Tiny, _, _, false)   => new TinyObjectsFractalHeapIdSubType1(localReader, firstByte),
+                (FractalHeapIdType.Tiny, _, _, true)    => new TinyObjectsFractalHeapIdSubType2(localReader, firstByte),
 
                 // default
                 _                                       => throw new Exception($"Unknown heap ID type '{type}'.")
             });
         }
+
+        public abstract T Read<T>(Func<BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache);
 
         #endregion
     }

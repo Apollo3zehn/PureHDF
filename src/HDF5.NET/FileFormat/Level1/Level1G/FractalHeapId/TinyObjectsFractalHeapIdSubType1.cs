@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -12,12 +15,12 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType1(BinaryReader reader, byte firstByte) : base(reader)
+        public TinyObjectsFractalHeapIdSubType1(BinaryReader localReader, byte firstByte) : base(localReader)
         {
             _firstByte = firstByte;
 
             // data
-            this.Data = reader.ReadBytes(this.Length);
+            this.Data = localReader.ReadBytes(this.Length);
         }
 
         #endregion
@@ -33,6 +36,16 @@ namespace HDF5.NET
         }
 
         public byte[] Data { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public override T Read<T>(Func<BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        {
+            using var reader = new BinaryReader(new MemoryStream(this.Data));
+            return func.Invoke(reader);
+        }
 
         #endregion
     }
