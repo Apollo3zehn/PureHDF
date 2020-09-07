@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FamilyDriverInfo : DriverInfo
     {
         #region Constructors
 
-        public FamilyDriverInfo(BinaryReader reader) : base(reader)
+        public FamilyDriverInfo(H5BinaryReader reader) : base(reader)
         {
             this.MemberFileSize = reader.ReadUInt64();
         }

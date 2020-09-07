@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ChunkedStoragePropertyDescription3 : StoragePropertyDescription
     {
         #region Constructors
 
-        public ChunkedStoragePropertyDescription3(BinaryReader reader, Superblock superblock) : base(reader)
+        public ChunkedStoragePropertyDescription3(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // dimensionality
             this.Dimensionality = reader.ReadByte();

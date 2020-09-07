@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 
 namespace HDF5.NET
 {
@@ -8,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public ObjectHeaderContinuationBlock2(BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder) : base(reader)
+        public ObjectHeaderContinuationBlock2(H5BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

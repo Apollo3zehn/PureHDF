@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public ArrayPropertyDescription3(BinaryReader reader) : base(reader)
+        public ArrayPropertyDescription3(H5BinaryReader reader) : base(reader)
         {
             // dimensionality
             this.Dimensionality = reader.ReadByte();

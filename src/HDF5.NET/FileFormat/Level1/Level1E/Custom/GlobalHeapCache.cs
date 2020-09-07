@@ -22,7 +22,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public static GlobalHeapCollection GetGlobalHeapObject(BinaryReader reader, Superblock superblock, ulong address)
+        public static GlobalHeapCollection GetGlobalHeapObject(H5BinaryReader reader, Superblock superblock, ulong address)
         {
             if (!_map.TryGetValue(superblock, out var addressToCollectionMap))
             {
@@ -45,9 +45,9 @@ namespace HDF5.NET
                 _map.Remove(superblock);
         }
 
-        private static GlobalHeapCollection ReadGlobalHeapCollection(BinaryReader reader, Superblock superblock, ulong address)
+        private static GlobalHeapCollection ReadGlobalHeapCollection(H5BinaryReader reader, Superblock superblock, ulong address)
         {
-            reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+            reader.Seek((long)address, SeekOrigin.Begin);
             return new GlobalHeapCollection(reader, superblock);
         }
 

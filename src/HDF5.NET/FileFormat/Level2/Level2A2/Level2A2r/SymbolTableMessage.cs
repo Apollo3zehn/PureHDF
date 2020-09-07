@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public SymbolTableMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -32,7 +32,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.BTree1Address, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -41,7 +41,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.LocalHeapAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.LocalHeapAddress, SeekOrigin.Begin);
                 return new LocalHeap(this.Reader, _superblock);
             }
         }

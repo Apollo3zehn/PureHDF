@@ -12,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeaderScratchPad(BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderScratchPad(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -31,7 +31,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.BTreeAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.BTreeAddress, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -40,7 +40,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.NameHeapAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.NameHeapAddress, SeekOrigin.Begin);
                 return new LocalHeap(this.Reader, _superblock);
             }
         }

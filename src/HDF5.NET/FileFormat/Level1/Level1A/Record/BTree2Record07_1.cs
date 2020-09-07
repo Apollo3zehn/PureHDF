@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree2Record07_1(BinaryReader reader, Superblock superblock, MessageLocation messageLocation) 
+        public BTree2Record07_1(H5BinaryReader reader, Superblock superblock, MessageLocation messageLocation) 
             : base(reader, messageLocation)
         {
             _superblock = superblock;
@@ -47,7 +47,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
                 return ObjectHeader.Construct(this.Reader, _superblock);
             }
         }

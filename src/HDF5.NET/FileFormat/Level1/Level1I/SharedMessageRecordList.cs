@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -8,7 +7,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public SharedMessageRecordList(BinaryReader reader) : base(reader)
+        public SharedMessageRecordList(H5BinaryReader reader) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

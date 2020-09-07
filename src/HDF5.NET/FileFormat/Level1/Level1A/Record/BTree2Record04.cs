@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class BTree2Record04 : BTree2Record
     {
         #region Constructors
 
-        public BTree2Record04(BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree2Record04(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             this.FilteredHugeObjectAddress = superblock.ReadOffset(reader);
             this.FilteredHugeObjectLength = superblock.ReadLength(reader);

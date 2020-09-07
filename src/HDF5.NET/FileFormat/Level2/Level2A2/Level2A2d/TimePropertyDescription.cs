@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class TimePropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public TimePropertyDescription(BinaryReader reader) : base(reader)
+        public TimePropertyDescription(H5BinaryReader reader) : base(reader)
         {
             this.BitPrecision = reader.ReadUInt16();
         }

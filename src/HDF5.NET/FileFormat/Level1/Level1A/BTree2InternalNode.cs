@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Text;
+﻿using System.Text;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree2InternalNode(BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, int nodeLevel)
+        public BTree2InternalNode(H5BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, int nodeLevel)
             : base(reader, superblock, header, recordCount, BTree2InternalNode<T>.Signature)
         {
             this.NodePointers = new BTree2NodePointer[recordCount + 1];

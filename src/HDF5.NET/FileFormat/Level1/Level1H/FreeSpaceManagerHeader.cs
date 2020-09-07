@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -14,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FreeSpaceManagerHeader(BinaryReader reader, Superblock superblock) : base(reader)
+        public FreeSpaceManagerHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

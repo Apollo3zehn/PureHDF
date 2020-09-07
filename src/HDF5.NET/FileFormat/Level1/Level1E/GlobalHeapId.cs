@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class GlobalHeapId : FileBlock
     {
@@ -12,7 +10,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public GlobalHeapId(BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapId(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 

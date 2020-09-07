@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -14,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public Superblock(BinaryReader reader) : base(reader)
+        public Superblock(H5BinaryReader reader) : base(reader)
         {
             //
         }
@@ -58,6 +57,8 @@ namespace HDF5.NET
         }
 
         public FileConsistencyFlags FileConsistencyFlags { get; set; }
+        public ulong BaseAddress { get; set; }
+        public ulong EndOfFileAddress { get; set; }
 
         #endregion
 
@@ -79,12 +80,12 @@ namespace HDF5.NET
             };
         }
 
-        public ulong ReadOffset(BinaryReader reader)
+        public ulong ReadOffset(H5BinaryReader reader)
         {
             return H5Utils.ReadUlong(reader, this.OffsetsSize);
         }
 
-        public ulong ReadLength(BinaryReader reader)
+        public ulong ReadLength(H5BinaryReader reader)
         {
             return H5Utils.ReadUlong(reader, this.LengthsSize);
         }

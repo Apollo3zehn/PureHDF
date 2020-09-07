@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class BTree2Record07_0 : BTree2Record07
     {
         #region Constructors
 
-        internal BTree2Record07_0(BinaryReader reader, MessageLocation messageLocation)
+        internal BTree2Record07_0(H5BinaryReader reader, MessageLocation messageLocation)
             : base(reader, messageLocation)
         {
             this.Hash = reader.ReadBytes(4);

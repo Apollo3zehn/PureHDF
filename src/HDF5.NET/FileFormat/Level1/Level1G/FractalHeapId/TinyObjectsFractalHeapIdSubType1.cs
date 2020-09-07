@@ -15,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType1(BinaryReader localReader, byte firstByte) : base(localReader)
+        public TinyObjectsFractalHeapIdSubType1(H5BinaryReader localReader, byte firstByte)
         {
             _firstByte = firstByte;
 
@@ -41,9 +41,9 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
         {
-            using var reader = new BinaryReader(new MemoryStream(this.Data));
+            using var reader = new H5BinaryReader(new MemoryStream(this.Data));
             return func.Invoke(reader);
         }
 

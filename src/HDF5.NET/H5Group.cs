@@ -217,7 +217,8 @@ namespace HDF5.NET
                          * IV.A.2.c. The Link Info Message 
                          * Optional; may not be repeated. */
                         if (!this.File.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
-                            linkMessages = this.GetLinksFromLinkInfoMessage(lmessage);
+                            linkMessages = this.GetLinkMessagesFromLinkInfoMessage(lmessage);
+
                         /* New (1.8) compact format
                          * IV.A.2.g. The Link Message 
                          * A group is storing its links compactly when the fractal heap address 
@@ -225,6 +226,7 @@ namespace HDF5.NET
                         else
                             linkMessages = this.ObjectHeader.GetMessages<LinkMessage>();
 
+                        // build links
                         foreach (var linkMessage in linkMessages)
                         {
                             yield return linkMessage.LinkInfo switch
@@ -262,7 +264,7 @@ namespace HDF5.NET
             }
         }
 
-        private IEnumerable<LinkMessage> GetLinksFromLinkInfoMessage(LinkInfoMessage infoMessage)
+        private IEnumerable<LinkMessage> GetLinkMessagesFromLinkInfoMessage(LinkInfoMessage infoMessage)
         {
             var fractalHeap = infoMessage.FractalHeap;
             var btree2NameIndex = infoMessage.BTree2NameIndex;
@@ -275,7 +277,7 @@ namespace HDF5.NET
 
             foreach (var record in records)
             {
-                using var localReader = new BinaryReader(new MemoryStream(record.HeapId));
+                using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                 var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
 
                 yield return heapId.Read(reader =>

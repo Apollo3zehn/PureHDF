@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree2Record11(BinaryReader reader, Superblock superblock, ushort recordSize) : base(reader)
+        public BTree2Record11(H5BinaryReader reader, Superblock superblock, ushort recordSize) : base(reader)
         {
             // address
             this.Address = superblock.ReadOffset(reader);

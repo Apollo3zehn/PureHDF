@@ -16,7 +16,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree1Node(BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree1Node(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -83,7 +83,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -92,7 +92,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -103,7 +103,7 @@ namespace HDF5.NET
 
         public BTree1Node GetChild(int index)
         {
-            this.Reader.BaseStream.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
+            this.Reader.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
             return new BTree1Node(this.Reader, _superblock);
         }
 
@@ -122,7 +122,7 @@ namespace HDF5.NET
                 {
                     foreach (var address in parentNode.ChildAddresses)
                     {
-                        this.Reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+                        this.Reader.Seek((long)address, SeekOrigin.Begin);
                         newNodes.Add(new BTree1Node(this.Reader, _superblock));
                     }
                 }
@@ -142,7 +142,7 @@ namespace HDF5.NET
             {
                 return node.ChildAddresses.Select(address =>
                 {
-                    this.Reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+                    this.Reader.Seek((long)address, SeekOrigin.Begin);
                     return new SymbolTableNode(this.Reader, _superblock);
                 });
             }).ToList();

@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class HyperslabSelectionInfo2 : HyperslabSelectionInfo
     {
         #region Constructors
 
-        public HyperslabSelectionInfo2(BinaryReader reader) : base(reader)
+        public HyperslabSelectionInfo2(H5BinaryReader reader) : base(reader)
         {
             // flags
             this.Flags = reader.ReadByte();

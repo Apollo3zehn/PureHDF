@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class TinyObjectsFractalHeapIdSubType2 : TinyObjectsFractalHeapIdSubType1
     {
@@ -13,7 +11,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType2(BinaryReader localReader, byte firstByte) 
+        public TinyObjectsFractalHeapIdSubType2(H5BinaryReader localReader, byte firstByte) 
             : base(localReader, firstByte)
         {
             _firstByte = firstByte;

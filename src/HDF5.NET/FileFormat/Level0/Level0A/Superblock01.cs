@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class Superblock01 : Superblock
     {
         #region Constructors
 
-        public Superblock01(BinaryReader reader, byte version) : base(reader)
+        public Superblock01(H5BinaryReader reader, byte version) : base(reader)
         {
             this.SuperBlockVersion = version;
             this.FreeSpaceStorageVersion = reader.ReadByte();
@@ -46,15 +44,9 @@ namespace HDF5.NET
         public ushort GroupLeafNodeK { get; set; }
         public ushort GroupInternalNodeK { get; set; }
         public ushort IndexedStorageInternalNodeK { get; set; }
-        public ulong BaseAddress { get; set; }
         public ulong FreeSpaceInfoAddress { get; set; }
-        public ulong EndOfFileAddress { get; set; }
         public ulong DriverInfoBlockAddress { get; set; }
         public SymbolTableEntry RootGroupSymbolTableEntry { get; set; }
-
-        #endregion
-
-        #region Properties
 
         public DriverInfoBlock? DriverInfoBlock
         {

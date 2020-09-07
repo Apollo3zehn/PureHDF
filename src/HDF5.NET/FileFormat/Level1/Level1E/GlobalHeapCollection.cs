@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -16,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public GlobalHeapCollection(BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapCollection(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

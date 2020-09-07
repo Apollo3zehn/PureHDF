@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -84,7 +83,7 @@ namespace HDF5.NET
                     throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
-                using (var dataReader = new BinaryReader(new MemoryStream(data.ToArray())))
+                using (var dataReader = new H5BinaryReader(new MemoryStream(data.ToArray())))
                 {
                     while (dataReader.BaseStream.Position != data.Length)
                     {
@@ -112,7 +111,7 @@ namespace HDF5.NET
             };
         }
 
-        public static string ReadFixedLengthString(BinaryReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        public static string ReadFixedLengthString(H5BinaryReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = reader.ReadBytes(length);
 
@@ -124,7 +123,7 @@ namespace HDF5.NET
             };
         }
 
-        public static string ReadNullTerminatedString(BinaryReader reader, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        public static string ReadNullTerminatedString(H5BinaryReader reader, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = new List<byte>();
             var byteValue = reader.ReadByte();
@@ -152,7 +151,7 @@ namespace HDF5.NET
             return result;
         }
 
-        public static ulong ReadUlong(BinaryReader reader, ulong size)
+        public static ulong ReadUlong(H5BinaryReader reader, ulong size)
         {
             return size switch
             {
@@ -174,7 +173,7 @@ namespace HDF5.NET
             return (bool)generic.Invoke(null, null);
         }
 
-        private static ulong ReadUlongArbitrary(BinaryReader reader, ulong size)
+        private static ulong ReadUlongArbitrary(H5BinaryReader reader, ulong size)
         {
             var result = 0UL;
             var shift = 0;

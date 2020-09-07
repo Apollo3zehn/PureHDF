@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public Superblock23(BinaryReader reader, byte version) : base(reader)
+        public Superblock23(H5BinaryReader reader, byte version) : base(reader)
         {
             this.SuperBlockVersion = version;
             this.OffsetsSize = reader.ReadByte();
@@ -23,9 +23,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        public ulong BaseAddress { get; set; }
         public ulong SuperblockExtensionAddress { get; set; }
-        public ulong EndOfFileAddress { get; set; }
         public ulong RootGroupObjectHeaderAddress { get; set; }
         public uint SuperblockChecksum { get; set; }
 
@@ -39,7 +37,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    this.Reader.BaseStream.Seek((long)this.SuperblockExtensionAddress, SeekOrigin.Begin);
+                    this.Reader.Seek((long)this.SuperblockExtensionAddress, SeekOrigin.Begin);
                     return ObjectHeader.Construct(this.Reader, this);
                 }
             }
@@ -49,7 +47,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.RootGroupObjectHeaderAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.RootGroupObjectHeaderAddress, SeekOrigin.Begin);
                 return ObjectHeader.Construct(this.Reader, this);
             }
         }

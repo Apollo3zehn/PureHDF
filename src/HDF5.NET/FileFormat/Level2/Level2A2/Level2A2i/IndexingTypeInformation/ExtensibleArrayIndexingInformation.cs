@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ExtensibleArrayIndexingInformation : IndexingInformation
     {
         #region Constructors
 
-        public ExtensibleArrayIndexingInformation(BinaryReader reader) : base(reader)
+        public ExtensibleArrayIndexingInformation(H5BinaryReader reader) : base(reader)
         {
             // max bit count
             this.MaxBitCount = reader.ReadByte();

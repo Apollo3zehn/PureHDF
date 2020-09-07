@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class CompoundPropertyDescription2 : CompoundPropertyDescription
     {
         #region Constructors
 
-        public CompoundPropertyDescription2(BinaryReader reader) : base(reader)
+        public CompoundPropertyDescription2(H5BinaryReader reader) : base(reader)
         {
             // name
             this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true);

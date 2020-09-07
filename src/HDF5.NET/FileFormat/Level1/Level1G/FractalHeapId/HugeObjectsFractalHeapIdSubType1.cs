@@ -10,7 +10,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private BinaryReader _reader;
+        private H5BinaryReader _reader;
         private Superblock _superblock;
         private FractalHeapHeader _heapHeader;
 
@@ -18,7 +18,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal HugeObjectsFractalHeapIdSubType1(BinaryReader reader, Superblock superblock, BinaryReader localReader, FractalHeapHeader header) : base(reader)
+        internal HugeObjectsFractalHeapIdSubType1(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader, FractalHeapHeader header)
         {
             _reader = reader;
             _superblock = superblock;
@@ -38,18 +38,18 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache)
         {
             // huge objects b-tree v2
             if (record01Cache == null)
             {
-                _reader.BaseStream.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
+                _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
                 var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock);
                 record01Cache = hugeBtree2.GetRecords();
             }
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == this.BTree2Key);
-            _reader.BaseStream.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
+            _reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
             
             return func(_reader);
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -12,7 +11,7 @@ namespace HDF5.NET
 
         #endregion
 
-        public BTree2Node(BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, byte[] signature) 
+        public BTree2Node(H5BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, byte[] signature) 
             : base(reader)
         {
             // signature

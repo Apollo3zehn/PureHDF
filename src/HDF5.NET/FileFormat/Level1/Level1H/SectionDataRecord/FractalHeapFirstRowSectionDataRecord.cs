@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FractalHeapSingleSectionDataRecord : FractalHeapIndirectSectionDataRecord
     {
         #region Constructors
 
-        public FractalHeapSingleSectionDataRecord(BinaryReader reader) : base(reader)
+        public FractalHeapSingleSectionDataRecord(H5BinaryReader reader) : base(reader)
         {
             //
         }

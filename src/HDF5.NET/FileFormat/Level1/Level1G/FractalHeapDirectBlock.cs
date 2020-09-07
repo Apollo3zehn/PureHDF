@@ -15,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FractalHeapDirectBlock(FractalHeapHeader header, BinaryReader reader, Superblock superblock) : base(reader)
+        public FractalHeapDirectBlock(FractalHeapHeader header, H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
             var headerSize = 0UL;
@@ -78,7 +78,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.HeapHeaderAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.HeapHeaderAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(this.Reader, _superblock);
             }
         }

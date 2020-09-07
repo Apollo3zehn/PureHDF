@@ -17,7 +17,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree2Header(BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree2Header(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -135,7 +135,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    this.Reader.BaseStream.Seek((long)this.RootNodeAddress, SeekOrigin.Begin);
+                    this.Reader.Seek((long)this.RootNodeAddress, SeekOrigin.Begin);
 
                     return this.Depth != 0
                         ? (BTree2Node<T>)new BTree2InternalNode<T>(this.Reader, _superblock, this, this.RootNodeRecordCount, this.Depth)
@@ -185,7 +185,7 @@ namespace HDF5.NET
                         yield return records[i];
 
                     var nodePointer = nodePointers[i];
-                    this.Reader.BaseStream.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+                    this.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
                     var childNodeLevel = (ushort)(nodeLevel - 1);
 
                     IEnumerable<T> childRecords;
@@ -235,7 +235,7 @@ namespace HDF5.NET
             //        {
             //            foreach (var nodePointer in parentNode.NodePointers)
             //            {
-            //                this.Reader.BaseStream.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+            //                this.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
             //                var internalNode = new BTree2InternalNode(this.Reader, _superblock, this, nodePointer.RecordCount, nodeLevel);
             //                newInternalNodes.Add(internalNode);
             //            }
@@ -252,7 +252,7 @@ namespace HDF5.NET
             //    {
             //        foreach (var nodePointer in parentNode.NodePointers)
             //        {
-            //            this.Reader.BaseStream.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+            //            this.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
             //            var leafNode = new BTree2LeafNode(this.Reader, _superblock, this, nodePointer.RecordCount);
             //            newLeafNodes.Add(leafNode);
             //        }

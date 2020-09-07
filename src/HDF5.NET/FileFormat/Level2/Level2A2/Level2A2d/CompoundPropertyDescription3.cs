@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public CompoundPropertyDescription3(BinaryReader reader, uint valueSize) : base(reader)
+        public CompoundPropertyDescription3(H5BinaryReader reader, uint valueSize) : base(reader)
         {
             // name
             this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false);

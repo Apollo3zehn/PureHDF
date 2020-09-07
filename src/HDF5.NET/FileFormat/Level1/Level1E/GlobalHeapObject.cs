@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public GlobalHeapObject(BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapObject(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // heap object index
             this.HeapObjectIndex = reader.ReadUInt16();

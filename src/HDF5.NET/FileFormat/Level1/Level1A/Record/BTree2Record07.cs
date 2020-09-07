@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree2Record07(BinaryReader reader, MessageLocation messageLocation) : base(reader)
+        public BTree2Record07(H5BinaryReader reader, MessageLocation messageLocation) : base(reader)
         {
             this.MessageLocation = messageLocation;
         }
@@ -22,7 +21,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        public static BTree2Record07 Construct(BinaryReader reader, Superblock superblock)
+        public static BTree2Record07 Construct(H5BinaryReader reader, Superblock superblock)
         {
             var messageLocation = (MessageLocation)reader.ReadByte();
 

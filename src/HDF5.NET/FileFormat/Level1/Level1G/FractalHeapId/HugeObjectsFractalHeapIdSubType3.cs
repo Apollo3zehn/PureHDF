@@ -9,13 +9,13 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private BinaryReader _reader;
+        private H5BinaryReader _reader;
 
         #endregion
 
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType3(BinaryReader reader, Superblock superblock, BinaryReader localReader) : base(reader)
+        public HugeObjectsFractalHeapIdSubType3(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader)
         {
             _reader = reader;
 
@@ -37,9 +37,9 @@ namespace HDF5.NET
 
         #region Method
 
-        public override T Read<T>(Func<BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
         {
-            _reader.BaseStream.Seek((long)this.Address, SeekOrigin.Begin);
+            _reader.Seek((long)this.Address, SeekOrigin.Begin);
             return func(_reader);
         }
 

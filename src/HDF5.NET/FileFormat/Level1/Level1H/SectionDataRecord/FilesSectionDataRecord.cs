@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FilesSectionDataRecord : SectionDataRecord
     {
         #region Constructors
 
-        public FilesSectionDataRecord(BinaryReader reader) : base(reader)
+        public FilesSectionDataRecord(H5BinaryReader reader) : base(reader)
         {
             //
         }

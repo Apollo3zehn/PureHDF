@@ -15,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public LocalHeap(BinaryReader reader, Superblock superblock) : base(reader)
+        public LocalHeap(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);
@@ -68,7 +68,7 @@ namespace HDF5.NET
             {
                 if (_data == null)
                 {
-                    this.Reader.BaseStream.Seek((long)this.DataSegmentAddress, SeekOrigin.Begin);
+                    this.Reader.Seek((long)this.DataSegmentAddress, SeekOrigin.Begin);
                     _data = this.Reader.ReadBytes((int)this.DataSegmentSize);
                 }
 

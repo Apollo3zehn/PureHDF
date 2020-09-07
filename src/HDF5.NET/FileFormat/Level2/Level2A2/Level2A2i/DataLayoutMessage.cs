@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public DataLayoutMessage(BinaryReader reader) : base(reader)
+        public DataLayoutMessage(H5BinaryReader reader) : base(reader)
         {
             //
         }
@@ -22,7 +21,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public static DataLayoutMessage Construct(BinaryReader reader, Superblock superblock)
+        public static DataLayoutMessage Construct(H5BinaryReader reader, Superblock superblock)
         {
             // get version
             var version = reader.ReadByte();

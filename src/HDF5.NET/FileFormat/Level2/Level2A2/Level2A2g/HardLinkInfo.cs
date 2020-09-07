@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public HardLinkInfo(BinaryReader reader, Superblock superblock) : base(reader)
+        public HardLinkInfo(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -31,7 +31,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
                 return ObjectHeader.Construct(this.Reader, _superblock);
             }
         }

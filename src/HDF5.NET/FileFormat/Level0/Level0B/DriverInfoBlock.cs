@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -13,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public DriverInfoBlock(BinaryReader reader) : base(reader)
+        public DriverInfoBlock(H5BinaryReader reader) : base(reader)
         {
             // version
             this.Version = reader.ReadByte(); 

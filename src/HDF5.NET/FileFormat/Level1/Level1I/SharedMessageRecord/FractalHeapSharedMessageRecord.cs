@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FractalHeapSharedMessageRecord : SharedMessageRecord
     {
         #region Constructors
 
-        public FractalHeapSharedMessageRecord(BinaryReader reader) : base(reader)
+        public FractalHeapSharedMessageRecord(H5BinaryReader reader) : base(reader)
         {
             // hash value
             this.HashValue = reader.ReadUInt32();

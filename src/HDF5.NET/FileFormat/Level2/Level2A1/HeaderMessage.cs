@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -16,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public HeaderMessage(BinaryReader reader, Superblock superblock, byte version, bool withCreationOrder = false) : base(reader)
+        public HeaderMessage(H5BinaryReader reader, Superblock superblock, byte version, bool withCreationOrder = false) : base(reader)
         {
             this.Version = version;
             this.WithCreationOrder = withCreationOrder;

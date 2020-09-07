@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -54,7 +53,7 @@ namespace HDF5.NET
             {
                 if (_objectHeader == null)
                 {
-                    this.File.Reader.BaseStream.Seek((long)_objectHeaderAddress, SeekOrigin.Begin);
+                    this.File.Reader.Seek((long)_objectHeaderAddress, SeekOrigin.Begin);
                     _objectHeader = ObjectHeader.Construct(this.File.Reader, this.File.Superblock);
                 }
 
@@ -106,7 +105,7 @@ namespace HDF5.NET
 
             foreach (var record in records)
             {
-                using var localReader = new BinaryReader(new MemoryStream(record.HeapId));
+                using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                 var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
 
                 yield return heapId.Read(reader =>

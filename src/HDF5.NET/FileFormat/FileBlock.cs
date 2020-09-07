@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public FileBlock(BinaryReader reader)
+        public FileBlock(H5BinaryReader reader)
         {
             this.Reader = reader;
         }
@@ -17,7 +16,7 @@ namespace HDF5.NET
         #region Properties
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal BinaryReader Reader { get; }
+        internal H5BinaryReader Reader { get; }
 
         #endregion
     }

@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public AttributeMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public AttributeMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             //var a = reader.ReadBytes(200);
             // version
@@ -61,12 +61,17 @@ namespace HDF5.NET
             {
                 var paddedSize = (int)(Math.Ceiling(this.DataspaceSize / 8.0) * 8);
                 var remainingSize = paddedSize - this.DataspaceSize;
-                this.Reader.BaseStream.Seek(remainingSize, SeekOrigin.Current);
+                this.Reader.Seek(remainingSize, SeekOrigin.Current);
             }
 
             // data
-            var totalLength = this.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
-            totalLength *= this.Datatype.Size;
+            var totalLength = 0UL;
+
+            if (this.Dataspace.Dimensionality > 0)
+            {
+                totalLength = this.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
+                totalLength *= this.Datatype.Size;
+            }
 
             this.Data = reader.ReadBytes((int)totalLength);
         }

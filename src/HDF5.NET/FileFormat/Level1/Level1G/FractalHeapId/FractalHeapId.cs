@@ -1,24 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 
 namespace HDF5.NET
 {
-    public abstract class FractalHeapId : FileBlock
+    public abstract class FractalHeapId
     {
-        #region Constructors
-
-        public FractalHeapId(BinaryReader reader) : base(reader)
-        {
-            //
-        }
-
-        #endregion
-
         #region Methods
 
-        public static FractalHeapId Construct(BinaryReader reader, Superblock superblock, BinaryReader localReader, FractalHeapHeader header)
+        public static FractalHeapId Construct(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader, FractalHeapHeader header)
         {
             var firstByte = localReader.ReadByte();
 
@@ -56,7 +46,7 @@ namespace HDF5.NET
             });
         }
 
-        public abstract T Read<T>(Func<BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache);
+        public abstract T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache);
 
         #endregion
     }

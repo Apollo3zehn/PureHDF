@@ -9,15 +9,14 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private BinaryReader _reader;
+        private H5BinaryReader _reader;
         private FractalHeapHeader _header;
 
         #endregion
 
         #region Constructors
 
-        public ManagedObjectsFractalHeapId(BinaryReader reader, BinaryReader localReader, FractalHeapHeader header, ulong offsetByteCount, ulong lengthByteCount) 
-            : base(reader)
+        public ManagedObjectsFractalHeapId(H5BinaryReader reader, H5BinaryReader localReader, FractalHeapHeader header, ulong offsetByteCount, ulong lengthByteCount)
         {
             _reader = reader;
             _header = header;
@@ -37,11 +36,11 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
         {
             var address = _header.GetAddress(this);
 
-            _reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
+            _reader.Seek((long)address, SeekOrigin.Begin);
             return func(_reader);
         }
 

@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class OpaqueBitFieldDescription : DatatypeBitFieldDescription
     {
         #region Constructors
 
-        public OpaqueBitFieldDescription(BinaryReader reader) : base(reader)
+        public OpaqueBitFieldDescription(H5BinaryReader reader) : base(reader)
         {
             //
         }

@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public LinkInfoMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public LinkInfoMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -68,7 +68,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.FractalHeapAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.FractalHeapAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(this.Reader, _superblock);
             }
         }
@@ -77,7 +77,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
                 return new BTree2Header<BTree2Record05>(this.Reader, _superblock);
             }
         }
@@ -86,7 +86,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
                 return new BTree2Header<BTree2Record06>(this.Reader, _superblock);
             }
         }

@@ -10,7 +10,7 @@ namespace HDF5.NET
         private ulong gapSize;
         #region Constructors
 
-        public ObjectHeader(BinaryReader reader) : base(reader)
+        public ObjectHeader(H5BinaryReader reader) : base(reader)
         {
             this.HeaderMessages = new List<HeaderMessage>();
         }
@@ -42,7 +42,7 @@ namespace HDF5.NET
                 .Cast<T>();
         }
 
-        public static ObjectHeader Construct(BinaryReader reader, Superblock superblock)
+        public static ObjectHeader Construct(H5BinaryReader reader, Superblock superblock)
         {
             // get version
             var version = reader.ReadByte();
@@ -63,7 +63,7 @@ namespace HDF5.NET
             };
         }
 
-        protected List<HeaderMessage> ReadHeaderMessages(BinaryReader reader,
+        protected List<HeaderMessage> ReadHeaderMessages(H5BinaryReader reader,
                                                          Superblock superblock,
                                                          ulong objectHeaderSize,
                                                          byte version,
@@ -105,7 +105,7 @@ namespace HDF5.NET
 
             foreach (var continuationMessage in continuationMessages)
             {
-                reader.BaseStream.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+                reader.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
 
                 if (version == 1)
                 {

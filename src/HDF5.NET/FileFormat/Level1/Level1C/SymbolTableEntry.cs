@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public SymbolTableEntry(BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableEntry(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -62,7 +62,7 @@ namespace HDF5.NET
             {
                 if (!_superblock.IsUndefinedAddress(this.ObjectHeaderAddress))
                 {
-                    this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+                    this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
                     return ObjectHeader.Construct(this.Reader, _superblock);
                 }
                 else

@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ObjectHeaderContinuationMessage : Message
     {
         #region Constructors
 
-        public ObjectHeaderContinuationMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderContinuationMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             this.Offset = superblock.ReadOffset(reader);
             this.Length = superblock.ReadLength(reader);

@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ImplicitIndexingInformation : IndexingInformation
     {
         #region Constructors
 
-        public ImplicitIndexingInformation(BinaryReader reader) : base(reader)
+        public ImplicitIndexingInformation(H5BinaryReader reader) : base(reader)
         {
             //
         }

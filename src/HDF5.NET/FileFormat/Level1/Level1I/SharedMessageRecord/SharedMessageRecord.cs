@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public abstract class SharedMessageRecord : FileBlock
     {
         #region Constructors
 
-        public SharedMessageRecord(BinaryReader reader) : base(reader)
+        public SharedMessageRecord(H5BinaryReader reader) : base(reader)
         {
             // message location
             this.MessageLocation = (MessageLocation)reader.ReadByte();

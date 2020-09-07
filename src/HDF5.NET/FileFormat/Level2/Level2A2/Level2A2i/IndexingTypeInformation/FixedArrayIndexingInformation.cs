@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FixedArrayIndexingInformation : IndexingInformation
     {
         #region Constructors
 
-        public FixedArrayIndexingInformation(BinaryReader reader) : base(reader)
+        public FixedArrayIndexingInformation(H5BinaryReader reader) : base(reader)
         {
             // page bit count
             this.PageBitCount = reader.ReadByte();

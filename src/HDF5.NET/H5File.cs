@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        private H5File(BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string filePath, bool deleteOnClose)
+        private H5File(H5BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string filePath, bool deleteOnClose)
             : base(objectHeader)
         {
             this.Reader = reader;
@@ -27,7 +27,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        internal BinaryReader Reader { get; }
+        internal H5BinaryReader Reader { get; }
         internal Superblock Superblock { get; }
 
         #endregion
@@ -44,11 +44,22 @@ namespace HDF5.NET
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
-            var reader = new BinaryReader(System.IO.File.Open(filePath, mode, fileAccess, fileShare));
+            var reader = new H5BinaryReader(System.IO.File.Open(filePath, mode, fileAccess, fileShare));
 
             // superblock
+            int stepSize = 512;
             var signature = reader.ReadBytes(8);
-            H5File.ValidateSignature(signature, Superblock.FormatSignature);
+
+            while (!H5File.ValidateSignature(signature, Superblock.FormatSignature))
+            {
+                reader.Seek(stepSize - 8, SeekOrigin.Current);
+
+                if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                    throw new Exception("The file is not a valid HDF 5 file.");
+
+                signature = reader.ReadBytes(8);
+                stepSize *= 2;
+            }
 
             var version = reader.ReadByte();
 
@@ -60,6 +71,8 @@ namespace HDF5.NET
                 3 => new Superblock23(reader, version),
                 _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
             });
+
+            reader.BaseAddress = superblock.BaseAddress;
 
             ObjectHeader objectHeader;
             var superblock01 = superblock as Superblock01;
@@ -78,13 +91,9 @@ namespace HDF5.NET
                 var superblock23 = superblock as Superblock23;
 
                 if (superblock23 != null)
-                {
                     objectHeader = superblock23.RootGroupObjectHeader;
-                }
                 else
-                {
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
-                }
             }
 
             return new H5File(reader, superblock, objectHeader, filePath, deleteOnClose);
@@ -108,18 +117,18 @@ namespace HDF5.NET
             }    
         }
 
-        private static void ValidateSignature(byte[] actual, byte[] expected)
+        private static bool ValidateSignature(byte[] actual, byte[] expected)
         {
             if (actual.Length == expected.Length)
             {
                 if (actual[0] == expected[0] && actual[1] == expected[1] && actual[2] == expected[2] && actual[3] == expected[3]
                  && actual[4] == expected[4] && actual[5] == expected[5] && actual[6] == expected[6] && actual[7] == expected[7])
                 {
-                    return;
+                    return true;
                 }
             }
 
-            throw new Exception("The file is not a valid HDF 5 file.");
+            return false;
         }
 
         #endregion
