@@ -15,10 +15,10 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
 
             // header messages
-#error Why does -8 work? Signature + Checksum?
             var messages = this.ReadHeaderMessages(reader, superblock, objectHeaderSize - 8, version, withCreationOrder);
             this.HeaderMessages.AddRange(messages);
 
+#warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
 #warning read gap and checksum
         }
 

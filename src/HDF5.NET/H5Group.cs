@@ -10,24 +10,29 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5File _file;
         private ObjectHeaderScratchPad? _scratchPad;
 
         #endregion
 
         #region Constructors
 
-        internal H5Group(H5File file, string name, ulong objectHeaderAddress, ObjectHeaderScratchPad? scratchPad)
-            : base(file.Reader, file.Superblock, name, objectHeaderAddress)
+        // only for root group
+        internal H5Group(ObjectHeader objectHeader)
+           : base(objectHeader)
         {
-            _file = file;
-            _scratchPad = scratchPad;
+            //   
         }
 
         internal H5Group(H5File file, string name, ObjectHeader objectHeader)
-            : base(file.Reader, file.Superblock, name, objectHeader)
+            : base(file, name, objectHeader)
         {
-            _file = file;
+            //
+        }
+
+        internal H5Group(H5File file, string name, ulong objectHeaderAddress, ObjectHeaderScratchPad? scratchPad)
+            : base(file, name, objectHeaderAddress)
+        {
+            _scratchPad = scratchPad;
         }
 
         #endregion
@@ -91,7 +96,7 @@ namespace HDF5.NET
 
             var isRooted = path.StartsWith('/');
             var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-            var current = (H5Link)(isRooted ? _file.Root : this);
+            var current = (H5Link)(isRooted ? this.File : this);
 
             H5SymbolicLink? symbolicLink;
 
@@ -145,7 +150,7 @@ namespace HDF5.NET
 
                 yield return entry.ScratchPad switch
                 {
-                    ObjectHeaderScratchPad objectScratch    => new H5Group(_file, name, entry.ObjectHeaderAddress, objectScratch),
+                    ObjectHeaderScratchPad objectScratch    => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
                     SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
                     _                                       => this.InstantiateUncachedLink(name, entry.ObjectHeader)
                 };
@@ -198,7 +203,7 @@ namespace HDF5.NET
             /* new (1.8) indexed format (in combination with Group Info Message) */
             var linkInfoMessages = this.ObjectHeader
                 .GetMessages<LinkInfoMessage>()
-                .Where(message => !this.Superblock.IsUndefinedAddress(message.BTree2NameIndexAddress));
+                .Where(message => !this.File.Superblock.IsUndefinedAddress(message.BTree2NameIndexAddress));
 
             foreach (var linkInfoMessage in linkInfoMessages)
             {
@@ -229,8 +234,8 @@ namespace HDF5.NET
             {
                 return objectHeader.ObjectType switch
                 {
-                    H5ObjectType.Group => new H5Group(_file, name, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(this.Reader, this.Superblock, name, objectHeader),
+                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
+                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
                     H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
                     _ => throw new Exception("Unknown object type.")
                 };

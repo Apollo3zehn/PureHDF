@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class H5File : IDisposable
+    public class H5File : H5Group, IDisposable
     {
         #region Fields
 
@@ -14,85 +14,80 @@ namespace HDF5.NET
 
         #region Constructors
 
-        private H5File(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose)
-            : this(filePath, mode, fileAccess, fileShare)
+        private H5File(BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string filePath, bool deleteOnClose)
+            : base(objectHeader)
         {
-            _deleteOnClose = deleteOnClose;
-        }
-
-        private H5File(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
-        {
+            this.Reader = reader;
+            this.Superblock = superblock;
             _filePath = filePath;
-
-            if (!BitConverter.IsLittleEndian)
-                throw new Exception("This library only works on little endian systems.");
-
-            this.Reader = new BinaryReader(File.Open(filePath, mode, fileAccess, fileShare));
-
-            // superblock
-            var signature = this.Reader.ReadBytes(8);
-            this.ValidateSignature(signature, Superblock.FormatSignature);
-
-            var version = this.Reader.ReadByte();
-
-            this.Superblock = version switch
-            {
-                0 => new Superblock01(this.Reader, version),
-                1 => new Superblock01(this.Reader, version),
-                2 => new Superblock23(this.Reader, version),
-                3 => new Superblock23(this.Reader, version),
-                _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
-            };
-
-            var superblock01 = this.Superblock as Superblock01;
-
-            if (superblock01 != null)
-            {
-                var objectHeader = superblock01.RootGroupSymbolTableEntry.ObjectHeader;
-
-                if (objectHeader != null)
-                    this.Root = new H5Group(this, "/", objectHeader);
-                else
-                    throw new Exception("The root group object header is not allocated.");
-            }
-            else
-            {
-                var superblock23 = this.Superblock as Superblock23;
-
-                if (superblock23 != null)
-                {
-                    var objectHeader = superblock23.RootGroupObjectHeader;
-                    this.Root = new H5Group(this, "/", objectHeader);
-                }
-                else
-                {
-                    throw new Exception($"The superblock of type '{this.Superblock.GetType().Name}' is not supported.");
-                }
-            }
+            _deleteOnClose = deleteOnClose;
         }
 
         #endregion
 
         #region Properties
 
-        public Superblock Superblock { get; set; }
-
-        public H5Group Root { get; set; }
-
-        internal BinaryReader Reader { get; set; }
+        internal BinaryReader Reader { get; }
+        internal Superblock Superblock { get; }
 
         #endregion
 
         #region Methods
 
-        internal static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose)
-        {
-            return new H5File(filePath, mode, fileAccess, fileShare, deleteOnClose);
-        }
-
         public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
         {
-            return new H5File(filePath, mode, fileAccess, fileShare);
+            return H5File.Open(filePath, mode, fileAccess, fileShare, deleteOnClose: false);
+        }
+
+        internal static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose)
+        {
+            if (!BitConverter.IsLittleEndian)
+                throw new Exception("This library only works on little endian systems.");
+
+            var reader = new BinaryReader(System.IO.File.Open(filePath, mode, fileAccess, fileShare));
+
+            // superblock
+            var signature = reader.ReadBytes(8);
+            H5File.ValidateSignature(signature, Superblock.FormatSignature);
+
+            var version = reader.ReadByte();
+
+            var superblock = (Superblock)(version switch
+            {
+                0 => new Superblock01(reader, version),
+                1 => new Superblock01(reader, version),
+                2 => new Superblock23(reader, version),
+                3 => new Superblock23(reader, version),
+                _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
+            });
+
+            ObjectHeader objectHeader;
+            var superblock01 = superblock as Superblock01;
+
+            if (superblock01 != null)
+            {
+                var nullableObjectHeader = superblock01.RootGroupSymbolTableEntry.ObjectHeader;
+
+                if (nullableObjectHeader == null)
+                    throw new Exception("The root group object header is not allocated.");
+
+                objectHeader = nullableObjectHeader;
+            }
+            else
+            {
+                var superblock23 = superblock as Superblock23;
+
+                if (superblock23 != null)
+                {
+                    objectHeader = superblock23.RootGroupObjectHeader;
+                }
+                else
+                {
+                    throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
+                }
+            }
+
+            return new H5File(reader, superblock, objectHeader, filePath, deleteOnClose);
         }
 
         public void Dispose()
@@ -104,7 +99,7 @@ namespace HDF5.NET
             {
                 try
                 {
-                    File.Delete(_filePath);
+                    System.IO.File.Delete(_filePath);
                 }
                 catch
                 {
@@ -113,7 +108,7 @@ namespace HDF5.NET
             }    
         }
 
-        private void ValidateSignature(byte[] actual, byte[] expected)
+        private static void ValidateSignature(byte[] actual, byte[] expected)
         {
             if (actual.Length == expected.Length)
             {

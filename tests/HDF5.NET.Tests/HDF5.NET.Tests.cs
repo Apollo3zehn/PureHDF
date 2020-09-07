@@ -20,9 +20,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withSimple: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var actual = root.LinkExists(path);
 
                 // Assert
@@ -42,9 +40,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withSimple: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var group = root.Get<H5Group>(path);
 
                 // Assert
@@ -64,9 +60,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withSimple: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var group = root.Get<H5Dataset>(path);
 
                 // Assert
@@ -98,9 +92,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == name);
                 var actual = attribute.Read<T>().ToArray();
 
@@ -118,9 +110,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A14");
                 var actual = attribute.Read<TestStructL1>().ToArray();
 
@@ -138,9 +128,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A15");
                 var actual = attribute.ReadCompound<TestStructString>().ToArray();
 
@@ -158,8 +146,8 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withTinyAttribute: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = h5file.Root.Get<H5Group>("/tiny");
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("/tiny");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<byte>().ToArray();
 
@@ -177,8 +165,8 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withHugeAttribute: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = h5file.Root.Get<H5Group>("/large");
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("/large");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<int>().ToArray();
 
@@ -197,8 +185,8 @@ namespace HDF5.NET.Tests
                 var expectedCount = 1000;
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = h5file.Root.Get<H5Group>("/mass");
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("/mass");
                 var attributes = parent.Attributes.ToList();
 
                 foreach (var attribute in attributes)
@@ -222,9 +210,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A15");
                 var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>().ToArray());
 
@@ -247,9 +233,7 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == name);
                 var actual = attribute.ReadString();
 
@@ -267,9 +251,8 @@ namespace HDF5.NET.Tests
                 var filePath = TestUtils.PrepareTestFile(version, withLinks: true);
 
                 // Act
-                using var h5file = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var root = h5file.Root;
-
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                
                 var dataset_hard_1 = root.Get<H5Dataset>("/links/hard_link_1/dataset");
                 var dataset_hard_2 = root.Get<H5Dataset>("/links/hard_link_2/dataset");
                 var dataset_hard_3 = root.Get<H5Dataset>("/links/soft_link_2/dataset");

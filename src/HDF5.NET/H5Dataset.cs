@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -8,8 +7,8 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal H5Dataset(BinaryReader reader, Superblock superblock, string name, ObjectHeader objectHeader) 
-            : base(reader, superblock, name, objectHeader)
+        internal H5Dataset(H5File file, string name, ObjectHeader objectHeader) 
+            : base(file, name, objectHeader)
         {
             foreach (var message in this.ObjectHeader.HeaderMessages)
             {

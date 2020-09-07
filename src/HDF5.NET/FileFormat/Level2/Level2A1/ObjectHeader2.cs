@@ -47,6 +47,7 @@ namespace HDF5.NET
             var messages = this.ReadHeaderMessages(reader, superblock, this.SizeOfChunk0, version: 2, withCreationOrder);
             this.HeaderMessages.AddRange(messages);
 
+#warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
 #warning read gap and checksum
         }
 

@@ -17,27 +17,36 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public H5AttributableLink(BinaryReader reader, Superblock superblock, string name, ulong objectHeaderAddress) : base(name)
+        // only for H5File constructor
+        public H5AttributableLink(ObjectHeader objectHeader) : base("/")
         {
-            this.Reader = reader;
-            this.Superblock = superblock;
-            _objectHeaderAddress = objectHeaderAddress;
+            var file = this as H5File;
+
+            if (file == null)
+                throw new Exception($"This constructor is only intended for the {nameof(H5File)} class.");
+
+            this.File = file;
+
+            _objectHeader = objectHeader;
         }
 
-        public H5AttributableLink(BinaryReader reader, Superblock superblock, string name, ObjectHeader objectHeader) : base(name)
+        public H5AttributableLink(H5File file, string name, ObjectHeader objectHeader) : base(name)
         {
-            this.Reader = reader;
-            this.Superblock = superblock;
+            this.File = file;
             _objectHeader = objectHeader;
+        }
+
+        public H5AttributableLink(H5File file, string name, ulong objectHeaderAddress) : base(name)
+        {
+            this.File = file;
+            _objectHeaderAddress = objectHeaderAddress;
         }
 
         #endregion
 
         #region Properties
 
-        public BinaryReader Reader;
-
-        public Superblock Superblock { get; }
+        public H5File File { get; }
 
         protected ObjectHeader ObjectHeader
         {
@@ -45,8 +54,8 @@ namespace HDF5.NET
             {
                 if (_objectHeader == null)
                 {
-                    this.Reader.BaseStream.Seek((long)_objectHeaderAddress, SeekOrigin.Begin);
-                    _objectHeader = ObjectHeader.Construct(this.Reader, this.Superblock);
+                    this.File.Reader.BaseStream.Seek((long)_objectHeaderAddress, SeekOrigin.Begin);
+                    _objectHeader = ObjectHeader.Construct(this.File.Reader, this.File.Superblock);
                 }
 
                 return _objectHeader;
@@ -66,7 +75,7 @@ namespace HDF5.NET
 
             foreach (var message in attributeMessages)
             {
-                var attribute = new H5Attribute(message, this.Superblock);
+                var attribute = new H5Attribute(message, this.File.Superblock);
                 yield return attribute;
             }
 
@@ -87,13 +96,13 @@ namespace HDF5.NET
         private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage infoMessage)
         {
             // fractal heap header
-            var reader = this.Superblock.Reader;
+            var reader = this.File.Superblock.Reader;
             reader.BaseStream.Seek((long)infoMessage.FractalHeapAddress, SeekOrigin.Begin);
-            var heapHeader = new FractalHeapHeader(reader, this.Superblock);
+            var heapHeader = new FractalHeapHeader(reader, this.File.Superblock);
 
             // b-tree v2
             reader.BaseStream.Seek((long)infoMessage.BTree2NameIndexAddress, SeekOrigin.Begin);
-            var btree2 = new BTree2Header<BTree2Record08>(reader, this.Superblock);
+            var btree2 = new BTree2Header<BTree2Record08>(reader, this.File.Superblock);
 
             var records = btree2
                 .GetRecords()
@@ -105,7 +114,7 @@ namespace HDF5.NET
             foreach (var record in records)
             {
                 using var localReader = new BinaryReader(new MemoryStream(record.HeapId));
-                var heapId = FractalHeapId.Construct(localReader, this.Superblock, heapHeader);
+                var heapId = FractalHeapId.Construct(localReader, this.File.Superblock, heapHeader);
 
                 yield return heapId switch
                 {
@@ -143,8 +152,8 @@ namespace HDF5.NET
             var address = heapHeader.GetAddress(heapId);
 
             reader.BaseStream.Seek((long)address, SeekOrigin.Begin);
-            var message = new AttributeMessage(reader, this.Superblock);
-            var attribute = new H5Attribute(message, this.Superblock);
+            var message = new AttributeMessage(reader, this.File.Superblock);
+            var attribute = new H5Attribute(message, this.File.Superblock);
 
             return attribute;
         }
@@ -158,14 +167,14 @@ namespace HDF5.NET
             if (record01Cache == null)
             {
                 reader.BaseStream.Seek((long)heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
-                var hugeBtree2 = new BTree2Header<BTree2Record01>(reader, this.Superblock);
+                var hugeBtree2 = new BTree2Header<BTree2Record01>(reader, this.File.Superblock);
                 record01Cache = hugeBtree2.GetRecords();
             }
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == heapId.BTree2Key);
             reader.BaseStream.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
-            var message = new AttributeMessage(reader, this.Superblock);
-            var attribute = new H5Attribute(message, this.Superblock);
+            var message = new AttributeMessage(reader, this.File.Superblock);
+            var attribute = new H5Attribute(message, this.File.Superblock);
 
             return attribute;
         }
@@ -174,8 +183,8 @@ namespace HDF5.NET
                                                HugeObjectsFractalHeapIdSubType3 heapId)
         {
             reader.BaseStream.Seek((long)heapId.Address, SeekOrigin.Begin);
-            var message = new AttributeMessage(reader, this.Superblock);
-            var attribute = new H5Attribute(message, this.Superblock);
+            var message = new AttributeMessage(reader, this.File.Superblock);
+            var attribute = new H5Attribute(message, this.File.Superblock);
 
             return attribute;
         }
@@ -183,8 +192,8 @@ namespace HDF5.NET
         private H5Attribute ReadTinyAttribute(TinyObjectsFractalHeapIdSubType1 heapId)
         {
             using var localReader = new BinaryReader(new MemoryStream(heapId.Data));
-            var message = new AttributeMessage(localReader, this.Superblock);
-            var attribute = new H5Attribute(message, this.Superblock);
+            var message = new AttributeMessage(localReader, this.File.Superblock);
+            var attribute = new H5Attribute(message, this.File.Superblock);
 
             return attribute;
         }
