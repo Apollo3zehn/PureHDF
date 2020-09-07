@@ -92,6 +92,16 @@ namespace HDF5.NET
 
         public H5Link Get(string path)
         {
+            return this.InternalGet(path, resolveSymboliclink: true);
+        }
+
+        public H5SymbolicLink GetSymbolicLink(string path)
+        {
+            return (H5SymbolicLink)this.InternalGet(path, resolveSymboliclink: false);
+        }
+
+        private H5Link InternalGet(string path, bool resolveSymboliclink = true)
+        {
             if (path == "/")
                 return this;
 
@@ -124,7 +134,7 @@ namespace HDF5.NET
                     }
                 }
 
-#warning Improve this to traverse to specific link instead of enumeration
+#warning Improve this to traverse to specific link instead of enumeration (Jenkins hash required)
                 var link = group
                     .EnumerateLinks()
                     .FirstOrDefault(link => link.Name == segments[i]);
@@ -137,7 +147,7 @@ namespace HDF5.NET
 
             symbolicLink = current as H5SymbolicLink;
 
-            if (symbolicLink != null)
+            if (symbolicLink != null && resolveSymboliclink)
                 current = symbolicLink.Target;
 
             return current;

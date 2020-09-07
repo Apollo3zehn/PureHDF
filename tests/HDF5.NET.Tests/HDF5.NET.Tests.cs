@@ -274,8 +274,24 @@ namespace HDF5.NET.Tests
                 
                 var dataset_hard_1 = root.Get<H5Dataset>("/links/hard_link_1/dataset");
                 var dataset_hard_2 = root.Get<H5Dataset>("/links/hard_link_2/dataset");
-                var dataset_hard_3 = root.Get<H5Dataset>("/links/soft_link_2/dataset");
-                var dataset_hard_4 = root.Get<H5Dataset>("/links/dataset");
+                var dataset_soft_2 = root.Get<H5Dataset>("/links/soft_link_2/dataset");
+                var dataset_direct = root.Get<H5Dataset>("/links/dataset");
+            });
+        }
+
+        [Fact]
+        public void CanOpenLink()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withLinks: true);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+
+                var group = root.GetSymbolicLink("/links/soft_link_2");
+                var dataset = root.GetSymbolicLink("/links/dataset");
             });
         }
 
