@@ -70,12 +70,25 @@ namespace HDF5.NET
 
         public bool AttributeExists(string name)
         {
+            return this.TryGetAttributeMessage(name, out var _);
+        }
+
+        public H5Attribute GetAttribute(string name)
+        {
+            if (!this.TryGetAttributeMessage(name, out var attributeMessage))
+                throw new Exception($"Could not find attribute '{name}'.");
+
+            return new H5Attribute(attributeMessage, this.File.Superblock);
+        }
+
+        private bool TryGetAttributeMessage(string name, [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)
+        {
             // get attribute from attribute message
-            var attributeMessage1 = this.ObjectHeader
+            attributeMessage = this.ObjectHeader
                 .GetMessages<AttributeMessage>()
                 .FirstOrDefault(message => message.Name == name);
 
-            if (attributeMessage1 != null)
+            if (attributeMessage != null)
             {
                 return true;
             }
@@ -93,44 +106,13 @@ namespace HDF5.NET
 
                     if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                     {
-                        if (this.TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out var attributeMessage2))
+                        if (this.TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out attributeMessage))
                             return true;
                     }
                 }
             }
 
             return false;
-        }
-
-        public H5Attribute GetAttribute(string name)
-        {
-            // attributes are stored compactly
-            var attributeMessage1 = this.ObjectHeader
-                .GetMessages<AttributeMessage>()
-                .FirstOrDefault(message => message.Name == name);
-            
-            if (attributeMessage1 != null)
-                return new H5Attribute(attributeMessage1, this.File.Superblock);
-
-            // attributes are stored densely
-            var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
-
-            if (attributeInfoMessages.Any())
-            {
-                if (attributeInfoMessages.Count() != 1)
-                    throw new Exception("There may be only a single attribute info message.");
-
-                var attributeInfoMessage = attributeInfoMessages.First();
-
-                if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
-                {
-                    if (this.TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out var attributeMessage2))
-                        return new H5Attribute(attributeMessage2, this.File.Superblock);
-                }
-            }
-
-            // nothing found
-            throw new Exception($"Could not find attribute '{name}'.");
         }
 
         private IEnumerable<H5Attribute> EnumerateAttributes()
@@ -160,7 +142,7 @@ namespace HDF5.NET
 
                 if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                 {
-                    var attributeMessages2 = this.EnumerateAttributeMessagesFromAttributeInfo(attributeInfoMessage);
+                    var attributeMessages2 = this.EnumerateAttributeMessagesFromAttributeInfoMessage(attributeInfoMessage);
 
                     foreach (var attributeMessage in attributeMessages2)
                     {
@@ -170,7 +152,7 @@ namespace HDF5.NET
             }
         }
 
-        private IEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfo(AttributeInfoMessage attributeInfoMessage)
+        private IEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfoMessage(AttributeInfoMessage attributeInfoMessage)
         {
             var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
             var records = btree2NameIndex

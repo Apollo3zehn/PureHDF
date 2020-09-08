@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -40,16 +41,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        public IEnumerable<H5Link> Children
-        {
-            get
-            {
-                foreach (var link in this.EnumerateLinks())
-                {
-                    yield return link;
-                }
-            }
-        }
+        public IEnumerable<H5Link> Children => this.EnumerateLinks();
 
         #endregion
 
@@ -73,10 +65,7 @@ namespace HDF5.NET
                 if (group == null)
                     return false;
 
-                var links = group.EnumerateLinks();
-                var link = links.FirstOrDefault(namedObjects => namedObjects.Name == pathSegment);
-
-                if (link == null)
+                if (!group.TryGetLink(pathSegment, out var link))
                     return false;
 
                 current = link;
@@ -134,12 +123,7 @@ namespace HDF5.NET
                     }
                 }
 
-#error Improve this to traverse to specific link instead of enumeration (Jenkins hash required)
-                var link = group
-                    .EnumerateLinks()
-                    .FirstOrDefault(link => link.Name == segments[i]);
-
-                if (link == null)
+                if (!group.TryGetLink(segments[i], out var link))
                     throw new Exception($"Could not find part of the path '{path}'.");
 
                 current = link;
@@ -153,37 +137,98 @@ namespace HDF5.NET
             return current;
         }
 
-        private IEnumerable<H5Link> InstantiateLinks(LocalHeap heap, List<SymbolTableEntry> entries)
+        private bool TryGetLink(string name, [NotNullWhen(returnValue: true)] out H5Link? link)
         {
-            foreach (var entry in entries)
-            {
-                var name = heap.GetObjectName(entry.LinkNameOffset);
+            link = null;
 
-                yield return entry.ScratchPad switch
-                {
-                    ObjectHeaderScratchPad objectScratch    => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
-                    SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
-                    _                                       => this.InstantiateUncachedLink(name, entry.ObjectHeader)
-                };
-            }
-        }
-
-        private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
-        {
-            if (objectHeader != null)
+            /* cached data */
+            if (_scratchPad != null)
             {
-                return objectHeader.ObjectType switch
-                {
-                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
-                    H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
-                    _ => throw new Exception("Unknown object type.")
-                };
+                var localHeap = _scratchPad.LocalHeap;
+                var links = _scratchPad.BTree1
+                    .GetSymbolTableNodes()
+                    .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
+
+                link = links.FirstOrDefault(link => link.Name == name);
+
+                if (link != null)
+                    return true;
+
+#error this is not efficient
             }
             else
             {
-                throw new Exception("Unknown object type.");
+                var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
+
+                if (symbolTableHeaderMessages.Any())
+                {
+                    /* Original approach.
+                     * IV.A.2.r.: The Symbol Table Message
+                     * Required for "old style" groups; may not be repeated. */
+
+                    if (symbolTableHeaderMessages.Count() != 1)
+                        throw new Exception("There may be only a single symbol table header message.");
+
+                    var smessage = symbolTableHeaderMessages.First();
+                    var localHeap = smessage.LocalHeap;
+                    var links = smessage.BTree1
+                        .GetSymbolTableNodes()
+                        .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
+
+                    link = links.FirstOrDefault(link => link.Name == name);
+
+                    if (link != null)
+                        return true;
+
+#error this is not efficient
+                }
+                else
+                {
+                    var linkInfoMessages = this.ObjectHeader.GetMessages<LinkInfoMessage>();
+
+                    if (linkInfoMessages.Any())
+                    {
+                        if (linkInfoMessages.Count() != 1)
+                            throw new Exception("There may be only a single link info message.");
+
+                        var lmessage = linkInfoMessages.First();
+
+                        /* New (1.8) indexed format (in combination with Group Info Message) 
+                         * IV.A.2.c. The Link Info Message 
+                         * Optional; may not be repeated. */
+                        if (!this.File.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                        {
+                            if (this.TryGetLinkMessageFromLinkInfoMessage(lmessage, name, out var linkMessage))
+                            {
+                                link = this.InstantiateLink(linkMessage);
+                                return true;
+                            }
+                        }
+                        /* New (1.8) compact format
+                         * IV.A.2.g. The Link Message 
+                         * A group is storing its links compactly when the fractal heap address 
+                         * in the Link Info Message is set to the "undefined address" value. */
+                        else
+                        {
+                            var linkMessage = this.ObjectHeader
+                                .GetMessages<LinkMessage>()
+                                .FirstOrDefault(message => message.LinkName == name);
+
+                            if (linkMessage != null)
+                            {
+                                link = this.InstantiateLink(linkMessage);
+                                return true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("No link information found in object header.");
+                    }
+                }
             }
+
+            return false;
         }
 
         private IEnumerable<H5Link> EnumerateLinks()
@@ -197,7 +242,7 @@ namespace HDF5.NET
                 var localHeap = _scratchPad.LocalHeap;
                 var links = _scratchPad.BTree1
                     .GetSymbolTableNodes()
-                    .SelectMany(node => this.InstantiateLinks(localHeap, node.GroupEntries));
+                    .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
 
                 foreach (var link in links)
                 {
@@ -221,7 +266,7 @@ namespace HDF5.NET
                     var localHeap = smessage.LocalHeap;
                     var links = smessage.BTree1
                         .GetSymbolTableNodes()
-                        .SelectMany(node => this.InstantiateLinks(localHeap, node.GroupEntries));
+                        .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
 
                     foreach (var link in links)
                     {
@@ -257,13 +302,7 @@ namespace HDF5.NET
                         // build links
                         foreach (var linkMessage in linkMessages)
                         {
-                            yield return linkMessage.LinkInfo switch
-                            {
-                                HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
-                                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
-                                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
-                                _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
-                            };
+                            yield return this.InstantiateLink(linkMessage);
                         }
                     }
                     else
@@ -295,6 +334,98 @@ namespace HDF5.NET
                     var message = new LinkMessage(reader, this.File.Superblock);
                     return message;
                 }, ref record01Cache);
+            }
+        }
+
+        private bool TryGetLinkMessageFromLinkInfoMessage(LinkInfoMessage linkInfoMessage,
+                                                          string name,
+                                                          [NotNullWhen(returnValue: true)] out LinkMessage? linkMessage)
+        {
+            linkMessage = null;
+
+            var fractalHeap = linkInfoMessage.FractalHeap;
+            var btree2NameIndex = linkInfoMessage.BTree2NameIndex;
+            var nameHash = H5Checksum.JenkinsLookup3(name);
+            var candidate = default(LinkMessage);
+
+            var success = btree2NameIndex.TryFindRecord(out var record, record =>
+            {
+#warning Better to implement comparison code in record (here: BTree2Record05) itself?
+
+                if (nameHash < record.NameHash)
+                {
+                    return -1;
+                }
+                else if (nameHash > record.NameHash)
+                {
+                    return 1;
+                }
+                else
+                {
+#warning duplicate2
+                    using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                    var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
+                    candidate = heapId.Read(reader => new LinkMessage(reader, this.File.Superblock));
+
+                    // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
+                    // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
+                    return string.CompareOrdinal(name, candidate.LinkName);
+                }
+            });
+
+            if (success)
+            {
+                if (candidate == null)
+                    throw new Exception("This should never happen. Just to satisfy the compiler.");
+
+                linkMessage = candidate;
+                return true;
+            }
+
+            return false;
+        }
+
+        private H5Link InstantiateLink(LinkMessage linkMessage)
+        {
+            return linkMessage.LinkInfo switch
+            {
+                HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
+                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
+                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
+                _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
+            };
+        }
+
+        private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
+        {
+            if (objectHeader != null)
+            {
+                return objectHeader.ObjectType switch
+                {
+                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
+                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
+                    H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
+                    _ => throw new Exception("Unknown object type.")
+                };
+            }
+            else
+            {
+                throw new Exception("Unknown object type.");
+            }
+        }
+
+        private IEnumerable<H5Link> InstantiateLinksForSymbolTableEntries(LocalHeap heap, List<SymbolTableEntry> entries)
+        {
+            foreach (var entry in entries)
+            {
+                var name = heap.GetObjectName(entry.LinkNameOffset);
+
+                yield return entry.ScratchPad switch
+                {
+                    ObjectHeaderScratchPad objectScratch => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
+                    SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
+                    _ => this.InstantiateUncachedLink(name, entry.ObjectHeader)
+                };
             }
         }
 
