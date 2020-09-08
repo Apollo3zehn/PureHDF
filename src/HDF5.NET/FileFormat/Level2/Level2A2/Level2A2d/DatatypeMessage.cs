@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using System.Collections.Generic;
 
 namespace HDF5.NET
 {
@@ -7,11 +7,11 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public DatatypeMessage(BinaryReader reader) : base(reader)
+        public DatatypeMessage(H5BinaryReader reader) : base(reader)
         {
             this.ClassVersion = reader.ReadByte();
 
-            this.BitFieldDescription = this.Class switch
+            this.BitField = this.Class switch
             {
                 DatatypeMessageClass.FixedPoint     => new FixedPointBitFieldDescription(reader),
                 DatatypeMessageClass.FloatingPoint  => new FloatingPointBitFieldDescription(reader),
@@ -29,35 +29,48 @@ namespace HDF5.NET
 
             this.Size = reader.ReadUInt32();
 
-            this.Properties = (this.Version, this.Class) switch
+            var memberCount = 1;
+
+            if (this.Class == DatatypeMessageClass.Compount && this.BitField != null)
+                memberCount = ((CompoundBitFieldDescription)this.BitField).MemberCount;
+
+            this.Properties = new List<DatatypePropertyDescription>(memberCount);
+
+            for (int i = 0; i < memberCount; i++)
             {
-                (_, DatatypeMessageClass.FixedPoint)        => new FixedPointPropertyDescription(reader),
-                (_, DatatypeMessageClass.FloatingPoint)     => new FloatingPointPropertyDescription(reader),
-                (_, DatatypeMessageClass.Time)              => new TimePropertyDescription(reader),
-                (_, DatatypeMessageClass.String)            => null,
-                (_, DatatypeMessageClass.BitField)          => new BitFieldPropertyDescription(reader),
-                (_, DatatypeMessageClass.Opaque)            => new OpaquePropertyDescription(reader),
-                (1, DatatypeMessageClass.Compount)          => new CompoundPropertyDescription1(reader),
-                (2, DatatypeMessageClass.Compount)          => new CompoundPropertyDescription2(reader),
-                (3, DatatypeMessageClass.Compount)          => new CompoundPropertyDescription3(reader, this.Size),
-                (_, DatatypeMessageClass.Reference)         => null,
-                (1, DatatypeMessageClass.Enumerated)        => new EnumerationPropertyDescription12(reader, this.Size, this.GetMemberCount()),
-                (2, DatatypeMessageClass.Enumerated)        => new EnumerationPropertyDescription12(reader, this.Size, this.GetMemberCount()),
-                (3, DatatypeMessageClass.Enumerated)        => new EnumerationPropertyDescription3(reader, this.Size, this.GetMemberCount()),
-                (_, DatatypeMessageClass.VariableLength)    => new VariableLengthPropertyDescription(reader),
-                (2, DatatypeMessageClass.Array)             => new ArrayPropertyDescription2(reader),
-                (3, DatatypeMessageClass.Array)             => new ArrayPropertyDescription3(reader),
-                (_, _) => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
-            };
+                DatatypePropertyDescription? properties = (this.Version, this.Class) switch
+                {
+                    (_, DatatypeMessageClass.FixedPoint) => new FixedPointPropertyDescription(reader),
+                    (_, DatatypeMessageClass.FloatingPoint) => new FloatingPointPropertyDescription(reader),
+                    (_, DatatypeMessageClass.Time) => new TimePropertyDescription(reader),
+                    (_, DatatypeMessageClass.String) => null,
+                    (_, DatatypeMessageClass.BitField) => new BitFieldPropertyDescription(reader),
+                    (_, DatatypeMessageClass.Opaque) => new OpaquePropertyDescription(reader),
+                    (1, DatatypeMessageClass.Compount) => new CompoundPropertyDescription1(reader),
+                    (2, DatatypeMessageClass.Compount) => new CompoundPropertyDescription2(reader),
+                    (3, DatatypeMessageClass.Compount) => new CompoundPropertyDescription3(reader, this.Size),
+                    (_, DatatypeMessageClass.Reference) => null,
+                    (1, DatatypeMessageClass.Enumerated) => new EnumerationPropertyDescription12(reader, this.Size, this.GetEnumMemberCount()),
+                    (2, DatatypeMessageClass.Enumerated) => new EnumerationPropertyDescription12(reader, this.Size, this.GetEnumMemberCount()),
+                    (3, DatatypeMessageClass.Enumerated) => new EnumerationPropertyDescription3(reader, this.Size, this.GetEnumMemberCount()),
+                    (_, DatatypeMessageClass.VariableLength) => new VariableLengthPropertyDescription(reader),
+                    (2, DatatypeMessageClass.Array) => new ArrayPropertyDescription2(reader),
+                    (3, DatatypeMessageClass.Array) => new ArrayPropertyDescription3(reader),
+                    (_, _) => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
+                };
+
+                if (properties != null)
+                    this.Properties.Add(properties);
+            }
         }
 
         #endregion
 
         #region Properties
 
-        public DatatypeBitFieldDescription? BitFieldDescription { get; set; }
+        public DatatypeBitFieldDescription? BitField { get; set; }
         public uint Size { get; set; }
-        public DatatypePropertyDescription? Properties { get; set; }
+        public List<DatatypePropertyDescription> Properties { get; set; }
 
         public byte Version
         {
@@ -97,14 +110,14 @@ namespace HDF5.NET
 
         #region Method
 
-        private ushort GetMemberCount()
+        private ushort GetEnumMemberCount()
         {
-            var enumerationDescription = this.BitFieldDescription as EnumerationBitFieldDescription;
+            var enumerationDescription = this.BitField as EnumerationBitFieldDescription;
 
             if (enumerationDescription != null)
                 return enumerationDescription.MemberCount;
             else
-                throw new FormatException($"For enumeration types, the bit field description must be set to an instance of type '{nameof(EnumerationBitFieldDescription)}'.");
+                throw new FormatException($"For enumeration types, the bit field description must be an instance of type '{nameof(EnumerationBitFieldDescription)}'.");
         }
 
         #endregion

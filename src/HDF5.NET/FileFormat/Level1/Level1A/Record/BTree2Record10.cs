@@ -1,19 +1,18 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
-    public class BTree2Record10 : BTree2Record
+    public struct BTree2Record10 : IBTree2Record
     {
         #region Constructors
 
-#warning How to get rank? Is rank correct name?
-        public BTree2Record10(BinaryReader reader, Superblock superblock, int rank) : base(reader)
+        public BTree2Record10(H5BinaryReader reader, Superblock superblock, ushort recordSize)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // scaled offsets
+            var rank = recordSize - superblock.OffsetsSize;
             this.ScaledOffsets = new List<ulong>(rank);
 
             for (int i = 0; i < rank; i++)

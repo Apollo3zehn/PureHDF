@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class CompoundBitFieldDescription : DatatypeBitFieldDescription
     {
         #region Constructors
 
-        public CompoundBitFieldDescription(BinaryReader reader) : base(reader)
+        public CompoundBitFieldDescription(H5BinaryReader reader) : base(reader)
         {
             //
         }
@@ -19,7 +17,7 @@ namespace HDF5.NET
         {
             get
             {
-                return (ushort)(this.Data[0] + this.Data[1] << 8); 
+                return (ushort)(this.Data[0] + (this.Data[1] << 8)); 
             }
             set 
             {

@@ -17,7 +17,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FreeSpaceSectionList(BinaryReader reader, Superblock superblock) : base(reader)
+        public FreeSpaceSectionList(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -29,7 +29,7 @@ namespace HDF5.NET
             this.Version = reader.ReadByte();
 
             // free space manager header address
-            this.FreeSpaceManagerHeaderAddress = superblock.ReadOffset();
+            this.FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
 
 #warning implement everything
 
@@ -71,8 +71,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
-                return new FreeSpaceManagerHeader(this.Reader, _superblock)
+                this.Reader.Seek((long)this.FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
+                return new FreeSpaceManagerHeader(this.Reader, _superblock);
             }
         }
 

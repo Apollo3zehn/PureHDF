@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
-    public class CompoundPropertyDescription2 : DatatypePropertyDescription
+    public class CompoundPropertyDescription2 : CompoundPropertyDescription
     {
         #region Constructors
 
-        public CompoundPropertyDescription2(BinaryReader reader) : base(reader)
+        public CompoundPropertyDescription2(H5BinaryReader reader) : base(reader)
         {
             // name
             this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true);
@@ -17,14 +15,6 @@ namespace HDF5.NET
             // member type message
             this.MemberTypeMessage = new DatatypeMessage(reader);
         }
-
-        #endregion
-
-        #region Properties
-
-        public string Name { get; set; }
-        public uint MemberByteOffset { get; set; }
-        public DatatypeMessage MemberTypeMessage { get; set; }
 
         #endregion
     }

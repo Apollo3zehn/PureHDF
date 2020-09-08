@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -15,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader2(BinaryReader reader, byte version) : base(reader)
+        public ObjectHeader2(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
             this.Version = version;
@@ -40,19 +38,15 @@ namespace HDF5.NET
             }
 
             // size of chunk 0
-            var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0xFC));
-            this.SizeOfChunk0 = this.ReadUlong(chunkFieldSize);
+            var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0x03));
+            this.SizeOfChunk0 = H5Utils.ReadUlong(this.Reader, chunkFieldSize);
 
             // header messages
-            this.HeaderMessages = new List<HeaderMessage>();
+            var withCreationOrder = this.Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
+            var messages = this.ReadHeaderMessages(reader, superblock, this.SizeOfChunk0, version: 2, withCreationOrder);
+            this.HeaderMessages.AddRange(messages);
 
-#warning read messages
-            //while (remainingBytes > 0)
-            //{
-            //    var message = new HeaderMessage(reader, superblock, 1);
-            //    this.HeaderMessages.Add(message);
-            //}
-
+#warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
 #warning read gap and checksum
         }
 

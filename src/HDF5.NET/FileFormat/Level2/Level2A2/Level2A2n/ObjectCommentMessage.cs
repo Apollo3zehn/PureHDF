@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ObjectCommentMessage : Message
     {
         #region Constructors
 
-        public ObjectCommentMessage(BinaryReader reader) : base(reader)
+        public ObjectCommentMessage(H5BinaryReader reader) : base(reader)
         {
             // comment
             this.Comment = H5Utils.ReadNullTerminatedString(reader, pad: false);

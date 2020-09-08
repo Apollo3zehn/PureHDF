@@ -1,10 +1,8 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public abstract class StoragePropertyDescription : FileBlock
     {
-        public StoragePropertyDescription(BinaryReader reader) : base(reader)
+        public StoragePropertyDescription(H5BinaryReader reader) : base(reader)
         {
             //
         }

@@ -1,10 +1,8 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public abstract class IndexingInformation : FileBlock
     {
-        public IndexingInformation(BinaryReader reader) : base(reader)
+        public IndexingInformation(H5BinaryReader reader) : base(reader)
         {
             //
         }

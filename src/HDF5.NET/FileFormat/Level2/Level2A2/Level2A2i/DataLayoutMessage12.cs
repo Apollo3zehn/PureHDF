@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -13,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal DataLayoutMessage12(BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        internal DataLayoutMessage12(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
             this.Version = version;
@@ -31,8 +30,8 @@ namespace HDF5.NET
             this.DataAddress = this.LayoutClass switch
             {
                 LayoutClass.Compact     => ulong.MaxValue, // invalid address
-                LayoutClass.Contiguous  => superblock.ReadOffset(),
-                LayoutClass.Chunked     => superblock.ReadOffset(),
+                LayoutClass.Contiguous  => superblock.ReadOffset(reader),
+                LayoutClass.Chunked     => superblock.ReadOffset(reader),
                 _ => throw new NotSupportedException($"The layout class '{this.LayoutClass}' is not supported.")
             };
 

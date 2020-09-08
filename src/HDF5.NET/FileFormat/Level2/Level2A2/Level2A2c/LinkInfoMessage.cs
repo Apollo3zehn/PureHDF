@@ -7,14 +7,20 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private Superblock _superblock;
         private byte _version;
 
         #endregion
 
         #region Constructors
 
-        public LinkInfoMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public LinkInfoMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
+            _superblock = superblock;
+
+            // version
+            this.Version = reader.ReadByte();
+
             // flags
             this.Flags = (CreationOrderFlags)reader.ReadByte();
 
@@ -23,14 +29,14 @@ namespace HDF5.NET
                 this.MaximumCreationIndex = reader.ReadUInt64();
 
             // fractal heap address
-            this.FractalHeapAddress = superblock.ReadOffset();
+            this.FractalHeapAddress = superblock.ReadOffset(reader);
 
             // BTree2 name index address
-            this.BTree2NameIndexAddress = superblock.ReadOffset();
+            this.BTree2NameIndexAddress = superblock.ReadOffset(reader);
 
             // BTree2 creation order index address
             if (this.Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-                this.BTree2CreationOrderIndexAddress = superblock.ReadOffset();
+                this.BTree2CreationOrderIndexAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -57,6 +63,33 @@ namespace HDF5.NET
         public ulong FractalHeapAddress { get; set; }
         public ulong BTree2NameIndexAddress { get; set; }
         public ulong BTree2CreationOrderIndexAddress { get; set; }
+
+        public FractalHeapHeader FractalHeap
+        {
+            get
+            {
+                this.Reader.Seek((long)this.FractalHeapAddress, SeekOrigin.Begin);
+                return new FractalHeapHeader(this.Reader, _superblock);
+            }
+        }
+
+        public BTree2Header<BTree2Record05> BTree2NameIndex
+        {
+            get
+            {
+                this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record05>(this.Reader, _superblock);
+            }
+        }
+
+        public BTree2Header<BTree2Record06> BTree2CreationOrder
+        {
+            get
+            {
+                this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record06>(this.Reader, _superblock);
+            }
+        }
 
         #endregion
     }

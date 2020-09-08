@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -14,14 +13,14 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public DataspaceMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public DataspaceMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             this.Version = reader.ReadByte();
             this.Dimensionality = reader.ReadByte();
             this.Flags = (DataspaceMessageFlags)reader.ReadByte();
 
             if (this.Version == 1)
-                this.Reader.ReadByte();
+                reader.ReadBytes(5); 
             else if (this.Version == 2)
                 this.Flags = (DataspaceMessageFlags)reader.ReadByte();
 
@@ -34,13 +33,23 @@ namespace HDF5.NET
 
             for (int i = 0; i < this.Dimensionality; i++)
             {
-                this.DimensionSizes.Add(superblock.ReadLength());
+                this.DimensionSizes.Add(superblock.ReadLength(reader));
+            }
 
-                if (dimensionMaxSizesArePresent)
-                    this.DimensionMaxSizes.Add(superblock.ReadLength());
+            if (dimensionMaxSizesArePresent)
+            {
+                for (int i = 0; i < this.Dimensionality; i++)
+                {
+                    this.DimensionMaxSizes.Add(superblock.ReadLength(reader));
+                }
+            }
 
-                if (permutationIndicesArePresent)
-                    this.PermutationIndices.Add(superblock.ReadLength());
+            if (permutationIndicesArePresent)
+            {
+                for (int i = 0; i < this.Dimensionality; i++)
+                {
+                    this.PermutationIndices.Add(superblock.ReadLength(reader));
+                }
             }
         }
 

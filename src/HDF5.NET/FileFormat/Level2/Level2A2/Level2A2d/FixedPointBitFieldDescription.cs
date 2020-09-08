@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public FixedPointBitFieldDescription(BinaryReader reader) : base(reader)
+        public FixedPointBitFieldDescription(H5BinaryReader reader) : base(reader)
         {
             //
         }

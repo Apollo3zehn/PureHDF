@@ -1,10 +1,8 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public abstract class HyperslabSelectionInfo : FileBlock
     {
-        public HyperslabSelectionInfo(BinaryReader reader) : base(reader)
+        public HyperslabSelectionInfo(H5BinaryReader reader) : base(reader)
         {
             //
         }

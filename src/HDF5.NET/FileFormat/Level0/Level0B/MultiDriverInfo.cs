@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace HDF5.NET
@@ -8,7 +7,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public MultiDriverInfo(BinaryReader reader) : base(reader)
+        public MultiDriverInfo(H5BinaryReader reader) : base(reader)
         {
             // member mapping
             this.MemberMapping1 = (MemberMapping)reader.ReadByte();

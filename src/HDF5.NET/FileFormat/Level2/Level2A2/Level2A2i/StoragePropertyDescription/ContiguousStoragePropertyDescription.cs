@@ -1,15 +1,13 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ContiguousStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 
-        public ContiguousStoragePropertyDescription(BinaryReader reader, Superblock superblock) : base(reader)
+        public ContiguousStoragePropertyDescription(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.Address = superblock.ReadOffset();
-            this.Size = superblock.ReadLength();
+            this.Address = superblock.ReadOffset(reader);
+            this.Size = superblock.ReadLength(reader);
         }
 
         #endregion

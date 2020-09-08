@@ -1,8 +1,9 @@
 ﻿using System;
-using System.IO;
+using System.Diagnostics;
 
 namespace HDF5.NET
 {
+    [DebuggerDisplay("{Type}")]
     public class HeaderMessage : FileBlock
     {
         #region Fields
@@ -14,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public HeaderMessage(BinaryReader reader, Superblock superblock, byte version, bool withCreationOrder = false) : base(reader)
+        public HeaderMessage(H5BinaryReader reader, Superblock superblock, byte version, bool withCreationOrder = false) : base(reader)
         {
             this.Version = version;
             this.WithCreationOrder = withCreationOrder;

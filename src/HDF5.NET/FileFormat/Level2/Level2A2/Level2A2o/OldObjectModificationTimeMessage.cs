@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class OldObjectModificationTimeMessage : Message
     {
         #region Constructors
 
-        public OldObjectModificationTimeMessage(BinaryReader reader) : base(reader)
+        public OldObjectModificationTimeMessage(H5BinaryReader reader) : base(reader)
         {
             // date / time
             this.Year = H5Utils.ReadFixedLengthString(reader, 4);

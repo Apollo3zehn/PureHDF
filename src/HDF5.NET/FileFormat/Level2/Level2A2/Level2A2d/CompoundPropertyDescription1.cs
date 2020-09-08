@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
-    public class CompoundPropertyDescription1 : DatatypePropertyDescription
+    public class CompoundPropertyDescription1 : CompoundPropertyDescription
     {
         #region Constructors
 
-        public CompoundPropertyDescription1(BinaryReader reader) : base(reader)
+        public CompoundPropertyDescription1(H5BinaryReader reader) : base(reader)
         {
             // name
             this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true);
@@ -22,13 +19,13 @@ namespace HDF5.NET
             reader.ReadBytes(3);
 
             // dimension permutation
-            this.DimensionPermutation = reader.ReadByte();
+            this.DimensionPermutation = reader.ReadUInt32();
 
             // padding byte
-            reader.ReadByte();
+            reader.ReadBytes(4);
 
             // dimension sizes
-            this.DimensionSizes = new List<uint>(4);
+            this.DimensionSizes = new uint[4];
 
             for (int i = 0; i < 4; i++)
             {
@@ -43,12 +40,9 @@ namespace HDF5.NET
 
         #region Properties
 
-        public string Name { get; set; }
-        public uint MemberByteOffset { get; set; }
         public byte Dimensionality { get; set; }
         public uint DimensionPermutation { get; set; }
-        public List<uint> DimensionSizes { get; set; }
-        public DatatypeMessage MemberTypeMessage { get; set; }
+        public uint[] DimensionSizes { get; set; }
 
         #endregion
     }

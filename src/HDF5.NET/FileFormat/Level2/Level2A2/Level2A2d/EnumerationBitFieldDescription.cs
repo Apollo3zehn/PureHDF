@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class EnumerationBitFieldDescription : DatatypeBitFieldDescription
     {
         #region Constructors
 
-        public EnumerationBitFieldDescription(BinaryReader reader) : base(reader)
+        public EnumerationBitFieldDescription(H5BinaryReader reader) : base(reader)
         {
             //
         }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public FilterDescription(BinaryReader reader, byte version) : base(reader)
+        public FilterDescription(H5BinaryReader reader, byte version) : base(reader)
         {
             // filter identifier
             this.FilterIdentifier = (FilterIdentifier)reader.ReadInt16();

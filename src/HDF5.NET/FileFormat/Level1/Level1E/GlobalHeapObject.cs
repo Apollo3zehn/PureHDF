@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 
 namespace HDF5.NET
 {
@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public GlobalHeapObject(BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapObject(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // heap object index
             this.HeapObjectIndex = reader.ReadUInt16();
@@ -18,11 +18,14 @@ namespace HDF5.NET
             reader.ReadBytes(4);
 
             // object size
-            this.ObjectSize = superblock.ReadLength();
+            this.ObjectSize = superblock.ReadLength(reader);
 
             // object data
             this.ObjectData = reader.ReadBytes((int)this.ObjectSize);
-            reader.ReadBytes((int)(this.ObjectSize % 8));
+
+            var paddedSize = (int)(Math.Ceiling(this.ObjectSize / 8.0) * 8);
+            var remainingSize = paddedSize - (int)this.ObjectSize;
+            reader.ReadBytes(remainingSize);
         }
 
         #endregion

@@ -1,16 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace HDF5.NET
 {
     public class TinyObjectsFractalHeapIdSubType1 : FractalHeapId
     {
+        #region Fields
+
+        private byte _firstByte;
+
+        #endregion
+
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType1(BinaryReader reader) : base(reader)
+        public TinyObjectsFractalHeapIdSubType1(H5BinaryReader localReader, byte firstByte)
         {
+            _firstByte = firstByte;
+
             // data
-            this.Data = reader.ReadBytes(this.Length);
+            this.Data = localReader.ReadBytes(this.Length);
         }
 
         #endregion
@@ -21,23 +31,21 @@ namespace HDF5.NET
         {
             get
             {
-                return (byte)(((this.FirstByte & 0x07) >> 0) + 1);          // take
-            }
-            set
-            {
-                if (!(1 <= value && value <= 8)) // value must be <= 2^3
-                    throw new FormatException("The length of an extended tiny object must be in the range of 1..8");
-
-                var actualValue = value - 1;
-
-                this.FirstByte &= 0xF8;                                     // clear
-                this.FirstByte |= (byte)(actualValue << 0);                 // set
+                return (byte)(((_firstByte & 0x0F) >> 0) + 1);          // take
             }
         }
 
         public byte[] Data { get; set; }
 
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Tiny;
+        #endregion
+
+        #region Methods
+
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        {
+            using var reader = new H5BinaryReader(new MemoryStream(this.Data));
+            return func.Invoke(reader);
+        }
 
         #endregion
     }

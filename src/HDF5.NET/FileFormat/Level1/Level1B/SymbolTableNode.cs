@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -16,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public SymbolTableNode(BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableNode(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // signature
             var signature = reader.ReadBytes(4);
@@ -63,21 +61,6 @@ namespace HDF5.NET
 
         public ushort SymbolCount { get; set; }
         public List<SymbolTableEntry> GroupEntries { get; set; }
-
-        #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"SymbolTableNode");
-
-            for (int i = 0; i < this.SymbolCount; i++)
-            {
-                logger.LogInformation($"SymbolTableNode Entry[{i}]");
-                this.GroupEntries[i].Print(logger);
-            }
-        }
 
         #endregion
     }

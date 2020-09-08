@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class VdsDatasetEntry : FileBlock
     {
         #region Constructors
 
-        public VdsDatasetEntry(BinaryReader reader) : base(reader)
+        public VdsDatasetEntry(H5BinaryReader reader) : base(reader)
         {
 #warning Is reading null terminated string correct?
             // source file name

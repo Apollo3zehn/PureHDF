@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -13,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public LinkMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public LinkMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // version
             this.Version = reader.ReadByte();
@@ -33,18 +32,18 @@ namespace HDF5.NET
             if (isCreationOrderFieldPresent)
                 this.CreationOrder = reader.ReadUInt64();
 
-            // link name character set
-            var isLinkNameCharacterSetFieldPresent = (this.Flags & (1 << 4)) > 0;
+            // link name encoding
+            var isLinkNameEncodingFieldPresent = (this.Flags & (1 << 4)) > 0;
 
-            if (isLinkNameCharacterSetFieldPresent)
-                this.LinkNameCharacterSet = (CharacterSetEncoding)reader.ReadByte();
+            if (isLinkNameEncodingFieldPresent)
+                this.LinkNameEncoding = (CharacterSetEncoding)reader.ReadByte();
 
             // link length
             var linkLengthFieldLength = (ulong)(1 << (this.Flags & 0x03));
-            this.LinkNameLength = this.ReadUlong(linkLengthFieldLength);
+            this.LinkNameLength = H5Utils.ReadUlong(this.Reader, linkLengthFieldLength);
 
             // link name
-            this.LinkName = H5Utils.ReadFixedLengthString(reader, (int)this.LinkNameLength, this.LinkNameCharacterSet);
+            this.LinkName = H5Utils.ReadFixedLengthString(reader, (int)this.LinkNameLength, this.LinkNameEncoding);
 
             // link info
             this.LinkInfo = this.LinkType switch
@@ -53,7 +52,7 @@ namespace HDF5.NET
                 LinkType.Soft       => new SoftLinkInfo(reader),
                 LinkType.External   => new ExternalLinkInfo(reader),
                 _ when (65 <= (byte)this.LinkType && (byte)this.LinkType <= 255) => new UserDefinedLinkInfo(reader),
-                _ => throw new NotSupportedException("The link message link type '{this.LinkType}' is not supported")
+                _ => throw new NotSupportedException($"The link message link type '{this.LinkType}' is not supported.")
             };
         }
 
@@ -79,7 +78,7 @@ namespace HDF5.NET
         public byte Flags { get; set; }
         public LinkType LinkType { get; set; }
         public ulong CreationOrder { get; set; }
-        public CharacterSetEncoding LinkNameCharacterSet { get; set; }
+        public CharacterSetEncoding LinkNameEncoding { get; set; }
         public ulong LinkNameLength { get; set; }
         public string LinkName { get; set; }
         public LinkInfo LinkInfo { get; set; }

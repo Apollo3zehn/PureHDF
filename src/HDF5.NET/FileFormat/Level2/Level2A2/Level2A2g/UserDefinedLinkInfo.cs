@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class UserDefinedLinkInfo : LinkInfo
     {
         #region Constructors
 
-        public UserDefinedLinkInfo(BinaryReader reader) : base(reader)
+        public UserDefinedLinkInfo(H5BinaryReader reader) : base(reader)
         {
             // data length
             this.DataLength = reader.ReadUInt16();

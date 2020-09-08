@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.IO;
+﻿using System.IO;
 
 namespace HDF5.NET
 {
@@ -14,12 +13,12 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public SymbolTableMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
-            this.BTree1Address = superblock.ReadOffset();
-            this.LocalHeapAddress = superblock.ReadOffset();
+            this.BTree1Address = superblock.ReadOffset(reader);
+            this.LocalHeapAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -33,7 +32,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.BTree1Address, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -42,22 +41,9 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.LocalHeapAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.LocalHeapAddress, SeekOrigin.Begin);
                 return new LocalHeap(this.Reader, _superblock);
             }
-        }
-
-        #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation("SymbolTableMessage");
-            logger.LogInformation($"SymbolTableMessage LocalHeap (Address: {this.LocalHeapAddress})");
-            logger.LogInformation($"SymbolTableMessage BTree1 (Address: {this.BTree1Address})");
-
-            this.BTree1.Print(logger);
         }
 
         #endregion

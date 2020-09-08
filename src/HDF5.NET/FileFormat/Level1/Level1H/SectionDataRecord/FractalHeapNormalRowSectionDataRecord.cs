@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FractalHeapNormalRowSectionDataRecord : SectionDataRecord
     {
         #region Constructors
 
-        public FractalHeapNormalRowSectionDataRecord(BinaryReader reader) : base(reader)
+        public FractalHeapNormalRowSectionDataRecord(H5BinaryReader reader) : base(reader)
         {
             //
         }

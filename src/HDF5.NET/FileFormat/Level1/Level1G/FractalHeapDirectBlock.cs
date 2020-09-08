@@ -8,7 +8,6 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning OK like this?
         private Superblock _superblock;
         private byte _version;
 
@@ -16,33 +15,37 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FractalHeapDirectBlock(BinaryReader reader, Superblock superblock) : base(reader)
+        public FractalHeapDirectBlock(FractalHeapHeader header, H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
+            var headerSize = 0UL;
 
             // signature
             var signature = reader.ReadBytes(4);
+            headerSize += 4;
             H5Utils.ValidateSignature(signature, FractalHeapDirectBlock.Signature);
 
             // version
             this.Version = reader.ReadByte();
+            headerSize += 1;
 
             // heap header address
-            this.HeapHeaderAddress = superblock.ReadOffset();
-            var header = this.HeapHeader;
+            this.HeapHeaderAddress = superblock.ReadOffset(reader);
+            headerSize += superblock.OffsetsSize;
 
             // block offset
-#warning correct?
-            var blockOffsetFieldSize = (header.MaximumHeapSize + 1) / 8;
-            this.BlockOffset = this.ReadUlong((ulong)blockOffsetFieldSize);
+            var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
+            this.BlockOffset = H5Utils.ReadUlong(this.Reader, (ulong)blockOffsetFieldSize);
+            headerSize += (ulong)blockOffsetFieldSize;
 
             // checksum
             if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
+            {
                 this.Checksum = reader.ReadUInt32();
+                headerSize += 4;
+            }
 
-            // object data
-#warning Dunno how to calculate the length yet.
-            this.ObjectData = reader.ReadBytes(1);
+            this.HeaderSize = headerSize;
         }
 
         #endregion
@@ -75,10 +78,12 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.HeapHeaderAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.HeapHeaderAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(this.Reader, _superblock);
             }
         }
+
+        public ulong HeaderSize { get; }
 
         #endregion
     }

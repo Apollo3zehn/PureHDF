@@ -1,16 +1,14 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class FractalHeapIndirectSectionDataRecord : SectionDataRecord
     {
         #region Constructors
 
-        public FractalHeapIndirectSectionDataRecord(BinaryReader reader) : base(reader)
+        public FractalHeapIndirectSectionDataRecord(H5BinaryReader reader) : base(reader)
         {
             // fractal heap indirect block offset
 #warning implement this correctly
-            this.FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
+            //this.FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
 
             // block start row
             this.BlockStartRow = reader.ReadUInt16();

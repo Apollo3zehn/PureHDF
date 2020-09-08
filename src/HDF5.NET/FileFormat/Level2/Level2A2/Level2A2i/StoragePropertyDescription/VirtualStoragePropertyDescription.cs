@@ -1,15 +1,13 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class VirtualStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 
-        public VirtualStoragePropertyDescription(BinaryReader reader, Superblock superblock) : base(reader)
+        public VirtualStoragePropertyDescription(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
 
             // index
             this.Index = reader.ReadUInt32();

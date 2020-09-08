@@ -1,13 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class Superblock01 : Superblock
     {
         #region Constructors
 
-        public Superblock01(BinaryReader reader, byte version) : base(reader)
+        public Superblock01(H5BinaryReader reader, byte version) : base(reader)
         {
             this.SuperBlockVersion = version;
             this.FreeSpaceStorageVersion = reader.ReadByte();
@@ -30,10 +27,10 @@ namespace HDF5.NET
                 reader.ReadUInt16();
             }
 
-            this.BaseAddress = this.ReadOffset();
-            this.FreeSpaceInfoAddress = this.ReadOffset();
-            this.EndOfFileAddress = this.ReadOffset();
-            this.DriverInfoBlockAddress = this.ReadOffset();
+            this.BaseAddress = this.ReadOffset(reader);
+            this.FreeSpaceInfoAddress = this.ReadOffset(reader);
+            this.EndOfFileAddress = this.ReadOffset(reader);
+            this.DriverInfoBlockAddress = this.ReadOffset(reader);
             this.RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
         }
 
@@ -47,15 +44,9 @@ namespace HDF5.NET
         public ushort GroupLeafNodeK { get; set; }
         public ushort GroupInternalNodeK { get; set; }
         public ushort IndexedStorageInternalNodeK { get; set; }
-        public ulong BaseAddress { get; set; }
         public ulong FreeSpaceInfoAddress { get; set; }
-        public ulong EndOfFileAddress { get; set; }
         public ulong DriverInfoBlockAddress { get; set; }
         public SymbolTableEntry RootGroupSymbolTableEntry { get; set; }
-
-        #endregion
-
-        #region Properties
 
         public DriverInfoBlock? DriverInfoBlock
         {
@@ -66,20 +57,6 @@ namespace HDF5.NET
                 else
                     return new DriverInfoBlock(this.Reader);
             }
-        }
-
-        #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation("Superblock");
-            logger.LogInformation($"Superblock GroupLeafNodeK: {this.GroupLeafNodeK}");
-            logger.LogInformation($"Superblock GroupInternalNodeK: {this.GroupInternalNodeK}");
-            logger.LogInformation($"Superblock IndexedStorageInternalNodeK: {this.IndexedStorageInternalNodeK}");
-
-            this.RootGroupSymbolTableEntry.Print(logger);
         }
 
         #endregion

@@ -1,7 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace HDF5.NET
@@ -10,14 +10,13 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning Correct?
         Superblock _superblock;
 
         #endregion
 
         #region Constructors
 
-        public BTree1Node(BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree1Node(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -28,8 +27,8 @@ namespace HDF5.NET
             this.NodeLevel = reader.ReadByte();
             this.EntriesUsed = reader.ReadUInt16();
 
-            this.LeftSiblingAddress = superblock.ReadOffset();
-            this.RightSiblingAddress = superblock.ReadOffset();
+            this.LeftSiblingAddress = superblock.ReadOffset(reader);
+            this.RightSiblingAddress = superblock.ReadOffset(reader);
 
             this.Keys = new List<BTree1Key>();
             this.ChildAddresses = new List<ulong>();
@@ -41,7 +40,7 @@ namespace HDF5.NET
                     for (int i = 0; i < this.EntriesUsed; i++)
                     {
                         this.Keys.Add(new BTree1GroupKey(reader, superblock));
-                        this.ChildAddresses.Add(superblock.ReadOffset());
+                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
                     }
 
                     this.Keys.Add(new BTree1GroupKey(reader, superblock));
@@ -54,7 +53,7 @@ namespace HDF5.NET
                     {
 #warning How to correctly handle dimensionality?
                         this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
-                        this.ChildAddresses.Add(superblock.ReadOffset());
+                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
                     }
 
                     this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
@@ -72,19 +71,19 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
-        public BTree1NodeType NodeType { get; set; }
-        public byte NodeLevel { get; set; }
-        public ushort EntriesUsed { get; set; }
-        public ulong LeftSiblingAddress { get; set; }
-        public ulong RightSiblingAddress { get; set; }
-        public List<BTree1Key> Keys { get; set; }
-        public List<ulong> ChildAddresses { get; set; }
+        public BTree1NodeType NodeType { get; }
+        public byte NodeLevel { get;  }
+        public ushort EntriesUsed { get; }
+        public ulong LeftSiblingAddress { get; }
+        public ulong RightSiblingAddress { get; }
+        public List<BTree1Key> Keys { get; }
+        public List<ulong> ChildAddresses { get; }
 
         public BTree1Node LeftSibling
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -93,7 +92,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node(this.Reader, _superblock);
             }
         }
@@ -104,58 +103,49 @@ namespace HDF5.NET
 
         public BTree1Node GetChild(int index)
         {
-            this.Reader.BaseStream.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
+            this.Reader.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
             return new BTree1Node(this.Reader, _superblock);
         }
 
-        public SymbolTableNode GetSymbolTableNode(int index)
+        public Dictionary<uint, List<BTree1Node>> GetTree()
         {
-            this.Reader.BaseStream.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
-            return new SymbolTableNode(this.Reader, _superblock);
-        }
+            var nodeMap = new Dictionary<uint, List<BTree1Node>>();
+            var nodeLevel = this.NodeLevel;
 
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"BTree1Node");
-            logger.LogInformation($"BTree1Node NodeType: {this.NodeType}");
-            logger.LogInformation($"BTree1Node Level {this.NodeLevel}");
+            nodeMap[nodeLevel] = new List<BTree1Node>() { this };
 
-            // keys
-            for (int i = 0; i <= this.EntriesUsed; i++)
+            while (nodeLevel > 0)
             {
-                logger.LogInformation($"BTree1Node Keys[{i}]");
-                this.Keys[i].Print(logger);
-            }
+                var newNodes = new List<BTree1Node>();
 
-            // child nodes
-            for (int i = 0; i < this.EntriesUsed; i++)
-            {
-                logger.LogInformation($"BTree1Node GetChildNode({i}) (Address: {this.ChildAddresses[i]})");
-
-                if (this.NodeLevel == 0)
+                foreach (var parentNode in nodeMap[nodeLevel])
                 {
-                    switch (this.NodeType)
+                    foreach (var address in parentNode.ChildAddresses)
                     {
-                        case BTree1NodeType.Group:
-
-                            var symbolTableNode = this.GetSymbolTableNode(i);
-                            symbolTableNode.Print(logger);
-
-                            break;
-
-                        case BTree1NodeType.RawDataChunks:
-                             break;
-
-                        default:
-                            throw new NotSupportedException($"The version 1 B-tree node type '{this.NodeType}' is not supported.");
+                        this.Reader.Seek((long)address, SeekOrigin.Begin);
+                        newNodes.Add(new BTree1Node(this.Reader, _superblock));
                     }
                 }
-                else
-                {
-                    logger.LogInformation($"BTree1Node ChildNode[{i}]");
-                    this.GetChild(i).Print(logger);
-                }
+
+                nodeLevel--;
+                nodeMap[nodeLevel] = newNodes;
             }
+
+            return nodeMap;
+        }
+
+        public List<SymbolTableNode> GetSymbolTableNodes()
+        {
+            var nodeLevel = 0U;
+
+            return this.GetTree()[nodeLevel].SelectMany(node =>
+            {
+                return node.ChildAddresses.Select(address =>
+                {
+                    this.Reader.Seek((long)address, SeekOrigin.Begin);
+                    return new SymbolTableNode(this.Reader, _superblock);
+                });
+            }).ToList();
         }
 
         #endregion

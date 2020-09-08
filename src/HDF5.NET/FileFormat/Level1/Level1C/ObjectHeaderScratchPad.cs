@@ -1,16 +1,23 @@
-﻿using Microsoft.Extensions.Logging;
-using System.IO;
+﻿using System.IO;
 
 namespace HDF5.NET
 {
     public class ObjectHeaderScratchPad : ScratchPad
     {
+        #region Fields
+
+        private Superblock _superblock;
+
+        #endregion
+
         #region Constructors
 
-        public ObjectHeaderScratchPad(BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderScratchPad(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.BTreeAddress = superblock.ReadLength();
-            this.NameHeapAddress = superblock.ReadLength();
+            _superblock = superblock;
+
+            this.BTreeAddress = superblock.ReadLength(reader);
+            this.NameHeapAddress = superblock.ReadLength(reader);
         }
 
         #endregion
@@ -20,15 +27,22 @@ namespace HDF5.NET
         public ulong BTreeAddress { get; set; }
         public ulong NameHeapAddress { get; set; }
 
-        #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
+        public BTree1Node BTree1
         {
-            logger.LogInformation($"ObjectHeaderScratchPad");
-            logger.LogInformation($"ObjectHeaderScratchPad BTreeAddress: {this.BTreeAddress}");
-            logger.LogInformation($"ObjectHeaderScratchPad NameHeapAddress: {this.NameHeapAddress}");
+            get
+            {
+                this.Reader.Seek((long)this.BTreeAddress, SeekOrigin.Begin);
+                return new BTree1Node(this.Reader, _superblock);
+            }
+        }
+
+        public LocalHeap LocalHeap
+        {
+            get
+            {
+                this.Reader.Seek((long)this.NameHeapAddress, SeekOrigin.Begin);
+                return new LocalHeap(this.Reader, _superblock);
+            }
         }
 
         #endregion

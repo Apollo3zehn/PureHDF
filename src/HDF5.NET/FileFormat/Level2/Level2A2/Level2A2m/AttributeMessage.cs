@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 
 namespace HDF5.NET
 {
@@ -13,16 +14,16 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public AttributeMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public AttributeMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
+            //var a = reader.ReadBytes(200);
             // version
             this.Version = reader.ReadByte();
 
-            // flags (only version 2 and 3)
-            this.Flags = (AttributeMessageFlags)reader.ReadByte();
-
-            // reserved
-            reader.ReadByte();
+            if (this.Version == 1)
+                reader.ReadByte();
+            else
+                this.Flags = (AttributeMessageFlags)reader.ReadByte();
 
             // name size
             this.NameSize = reader.ReadUInt16();
@@ -34,22 +35,45 @@ namespace HDF5.NET
             this.DataspaceSize = reader.ReadUInt16();
 
             // name character set encoding
-            this.NameCharacterSetEncoding = (CharacterSetEncoding)reader.ReadByte();
-
+            if (this.Version == 3)
+                this.NameEncoding = (CharacterSetEncoding)reader.ReadByte();
+            
             // name
-            this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, this.NameCharacterSetEncoding);
+            if (this.Version == 1)
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, encoding: this.NameEncoding);
+            else
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, encoding: this.NameEncoding);
 
             // datatype
-#warning Insert padding bytes! But only if version == 1!
             this.Datatype = new DatatypeMessage(reader);
 
+            if (this.Version == 1)
+            {
+                var paddedSize = (int)(Math.Ceiling(this.DatatypeSize / 8.0) * 8);
+                var remainingSize = paddedSize - this.DatatypeSize;
+                reader.ReadBytes(remainingSize);
+            }
+
             // dataspace 
-#warning Insert padding bytes! But only if version == 1!
             this.Dataspace = new DataspaceMessage(reader, superblock);
 
+            if (this.Version == 1)
+            {
+                var paddedSize = (int)(Math.Ceiling(this.DataspaceSize / 8.0) * 8);
+                var remainingSize = paddedSize - this.DataspaceSize;
+                this.Reader.Seek(remainingSize, SeekOrigin.Current);
+            }
+
             // data
-#warning determine size correctly from datatype and dataspace
-            this.Data = reader.ReadBytes(1);
+            var totalLength = 0UL;
+
+            if (this.Dataspace.Dimensionality > 0)
+            {
+                totalLength = this.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
+                totalLength *= this.Datatype.Size;
+            }
+
+            this.Data = reader.ReadBytes((int)totalLength);
         }
 
         #endregion
@@ -75,7 +99,7 @@ namespace HDF5.NET
         public ushort NameSize { get; set; }
         public ushort DatatypeSize { get; set; }
         public ushort DataspaceSize { get; set; }
-        public CharacterSetEncoding NameCharacterSetEncoding { get; set; }
+        public CharacterSetEncoding NameEncoding { get; set; }
         public string Name { get; set; }
         public DatatypeMessage Datatype { get; set; }
         public DataspaceMessage Dataspace { get; set; }

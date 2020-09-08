@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.IO;
 
 namespace HDF5.NET
@@ -8,22 +7,21 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning OK like this?
         Superblock _superblock;
 
         #endregion
 
         #region Constructors
 
-        public SymbolTableEntry(BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableEntry(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
             // link name offset
-            this.LinkNameOffset = superblock.ReadOffset();
+            this.LinkNameOffset = superblock.ReadOffset(reader);
             
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset();
+            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
 
             // cache type
             this.CacheType = (CacheType)reader.ReadUInt32();
@@ -58,33 +56,20 @@ namespace HDF5.NET
         public CacheType CacheType { get; set; }
         public ScratchPad? ScratchPad { get; set; }
 
-        public ObjectHeader ObjectHeader
+        public ObjectHeader? ObjectHeader
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Construct(this.Reader, _superblock);
+                if (!_superblock.IsUndefinedAddress(this.ObjectHeaderAddress))
+                {
+                    this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+                    return ObjectHeader.Construct(this.Reader, _superblock);
+                }
+                else
+                {
+                    return null;
+                }
             }
-        }
-
-        #endregion
-
-        #region Methods
-
-        public override void Print(ILogger logger)
-        {
-            logger.LogInformation($"SymbolTableEntry");
-            logger.LogInformation($"SymbolTableEntry Cache Type: {this.CacheType}");
-            logger.LogInformation($"SymbolTableEntry LinkNameOffset: {this.LinkNameOffset}");
-
-            if (this.ScratchPad != null)
-            {
-                logger.LogInformation($"SymbolTableEntry ScratchPad");
-                this.ScratchPad.Print(logger);
-            }
-
-            logger.LogInformation($"SymbolTableEntry ObjectHeader");
-            this.ObjectHeader.Print(logger);
         }
 
         #endregion

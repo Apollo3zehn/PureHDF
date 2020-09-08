@@ -1,60 +1,58 @@
-﻿using System.IO;
+﻿//using System.IO;
 
-namespace HDF5.NET
-{
-    public class BTree2Record07_1 : BTree2Record
-    {
-        #region Fields
+//namespace HDF5.NET
+//{
+//    public class BTree2Record07_1 : BTree2Record07
+//    {
+//        #region Fields
 
-#warning OK like this?
-        private Superblock _superblock;
+//        private H5BinaryReader _reader;
+//        private Superblock _superblock;
 
-        #endregion
+//        #endregion
 
-        #region Constructors
+//        #region Constructors
 
-        public BTree2Record07_1(BinaryReader reader, Superblock superblock) : base(reader)
-        {
-            _superblock = superblock;
+//        public BTree2Record07_1(H5BinaryReader reader, Superblock superblock, MessageLocation messageLocation) 
+//            : base(messageLocation)
+//        {
+//            _reader = reader;
+//            _superblock = superblock;
 
-            // message location
-            this.MessageLocation = (MessageLocation)reader.ReadByte();
+//            // hash
+//            this.Hash = reader.ReadBytes(4);
 
-            // hash
-            this.Hash = reader.ReadBytes(4);
+//            // reserved
+//            reader.ReadByte();
 
-            // reserved
-            reader.ReadByte();
+//            // message type
+//            this.MessageType = (HeaderMessageType)reader.ReadByte();
 
-            // message type
-            this.MessageType = (MessageType)reader.ReadByte();
+//            // object header index
+//            this.ObjectHeaderIndex = reader.ReadUInt16();
 
-            // object header index
-            this.ObjectHeaderIndex = reader.ReadUInt16();
+//            // object header address
+//            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
+//        }
 
-            // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset();
-        }
+//        #endregion
 
-        #endregion
+//        #region Properties
 
-        #region Properties
+//        public byte[] Hash { get; set; }
+//        public HeaderMessageType MessageType { get; set; }
+//        public ushort ObjectHeaderIndex { get; set; }
+//        public ulong ObjectHeaderAddress { get; set; }
 
-        public MessageLocation MessageLocation { get; set; }
-        public byte[] Hash { get; set; }
-        public MessageType MessageType { get; set; }
-        public ushort ObjectHeaderIndex { get; set; }
-        public ulong ObjectHeaderAddress { get; set; }
+//        public ObjectHeader ObjectHeader
+//        {
+//            get
+//            {
+//                _reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+//                return ObjectHeader.Construct(_reader, _superblock);
+//            }
+//        }
 
-        public ObjectHeader ObjectHeader
-        {
-            get
-            {
-                this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Construct(this.Reader, _superblock);
-            }
-        }
-
-        #endregion
-    }
-}
+//        #endregion
+//    }
+//}

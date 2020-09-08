@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public ChunkedStoragePropertyDescription4(BinaryReader reader, Superblock superblock) : base(reader)
+        public ChunkedStoragePropertyDescription4(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // flags
             this.Flags = (ChunkedStoragePropertyFlags)reader.ReadByte();
@@ -41,7 +40,7 @@ namespace HDF5.NET
             };
 
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(reader);
         }
 
         #endregion

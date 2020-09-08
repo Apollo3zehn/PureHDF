@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -7,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree1RawDataChunksKey(BinaryReader reader, int dimensionality) : base(reader)
+        public BTree1RawDataChunksKey(H5BinaryReader reader, int dimensionality) : base(reader)
         {
             this.ChunkSize = reader.ReadUInt32();
             this.FilterMask = reader.ReadUInt32();

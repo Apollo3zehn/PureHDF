@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeaderSharedMessageRecord(BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderSharedMessageRecord(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -30,7 +30,7 @@ namespace HDF5.NET
             this.CreationIndex = reader.ReadUInt16();
 
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset();
+            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -46,7 +46,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
                 return ObjectHeader.Construct(this.Reader, _superblock);
             }
         }

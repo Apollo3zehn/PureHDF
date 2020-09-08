@@ -16,7 +16,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ExternalFileListMessage(BinaryReader reader, Superblock superblock) : base(reader)
+        public ExternalFileListMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
 
@@ -34,7 +34,7 @@ namespace HDF5.NET
             this.UsedSlotCount = reader.ReadUInt16();
 
             // heap address
-            this.HeapAddress = superblock.ReadOffset();
+            this.HeapAddress = superblock.ReadOffset(reader);
 
             // slot definitions
             this.SlotDefinitions = new List<ExternalFileListSlot>(this.UsedSlotCount);
@@ -73,7 +73,7 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.BaseStream.Seek((long)this.HeapAddress, SeekOrigin.Begin);
+                this.Reader.Seek((long)this.HeapAddress, SeekOrigin.Begin);
                 return new LocalHeap(this.Reader, _superblock);
             }
         }

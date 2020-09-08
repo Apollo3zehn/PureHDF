@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace HDF5.NET
 {
@@ -6,19 +8,19 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType4(BinaryReader reader, Superblock superblock) : base(reader)
+        public HugeObjectsFractalHeapIdSubType4(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader)
         {
             // address
-            this.Address = superblock.ReadOffset();
+            this.Address = superblock.ReadOffset(localReader);
 
             // length
-            this.Length = superblock.ReadLength();
+            this.Length = superblock.ReadLength(localReader);
 
             // filter mask
-            this.FilterMask = reader.ReadUInt32();
+            this.FilterMask = localReader.ReadUInt32();
 
             // de-filtered size
-            this.DeFilteredSize = superblock.ReadLength();
+            this.DeFilteredSize = superblock.ReadLength(localReader);
         }
 
         #endregion
@@ -30,7 +32,14 @@ namespace HDF5.NET
         public uint FilterMask { get; set; }
         public ulong DeFilteredSize { get; set; }
 
-        protected override FractalHeapIdType ExpectedType => FractalHeapIdType.Huge;
+        #endregion
+
+        #region Methods
+
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        {
+            throw new Exception("Filtered data is not yet supported.");
+        }
 
         #endregion
     }

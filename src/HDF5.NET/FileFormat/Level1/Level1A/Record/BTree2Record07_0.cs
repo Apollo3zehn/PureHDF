@@ -1,28 +1,25 @@
-﻿using System.IO;
+﻿//namespace HDF5.NET
+//{
+//    public class BTree2Record07_0 : BTree2Record07
+//    {
+//        #region Constructors
 
-namespace HDF5.NET
-{
-    public class BTree2Record07_0 : BTree2Record
-    {
-        #region Constructors
+//        internal BTree2Record07_0(H5BinaryReader reader, MessageLocation messageLocation)
+//            : base(messageLocation)
+//        {
+//            this.Hash = reader.ReadBytes(4);
+//            this.ReferenceCount = reader.ReadUInt32();
+//            this.HeapId = reader.ReadBytes(8);
+//        }
 
-        public BTree2Record07_0(BinaryReader reader) : base(reader)
-        {
-            this.MessageLocation = (MessageLocation)reader.ReadByte();
-            this.Hash = reader.ReadBytes(4);
-            this.ReferenceCount = reader.ReadUInt32();
-            this.HeapId = reader.ReadBytes(8);
-        }
+//        #endregion
 
-        #endregion
+//        #region Properties
 
-        #region Properties
+//        public byte[] Hash { get; set; }
+//        public uint ReferenceCount { get; set; }
+//        public byte[] HeapId { get; set; }
 
-        public MessageLocation MessageLocation { get; set; }
-        public byte[] Hash { get; set; }
-        public uint ReferenceCount { get; set; }
-        public byte[] HeapId { get; set; }
-
-        #endregion
-    }
-}
+//        #endregion
+//    }
+//}

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -14,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader1(BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        public ObjectHeader1(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
             this.Version = version;
@@ -32,20 +30,13 @@ namespace HDF5.NET
             this.ObjectHeaderSize = reader.ReadUInt32();
 
             // header messages
-            this.HeaderMessages = new List<HeaderMessage>();
 
             // read padding bytes that align the following message to an 8 byte boundary
-            var remainingBytes = this.ObjectHeaderSize;
-
-            if (remainingBytes > 0)
+            if (this.ObjectHeaderSize > 0)
                 reader.ReadBytes(4);
 
-            while (remainingBytes > 0)
-            {
-                var message = new HeaderMessage(reader, superblock, 1);
-                remainingBytes -= (uint)message.DataSize + 2 + 2 + 1 + 3;
-                this.HeaderMessages.Add(message);
-            }
+            var messages = this.ReadHeaderMessages(reader, superblock, this.ObjectHeaderSize, 1);
+            this.HeaderMessages.AddRange(messages);
         }
 
         #endregion

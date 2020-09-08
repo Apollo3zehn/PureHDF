@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 
 namespace HDF5.NET
 {
@@ -9,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public FileBlock(BinaryReader reader)
+        public FileBlock(H5BinaryReader reader)
         {
             this.Reader = reader;
         }
@@ -19,33 +16,7 @@ namespace HDF5.NET
         #region Properties
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal BinaryReader Reader { get; }
-
-        #endregion
-
-        #region Methods
-
-        public virtual void Validate()
-        {
-            //
-        }
-
-        public virtual void Print(ILogger logger)
-        {
-            logger.LogWarning($"Printing of file block type '{this.GetType()}' is not implemented.");
-        }
-
-        private protected ulong ReadUlong(ulong byteCount)
-        {
-            return byteCount switch
-            {
-                1 => this.Reader.ReadByte(),
-                2 => this.Reader.ReadUInt16(),
-                4 => this.Reader.ReadUInt32(),
-                8 => this.Reader.ReadUInt64(),
-                _ => throw new NotSupportedException("The byte count is invalid.")
-            };
-        }
+        internal H5BinaryReader Reader { get; }
 
         #endregion
     }

@@ -1,12 +1,10 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class OldFillValueMessage : Message
     {
         #region Constructors
 
-        public OldFillValueMessage(BinaryReader reader) : base(reader)
+        public OldFillValueMessage(H5BinaryReader reader) : base(reader)
         {
             this.Size = reader.ReadUInt32();
             this.FillValue = reader.ReadBytes((int)this.Size);
