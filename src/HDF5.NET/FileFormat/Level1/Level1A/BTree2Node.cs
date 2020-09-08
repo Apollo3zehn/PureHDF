@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace HDF5.NET
 {
-    public abstract class BTree2Node<T> : FileBlock where T : BTree2Record
+    public abstract class BTree2Node<T> : FileBlock where T : struct, IBTree2Record
     {
         #region Fields
 
@@ -28,11 +27,11 @@ namespace HDF5.NET
                 throw new FormatException($"The BTree2 internal node type ('{this.Type}') does not match the type defined in the header ('{header.Type}').");
 
             // records
-            this.Records = new List<T>(recordCount);
+            this.Records = new T[recordCount];
 
             for (ulong i = 0; i < recordCount; i++)
             {
-                var record = (BTree2Record)(this.Type switch
+                var record = (IBTree2Record)(this.Type switch
                 {
                     BTree2Type.IndexingIndirectlyAccessed_NonFilteredHugeFractalHeapObjects => new BTree2Record01(reader, superblock),
                     BTree2Type.IndexingIndirectlyAccessed_FilteredHugeFractalHeapObjects => new BTree2Record02(reader, superblock),
@@ -40,7 +39,7 @@ namespace HDF5.NET
                     BTree2Type.IndexingDirectlyAccessed_FilteredHugeFractalHeapObjects => new BTree2Record04(reader, superblock),
                     BTree2Type.IndexingNameField_Links => new BTree2Record05(reader),
                     BTree2Type.IndexingCreationOrderField_Links => new BTree2Record06(reader),
-                    BTree2Type.IndexingSharedObjectHeaderMessages => BTree2Record07.Construct(reader, superblock),
+                    //BTree2Type.IndexingSharedObjectHeaderMessages => BTree2Record07.Construct(reader, superblock),
                     BTree2Type.IndexingNameField_Attributes => new BTree2Record08(reader),
                     BTree2Type.IndexingCreationOrderField_Attributes => new BTree2Record09(reader),
                     BTree2Type.IndexingChunksOfDatasets_WithoutFilters_WithMoreThanOneUnlimDim => new BTree2Record10(reader, superblock, header.RecordSize),
@@ -49,7 +48,7 @@ namespace HDF5.NET
                     _ => throw new Exception($"Unknown record type '{this.Type}'.")
                 });
 
-                this.Records.Add((T)record);
+                this.Records[i] = (T)record;
             }
         }
 
@@ -71,8 +70,7 @@ namespace HDF5.NET
         }
 
         public BTree2Type Type { get; }
-        public List<T> Records { get; }
-
+        public T[] Records { get; }
         public uint Checksum { get; protected set; }
 
         #endregion

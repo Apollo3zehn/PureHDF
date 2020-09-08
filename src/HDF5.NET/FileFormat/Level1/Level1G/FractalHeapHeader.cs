@@ -387,8 +387,8 @@ namespace HDF5.NET
 
             /* Compute information about 'tiny' objects for the heap */
 
-            /* Check if tiny objects need an extra byte for their length */
-            /* (account for boundary condition when length of an object would need an
+            /* Check if tiny objects need an extra byte for their length
+             * (account for boundary condition when length of an object would need an
              *  extra byte, but using that byte means that the extra length byte is
              *  unnecessary)
              */

@@ -45,7 +45,7 @@ namespace HDF5.NET
             {
                 _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
                 var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock);
-                record01Cache = hugeBtree2.GetRecords();
+                record01Cache = hugeBtree2.EnumerateRecords();
             }
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == this.BTree2Key);

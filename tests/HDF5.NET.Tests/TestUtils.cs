@@ -399,6 +399,8 @@ namespace HDF5.NET.Tests
             var attributeId15 = H5A.create(groupId, "A15", attributeTypeId15, attributeSpaceId);
             var attributeData15 = TestUtils.StringTestStructData;
 
+            // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
+            // Is only relevant when Marshal.XX methods are replaced by other code.
             var elementSize = Marshal.SizeOf<TestStructString>();
             var totalByteLength = elementSize * attributeData15.Length;
             var attributeData15Ptr = Marshal.AllocHGlobal(totalByteLength);
@@ -438,7 +440,22 @@ namespace HDF5.NET.Tests
             {
                 var attributeSpaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
                 var attributeTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
-                var attributeId = H5A.create(groupId, $"mass_{i.ToString("D4")}", attributeTypeId, attributeSpaceId);
+
+                long attributeId;
+
+                if (i == 450)
+                {
+                    var acpl_id = H5P.create(H5P.ATTRIBUTE_CREATE);
+                    var bytes = Encoding.UTF8.GetBytes("字形碼 / 字形码, Zìxíngmǎ");
+                    res = H5P.set_char_encoding(acpl_id, H5T.cset_t.UTF8);
+                    attributeId = H5A.create(groupId, bytes, attributeTypeId, attributeSpaceId, acpl_id);
+                }
+                else
+                {
+                    var name = $"mass_{i.ToString("D4")}";
+                    attributeId = H5A.create(groupId, name, attributeTypeId, attributeSpaceId);
+                }
+
                 var attributeData = TestUtils.NonNullableTestStructData;
 
                 fixed (void* ptr = attributeData)

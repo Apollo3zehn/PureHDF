@@ -1,15 +1,15 @@
 ﻿namespace HDF5.NET
 {
-    public class BTree2Record08 : BTree2Record
+    public struct BTree2Record08 : IBTree2Record
     {
         #region Constructors
 
-        public BTree2Record08(H5BinaryReader reader) : base(reader)
+        public BTree2Record08(H5BinaryReader reader)
         {
             this.HeapId = reader.ReadBytes(8);
             this.MessageFlags = (HeaderMessageFlags)reader.ReadByte();
             this.CreationOrder = reader.ReadUInt32();
-            this.NameHash = reader.ReadBytes(4);
+            this.NameHash = reader.ReadUInt32();
         }
 
         #endregion
@@ -19,7 +19,7 @@
         public byte[] HeapId { get; set; }
         public HeaderMessageFlags MessageFlags { get; set; }
         public uint CreationOrder { get; set; }
-        public byte[] NameHash { get; set; }
+        public uint NameHash { get; set; }
 
         #endregion
     }

@@ -1,38 +1,38 @@
-﻿using System;
+﻿//using System;
 
-namespace HDF5.NET
-{
-    public abstract class BTree2Record07 : BTree2Record
-    {
-        #region Constructors
+//namespace HDF5.NET
+//{
+//    public struct BTree2Record07 : IBTree2Record
+//    {
+//        #region Constructors
 
-        public BTree2Record07(H5BinaryReader reader, MessageLocation messageLocation) : base(reader)
-        {
-            this.MessageLocation = messageLocation;
-        }
+//        public BTree2Record07(MessageLocation messageLocation)
+//        {
+//            this.MessageLocation = messageLocation;
+//        }
 
-        #endregion
+//        #endregion
 
-        #region Properties
+//        #region Properties
 
-        public MessageLocation MessageLocation { get; }
+//        public MessageLocation MessageLocation { get; }
 
-        #endregion
+//        #endregion
 
-        #region Properties
+//        #region Properties
 
-        public static BTree2Record07 Construct(H5BinaryReader reader, Superblock superblock)
-        {
-            var messageLocation = (MessageLocation)reader.ReadByte();
+//        public static BTree2Record07 Construct(H5BinaryReader reader, Superblock superblock)
+//        {
+//            var messageLocation = (MessageLocation)reader.ReadByte();
 
-            return messageLocation switch
-            {
-                MessageLocation.Heap            => new BTree2Record07_0(reader, messageLocation),
-                MessageLocation.ObjectHeader    => new BTree2Record07_1(reader, superblock, messageLocation),
-                _                               => throw new Exception($"Unknown message location '{MessageLocation.Heap}'.")
-            };
-        }
+//            return messageLocation switch
+//            {
+//                MessageLocation.Heap            => new BTree2Record07_0(reader, messageLocation),
+//                MessageLocation.ObjectHeader    => new BTree2Record07_1(reader, superblock, messageLocation),
+//                _                               => throw new Exception($"Unknown message location '{MessageLocation.Heap}'.")
+//            };
+//        }
 
-        #endregion
-    }
-}
+//        #endregion
+//    }
+//}

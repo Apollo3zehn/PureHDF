@@ -1,5 +1,7 @@
-﻿using System;
+using HDF.PInvoke;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -9,15 +11,16 @@ namespace HDF5.NET.Tests
     public class HDF5Tests
     {
         [Theory]
-        [InlineData("/", true)]
-        [InlineData("/simple", true)]
-        [InlineData("/simple/sub?!", false)]
-        public void CanCheckExists(string path, bool expected)
+        [InlineData("/", true, false)]
+        [InlineData("/simple", true, false)]
+        [InlineData("/simple/sub?!", false, false)]
+        [InlineData("/simple/sub?!", false, true)]
+        public void CanCheckLinkExists(string path, bool expected, bool withEmptyFile)
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withSimple: true);
+                var filePath = TestUtils.PrepareTestFile(version, withSimple: !withEmptyFile);
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -49,7 +52,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanListMassAmountOfLinks()
+        public void CanEnumerateMassAmountOfLinks()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -112,7 +115,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == name);
+                var attribute = root.Get<H5Group>("typed").GetAttribute(name);
                 var actual = attribute.Read<T>().ToArray();
 
                 // Assert
@@ -130,7 +133,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A14");
+                var attribute = root.Get<H5Group>("typed").GetAttribute("A14");
                 var actual = attribute.Read<TestStructL1>().ToArray();
 
                 // Assert
@@ -148,7 +151,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A15");
+                var attribute = root.Get<H5Group>("typed").GetAttribute("A15");
                 var actual = attribute.ReadCompound<TestStructString>().ToArray();
 
                 // Assert
@@ -166,7 +169,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.Get<H5Group>("/tiny");
+                var parent = root.Get<H5Group>("tiny");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<byte>().ToArray();
 
@@ -185,7 +188,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.Get<H5Group>("/large");
+                var parent = root.Get<H5Group>("large");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<int>().ToArray();
 
@@ -193,6 +196,71 @@ namespace HDF5.NET.Tests
                 Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
             });
         }
+
+        [Theory]
+        [InlineData("mass_0000")]
+        [InlineData("mass_0001")]
+        [InlineData("mass_0020")]
+        [InlineData("mass_0100")]
+        [InlineData("mass_0101")]
+        [InlineData("mass_0102")]
+        [InlineData("mass_0900")]
+        [InlineData("mass_0999")]
+        public void CanOpenAttribute(string attributeName)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("mass_attributes");
+                var attribute = parent.GetAttribute(attributeName);
+
+                // Assert
+            });
+        }
+
+        [Theory]
+        [InlineData("mass_0000", true)]
+        [InlineData("mass_0020", true)]
+        [InlineData("mass_0102", true)]
+        [InlineData("mass_0999", true)]
+        [InlineData("mass_1000", false)]
+        public void CanCheckAttributeExists(string attributeName, bool expected)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("mass_attributes");
+                var actual = parent.AttributeExists(attributeName);
+
+                // Assert
+                Assert.Equal(expected, actual);
+            });
+        }
+
+        [Fact]
+        public void CanCheckAttributeExistsUTF8()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("mass_attributes");
+            var actual = parent.AttributeExists("字形碼 / 字形码, Zìxíngmǎ");
+
+            // Assert
+            Assert.True(actual);
+        }
+
 
         [Fact]
         public void CanReadMassAmountOfAttributes()
@@ -205,7 +273,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.Get<H5Group>("/mass_attributes");
+                var parent = root.Get<H5Group>("mass_attributes");
                 var attributes = parent.Attributes.ToList();
 
                 foreach (var attribute in attributes)
@@ -230,7 +298,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == "A15");
+                var attribute = root.Get<H5Group>("typed").GetAttribute("A15");
                 var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>().ToArray());
 
                 // Assert
@@ -253,7 +321,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.Get<H5Group>("/typed").Attributes.First(attribute => attribute.Name == name);
+                var attribute = root.Get<H5Group>("typed").GetAttribute(name);
                 var actual = attribute.ReadString();
 
                 // Assert
@@ -272,10 +340,10 @@ namespace HDF5.NET.Tests
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 
-                var dataset_hard_1 = root.Get<H5Dataset>("/links/hard_link_1/dataset");
-                var dataset_hard_2 = root.Get<H5Dataset>("/links/hard_link_2/dataset");
-                var dataset_soft_2 = root.Get<H5Dataset>("/links/soft_link_2/dataset");
-                var dataset_direct = root.Get<H5Dataset>("/links/dataset");
+                var dataset_hard_1 = root.Get<H5Dataset>("links/hard_link_1/dataset");
+                var dataset_hard_2 = root.Get<H5Dataset>("links/hard_link_2/dataset");
+                var dataset_soft_2 = root.Get<H5Dataset>("links/soft_link_2/dataset");
+                var dataset_direct = root.Get<H5Dataset>("links/dataset");
             });
         }
 
@@ -290,8 +358,8 @@ namespace HDF5.NET.Tests
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
 
-                var group = root.GetSymbolicLink("/links/soft_link_2");
-                var dataset = root.GetSymbolicLink("/links/dataset");
+                var group = root.GetSymbolicLink("links/soft_link_2");
+                var dataset = root.GetSymbolicLink("links/dataset");
             });
         }
 
@@ -304,6 +372,21 @@ namespace HDF5.NET.Tests
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
             var children = root.Children.ToList();
+        }
+
+        [Theory]
+        [InlineData("Deadbeef", 0x5c16ad42)]
+        [InlineData("f", 0xb3e7e36f)]
+        [InlineData("字形碼 / 字形码, Zìxíngmǎ", 0xfd18335c)]
+        public void CanCalculateHash(string key, uint expected)
+        {
+            // Arrange
+
+            // Act
+            var actual = H5Checksum.JenkinsLookup3(key);
+
+            // Assert
+            Assert.Equal(expected, actual);
         }
     }
 }

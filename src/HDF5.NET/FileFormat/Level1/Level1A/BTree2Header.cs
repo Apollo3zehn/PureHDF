@@ -6,7 +6,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class BTree2Header<T> : FileBlock where T : BTree2Record
+    public class BTree2Header<T> : FileBlock where T : struct, IBTree2Record
     {
         #region Fields
 
@@ -47,13 +47,12 @@ namespace HDF5.NET
             this.MergePercent = reader.ReadByte();
 
             // root node address
-            this.RootNodeAddress = superblock.ReadOffset(reader);
-
-            // root node record count
-            this.RootNodeRecordCount = reader.ReadUInt16();
-
-            // b-tree total record count
-            this.BTreeTotalRecordCount = superblock.ReadLength(reader);
+            this.RootNodePointer = new BTree2NodePointer()
+            {
+                Address = superblock.ReadOffset(reader),
+                RecordCount = reader.ReadUInt16(),
+                TotalRecordCount = superblock.ReadLength(reader)
+            };
 
             // checksum
             this.Checksum = reader.ReadUInt32();
@@ -120,26 +119,24 @@ namespace HDF5.NET
         public ushort Depth { get; set; }
         public byte SplitPercent { get; set; }
         public byte MergePercent { get; set; }
-        public ulong RootNodeAddress { get; set; }
-        public ushort RootNodeRecordCount { get; set; }
-        public ulong BTreeTotalRecordCount { get; set; }
+        public BTree2NodePointer RootNodePointer { get; set; }
         public uint Checksum { get; set; }
 
         public BTree2Node<T>? RootNode
         {
             get
             {
-                if (_superblock.IsUndefinedAddress(this.RootNodeAddress))
+                if (_superblock.IsUndefinedAddress(this.RootNodePointer.Address))
                 {
                     return null;
                 }
                 else
                 {
-                    this.Reader.Seek((long)this.RootNodeAddress, SeekOrigin.Begin);
+                    this.Reader.Seek((long)this.RootNodePointer.Address, SeekOrigin.Begin);
 
                     return this.Depth != 0
-                        ? (BTree2Node<T>)new BTree2InternalNode<T>(this.Reader, _superblock, this, this.RootNodeRecordCount, this.Depth)
-                        : (BTree2Node<T>)new BTree2LeafNode<T>(this.Reader, _superblock, this, this.RootNodeRecordCount);
+                        ? (BTree2Node<T>)new BTree2InternalNode<T>(this.Reader, _superblock, this, this.RootNodePointer.RecordCount, this.Depth)
+                        : (BTree2Node<T>)new BTree2LeafNode<T>(this.Reader, _superblock, this, this.RootNodePointer.RecordCount);
                 }
             }
         }
@@ -148,21 +145,122 @@ namespace HDF5.NET
 
         internal byte MaxRecordCountSize { get; }
 
+        internal T MinNativeRec { get; set; }
+
+        internal T MaxNativeRec { get; set; }
+
         #endregion
 
         #region Methods
 
-        public IEnumerable<T> GetRecords()
+        public bool TryFindRecord(out T result, Func<T, int> compare)
+        {
+            /* H5B2.c (H5B2_find) */
+            int cmp;
+            uint idx = 0;
+            BTree2NodePosition curr_pos;
+            result = default(T);
+
+            /* Make copy of the root node pointer to start search with */
+            var currentNodePointer = this.RootNodePointer;
+
+            /* Check for empty tree */
+            if (currentNodePointer.RecordCount == 0)
+                return false;
+
+#warning Optimizations missing.
+
+            /* Current depth of the tree */
+            var depth = this.Depth;
+
+            /* Walk down B-tree to find record or leaf node where record is located */
+            cmp = -1;
+            curr_pos = BTree2NodePosition.Root;
+
+            while (depth > 0)
+            {
+                this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                var internalNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount, depth);
+
+                if (internalNode == null)
+                    throw new Exception("Unable to load B-tree internal node.");
+
+                /* Locate node pointer for child */
+                (idx, cmp) = this.LocateRecord(internalNode.Records, compare);
+
+                if (cmp > 0)
+                    idx++;
+
+                if (cmp != 0)
+                {
+                    /* Get node pointer for next node to search */
+                    var nextNodePointer = internalNode.NodePointers[idx];
+
+                    /* Set the position of the next node */
+                    if (curr_pos != BTree2NodePosition.Middle)
+                    {
+                        if (idx == 0)
+                        {
+                            if (curr_pos == BTree2NodePosition.Left || curr_pos == BTree2NodePosition.Root)
+                                curr_pos = BTree2NodePosition.Left;
+                            else
+                                curr_pos = BTree2NodePosition.Middle;
+                        }
+                        else if (idx == internalNode.Records.Length)
+                        {
+                            if (curr_pos == BTree2NodePosition.Right || curr_pos == BTree2NodePosition.Root)
+                                curr_pos = BTree2NodePosition.Right;
+                            else
+                                curr_pos = BTree2NodePosition.Middle;
+                        }
+                        else
+                        {
+                            curr_pos = BTree2NodePosition.Middle;
+                        }
+                    }
+
+                    currentNodePointer = nextNodePointer;
+                }
+                else
+                {
+                    result = internalNode.Records[idx];
+                    return true;
+                }
+
+                /* Decrement depth we're at in B-tree */
+                depth--;
+            }
+
+            {
+                this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                var leafNode = new BTree2LeafNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount);
+
+                /* Locate record */
+                (idx, cmp) = this.LocateRecord(leafNode.Records, compare);
+
+                if (cmp == 0)
+                {
+                    result = leafNode.Records[idx];
+                    return true;
+
+#warning Optimizations missing.
+                }
+            }
+
+            return false;
+        }
+
+        public IEnumerable<T> EnumerateRecords()
         {
             var rootNode = this.RootNode;
 
             if (rootNode != null)
-                return this.GetRecords(rootNode, this.Depth);
+                return this.EnumerateRecords(rootNode, this.Depth);
             else
                 return new List<T>();
         }
 
-        public IEnumerable<T> GetRecords(BTree2Node<T> node, ushort nodeLevel)
+        private IEnumerable<T> EnumerateRecords(BTree2Node<T> node, ushort nodeLevel)
         {
             // This method could be rearranged to accept a BTree2NodePointer (instead of the root node).
             // In that case it would be possible to simplify the double check for internal/leaf node.
@@ -194,7 +292,7 @@ namespace HDF5.NET
                     if (childNodeLevel > 0)
                     {
                         var childNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, nodePointer.RecordCount, childNodeLevel);
-                        childRecords = this.GetRecords(childNode, childNodeLevel);
+                        childRecords = this.EnumerateRecords(childNode, childNodeLevel);
                     }
                     // leaf node
                     else
@@ -262,6 +360,35 @@ namespace HDF5.NET
             //}
 
             //return nodeMap;
+        }
+
+        private (uint index, int cmp) LocateRecord(T[] records,
+                                                   Func<T, int> compare)
+        {
+            // H5B2int.c (H5B2__locate_record)
+            // Return: Comparison value for insertion location. Negative for record
+            // to locate being less than value in *IDX.  Zero for record to
+            // locate equal to value in *IDX.  Positive for record to locate
+            // being greater than value in *IDX (which should only happen when
+            // record to locate is greater than all records to search).
+            uint low = 0, high;
+            uint index = 0;
+            int cmp = -1;
+
+            high = (uint)records.Length;
+
+            while (low < high && cmp != 0)
+            {
+                index = (low + high) / 2;
+                cmp = compare(records[index]);
+
+                if (cmp < 0)
+                    high = index;
+                else
+                    low = index + 1;
+            }
+
+            return (index, cmp);
         }
 
         #endregion

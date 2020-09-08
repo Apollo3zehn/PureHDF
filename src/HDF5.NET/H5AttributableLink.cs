@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 
@@ -61,59 +62,183 @@ namespace HDF5.NET
             }
         }
 
-        public IEnumerable<H5Attribute> Attributes => this.GetAttributes();
+        public IEnumerable<H5Attribute> Attributes => this.EnumerateAttributes();
 
         #endregion
 
         #region Methods
 
-        private IEnumerable<H5Attribute> GetAttributes()
+        public bool AttributeExists(string name)
         {
-            // get attributes from attribute message
-            var attributeMessages = this.ObjectHeader.GetMessages<AttributeMessage>();
+            // get attribute from attribute message
+            var attributeMessage1 = this.ObjectHeader
+                .GetMessages<AttributeMessage>()
+                .FirstOrDefault(message => message.Name == name);
 
-            foreach (var message in attributeMessages)
+            if (attributeMessage1 != null)
             {
-                var attribute = new H5Attribute(message, this.File.Superblock);
-                yield return attribute;
+                return true;
+            }
+            // get attribute from attribute info
+            else
+            {
+                var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+
+                if (attributeInfoMessages.Any())
+                {
+                    if (attributeInfoMessages.Count() != 1)
+                        throw new Exception("There may be only a single attribute info message.");
+
+                    var attributeInfoMessage = attributeInfoMessages.First();
+
+                    if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
+                    {
+                        if (this.TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out var attributeMessage2))
+                            return true;
+                    }
+                }
             }
 
-            // get attributes from attribute info
-            var infoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+            return false;
+        }
 
-            foreach (var infoMessage in infoMessages)
+        public H5Attribute GetAttribute(string name)
+        {
+            // attributes are stored compactly
+            var attributeMessage1 = this.ObjectHeader
+                .GetMessages<AttributeMessage>()
+                .FirstOrDefault(message => message.Name == name);
+            
+            if (attributeMessage1 != null)
+                return new H5Attribute(attributeMessage1, this.File.Superblock);
+
+            // attributes are stored densely
+            var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+
+            if (attributeInfoMessages.Any())
             {
-                var attributes = this.GetAttributesFromAttributeInfo(infoMessage);
+                if (attributeInfoMessages.Count() != 1)
+                    throw new Exception("There may be only a single attribute info message.");
 
-                foreach (var attribute in attributes)
+                var attributeInfoMessage = attributeInfoMessages.First();
+
+                if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                 {
-                    yield return attribute;
+                    if (this.TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out var attributeMessage2))
+                        return new H5Attribute(attributeMessage2, this.File.Superblock);
+                }
+            }
+
+            // nothing found
+            throw new Exception($"Could not find attribute '{name}'.");
+        }
+
+        private IEnumerable<H5Attribute> EnumerateAttributes()
+        {
+            // AttributeInfoMessage is optional
+            // AttributeMessage is optional
+            // both may appear at the same time, or only of of them, or none of them
+            // => do not use "if/else"
+
+            // attributes are stored compactly
+            var attributeMessages1 = this.ObjectHeader.GetMessages<AttributeMessage>();
+
+            foreach (var attributeMessage in attributeMessages1)
+            {
+                yield return new H5Attribute(attributeMessage, this.File.Superblock);
+            }
+
+            // attributes are stored densely
+            var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+
+            if (attributeInfoMessages.Any())
+            {
+                if (attributeInfoMessages.Count() != 1)
+                    throw new Exception("There may be only a single attribute info message.");
+
+                var attributeInfoMessage = attributeInfoMessages.First();
+
+                if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
+                {
+                    var attributeMessages2 = this.EnumerateAttributeMessagesFromAttributeInfo(attributeInfoMessage);
+
+                    foreach (var attributeMessage in attributeMessages2)
+                    {
+                        yield return new H5Attribute(attributeMessage, this.File.Superblock);
+                    }
                 }
             }
         }
 
-        private IEnumerable<H5Attribute> GetAttributesFromAttributeInfo(AttributeInfoMessage infoMessage)
+        private IEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfo(AttributeInfoMessage attributeInfoMessage)
         {
-            var fractalHeap = infoMessage.FractalHeap;
-            var btree2NameIndex = infoMessage.BTree2NameIndex;
+            var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
             var records = btree2NameIndex
-                .GetRecords()
+                .EnumerateRecords()
                 .ToList();
+
+            var fractalHeap = attributeInfoMessage.FractalHeap;
 
             // local cache: indirectly accessed, non-filtered
             IEnumerable<BTree2Record01>? record01Cache = null;
 
             foreach (var record in records)
             {
+#warning duplicate1
                 using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                 var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
+                var message = heapId.Read(reader => new AttributeMessage(reader, this.File.Superblock), ref record01Cache);
 
-                yield return heapId.Read(reader =>
-                {
-                    var message = new AttributeMessage(reader, this.File.Superblock);
-                    return new H5Attribute(message, this.File.Superblock);
-                }, ref record01Cache);
+                yield return message;
             }
+        }
+
+        private bool TryGetAttributeMessageFromAttributeInfoMessage(AttributeInfoMessage attributeInfoMessage,
+                                                                    string name,
+                                                                    [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)
+        {
+            attributeMessage = null;
+
+            var fractalHeap = attributeInfoMessage.FractalHeap;
+            var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
+            var nameHash = H5Checksum.JenkinsLookup3(name);
+            var candidate = default(AttributeMessage);
+
+            var success = btree2NameIndex.TryFindRecord(out var record, record =>
+            {
+#warning Better to implement comparison code in record (here: BTree2Record08) itself?
+
+                if (nameHash < record.NameHash)
+                {
+                    return -1;
+                }
+                else if (nameHash > record.NameHash)
+                {
+                    return 1;
+                }
+                else
+                {
+#warning duplicate2
+                    using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                    var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
+                    candidate = heapId.Read(reader => new AttributeMessage(reader, this.File.Superblock));
+
+                    // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
+                    // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
+                    return string.CompareOrdinal(name, candidate.Name);
+                }
+            });
+
+            if (success)
+            {
+                if (candidate == null)
+                    throw new Exception("This should never happen. Just to satisfy the compiler.");
+
+                attributeMessage = candidate;
+                return true;
+            }
+
+            return false;
         }
 
         #endregion

@@ -20,7 +20,7 @@ namespace HDF5.NET
             // version
             this.Version = reader.ReadByte();
 
-                if (this.Version == 1)
+            if (this.Version == 1)
                 reader.ReadByte();
             else
                 this.Flags = (AttributeMessageFlags)reader.ReadByte();

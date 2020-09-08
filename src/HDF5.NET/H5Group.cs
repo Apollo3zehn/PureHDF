@@ -134,7 +134,7 @@ namespace HDF5.NET
                     }
                 }
 
-#warning Improve this to traverse to specific link instead of enumeration (Jenkins hash required)
+#error Improve this to traverse to specific link instead of enumeration (Jenkins hash required)
                 var link = group
                     .EnumerateLinks()
                     .FirstOrDefault(link => link.Name == segments[i]);
@@ -165,6 +165,24 @@ namespace HDF5.NET
                     SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
                     _                                       => this.InstantiateUncachedLink(name, entry.ObjectHeader)
                 };
+            }
+        }
+
+        private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
+        {
+            if (objectHeader != null)
+            {
+                return objectHeader.ObjectType switch
+                {
+                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
+                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
+                    H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
+                    _ => throw new Exception("Unknown object type.")
+                };
+            }
+            else
+            {
+                throw new Exception("Unknown object type.");
             }
         }
 
@@ -227,7 +245,7 @@ namespace HDF5.NET
                          * IV.A.2.c. The Link Info Message 
                          * Optional; may not be repeated. */
                         if (!this.File.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
-                            linkMessages = this.GetLinkMessagesFromLinkInfoMessage(lmessage);
+                            linkMessages = this.EnumerateLinkMessagesFromLinkInfoMessage(lmessage);
 
                         /* New (1.8) compact format
                          * IV.A.2.g. The Link Message 
@@ -256,30 +274,12 @@ namespace HDF5.NET
             }
         }
 
-        private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
-        {
-            if (objectHeader != null)
-            {
-                return objectHeader.ObjectType switch
-                {
-                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
-                    H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
-                    _ => throw new Exception("Unknown object type.")
-                };
-            }
-            else
-            {
-                throw new Exception("Unknown object type.");
-            }
-        }
-
-        private IEnumerable<LinkMessage> GetLinkMessagesFromLinkInfoMessage(LinkInfoMessage infoMessage)
+        private IEnumerable<LinkMessage> EnumerateLinkMessagesFromLinkInfoMessage(LinkInfoMessage infoMessage)
         {
             var fractalHeap = infoMessage.FractalHeap;
             var btree2NameIndex = infoMessage.BTree2NameIndex;
             var records = btree2NameIndex
-                .GetRecords()
+                .EnumerateRecords()
                 .ToList();
 
             // local cache: indirectly accessed, non-filtered
