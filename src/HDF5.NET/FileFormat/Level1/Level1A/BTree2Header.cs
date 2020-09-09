@@ -157,9 +157,9 @@ namespace HDF5.NET
         {
             /* H5B2.c (H5B2_find) */
             int cmp;
-            uint idx = 0;
+            uint index = 0;
             BTree2NodePosition curr_pos;
-            result = default(T);
+            result = default;
 
             /* Make copy of the root node pointer to start search with */
             var currentNodePointer = this.RootNodePointer;
@@ -186,27 +186,27 @@ namespace HDF5.NET
                     throw new Exception("Unable to load B-tree internal node.");
 
                 /* Locate node pointer for child */
-                (idx, cmp) = this.LocateRecord(internalNode.Records, compare);
+                (index, cmp) = this.LocateRecord(internalNode.Records, compare);
 
                 if (cmp > 0)
-                    idx++;
+                    index++;
 
                 if (cmp != 0)
                 {
                     /* Get node pointer for next node to search */
-                    var nextNodePointer = internalNode.NodePointers[idx];
+                    var nextNodePointer = internalNode.NodePointers[index];
 
                     /* Set the position of the next node */
                     if (curr_pos != BTree2NodePosition.Middle)
                     {
-                        if (idx == 0)
+                        if (index == 0)
                         {
                             if (curr_pos == BTree2NodePosition.Left || curr_pos == BTree2NodePosition.Root)
                                 curr_pos = BTree2NodePosition.Left;
                             else
                                 curr_pos = BTree2NodePosition.Middle;
                         }
-                        else if (idx == internalNode.Records.Length)
+                        else if (index == internalNode.Records.Length)
                         {
                             if (curr_pos == BTree2NodePosition.Right || curr_pos == BTree2NodePosition.Root)
                                 curr_pos = BTree2NodePosition.Right;
@@ -223,7 +223,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    result = internalNode.Records[idx];
+                    result = internalNode.Records[index];
                     return true;
                 }
 
@@ -236,11 +236,11 @@ namespace HDF5.NET
                 var leafNode = new BTree2LeafNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount);
 
                 /* Locate record */
-                (idx, cmp) = this.LocateRecord(leafNode.Records, compare);
+                (index, cmp) = this.LocateRecord(leafNode.Records, compare);
 
                 if (cmp == 0)
                 {
-                    result = leafNode.Records[idx];
+                    result = leafNode.Records[index];
                     return true;
 
 #warning Optimizations missing.

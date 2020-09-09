@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    public class BTree1RawDataChunksKey : BTree1Key
+    public struct BTree1RawDataChunksKey : IBTree1Key
     {
         #region Constructors
 
-        public BTree1RawDataChunksKey(H5BinaryReader reader, int dimensionality) : base(reader)
+        public BTree1RawDataChunksKey(H5BinaryReader reader, int dimensionality)
         {
             this.ChunkSize = reader.ReadUInt32();
             this.FilterMask = reader.ReadUInt32();

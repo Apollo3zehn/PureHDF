@@ -28,12 +28,12 @@ namespace HDF5.NET
         public ulong BTree1Address { get; set; }
         public ulong LocalHeapAddress { get; set; }
 
-        public BTree1Node BTree1
+        public BTree1Node<BTree1GroupKey> BTree1
         {
             get
             {
                 this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
-                return new BTree1Node(this.Reader, _superblock);
+                return new BTree1Node<BTree1GroupKey>(this.Reader, _superblock);
             }
         }
 

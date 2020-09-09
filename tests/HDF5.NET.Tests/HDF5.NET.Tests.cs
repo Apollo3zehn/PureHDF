@@ -1,7 +1,6 @@
 using HDF.PInvoke;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -15,12 +14,37 @@ namespace HDF5.NET.Tests
         [InlineData("/simple", true, false)]
         [InlineData("/simple/sub?!", false, false)]
         [InlineData("/simple/sub?!", false, true)]
-        public void CanCheckLinkExists(string path, bool expected, bool withEmptyFile)
+        public void CanCheckLinkExistsSimple(string path, bool expected, bool withEmptyFile)
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, withSimple: !withEmptyFile);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var actual = root.LinkExists(path);
+
+                // Assert
+                Assert.Equal(expected, actual);
+            });
+        }
+
+        [Theory]
+        [InlineData("/", true, false)]
+        [InlineData("/mass_links", true, false)]
+        [InlineData("/mass_links/mass_0000", true, false)]
+        [InlineData("/mass_links/mass_0020", true, false)]
+        [InlineData("/mass_links/mass_0102", true, false)]
+        [InlineData("/mass_links/mass_0999", true, false)]
+        [InlineData("/mass_links/mass_1000", false, false)]
+        [InlineData("/mass_links/mass_1000", false, true)]
+        public void CanCheckLinkExistsMass(string path, bool expected, bool withEmptyFile)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withMassLinks: !withEmptyFile);
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -52,7 +76,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanEnumerateMassAmountOfLinks()
+        public void CanEnumerateLinkMass()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -198,37 +222,12 @@ namespace HDF5.NET.Tests
         }
 
         [Theory]
-        [InlineData("mass_0000")]
-        [InlineData("mass_0001")]
-        [InlineData("mass_0020")]
-        [InlineData("mass_0100")]
-        [InlineData("mass_0101")]
-        [InlineData("mass_0102")]
-        [InlineData("mass_0900")]
-        [InlineData("mass_0999")]
-        public void CanOpenAttribute(string attributeName)
-        {
-            TestUtils.RunForAllVersions(version =>
-            {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
-
-                // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.Get<H5Group>("mass_attributes");
-                var attribute = parent.GetAttribute(attributeName);
-
-                // Assert
-            });
-        }
-
-        [Theory]
         [InlineData("mass_0000", true)]
         [InlineData("mass_0020", true)]
         [InlineData("mass_0102", true)]
         [InlineData("mass_0999", true)]
         [InlineData("mass_1000", false)]
-        public void CanCheckAttributeExists(string attributeName, bool expected)
+        public void CanCheckAttributeExistsMass (string attributeName, bool expected)
         {
             TestUtils.RunForAllVersions(version =>
             {

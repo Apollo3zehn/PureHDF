@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    public class BTree1GroupKey : BTree1Key
+    public struct BTree1GroupKey : IBTree1Key
     {
         #region Constructors
 
-        public BTree1GroupKey(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree1GroupKey(H5BinaryReader reader, Superblock superblock)
         {
             this.LocalHeapByteOffset = superblock.ReadLength(reader);
         }

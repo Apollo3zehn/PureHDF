@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
@@ -145,16 +146,16 @@ namespace HDF5.NET
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
-                var links = _scratchPad.BTree1
-                    .GetSymbolTableNodes()
-                    .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
 
-                link = links.FirstOrDefault(link => link.Name == name);
+                var success = _scratchPad.BTree1.TryFindUserData(out var userData,
+                        (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
+                        (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
 
-                if (link != null)
+                if (success)
+                {
+                    link = this.InstantiateLinkForSymbolTableEntry(localHeap, userData.SymbolTableEntry);
                     return true;
-
-#error this is not efficient
+                }
             }
             else
             {
@@ -171,16 +172,16 @@ namespace HDF5.NET
 
                     var smessage = symbolTableHeaderMessages.First();
                     var localHeap = smessage.LocalHeap;
-                    var links = smessage.BTree1
-                        .GetSymbolTableNodes()
-                        .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
 
-                    link = links.FirstOrDefault(link => link.Name == name);
+                    var success = smessage.BTree1.TryFindUserData(out var userData,
+                        (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
+                        (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
 
-                    if (link != null)
+                    if (success)
+                    {
+                        link = this.InstantiateLinkForSymbolTableEntry(localHeap, userData.SymbolTableEntry);
                         return true;
-
-#error this is not efficient
+                    }
                 }
                 else
                 {
@@ -240,9 +241,10 @@ namespace HDF5.NET
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
-                var links = _scratchPad.BTree1
-                    .GetSymbolTableNodes()
-                    .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
+                var links = this
+                    .EnumerateSymbolTableNodes(_scratchPad.BTree1)
+                    .SelectMany(node => node.GroupEntries
+                    .Select(entry => this.InstantiateLinkForSymbolTableEntry(localHeap, entry)));
 
                 foreach (var link in links)
                 {
@@ -264,9 +266,10 @@ namespace HDF5.NET
 
                     var smessage = symbolTableHeaderMessages.First();
                     var localHeap = smessage.LocalHeap;
-                    var links = smessage.BTree1
-                        .GetSymbolTableNodes()
-                        .SelectMany(node => this.InstantiateLinksForSymbolTableEntries(localHeap, node.GroupEntries));
+                    var links = this
+                        .EnumerateSymbolTableNodes(smessage.BTree1)
+                        .SelectMany(node => node.GroupEntries
+                        .Select(entry => this.InstantiateLinkForSymbolTableEntry(localHeap, entry)));
 
                     foreach (var link in links)
                     {
@@ -385,6 +388,7 @@ namespace HDF5.NET
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private H5Link InstantiateLink(LinkMessage linkMessage)
         {
             return linkMessage.LinkInfo switch
@@ -396,6 +400,7 @@ namespace HDF5.NET
             };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
         {
             if (objectHeader != null)
@@ -414,19 +419,98 @@ namespace HDF5.NET
             }
         }
 
-        private IEnumerable<H5Link> InstantiateLinksForSymbolTableEntries(LocalHeap heap, List<SymbolTableEntry> entries)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private H5Link InstantiateLinkForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry)
         {
-            foreach (var entry in entries)
-            {
-                var name = heap.GetObjectName(entry.LinkNameOffset);
+            var name = heap.GetObjectName(entry.LinkNameOffset);
 
-                yield return entry.ScratchPad switch
+            return entry.ScratchPad switch
+            {
+                ObjectHeaderScratchPad objectScratch => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
+                SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
+                _ => this.InstantiateUncachedLink(name, entry.ObjectHeader)
+            };
+        }
+
+        private IEnumerable<SymbolTableNode> EnumerateSymbolTableNodes(BTree1Node<BTree1GroupKey> btree1)
+        {
+            var nodeLevel = 0U;
+
+            return btree1.GetTree()[nodeLevel].SelectMany(node =>
+            {
+                return node.ChildAddresses.Select(address =>
                 {
-                    ObjectHeaderScratchPad objectScratch => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
-                    SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
-                    _ => this.InstantiateUncachedLink(name, entry.ObjectHeader)
-                };
+                    this.File.Reader.Seek((long)address, SeekOrigin.Begin);
+                    return new SymbolTableNode(this.File.Reader, this.File.Superblock);
+                });
+            });
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
+        {
+            // H5Gnode.c (H5G_node_cmp3)
+
+            /* left side */
+            var leftName = localHeap.GetObjectName(leftKey.LocalHeapByteOffset);
+
+            if (string.CompareOrdinal(name, leftName) <= 0)
+            {
+                return -1;
             }
+            else
+            {
+                /* right side */
+                var rightName = localHeap.GetObjectName(rightKey.LocalHeapByteOffset);
+
+                if (string.CompareOrdinal(name, rightName) > 0)
+                {
+                    return 1;
+                }
+            }
+
+            return 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool NodeFound(LocalHeap localHeap, string name, ulong address, out BTree1SymbolTableUserData userData)
+        {
+            userData = default;
+
+            // H5Gnode.c (H5G_node_found)
+            uint low = 0, index = 0, high;
+            int cmp = 1;
+
+            /*
+             * Load the symbol table node for exclusive access.
+             */
+            this.File.Reader.Seek((long)address, SeekOrigin.Begin);
+            var symbolTableNode = new SymbolTableNode(this.File.Reader, this.File.Superblock);
+
+            /*
+             * Binary search.
+             */
+            high = symbolTableNode.SymbolCount;
+
+            while (low < high && cmp != 0)
+            {
+                index = (low + high) / 2;
+
+                var linkNameOffset = symbolTableNode.GroupEntries[(int)index].LinkNameOffset;
+                var currentName = localHeap.GetObjectName(linkNameOffset);
+                cmp = string.CompareOrdinal(name, currentName);
+
+                if (cmp < 0)
+                    high = index;
+                else
+                    low = index + 1;
+            }
+
+            if (cmp != 0)
+                return false;
+
+            userData.SymbolTableEntry = symbolTableNode.GroupEntries[(int)index];
+            return true;
         }
 
         #endregion
