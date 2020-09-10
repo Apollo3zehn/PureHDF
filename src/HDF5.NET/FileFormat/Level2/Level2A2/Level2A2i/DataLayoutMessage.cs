@@ -30,8 +30,8 @@ namespace HDF5.NET
             {
                 1 => new DataLayoutMessage12(reader, superblock, version),
                 2 => new DataLayoutMessage12(reader, superblock, version),
-                3 => new DataLayoutMessage34(reader, superblock, version),
-                4 => new DataLayoutMessage34(reader, superblock, version),
+                3 => new DataLayoutMessage3(reader, superblock, version),
+                4 => new DataLayoutMessage4(reader, superblock, version),
                 _ => throw new NotSupportedException($"The data layout message version '{version}' is not supported.")
             };
         }

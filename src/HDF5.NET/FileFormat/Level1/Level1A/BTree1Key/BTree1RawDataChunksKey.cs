@@ -11,9 +11,9 @@ namespace HDF5.NET
             this.ChunkSize = reader.ReadUInt32();
             this.FilterMask = reader.ReadUInt32();
 
-            this.ChunkOffsets = new List<ulong>(dimensionality);
+            this.ChunkOffsets = new ulong[dimensionality + 1];
 
-            for (int i = 0; i < dimensionality; i++)
+            for (int i = 0; i < dimensionality + 1; i++)
             {
                 this.ChunkOffsets[i] = reader.ReadUInt64();
             }
@@ -25,7 +25,7 @@ namespace HDF5.NET
 
         public uint ChunkSize { get; set; }
         public uint FilterMask { get; set; }
-        public List<ulong> ChunkOffsets { get; set; }
+        public ulong[] ChunkOffsets { get; set; }
 
         #endregion
     }

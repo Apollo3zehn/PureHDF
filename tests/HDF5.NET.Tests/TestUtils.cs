@@ -123,7 +123,10 @@ namespace HDF5.NET.Tests
                                                     bool withMassAttributes = false,
                                                     bool withHugeAttribute = false,
                                                     bool withTinyAttribute = false,
-                                                    bool withLinks = false)
+                                                    bool withLinks = false,
+                                                    bool withCompactDataset = false,
+                                                    bool withContiguousDataset = false,
+                                                    bool withChunkedDataset = false)
         {
             var filePath = Path.GetTempFileName();
             long res;
@@ -153,6 +156,15 @@ namespace HDF5.NET.Tests
 
             if (withLinks)
                 TestUtils.AddLinks(fileId);
+
+            if (withCompactDataset)
+                TestUtils.AddCompactDataset(fileId);
+
+            if (withContiguousDataset)
+                TestUtils.AddContiguousDataset(fileId);
+
+            if (withChunkedDataset)
+                TestUtils.AddChunkedDataset(fileId);
 
             res = H5F.close(fileId);
 
@@ -463,6 +475,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
                 }
 
+                res = H5S.close(attributeSpaceId);
                 res = H5T.close(attributeTypeId);
                 res = H5A.close(attributeId);
             }
@@ -477,7 +490,7 @@ namespace HDF5.NET.Tests
             var length = version switch
             {
                 H5F.libver_t.EARLIEST => 16368UL, // max 64 kb in object header
-                _ => 10_000_000UL,
+                _ => (ulong)TestUtils.HugeData.Length,
             };
 
             var groupId = H5G.create(fileId, "large");
@@ -490,6 +503,7 @@ namespace HDF5.NET.Tests
                 res = H5A.write(attributeId, H5T.NATIVE_INT32, new IntPtr(ptr));
             }
 
+            res = H5S.close(attributeSpaceId);
             res = H5A.close(attributeId);
             res = H5G.close(groupId);
         }
@@ -508,6 +522,7 @@ namespace HDF5.NET.Tests
                 res = H5A.write(attributeId, H5T.NATIVE_UINT8, new IntPtr(ptr));
             }
 
+            res = H5S.close(attributeSpaceId);
             res = H5A.close(attributeId);
             res = H5G.close(groupId);
         }
@@ -534,6 +549,65 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
             res = H5G.close(hardLinkId1);
         }
+
+        private static unsafe void AddCompactDataset(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "compact");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId = H5D.create(groupId, "compact", H5T.NATIVE_UINT8, datasetSpaceId);
+            var datasetData = TestUtils.TinyData;
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_UINT8, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        private static unsafe void AddContiguousDataset(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.HugeData.Length;
+            var groupId = H5G.create(fileId, "contiguous");         
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+            var datasetId = H5D.create(groupId, "contiguous", H5T.NATIVE_INT, datasetSpaceId);
+            var datasetData = TestUtils.HugeData;
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        private static unsafe void AddChunkedDataset(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.HugeData.Length;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
+            var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var datasetData = TestUtils.HugeData;
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
 
         private static long GetHdfTypeIdFromType(Type type)
         {

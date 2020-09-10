@@ -387,5 +387,62 @@ namespace HDF5.NET.Tests
             // Assert
             Assert.Equal(expected, actual);
         }
+
+        [Fact(Skip = "Unable to create compact attribute.")]
+        public void CanReadCompactDataset()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withCompactDataset: true);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("compact");
+                var dataset = parent.Get<H5Dataset>("compact");
+                var actual = dataset.Read<byte>().ToArray();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.TinyData));
+            });
+        }
+
+        [Fact]
+        public void CanReadContiguousDataset()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withContiguousDataset: true);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("contiguous");
+                var dataset = parent.Get<H5Dataset>("contiguous");
+                var actual = dataset.Read<int>().ToArray();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+            });
+        }
+
+        [Fact]
+        public void CanReadChunkedDataset()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, withChunkedDataset: true);
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked");
+                var actual = dataset.Read<int>().ToArray();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+            });
+        }
     }
 }

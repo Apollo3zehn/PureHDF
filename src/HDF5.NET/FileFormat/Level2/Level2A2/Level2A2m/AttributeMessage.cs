@@ -65,15 +65,15 @@ namespace HDF5.NET
             }
 
             // data
-            var totalLength = 0UL;
+            var size = 0UL;
 
             if (this.Dataspace.Dimensionality > 0)
             {
-                totalLength = this.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
-                totalLength *= this.Datatype.Size;
+                size = this.Dataspace.DimensionSizes.Aggregate((x, y) => x * y);
+                size *= this.Datatype.Size;
             }
 
-            this.Data = reader.ReadBytes((int)totalLength);
+            this.Data = reader.ReadBytes((int)size);
         }
 
         #endregion
