@@ -18,11 +18,11 @@ namespace HDF5.NET
             this.DimensionSizeEncodedLength = reader.ReadByte();
 
             // dimension sizes
-            this.DimensionSizes = new uint[this.Dimensionality];
+            this.DimensionSizes = new ulong[this.Dimensionality - 1];
 
-            for (uint i = 0; i < this.Dimensionality; i++)
+            for (uint i = 0; i < this.Dimensionality - 1; i++)
             {
-                this.DimensionSizes[i] = reader.ReadUInt32();
+                this.DimensionSizes[i] = H5Utils.ReadUlong(reader, this.DimensionSizeEncodedLength);
             }
 
             // chunk indexing type
@@ -50,7 +50,7 @@ namespace HDF5.NET
         public ChunkedStoragePropertyFlags Flags { get; set; }
         public byte Dimensionality { get; set; }
         public byte DimensionSizeEncodedLength { get; set; }
-        public uint[] DimensionSizes { get; set; }
+        public ulong[] DimensionSizes { get; set; }
         public ChunkIndexingType ChunkIndexingType { get; set; }
         public IndexingInformation IndexingTypeInformation { get; set; }
         public ulong Address { get; set; }

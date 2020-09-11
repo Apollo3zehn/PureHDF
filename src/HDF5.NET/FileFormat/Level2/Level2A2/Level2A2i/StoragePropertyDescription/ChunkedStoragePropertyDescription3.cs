@@ -13,9 +13,9 @@
             this.Address = superblock.ReadOffset(reader);
 
             // dimension sizes
-            this.DimensionSizes = new uint[this.Dimensionality];
+            this.DimensionSizes = new uint[this.Dimensionality - 1];
 
-            for (uint i = 0; i < this.Dimensionality; i++)
+            for (uint i = 0; i < this.Dimensionality - 1; i++)
             {
                 this.DimensionSizes[i] = reader.ReadUInt32();
             }

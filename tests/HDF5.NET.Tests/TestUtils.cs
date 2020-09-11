@@ -556,7 +556,9 @@ namespace HDF5.NET.Tests
 
             var groupId = H5G.create(fileId, "compact");
             var datasetSpaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
-            var datasetId = H5D.create(groupId, "compact", H5T.NATIVE_UINT8, datasetSpaceId);
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
+            var datasetId = H5D.create(groupId, "compact", H5T.NATIVE_UINT8, datasetSpaceId, dcpl_id: dcpl_id);
             var datasetData = TestUtils.TinyData;
 
             fixed (void* ptr = datasetData)
@@ -595,7 +597,7 @@ namespace HDF5.NET.Tests
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
+            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
             var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
             var datasetData = TestUtils.HugeData;
 

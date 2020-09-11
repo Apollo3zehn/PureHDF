@@ -140,7 +140,7 @@ namespace HDF5.NET.Tests
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("typed").GetAttribute(name);
-                var actual = attribute.Read<T>().ToArray();
+                var actual = attribute.Read<T>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
@@ -158,7 +158,7 @@ namespace HDF5.NET.Tests
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("typed").GetAttribute("A14");
-                var actual = attribute.Read<TestStructL1>().ToArray();
+                var actual = attribute.Read<TestStructL1>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.NonNullableTestStructData));
@@ -176,7 +176,7 @@ namespace HDF5.NET.Tests
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("typed").GetAttribute("A15");
-                var actual = attribute.ReadCompound<TestStructString>().ToArray();
+                var actual = attribute.ReadCompound<TestStructString>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.StringTestStructData));
@@ -195,7 +195,7 @@ namespace HDF5.NET.Tests
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var parent = root.Get<H5Group>("tiny");
                 var attribute = parent.Attributes.First();
-                var actual = attribute.Read<byte>().ToArray();
+                var actual = attribute.Read<byte>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.TinyData));
@@ -214,7 +214,7 @@ namespace HDF5.NET.Tests
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var parent = root.Get<H5Group>("large");
                 var attribute = parent.Attributes.First();
-                var actual = attribute.Read<int>().ToArray();
+                var actual = attribute.Read<int>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
@@ -277,7 +277,7 @@ namespace HDF5.NET.Tests
 
                 foreach (var attribute in attributes)
                 {
-                    var actual = attribute.ReadCompound<TestStructL1>().ToArray();
+                    var actual = attribute.ReadCompound<TestStructL1>();
 
                     // Assert
                     Assert.True(actual.SequenceEqual(TestUtils.NonNullableTestStructData));
@@ -298,7 +298,7 @@ namespace HDF5.NET.Tests
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var attribute = root.Get<H5Group>("typed").GetAttribute("A15");
-                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>().ToArray());
+                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
 
                 // Assert
                 Assert.Contains("Nested nullable fields are not supported.", exception.Message);
@@ -388,7 +388,7 @@ namespace HDF5.NET.Tests
             Assert.Equal(expected, actual);
         }
 
-        [Fact(Skip = "Unable to create compact attribute.")]
+        [Fact]
         public void CanReadCompactDataset()
         {
             TestUtils.RunForAllVersions(version =>
@@ -400,10 +400,39 @@ namespace HDF5.NET.Tests
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var parent = root.Get<H5Group>("compact");
                 var dataset = parent.Get<H5Dataset>("compact");
-                var actual = dataset.Read<byte>().ToArray();
+                var actual = dataset.Read<byte>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.TinyData));
+            });
+        }
+
+
+        [Fact]
+        public void CanReadCompactDatasetTestFile()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = "testfiles/h5ex_d_compact.h5";
+                var expected = new int[4,7];
+
+                for (int i = 0; i < 4; i++)
+                {
+                    for (int j = 0; j < 7; j++)
+                    {
+                        expected[i,j] = i * j - j;
+                    }
+                }
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var parent = root;
+                var dataset = parent.Get<H5Dataset>("DS1");
+                var actual = dataset.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected.Cast<int>()));
             });
         }
 
@@ -419,7 +448,7 @@ namespace HDF5.NET.Tests
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var parent = root.Get<H5Group>("contiguous");
                 var dataset = parent.Get<H5Dataset>("contiguous");
-                var actual = dataset.Read<int>().ToArray();
+                var actual = dataset.Read<int>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
@@ -438,11 +467,75 @@ namespace HDF5.NET.Tests
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var parent = root.Get<H5Group>("chunked");
                 var dataset = parent.Get<H5Dataset>("chunked");
-                var actual = dataset.Read<int>().ToArray();
+                var actual = dataset.Read<int>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
             });
+        }
+
+        [Fact]
+        public void CanConvertDataset2D()
+        {
+            // Arrange
+            var expected = new int[4, 7];
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    expected[i, j] = i * j - j;
+                }
+            }
+
+            // Act
+            var actual = expected
+                .Cast<int>()
+                .ToArray()
+                .ToArray2D(new long[] { 4, -1 });
+
+            // Assert
+            Assert.Equal(expected.Rank, actual.Rank);
+
+            for (int i = 0; i < expected.Rank; i++)
+            {
+                Assert.Equal(expected.GetLength(i), actual.GetLength(i));
+            }
+            Assert.True(actual.Cast<int>().SequenceEqual(expected.Cast<int>()));
+        }
+
+        [Fact]
+        public void CanConvertDataset3D()
+        {
+            // Arrange
+            var expected = new int[4, 7, 2];
+
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    for (int k = 0; k < 2; k++)
+                    {
+                        expected[i, j, k] = i * j - j + k;
+                    }
+                }
+            }
+
+            // Act
+            var actual = expected
+                .Cast<int>()
+                .ToArray()
+                .ToArray3D(new long[] { -1, 7, 2 });
+
+            // Assert
+            Assert.Equal(expected.Rank, actual.Rank);
+
+            for (int i = 0; i < expected.Rank; i++)
+            {
+                Assert.Equal(expected.GetLength(i), actual.GetLength(i));
+            }
+
+            Assert.True(actual.Cast<int>().SequenceEqual(expected.Cast<int>()));
         }
     }
 }
