@@ -325,7 +325,7 @@ namespace HDF5.NET
                 .ToList();
 
             // local cache: indirectly accessed, non-filtered
-            IEnumerable<BTree2Record01>? record01Cache = null;
+            List<BTree2Record01>? record01Cache = null;
 
             foreach (var record in records)
             {

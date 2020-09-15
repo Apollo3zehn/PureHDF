@@ -34,8 +34,8 @@ namespace HDF5.NET
             this.LeftSiblingAddress = superblock.ReadOffset(reader);
             this.RightSiblingAddress = superblock.ReadOffset(reader);
 
-            this.Keys = new List<T>();
-            this.ChildAddresses = new List<ulong>();
+            this.Keys = new T[this.EntriesUsed + 1];
+            this.ChildAddresses = new ulong[this.EntriesUsed];
 
             switch (this.NodeType)
             {
@@ -43,11 +43,11 @@ namespace HDF5.NET
 
                     for (int i = 0; i < this.EntriesUsed; i++)
                     {
-                        this.Keys.Add((T)(object)new BTree1GroupKey(reader, superblock));
-                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
+                        this.Keys[i] = (T)(object)new BTree1GroupKey(reader, superblock);
+                        this.ChildAddresses[i] = superblock.ReadOffset(reader);
                     }
 
-                    this.Keys.Add((T)(object)new BTree1GroupKey(reader, superblock));
+                    this.Keys[this.EntriesUsed] = (T)(object)new BTree1GroupKey(reader, superblock);
                     
                     break;
 
@@ -55,12 +55,12 @@ namespace HDF5.NET
 
                     for (int i = 0; i < this.EntriesUsed; i++)
                     {
-#warning How to correctly handle dimensionality?
-                        this.Keys.Add((T)(object)new BTree1RawDataChunksKey(reader, dimensionality: 1));
-                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
+#error Search in source code for user data
+                        this.Keys[i] = (T)(object)new BTree1RawDataChunksKey(reader, dimensionality: 2);
+                        this.ChildAddresses[i] = superblock.ReadOffset(reader);
                     }
 
-                    this.Keys.Add((T)(object)new BTree1RawDataChunksKey(reader, dimensionality: 1));
+                    this.Keys[this.EntriesUsed] = (T)(object)new BTree1RawDataChunksKey(reader, dimensionality: 2);
 
                     break;
 
@@ -80,8 +80,8 @@ namespace HDF5.NET
         public ushort EntriesUsed { get; }
         public ulong LeftSiblingAddress { get; }
         public ulong RightSiblingAddress { get; }
-        public List<T> Keys { get; }
-        public List<ulong> ChildAddresses { get; }
+        public T[] Keys { get; }
+        public ulong[] ChildAddresses { get; }
 
         public BTree1Node<T> LeftSibling
         {
@@ -161,6 +161,11 @@ namespace HDF5.NET
                 {
                     foreach (var address in parentNode.ChildAddresses)
                     {
+                        if (address == 0)
+                        {
+                            var a = 1;
+                        }    
+
                         _reader.Seek((long)address, SeekOrigin.Begin);
                         newNodes.Add(new BTree1Node<T>(_reader, _superblock));
                     }

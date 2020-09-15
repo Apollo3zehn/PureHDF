@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -124,8 +125,7 @@ namespace HDF5.NET
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
 #warning untested
-                var dimensionSizes = layout12.DimensionSizes.Select(value => (ulong)value).ToArray();
-                var buffer = this.GetBuffer<T>(layout12.Dimensionality, dimensionSizes, layout12.DatasetElementSize, out var result);
+                var buffer = this.GetBuffer<T>(out var result);
 
                 // read data
                 this.File.Reader.Seek((long)layout12.DataAddress, SeekOrigin.Begin);
@@ -136,7 +136,7 @@ namespace HDF5.NET
             else if (this.DataLayout is DataLayoutMessage3 layout34)
             {
                 var contiguous = (ContiguousStoragePropertyDescription)layout34.Properties;
-                var buffer = this.GetBuffer<T>(1, new ulong[] { contiguous.Size }, 1, out var result);
+                var buffer = this.GetBuffer<T>(out var result);
 
                 // read data
                 this.File.Reader.Seek((long)contiguous.Address, SeekOrigin.Begin);
@@ -152,126 +152,198 @@ namespace HDF5.NET
 
         private T[] ReadChunked<T>() where T : unmanaged
         {
+            var buffer = this.GetBuffer<T>(out var result);
+
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
-                return this.ReadChunkedBTree1<T>(layout12.DataAddress, layout12.Dimensionality, layout12.DimensionSizes, layout12.DatasetElementSize);
+                if (this.File.Superblock.IsUndefinedAddress(layout12.DataAddress))
+                    return result;
+
+                this.File.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
+                this.ReadChunkedBTree1(buffer);
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
             {
                 var chunked4 = (ChunkedStoragePropertyDescription4)layout4.Properties;
+                var chunkSize = (int)this.CalculateByteSize(chunked4.DimensionSizes);
+
+                if (this.File.Superblock.IsUndefinedAddress(chunked4.Address))
+                    return result;
+
+                this.File.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
 
                 switch (chunked4.ChunkIndexingType)
                 {
+                    // the current, maximum, and chunk dimension sizes are all the same
                     case ChunkIndexingType.SingleChunk:
-                        // the current, maximum, and chunk dimension sizes are all the same
-#warning untested
-                        var singleChunk = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
-                        var buffer = this.GetBuffer<T>(chunked4.Dimensionality, chunked4.DimensionSizes, this.DataType.Size, 1, out var result);
-
-                        // read data
-#warning if/else is filtered is missing
-                        this.File.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
+                        var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
                         this.File.Reader.Read(buffer);
-
                         break;
 
+                    // fixed maximum dimension sizes
+                    // no filter applied to the dataset
+                    // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
                     case ChunkIndexingType.Implicit:
-                        // fixed maximum dimension sizes
-                        // no filter applied to the dataset
-                        // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
-                        var @implicit = (ImplicitIndexingInformation)chunked4.IndexingTypeInformation;
+                        var @implicitInfo = (ImplicitIndexingInformation)chunked4.IndexingTypeInformation;
+                        this.File.Reader.Read(buffer);
                         break;
 
+                    // fixed maximum dimension sizes
                     case ChunkIndexingType.FixedArray:
-                        var fixedArray = (FixedArrayIndexingInformation)chunked4.IndexingTypeInformation;
+                        var fixedArrayInfo = (FixedArrayIndexingInformation)chunked4.IndexingTypeInformation;
+                        this.ReadFixedArray(buffer, chunkSize);
                         break;
 
+                    // only one dimension of unlimited extent
                     case ChunkIndexingType.ExtensibleArray:
-                        var extensibleArray = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
-
-                        break;
-                    case ChunkIndexingType.BTree2:
+                        var extensibleArrayInfo = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
                         throw new NotImplementedException();
+                        break;
+
+                    // more than one dimension of unlimited extent
+                    case ChunkIndexingType.BTree2:
+                        var btree2Info = (BTree2IndexingInformation)chunked4.IndexingTypeInformation;
+                        this.ReadChunkedBTree2(buffer, chunkSize);
+                        break;
 
                     default:
                         break;
                 }
-
-                //this.File.Reader.Seek((long)chunked4.Address, SeekOrigin.Begin);
-                //var btree2 = new BTree2Header<BTree2Record10>(this.File.Reader, this.File.Superblock);
-                throw new NotImplementedException();
             }
             else if (this.DataLayout is DataLayoutMessage3 layout3)
             {
                 var chunked3 = (ChunkedStoragePropertyDescription3)layout3.Properties;
-                return this.ReadChunkedBTree1<T>(chunked3.Address, chunked3.Dimensionality, chunked3.DimensionSizes, chunked3.DatasetElementSize);
+                this.File.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
+                this.ReadChunkedBTree1(buffer);
             }
             else
             {
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
+
+            return result;
         }
 
-        private Span<byte> GetBuffer<T>(byte dimensionality, ulong[] dimensionSizes, ulong elementSize, out T[] result) where T : unmanaged
+        private void ReadChunkedBTree1(Span<byte> buffer)
         {
-            return this.GetBuffer(dimensionality, dimensionSizes, elementSize, 1, out result);
+            // btree1
+            var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.File.Reader, this.File.Superblock);
+            var leafKeys = btree1.GetTree()[0];
+            var childAddresses = leafKeys.SelectMany(key => key.ChildAddresses).ToArray();
+            var keys = leafKeys.SelectMany(key => key.Keys).ToArray();
+
+            // read data
+            var offset = 0;
+            var chunkCount = (ulong)childAddresses.Length;
+
+            for (ulong i = 0; i < chunkCount; i++)
+            {
+                var chunkSize = (int)keys[i].ChunkSize;
+                this.File.Reader.Seek((long)childAddresses[i], SeekOrigin.Begin);
+                this.File.Reader.Read(buffer.Slice(offset, chunkSize));
+                offset += chunkSize;
+            }
         }
 
-        private Span<byte> GetBuffer<T>(byte dimensionality, ulong[] dimensionSizes, ulong elementSize, ulong repetitions, out T[] result) where T : unmanaged
+        private void ReadChunkedBTree2(Span<byte> buffer, int chunkSize)
         {
-            var byteSize = this.CalculateByteSize(dimensionality, dimensionSizes, elementSize, repetitions);
+            // btree2
+            var btree2 = new BTree2Header<BTree2Record10>(this.File.Reader, this.File.Superblock);
+            var records = btree2.EnumerateRecords();
+
+            // read data
+            var offset = 0;
+
+            foreach (var record in records)
+            {
+                var length = Math.Min(chunkSize, buffer.Length - offset);
+                this.File.Reader.Seek((long)record.Address, SeekOrigin.Begin);
+                this.File.Reader.Read(buffer.Slice(offset, length));
+                offset += chunkSize;
+            }
+        }
+
+        private void ReadFixedArray(Span<byte> buffer, int chunkSize)
+        {
+            // H5Dfarray.c (H5D__farray_crt_context)
+            /* Compute the size required for encoding the size of a chunk, allowing
+             *      for an extra byte, in case the filter makes the chunk larger.
+             */
+            var chunkSizeLength = 1 + ((uint)Math.Log(chunkSize, 2) + 8) / 8;
+
+            if (chunkSizeLength > 8)
+                chunkSizeLength = 8;
+
+            // go
+            var fixedArray = new FixedArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
+            var datablock = fixedArray.DataBlock;
+
+            IEnumerator<FixedArrayDataBlockElement> elements;
+
+            if (datablock.PageCount > 0)
+            {
+                var pages = new List<FixedArrayDataBlockPage>((int)datablock.PageCount);
+
+                for (int i = 0; i < (int)datablock.PageCount; i++)
+                {
+                    var page = new FixedArrayDataBlockPage(this.File.Reader, this.File.Superblock, datablock.ElementsPerPage, datablock.ClientID, chunkSizeLength);
+                    pages.Add(page);
+                }
+
+                elements = pages
+                    .SelectMany(page => page.Elements)
+                    .GetEnumerator();
+            }
+            else
+            {
+                elements = datablock.Elements
+                    .AsEnumerable()
+                    .GetEnumerator();
+            }
+
+            var offset = 0;
+            var index = 0UL;
+
+            for (ulong i = 0; i < fixedArray.EntriesCount; i++)
+            {
+                elements.MoveNext();
+                var element = elements.Current;
+
+                // if page is initialized (see also datablock.PageBitmap)
+                if (element.Address > 0)
+                {
+                    this.File.Reader.Seek((long)element.Address, SeekOrigin.Begin);
+                    var length = Math.Min(chunkSize, buffer.Length - offset);
+                    var currentBuffer = buffer.Slice(offset, length);
+                    this.File.Reader.Read(currentBuffer);
+                }
+               
+                offset += chunkSize;
+                index++;
+            }
+        }
+
+        private Span<byte> GetBuffer<T>(out T[] result) where T : unmanaged
+        {
+            // first, get byte size
+            var byteSize = this.CalculateByteSize(this.Dataspace.DimensionSizes) * this.DataType.Size;
+
+            // second, convert file type (e.g. 2 bytes) to T (e.g. 4 bytes)
             var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
+
+            // finally, create buffer
             result = new T[arraySize];
             var buffer = MemoryMarshal.AsBytes(result.AsSpan());
 
             return buffer;
         }
 
-        private T[] ReadChunkedBTree1<T>(ulong address, byte dimensionality, uint[] dimensionSizes, uint dataElementSize)
-            where T : unmanaged
-        {
-            // btree1
-#warning may be the undefined address to indicate that storge is not yet allocated.
-            this.File.Reader.Seek((int)address, SeekOrigin.Begin);
-            var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.File.Reader, this.File.Superblock);
-            var leafKeys = btree1.GetTree()[0];
-            var childAddress = leafKeys.SelectMany(key => key.ChildAddresses).ToArray();
-            var keys = leafKeys.SelectMany(key => key.Keys).ToArray();
-
-            // buffer
-            var chunkCount = (ulong)childAddress.Length;
-            dimensionality -= 1;
-            var dimensionSizes_ulong = dimensionSizes
-                .Select(value => (ulong)value)
-                .ToArray();
-
-            var buffer = this.GetBuffer<T>(dimensionality, dimensionSizes_ulong, dataElementSize, chunkCount, out var result);
-
-            // read data
-            var offset = 0;
-
-            for (ulong i = 0; i < chunkCount; i++)
-            {
-#warning if/else is filtered is missing
-                var chunkSize = (int)keys[i].ChunkSize;
-                this.File.Reader.Seek((long)childAddress[i], SeekOrigin.Begin);
-                this.File.Reader.Read(buffer.Slice(offset, chunkSize));
-                offset += chunkSize;
-            }
-
-            return result;
-        }
-
-        private ulong CalculateByteSize(byte dimensionality, ulong[] dimensionSizes, ulong elementSize, ulong repetitions)
+        private ulong CalculateByteSize(ulong[] dimensionSizes)
         {
             var byteSize = 0UL;
 
-            if (dimensionality > 0)
-            {
+            if (dimensionSizes.Any())
                 byteSize = dimensionSizes.Aggregate((x, y) => x * y);
-                byteSize *= elementSize;
-                byteSize *= repetitions;
-            }
 
             return byteSize;
         }

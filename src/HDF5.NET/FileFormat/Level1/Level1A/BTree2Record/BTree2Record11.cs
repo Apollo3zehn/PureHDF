@@ -19,7 +19,7 @@ namespace HDF5.NET
             this.FilterMask = reader.ReadUInt32();
 
             // scaled offsets
-            var rank = recordSize - (superblock.OffsetsSize + 8 + 4);
+            var rank = (recordSize - (superblock.OffsetsSize + 8 + 4)) / 8;
             this.ScaledOffsets = new List<ulong>(rank);
 
             for (int i = 0; i < rank; i++)

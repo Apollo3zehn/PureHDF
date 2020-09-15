@@ -36,7 +36,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref IEnumerable<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
             var address = _header.GetAddress(this);
 

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ChunkedStoragePropertyDescription4 : StoragePropertyDescription
+    public class ChunkedStoragePropertyDescription4 : ChunkedStoragePropertyDescription
     {
         #region Constructors
 
@@ -18,9 +18,9 @@ namespace HDF5.NET
             this.DimensionSizeEncodedLength = reader.ReadByte();
 
             // dimension sizes
-            this.DimensionSizes = new ulong[this.Dimensionality - 1];
+            this.DimensionSizes = new ulong[this.Dimensionality];
 
-            for (uint i = 0; i < this.Dimensionality - 1; i++)
+            for (uint i = 0; i < this.Dimensionality; i++)
             {
                 this.DimensionSizes[i] = H5Utils.ReadUlong(reader, this.DimensionSizeEncodedLength);
             }
@@ -31,7 +31,7 @@ namespace HDF5.NET
             // indexing type information
             this.IndexingTypeInformation = this.ChunkIndexingType switch
             {
-                ChunkIndexingType.SingleChunk       => new SingleChunkIndexingInformation(reader, superblock),
+                ChunkIndexingType.SingleChunk       => new SingleChunkIndexingInformation(reader, superblock, this.Flags),
                 ChunkIndexingType.Implicit          => new ImplicitIndexingInformation(reader),
                 ChunkIndexingType.FixedArray        => new FixedArrayIndexingInformation(reader),
                 ChunkIndexingType.ExtensibleArray   => new ExtensibleArrayIndexingInformation(reader),
@@ -48,12 +48,10 @@ namespace HDF5.NET
         #region Properties
 
         public ChunkedStoragePropertyFlags Flags { get; set; }
-        public byte Dimensionality { get; set; }
         public byte DimensionSizeEncodedLength { get; set; }
         public ulong[] DimensionSizes { get; set; }
         public ChunkIndexingType ChunkIndexingType { get; set; }
         public IndexingInformation IndexingTypeInformation { get; set; }
-        public ulong Address { get; set; }
 
         #endregion
     }

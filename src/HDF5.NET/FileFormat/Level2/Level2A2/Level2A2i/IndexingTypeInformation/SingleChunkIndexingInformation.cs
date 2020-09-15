@@ -4,13 +4,16 @@
     {
         #region Constructors
 
-        public SingleChunkIndexingInformation(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public SingleChunkIndexingInformation(H5BinaryReader reader, Superblock superblock, ChunkedStoragePropertyFlags flags) : base(reader)
         {
-            // filtered chunk size
-            this.FilteredChunkSize = superblock.ReadLength(reader);
+            if (flags.HasFlag(ChunkedStoragePropertyFlags.DONT_FILTER_PARTIAL_BOUND_CHUNKS))
+            {
+                // filtered chunk size
+                this.FilteredChunkSize = superblock.ReadLength(reader);
 
-            // chunk filters
-            this.ChunkFilters = reader.ReadUInt32();
+                // chunk filters
+                this.ChunkFilters = reader.ReadUInt32();
+            }
         }
 
         #endregion

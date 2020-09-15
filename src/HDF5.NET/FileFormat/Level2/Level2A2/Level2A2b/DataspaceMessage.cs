@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace HDF5.NET
 {
@@ -24,31 +23,33 @@ namespace HDF5.NET
             else if (this.Version == 2)
                 this.Flags = (DataspaceMessageFlags)reader.ReadByte();
 
-            this.DimensionSizes = new List<ulong>();
-            this.DimensionMaxSizes = new List<ulong>();
-            this.PermutationIndices = new List<ulong>();
+            this.DimensionSizes = new ulong[this.Dimensionality];
 
             var dimensionMaxSizesArePresent = this.Flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes);
             var permutationIndicesArePresent = this.Flags.HasFlag(DataspaceMessageFlags.PermuationIndices);
 
             for (int i = 0; i < this.Dimensionality; i++)
             {
-                this.DimensionSizes.Add(superblock.ReadLength(reader));
+                this.DimensionSizes[i] = superblock.ReadLength(reader);
             }
 
             if (dimensionMaxSizesArePresent)
             {
+                this.DimensionMaxSizes = new ulong[this.Dimensionality];
+                
                 for (int i = 0; i < this.Dimensionality; i++)
                 {
-                    this.DimensionMaxSizes.Add(superblock.ReadLength(reader));
+                    this.DimensionMaxSizes[i] = superblock.ReadLength(reader);
                 }
             }
 
             if (permutationIndicesArePresent)
             {
+                this.PermutationIndices = new ulong[this.Dimensionality];
+
                 for (int i = 0; i < this.Dimensionality; i++)
                 {
-                    this.PermutationIndices.Add(superblock.ReadLength(reader));
+                    this.PermutationIndices[i] = superblock.ReadLength(reader);
                 }
             }
         }
@@ -75,9 +76,9 @@ namespace HDF5.NET
         public byte Dimensionality { get; set; }
         public DataspaceMessageFlags Flags { get; set; }
         public DataspaceMessageType Type { get; set; }
-        public List<ulong> DimensionSizes { get; set; }
-        public List<ulong> DimensionMaxSizes { get; set; }
-        public List<ulong> PermutationIndices { get; set; }
+        public ulong[] DimensionSizes { get; set; }
+        public ulong[]? DimensionMaxSizes { get; set; }
+        public ulong[]? PermutationIndices { get; set; }
 
         #endregion
     }

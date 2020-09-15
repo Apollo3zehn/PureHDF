@@ -19,7 +19,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withSimple: !withEmptyFile);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSimple(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -44,7 +44,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withMassLinks: !withEmptyFile);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassLinks(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -64,7 +64,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withSimple: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSimple(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -81,7 +81,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withMassLinks: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassLinks(fileId));
                 var expected = 1000;
 
                 // Act
@@ -103,7 +103,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withSimple: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSimple(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -135,7 +135,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -153,7 +153,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -171,7 +171,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -189,7 +189,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withTinyAttribute: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTinyAttribute(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -208,7 +208,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withHugeAttribute: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddHugeAttribute(fileId, version));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -232,7 +232,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -249,7 +249,7 @@ namespace HDF5.NET.Tests
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -267,7 +267,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withMassAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
                 var expectedCount = 1000;
 
                 // Act
@@ -293,7 +293,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -316,7 +316,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withTypedAttributes: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -334,7 +334,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withLinks: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddLinks(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -352,7 +352,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withLinks: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddLinks(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -394,7 +394,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withCompactDataset: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCompactDataset(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -442,7 +442,7 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withContiguousDataset: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddContiguousDataset(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -458,10 +458,16 @@ namespace HDF5.NET.Tests
         [Fact]
         public void CanReadChunkedDataset()
         {
-            TestUtils.RunForAllVersions(version =>
+            var versions = new H5F.libver_t[]
+            {
+                H5F.libver_t.EARLIEST,
+                H5F.libver_t.V18
+            };
+
+            TestUtils.RunForVersions(versions, version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, withChunkedDataset: true);
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -470,8 +476,110 @@ namespace HDF5.NET.Tests
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+                Assert.True(actual.SequenceEqual(TestUtils.HugeData));
             });
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetSingleChunk()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Single_Chunk(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_single_chunk");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetImplicit()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Implicit(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_implicit");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetFixedArray()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_fixed_array");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetFixedArrayPaged()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_fixed_array_paged");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.HugeData));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetExtensibleArray()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_extensible_array");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetBTree2()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_BTree2(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_btree2");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
         }
 
         [Fact]

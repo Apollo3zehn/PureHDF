@@ -38,14 +38,14 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache)
         {
             // huge objects b-tree v2
             if (record01Cache == null)
             {
                 _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
                 var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock);
-                record01Cache = hugeBtree2.EnumerateRecords();
+                record01Cache = hugeBtree2.EnumerateRecords().ToList();
             }
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == this.BTree2Key);
