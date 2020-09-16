@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace HDF5.NET
 {
@@ -28,15 +29,6 @@ namespace HDF5.NET
         public ulong BTree1Address { get; set; }
         public ulong LocalHeapAddress { get; set; }
 
-        public BTree1Node<BTree1GroupKey> BTree1
-        {
-            get
-            {
-                this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
-                return new BTree1Node<BTree1GroupKey>(this.Reader, _superblock);
-            }
-        }
-
         public LocalHeap LocalHeap
         {
             get
@@ -44,6 +36,16 @@ namespace HDF5.NET
                 this.Reader.Seek((long)this.LocalHeapAddress, SeekOrigin.Begin);
                 return new LocalHeap(this.Reader, _superblock);
             }
+        }
+
+        #endregion
+
+        #region Methods
+
+        public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
+        {
+            this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
+            return new BTree1Node<BTree1GroupKey>(this.Reader, _superblock, decodeKey);
         }
 
         #endregion

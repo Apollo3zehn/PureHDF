@@ -160,7 +160,7 @@ namespace HDF5.NET
                     return result;
 
                 this.File.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
-                this.ReadChunkedBTree1(buffer);
+                this.ReadChunkedBTree1(buffer, layout12.Dimensionality);
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
             {
@@ -214,7 +214,7 @@ namespace HDF5.NET
             {
                 var chunked3 = (ChunkedStoragePropertyDescription3)layout3.Properties;
                 this.File.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
-                this.ReadChunkedBTree1(buffer);
+                this.ReadChunkedBTree1(buffer, (byte)(chunked3.Dimensionality - 1));
             }
             else
             {
@@ -224,11 +224,12 @@ namespace HDF5.NET
             return result;
         }
 
-        private void ReadChunkedBTree1(Span<byte> buffer)
+        private void ReadChunkedBTree1(Span<byte> buffer, byte dimensionality)
         {
             // btree1
-            var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.File.Reader, this.File.Superblock);
-            var leafKeys = btree1.GetTree()[0];
+            Func<BTree1RawDataChunksKey> decodeKey = () => this.DecodeRawDataChunksKey(dimensionality);
+            var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.File.Reader, this.File.Superblock, decodeKey);
+            var leafKeys = btree1.EnumerateNodes().ToList();
             var childAddresses = leafKeys.SelectMany(key => key.ChildAddresses).ToArray();
             var keys = leafKeys.SelectMany(key => key.Keys).ToArray();
 
@@ -346,6 +347,16 @@ namespace HDF5.NET
                 byteSize = dimensionSizes.Aggregate((x, y) => x * y);
 
             return byteSize;
+        }
+
+        #endregion
+
+        #region Callbacks
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte dimensionality)
+        {
+            return new BTree1RawDataChunksKey(this.File.Reader, dimensionality);
         }
 
         #endregion

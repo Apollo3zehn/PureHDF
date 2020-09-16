@@ -147,9 +147,11 @@ namespace HDF5.NET
             {
                 var localHeap = _scratchPad.LocalHeap;
 
-                var success = _scratchPad.BTree1.TryFindUserData(out var userData,
-                        (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
-                        (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
+                var success = _scratchPad
+                    .GetBTree1(this.DecodeGroupKey)
+                    .TryFindUserData(out var userData,
+                                    (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
+                                    (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
 
                 if (success)
                 {
@@ -173,9 +175,11 @@ namespace HDF5.NET
                     var smessage = symbolTableHeaderMessages.First();
                     var localHeap = smessage.LocalHeap;
 
-                    var success = smessage.BTree1.TryFindUserData(out var userData,
-                        (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
-                        (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
+                    var success = smessage
+                        .GetBTree1(this.DecodeGroupKey)
+                        .TryFindUserData(out var userData,
+                                        (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
+                                        (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
 
                     if (success)
                     {
@@ -242,7 +246,7 @@ namespace HDF5.NET
             {
                 var localHeap = _scratchPad.LocalHeap;
                 var links = this
-                    .EnumerateSymbolTableNodes(_scratchPad.BTree1)
+                    .EnumerateSymbolTableNodes(_scratchPad.GetBTree1(this.DecodeGroupKey))
                     .SelectMany(node => node.GroupEntries
                     .Select(entry => this.InstantiateLinkForSymbolTableEntry(localHeap, entry)));
 
@@ -267,7 +271,7 @@ namespace HDF5.NET
                     var smessage = symbolTableHeaderMessages.First();
                     var localHeap = smessage.LocalHeap;
                     var links = this
-                        .EnumerateSymbolTableNodes(smessage.BTree1)
+                        .EnumerateSymbolTableNodes(smessage.GetBTree1(this.DecodeGroupKey))
                         .SelectMany(node => node.GroupEntries
                         .Select(entry => this.InstantiateLinkForSymbolTableEntry(localHeap, entry)));
 
@@ -434,9 +438,7 @@ namespace HDF5.NET
 
         private IEnumerable<SymbolTableNode> EnumerateSymbolTableNodes(BTree1Node<BTree1GroupKey> btree1)
         {
-            var nodeLevel = 0U;
-
-            return btree1.GetTree()[nodeLevel].SelectMany(node =>
+            return btree1.EnumerateNodes().SelectMany(node =>
             {
                 return node.ChildAddresses.Select(address =>
                 {
@@ -445,6 +447,10 @@ namespace HDF5.NET
                 });
             });
         }
+
+        #endregion
+
+        #region Callbacks
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
@@ -511,6 +517,12 @@ namespace HDF5.NET
 
             userData.SymbolTableEntry = symbolTableNode.GroupEntries[(int)index];
             return true;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private BTree1GroupKey DecodeGroupKey()
+        {
+            return new BTree1GroupKey(this.File.Reader, this.File.Superblock);
         }
 
         #endregion

@@ -14,15 +14,17 @@ namespace HDF5.NET
 
         private H5BinaryReader _reader;
         private Superblock _superblock;
+        private Func<T> _decodeKey;
 
         #endregion
 
         #region Constructors
 
-        public BTree1Node(H5BinaryReader reader, Superblock superblock)
+        public BTree1Node(H5BinaryReader reader, Superblock superblock, Func<T> decodeKey)
         {
             _reader = reader;
             _superblock = superblock;
+            _decodeKey = decodeKey;
 
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
@@ -37,36 +39,13 @@ namespace HDF5.NET
             this.Keys = new T[this.EntriesUsed + 1];
             this.ChildAddresses = new ulong[this.EntriesUsed];
 
-            switch (this.NodeType)
+            for (int i = 0; i < this.EntriesUsed; i++)
             {
-                case BTree1NodeType.Group:
-
-                    for (int i = 0; i < this.EntriesUsed; i++)
-                    {
-                        this.Keys[i] = (T)(object)new BTree1GroupKey(reader, superblock);
-                        this.ChildAddresses[i] = superblock.ReadOffset(reader);
-                    }
-
-                    this.Keys[this.EntriesUsed] = (T)(object)new BTree1GroupKey(reader, superblock);
-                    
-                    break;
-
-                case BTree1NodeType.RawDataChunks:
-
-                    for (int i = 0; i < this.EntriesUsed; i++)
-                    {
-#error Search in source code for user data
-                        this.Keys[i] = (T)(object)new BTree1RawDataChunksKey(reader, dimensionality: 2);
-                        this.ChildAddresses[i] = superblock.ReadOffset(reader);
-                    }
-
-                    this.Keys[this.EntriesUsed] = (T)(object)new BTree1RawDataChunksKey(reader, dimensionality: 2);
-
-                    break;
-
-                default:
-                    throw new NotSupportedException($"The node type '{this.NodeType}' is not supported.");
+                this.Keys[i] = decodeKey();
+                this.ChildAddresses[i] = superblock.ReadOffset(reader);
             }
+
+            this.Keys[this.EntriesUsed] = decodeKey();
         }
 
         #endregion
@@ -88,7 +67,7 @@ namespace HDF5.NET
             get
             {
                 _reader.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
-                return new BTree1Node<T>(_reader, _superblock);
+                return new BTree1Node<T>(_reader, _superblock, _decodeKey);
             }
         }
 
@@ -97,7 +76,7 @@ namespace HDF5.NET
             get
             {
                 _reader.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
-                return new BTree1Node<T>(_reader, _superblock);
+                return new BTree1Node<T>(_reader, _superblock, _decodeKey);
             }
         }
 
@@ -106,8 +85,8 @@ namespace HDF5.NET
         #region Methods
 
         public bool TryFindUserData<TUserData>([NotNullWhen(returnValue: true)] out TUserData userData,
-                                       Func<T, T, int> compare3,
-                                       FoundDelegate<TUserData> found)
+                                               Func<T, T, int> compare3,
+                                               FoundDelegate<TUserData> found)
             where TUserData : struct
         {
             userData = default;
@@ -132,7 +111,7 @@ namespace HDF5.NET
             if (this.NodeLevel > 0)
             {
                 _reader.Seek((long)childAddress, SeekOrigin.Begin);
-                var subtree = new BTree1Node<T>(_reader, _superblock);
+                var subtree = new BTree1Node<T>(_reader, _superblock, _decodeKey);
 
                 if (subtree.TryFindUserData(out userData, compare3, found))
                     return true;
@@ -146,36 +125,32 @@ namespace HDF5.NET
             return false;
         }
 
-        public Dictionary<uint, List<BTree1Node<T>>> GetTree()
+        public IEnumerable<BTree1Node<T>> EnumerateNodes()
         {
-            var nodeMap = new Dictionary<uint, List<BTree1Node<T>>>();
             var nodeLevel = this.NodeLevel;
-
-            nodeMap[nodeLevel] = new List<BTree1Node<T>>() { this };
+            var nodes = new List<BTree1Node<T>>() { this };
 
             while (nodeLevel > 0)
             {
                 var newNodes = new List<BTree1Node<T>>();
 
-                foreach (var parentNode in nodeMap[nodeLevel])
+                foreach (var parentNode in nodes)
                 {
                     foreach (var address in parentNode.ChildAddresses)
                     {
-                        if (address == 0)
-                        {
-                            var a = 1;
-                        }    
-
                         _reader.Seek((long)address, SeekOrigin.Begin);
-                        newNodes.Add(new BTree1Node<T>(_reader, _superblock));
+                        var node = new BTree1Node<T>(_reader, _superblock, _decodeKey);
+
+                        if (nodeLevel > 1)
+                            newNodes.Add(node);
+                        else
+                            yield return node;
                     }
                 }
 
+                nodes = newNodes;
                 nodeLevel--;
-                nodeMap[nodeLevel] = newNodes;
             }
-
-            return nodeMap;
         }
 
         private (uint index, int cmp) LocateRecord(Func<T, T, int> compare3)
