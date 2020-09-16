@@ -31,10 +31,8 @@ namespace HDF5.NET
             // client ID
             this.ClientID = (ClientID)reader.ReadByte();
 
-            // element size
-            this.ElementSize = reader.ReadByte();
-
             // byte fields
+            this.ElementSize = reader.ReadByte();
             this.ExtensibleArrayMaximumNumberOfElementsBits = reader.ReadByte();
             this.IndexBlockElementsCount = reader.ReadByte();
             this.DataBlockMininumElementsCount = reader.ReadByte();
@@ -128,7 +126,21 @@ namespace HDF5.NET
 
         #region Methods
 
-        public void Initialize()
+        public uint ComputeSecondaryBlockIndex(ulong index)
+        {
+            // H5EAdblock.c (H5EA__dblock_sblk_idx)
+
+            /* Adjust index for elements in index block */
+            index -= this.IndexBlockElementsCount;
+
+            /* Determine the superblock information for the index */
+            var tmp = index / this.DataBlockMininumElementsCount;
+            var secondaryBlockIndex = (uint)Math.Log(tmp + 1, 2);
+
+            return secondaryBlockIndex;
+        }
+
+        private void Initialize()
         {
             // H5EA.hdr.c (H5EA__hdr_init)
 

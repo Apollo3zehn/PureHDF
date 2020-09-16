@@ -277,8 +277,8 @@ namespace HDF5.NET
                 chunkSizeLength = 8;
 
             // go
-            var fixedArray = new FixedArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
-            var dataBlock = fixedArray.DataBlock;
+            var header = new FixedArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
+            var dataBlock = header.DataBlock;
 
             IEnumerable<DataBlockElement> elements;
 
@@ -303,7 +303,7 @@ namespace HDF5.NET
             var index = 0UL;
             var enumerator = elements.GetEnumerator();
 
-            for (ulong i = 0; i < fixedArray.EntriesCount; i++)
+            for (ulong i = 0; i < header.EntriesCount; i++)
             {
                 enumerator.MoveNext();
                 var element = enumerator.Current;
@@ -336,70 +336,30 @@ namespace HDF5.NET
                 chunkSizeLength = 8;
 
             // go
-            var extensibleArray = new ExtensibleArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
-            var indexBlock = extensibleArray.IndexBlock;
+            var header = new ExtensibleArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
+            var indexBlock = header.IndexBlock;
+            var elementIndex = 0U;
 
             IEnumerable<DataBlockElement> elements = new List<DataBlockElement>();
-
-            var secondaryBlockIndex = 0U;
 
             // elements
             elements = elements.Concat(indexBlock.Elements);
 
             // data blocks
-#warning Is there any precalculated way to avoid checking all addresses?
-            var addresses = indexBlock
-                .DataBlockAddresses
-                .Where(address => !this.File.Superblock.IsUndefinedAddress(address));
-
-            foreach (var address in addresses)
-            {
-                this.File.Reader.Seek((long)address, SeekOrigin.Begin);
-
-                var elementsCount = extensibleArray.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
-                var dataBlock = new ExtensibleArrayDataBlock(this.File.Reader,
-                                                             this.File.Superblock,
-                                                             extensibleArray,
-                                                             chunkSizeLength,
-                                                             elementsCount);
-
-                if (dataBlock.PageCount > 0)
-                {
-                    var pages = new List<DataBlockPage>((int)dataBlock.PageCount);
-
-                    for (int i = 0; i < (int)dataBlock.PageCount; i++)
-                    {
-                        var page = new DataBlockPage(this.File.Reader,
-                                                     this.File.Superblock,
-                                                     extensibleArray.DataBlockPageElementsCount,
-                                                     dataBlock.ClientID,
-                                                     chunkSizeLength);
-                        pages.Add(page);
-                    }
-
-                    elements = elements.Concat(pages.SelectMany(page => page.Elements));
-                }
-                else
-                {
-                    elements = elements.Concat(dataBlock.Elements);
-                }
-
-                secondaryBlockIndex++;
-            }
+            ReadDataBlocks(indexBlock.DataBlockAddresses);
 
             // secondary blocks
-            addresses = indexBlock
+#warning Is there any precalculated way to avoid checking all addresses?
+            var addresses = indexBlock
                 .SecondaryBlockAddresses
                 .Where(address => !this.File.Superblock.IsUndefinedAddress(address));
 
-            foreach (var address in addresses)
+            foreach (var secondaryBlockAddress in addresses)
             {
-                this.File.Reader.Seek((long)address, SeekOrigin.Begin);
-                var secondaryBlock = new ExtensibleArraySecondaryBlock(this.File.Reader, this.File.Superblock, extensibleArray, secondaryBlockIndex);
-                //H5EA__dblock_protect(..., sblock->dblk_nelmts, ...)
-                // same code as above
-
-                secondaryBlockIndex++;
+                this.File.Reader.Seek((long)secondaryBlockAddress, SeekOrigin.Begin);
+                var secondaryBlockIndex = header.ComputeSecondaryBlockIndex(elementIndex + header.IndexBlockElementsCount);
+                var secondaryBlock = new ExtensibleArraySecondaryBlock(this.File.Reader, this.File.Superblock, header, secondaryBlockIndex);
+                ReadDataBlocks(secondaryBlock.DataBlockAddresses);
             }
 
             var offset = 0;
@@ -407,7 +367,7 @@ namespace HDF5.NET
             foreach (var element in elements)
             {
                 // if page/element is initialized (see also datablock.PageBitmap)
-#warning: is there a precomputed way to avoid the undefined address check?
+#warning Is there any precalculated way to avoid checking all addresses?
                 if (element.Address > 0 && !this.File.Superblock.IsUndefinedAddress(element.Address))
                 {
                     var length = Math.Min(chunkSize, buffer.Length - offset);
@@ -417,6 +377,56 @@ namespace HDF5.NET
                 }
 
                 offset += chunkSize;
+            }
+
+            void ReadDataBlocks(ulong[] dataBlockAddresses)
+            {
+#warning Is there any precalculated way to avoid checking all addresses?
+                dataBlockAddresses = dataBlockAddresses
+                    .Where(address => !this.File.Superblock.IsUndefinedAddress(address))
+                    .ToArray();
+
+                foreach (var dataBlockAddress in dataBlockAddresses)
+                {
+                    this.File.Reader.Seek((long)dataBlockAddress, SeekOrigin.Begin);
+                    var newElements = this.ReadExtensibleArrayDataBlock(header, chunkSizeLength, elementIndex);
+                    elements = elements.Concat(newElements);
+                    elementIndex += (uint)newElements.Length;
+                }
+            }
+        }
+
+        private DataBlockElement[] ReadExtensibleArrayDataBlock(ExtensibleArrayHeader header, uint chunkSizeLength, uint elementIndex)
+        {
+            var secondaryBlockIndex = header.ComputeSecondaryBlockIndex(elementIndex + header.IndexBlockElementsCount);
+            var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
+            var dataBlock = new ExtensibleArrayDataBlock(this.File.Reader,
+                                                         this.File.Superblock,
+                                                         header,
+                                                         chunkSizeLength,
+                                                         elementsCount);
+
+            if (dataBlock.PageCount > 0)
+            {
+                var pages = new List<DataBlockPage>((int)dataBlock.PageCount);
+
+                for (int i = 0; i < (int)dataBlock.PageCount; i++)
+                {
+                    var page = new DataBlockPage(this.File.Reader,
+                                                 this.File.Superblock,
+                                                 header.DataBlockPageElementsCount,
+                                                 dataBlock.ClientID,
+                                                 chunkSizeLength);
+                    pages.Add(page);
+                }
+
+                return pages
+                    .SelectMany(page => page.Elements)
+                    .ToArray();
+            }
+            else
+            {
+                return dataBlock.Elements;
             }
         }
 

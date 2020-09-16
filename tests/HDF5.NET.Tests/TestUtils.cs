@@ -716,7 +716,7 @@ namespace HDF5.NET.Tests
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 4 });
             var datasetId = H5D.create(groupId, "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
             var datasetData = TestUtils.MediumData;
 

@@ -69,7 +69,7 @@ namespace HDF5.NET
             // data block addresses
             this.DataBlockAddresses = new ulong[dataBlocksCount];
 
-            for (ulong i = 0; i < header.DataBlocksCount; i++)
+            for (ulong i = 0; i < dataBlocksCount; i++)
             {
                 this.DataBlockAddresses[i] = superblock.ReadOffset(reader);
             }
