@@ -76,7 +76,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanEnumerateLinkMass()
+        public void CanEnumerateLinksMass()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -451,7 +451,7 @@ namespace HDF5.NET.Tests
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+                Assert.True(actual.SequenceEqual(TestUtils.HugeData));
             });
         }
 
@@ -476,7 +476,7 @@ namespace HDF5.NET.Tests
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestUtils.HugeData));
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
             });
         }
 
@@ -545,24 +545,58 @@ namespace HDF5.NET.Tests
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.HugeData));
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
         }
 
         [Fact]
-        public void CanReadChunkedDatasetExtensibleArray()
+        public void CanReadChunkedDatasetExtensibleArrayElements()
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array(fileId));
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId));
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
             var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_extensible_array");
+            var dataset = parent.Get<H5Dataset>("chunked_extensible_array_elements");
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetExtensibleArrayDataBlocks()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_extensible_array_data_blocks");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanReadChunkedDatasetExtensibleArraySecondaryBlocks()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("chunked");
+            var dataset = parent.Get<H5Dataset>("chunked_extensible_array_secondary_blocks");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
         }
 
         [Fact]
@@ -579,7 +613,7 @@ namespace HDF5.NET.Tests
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.HugeData[0..actual.Length]));
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
         }
 
         [Fact]

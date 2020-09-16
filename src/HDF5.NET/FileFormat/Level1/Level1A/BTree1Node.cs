@@ -127,29 +127,41 @@ namespace HDF5.NET
 
         public IEnumerable<BTree1Node<T>> EnumerateNodes()
         {
-            var nodeLevel = this.NodeLevel;
-            var nodes = new List<BTree1Node<T>>() { this };
+            return this.EnumerateNodes(this);
+        }
 
-            while (nodeLevel > 0)
+        private IEnumerable<BTree1Node<T>> EnumerateNodes(BTree1Node<T> node)
+        {
+            // internal node
+            if (node.NodeLevel > 0)
             {
-                var newNodes = new List<BTree1Node<T>>();
-
-                foreach (var parentNode in nodes)
+                foreach (var address in node.ChildAddresses)
                 {
-                    foreach (var address in parentNode.ChildAddresses)
-                    {
-                        _reader.Seek((long)address, SeekOrigin.Begin);
-                        var node = new BTree1Node<T>(_reader, _superblock, _decodeKey);
+                    _reader.Seek((long)address, SeekOrigin.Begin);
 
-                        if (nodeLevel > 1)
-                            newNodes.Add(node);
-                        else
-                            yield return node;
+                    var childNode = new BTree1Node<T>(_reader, _superblock, _decodeKey);
+
+                    // internal node
+                    if ((node.NodeLevel - 1) > 0)
+                    {
+                        var internalNodes = this.EnumerateNodes(childNode);
+
+                        foreach (var internalNode in internalNodes)
+                        {
+                            yield return internalNode;
+                        }
+                    }
+                    // leaf node
+                    else
+                    {
+                        yield return childNode;
                     }
                 }
-
-                nodes = newNodes;
-                nodeLevel--;
+            }
+            // leaf node
+            else
+            {
+                yield return node;
             }
         }
 

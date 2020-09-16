@@ -197,7 +197,7 @@ namespace HDF5.NET
                     // only one dimension of unlimited extent
                     case ChunkIndexingType.ExtensibleArray:
                         var extensibleArrayInfo = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                        throw new NotImplementedException();
+                        this.ReadExtensibleArray(buffer, chunkSize);
                         break;
 
                     // more than one dimension of unlimited extent
@@ -229,9 +229,9 @@ namespace HDF5.NET
             // btree1
             Func<BTree1RawDataChunksKey> decodeKey = () => this.DecodeRawDataChunksKey(dimensionality);
             var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.File.Reader, this.File.Superblock, decodeKey);
-            var leafKeys = btree1.EnumerateNodes().ToList();
-            var childAddresses = leafKeys.SelectMany(key => key.ChildAddresses).ToArray();
-            var keys = leafKeys.SelectMany(key => key.Keys).ToArray();
+            var nodes = btree1.EnumerateNodes().ToList();
+            var childAddresses = nodes.SelectMany(key => key.ChildAddresses).ToArray();
+            var keys = nodes.SelectMany(key => key.Keys).ToArray();
 
             // read data
             var offset = 0;
@@ -240,8 +240,9 @@ namespace HDF5.NET
             for (ulong i = 0; i < chunkCount; i++)
             {
                 var chunkSize = (int)keys[i].ChunkSize;
+                var length = Math.Min(chunkSize, buffer.Length - offset);
                 this.File.Reader.Seek((long)childAddresses[i], SeekOrigin.Begin);
-                this.File.Reader.Read(buffer.Slice(offset, chunkSize));
+                this.File.Reader.Read(buffer.Slice(offset, length));
                 offset += chunkSize;
             }
         }
@@ -277,40 +278,37 @@ namespace HDF5.NET
 
             // go
             var fixedArray = new FixedArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
-            var datablock = fixedArray.DataBlock;
+            var dataBlock = fixedArray.DataBlock;
 
-            IEnumerator<FixedArrayDataBlockElement> elements;
+            IEnumerable<DataBlockElement> elements;
 
-            if (datablock.PageCount > 0)
+            if (dataBlock.PageCount > 0)
             {
-                var pages = new List<FixedArrayDataBlockPage>((int)datablock.PageCount);
+                var pages = new List<DataBlockPage>((int)dataBlock.PageCount);
 
-                for (int i = 0; i < (int)datablock.PageCount; i++)
+                for (int i = 0; i < (int)dataBlock.PageCount; i++)
                 {
-                    var page = new FixedArrayDataBlockPage(this.File.Reader, this.File.Superblock, datablock.ElementsPerPage, datablock.ClientID, chunkSizeLength);
+                    var page = new DataBlockPage(this.File.Reader, this.File.Superblock, dataBlock.ElementsPerPage, dataBlock.ClientID, chunkSizeLength);
                     pages.Add(page);
                 }
 
-                elements = pages
-                    .SelectMany(page => page.Elements)
-                    .GetEnumerator();
+                elements = pages.SelectMany(page => page.Elements);
             }
             else
             {
-                elements = datablock.Elements
-                    .AsEnumerable()
-                    .GetEnumerator();
+                elements = dataBlock.Elements.AsEnumerable();
             }
 
             var offset = 0;
             var index = 0UL;
+            var enumerator = elements.GetEnumerator();
 
             for (ulong i = 0; i < fixedArray.EntriesCount; i++)
             {
-                elements.MoveNext();
-                var element = elements.Current;
+                enumerator.MoveNext();
+                var element = enumerator.Current;
 
-                // if page is initialized (see also datablock.PageBitmap)
+                // if page/element is initialized (see also datablock.PageBitmap)
                 if (element.Address > 0)
                 {
                     this.File.Reader.Seek((long)element.Address, SeekOrigin.Begin);
@@ -321,6 +319,104 @@ namespace HDF5.NET
                
                 offset += chunkSize;
                 index++;
+            }
+        }
+
+        // for later: H5EA__lookup_elmt
+
+        private void ReadExtensibleArray(Span<byte> buffer, int chunkSize)
+        {
+            // H5Dearray.c (H5D__earray_crt_context)
+            /* Compute the size required for encoding the size of a chunk, allowing
+             *      for an extra byte, in case the filter makes the chunk larger.
+             */
+            var chunkSizeLength = 1 + ((uint)Math.Log(chunkSize, 2) + 8) / 8;
+
+            if (chunkSizeLength > 8)
+                chunkSizeLength = 8;
+
+            // go
+            var extensibleArray = new ExtensibleArrayHeader(this.File.Reader, this.File.Superblock, chunkSizeLength);
+            var indexBlock = extensibleArray.IndexBlock;
+
+            IEnumerable<DataBlockElement> elements = new List<DataBlockElement>();
+
+            var secondaryBlockIndex = 0U;
+
+            // elements
+            elements = elements.Concat(indexBlock.Elements);
+
+            // data blocks
+#warning Is there any precalculated way to avoid checking all addresses?
+            var addresses = indexBlock
+                .DataBlockAddresses
+                .Where(address => !this.File.Superblock.IsUndefinedAddress(address));
+
+            foreach (var address in addresses)
+            {
+                this.File.Reader.Seek((long)address, SeekOrigin.Begin);
+
+                var elementsCount = extensibleArray.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
+                var dataBlock = new ExtensibleArrayDataBlock(this.File.Reader,
+                                                             this.File.Superblock,
+                                                             extensibleArray,
+                                                             chunkSizeLength,
+                                                             elementsCount);
+
+                if (dataBlock.PageCount > 0)
+                {
+                    var pages = new List<DataBlockPage>((int)dataBlock.PageCount);
+
+                    for (int i = 0; i < (int)dataBlock.PageCount; i++)
+                    {
+                        var page = new DataBlockPage(this.File.Reader,
+                                                     this.File.Superblock,
+                                                     extensibleArray.DataBlockPageElementsCount,
+                                                     dataBlock.ClientID,
+                                                     chunkSizeLength);
+                        pages.Add(page);
+                    }
+
+                    elements = elements.Concat(pages.SelectMany(page => page.Elements));
+                }
+                else
+                {
+                    elements = elements.Concat(dataBlock.Elements);
+                }
+
+                secondaryBlockIndex++;
+            }
+
+            // secondary blocks
+            addresses = indexBlock
+                .SecondaryBlockAddresses
+                .Where(address => !this.File.Superblock.IsUndefinedAddress(address));
+
+            foreach (var address in addresses)
+            {
+                this.File.Reader.Seek((long)address, SeekOrigin.Begin);
+                var secondaryBlock = new ExtensibleArraySecondaryBlock(this.File.Reader, this.File.Superblock, extensibleArray, secondaryBlockIndex);
+                //H5EA__dblock_protect(..., sblock->dblk_nelmts, ...)
+                // same code as above
+
+                secondaryBlockIndex++;
+            }
+
+            var offset = 0;
+
+            foreach (var element in elements)
+            {
+                // if page/element is initialized (see also datablock.PageBitmap)
+#warning: is there a precomputed way to avoid the undefined address check?
+                if (element.Address > 0 && !this.File.Superblock.IsUndefinedAddress(element.Address))
+                {
+                    var length = Math.Min(chunkSize, buffer.Length - offset);
+                    var currentBuffer = buffer.Slice(offset, length);
+                    this.File.Reader.Seek((long)element.Address, SeekOrigin.Begin);
+                    this.File.Reader.Read(currentBuffer);
+                }
+
+                offset += chunkSize;
             }
         }
 

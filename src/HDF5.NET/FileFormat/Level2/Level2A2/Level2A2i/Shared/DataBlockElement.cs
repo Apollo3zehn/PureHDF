@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct FixedArrayDataBlockElement
+    public struct DataBlockElement
     {
         #region Properties
 

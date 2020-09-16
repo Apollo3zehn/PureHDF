@@ -563,13 +563,13 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.HugeData.Length / 4;
+            var length = (ulong)TestUtils.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
             var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.HugeData;
+            var datasetData = TestUtils.MediumData;
 
             fixed (void* ptr = datasetData)
             {
@@ -649,13 +649,13 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.HugeData.Length / 4;
+            var length = (ulong)TestUtils.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 4 });
             var datasetId = H5D.create(groupId, "chunked_fixed_array_paged", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.HugeData;
+            var datasetData = TestUtils.MediumData;
 
             fixed (void* ptr = datasetData)
             {
@@ -666,7 +666,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_Extensible_Array(long fileId)
+        public static unsafe void AddChunkedDataset_Extensible_Array_Elements(long fileId)
         {
             long res;
 
@@ -675,7 +675,49 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            var datasetId = H5D.create(groupId, "chunked_extensible_array", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_elements", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var datasetData = TestUtils.MediumData;
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Extensible_Array_Data_Blocks(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 4 });
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_data_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var datasetData = TestUtils.MediumData;
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Extensible_Array_Secondary_Blocks(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
             var datasetData = TestUtils.MediumData;
 
             fixed (void* ptr = datasetData)

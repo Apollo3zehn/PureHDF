@@ -15,9 +15,9 @@ namespace HDF5.NET
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // index element count
-            this.IndexElementCount = reader.ReadByte();
+            this.IndexElementsCount = reader.ReadByte();
 
-            if (this.IndexElementCount == 0)
+            if (this.IndexElementsCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // min pointer count
@@ -27,9 +27,9 @@ namespace HDF5.NET
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // min element count
-            this.MinElementCount = reader.ReadByte();
+            this.MinElementsCount = reader.ReadByte();
 
-            if (this.MinElementCount == 0)
+            if (this.MinElementsCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // page bit count
@@ -44,9 +44,9 @@ namespace HDF5.NET
         #region Properties
 
         public byte MaxBitCount { get; set; }
-        public byte IndexElementCount { get; set; }
+        public byte IndexElementsCount { get; set; }
         public byte MinPointerCount { get; set; }
-        public byte MinElementCount { get; set; }
+        public byte MinElementsCount { get; set; }
         public ushort PageBitCount { get; set; }
 
         #endregion

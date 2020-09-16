@@ -10,7 +10,7 @@ namespace HDF5.NET
 
         private byte _version;
         private Superblock _superblock;
-        private ulong _chunkSizeLength;
+        private uint _chunkSizeLength;
 
         #endregion
 
@@ -29,7 +29,7 @@ namespace HDF5.NET
             this.Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (FixedArrayClientID)reader.ReadByte();
+            this.ClientID = (ClientID)reader.ReadByte();
 
             // entry size
             this.EntrySize = reader.ReadByte();
@@ -68,7 +68,7 @@ namespace HDF5.NET
             }
         }
 
-        public FixedArrayClientID ClientID { get; }
+        public ClientID ClientID { get; }
 
         public byte EntrySize { get; }
 
