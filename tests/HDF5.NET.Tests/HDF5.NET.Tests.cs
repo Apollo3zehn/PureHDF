@@ -389,6 +389,19 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
+        public void CanShuffleData()
+        {
+            // Arrange
+            
+
+            // Act
+            
+
+            // Assert
+            
+        }
+
+        [Fact]
         public void CanReadCompactDataset()
         {
             TestUtils.RunForAllVersions(version =>
