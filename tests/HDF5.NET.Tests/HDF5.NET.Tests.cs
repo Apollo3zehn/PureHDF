@@ -19,7 +19,11 @@ namespace HDF5.NET.Tests
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSimple(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId =>
+                {
+                    if (!withEmptyFile)
+                        TestUtils.AddSimple(fileId);
+                });
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
