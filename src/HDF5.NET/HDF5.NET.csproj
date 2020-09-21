@@ -2,15 +2,44 @@
 
   <PropertyGroup>
     <Description>An managed .h5 file reader and writer without native dependencies.</Description>
-    <PackageTags>HDF hierarchical data file H5</PackageTags>
+    <PackageTags>HDF5 hierarchical data file H5</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFrameworks>netstandard2.1;netcoreapp3.0</TargetFrameworks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.0" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Filters\ShuffleSse2.tt">
+      <LastGenOutput>ShuffleSse2.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="Filters\ShuffleAvx2.tt">
+      <LastGenOutput>ShuffleAvx2.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Filters\ShuffleSse2.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ShuffleSse2.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Filters\ShuffleAvx2.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ShuffleAvx2.tt</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

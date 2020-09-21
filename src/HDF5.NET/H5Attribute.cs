@@ -36,10 +36,11 @@ namespace HDF5.NET
 
         #region Methods
 
-        public Span<T> Read<T>() where T : unmanaged
+        public T[] Read<T>() where T : unmanaged
         {
             return MemoryMarshal
-                .Cast<byte, T>(this.Message.Data);
+                .Cast<byte, T>(this.Message.Data)
+                .ToArray();
         }
 
         public T[] ReadCompound<T>() where T : struct

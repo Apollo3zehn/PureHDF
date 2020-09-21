@@ -3,11 +3,11 @@
     public enum FilterIdentifier : ushort
     {
         NA = 0,
-        deflate = 1,
-        shuffle = 2,
-        fletcher32 = 3,
-        szip = 4,
-        nbit = 5,
-        scaleoffset = 6
+        Deflate = 1,
+        Shuffle = 2,
+        Fletcher32 = 3,
+        Szip = 4,
+        Nbit = 5,
+        ScaleOffset = 6
     }
 }

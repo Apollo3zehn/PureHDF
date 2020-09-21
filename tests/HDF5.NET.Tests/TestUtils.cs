@@ -90,8 +90,9 @@ namespace HDF5.NET.Tests
         {
             TestUtils.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
             TestUtils.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
-            TestUtils.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
             TestUtils.TinyData = new byte[] { 99 };
+            TestUtils.MediumData = Enumerable.Range(0, 10_000).ToArray();
+            TestUtils.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
         }
 
         public static void RunForAllVersions(Action<H5F.libver_t> action)
@@ -109,21 +110,23 @@ namespace HDF5.NET.Tests
             }
         }
 
+        public static void RunForVersions(H5F.libver_t[] versions, Action<H5F.libver_t> action)
+        {
+            foreach (var version in versions)
+            {
+                action(version);
+            }
+        }
+
         public static TestStructL1[] NonNullableTestStructData { get; }
 
         public static TestStructString[] StringTestStructData { get; }
 
-        public static int[] HugeData { get; }
         public static byte[] TinyData { get; }
+        public static int[] MediumData { get; }
+        public static int[] HugeData { get; }
 
-        public static unsafe string PrepareTestFile(H5F.libver_t version,
-                                                    bool withSimple = false,
-                                                    bool withMassLinks = false,
-                                                    bool withTypedAttributes = false,
-                                                    bool withMassAttributes = false,
-                                                    bool withHugeAttribute = false,
-                                                    bool withTinyAttribute = false,
-                                                    bool withLinks = false)
+        public static unsafe string PrepareTestFile(H5F.libver_t version, Action<long> action)
         {
             var filePath = Path.GetTempFileName();
             long res;
@@ -132,34 +135,13 @@ namespace HDF5.NET.Tests
             var faplId = H5P.create(H5P.FILE_ACCESS);
             res = H5P.set_libver_bounds(faplId, version, version);
             var fileId = H5F.create(filePath, H5F.ACC_TRUNC, 0, faplId);
-
-            if (withSimple)
-                TestUtils.AddSimple(fileId);
-
-            if (withMassLinks)
-                TestUtils.AddMassLinks(fileId);
-
-            if (withTypedAttributes)
-                TestUtils.AddTypedAttributes(fileId);
-
-            if (withMassAttributes)
-                TestUtils.AddMassAttributes(fileId);
-
-            if (withHugeAttribute)
-                TestUtils.AddHugeAttribute(fileId, version);
-
-            if (withTinyAttribute)
-                TestUtils.AddTinyAttribute(fileId);
-
-            if (withLinks)
-                TestUtils.AddLinks(fileId);
-
+            action?.Invoke(fileId);
             res = H5F.close(fileId);
 
             return filePath;
         }
 
-        private static unsafe void AddSimple(long fileId)
+        public static unsafe void AddSimple(long fileId)
         {
             long res;
 
@@ -195,7 +177,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId_sub);
         }
 
-        private static unsafe void AddMassLinks(long fileId)
+        public static unsafe void AddMassLinks(long fileId)
         {
             long res;
 
@@ -210,7 +192,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        private static unsafe void AddTypedAttributes(long fileId)
+        public static unsafe void AddTypedAttributes(long fileId)
         {
             long res;
 
@@ -430,7 +412,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        private static unsafe void AddMassAttributes(long fileId)
+        public static unsafe void AddMassAttributes(long fileId)
         {
             long res;
 
@@ -463,6 +445,7 @@ namespace HDF5.NET.Tests
                     res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
                 }
 
+                res = H5S.close(attributeSpaceId);
                 res = H5T.close(attributeTypeId);
                 res = H5A.close(attributeId);
             }
@@ -470,14 +453,14 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        private static unsafe void AddHugeAttribute(long fileId, H5F.libver_t version)
+        public static unsafe void AddHugeAttribute(long fileId, H5F.libver_t version)
         {
             long res;
 
             var length = version switch
             {
                 H5F.libver_t.EARLIEST => 16368UL, // max 64 kb in object header
-                _ => 10_000_000UL,
+                _ => (ulong)TestUtils.HugeData.Length,
             };
 
             var groupId = H5G.create(fileId, "large");
@@ -490,11 +473,12 @@ namespace HDF5.NET.Tests
                 res = H5A.write(attributeId, H5T.NATIVE_INT32, new IntPtr(ptr));
             }
 
+            res = H5S.close(attributeSpaceId);
             res = H5A.close(attributeId);
             res = H5G.close(groupId);
         }
 
-        private static unsafe void AddTinyAttribute(long fileId)
+        public static unsafe void AddTinyAttribute(long fileId)
         {
             long res;
 
@@ -508,11 +492,12 @@ namespace HDF5.NET.Tests
                 res = H5A.write(attributeId, H5T.NATIVE_UINT8, new IntPtr(ptr));
             }
 
+            res = H5S.close(attributeSpaceId);
             res = H5A.close(attributeId);
             res = H5G.close(groupId);
         }
 
-        private static void AddLinks(long fileId)
+        public static unsafe void AddLinks(long fileId)
         {
             long res;
 
@@ -533,6 +518,298 @@ namespace HDF5.NET.Tests
 
             res = H5G.close(groupId);
             res = H5G.close(hardLinkId1);
+        }
+
+        public static unsafe void AddCompactDataset(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "compact");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
+            var datasetId = H5D.create(groupId, "compact", H5T.NATIVE_UINT8, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.TinyData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_UINT8, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddContiguousDataset(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.HugeData.Length;
+            var groupId = H5G.create(fileId, "contiguous");         
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+            var datasetId = H5D.create(groupId, "contiguous", H5T.NATIVE_INT, datasetSpaceId);
+            var dataset = TestUtils.HugeData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Single_Chunk(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_single_chunk", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Implicit(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
+
+            var datasetId = H5D.create(groupId, "chunked_implicit", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Fixed_Array(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_fixed_array", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Fixed_Array_Paged(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_fixed_array_paged", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Extensible_Array_Elements(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_elements", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Extensible_Array_Data_Blocks(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_data_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Extensible_Array_Secondary_Blocks(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_BTree2(long fileId, bool withShuffle)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var groupId = H5G.create(fileId, "chunked");
+            var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, H5S.UNLIMITED });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_btree2", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddShuffledData(long fileId, int bytesOfType, int length, Span<byte> dataset)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "shuffle");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { (ulong)length }, new ulong[] { (ulong)length });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { (ulong)length });
+            res = H5P.set_shuffle(dcpl_id);
+
+            var type = bytesOfType switch
+            {
+                1 => H5T.NATIVE_UINT8,
+                2 => H5T.NATIVE_UINT16,
+                4 => H5T.NATIVE_UINT32,
+                8 => H5T.NATIVE_UINT64,
+                _ => throw new Exception($"The value '{bytesOfType}' of the 'bytesOfType' parameter is not within the valid range.")
+            };
+
+            var datasetId = H5D.create(groupId, $"shuffle_{bytesOfType}", type, datasetSpaceId, dcpl_id: dcpl_id);
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, type, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
         }
 
         private static long GetHdfTypeIdFromType(Type type)

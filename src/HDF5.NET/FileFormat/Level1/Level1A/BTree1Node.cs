@@ -1,27 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public class BTree1Node : FileBlock
+    public delegate bool FoundDelegate<TUserData>(ulong address, out TUserData userData);
+
+    public class BTree1Node<T> where T : struct, IBTree1Key
     {
         #region Fields
 
-        Superblock _superblock;
+        private H5BinaryReader _reader;
+        private Superblock _superblock;
+        private Func<T> _decodeKey;
 
         #endregion
 
         #region Constructors
 
-        public BTree1Node(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree1Node(H5BinaryReader reader, Superblock superblock, Func<T> decodeKey)
         {
+            _reader = reader;
             _superblock = superblock;
+            _decodeKey = decodeKey;
 
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, BTree1Node.Signature);
+            H5Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
 
             this.NodeType = (BTree1NodeType)reader.ReadByte();
             this.NodeLevel = reader.ReadByte();
@@ -30,39 +36,16 @@ namespace HDF5.NET
             this.LeftSiblingAddress = superblock.ReadOffset(reader);
             this.RightSiblingAddress = superblock.ReadOffset(reader);
 
-            this.Keys = new List<BTree1Key>();
-            this.ChildAddresses = new List<ulong>();
+            this.Keys = new T[this.EntriesUsed + 1];
+            this.ChildAddresses = new ulong[this.EntriesUsed];
 
-            switch (this.NodeType)
+            for (int i = 0; i < this.EntriesUsed; i++)
             {
-                case BTree1NodeType.Group:
-
-                    for (int i = 0; i < this.EntriesUsed; i++)
-                    {
-                        this.Keys.Add(new BTree1GroupKey(reader, superblock));
-                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
-                    }
-
-                    this.Keys.Add(new BTree1GroupKey(reader, superblock));
-
-                    break;
-
-                case BTree1NodeType.RawDataChunks:
-
-                    for (int i = 0; i < this.EntriesUsed; i++)
-                    {
-#warning How to correctly handle dimensionality?
-                        this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
-                        this.ChildAddresses.Add(superblock.ReadOffset(reader));
-                    }
-
-                    this.Keys.Add(new BTree1RawDataChunksKey(reader, dimensionality: 1));
-
-                    break;
-
-                default:
-                    throw new NotSupportedException($"The node type '{this.NodeType}' is not supported.");
+                this.Keys[i] = decodeKey();
+                this.ChildAddresses[i] = superblock.ReadOffset(reader);
             }
+
+            this.Keys[this.EntriesUsed] = decodeKey();
         }
 
         #endregion
@@ -76,24 +59,24 @@ namespace HDF5.NET
         public ushort EntriesUsed { get; }
         public ulong LeftSiblingAddress { get; }
         public ulong RightSiblingAddress { get; }
-        public List<BTree1Key> Keys { get; }
-        public List<ulong> ChildAddresses { get; }
+        public T[] Keys { get; }
+        public ulong[] ChildAddresses { get; }
 
-        public BTree1Node LeftSibling
+        public BTree1Node<T> LeftSibling
         {
             get
             {
-                this.Reader.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
-                return new BTree1Node(this.Reader, _superblock);
+                _reader.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
+                return new BTree1Node<T>(_reader, _superblock, _decodeKey);
             }
         }
 
-        public BTree1Node RightSibling
+        public BTree1Node<T> RightSibling
         {
             get
             {
-                this.Reader.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
-                return new BTree1Node(this.Reader, _superblock);
+                _reader.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
+                return new BTree1Node<T>(_reader, _superblock, _decodeKey);
             }
         }
 
@@ -101,51 +84,108 @@ namespace HDF5.NET
 
         #region Methods
 
-        public BTree1Node GetChild(int index)
+        public bool TryFindUserData<TUserData>([NotNullWhen(returnValue: true)] out TUserData userData,
+                                               Func<T, T, int> compare3,
+                                               FoundDelegate<TUserData> found)
+            where TUserData : struct
         {
-            this.Reader.Seek((long)this.ChildAddresses[index], SeekOrigin.Begin);
-            return new BTree1Node(this.Reader, _superblock);
-        }
+            userData = default;
 
-        public Dictionary<uint, List<BTree1Node>> GetTree()
-        {
-            var nodeMap = new Dictionary<uint, List<BTree1Node>>();
-            var nodeLevel = this.NodeLevel;
+            // H5B.c (H5B_find)
 
-            nodeMap[nodeLevel] = new List<BTree1Node>() { this };
+            /*
+             * Perform a binary search to locate the child which contains
+             * the thing for which we're searching.
+             */
+            (var index, var cmp) = this.LocateRecord(compare3);
 
-            while (nodeLevel > 0)
+            /* Check if not found */
+            if (cmp != 0)
+                return false;
+
+            /*
+             * Follow the link to the subtree or to the data node.
+             */
+            var childAddress = this.ChildAddresses[(int)index];
+
+            if (this.NodeLevel > 0)
             {
-                var newNodes = new List<BTree1Node>();
+                _reader.Seek((long)childAddress, SeekOrigin.Begin);
+                var subtree = new BTree1Node<T>(_reader, _superblock, _decodeKey);
 
-                foreach (var parentNode in nodeMap[nodeLevel])
-                {
-                    foreach (var address in parentNode.ChildAddresses)
-                    {
-                        this.Reader.Seek((long)address, SeekOrigin.Begin);
-                        newNodes.Add(new BTree1Node(this.Reader, _superblock));
-                    }
-                }
-
-                nodeLevel--;
-                nodeMap[nodeLevel] = newNodes;
+                if (subtree.TryFindUserData(out userData, compare3, found))
+                    return true;
+            }
+            else
+            {
+                if (found(childAddress, out userData))
+                    return true;
             }
 
-            return nodeMap;
+            return false;
         }
 
-        public List<SymbolTableNode> GetSymbolTableNodes()
+        public IEnumerable<BTree1Node<T>> EnumerateNodes()
         {
-            var nodeLevel = 0U;
+            return this.EnumerateNodes(this);
+        }
 
-            return this.GetTree()[nodeLevel].SelectMany(node =>
+        private IEnumerable<BTree1Node<T>> EnumerateNodes(BTree1Node<T> node)
+        {
+            // internal node
+            if (node.NodeLevel > 0)
             {
-                return node.ChildAddresses.Select(address =>
+                foreach (var address in node.ChildAddresses)
                 {
-                    this.Reader.Seek((long)address, SeekOrigin.Begin);
-                    return new SymbolTableNode(this.Reader, _superblock);
-                });
-            }).ToList();
+                    _reader.Seek((long)address, SeekOrigin.Begin);
+
+                    var childNode = new BTree1Node<T>(_reader, _superblock, _decodeKey);
+
+                    // internal node
+                    if ((node.NodeLevel - 1) > 0)
+                    {
+                        var internalNodes = this.EnumerateNodes(childNode);
+
+                        foreach (var internalNode in internalNodes)
+                        {
+                            yield return internalNode;
+                        }
+                    }
+                    // leaf node
+                    else
+                    {
+                        yield return childNode;
+                    }
+                }
+            }
+            // leaf node
+            else
+            {
+                yield return node;
+            }
+        }
+
+        private (uint index, int cmp) LocateRecord(Func<T, T, int> compare3)
+        {
+            uint index = 0, low = 0, high;  /* Final, left & right key indices */
+            int cmp = 1;                    /* Key comparison value */
+
+            high = this.EntriesUsed;
+
+            while (low < high && cmp != 0)
+            {
+                index = (low + high) / 2;
+
+                /* compare */
+                cmp = compare3(this.Keys[(int)index], this.Keys[(int)index + 1]);
+
+                if (cmp < 0)
+                    high = index;
+                else
+                    low = index + 1;
+            }
+
+            return (index, cmp);
         }
 
         #endregion

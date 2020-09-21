@@ -39,9 +39,7 @@ namespace HDF5.NET
 
             // padding
             if (version == 1 && this.ClientDataValueCount % 2 != 0)
-            {
                 reader.ReadBytes(4);
-            }
         }
 
         #endregion

@@ -49,11 +49,11 @@ namespace HDF5.NET
         public T Read<T>(Func<H5BinaryReader, T> func)
         {
 #warning Is there a better way?
-            IEnumerable<BTree2Record01>? cache = null;
+            List<BTree2Record01>? cache = null;
             return this.Read(func, ref cache);
         }
 
-        public abstract T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref IEnumerable<BTree2Record01> record01Cache);
+        public abstract T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache);
 
         #endregion
     }

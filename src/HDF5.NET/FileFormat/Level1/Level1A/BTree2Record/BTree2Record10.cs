@@ -12,10 +12,10 @@ namespace HDF5.NET
             this.Address = superblock.ReadOffset(reader);
 
             // scaled offsets
-            var rank = recordSize - superblock.OffsetsSize;
-            this.ScaledOffsets = new List<ulong>(rank);
+            var dimensionality = (recordSize - superblock.OffsetsSize) / 8;
+            this.ScaledOffsets = new ulong[dimensionality];
 
-            for (int i = 0; i < rank; i++)
+            for (int i = 0; i < dimensionality; i++)
             {
                 this.ScaledOffsets[i] = reader.ReadUInt64();
             }
@@ -26,7 +26,7 @@ namespace HDF5.NET
         #region Properties
 
         public ulong Address { get; set; }
-        public List<ulong> ScaledOffsets { get; set; }
+        public ulong[] ScaledOffsets { get; set; }
 
         #endregion
     }

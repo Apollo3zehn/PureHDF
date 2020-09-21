@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class DataLayoutMessage34 : DataLayoutMessage
+    public class DataLayoutMessage3 : DataLayoutMessage
     {
         #region Fields
 
@@ -12,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal DataLayoutMessage34(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        internal DataLayoutMessage3(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
             this.Version = version;
@@ -45,7 +45,7 @@ namespace HDF5.NET
             set
             {
                 if (!(3 <= value && value <= 4))
-                    throw new FormatException($"Only version 3 and version 4 instances of type {nameof(DataLayoutMessage34)} are supported.");
+                    throw new FormatException($"Only version 3 and version 4 instances of type {nameof(DataLayoutMessage3)} are supported.");
 
                 _version = value;
             }

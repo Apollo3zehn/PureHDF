@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class ChunkedStoragePropertyDescription3 : StoragePropertyDescription
+    public class ChunkedStoragePropertyDescription3 : ChunkedStoragePropertyDescription
     {
         #region Constructors
 
@@ -19,19 +19,13 @@
             {
                 this.DimensionSizes[i] = reader.ReadUInt32();
             }
-
-            // dataset element size
-            this.DatasetElementSize = reader.ReadUInt32();
         }
 
         #endregion
 
         #region Properties
 
-        public byte Dimensionality { get; set; }
-        public ulong Address { get; set; }
         public uint[] DimensionSizes { get; set; }
-        public uint DatasetElementSize { get; set; }
 
         #endregion
     }

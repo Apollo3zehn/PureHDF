@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System;
+
+namespace HDF5.NET
 {
     public class ExtensibleArrayIndexingInformation : IndexingInformation
     {
@@ -9,17 +11,32 @@
             // max bit count
             this.MaxBitCount = reader.ReadByte();
 
+            if (this.MaxBitCount == 0)
+                throw new Exception("Invalid extensible array creation parameter.");
+
             // index element count
-            this.IndexElementCount = reader.ReadByte();
+            this.IndexElementsCount = reader.ReadByte();
+
+            if (this.IndexElementsCount == 0)
+                throw new Exception("Invalid extensible array creation parameter.");
 
             // min pointer count
             this.MinPointerCount = reader.ReadByte();
 
+            if (this.MinPointerCount == 0)
+                throw new Exception("Invalid extensible array creation parameter.");
+
             // min element count
-            this.MinElementCount = reader.ReadByte();
+            this.MinElementsCount = reader.ReadByte();
+
+            if (this.MinElementsCount == 0)
+                throw new Exception("Invalid extensible array creation parameter.");
 
             // page bit count
-            this.PageBitCount = reader.ReadUInt16();
+            this.PageBitCount = reader.ReadByte();
+
+            if (this.PageBitCount == 0)
+                throw new Exception("Invalid extensible array creation parameter.");
         }
 
         #endregion
@@ -27,9 +44,9 @@
         #region Properties
 
         public byte MaxBitCount { get; set; }
-        public byte IndexElementCount { get; set; }
+        public byte IndexElementsCount { get; set; }
         public byte MinPointerCount { get; set; }
-        public byte MinElementCount { get; set; }
+        public byte MinElementsCount { get; set; }
         public ushort PageBitCount { get; set; }
 
         #endregion
