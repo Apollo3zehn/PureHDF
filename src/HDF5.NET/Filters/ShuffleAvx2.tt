@@ -5,39 +5,58 @@
 <# 
 	using var webClient = new WebClient();
 
-    var url1 = "https://raw.githubusercontent.com/Blosc/c-blosc/master/blosc/shuffle-avx2.c";
+    var url1 = "https://raw.githubusercontent.com/Blosc/c-blosc2/master/blosc/shuffle-avx2.c";
     var csstring = webClient.DownloadString(url1); 
     
-    var url2 = "https://raw.githubusercontent.com/Blosc/c-blosc/master/LICENSES/BLOSC.txt";
+    var url2 = "https://raw.githubusercontent.com/Blosc/c-blosc2/master/LICENSES/BLOSC.txt";
     var license = webClient.DownloadString(url2);
 
-    // decoration and type definitions
+    // methods
+    csstring = Regex.Replace(csstring, @"static inline __m256i\n__attribute__\(\(__always_inline__\)\)", "[MethodImpl(MethodImplOptions.AggressiveInlining)]\n static unsafe Vector256<byte>", RegexOptions.Singleline);
+    csstring = Regex.Replace(csstring, @"static inline void\n__attribute__\(\(__always_inline__\)\)", "[MethodImpl(MethodImplOptions.AggressiveInlining)]\n static void", RegexOptions.Singleline);
+    csstring = Regex.Replace(csstring, @"unshuffle_generic_inline", "ShuffleGeneric.Unshuffle");
+    csstring = Regex.Replace(csstring, @"shuffle_generic_inline", "ShuffleGeneric.Shuffle");
+    csstring = Regex.Replace(csstring, @"unshuffle_generic\(bytesoftype", "ShuffleGeneric.Unshuffle(bytesoftype, 0");
+    csstring = Regex.Replace(csstring, @"shuffle_generic\(bytesoftype", "ShuffleGeneric.Shuffle(bytesoftype, 0");
+    csstring = Regex.Replace(csstring, @"(default:.*?}.*?})", m => $"{m.Groups[0].Value}\n      break;", RegexOptions.Singleline);
+    csstring = Regex.Replace(csstring, @"lldiv_t vecs_per_el = lldiv\(bytesoftype, sizeof\(__m128i\)\);", "var remainder = bytesoftype % sizeof(Vector128<byte>);");
+    csstring = Regex.Replace(csstring, @"\(int32_t\)vecs_per_el\.rem;", "remainder;");
+
+    // decorations and type definitions
     csstring = Regex.Replace(csstring, @"#.*", "");
     csstring = Regex.Replace(csstring, @"static void\n", "private static unsafe void ");
     csstring = Regex.Replace(csstring, @"void\n", "private static unsafe void ");
+    csstring = Regex.Replace(csstring, @"static const int32_t", "int");
     csstring = Regex.Replace(csstring, @"const\s", "");
     csstring = Regex.Replace(csstring, @"const\s", "");
-    csstring = Regex.Replace(csstring, @"size_t\s", "ulong ");
+    csstring = Regex.Replace(csstring, @"int32_t", "int");
     csstring = Regex.Replace(csstring, @"uint8_t\*", "byte*");
+    csstring = Regex.Replace(csstring, @"uint8_t \*", "byte *");
     csstring = Regex.Replace(csstring, @"inline ", "");
     csstring = Regex.Replace(csstring, @"static ulong", "ulong");
+    csstring = Regex.Replace(csstring, @"sizeof\(__m128i\)", "sizeof(Vector128<byte>)");
     csstring = Regex.Replace(csstring, @"sizeof\(__m256i\)", "sizeof(Vector256<byte>)");
+    csstring = Regex.Replace(csstring, @", __m256i", ", Vector256<byte>");
     csstring = Regex.Replace(csstring, @"__m256i\s", "var ");
+    csstring = Regex.Replace(csstring, @"__m128i\*", "byte*");
+    csstring = Regex.Replace(csstring, @"\(__m128i\*\)", "");
     csstring = Regex.Replace(csstring, @"\(__m256i\*\)", "");
     csstring = Regex.Replace(csstring, @"var ymm0\[(.*)\], ymm1\[(.*)\];", m => $"var ymm0 = new Vector256<byte>[{m.Groups[1]}];\n  var ymm1 = new Vector256<byte>[{m.Groups[1]}];");
-    csstring = Regex.Replace(csstring, @"\+= sizeof\(Vector256<byte>\)", "+= (ulong)sizeof(Vector256<byte>)");
-    csstring = Regex.Replace(csstring, @"\* sizeof\(Vector256<byte>\)", "* (ulong)sizeof(Vector256<byte>)");
-    csstring = Regex.Replace(csstring, @"int j;", "uint j;");
-    csstring = Regex.Replace(csstring, @"int k;", "uint k;");
-    csstring = Regex.Replace(csstring, @"int k, l;", "uint k; int l;");
+    csstring = Regex.Replace(csstring, @"\+= sizeof\(Vector256<byte>\)", "+= sizeof(Vector256<byte>)");
+    csstring = Regex.Replace(csstring, @"\* sizeof\(Vector256<byte>\)", "* sizeof(Vector256<byte>)");
 
-    csstring = Regex.Replace(csstring, @"unshuffle_generic_inline", "ShuffleGeneric.Unshuffle");
-    csstring = Regex.Replace(csstring, @"shuffle_generic_inline", "ShuffleGeneric.Shuffle");
-    csstring = Regex.Replace(csstring, @"blosc_internal_unshuffle_generic\(bytesoftype", "ShuffleGeneric.Unshuffle(bytesoftype, 0");
-    csstring = Regex.Replace(csstring, @"blosc_internal_shuffle_generic\(bytesoftype", "ShuffleGeneric.Shuffle(bytesoftype, 0");
-    csstring = Regex.Replace(csstring, @"default:.*?}.*?}", "throw new Exception(\"No optimized AVX Implementation found.\");", RegexOptions.Singleline);
+    // intrinsics (128)
+    csstring = Regex.Replace(csstring, @"_mm_loadu_si128", "Sse2.LoadVector128");
+    csstring = Regex.Replace(csstring, @"_mm_storeu_si128", "Sse2.Store");
 
-    // intrinsics
+    // intrinsics (cast)
+    csstring = Regex.Replace(csstring, @"_mm256_inserti128_si256", "Avx2.InsertVector128");
+    csstring = Regex.Replace(csstring, @"_mm256_extracti128_si256", "Avx2.ExtractVector128");
+
+    csstring = Regex.Replace(csstring, @"_mm256_castsi128_si256\((.*?)\)\)", m => $"{m.Groups[1]}).ToVector256()");
+    csstring = Regex.Replace(csstring, @"_mm256_castsi256_si128\((.*?)\)\)", m => $"{m.Groups[1]}.GetLower())");
+
+    // intrinsics (256)
     csstring = Regex.Replace(csstring, @"_mm256_set_epi8\(", "Vector256.Create((byte)");
     csstring = Regex.Replace(csstring, @"_mm256_set_epi32\(", "Vector256.Create((int)");
     csstring = Regex.Replace(csstring, @"_mm256_loadu_si256", "Avx.LoadVector256");
@@ -60,24 +79,16 @@
     // remove unnecessary blocks
     csstring = Regex.Replace(csstring, @"/\*.*?Author.*?\\*}", "", RegexOptions.Singleline);
     csstring = Regex.Replace(csstring, @"/\* The next is useful for debugging purposes \*/.*?}", "", RegexOptions.Singleline);
-    csstring = Regex.Replace(csstring, @"/\* GCC doesn't include the split load/store intrinsics.*?}.*?}", "", RegexOptions.Singleline);
-    csstring = Regex.Replace(csstring, @"/\* Routine optimized for shuffling a buffer for a type size larger than 16 bytes. \*/.*?}\n}", "\n", RegexOptions.Singleline);
-    csstring = Regex.Replace(csstring, @"/\* Routine optimized for unshuffling a buffer for a type size larger than 16 bytes. \*/.*?}\n}", "\n", RegexOptions.Singleline);
-
+    
     // line breaks
     csstring = Regex.Replace(csstring, @"(\n){3,}", "\n\n");
     csstring += "\n";
 
-    // tabs
-    //csstring = Regex.Replace(csstring, @"^\s{2}(?=[^\s])", "\n     avx   ");
-    csstring = Regex.Replace(csstring, @"\n\s{0}(?=[^\s])", "\n        ");
-    csstring = Regex.Replace(csstring, @"\n\s{2}(?=[^\s])", "\n            ");
-    csstring = Regex.Replace(csstring, @"\n\s{4}(?=[^\s])", "\n                ");
-    csstring = Regex.Replace(csstring, @"\n\s{5}(?=[^\s])", "\n             ");
-    csstring = Regex.Replace(csstring, @"\n\s{6}(?=[^\s])", "\n                    ");
+    // spaces
+    csstring = Regex.Replace(csstring, @"\n", "\n        ");
 #>
 /* 
-This is automatically translated code from https://github.com/Blosc/c-blosc
+This is automatically translated code from https://github.com/Blosc/c-blosc2
 
 <# Write(license); #> 
 */
@@ -85,6 +96,7 @@ This is automatically translated code from https://github.com/Blosc/c-blosc
 #if NETCOREAPP3_0
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
