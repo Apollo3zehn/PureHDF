@@ -32,6 +32,9 @@ namespace HDF5.NET
                 else if (type == typeof(FillValueMessage))
                     this.FillValue = (FillValueMessage)message.Data;
 
+                else if (type == typeof(FilterPipelineMessage))
+                    this.FilterPipeline = (FilterPipelineMessage)message.Data;
+
                 else if (type == typeof(ObjectModificationMessage))
                     this.ObjectModification = (ObjectModificationMessage)message.Data;
             }
@@ -49,6 +52,8 @@ namespace HDF5.NET
 
         public FillValueMessage FillValue { get; }
 
+        public FilterPipelineMessage FilterPipeline { get; }
+
         public ObjectModificationMessage ObjectModification { get; }
 
         #endregion
@@ -56,6 +61,11 @@ namespace HDF5.NET
         #region Methods
 
         public T[] Read<T>() where T : unmanaged
+        {
+            return this.Read<T>(skipShuffle: false);
+        }
+
+        internal T[] Read<T>(bool skipShuffle) where T : unmanaged
         {
             switch (this.DataLayout.LayoutClass)
             {
@@ -177,7 +187,7 @@ namespace HDF5.NET
                     // the current, maximum, and chunk dimension sizes are all the same
                     case ChunkIndexingType.SingleChunk:
                         var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
-                        this.File.Reader.Read(buffer);
+                        this.ReadChunk(buffer, chunkSize);
                         break;
 
                     // fixed maximum dimension sizes
@@ -242,13 +252,17 @@ namespace HDF5.NET
                 var chunkSize = (int)keys[i].ChunkSize;
                 var length = Math.Min(chunkSize, buffer.Length - offset);
                 this.File.Reader.Seek((long)childAddresses[i], SeekOrigin.Begin);
-                this.File.Reader.Read(buffer.Slice(offset, length));
+                var bufferSlice = buffer.Slice(offset, length);
+                this.ReadChunk(bufferSlice, chunkSize);
+
                 offset += chunkSize;
             }
         }
 
         private void ReadChunkedBTree2(Span<byte> buffer, int chunkSize)
         {
+#warning Layout: Version 2 B-tree, Type 11 Record Layout - Filtered Dataset Chunks 
+
             // btree2
             var btree2 = new BTree2Header<BTree2Record10>(this.File.Reader, this.File.Superblock);
             var records = btree2.EnumerateRecords();
@@ -260,7 +274,8 @@ namespace HDF5.NET
             {
                 var length = Math.Min(chunkSize, buffer.Length - offset);
                 this.File.Reader.Seek((long)record.Address, SeekOrigin.Begin);
-                this.File.Reader.Read(buffer.Slice(offset, length));
+                var bufferSlice = buffer.Slice(offset, length);
+                this.ReadChunk(bufferSlice, chunkSize);
                 offset += chunkSize;
             }
         }
@@ -313,8 +328,8 @@ namespace HDF5.NET
                 {
                     this.File.Reader.Seek((long)element.Address, SeekOrigin.Begin);
                     var length = Math.Min(chunkSize, buffer.Length - offset);
-                    var currentBuffer = buffer.Slice(offset, length);
-                    this.File.Reader.Read(currentBuffer);
+                    var bufferSlice = buffer.Slice(offset, length);
+                    this.ReadChunk(bufferSlice, chunkSize);
                 }
                
                 offset += chunkSize;
@@ -340,7 +355,8 @@ namespace HDF5.NET
             var indexBlock = header.IndexBlock;
             var elementIndex = 0U;
 
-            IEnumerable<DataBlockElement> elements = new List<DataBlockElement>();
+            var elements = new List<DataBlockElement>()
+                .AsEnumerable();
 
             // elements
             elements = elements.Concat(indexBlock.Elements);
@@ -373,7 +389,8 @@ namespace HDF5.NET
                     var length = Math.Min(chunkSize, buffer.Length - offset);
                     var currentBuffer = buffer.Slice(offset, length);
                     this.File.Reader.Seek((long)element.Address, SeekOrigin.Begin);
-                    this.File.Reader.Read(currentBuffer);
+                    var bufferSlice = buffer.Slice(offset, length);
+                    this.ReadChunk(bufferSlice, chunkSize);
                 }
 
                 offset += chunkSize;
@@ -453,6 +470,32 @@ namespace HDF5.NET
                 byteSize = dimensionSizes.Aggregate((x, y) => x * y);
 
             return byteSize;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ReadChunk(Span<byte> buffer, int chunkSize)
+        {
+            var shuffleFilter = this.FilterPipeline?.FilterDescriptions
+                       .FirstOrDefault(description => description.FilterIdentifier == FilterIdentifier.Shuffle);
+
+
+            if (shuffleFilter != null)
+            {
+                var filteredBuffer = new byte[chunkSize];
+                var unfilteredBuffer = new byte[chunkSize];
+
+                this.File.Reader.Read(filteredBuffer);
+                ShuffleFilter.Unshuffle((int)shuffleFilter.ClientData[0], filteredBuffer, unfilteredBuffer);
+
+                unfilteredBuffer
+                    .AsSpan()
+                    .Slice(0, buffer.Length)
+                    .CopyTo(buffer);
+            }
+            else
+            {
+                this.File.Reader.Read(buffer);
+            }
         }
 
         #endregion

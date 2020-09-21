@@ -51,6 +51,22 @@ namespace HDF5.NET
 {
     public static class ShuffleAvx2
     {
+        public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        {
+            fixed (byte* src = source, dest = destination)
+            {
+                ShuffleAvx2.shuffle_avx2(bytesOfType, source.Length, src, dest);
+            }
+        }
+
+        public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        {
+            fixed (byte* src = source, dest = destination)
+            {
+                ShuffleAvx2.unshuffle_avx2(bytesOfType, source.Length, src, dest);
+            }
+        }
+
         
         
         /* GCC doesn't include the split load/store intrinsics
@@ -134,17 +150,17 @@ namespace HDF5.NET
               ymm0[j] = Avx2.Shuffle(ymm0[j].AsInt32(), 0x8d).AsByte();
               ymm0[j] = Avx2.UnpackLow(ymm1[j], ymm0[j]);
               ymm1[j] = Avx2.Shuffle(ymm0[j].AsInt32(), 0x04e).AsByte();
-              ymm0[j] = Avx2.UnpackLow(ymm0[j], ymm1[j]);
+              ymm0[j] = Avx2.UnpackLow(ymm0[j].AsInt16(), ymm1[j].AsInt16()).AsByte();
             }
             /* Transpose double words */
             for (j = 0; j < 2; j++) {
-              ymm1[j * 2] = Avx2.UnpackLow(ymm0[j * 2], ymm0[j * 2 + 1]);
-              ymm1[j * 2 + 1] = Avx2.UnpackHigh(ymm0[j * 2], ymm0[j * 2 + 1]);
+              ymm1[j * 2] = Avx2.UnpackLow(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
+              ymm1[j * 2 + 1] = Avx2.UnpackHigh(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
             }
             /* Transpose quad words */
             for (j = 0; j < 2; j++) {
-              ymm0[j * 2] = Avx2.UnpackLow(ymm1[j], ymm1[j + 2]);
-              ymm0[j * 2 + 1] = Avx2.UnpackHigh(ymm1[j], ymm1[j + 2]);
+              ymm0[j * 2] = Avx2.UnpackLow(ymm1[j].AsInt64(), ymm1[j + 2].AsInt64()).AsByte();
+              ymm0[j * 2 + 1] = Avx2.UnpackHigh(ymm1[j].AsInt64(), ymm1[j + 2].AsInt64()).AsByte();
             }
             for (j = 0; j < 4; j++) {
               ymm0[j] = Avx2.PermuteVar8x32(ymm0[j].AsInt32(), mask).AsByte();
@@ -175,24 +191,24 @@ namespace HDF5.NET
             }
             /* Transpose words */
             for (k = 0, l = 0; k < 4; k++, l += 2) {
-              ymm0[k * 2] = Avx2.UnpackLow(ymm1[l], ymm1[l + 1]);
-              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[l], ymm1[l + 1]);
+              ymm0[k * 2] = Avx2.UnpackLow(ymm1[l].AsInt16(), ymm1[l + 1].AsInt16()).AsByte();
+              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[l].AsInt16(), ymm1[l + 1].AsInt16()).AsByte();
             }
             /* Transpose double words */
             for (k = 0, l = 0; k < 4; k++, l++) {
               if (k == 2) l += 2;
-              ymm1[k * 2] = Avx2.UnpackLow(ymm0[l], ymm0[l + 2]);
-              ymm1[k * 2 + 1] = Avx2.UnpackHigh(ymm0[l], ymm0[l + 2]);
+              ymm1[k * 2] = Avx2.UnpackLow(ymm0[l].AsInt32(), ymm0[l + 2].AsInt32()).AsByte();
+              ymm1[k * 2 + 1] = Avx2.UnpackHigh(ymm0[l].AsInt32(), ymm0[l + 2].AsInt32()).AsByte();
             }
             /* Transpose quad words */
             for (k = 0; k < 4; k++) {
-              ymm0[k * 2] = Avx2.UnpackLow(ymm1[k], ymm1[k + 4]);
-              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[k], ymm1[k + 4]);
+              ymm0[k * 2] = Avx2.UnpackLow(ymm1[k].AsInt64(), ymm1[k + 4].AsInt64()).AsByte();
+              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[k].AsInt64(), ymm1[k + 4].AsInt64()).AsByte();
             }
             for (k = 0; k < 8; k++) {
               ymm1[k] = Avx2.Permute4x64(ymm0[k].AsInt64(), 0x72).AsByte();
               ymm0[k] = Avx2.Permute4x64(ymm0[k].AsInt64(), 0xD8).AsByte();
-              ymm0[k] = Avx2.UnpackLow(ymm0[k], ymm1[k]);
+              ymm0[k] = Avx2.UnpackLow(ymm0[k].AsInt16(), ymm1[k].AsInt16()).AsByte();
             }
             /* Store the result vectors */
             byte* dest_for_jth_element = dest + j;
@@ -234,19 +250,19 @@ namespace HDF5.NET
             /* Transpose words */
             for (k = 0, l = -2; k < 8; k++, l++) {
               if ((k % 2) == 0) l += 2;
-              ymm0[k * 2] = Avx2.UnpackLow(ymm1[l], ymm1[l + 2]);
-              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[l], ymm1[l + 2]);
+              ymm0[k * 2] = Avx2.UnpackLow(ymm1[l].AsInt16(), ymm1[l + 2].AsInt16()).AsByte();
+              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[l].AsInt16(), ymm1[l + 2].AsInt16()).AsByte();
             }
             /* Transpose double words */
             for (k = 0, l = -4; k < 8; k++, l++) {
               if ((k % 4) == 0) l += 4;
-              ymm1[k * 2] = Avx2.UnpackLow(ymm0[l], ymm0[l + 4]);
-              ymm1[k * 2 + 1] = Avx2.UnpackHigh(ymm0[l], ymm0[l + 4]);
+              ymm1[k * 2] = Avx2.UnpackLow(ymm0[l].AsInt32(), ymm0[l + 4].AsInt32()).AsByte();
+              ymm1[k * 2 + 1] = Avx2.UnpackHigh(ymm0[l].AsInt32(), ymm0[l + 4].AsInt32()).AsByte();
             }
             /* Transpose quad words */
             for (k = 0; k < 8; k++) {
-              ymm0[k * 2] = Avx2.UnpackLow(ymm1[k], ymm1[k + 8]);
-              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[k], ymm1[k + 8]);
+              ymm0[k * 2] = Avx2.UnpackLow(ymm1[k].AsInt64(), ymm1[k + 8].AsInt64()).AsByte();
+              ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[k].AsInt64(), ymm1[k + 8].AsInt64()).AsByte();
             }
             for (k = 0; k < 16; k++) {
               ymm0[k] = Avx2.Permute4x64(ymm0[k].AsInt64(), 0xd8).AsByte();
@@ -305,19 +321,19 @@ namespace HDF5.NET
               /* Transpose words */
               for (k = 0, l = -2; k < 8; k++, l++) {
                 if ((k % 2) == 0) l += 2;
-                ymm0[k * 2] = Avx2.UnpackLow(ymm1[l], ymm1[l + 2]);
-                ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[l], ymm1[l + 2]);
+                ymm0[k * 2] = Avx2.UnpackLow(ymm1[l].AsInt16(), ymm1[l + 2].AsInt16()).AsByte();
+                ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[l].AsInt16(), ymm1[l + 2].AsInt16()).AsByte();
               }
               /* Transpose double words */
               for (k = 0, l = -4; k < 8; k++, l++) {
                 if ((k % 4) == 0) l += 4;
-                ymm1[k * 2] = Avx2.UnpackLow(ymm0[l], ymm0[l + 4]);
-                ymm1[k * 2 + 1] = Avx2.UnpackHigh(ymm0[l], ymm0[l + 4]);
+                ymm1[k * 2] = Avx2.UnpackLow(ymm0[l].AsInt32(), ymm0[l + 4].AsInt32()).AsByte();
+                ymm1[k * 2 + 1] = Avx2.UnpackHigh(ymm0[l].AsInt32(), ymm0[l + 4].AsInt32()).AsByte();
               }
               /* Transpose quad words */
               for (k = 0; k < 8; k++) {
-                ymm0[k * 2] = Avx2.UnpackLow(ymm1[k], ymm1[k + 8]);
-                ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[k], ymm1[k + 8]);
+                ymm0[k * 2] = Avx2.UnpackLow(ymm1[k].AsInt64(), ymm1[k + 8].AsInt64()).AsByte();
+                ymm0[k * 2 + 1] = Avx2.UnpackHigh(ymm1[k].AsInt64(), ymm1[k + 8].AsInt64()).AsByte();
               }
               for (k = 0; k < 16; k++) {
                 ymm0[k] = Avx2.Permute4x64(ymm0[k].AsInt64(), 0xd8).AsByte();
@@ -386,9 +402,9 @@ namespace HDF5.NET
             /* Shuffle 2-byte words */
             for (j = 0; j < 2; j++) {
               /* Compute the low 64 bytes */
-              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
               /* Compute the hi 64 bytes */
-              ymm0[2 + j] = Avx2.UnpackHigh(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[2 + j] = Avx2.UnpackHigh(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
             }
             ymm1[0] = Avx2.Permute2x128(ymm0[0], ymm0[2], 0x20);
             ymm1[1] = Avx2.Permute2x128(ymm0[1], ymm0[3], 0x20);
@@ -427,9 +443,9 @@ namespace HDF5.NET
             /* Shuffle words */
             for (j = 0; j < 4; j++) {
               /* Compute the low 32 bytes */
-              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
               /* Compute the hi 32 bytes */
-              ymm0[4 + j] = Avx2.UnpackHigh(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[4 + j] = Avx2.UnpackHigh(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
             }
             for (j = 0; j < 8; j++) {
               ymm0[j] = Avx2.Permute4x64(ymm0[j].AsInt64(), 0xd8).AsByte();
@@ -438,9 +454,9 @@ namespace HDF5.NET
             /* Shuffle 4-byte dwords */
             for (j = 0; j < 4; j++) {
               /* Compute the low 32 bytes */
-              ymm1[j] = Avx2.UnpackLow(ymm0[j * 2], ymm0[j * 2 + 1]);
+              ymm1[j] = Avx2.UnpackLow(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
               /* Compute the hi 32 bytes */
-              ymm1[4 + j] = Avx2.UnpackHigh(ymm0[j * 2], ymm0[j * 2 + 1]);
+              ymm1[4 + j] = Avx2.UnpackHigh(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
             }
         
             /* Store the result vectors in proper order */
@@ -481,24 +497,24 @@ namespace HDF5.NET
             /* Shuffle 2-byte words */
             for (j = 0; j < 8; j++) {
               /* Compute the low 32 bytes */
-              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
               /* Compute the hi 32 bytes */
-              ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
             }
             /* Shuffle 4-byte dwords */
             for (j = 0; j < 8; j++) {
               /* Compute the low 32 bytes */
-              ymm1[j] = Avx2.UnpackLow(ymm0[j * 2], ymm0[j * 2 + 1]);
+              ymm1[j] = Avx2.UnpackLow(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
               /* Compute the hi 32 bytes */
-              ymm1[8 + j] = Avx2.UnpackHigh(ymm0[j * 2], ymm0[j * 2 + 1]);
+              ymm1[8 + j] = Avx2.UnpackHigh(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
             }
         
             /* Shuffle 8-byte qwords */
             for (j = 0; j < 8; j++) {
               /* Compute the low 32 bytes */
-              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[j] = Avx2.UnpackLow(ymm1[j * 2].AsInt64(), ymm1[j * 2 + 1].AsInt64()).AsByte();
               /* Compute the hi 32 bytes */
-              ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2], ymm1[j * 2 + 1]);
+              ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2].AsInt64(), ymm1[j * 2 + 1].AsInt64()).AsByte();
             }
         
             for (j = 0; j < 8; j++) {
@@ -559,24 +575,24 @@ namespace HDF5.NET
               /* Shuffle 2-byte words */
               for (j = 0; j < 8; j++) {
                 /* Compute the low 32 bytes */
-                ymm0[j] = Avx2.UnpackLow(ymm1[j * 2], ymm1[j * 2 + 1]);
+                ymm0[j] = Avx2.UnpackLow(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
                 /* Compute the hi 32 bytes */
-                ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2], ymm1[j * 2 + 1]);
+                ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2].AsInt16(), ymm1[j * 2 + 1].AsInt16()).AsByte();
               }
               /* Shuffle 4-byte dwords */
               for (j = 0; j < 8; j++) {
                 /* Compute the low 32 bytes */
-                ymm1[j] = Avx2.UnpackLow(ymm0[j * 2], ymm0[j * 2 + 1]);
+                ymm1[j] = Avx2.UnpackLow(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
                 /* Compute the hi 32 bytes */
-                ymm1[8 + j] = Avx2.UnpackHigh(ymm0[j * 2], ymm0[j * 2 + 1]);
+                ymm1[8 + j] = Avx2.UnpackHigh(ymm0[j * 2].AsInt32(), ymm0[j * 2 + 1].AsInt32()).AsByte();
               }
         
               /* Shuffle 8-byte qwords */
               for (j = 0; j < 8; j++) {
                 /* Compute the low 32 bytes */
-                ymm0[j] = Avx2.UnpackLow(ymm1[j * 2], ymm1[j * 2 + 1]);
+                ymm0[j] = Avx2.UnpackLow(ymm1[j * 2].AsInt64(), ymm1[j * 2 + 1].AsInt64()).AsByte();
                 /* Compute the hi 32 bytes */
-                ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2], ymm1[j * 2 + 1]);
+                ymm0[8 + j] = Avx2.UnpackHigh(ymm1[j * 2].AsInt64(), ymm1[j * 2 + 1].AsInt64()).AsByte();
               }
         
               for (j = 0; j < 8; j++) {
@@ -646,7 +662,7 @@ namespace HDF5.NET
           /* If the block size is too small to be vectorized,
              use the generic implementation. */
           if (blocksize < vectorized_chunk_size) {
-            ShuffleGeneric.Shuffle(bytesoftype, 0, blocksize, _src, _dest);
+            ShuffleGeneric.shuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
             return;
           }
         
@@ -681,7 +697,7 @@ namespace HDF5.NET
               }
               else {
                 /* Non-optimized shuffle */
-                ShuffleGeneric.Shuffle(bytesoftype, 0, blocksize, _src, _dest);
+                ShuffleGeneric.shuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
                 /* The non-optimized function covers the whole buffer,
                    so we're done processing here. */
                 return;
@@ -693,7 +709,7 @@ namespace HDF5.NET
              by the vectorized implementations, use the non-optimized version
              to finish them up. */
           if (vectorizable_bytes < blocksize) {
-            ShuffleGeneric.Shuffle(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
+            ShuffleGeneric.shuffle_avx2(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
           }
         }
         
@@ -705,7 +721,7 @@ namespace HDF5.NET
           /* If the block size is too small to be vectorized,
              use the generic implementation. */
           if (blocksize < vectorized_chunk_size) {
-            ShuffleGeneric.Unshuffle(bytesoftype, 0, blocksize, _src, _dest);
+            ShuffleGeneric.unshuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
             return;
           }
         
@@ -740,7 +756,7 @@ namespace HDF5.NET
               }
               else {
                 /* Non-optimized unshuffle */
-                ShuffleGeneric.Unshuffle(bytesoftype, 0, blocksize, _src, _dest);
+                ShuffleGeneric.unshuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
                 /* The non-optimized function covers the whole buffer,
                    so we're done processing here. */
                 return;
@@ -752,7 +768,7 @@ namespace HDF5.NET
              by the vectorized implementations, use the non-optimized version
              to finish them up. */
           if (vectorizable_bytes < blocksize) {
-            ShuffleGeneric.Unshuffle(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
+            ShuffleGeneric.unshuffle_avx2(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
           }
         }
         

@@ -1,14 +1,25 @@
 using HDF.PInvoke;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.X86;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace HDF5.NET.Tests
 {
     public class HDF5Tests
     {
+        private readonly ITestOutputHelper _logger;
+
+        public HDF5Tests(ITestOutputHelper logger)
+        {
+            _logger = logger;
+        }
+
         [Theory]
         [InlineData("/", true, false)]
         [InlineData("/simple", true, false)]
@@ -231,7 +242,7 @@ namespace HDF5.NET.Tests
         [InlineData("mass_0102", true)]
         [InlineData("mass_0999", true)]
         [InlineData("mass_1000", false)]
-        public void CanCheckAttributeExistsMass (string attributeName, bool expected)
+        public void CanCheckAttributeExistsMass(string attributeName, bool expected)
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -342,7 +353,7 @@ namespace HDF5.NET.Tests
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                
+
                 var dataset_hard_1 = root.Get<H5Dataset>("links/hard_link_1/dataset");
                 var dataset_hard_2 = root.Get<H5Dataset>("links/hard_link_2/dataset");
                 var dataset_soft_2 = root.Get<H5Dataset>("links/soft_link_2/dataset");
@@ -393,19 +404,6 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanShuffleData()
-        {
-            // Arrange
-            
-
-            // Act
-            
-
-            // Assert
-            
-        }
-
-        [Fact]
         public void CanReadCompactDataset()
         {
             TestUtils.RunForAllVersions(version =>
@@ -432,13 +430,13 @@ namespace HDF5.NET.Tests
             {
                 // Arrange
                 var filePath = "testfiles/h5ex_d_compact.h5";
-                var expected = new int[4,7];
+                var expected = new int[4, 7];
 
                 for (int i = 0; i < 4; i++)
                 {
                     for (int j = 0; j < 7; j++)
                     {
-                        expected[i,j] = i * j - j;
+                        expected[i, j] = i * j - j;
                     }
                 }
 
@@ -483,35 +481,41 @@ namespace HDF5.NET.Tests
 
             TestUtils.RunForVersions(versions, version =>
             {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset(fileId));
+                foreach (var withShuffle in new bool[] { false, true })
+                {
+                    // Arrange
+                    var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset(fileId, withShuffle));
 
-                // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.Get<H5Group>("chunked");
-                var dataset = parent.Get<H5Dataset>("chunked");
-                var actual = dataset.Read<int>();
+                    // Act
+                    using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                    var parent = root.Get<H5Group>("chunked");
+                    var dataset = parent.Get<H5Dataset>("chunked");
+                    var actual = dataset.Read<int>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                    // Assert
+                    Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                }
             });
         }
 
         [Fact]
         public void CanReadChunkedDatasetSingleChunk()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Single_Chunk(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Single_Chunk(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_single_chunk");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_single_chunk");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
@@ -534,103 +538,121 @@ namespace HDF5.NET.Tests
         [Fact]
         public void CanReadChunkedDatasetFixedArray()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_fixed_array");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_fixed_array");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
         public void CanReadChunkedDatasetFixedArrayPaged()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_fixed_array_paged");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_fixed_array_paged");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
         public void CanReadChunkedDatasetExtensibleArrayElements()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_extensible_array_elements");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_extensible_array_elements");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
         public void CanReadChunkedDatasetExtensibleArrayDataBlocks()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_extensible_array_data_blocks");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_extensible_array_data_blocks");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
         public void CanReadChunkedDatasetExtensibleArraySecondaryBlocks()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_extensible_array_secondary_blocks");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_extensible_array_secondary_blocks");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
         public void CanReadChunkedDatasetBTree2()
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_BTree2(fileId));
+            foreach (var withShuffle in new bool[] { false, true })
+            {
+                // Arrange
+                var version = H5F.libver_t.LATEST;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_BTree2(fileId, withShuffle));
 
-            // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("chunked");
-            var dataset = parent.Get<H5Dataset>("chunked_btree2");
-            var actual = dataset.Read<int>();
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Get<H5Group>("chunked");
+                var dataset = parent.Get<H5Dataset>("chunked_btree2");
+                var actual = dataset.Read<int>();
 
-            // Assert
-            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+                // Assert
+                Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
         }
 
         [Fact]
@@ -695,6 +717,179 @@ namespace HDF5.NET.Tests
             }
 
             Assert.True(actual.Cast<int>().SequenceEqual(expected.Cast<int>()));
+        }
+
+#warning 16 byte and arbitrary number of bytes tests missing
+        [Theory]
+        [InlineData((byte)1, 1001)]
+        [InlineData((short)2, 732)]
+        [InlineData((short)2, 733)]
+        [InlineData((int)4, 732)]
+        [InlineData((int)4, 733)]
+        [InlineData((int)4, 734)]
+        [InlineData((int)4, 735)]
+        [InlineData((long)8, 432)]
+        [InlineData((long)8, 433)]
+        [InlineData((long)8, 434)]
+        [InlineData((long)8, 435)]
+        [InlineData((long)8, 436)]
+        [InlineData((long)8, 437)]
+        [InlineData((long)8, 438)]
+        [InlineData((long)8, 439)]
+        public void CanUnshuffleDataGeneric<T>(T dummy, int length) where T : unmanaged
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+
+            var bytesOfType = Unsafe.SizeOf<T>();
+            var expected = Enumerable.Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value)).ToArray();
+
+            var filePath = TestUtils.PrepareTestFile(version, fileId =>
+            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("shuffle");
+            var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
+            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+
+            // Act
+            var actual = new byte[actual_shuffled.Length];
+            ShuffleGeneric.Unshuffle(bytesOfType, actual_shuffled, actual);
+
+            // Assert
+            Assert.True(actual.AsSpan().SequenceEqual(expected));
+        }
+
+        [Theory]
+        [InlineData((byte)1, 1001)]
+        [InlineData((short)2, 732)]
+        [InlineData((short)2, 733)]
+        [InlineData((int)4, 732)]
+        [InlineData((int)4, 733)]
+        [InlineData((int)4, 734)]
+        [InlineData((int)4, 735)]
+        [InlineData((long)8, 432)]
+        [InlineData((long)8, 433)]
+        [InlineData((long)8, 434)]
+        [InlineData((long)8, 435)]
+        [InlineData((long)8, 436)]
+        [InlineData((long)8, 437)]
+        [InlineData((long)8, 438)]
+        [InlineData((long)8, 439)]
+        public void CanUnshuffleDataAvx2<T>(T dummy, int length) where T : unmanaged
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+
+            var bytesOfType = Unsafe.SizeOf<T>();
+            var expected = Enumerable.Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value)).ToArray();
+
+            var filePath = TestUtils.PrepareTestFile(version, fileId =>
+            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("shuffle");
+            var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
+            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+
+            // Act
+            var actual = new byte[actual_shuffled.Length];
+            ShuffleAvx2.Unshuffle(bytesOfType, actual_shuffled, actual);
+
+            // Assert
+            Assert.True(actual.AsSpan().SequenceEqual(expected));
+        }
+
+        [Theory]
+        [InlineData((byte)1, 1001)]
+        [InlineData((short)2, 732)]
+        [InlineData((short)2, 733)]
+        [InlineData((int)4, 732)]
+        [InlineData((int)4, 733)]
+        [InlineData((int)4, 734)]
+        [InlineData((int)4, 735)]
+        [InlineData((long)8, 432)]
+        [InlineData((long)8, 433)]
+        [InlineData((long)8, 434)]
+        [InlineData((long)8, 435)]
+        [InlineData((long)8, 436)]
+        [InlineData((long)8, 437)]
+        [InlineData((long)8, 438)]
+        [InlineData((long)8, 439)]
+        public void CanUnshuffleDataSse2<T>(T dummy, int length) where T : unmanaged
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+
+            var bytesOfType = Unsafe.SizeOf<T>();
+            var expected = Enumerable.Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value)).ToArray();
+
+            var filePath = TestUtils.PrepareTestFile(version, fileId =>
+            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("shuffle");
+            var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
+            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+
+            // Act
+            var actual = new byte[actual_shuffled.Length];
+            ShuffleAvx2.Unshuffle(bytesOfType, actual_shuffled, actual);
+
+            // Assert
+            Assert.True(actual.AsSpan().SequenceEqual(expected));
+        }
+
+        [Fact]
+        public void ShufflePerformanceTest()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+
+            var length = 10_000_000;
+            var bytesOfType = Unsafe.SizeOf<int>();
+            var expected = Enumerable.Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value)).ToArray();
+
+            var filePath = TestUtils.PrepareTestFile(version, fileId =>
+            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("shuffle");
+            var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
+            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+
+            // Act
+
+            /* generic */
+            var sw = Stopwatch.StartNew();
+            var actual = new byte[actual_shuffled.Length];
+            ShuffleGeneric.Unshuffle(bytesOfType, actual_shuffled, actual);
+            var generic = sw.Elapsed.TotalMilliseconds;
+            _logger.WriteLine($"Generic: {generic:F1} ms");
+
+            /* SSE2 */
+            if (Sse2.IsSupported)
+            {
+                sw = Stopwatch.StartNew();
+                actual = new byte[actual_shuffled.Length];
+                ShuffleAvx2.Unshuffle(bytesOfType, actual_shuffled, actual);
+                var sse2 = sw.Elapsed.TotalMilliseconds;
+                _logger.WriteLine($"Generic: {sse2:F1} ms");
+            }
+
+            /* AVX2 */
+            if (Avx2.IsSupported)
+            {
+                sw = Stopwatch.StartNew();
+                actual = new byte[actual_shuffled.Length];
+                ShuffleAvx2.Unshuffle(bytesOfType, actual_shuffled, actual);
+                var avx2 = sw.Elapsed.TotalMilliseconds;
+                _logger.WriteLine($"Generic: {avx2:F1} ms");
+            }
         }
     }
 }

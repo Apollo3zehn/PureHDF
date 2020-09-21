@@ -22,6 +22,10 @@ namespace HDF5.NET
             // filter count
             this.FilterCount = reader.ReadByte();
 
+            // reserved
+            if (this.Version == 1)
+                reader.ReadBytes(6);
+
             // filter descriptions
             this.FilterDescriptions = new List<FilterDescription>(this.FilterCount);
 

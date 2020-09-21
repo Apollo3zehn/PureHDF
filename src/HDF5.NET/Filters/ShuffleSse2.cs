@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if NETCOREAPP3_0
 
+using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
@@ -49,6 +50,22 @@ namespace HDF5.NET
 {
     public static class ShuffleSse2
     {
+        public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        {
+            fixed (byte* src = source, dest = destination)
+            {
+                ShuffleSse2.shuffle_sse2(bytesOfType, source.Length, src, dest);
+            }
+        }
+
+        public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        {
+            fixed (byte* src = source, dest = destination)
+            {
+                ShuffleSse2.unshuffle_sse2(bytesOfType, source.Length, src, dest);
+            }
+        }
+
         
         
         /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
@@ -533,7 +550,7 @@ namespace HDF5.NET
           /* If the block size is too small to be vectorized,
              use the generic implementation. */
           if (blocksize < vectorized_chunk_size) {
-            ShuffleGeneric.Shuffle(bytesoftype, 0, blocksize, _src, _dest);
+            ShuffleGeneric.shuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
             return;
           }
         
@@ -557,7 +574,7 @@ namespace HDF5.NET
               }
               else {
                 /* Non-optimized shuffle */
-                ShuffleGeneric.Shuffle(bytesoftype, 0, blocksize, _src, _dest);
+                ShuffleGeneric.shuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
                 /* The non-optimized function covers the whole buffer,
                    so we're done processing here. */
                 return;
@@ -569,7 +586,7 @@ namespace HDF5.NET
              by the vectorized implementations, use the non-optimized version
              to finish them up. */
           if (vectorizable_bytes < blocksize) {
-            ShuffleGeneric.Shuffle(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
+            ShuffleGeneric.shuffle_avx2(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
           }
         }
         
@@ -589,7 +606,7 @@ namespace HDF5.NET
           /* If the block size is too small to be vectorized,
              use the generic implementation. */
           if (blocksize < vectorized_chunk_size) {
-            ShuffleGeneric.Unshuffle(bytesoftype, 0, blocksize, _src, _dest);
+            ShuffleGeneric.unshuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
             return;
           }
         
@@ -613,7 +630,7 @@ namespace HDF5.NET
               }
               else {
                 /* Non-optimized unshuffle */
-                ShuffleGeneric.Unshuffle(bytesoftype, 0, blocksize, _src, _dest);
+                ShuffleGeneric.unshuffle_avx2(bytesoftype, 0, blocksize, _src, _dest);
                 /* The non-optimized function covers the whole buffer,
                    so we're done processing here. */
                 return;
@@ -625,7 +642,7 @@ namespace HDF5.NET
              by the vectorized implementations, use the non-optimized version
              to finish them up. */
           if (vectorizable_bytes < blocksize) {
-            ShuffleGeneric.Unshuffle(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
+            ShuffleGeneric.unshuffle_avx2(bytesoftype, vectorizable_bytes, blocksize, _src, _dest);
           }
         }
         

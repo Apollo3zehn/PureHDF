@@ -497,7 +497,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static void AddLinks(long fileId)
+        public static unsafe void AddLinks(long fileId)
         {
             long res;
 
@@ -529,9 +529,9 @@ namespace HDF5.NET.Tests
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
             var datasetId = H5D.create(groupId, "compact", H5T.NATIVE_UINT8, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.TinyData;
+            var dataset = TestUtils.TinyData;
 
-            fixed (void* ptr = datasetData)
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_UINT8, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -548,9 +548,9 @@ namespace HDF5.NET.Tests
             var groupId = H5G.create(fileId, "contiguous");         
             var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var datasetId = H5D.create(groupId, "contiguous", H5T.NATIVE_INT, datasetSpaceId);
-            var datasetData = TestUtils.HugeData;
+            var dataset = TestUtils.HugeData;
 
-            fixed (void* ptr = datasetData)
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -559,7 +559,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset(long fileId)
+        public static unsafe void AddChunkedDataset(long fileId, bool withShuffle)
         {
             long res;
 
@@ -568,10 +568,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -580,8 +584,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-
-        public static unsafe void AddChunkedDataset_Single_Chunk(long fileId)
+        public static unsafe void AddChunkedDataset_Single_Chunk(long fileId, bool withShuffle)
         {
             long res;
 
@@ -590,10 +593,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 4 });
-            var datasetId = H5D.create(groupId, "chunked_single_chunk", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_single_chunk", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -612,10 +619,11 @@ namespace HDF5.NET.Tests
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
             res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
-            var datasetId = H5D.create(groupId, "chunked_implicit", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            var datasetId = H5D.create(groupId, "chunked_implicit", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -624,7 +632,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_Fixed_Array(long fileId)
+        public static unsafe void AddChunkedDataset_Fixed_Array(long fileId, bool withShuffle)
         {
             long res;
 
@@ -633,10 +641,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            var datasetId = H5D.create(groupId, "chunked_fixed_array", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_fixed_array", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -645,7 +657,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_Fixed_Array_Paged(long fileId)
+        public static unsafe void AddChunkedDataset_Fixed_Array_Paged(long fileId, bool withShuffle)
         {
             long res;
 
@@ -654,10 +666,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 4 });
-            var datasetId = H5D.create(groupId, "chunked_fixed_array_paged", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_fixed_array_paged", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -666,7 +682,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_Extensible_Array_Elements(long fileId)
+        public static unsafe void AddChunkedDataset_Extensible_Array_Elements(long fileId, bool withShuffle)
         {
             long res;
 
@@ -675,10 +691,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            var datasetId = H5D.create(groupId, "chunked_extensible_array_elements", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_elements", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -687,7 +707,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_Extensible_Array_Data_Blocks(long fileId)
+        public static unsafe void AddChunkedDataset_Extensible_Array_Data_Blocks(long fileId, bool withShuffle)
         {
             long res;
 
@@ -696,10 +716,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 4 });
-            var datasetId = H5D.create(groupId, "chunked_extensible_array_data_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_data_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -708,7 +732,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_Extensible_Array_Secondary_Blocks(long fileId)
+        public static unsafe void AddChunkedDataset_Extensible_Array_Secondary_Blocks(long fileId, bool withShuffle)
         {
             long res;
 
@@ -717,10 +741,14 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 4 });
-            var datasetId = H5D.create(groupId, "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
@@ -729,7 +757,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset_BTree2(long fileId)
+        public static unsafe void AddChunkedDataset_BTree2(long fileId, bool withShuffle)
         {
             long res;
 
@@ -738,12 +766,46 @@ namespace HDF5.NET.Tests
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, H5S.UNLIMITED });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            var datasetId = H5D.create(groupId, "chunked_btree2", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var datasetData = TestUtils.MediumData;
 
-            fixed (void* ptr = datasetData)
+            if (withShuffle)
+                res = H5P.set_shuffle(dcpl_id);
+
+            var datasetId = H5D.create(groupId, "chunked_btree2", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+            var dataset = TestUtils.MediumData;
+
+            fixed (void* ptr = dataset)
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddShuffledData(long fileId, int bytesOfType, int length, Span<byte> dataset)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "shuffle");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { (ulong)length }, new ulong[] { (ulong)length });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { (ulong)length });
+            res = H5P.set_shuffle(dcpl_id);
+
+            var type = bytesOfType switch
+            {
+                1 => H5T.NATIVE_UINT8,
+                2 => H5T.NATIVE_UINT16,
+                4 => H5T.NATIVE_UINT32,
+                8 => H5T.NATIVE_UINT64,
+                _ => throw new Exception($"The value '{bytesOfType}' of the 'bytesOfType' parameter is not within the valid range.")
+            };
+
+            var datasetId = H5D.create(groupId, $"shuffle_{bytesOfType}", type, datasetSpaceId, dcpl_id: dcpl_id);
+
+            fixed (void* ptr = dataset)
+            {
+                res = H5D.write(datasetId, type, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
 
             res = H5D.close(datasetId);

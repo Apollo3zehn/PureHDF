@@ -6,7 +6,7 @@
 
         public SingleChunkIndexingInformation(H5BinaryReader reader, Superblock superblock, ChunkedStoragePropertyFlags flags) : base(reader)
         {
-            if (flags.HasFlag(ChunkedStoragePropertyFlags.DONT_FILTER_PARTIAL_BOUND_CHUNKS))
+            if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
             {
                 // filtered chunk size
                 this.FilteredChunkSize = superblock.ReadLength(reader);

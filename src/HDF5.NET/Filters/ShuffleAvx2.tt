@@ -14,10 +14,10 @@
     // methods
     csstring = Regex.Replace(csstring, @"static inline __m256i\n__attribute__\(\(__always_inline__\)\)", "[MethodImpl(MethodImplOptions.AggressiveInlining)]\n static unsafe Vector256<byte>", RegexOptions.Singleline);
     csstring = Regex.Replace(csstring, @"static inline void\n__attribute__\(\(__always_inline__\)\)", "[MethodImpl(MethodImplOptions.AggressiveInlining)]\n static void", RegexOptions.Singleline);
-    csstring = Regex.Replace(csstring, @"unshuffle_generic_inline", "ShuffleGeneric.Unshuffle");
-    csstring = Regex.Replace(csstring, @"shuffle_generic_inline", "ShuffleGeneric.Shuffle");
-    csstring = Regex.Replace(csstring, @"unshuffle_generic\(bytesoftype", "ShuffleGeneric.Unshuffle(bytesoftype, 0");
-    csstring = Regex.Replace(csstring, @"shuffle_generic\(bytesoftype", "ShuffleGeneric.Shuffle(bytesoftype, 0");
+    csstring = Regex.Replace(csstring, @"unshuffle_generic_inline", "ShuffleGeneric.unshuffle_avx2");
+    csstring = Regex.Replace(csstring, @"shuffle_generic_inline", "ShuffleGeneric.shuffle_avx2");
+    csstring = Regex.Replace(csstring, @"unshuffle_generic\(bytesoftype", "ShuffleGeneric.unshuffle_avx2(bytesoftype, 0");
+    csstring = Regex.Replace(csstring, @"shuffle_generic\(bytesoftype", "ShuffleGeneric.shuffle_avx2(bytesoftype, 0");
     csstring = Regex.Replace(csstring, @"(default:.*?}.*?})", m => $"{m.Groups[0].Value}\n      break;", RegexOptions.Singleline);
     csstring = Regex.Replace(csstring, @"lldiv_t vecs_per_el = lldiv\(bytesoftype, sizeof\(__m128i\)\);", "var remainder = bytesoftype % sizeof(Vector128<byte>);");
     csstring = Regex.Replace(csstring, @"\(int32_t\)vecs_per_el\.rem;", "remainder;");
@@ -67,14 +67,15 @@
     csstring = Regex.Replace(csstring, @"_mm256_permute4x64_epi64\((.*?), (.*?)\)", m => $"Avx2.Permute4x64({m.Groups[1]}.AsInt64(), {m.Groups[2]}).AsByte()");
     csstring = Regex.Replace(csstring, @"_mm256_permutevar8x32_epi32\((.*?), (.*?)\)", m => $"Avx2.PermuteVar8x32({m.Groups[1]}.AsInt32(), {m.Groups[2]}).AsByte()");
     csstring = Regex.Replace(csstring, @"_mm256_permute2x128_si256", "Avx2.Permute2x128");
+    
     csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi8", "Avx2.UnpackLow");
-    csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi16", "Avx2.UnpackLow");
-    csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi32", "Avx2.UnpackLow");
-    csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi64", "Avx2.UnpackLow");
+    csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi16\((.*?), (.*?)\)", m => $"Avx2.UnpackLow({m.Groups[1]}.AsInt16(), {m.Groups[2]}.AsInt16()).AsByte()");
+    csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi32\((.*?), (.*?)\)", m => $"Avx2.UnpackLow({m.Groups[1]}.AsInt32(), {m.Groups[2]}.AsInt32()).AsByte()");
+    csstring = Regex.Replace(csstring, @"_mm256_unpacklo_epi64\((.*?), (.*?)\)", m => $"Avx2.UnpackLow({m.Groups[1]}.AsInt64(), {m.Groups[2]}.AsInt64()).AsByte()");
     csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi8", "Avx2.UnpackHigh");
-    csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi16", "Avx2.UnpackHigh");
-    csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi32", "Avx2.UnpackHigh");
-    csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi64", "Avx2.UnpackHigh");
+    csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi16\((.*?), (.*?)\)", m => $"Avx2.UnpackHigh({m.Groups[1]}.AsInt16(), {m.Groups[2]}.AsInt16()).AsByte()");
+    csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi32\((.*?), (.*?)\)", m => $"Avx2.UnpackHigh({m.Groups[1]}.AsInt32(), {m.Groups[2]}.AsInt32()).AsByte()");
+    csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi64\((.*?), (.*?)\)", m => $"Avx2.UnpackHigh({m.Groups[1]}.AsInt64(), {m.Groups[2]}.AsInt64()).AsByte()");
 
     // remove unnecessary blocks
     csstring = Regex.Replace(csstring, @"/\*.*?Author.*?\\*}", "", RegexOptions.Singleline);
@@ -104,6 +105,22 @@ namespace HDF5.NET
 {
     public static class ShuffleAvx2
     {
+        public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        {
+            fixed (byte* src = source, dest = destination)
+            {
+                ShuffleAvx2.shuffle_avx2(bytesOfType, source.Length, src, dest);
+            }
+        }
+
+        public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        {
+            fixed (byte* src = source, dest = destination)
+            {
+                ShuffleAvx2.unshuffle_avx2(bytesOfType, source.Length, src, dest);
+            }
+        }
+
         <# Write(csstring); #>
     }
 }
