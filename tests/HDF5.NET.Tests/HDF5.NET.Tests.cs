@@ -1,3 +1,4 @@
+using Blosc2.PInvoke;
 using HDF.PInvoke;
 using System;
 using System.Collections.Generic;
@@ -5,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using Xunit;
 using Xunit.Abstractions;
@@ -652,6 +654,84 @@ namespace HDF5.NET.Tests
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+            }
+        }
+
+        [Fact(Skip = "Not yet finished test.")]
+        public void CanUseBlosc2()
+        {
+            // https://github.com/h5py/h5py/issues/611#issuecomment-497834183
+            H5Filter.Register(id: 32001, name: "blosc2", filterFunc: FilterFunc);
+
+            unsafe ulong FilterFunc(uint flags, uint[] parameters, ulong bytesToFilter, ref Span<byte> buffer)
+            {
+                byte[] outbuf = null;
+                int status = 0;
+                uint clevel = 5;
+                uint doshuffle = 1;
+                uint compcode;
+
+                /* Filter params that are always set */
+                var typesize = parameters[2];           /* The datatype size */
+                ulong outbuf_size = parameters[3];      /* Precomputed buffer guess */
+
+                /* Optional params */
+                if (parameters.Length >= 5)
+                    clevel = parameters[4];             /* The compression level */
+
+                if (parameters.Length >= 6)
+                    doshuffle = parameters[5];          /* BLOSC_SHUFFLE, BLOSC_BITSHUFFLE */
+
+                if (parameters.Length >= 7)
+                {
+                    compcode = parameters[6];            /* The Blosc compressor used */
+
+                    /* Check that we actually have support for the compressor code */
+                    var namePtr = IntPtr.Zero;
+                    var compressors = Marshal.PtrToStringAnsi(Blosc.blosc_list_compressors());
+                    var code = Blosc.blosc_compcode_to_compname(CompressorCodes.BLOSC_BLOSCLZ, ref namePtr);
+                    var name = Marshal.PtrToStringAnsi(namePtr);
+
+                    if (code == -1)
+                        throw new Exception($"This Blosc library does not have support for the '{name}' compressor, but only for: {compressors}.");
+                }
+
+                /* We're compressing */
+#warning FlagReverse check is missing here
+                if ((flags & 0x00) == 0)
+                {
+                    throw new Exception("Writing data chunks is not supported by HDF5.NET.");
+                }
+                /* We're decompressing */
+                else
+                {
+                    /* Extract the exact outbuf_size from the buffer header.
+                     *
+                     * NOTE: the guess value got from "cd_values" corresponds to the
+                     * uncompressed chunk size but it should not be used in a general
+                     * cases since other filters in the pipeline can modify the buffere
+                     *  size.
+                     */
+
+                    fixed (byte* srcPtr = buffer)
+                    {
+                        Blosc.blosc_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
+
+                        outbuf = new byte[outbuf_size];
+
+                        fixed (byte* destPtr = outbuf)
+                        {
+                            status = Blosc.blosc_decompress(new IntPtr(srcPtr), new IntPtr(destPtr), outbuf_size);
+
+                            /* decompression failed */
+                            if (status <= 0)
+                                throw new Exception("Blosc decompression error.");
+                        }
+                    }
+
+                    buffer = outbuf;
+                    return (ulong)status;  /* Size of compressed/decompressed data */
+                }
             }
         }
 
