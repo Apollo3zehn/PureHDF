@@ -1,4 +1,3 @@
-using Blosc2.PInvoke;
 using HDF.PInvoke;
 using System;
 using System.Collections.Generic;
@@ -6,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using Xunit;
 using Xunit.Abstractions;
@@ -657,82 +655,64 @@ namespace HDF5.NET.Tests
             }
         }
 
-        [Fact(Skip = "Not yet finished test.")]
-        public void CanUseBlosc2()
+        [Theory]
+        [InlineData("blosclz", true)]
+        [InlineData("lz4", true)]
+        [InlineData("lz4hc", true)]
+        [InlineData("snappy", false)]
+        [InlineData("zlib", true)]
+        [InlineData("zstd", true)]
+        [InlineData("blosclz_bit", true)]
+        public void CanUseBlosc2(string datasetName, bool shouldSuccess)
         {
-            // https://github.com/h5py/h5py/issues/611#issuecomment-497834183
-            H5Filter.Register(id: 32001, name: "blosc2", filterFunc: FilterFunc);
+            // import h5py
+            // import hdf5plugin
 
-            unsafe ulong FilterFunc(uint flags, uint[] parameters, ulong bytesToFilter, ref Span<byte> buffer)
+            // def blosc_opts(complevel=9, complib='blosc:lz4', shuffle=True):
+            //     shuffle = 2 if shuffle == 'bit' else 1 if shuffle else 0
+            //     compressors = ['blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd']
+            //     complib = ['blosc:' + c for c in compressors].index(complib)
+            //     args = {
+            //         'compression': 32001,
+            //         'compression_opts': (0, 0, 0, 0, complevel, shuffle, complib)
+            //     }
+            //     if shuffle:
+            //         args['shuffle'] = False
+            //     return args
+
+            // with h5py.File('blosc.h5', 'w') as f:
+            //     f.create_dataset('blosclz', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:blosclz', True))
+            //     f.create_dataset('lz4', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:lz4', True))
+            //     f.create_dataset('lz4hc', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:lz4hc', True))
+            //     f.create_dataset('snappy', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:snappy', True))
+            //     f.create_dataset('zlib', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:zlib', True))
+            //     f.create_dataset('zstd', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:zstd', True))
+            //     f.create_dataset('blosclz_bit', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:blosclz', 'bit'))
+
+            // Arrange
+            var filePath = "./testfiles/blosc.h5";
+            var expected = Enumerable.Range(0, 1000).ToArray();
+
+            H5Filter.Register(identifier: (FilterIdentifier)32001, name: "blosc2", filterFunc: BloscHelper.FilterFunc);
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var dataset = root.Get<H5Dataset>(datasetName);
+
+            if (shouldSuccess)
             {
-                byte[] outbuf = null;
-                int status = 0;
-                uint clevel = 5;
-                uint doshuffle = 1;
-                uint compcode;
+                var actual = dataset.Read<int>();
 
-                /* Filter params that are always set */
-                var typesize = parameters[2];           /* The datatype size */
-                ulong outbuf_size = parameters[3];      /* Precomputed buffer guess */
-
-                /* Optional params */
-                if (parameters.Length >= 5)
-                    clevel = parameters[4];             /* The compression level */
-
-                if (parameters.Length >= 6)
-                    doshuffle = parameters[5];          /* BLOSC_SHUFFLE, BLOSC_BITSHUFFLE */
-
-                if (parameters.Length >= 7)
-                {
-                    compcode = parameters[6];            /* The Blosc compressor used */
-
-                    /* Check that we actually have support for the compressor code */
-                    var namePtr = IntPtr.Zero;
-                    var compressors = Marshal.PtrToStringAnsi(Blosc.blosc_list_compressors());
-                    var code = Blosc.blosc_compcode_to_compname(CompressorCodes.BLOSC_BLOSCLZ, ref namePtr);
-                    var name = Marshal.PtrToStringAnsi(namePtr);
-
-                    if (code == -1)
-                        throw new Exception($"This Blosc library does not have support for the '{name}' compressor, but only for: {compressors}.");
-                }
-
-                /* We're compressing */
-#warning FlagReverse check is missing here
-                if ((flags & 0x00) == 0)
-                {
-                    throw new Exception("Writing data chunks is not supported by HDF5.NET.");
-                }
-                /* We're decompressing */
-                else
-                {
-                    /* Extract the exact outbuf_size from the buffer header.
-                     *
-                     * NOTE: the guess value got from "cd_values" corresponds to the
-                     * uncompressed chunk size but it should not be used in a general
-                     * cases since other filters in the pipeline can modify the buffere
-                     *  size.
-                     */
-
-                    fixed (byte* srcPtr = buffer)
-                    {
-                        Blosc.blosc_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
-
-                        outbuf = new byte[outbuf_size];
-
-                        fixed (byte* destPtr = outbuf)
-                        {
-                            status = Blosc.blosc_decompress(new IntPtr(srcPtr), new IntPtr(destPtr), outbuf_size);
-
-                            /* decompression failed */
-                            if (status <= 0)
-                                throw new Exception("Blosc decompression error.");
-                        }
-                    }
-
-                    buffer = outbuf;
-                    return (ulong)status;  /* Size of compressed/decompressed data */
-                }
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
             }
+            else
+            {
+                var exception = Assert.Throws<Exception>(() => dataset.Read<int>());
+
+                // Assert
+                Assert.Contains("snappy", exception.InnerException.Message);
+            }  
         }
 
         [Fact]
@@ -869,7 +849,7 @@ namespace HDF5.NET.Tests
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
             var parent = root.Get<H5Group>("shuffle");
             var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);

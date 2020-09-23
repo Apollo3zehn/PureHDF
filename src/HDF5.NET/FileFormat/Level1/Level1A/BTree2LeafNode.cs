@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace HDF5.NET
 {
@@ -6,8 +7,8 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree2LeafNode(H5BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount) 
-            : base(reader, superblock, header, recordCount, BTree2LeafNode<T>.Signature)
+        public BTree2LeafNode(H5BinaryReader reader, BTree2Header<T> header, ushort recordCount, Func<T> decodeKey) 
+            : base(reader, header, recordCount, BTree2LeafNode<T>.Signature, decodeKey)
         {
             // checksum
             this.Checksum = reader.ReadUInt32();

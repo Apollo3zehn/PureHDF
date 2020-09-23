@@ -10,6 +10,8 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private Func<T> _decodeKey;
+
         private Superblock _superblock;
         private byte _version;
 
@@ -17,9 +19,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree2Header(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public BTree2Header(H5BinaryReader reader, Superblock superblock, Func<T> decodeKey) : base(reader)
         {
             _superblock = superblock;
+            _decodeKey = decodeKey;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -135,8 +138,8 @@ namespace HDF5.NET
                     this.Reader.Seek((long)this.RootNodePointer.Address, SeekOrigin.Begin);
 
                     return this.Depth != 0
-                        ? (BTree2Node<T>)new BTree2InternalNode<T>(this.Reader, _superblock, this, this.RootNodePointer.RecordCount, this.Depth)
-                        : (BTree2Node<T>)new BTree2LeafNode<T>(this.Reader, _superblock, this, this.RootNodePointer.RecordCount);
+                        ? (BTree2Node<T>)new BTree2InternalNode<T>(this.Reader, _superblock, this, this.RootNodePointer.RecordCount, this.Depth, _decodeKey)
+                        : (BTree2Node<T>)new BTree2LeafNode<T>(this.Reader, this, this.RootNodePointer.RecordCount, _decodeKey);
                 }
             }
         }
@@ -180,7 +183,7 @@ namespace HDF5.NET
             while (depth > 0)
             {
                 this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-                var internalNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount, depth);
+                var internalNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount, depth, _decodeKey);
 
                 if (internalNode == null)
                     throw new Exception("Unable to load B-tree internal node.");
@@ -233,7 +236,7 @@ namespace HDF5.NET
 
             {
                 this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-                var leafNode = new BTree2LeafNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount);
+                var leafNode = new BTree2LeafNode<T>(this.Reader, this, currentNodePointer.RecordCount, _decodeKey);
 
                 /* Locate record */
                 (index, cmp) = this.LocateRecord(leafNode.Records, compare);
@@ -291,13 +294,13 @@ namespace HDF5.NET
                     // internal node
                     if (childNodeLevel > 0)
                     {
-                        var childNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, nodePointer.RecordCount, childNodeLevel);
+                        var childNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, nodePointer.RecordCount, childNodeLevel, _decodeKey);
                         childRecords = this.EnumerateRecords(childNode, childNodeLevel);
                     }
                     // leaf node
                     else
                     {
-                        var childNode = new BTree2LeafNode<T>(this.Reader, _superblock, this, nodePointer.RecordCount);
+                        var childNode = new BTree2LeafNode<T>(this.Reader, this, nodePointer.RecordCount, _decodeKey);
                         childRecords = childNode.Records;
                     }
 
@@ -315,51 +318,6 @@ namespace HDF5.NET
                     yield return record;
                 }
             }
-
-            // alterantive version to get tree dictionary:
-
-            //if (rootNode != null)
-            //{
-            //    // root node
-            //    nodeMap[nodeLevel] = new List<BTree2Node>() { rootNode };
-            //    nodeLevel--;
-
-            //    // internal nodes
-            //    while (nodeLevel > 0)
-            //    {
-            //        var newInternalNodes = new List<BTree2Node>();
-
-            //        foreach (BTree2InternalNode parentNode in nodeMap[nodeLevel + 1U])
-            //        {
-            //            foreach (var nodePointer in parentNode.NodePointers)
-            //            {
-            //                this.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
-            //                var internalNode = new BTree2InternalNode(this.Reader, _superblock, this, nodePointer.RecordCount, nodeLevel);
-            //                newInternalNodes.Add(internalNode);
-            //            }
-            //        }
-
-            //        nodeMap[nodeLevel] = newInternalNodes;
-            //        nodeLevel--;
-            //    }
-
-            //    // leaf nodes
-            //    var newLeafNodes = new List<BTree2Node>();
-
-            //    foreach (BTree2InternalNode parentNode in nodeMap[1])
-            //    {
-            //        foreach (var nodePointer in parentNode.NodePointers)
-            //        {
-            //            this.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
-            //            var leafNode = new BTree2LeafNode(this.Reader, _superblock, this, nodePointer.RecordCount);
-            //            newLeafNodes.Add(leafNode);
-            //        }
-            //    }
-
-            //    nodeMap[nodeLevel] = newLeafNodes;
-            //}
-
-            //return nodeMap;
         }
 
         private (uint index, int cmp) LocateRecord(T[] records,

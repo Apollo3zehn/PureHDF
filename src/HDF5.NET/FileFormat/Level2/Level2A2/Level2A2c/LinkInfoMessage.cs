@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
@@ -78,7 +79,7 @@ namespace HDF5.NET
             get
             {
                 this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
-                return new BTree2Header<BTree2Record05>(this.Reader, _superblock);
+                return new BTree2Header<BTree2Record05>(this.Reader, _superblock, this.DecodeRecord05);
             }
         }
 
@@ -87,9 +88,19 @@ namespace HDF5.NET
             get
             {
                 this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
-                return new BTree2Header<BTree2Record06>(this.Reader, _superblock);
+                return new BTree2Header<BTree2Record06>(this.Reader, _superblock, this.DecodeRecord06);
             }
         }
+
+        #endregion
+
+        #region Methods
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private BTree2Record05 DecodeRecord05() => new BTree2Record05(this.Reader);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private BTree2Record06 DecodeRecord06() => new BTree2Record06(this.Reader);
 
         #endregion
     }

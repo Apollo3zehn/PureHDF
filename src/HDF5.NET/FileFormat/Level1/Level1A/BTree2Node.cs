@@ -10,7 +10,7 @@ namespace HDF5.NET
 
         #endregion
 
-        public BTree2Node(H5BinaryReader reader, Superblock superblock, BTree2Header<T> header, ushort recordCount, byte[] signature) 
+        public BTree2Node(H5BinaryReader reader, BTree2Header<T> header, ushort recordCount, byte[] signature, Func<T> decodeKey) 
             : base(reader)
         {
             // signature
@@ -31,24 +31,7 @@ namespace HDF5.NET
 
             for (ulong i = 0; i < recordCount; i++)
             {
-                var record = (IBTree2Record)(this.Type switch
-                {
-                    BTree2Type.IndexingIndirectlyAccessed_NonFilteredHugeFractalHeapObjects => new BTree2Record01(reader, superblock),
-                    BTree2Type.IndexingIndirectlyAccessed_FilteredHugeFractalHeapObjects => new BTree2Record02(reader, superblock),
-                    BTree2Type.IndexingDirectlyAccessed_NonFilteredHugeFractalHeapObjects => new BTree2Record03(reader, superblock),
-                    BTree2Type.IndexingDirectlyAccessed_FilteredHugeFractalHeapObjects => new BTree2Record04(reader, superblock),
-                    BTree2Type.IndexingNameField_Links => new BTree2Record05(reader),
-                    BTree2Type.IndexingCreationOrderField_Links => new BTree2Record06(reader),
-                    //BTree2Type.IndexingSharedObjectHeaderMessages => BTree2Record07.Construct(reader, superblock),
-                    BTree2Type.IndexingNameField_Attributes => new BTree2Record08(reader),
-                    BTree2Type.IndexingCreationOrderField_Attributes => new BTree2Record09(reader),
-                    BTree2Type.IndexingChunksOfDatasets_WithoutFilters_WithMoreThanOneUnlimDim => new BTree2Record10(reader, superblock, header.RecordSize),
-                    BTree2Type.IndexingChunksOfDatasets_WithFilters_WithMoreThanOneUnlimDim => new BTree2Record11(reader, superblock, header.RecordSize),
-                    BTree2Type.Testing => throw new Exception($"Record type {nameof(BTree2Type.Testing)} should only be used for testing."),
-                    _ => throw new Exception($"Unknown record type '{this.Type}'.")
-                });
-
-                this.Records[i] = (T)record;
+                this.Records[i] = decodeKey();
             }
         }
 
