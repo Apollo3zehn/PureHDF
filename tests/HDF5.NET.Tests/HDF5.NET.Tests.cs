@@ -145,7 +145,7 @@ namespace HDF5.NET.Tests
 
         [Theory]
         [MemberData(nameof(HDF5Tests.CanReadNumericalAttributeTestData))]
-        public void CanReadNumericalAttribute<T>(string name, T[] expected) where T : unmanaged
+        public void CanReadAttribute_Numerical<T>(string name, T[] expected) where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -163,7 +163,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanReadNonNullableStructAttribute()
+        public void CanReadAttribute_NonNullableStruct()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -181,7 +181,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanReadNullableStructAttribute()
+        public void CanReadAttribute_NullableStruct()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -199,7 +199,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanReadTinyAttribute()
+        public void CanReadAttribute_Tiny()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -218,7 +218,7 @@ namespace HDF5.NET.Tests
         }
 
         [Fact]
-        public void CanReadHugeAttribute()
+        public void CanReadAttribute_Huge()
         {
             TestUtils.RunForAllVersions(version =>
             {
