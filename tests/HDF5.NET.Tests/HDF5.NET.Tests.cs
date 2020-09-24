@@ -663,7 +663,7 @@ namespace HDF5.NET.Tests
         [InlineData("zlib", true)]
         [InlineData("zstd", true)]
         [InlineData("blosclz_bit", true)]
-        public void CanUseBlosc2(string datasetName, bool shouldSuccess)
+        public void CanDefilterBlosc2(string datasetName, bool shouldSuccess)
         {
             // import h5py
             // import hdf5plugin
@@ -712,7 +712,58 @@ namespace HDF5.NET.Tests
 
                 // Assert
                 Assert.Contains("snappy", exception.InnerException.Message);
-            }  
+            }
+        }
+
+        [Fact]
+        public void CanDefilterFletcher()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Fletcher(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("filtered");
+            var dataset = parent.Get<H5Dataset>("fletcher");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanDefilterZLib()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_ZLib(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("filtered");
+            var dataset = parent.Get<H5Dataset>("deflate");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
+        }
+
+        [Fact]
+        public void CanDefilterMultiple()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Multi(fileId));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var parent = root.Get<H5Group>("filtered");
+            var dataset = parent.Get<H5Dataset>("multi");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(TestUtils.MediumData));
         }
 
         [Fact]
@@ -806,10 +857,10 @@ namespace HDF5.NET.Tests
                 .Select(value => unchecked((byte)value)).ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
-            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+            TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("shuffle");
+            var parent = root.Get<H5Group>("filtered");
             var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
@@ -847,10 +898,10 @@ namespace HDF5.NET.Tests
                 .Select(value => unchecked((byte)value)).ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
-            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+            TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
-            var parent = root.Get<H5Group>("shuffle");
+            var parent = root.Get<H5Group>("filtered");
             var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
@@ -888,10 +939,10 @@ namespace HDF5.NET.Tests
                 .Select(value => unchecked((byte)value)).ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
-            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+            TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("shuffle");
+            var parent = root.Get<H5Group>("filtered");
             var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
@@ -915,7 +966,7 @@ namespace HDF5.NET.Tests
                 .Select(value => unchecked((byte)value)).ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
-            TestUtils.AddShuffledData(fileId, bytesOfType: bytesOfType, length, expected));
+            TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
             var parent = root.Get<H5Group>("shuffle");

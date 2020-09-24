@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -503,10 +504,11 @@ namespace HDF5.NET
             }
             else
             {
-                var filterBuffer = new byte[rawChunkSize];
-                this.File.Reader.Read(filterBuffer);
+                using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
+                var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
+                this.File.Reader.Read(filterBuffer.Span);
 
-                H5Filter.ExecutePipeline(this.FilterPipeline?.FilterDescriptions, ExtendedFilterFlags.Reverse, filterBuffer, buffer);
+                H5Filter.ExecutePipeline(this.FilterPipeline.FilterDescriptions, ExtendedFilterFlags.Reverse, filterBuffer, buffer);
             }
         }
 

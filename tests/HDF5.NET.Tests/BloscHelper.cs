@@ -6,7 +6,7 @@ namespace HDF5.NET.Tests
 {
     public static class BloscHelper
     {
-        public static unsafe Span<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Span<byte> buffer)
+        public static unsafe Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             byte[] resultBuffer = null;
             int status = 0;
@@ -49,7 +49,7 @@ namespace HDF5.NET.Tests
                 *  size.
                 */
 
-                fixed (byte* srcPtr = buffer)
+                fixed (byte* srcPtr = buffer.Span)
                 {
                     Blosc.blosc_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
 
