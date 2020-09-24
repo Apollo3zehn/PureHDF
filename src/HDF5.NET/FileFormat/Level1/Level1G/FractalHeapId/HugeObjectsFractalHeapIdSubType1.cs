@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
@@ -44,7 +45,7 @@ namespace HDF5.NET
             if (record01Cache == null)
             {
                 _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
-                var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock);
+                var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock, this.DecodeRecord01);
                 record01Cache = hugeBtree2.EnumerateRecords().ToList();
             }
 
@@ -53,6 +54,13 @@ namespace HDF5.NET
             
             return func(_reader);
         }
+
+        #endregion
+
+        #region Methods
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private BTree2Record01 DecodeRecord01() => new BTree2Record01(_reader, _superblock);
 
         #endregion
     }

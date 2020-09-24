@@ -2,6 +2,7 @@
 
 namespace HDF5.NET
 {
+    // https://support.hdfgroup.org/HDF5/doc_resource/H5Fill_Behavior.html
     public class FillValueMessage : Message
     {
         #region Fields
@@ -21,24 +22,24 @@ namespace HDF5.NET
             {
                 case 1:
 
-                    this.SpaceAllocationTime = (SpaceAllocationTime)reader.ReadByte();
-                    this.FillValueWriteTime = (FillValueWriteTime)reader.ReadByte();
-                    this.IsFillValueDefined = reader.ReadByte() == 1;
+                    this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
+                    this.FillTime = (FillValueWriteTime)reader.ReadByte();
+                    this.IsDefined = reader.ReadByte() == 1;
                     this.Size = reader.ReadUInt32();
-                    this.FillValue = reader.ReadBytes((int)this.Size);
+                    this.Value = reader.ReadBytes((int)this.Size);
 
                     break;
 
                 case 2:
 
-                    this.SpaceAllocationTime = (SpaceAllocationTime)reader.ReadByte();
-                    this.FillValueWriteTime = (FillValueWriteTime)reader.ReadByte();
-                    this.IsFillValueDefined = reader.ReadByte() == 1;
+                    this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
+                    this.FillTime = (FillValueWriteTime)reader.ReadByte();
+                    this.IsDefined = reader.ReadByte() == 1;
 
-                    if (this.IsFillValueDefined)
+                    if (this.IsDefined)
                     {
                         this.Size = reader.ReadUInt32();
-                        this.FillValue = reader.ReadBytes((int)this.Size);
+                        this.Value = reader.ReadBytes((int)this.Size);
                     }
 
                     break;
@@ -46,17 +47,14 @@ namespace HDF5.NET
                 case 3:
 
                     var flags = reader.ReadByte();
-                    this.SpaceAllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);  // take only bits 0 and 1
-                    this.FillValueWriteTime = (FillValueWriteTime)((flags & 0x0C) >> 2);    // take only bits 2 and 3
-                    this.IsFillValueUndefined = (flags & (1 << 4)) > 0;                     // take only bit 4
-                    this.IsFillValueDefined = (flags & (1 << 5)) > 0;                       // take only bit 5
+                    this.AllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);   // take only bits 0 and 1
+                    this.FillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);          // take only bits 2 and 3
+                    this.IsDefined = (flags & (1 << 5)) > 0;                            // take only bit 5
 
-#warning make sure that both bool values cannot be true at the same time
-
-                    if (this.IsFillValueDefined)
+                    if (this.IsDefined)
                     {
                         this.Size = reader.ReadUInt32();
-                        this.FillValue = reader.ReadBytes((int)this.Size);
+                        this.Value = reader.ReadBytes((int)this.Size);
                     }
 
                     break;
@@ -85,12 +83,11 @@ namespace HDF5.NET
             }
         }
 
-        public SpaceAllocationTime SpaceAllocationTime { get; set; }
-        public FillValueWriteTime FillValueWriteTime { get; set; }
-        public bool IsFillValueUndefined { get; set; }
-        public bool IsFillValueDefined { get; set; }
+        public SpaceAllocationTime AllocationTime { get; set; }
+        public FillValueWriteTime FillTime { get; set; }
+        public bool IsDefined { get; set; }
         public uint Size { get; set; }
-        public byte[] FillValue { get; set; }
+        public byte[] Value { get; set; }
 
         #endregion
     }

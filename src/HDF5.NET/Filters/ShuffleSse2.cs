@@ -1,8 +1,3 @@
-
-
-
-
-
 /* 
 This is automatically translated code from https://github.com/Blosc/c-blosc2
 
@@ -646,8 +641,7 @@ namespace HDF5.NET
           }
         }
         
-        
-    }
+            }
 }
 
 #endif

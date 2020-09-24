@@ -4,6 +4,6 @@
     {
         OnAllocation = 0,
         Never = 1,
-        FillValueWrittenIfSetByUser = 2
+        IfSetByUser = 2
     }
 }

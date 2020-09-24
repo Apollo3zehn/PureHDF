@@ -6,23 +6,21 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree2Record11(H5BinaryReader reader, Superblock superblock, ushort recordSize)
+        public BTree2Record11(H5BinaryReader reader, Superblock superblock, byte dimensionality, uint chunkSizeLength)
         {
             // address
             this.Address = superblock.ReadOffset(reader);
 
             // chunk size
-#warning how to correctly parse this field?
-            this.ChunkSize = reader.ReadUInt64();
+            this.ChunkSize = H5Utils.ReadUlong(reader, chunkSizeLength);
 
             // filter mask
             this.FilterMask = reader.ReadUInt32();
 
             // scaled offsets
-            var rank = (recordSize - (superblock.OffsetsSize + 8 + 4)) / 8;
-            this.ScaledOffsets = new List<ulong>(rank);
+            this.ScaledOffsets = new ulong[dimensionality];
 
-            for (int i = 0; i < rank; i++)
+            for (int i = 0; i < dimensionality; i++)
             {
                 this.ScaledOffsets[i] = reader.ReadUInt64();
             }
@@ -35,7 +33,7 @@ namespace HDF5.NET
         public ulong Address { get; set; }
         public ulong ChunkSize { get; set; }
         public uint FilterMask { get; set; }
-        public List<ulong> ScaledOffsets { get; set; }
+        public ulong[] ScaledOffsets { get; set; }
 
         #endregion
     }

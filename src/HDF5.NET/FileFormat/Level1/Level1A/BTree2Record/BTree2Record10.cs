@@ -1,18 +1,15 @@
-﻿using System.Collections.Generic;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public struct BTree2Record10 : IBTree2Record
     {
         #region Constructors
 
-        public BTree2Record10(H5BinaryReader reader, Superblock superblock, ushort recordSize)
+        public BTree2Record10(H5BinaryReader reader, Superblock superblock, byte dimensionality)
         {
             // address
             this.Address = superblock.ReadOffset(reader);
 
             // scaled offsets
-            var dimensionality = (recordSize - superblock.OffsetsSize) / 8;
             this.ScaledOffsets = new ulong[dimensionality];
 
             for (int i = 0; i < dimensionality; i++)

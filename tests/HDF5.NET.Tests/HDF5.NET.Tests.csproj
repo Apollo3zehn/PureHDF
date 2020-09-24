@@ -7,8 +7,8 @@
 
   <ItemGroup>
     <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
+    <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.610" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
@@ -22,6 +22,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="testfiles\blosc.h5">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="testfiles\h5ex_d_compact.h5">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
