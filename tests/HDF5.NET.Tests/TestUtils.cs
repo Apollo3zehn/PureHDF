@@ -559,7 +559,29 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddChunkedDataset(long fileId, bool withShuffle)
+        public static unsafe void AddContiguousDatasetWithFillValueAndAllocationLate(long fileId, int fillValue)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length;
+            var groupId = H5G.create(fileId, "fillvalue");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
+            res = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
+
+            var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
+            H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
+            handle.Free();
+
+            var datasetId = H5D.create(groupId, $"{LayoutClass.Contiguous}", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDataset_Legacy(long fileId, bool withShuffle)
         {
             long res;
 
@@ -579,6 +601,28 @@ namespace HDF5.NET.Tests
             {
                 res = H5D.write(datasetId, H5T.NATIVE_INT, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
+
+            res = H5D.close(datasetId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddChunkedDatasetWithFillValueAndAllocationLate(long fileId, int fillValue)
+        {
+            long res;
+
+            var length = (ulong)TestUtils.MediumData.Length;
+            var groupId = H5G.create(fileId, "fillvalue");
+            var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
+            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
+
+            var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
+            H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
+            handle.Free();
+
+            var datasetId = H5D.create(groupId, $"{LayoutClass.Chunked}", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
 
             res = H5D.close(datasetId);
             res = H5G.close(groupId);

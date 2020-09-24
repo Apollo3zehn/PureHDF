@@ -39,23 +39,36 @@ namespace HDF5.NET
                 else if (type == typeof(ObjectModificationMessage))
                     this.ObjectModification = (ObjectModificationMessage)message.Data;
             }
+
+            // check that required fields are set
+            if (this.DataLayout == null)
+                throw new Exception("The data layout message is missing.");
+
+            if (this.Dataspace == null)
+                throw new Exception("The dataspace message is missing.");
+
+            if (this.DataType == null)
+                throw new Exception("The data type message is missing.");
+
+            if (this.FillValue == null)
+                throw new Exception("The fill value message is missing.");
         }
 
         #endregion
 
         #region Properties
 
-        public DataLayoutMessage DataLayout { get; }
+        public DataLayoutMessage DataLayout { get; } = null!;
 
-        public DataspaceMessage Dataspace { get; }
+        public DataspaceMessage Dataspace { get; } = null!;
 
-        public DatatypeMessage DataType { get; }
+        public DatatypeMessage DataType { get; } = null!;
 
-        public FillValueMessage FillValue { get; }
+        public FillValueMessage FillValue { get; } = null!;
 
-        public FilterPipelineMessage FilterPipeline { get; }
+        public FilterPipelineMessage? FilterPipeline { get; }
 
-        public ObjectModificationMessage ObjectModification { get; }
+        public ObjectModificationMessage? ObjectModification { get; }
 
         #endregion
 
@@ -69,7 +82,7 @@ namespace HDF5.NET
         internal T[] Read<T>(bool skipShuffle) where T : unmanaged
         {
             // for testing only
-            if (skipShuffle)
+            if (skipShuffle && this.FilterPipeline != null)
             {
                 var filtersToRemove = this
                     .FilterPipeline
@@ -148,32 +161,36 @@ namespace HDF5.NET
 
         private T[] ReadContiguous<T>() where T : unmanaged
         {
+            ulong address;
+
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
-#warning untested
-                var buffer = this.GetBuffer<T>(out var result);
-
-                // read data
-                this.File.Reader.Seek((long)layout12.DataAddress, SeekOrigin.Begin);
-                this.File.Reader.Read(buffer);
-
-                return result;
+                address = layout12.DataAddress;
             }
             else if (this.DataLayout is DataLayoutMessage3 layout34)
             {
                 var contiguous = (ContiguousStoragePropertyDescription)layout34.Properties;
-                var buffer = this.GetBuffer<T>(out var result);
-
-                // read data
-                this.File.Reader.Seek((long)contiguous.Address, SeekOrigin.Begin);
-                this.File.Reader.Read(buffer);
-
-                return result;
+                address = contiguous.Address;
             }
             else
             {
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
+
+            // read data
+            var buffer = this.GetBuffer<T>(out var result);
+
+            if (this.File.Superblock.IsUndefinedAddress(address))
+            {
+                buffer.Fill(this.FillValue.Value);
+            }
+            else
+            {
+                this.File.Reader.Seek((long)address, SeekOrigin.Begin);
+                this.File.Reader.Read(buffer);
+            }
+
+            return result;
         }
 
         private T[] ReadChunked<T>() where T : unmanaged
@@ -183,11 +200,15 @@ namespace HDF5.NET
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
                 if (this.File.Superblock.IsUndefinedAddress(layout12.DataAddress))
-                    return result;
-
-                var chunkSize = this.CalculateByteSize(layout12.DimensionSizes);
-                this.File.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
-                this.ReadChunkedBTree1(buffer, layout12.Dimensionality, chunkSize);
+                {
+                    buffer.Fill(this.FillValue.Value);
+                }
+                else
+                {
+                    var chunkSize = this.CalculateByteSize(layout12.DimensionSizes);
+                    this.File.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
+                    this.ReadChunkedBTree1(buffer, layout12.Dimensionality, chunkSize);
+                }                
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
             {
@@ -195,54 +216,66 @@ namespace HDF5.NET
                 var chunkSize = this.CalculateByteSize(chunked4.DimensionSizes);
 
                 if (this.File.Superblock.IsUndefinedAddress(chunked4.Address))
-                    return result;
-
-                this.File.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
-
-                switch (chunked4.ChunkIndexingType)
                 {
-                    // the current, maximum, and chunk dimension sizes are all the same
-                    case ChunkIndexingType.SingleChunk:
-                        var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
-                        this.ReadChunk(buffer, chunkSize);
-                        break;
+                    buffer.Fill(this.FillValue.Value);
+                }
+                else
+                {
+                    this.File.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
 
-                    // fixed maximum dimension sizes
-                    // no filter applied to the dataset
-                    // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
-                    case ChunkIndexingType.Implicit:
-                        var @implicitInfo = (ImplicitIndexingInformation)chunked4.IndexingTypeInformation;
-                        this.File.Reader.Read(buffer);
-                        break;
+                    switch (chunked4.ChunkIndexingType)
+                    {
+                        // the current, maximum, and chunk dimension sizes are all the same
+                        case ChunkIndexingType.SingleChunk:
+                            var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
+                            this.ReadChunk(buffer, chunkSize);
+                            break;
 
-                    // fixed maximum dimension sizes
-                    case ChunkIndexingType.FixedArray:
-                        var fixedArrayInfo = (FixedArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                        this.ReadFixedArray(buffer, chunkSize);
-                        break;
+                        // fixed maximum dimension sizes
+                        // no filter applied to the dataset
+                        // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
+                        case ChunkIndexingType.Implicit:
+                            var @implicitInfo = (ImplicitIndexingInformation)chunked4.IndexingTypeInformation;
+                            this.File.Reader.Read(buffer);
+                            break;
 
-                    // only one dimension of unlimited extent
-                    case ChunkIndexingType.ExtensibleArray:
-                        var extensibleArrayInfo = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                        this.ReadExtensibleArray(buffer, chunkSize);
-                        break;
+                        // fixed maximum dimension sizes
+                        case ChunkIndexingType.FixedArray:
+                            var fixedArrayInfo = (FixedArrayIndexingInformation)chunked4.IndexingTypeInformation;
+                            this.ReadFixedArray(buffer, chunkSize);
+                            break;
 
-                    // more than one dimension of unlimited extent
-                    case ChunkIndexingType.BTree2:
-                        var btree2Info = (BTree2IndexingInformation)chunked4.IndexingTypeInformation;
-                        this.ReadChunkedBTree2(buffer, (byte)(chunked4.Dimensionality - 1), chunkSize);
-                        break;
+                        // only one dimension of unlimited extent
+                        case ChunkIndexingType.ExtensibleArray:
+                            var extensibleArrayInfo = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
+                            this.ReadExtensibleArray(buffer, chunkSize);
+                            break;
 
-                    default:
-                        break;
+                        // more than one dimension of unlimited extent
+                        case ChunkIndexingType.BTree2:
+                            var btree2Info = (BTree2IndexingInformation)chunked4.IndexingTypeInformation;
+                            this.ReadChunkedBTree2(buffer, (byte)(chunked4.Dimensionality - 1), chunkSize);
+                            break;
+
+                        default:
+                            break;
+                    }
                 }
             }
             else if (this.DataLayout is DataLayoutMessage3 layout3)
             {
                 var chunked3 = (ChunkedStoragePropertyDescription3)layout3.Properties;
-                var chunkSize = this.CalculateByteSize(chunked3.DimensionSizes);
-                this.File.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
-                this.ReadChunkedBTree1(buffer, (byte)(chunked3.Dimensionality - 1), chunkSize);
+
+                if (this.File.Superblock.IsUndefinedAddress(chunked3.Address))
+                {
+                    buffer.Fill(this.FillValue.Value);
+                }
+                else
+                {
+                    var chunkSize = this.CalculateByteSize(chunked3.DimensionSizes);
+                    this.File.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
+                    this.ReadChunkedBTree1(buffer, (byte)(chunked3.Dimensionality - 1), chunkSize);
+                }
             }
             else
             {
@@ -488,11 +521,18 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SeekSliceAndReadChunk(ulong offset, ulong chunkSize, ulong rawChunkSize, ulong address, Span<byte> buffer)
         {
-            this.File.Reader.Seek((long)address, SeekOrigin.Begin);
-            var length = Math.Min(chunkSize, (ulong)buffer.Length - offset);
-            // https://github.com/dotnet/apireviews/tree/main/2016/11-04-SpanOfT#spant-and-64-bit
-            var bufferSlice = buffer.Slice((int)offset, (int)length);
-            this.ReadChunk(bufferSlice, rawChunkSize);
+            if (this.File.Superblock.IsUndefinedAddress(address))
+            {
+                buffer.Fill(this.FillValue.Value);
+            }
+            else
+            {
+                this.File.Reader.Seek((long)address, SeekOrigin.Begin);
+                var length = Math.Min(chunkSize, (ulong)buffer.Length - offset);
+                // https://github.com/dotnet/apireviews/tree/main/2016/11-04-SpanOfT#spant-and-64-bit
+                var bufferSlice = buffer.Slice((int)offset, (int)length);
+                this.ReadChunk(bufferSlice, rawChunkSize);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

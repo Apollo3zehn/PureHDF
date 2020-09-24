@@ -470,8 +470,34 @@ namespace HDF5.NET.Tests
             });
         }
 
+        // https://support.hdfgroup.org/HDF5/doc_resource/H5Fill_Behavior.html
+        // Fill value can only be inserted during read when data space is not allocated (late allocation).
+        // As soon as the allocation happened, the fill value is either written or not written but during 
+        // read this cannot be distinguished anymore. It is not possible to determine which parts of the
+        // dataset have not been touched to insert a fill value in these buffers.
         [Fact]
-        public void CanReadChunkedDataset()
+        public void CanReadContiguousDataset_With_FillValue_And_AllocationLate()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var fillValue = 99;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddContiguousDatasetWithFillValueAndAllocationLate(fileId, fillValue));
+            var expected = Enumerable.Range(0, TestUtils.MediumData.Length)
+                .Select(value => fillValue)
+                .ToArray();
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var group = root.Get<H5Group>("fillvalue");
+            var dataset = group.Get<H5Dataset>($"{LayoutClass.Contiguous}");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
+        public void CanReadChunkedDataset_Legacy()
         {
             var versions = new H5F.libver_t[]
             {
@@ -484,7 +510,7 @@ namespace HDF5.NET.Tests
                 foreach (var withShuffle in new bool[] { false, true })
                 {
                     // Arrange
-                    var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset(fileId, withShuffle));
+                    var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Legacy(fileId, withShuffle));
 
                     // Act
                     using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -653,6 +679,29 @@ namespace HDF5.NET.Tests
                 // Assert
                 Assert.True(actual.SequenceEqual(TestUtils.MediumData));
             }
+        }
+
+        [Fact]
+        public void CanReadChunkedDataset_With_FillValue_And_AllocationLate()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var fillValue = 99;
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetWithFillValueAndAllocationLate(fileId, fillValue));
+                var expected = Enumerable.Range(0, TestUtils.MediumData.Length)
+                    .Select(value => fillValue)
+                    .ToArray();
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var group = root.Get<H5Group>("fillvalue");
+                var dataset = group.Get<H5Dataset>($"{LayoutClass.Chunked}");
+                var actual = dataset.Read<int>();
+
+                // Assert
+                Assert.Equal(expected, actual);
+            });
         }
 
         [Theory]
@@ -969,7 +1018,7 @@ namespace HDF5.NET.Tests
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.Get<H5Group>("shuffle");
+            var parent = root.Get<H5Group>("filtered");
             var dataset = parent.Get<H5Dataset>($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
