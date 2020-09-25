@@ -75,22 +75,56 @@ namespace HDF5.NET
             return true;
         }
 
-        public T Get<T>(string path) where T : H5Link
-        {
-            return (T)this.Get(path);
-        }
-
         public H5Link Get(string path)
         {
-            return this.InternalGet(path, resolveSymboliclink: true);
+            return this.Get(path, resolveSymboliclink: true);
+        }
+
+        public H5Group GetGroup(string path)
+        {
+            var link = this.Get(path);
+            var castedLink = link as H5Group;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Group)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
+        }
+
+        public H5Dataset GetDataset(string path)
+        {
+            var link = this.Get(path);
+            var castedLink = link as H5Dataset;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Dataset)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
+        }
+
+        public H5CommitedDataType GetCommitedDataType(string path)
+        {
+            var link = this.Get(path);
+            var castedLink = link as H5CommitedDataType;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5CommitedDataType)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
         }
 
         public H5SymbolicLink GetSymbolicLink(string path)
         {
-            return (H5SymbolicLink)this.InternalGet(path, resolveSymboliclink: false);
+            var link = this.Get(path, resolveSymboliclink: false);
+            var castedLink = link as H5SymbolicLink;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5SymbolicLink)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
         }
 
-        private H5Link InternalGet(string path, bool resolveSymboliclink = true)
+        private H5Link Get(string path, bool resolveSymboliclink = true)
         {
             if (path == "/")
                 return this;

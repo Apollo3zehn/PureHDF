@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -9,92 +11,6 @@ namespace HDF5.NET.Tests
 {
     public class TestUtils
     {
-        private static TestStructL1 _nn_a = new TestStructL1()
-        {
-            ByteValue = 1,
-            UShortValue = 2,
-            UIntValue = 3,
-            ULongValue = 4,
-            L2Struct1 = new TestStructL2()
-            {
-                ByteValue = 99,
-                UShortValue = 65535,
-                EnumValue = TestEnum.b,
-            },
-            SByteValue = 5,
-            ShortValue = -6,
-            IntValue = 7,
-            LongValue = -8,
-            L2Struct2 = new TestStructL2()
-            {
-                ByteValue = 9,
-                EnumValue = TestEnum.b,
-            }
-        };
-
-        private static TestStructL1 _nn_b = new TestStructL1()
-        {
-            ByteValue = 2,
-            UShortValue = 4,
-            UIntValue = 6,
-            ULongValue = 8,
-            L2Struct1 = new TestStructL2()
-            {
-                ByteValue = 99,
-                UShortValue = 65535,
-                EnumValue = TestEnum.a,
-            },
-            SByteValue = -10,
-            ShortValue = 12,
-            IntValue = 14,
-            LongValue = -16,
-            L2Struct2 = new TestStructL2()
-            {
-                ByteValue = 18,
-                UShortValue = 20,
-                EnumValue = TestEnum.b,
-            }
-        };
-
-        private static TestStructString _string_a = new TestStructString()
-        {
-            FloatValue = (float)1.299e9,
-            StringValue1 = "Hello",
-            StringValue2 = "World",
-            ByteValue = 123,
-            ShortValue = -15521,
-            L2Struct = new TestStructL2()
-            {
-                ByteValue = 15,
-                UShortValue = 20,
-                EnumValue = TestEnum.a,
-            }
-        };
-
-        private static TestStructString _string_b = new TestStructString()
-        {
-            FloatValue = (float)2.299e-9,
-            StringValue1 = "Hello!",
-            StringValue2 = "World!",
-            ByteValue = 0,
-            ShortValue = 15521,
-            L2Struct = new TestStructL2()
-            {
-                ByteValue = 18,
-                UShortValue = 21,
-                EnumValue = TestEnum.b,
-            }
-        };
-
-        static TestUtils()
-        {
-            TestUtils.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
-            TestUtils.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
-            TestUtils.TinyData = new byte[] { 99 };
-            TestUtils.MediumData = Enumerable.Range(0, 10_000).ToArray();
-            TestUtils.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
-        }
-
         public static void RunForAllVersions(Action<H5F.libver_t> action)
         {
             var versions = new H5F.libver_t[] 
@@ -117,14 +33,6 @@ namespace HDF5.NET.Tests
                 action(version);
             }
         }
-
-        public static TestStructL1[] NonNullableTestStructData { get; }
-
-        public static TestStructString[] StringTestStructData { get; }
-
-        public static byte[] TinyData { get; }
-        public static int[] MediumData { get; }
-        public static int[] HugeData { get; }
 
         public static unsafe string PrepareTestFile(H5F.libver_t version, Action<long> action)
         {
@@ -200,106 +108,25 @@ namespace HDF5.NET.Tests
             var attributeSpaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
 
             // numeric attributes
-            var attributeId1 = H5A.create(groupId, "A1", H5T.NATIVE_UINT8, attributeSpaceId);
-            var attributeData1 = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData1)
+            foreach (var entry in TestData.AttributeNumericalTestData)
             {
-                res = H5A.write(attributeId1, H5T.NATIVE_UINT8, new IntPtr(ptr));
+                var attributeData = (Array)entry[1];
+                var type = attributeData
+                    .GetType()
+                    .GetElementType();
+
+                var typeId = TestUtils.GetHdfTypeIdFromType(type);
+                var attributeId = H5A.create(groupId, (string)entry[0], typeId, attributeSpaceId);
+                var handle = GCHandle.Alloc(attributeData, GCHandleType.Pinned);
+
+                var ptr = handle.AddrOfPinnedObject().ToPointer();
+                res = H5A.write(attributeId, typeId, new IntPtr(ptr));
+
+                handle.Free();
+
+                res = H5A.close(attributeId);
             }
-
-            res = H5A.close(attributeId1);
-
-            var attributeData2 = new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-            var attributeId2 = H5A.create(groupId, "A2", H5T.NATIVE_UINT16, attributeSpaceId);
-
-            fixed (void* ptr = attributeData2)
-            {
-                res = H5A.write(attributeId2, H5T.NATIVE_UINT16, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId2);
-
-            var attributeId3 = H5A.create(groupId, "A3", H5T.NATIVE_UINT32, attributeSpaceId);
-            var attributeData3 = new uint[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData3)
-            {
-                res = H5A.write(attributeId3, H5T.NATIVE_UINT32, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId3);
-
-            var attributeId4 = H5A.create(groupId, "A4", H5T.NATIVE_UINT64, attributeSpaceId);
-            var attributeData4 = new ulong[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData4)
-            {
-                res = H5A.write(attributeId4, H5T.NATIVE_UINT64, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId4);
-
-            var attributeId5 = H5A.create(groupId, "A5", H5T.NATIVE_INT8, attributeSpaceId);
-            var attributeData5 = new sbyte[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData5)
-            {
-                res = H5A.write(attributeId5, H5T.NATIVE_INT8, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId5);
-
-            var attributeId6 = H5A.create(groupId, "A6", H5T.NATIVE_INT16, attributeSpaceId);
-            var attributeData6 = new short[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData6)
-            {
-                res = H5A.write(attributeId6, H5T.NATIVE_INT16, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId6);
-
-            var attributeId7 = H5A.create(groupId, "A7", H5T.NATIVE_INT32, attributeSpaceId);
-            var attributeData7 = new int[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData7)
-            {
-                res = H5A.write(attributeId7, H5T.NATIVE_INT32, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId7);
-
-            var attributeId8 = H5A.create(groupId, "A8", H5T.NATIVE_INT64, attributeSpaceId);
-            var attributeData8 = new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData8)
-            {
-                res = H5A.write(attributeId8, H5T.NATIVE_INT64, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId8);
-
-            var attributeId9 = H5A.create(groupId, "A9", H5T.NATIVE_FLOAT, attributeSpaceId);
-            var attributeData9 = new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData9)
-            {
-                res = H5A.write(attributeId9, H5T.NATIVE_FLOAT, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId9);
-
-            var attributeId10 = H5A.create(groupId, "A10", H5T.NATIVE_DOUBLE, attributeSpaceId);
-            var attributeData10 = new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 };
-
-            fixed (void* ptr = attributeData10)
-            {
-                res = H5A.write(attributeId10, H5T.NATIVE_DOUBLE, new IntPtr(ptr));
-            }
-
-            res = H5A.close(attributeId10);
-
+           
             // fixed length string attribute (ASCII)
             var attributeTypeId11 = H5T.copy(H5T.C_S1);
             res = H5T.set_size(attributeTypeId11, new IntPtr(2));
@@ -366,7 +193,7 @@ namespace HDF5.NET.Tests
             // non-nullable struct
             var attributeTypeId14 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
             var attributeId14 = H5A.create(groupId, "A14", attributeTypeId14, attributeSpaceId);
-            var attributeData14 = TestUtils.NonNullableTestStructData;
+            var attributeData14 = TestData.NonNullableTestStructData;
 
             fixed (void* ptr = attributeData14)
             {
@@ -379,7 +206,7 @@ namespace HDF5.NET.Tests
             // nullable struct
             var attributeTypeId15 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
             var attributeId15 = H5A.create(groupId, "A15", attributeTypeId15, attributeSpaceId);
-            var attributeData15 = TestUtils.StringTestStructData;
+            var attributeData15 = TestData.StringTestStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
@@ -438,7 +265,7 @@ namespace HDF5.NET.Tests
                     attributeId = H5A.create(groupId, name, attributeTypeId, attributeSpaceId);
                 }
 
-                var attributeData = TestUtils.NonNullableTestStructData;
+                var attributeData = TestData.NonNullableTestStructData;
 
                 fixed (void* ptr = attributeData)
                 {
@@ -460,13 +287,13 @@ namespace HDF5.NET.Tests
             var length = version switch
             {
                 H5F.libver_t.EARLIEST => 16368UL, // max 64 kb in object header
-                _ => (ulong)TestUtils.HugeData.Length,
+                _ => (ulong)TestData.HugeData.Length,
             };
 
             var groupId = H5G.create(fileId, "large");
             var attributeSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var attributeId = H5A.create(groupId, "large", H5T.NATIVE_INT32, attributeSpaceId);
-            var attributeData = TestUtils.HugeData;
+            var attributeData = TestData.HugeData;
 
             fixed (void* ptr = attributeData)
             {
@@ -485,7 +312,7 @@ namespace HDF5.NET.Tests
             var groupId = H5G.create(fileId, "tiny");
             var attributeSpaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
             var attributeId = H5A.create(groupId, "tiny", H5T.NATIVE_UINT8, attributeSpaceId);
-            var attributeData = TestUtils.TinyData;
+            var attributeData = TestData.TinyData;
 
             fixed (void* ptr = attributeData)
             {
@@ -520,6 +347,170 @@ namespace HDF5.NET.Tests
             res = H5G.close(hardLinkId1);
         }
 
+        public static unsafe void AddExternalFileLink(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "links");
+
+            var hardLinkId1 = H5G.create(groupId, "hard_link_1");
+            res = H5L.create_external(groupId, "hard_link_1", groupId, "hard_link_2");
+            res = H5L.create_soft("hard_link_2", groupId, "soft_link_1");
+            res = H5L.create_soft("/links/soft_link_1", groupId, "soft_link_2");
+
+            var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId = H5D.create(hardLinkId1, "dataset", H5T.NATIVE_INT, spaceId);
+
+            res = H5L.create_soft("/links/soft_link_2/dataset", groupId, "dataset");
+
+            res = H5S.close(spaceId);
+            res = H5D.close(datasetId);
+
+            res = H5G.close(groupId);
+            res = H5G.close(hardLinkId1);
+        }
+
+        public static unsafe void AddTypedDatasets(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "typed");
+
+            // "extendible contiguous non-external dataset not allowed"
+            var datasetSpaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
+
+            // numeric datasets
+            foreach (var entry in TestData.DatasetNumericalTestData)
+            {
+                var datasetData = (Array)entry[1];
+                var type = datasetData
+                    .GetType()
+                    .GetElementType();
+
+                var typeId = TestUtils.GetHdfTypeIdFromType(type);
+                var datasetId = H5D.create(groupId, (string)entry[0], typeId, datasetSpaceId);
+                var handle = GCHandle.Alloc(datasetData, GCHandleType.Pinned);
+
+                var ptr = handle.AddrOfPinnedObject().ToPointer();
+                res = H5D.write(datasetId, typeId, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+
+                handle.Free();
+
+                res = H5D.close(datasetId);
+            }
+
+            // fixed length string dataset (ASCII)
+            var datasetTypeId11 = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(datasetTypeId11, new IntPtr(2));
+            res = H5T.set_cset(datasetTypeId11, H5T.cset_t.ASCII);
+
+            var datasetId11 = H5D.create(groupId, "D11", datasetTypeId11, datasetSpaceId);
+            var datasetData11 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var datasetData11Char = datasetData11
+                .SelectMany(value => Encoding.ASCII.GetBytes(value))
+                .ToArray();
+
+            fixed (void* ptr = datasetData11Char)
+            {
+                res = H5D.write(datasetId11, datasetTypeId11, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5T.close(datasetTypeId11);
+            res = H5D.close(datasetId11);
+
+            // variable length string dataset (ASCII)
+            var datasetTypeId12 = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(datasetTypeId12, H5T.VARIABLE);
+            res = H5T.set_cset(datasetTypeId12, H5T.cset_t.ASCII);
+
+            var datasetId12 = H5D.create(groupId, "D12", datasetTypeId12, datasetSpaceId);
+            var datasetData12 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var datasetData12IntPtr = datasetData12.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+
+            fixed (void* ptr = datasetData12IntPtr)
+            {
+                res = H5D.write(datasetId12, datasetTypeId12, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            foreach (var ptr in datasetData12IntPtr)
+            {
+                Marshal.FreeCoTaskMem(ptr);
+            }
+
+            res = H5T.close(datasetTypeId12);
+            res = H5D.close(datasetId12);
+
+            // variable length string dataset (UTF8)
+            var datasetTypeId13 = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(datasetTypeId13, H5T.VARIABLE);
+            res = H5T.set_cset(datasetTypeId13, H5T.cset_t.UTF8);
+
+            var datasetId13 = H5D.create(groupId, "D13", datasetTypeId13, datasetSpaceId);
+            var datasetData13 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
+            var datasetData13IntPtr = datasetData13.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+
+            fixed (void* ptr = datasetData13IntPtr)
+            {
+                res = H5D.write(datasetId13, datasetTypeId13, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            foreach (var ptr in datasetData13IntPtr)
+            {
+                Marshal.FreeCoTaskMem(ptr);
+            }
+
+            res = H5T.close(datasetTypeId13);
+            res = H5D.close(datasetId13);
+
+            // non-nullable struct
+            var datasetTypeId14 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var datasetId14 = H5D.create(groupId, "D14", datasetTypeId14, datasetSpaceId);
+            var datasetData14 = TestData.NonNullableTestStructData;
+
+            fixed (void* ptr = datasetData14)
+            {
+                res = H5D.write(datasetId14, datasetTypeId14, datasetSpaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5T.close(datasetTypeId14);
+            res = H5D.close(datasetId14);
+
+            // nullable struct
+            var datasetTypeId15 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
+            var datasetId15 = H5D.create(groupId, "D15", datasetTypeId15, datasetSpaceId);
+            var datasetData15 = TestData.StringTestStructData;
+
+            // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
+            // Is only relevant when Marshal.XX methods are replaced by other code.
+            var elementSize = Marshal.SizeOf<TestStructString>();
+            var totalByteLength = elementSize * datasetData15.Length;
+            var datasetData15Ptr = Marshal.AllocHGlobal(totalByteLength);
+            var counter = 0;
+
+            datasetData15.Cast<ValueType>().ToList().ForEach(x =>
+            {
+                var sourcePtr = Marshal.AllocHGlobal(elementSize);
+                Marshal.StructureToPtr(x, sourcePtr, false);
+
+                var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
+                var target = new Span<byte>(IntPtr.Add(datasetData15Ptr, elementSize * counter).ToPointer(), elementSize);
+
+                source.CopyTo(target);
+                counter++;
+                Marshal.FreeHGlobal(sourcePtr);
+            });
+
+            H5D.write(datasetId15, datasetTypeId15, datasetSpaceId, H5S.ALL, 0, datasetData15Ptr);
+            Marshal.FreeHGlobal(datasetData15Ptr);
+
+            res = H5T.close(datasetTypeId15);
+            res = H5D.close(datasetId15);
+
+            //
+            res = H5S.close(datasetSpaceId);
+            res = H5G.close(groupId);
+        }
+
         public static unsafe void AddCompactDataset(long fileId)
         {
             long res;
@@ -529,7 +520,7 @@ namespace HDF5.NET.Tests
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             res = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
             var datasetId = H5D.create(groupId, "compact", H5T.NATIVE_UINT8, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.TinyData;
+            var dataset = TestData.TinyData;
 
             fixed (void* ptr = dataset)
             {
@@ -544,11 +535,11 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.HugeData.Length;
+            var length = (ulong)TestData.HugeData.Length;
             var groupId = H5G.create(fileId, "contiguous");         
             var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var datasetId = H5D.create(groupId, "contiguous", H5T.NATIVE_INT, datasetSpaceId);
-            var dataset = TestUtils.HugeData;
+            var dataset = TestData.HugeData;
 
             fixed (void* ptr = dataset)
             {
@@ -563,7 +554,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length;
+            var length = (ulong)TestData.MediumData.Length;
             var groupId = H5G.create(fileId, "fillvalue");
             var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -585,7 +576,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -595,7 +586,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -610,7 +601,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length;
+            var length = (ulong)TestData.MediumData.Length;
             var groupId = H5G.create(fileId, "fillvalue");
             var datasetSpaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -632,7 +623,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -642,7 +633,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_single_chunk", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -657,7 +648,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -665,7 +656,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
             var datasetId = H5D.create(groupId, "chunked_implicit", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -680,7 +671,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -690,7 +681,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_fixed_array", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -705,7 +696,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -715,7 +706,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_fixed_array_paged", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -730,7 +721,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -740,7 +731,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_extensible_array_elements", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -755,7 +746,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -765,7 +756,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_extensible_array_data_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -780,7 +771,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -790,7 +781,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -805,7 +796,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "chunked");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { H5S.UNLIMITED, H5S.UNLIMITED });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -815,7 +806,7 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             var datasetId = H5D.create(groupId, "chunked_btree2", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -860,7 +851,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "filtered");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -868,7 +859,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), new uint[] { 5 } /* compression level */);
 
             var datasetId = H5D.create(groupId, "deflate", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -883,7 +874,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "filtered");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -891,7 +882,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_fletcher32(dcpl_id);
 
             var datasetId = H5D.create(groupId, "fletcher", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -906,7 +897,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            var length = (ulong)TestUtils.MediumData.Length / 4;
+            var length = (ulong)TestData.MediumData.Length / 4;
             var groupId = H5G.create(fileId, "filtered");
             var datasetSpaceId = H5S.create_simple(2, new ulong[] { length, 4 }, new ulong[] { length, 4 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -916,7 +907,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_deflate(dcpl_id, level: 5);
 
             var datasetId = H5D.create(groupId, "multi", H5T.NATIVE_INT, datasetSpaceId, dcpl_id: dcpl_id);
-            var dataset = TestUtils.MediumData;
+            var dataset = TestData.MediumData;
 
             fixed (void* ptr = dataset)
             {
@@ -987,8 +978,10 @@ namespace HDF5.NET.Tests
                 foreach (var fieldInfo in elementType.GetFields())
                 {
                     var fieldType = TestUtils.GetHdfTypeIdFromType(fieldInfo.FieldType);
+                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    var hdfFieldName = attribute != null ? attribute.Name : fieldInfo.Name;
 
-                    H5T.insert(typeId, fieldInfo.Name, Marshal.OffsetOf(elementType, fieldInfo.Name), fieldType);
+                    H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(elementType, fieldInfo.Name), fieldType);
 
                     if (H5I.is_valid(fieldType) > 0)
                         H5T.close(fieldType);

@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{DataType.Class}'")]
-    public class H5Dataset : H5AttributableLink
+    public class H5Dataset : H5AttributableLink, IH5DataContainer
     {
         #region Constructors
 
@@ -77,6 +78,24 @@ namespace HDF5.NET
         public T[] Read<T>() where T : unmanaged
         {
             return this.Read<T>(skipShuffle: false);
+        }
+
+        public T[] ReadCompound<T>() where T : struct
+        {
+            return this.ReadCompound<T>(fieldInfo => fieldInfo.Name);
+        }
+
+        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) where T : struct
+        {
+            var data = this.Read<byte>();
+
+            return H5Utils.ReadCompound<T>(this.DataType, this.Dataspace, this.File.Superblock, data, getName);
+        }
+
+        public string[] ReadString()
+        {
+            var data = this.Read<byte>();
+            return H5Utils.ReadString(this.DataType, data, this.File.Superblock);
         }
 
         internal T[] Read<T>(bool skipShuffle) where T : unmanaged

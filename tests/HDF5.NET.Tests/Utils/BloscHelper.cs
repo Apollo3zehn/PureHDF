@@ -8,26 +8,28 @@ namespace HDF5.NET.Tests
     {
         public static unsafe Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
-            byte[] resultBuffer = null;
+            // adapted from https://github.com/Blosc/hdf5-blosc/blob/bd8ee59708f366ac561153858735165d3a543b18/src/blosc_filter.c#L145-L272
             int status = 0;
             uint clevel = 5;
             uint doshuffle = 1;
+            byte[] resultBuffer = null;
+
             CompressorCodes compcode;
 
             /* Filter params that are always set */
-            var typesize = parameters[2];           /* The datatype size */
-            ulong outbuf_size = parameters[3];      /* Precomputed buffer guess */
+            var typesize = parameters[2];                   /* The datatype size */
+            ulong outbuf_size = parameters[3];              /* Precomputed buffer guess */
 
             /* Optional params */
             if (parameters.Length >= 5)
-                clevel = parameters[4];             /* The compression level */
+                clevel = parameters[4];                     /* The compression level */
 
             if (parameters.Length >= 6)
-                doshuffle = parameters[5];          /* BLOSC_SHUFFLE, BLOSC_BITSHUFFLE */
+                doshuffle = parameters[5];                  /* BLOSC_SHUFFLE, BLOSC_BITSHUFFLE */
 
             if (parameters.Length >= 7)
             {
-                compcode = (CompressorCodes)parameters[6];            /* The Blosc compressor used */
+                compcode = (CompressorCodes)parameters[6];  /* The Blosc compressor used */
 
                 /* Check that we actually have support for the compressor code */
                 var namePtr = IntPtr.Zero;

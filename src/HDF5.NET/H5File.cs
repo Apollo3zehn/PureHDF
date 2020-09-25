@@ -101,7 +101,7 @@ namespace HDF5.NET
 
         public void Dispose()
         {
-            GlobalHeapCache.Clear(this.Superblock);
+            H5Cache.Clear(this.Superblock);
             this.Reader.Dispose();
 
             if (_deleteOnClose)

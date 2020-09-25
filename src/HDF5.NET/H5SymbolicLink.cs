@@ -59,12 +59,28 @@ namespace HDF5.NET
 
         private H5Link GetTarget()
         {
-            if (this.FullObjectPath != null)
+            try
             {
-                throw new Exception("External links are not yet supported.");
-            }
+                // this file
+                if (string.IsNullOrWhiteSpace(this.FullObjectPath))
+                {
+                    return this.Parent.Get(this.LinkValue);
+                }
+                // external file
+                else
+                {
+                    var parts = this.FullObjectPath.Split('\0');
+                    var filePath = "";
+                    var objectName = "";
 
-            return this.Parent.Get(this.LinkValue);
+                    var externalFile = H5Cache.GetH5File(this.Parent.File.Superblock, filePath);
+                    return externalFile.Get(objectName);
+                }
+            }
+            catch
+            {
+                return new H5UnresolvedLink(this.Name);
+            }
         }
 
         #endregion
