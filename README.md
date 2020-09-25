@@ -1,4 +1,4 @@
-**Project is not yet released because support for reading partial datasets (hyperslabs) and support for virtual datasets and external files is still missing.**
+**Project is not yet released because support for reading partial datasets (hyperslabs) and support for virtual datasets still missing.**
 
 # HDF5.NET
 
@@ -43,11 +43,32 @@ var compoundData = dataset.ReadCompound<T>(); // not yet implemented
 var commitedDataType = group.GetCommitedDataType("myCommitedDataType");
 ```
 
-----------------------
+### Unknown Link Type
 If you do not know what kind of link to expect, use the following code:
 
 ```cs
 var link = group.Get("/path/to/unknown/link");
+```
+
+### External Links
+
+If an external link points to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
+
+You can either set an environment variable:
+
+```cs
+ Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
+```
+
+Or you can pass the prefix as an overload parameter to one of the different `Get` methods:
+
+```cs
+var linkAccess = new H5LinkAccessPropertyList() 
+{
+    ExternalFilePrefix = prefix 
+}
+
+var dataset = root.GetDataset(path, linkAccess);
 ```
 
 ### Iteration
@@ -68,7 +89,7 @@ foreach (var link in group.Children)
 }
 ```
 
-The last element, the `H5UnresolvedLink` becomes part of the `Children` property when a symbolic link is dangling, i.e. the link target does not exist. Section [Accessing Symbolic Links](#Accessing-Symbolic-Links) describes how to get the symbolic link itself instead of its target.
+An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed. Section [Accessing Symbolic Links](#Accessing-Symbolic-Links) describes how to get the symbolic link itself instead of its target.
 
 ## 2. Attributes
 

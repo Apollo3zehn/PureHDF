@@ -1,4 +1,5 @@
 using HDF.PInvoke;
+using System;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -181,20 +182,80 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-        [Fact]
-        public void CanOpenLink()
+        [Theory]
+        [InlineData("absolute", "", "")] // direct access
+        [InlineData("relative", "single", "")] // use environment variable
+        //[InlineData("relative", "multiple", "")] // this test will fail on Windows because of colon in path
+        [InlineData("relative", "", "yes")] // use link access property list
+        [InlineData("relative", "", "")] // file sits next to calling file
+        [InlineData("relativecd", "", "")] // file sits next to current directory
+        public void CanFollowExternalLink(string externalFilePath, string environment, string prefix)
         {
-            TestUtils.RunForAllVersions(version =>
+            // Arrange
+            if (externalFilePath == "absolute")
             {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddLinks(fileId));
+                externalFilePath = Path.GetTempFileName();
+            }
 
-                // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
 
-                var group = root.GetSymbolicLink("links/soft_link_2");
-                var dataset = root.GetSymbolicLink("links/dataset");
-            });
+            if (externalFilePath == "relative")
+                externalFilePath = Path.Combine(Path.GetTempPath(), externalFilePath);
+            else if (externalFilePath == "relativecd")
+                externalFilePath = Path.Combine(Environment.CurrentDirectory, externalFilePath);
+
+            if (environment == "single")
+            {
+                environment = Path.GetDirectoryName(externalFilePath);
+                Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", environment);
+            }
+            else if (environment == "multiple")
+            {
+                // Why did HDF Group choose a colon as prefix separator? This test must fail.
+                environment = $"::C:\\temp:{Path.GetDirectoryName(externalFilePath)}";
+                Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", environment);
+            }
+
+            if (prefix == "yes")
+                prefix = Path.GetDirectoryName(externalFilePath);
+
+            long res;
+
+            var externalFileId = H5F.create(externalFilePath, H5F.ACC_TRUNC);
+            var externalGroupId1 = H5G.create(externalFileId, "external");
+            var externalGroupId2 = H5G.create(externalGroupId1, "group");
+
+            var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+            var datasetId = H5D.create(externalGroupId2, "Hello from external file =)", H5T.NATIVE_UINT, spaceId);
+
+            res = H5S.close(spaceId);
+            res = H5D.close(datasetId);
+            res = H5G.close(externalGroupId2);
+            res = H5G.close(externalGroupId1);
+            res = H5F.close(externalFileId);
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+
+            var linkAccess = string.IsNullOrWhiteSpace(prefix) 
+                ? (H5LinkAccessPropertyList?)null
+                : new H5LinkAccessPropertyList() { ExternalFilePrefix = prefix };
+
+            var dataset = root.GetDataset("/links/external_link/Hello from external file =)", linkAccess);
+        }
+
+        [Fact]
+        public void GetsH5UnresolvedLinkForDanglingLinks()
+        {
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, "not-existing.h5"));
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            var link = root.Get("/links/external_link");
+
+            // Assert
+            Assert.True(link.GetType() == typeof(H5UnresolvedLink));
         }
     }
 }

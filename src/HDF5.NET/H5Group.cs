@@ -77,12 +77,22 @@ namespace HDF5.NET
 
         public H5Link Get(string path)
         {
-            return this.Get(path, resolveSymboliclink: true);
+            return this.Get(path, null);
+        }
+
+        public H5Link Get(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            return this.Get(path, linkAccess, resolveSymboliclink: true);
         }
 
         public H5Group GetGroup(string path)
         {
-            var link = this.Get(path);
+            return this.GetGroup(path, null);
+        }
+
+        public H5Group GetGroup(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess);
             var castedLink = link as H5Group;
 
             if (castedLink == null)
@@ -91,9 +101,15 @@ namespace HDF5.NET
             return castedLink;
         }
 
+
         public H5Dataset GetDataset(string path)
         {
-            var link = this.Get(path);
+            return this.GetDataset(path, null);
+        }
+
+        public H5Dataset GetDataset(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess);
             var castedLink = link as H5Dataset;
 
             if (castedLink == null)
@@ -102,9 +118,15 @@ namespace HDF5.NET
             return castedLink;
         }
 
+
         public H5CommitedDataType GetCommitedDataType(string path)
         {
-            var link = this.Get(path);
+            return this.GetCommitedDataType(path, null);
+        }
+
+        public H5CommitedDataType GetCommitedDataType(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess);
             var castedLink = link as H5CommitedDataType;
 
             if (castedLink == null)
@@ -115,7 +137,12 @@ namespace HDF5.NET
 
         public H5SymbolicLink GetSymbolicLink(string path)
         {
-            var link = this.Get(path, resolveSymboliclink: false);
+            return this.GetSymbolicLink(path, null);
+        }
+
+        public H5SymbolicLink GetSymbolicLink(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess, resolveSymboliclink: false);
             var castedLink = link as H5SymbolicLink;
 
             if (castedLink == null)
@@ -124,7 +151,7 @@ namespace HDF5.NET
             return castedLink;
         }
 
-        private H5Link Get(string path, bool resolveSymboliclink = true)
+        private H5Link Get(string path, H5LinkAccessPropertyList? linkAccess, bool resolveSymboliclink = true)
         {
             if (path == "/")
                 return this;
@@ -151,7 +178,7 @@ namespace HDF5.NET
                     }
                     else
                     {
-                        group = symbolicLink.Target as H5Group;
+                        group = symbolicLink.GetTarget(linkAccess) as H5Group;
 
                         if (group == null)
                             throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
@@ -167,7 +194,7 @@ namespace HDF5.NET
             symbolicLink = current as H5SymbolicLink;
 
             if (symbolicLink != null && resolveSymboliclink)
-                current = symbolicLink.Target;
+                current = symbolicLink.GetTarget(linkAccess);
 
             return current;
         }
@@ -176,10 +203,22 @@ namespace HDF5.NET
         {
             link = null;
 
+            // scratch pad info seems to be unused in HDF5 reference implementation (search for stab.btree_addr)
+
             /* cached data */
+            /*
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
+
+                this.File.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
+                var tree = new BTree1Node<BTree1GroupKey>(this.File.Reader, this.File.Superblock, this.DecodeGroupKey);
+                var b = tree.EnumerateNodes().ToList();
+
+                this.File.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
+                var heap = new LocalHeap(this.File.Reader, this.File.Superblock);
+                var c = heap.GetObjectName(0);
+
 
                 var success = _scratchPad
                     .GetBTree1(this.DecodeGroupKey)
@@ -194,6 +233,7 @@ namespace HDF5.NET
                 }
             }
             else
+            */
             {
                 var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
 
@@ -275,7 +315,10 @@ namespace HDF5.NET
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
 
+            // scratch pad info seems to be unused in HDF5 reference implementation (search for stab.btree_addr)
+
             /* cached data */
+            /*
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
@@ -290,6 +333,7 @@ namespace HDF5.NET
                 }
             }
             else
+            */
             {
                 var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
 

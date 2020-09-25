@@ -347,27 +347,14 @@ namespace HDF5.NET.Tests
             res = H5G.close(hardLinkId1);
         }
 
-        public static unsafe void AddExternalFileLink(long fileId)
+        public static unsafe void AddExternalFileLink(long fileId, string filePath)
         {
             long res;
 
+            // create external link
             var groupId = H5G.create(fileId, "links");
-
-            var hardLinkId1 = H5G.create(groupId, "hard_link_1");
-            res = H5L.create_external(groupId, "hard_link_1", groupId, "hard_link_2");
-            res = H5L.create_soft("hard_link_2", groupId, "soft_link_1");
-            res = H5L.create_soft("/links/soft_link_1", groupId, "soft_link_2");
-
-            var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
-            var datasetId = H5D.create(hardLinkId1, "dataset", H5T.NATIVE_INT, spaceId);
-
-            res = H5L.create_soft("/links/soft_link_2/dataset", groupId, "dataset");
-
-            res = H5S.close(spaceId);
-            res = H5D.close(datasetId);
-
+            res = H5L.create_external(filePath, "/external/group", groupId, "external_link");
             res = H5G.close(groupId);
-            res = H5G.close(hardLinkId1);
         }
 
         public static unsafe void AddTypedDatasets(long fileId)

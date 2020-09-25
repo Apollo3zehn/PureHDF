@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace HDF5.NET
@@ -10,6 +11,7 @@ namespace HDF5.NET
         static H5Cache()
         {
             _globalHeapMap = new Dictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>>();
+            _fileMap = new Dictionary<Superblock, Dictionary<string, H5File>>();
         }
 
         #endregion
@@ -18,11 +20,23 @@ namespace HDF5.NET
 
         public static void Clear(Superblock superblock)
         {
+            // global heap
             if (_globalHeapMap.ContainsKey(superblock))
                 _globalHeapMap.Remove(superblock);
 
-            if (_fileHandleMap.ContainsKey(superblock))
-                _fileHandleMap.Remove(superblock);
+
+            // file map
+            if (_fileMap.ContainsKey(superblock))
+            {
+                var pathToH5FileMap = _fileMap[superblock];
+
+                foreach (var h5File in pathToH5FileMap.Values)
+                {
+                    h5File.Dispose();
+                }
+
+                _fileMap.Remove(superblock);
+            }
         }
 
         #endregion
@@ -58,20 +72,27 @@ namespace HDF5.NET
 
         #region File Handles
 
-        private static Dictionary<Superblock, Dictionary<string, H5File>> _fileHandleMap;
+        private static Dictionary<Superblock, Dictionary<string, H5File>> _fileMap;
 
-        public static H5File GetH5File(Superblock superblock, string filePath)
+        public static H5File GetH5File(Superblock superblock, string absoluteFilePath)
         {
-            if (!_fileHandleMap.TryGetValue(superblock, out var pathToH5FileMap))
+            if (!Uri.TryCreate(absoluteFilePath, UriKind.Absolute, out var uri))
+                throw new Exception("The provided path is not absolute.");
+
+            if (!uri.IsFile && !uri.IsUnc)
+                throw new Exception("The provided path is not a file path or aN UNC path.");
+
+            if (!_fileMap.TryGetValue(superblock, out var pathToH5FileMap))
             {
                 pathToH5FileMap = new Dictionary<string, H5File>();
-                _fileHandleMap[superblock] = pathToH5FileMap;
+                _fileMap[superblock] = pathToH5FileMap;
             }
 
-            if (!pathToH5FileMap.TryGetValue(filePath, out var h5File))
+            if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
             {
-                h5File = H5File.Open(a, b, c, d);
-                pathToH5FileMap[filePath] = h5File;
+#warning This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
+                h5File = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                pathToH5FileMap[uri.AbsoluteUri] = h5File;
             }
 
             return h5File;
