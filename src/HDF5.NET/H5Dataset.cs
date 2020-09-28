@@ -80,6 +80,8 @@ namespace HDF5.NET
             return this.Read<T>(skipShuffle: false);
         }
 
+#error ReadEnum is missing, README.MD is not fully correcty (enum part)
+
         public T[] ReadCompound<T>() where T : struct
         {
             return this.ReadCompound<T>(fieldInfo => fieldInfo.Name);

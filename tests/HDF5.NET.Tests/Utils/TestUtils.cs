@@ -233,6 +233,19 @@ namespace HDF5.NET.Tests
             res = H5T.close(attributeTypeId15);
             res = H5A.close(attributeId15);
 
+            // enum
+            var enumData = TestData.EnumData;
+            var enumTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestEnum));
+            var enumAttributeId = H5A.create(groupId, "A16", enumTypeId, spaceId);
+            var enumHandle = GCHandle.Alloc(enumData, GCHandleType.Pinned);
+
+            var enumPtr = enumHandle.AddrOfPinnedObject().ToPointer();
+            res = H5A.write(enumAttributeId, enumTypeId, new IntPtr(enumPtr));
+
+            enumHandle.Free();
+
+            res = H5A.close(enumAttributeId);
+
             //
             res = H5S.close(spaceId);
             res = H5G.close(groupId);
@@ -511,6 +524,19 @@ namespace HDF5.NET.Tests
 
             res = H5T.close(datasetTypeId15);
             res = H5D.close(datasetId15);
+
+            // enum
+            var enumData = TestData.EnumData;
+            var enumTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestEnum));
+            var enumDatasetId = H5A.create(groupId, "D16", enumTypeId, spaceId);
+            var enumHandle = GCHandle.Alloc(enumData, GCHandleType.Pinned);
+
+            var enumPtr = enumHandle.AddrOfPinnedObject().ToPointer();
+            res = H5A.write(enumDatasetId, enumTypeId, new IntPtr(enumPtr));
+
+            enumHandle.Free();
+
+            res = H5A.close(enumDatasetId);
 
             //
             res = H5S.close(spaceId);
@@ -996,7 +1022,21 @@ namespace HDF5.NET.Tests
             //    return H5T.NATIVE_LDOUBLE;
 
             else if (elementType.IsEnum)
-                return TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(elementType));
+            {
+                var baseTypeId = TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(elementType));
+                var typeId = H5T.enum_create(baseTypeId);
+
+                foreach (var value in Enum.GetValues(type))
+                {
+                    var value_converted = Convert.ToInt64(value);
+                    var name = Enum.GetName(type, value_converted);
+
+                    var handle = GCHandle.Alloc(value_converted, GCHandleType.Pinned);
+                    H5T.enum_insert(typeId, name, handle.AddrOfPinnedObject());
+                }
+
+                return typeId;
+            }
 
             else if (elementType == typeof(string) || elementType == typeof(IntPtr))
             {

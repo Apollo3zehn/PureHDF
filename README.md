@@ -35,6 +35,16 @@ var dataset = group.GetDataset("/my/nested/group/myDataset");
 var data = dataset.Read<int>();
 var stringData = dataset.ReadString(); // not yet implemented
 var compoundData = dataset.ReadCompound<T>(); // not yet implemented
+
+// read enums
+enum MyEnum : short /* just make sure the HDF enum is based on the same type */
+{
+    MyValue1 = 1,
+    MyValue2 = 2,
+    MyValue3 = 3
+}
+
+var data = dataset.Read<MyEnum>();
 ```
 
 ### Commited Data Types
