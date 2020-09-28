@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -36,6 +37,12 @@ namespace HDF5.NET
 
         public T[] Read<T>() where T : unmanaged
         {
+            var buffer = this.Message.Data;
+            var byteOrderAware = this.Message.Datatype.BitField as IByteOrderAware;
+
+            if (byteOrderAware != null)
+                H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.Message.Datatype.Size);
+
             return MemoryMarshal
                 .Cast<byte, T>(this.Message.Data)
                 .ToArray();

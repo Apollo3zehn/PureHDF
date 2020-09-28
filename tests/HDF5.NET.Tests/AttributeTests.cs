@@ -110,7 +110,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("large");
+                var parent = root.GetGroup("huge");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<int>();
 

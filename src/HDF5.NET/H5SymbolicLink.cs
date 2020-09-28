@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net.WebSockets;
 
 namespace HDF5.NET
 {

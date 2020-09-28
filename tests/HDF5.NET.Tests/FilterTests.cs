@@ -147,7 +147,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleDataGeneric<T>(T dummy, int length) where T : unmanaged
+        public void CanUnshuffleGeneric<T>(T dummy, int length) where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -188,7 +188,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleDataAvx2<T>(T dummy, int length) where T : unmanaged
+        public void CanUnshuffleAvx2<T>(T dummy, int length) where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -229,7 +229,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleDataSse2<T>(T dummy, int length) where T : unmanaged
+        public void CanUnshuffleSse2<T>(T dummy, int length) where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -289,7 +289,7 @@ namespace HDF5.NET.Tests.Reading
                 actual = new byte[actual_shuffled.Length];
                 ShuffleAvx2.Unshuffle(bytesOfType, actual_shuffled, actual);
                 var sse2 = sw.Elapsed.TotalMilliseconds;
-                _logger.WriteLine($"Generic: {sse2:F1} ms");
+                _logger.WriteLine($"SSE2: {sse2:F1} ms");
             }
 
             /* AVX2 */
@@ -299,7 +299,104 @@ namespace HDF5.NET.Tests.Reading
                 actual = new byte[actual_shuffled.Length];
                 ShuffleAvx2.Unshuffle(bytesOfType, actual_shuffled, actual);
                 var avx2 = sw.Elapsed.TotalMilliseconds;
-                _logger.WriteLine($"Generic: {avx2:F1} ms");
+                _logger.WriteLine($"AVX2: {avx2:F1} ms");
+            }
+        }
+
+
+        [Theory]
+        [InlineData(1, new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x9 })]
+        [InlineData(2, new byte[] { 0x01, 0x00, 0x03, 0x02, 0x05, 0x04, 0x07, 0x06, 0x09, 0x8 })]
+        [InlineData(4, new byte[] { 0x03, 0x02, 0x01, 0x00, 0x07, 0x06, 0x05, 0x04, 0x08, 0x9 })]
+        [InlineData(8, new byte[] { 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00, 0x08, 0x9 })]
+        public void CanConvertEndiannessGeneric(int bytesOfType, byte[] input)
+        {
+            // Arrange
+            var expected = Enumerable.Range(0x0, 0x9)
+                .Select(value => (byte)value)
+                .ToArray();
+
+            // Act
+            var actual = new byte[expected.Length];
+            EndiannessConverterGeneric.Convert(bytesOfType, input, actual);
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Theory]
+        [InlineData((byte)1, 1001)]
+        [InlineData((short)2, 732)]
+        [InlineData((short)2, 733)]
+        [InlineData((int)4, 732)]
+        [InlineData((int)4, 733)]
+        [InlineData((int)4, 734)]
+        [InlineData((int)4, 735)]
+        [InlineData((long)8, 432)]
+        [InlineData((long)8, 433)]
+        [InlineData((long)8, 434)]
+        [InlineData((long)8, 435)]
+        [InlineData((long)8, 436)]
+        [InlineData((long)8, 437)]
+        [InlineData((long)8, 438)]
+        [InlineData((long)8, 439)]
+        public void CanConvertEndiannessAvx2<T>(T dummy, int length) where T : unmanaged
+        {
+            // Arrange
+            var bytesOfType = Unsafe.SizeOf<T>();
+            var expected = Enumerable.Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value)).ToArray();
+
+            var actual_converted = new byte[expected.Length];
+            EndiannessConverterGeneric.Convert(bytesOfType, expected, actual_converted);
+
+            // Act
+            var actual = new byte[actual_converted.Length];
+            EndiannessConverterAvx2.Convert(bytesOfType, actual_converted, actual);
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Fact]
+        public void ConvertEndiannessPerformanceTest()
+        {
+            // Arrange
+            var length = 10_000_000;
+            var bytesOfType = Unsafe.SizeOf<int>();
+            var expected = Enumerable.Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value)).ToArray();
+
+            var actual_converted = new byte[expected.Length];
+            EndiannessConverterGeneric.Convert(bytesOfType, expected, actual_converted);
+
+            // Act
+
+            /* generic */
+            var actual = new byte[actual_converted.Length];
+            var sw = Stopwatch.StartNew();
+            EndiannessConverterGeneric.Convert(bytesOfType, actual_converted, actual);
+            var generic = sw.Elapsed.TotalMilliseconds;
+            _logger.WriteLine($"Generic: {generic:F1} ms");
+
+            ///* SSE2 */
+            //if (Sse2.IsSupported)
+            //{
+            //    sw = Stopwatch.StartNew();
+            //    actual = new byte[actual_converted.Length];
+            //    EndiannessConverterSse2.Unshuffle(bytesOfType, actual_converted, actual);
+            //    var sse2 = sw.Elapsed.TotalMilliseconds;
+            //    _logger.WriteLine($"Generic: {sse2:F1} ms");
+            //}
+
+            /* AVX2 */
+            if (Avx2.IsSupported)
+            {
+                sw = Stopwatch.StartNew();
+                actual = new byte[actual_converted.Length];
+                EndiannessConverterAvx2.Convert(bytesOfType, actual_converted, actual);
+                var avx2 = sw.Elapsed.TotalMilliseconds;
+                _logger.WriteLine($"AVX2: {avx2:F1} ms");
             }
         }
     }

@@ -272,6 +272,20 @@ namespace HDF5.NET
             return (bool)generic.Invoke(null, null);
         }
 
+        public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)
+        {
+            if (byteOrder == ByteOrder.VaxEndian)
+                throw new Exception("VAX-endian byte order is not supported.");
+
+            var isLittleEndian = BitConverter.IsLittleEndian;
+
+            if ((isLittleEndian && byteOrder != ByteOrder.LittleEndian) ||
+               (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
+            {
+                EndiannessConverter.Convert((int)bytesOfType, source, destination);
+            }
+        }
+
         private static ulong ReadUlongArbitrary(H5BinaryReader reader, ulong size)
         {
             var result = 0UL;

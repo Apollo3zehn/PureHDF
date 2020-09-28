@@ -157,25 +157,28 @@ namespace HDF5.NET
 
         private T[] ReadCompact<T>() where T : unmanaged
         {
+            byte[] buffer;
+
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
 #warning untested
-                return MemoryMarshal
-                    .Cast<byte, T>(layout12.CompactData)
-                    .ToArray();
+                buffer = layout12.CompactData;
             }
             else if (this.DataLayout is DataLayoutMessage3 layout34)
             {
                 var compact = (CompactStoragePropertyDescription)layout34.Properties;
-
-                return MemoryMarshal
-                    .Cast<byte, T>(compact.RawData)
-                    .ToArray();
+                buffer = compact.RawData;
             }
             else
             {
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
+
+            var result = MemoryMarshal
+                    .Cast<byte, T>(buffer);
+
+            this.EnsureEndianness(buffer);
+            return result.ToArray();
         }
 
         private T[] ReadContiguous<T>() where T : unmanaged
@@ -201,7 +204,8 @@ namespace HDF5.NET
 
             if (this.File.Superblock.IsUndefinedAddress(address))
             {
-                buffer.Fill(this.FillValue.Value);
+                if (this.FillValue.IsDefined)
+                    buffer.Fill(this.FillValue.Value);
             }
             else
             {
@@ -209,6 +213,7 @@ namespace HDF5.NET
                 this.File.Reader.Read(buffer);
             }
 
+            this.EnsureEndianness(buffer);
             return result;
         }
 
@@ -220,7 +225,8 @@ namespace HDF5.NET
             {
                 if (this.File.Superblock.IsUndefinedAddress(layout12.DataAddress))
                 {
-                    buffer.Fill(this.FillValue.Value);
+                    if (this.FillValue.IsDefined)
+                        buffer.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -236,7 +242,8 @@ namespace HDF5.NET
 
                 if (this.File.Superblock.IsUndefinedAddress(chunked4.Address))
                 {
-                    buffer.Fill(this.FillValue.Value);
+                    if (this.FillValue.IsDefined)
+                        buffer.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -287,7 +294,8 @@ namespace HDF5.NET
 
                 if (this.File.Superblock.IsUndefinedAddress(chunked3.Address))
                 {
-                    buffer.Fill(this.FillValue.Value);
+                    if (this.FillValue.IsDefined)
+                        buffer.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -301,6 +309,7 @@ namespace HDF5.NET
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
 
+            this.EnsureEndianness(buffer);
             return result;
         }
 
@@ -583,6 +592,14 @@ namespace HDF5.NET
                 chunkSizeLength = 8;
 
             return chunkSizeLength;
+        }
+
+        private void EnsureEndianness(Span<byte> buffer)
+        {
+            var byteOrderAware = this.DataType.BitField as IByteOrderAware;
+
+            if (byteOrderAware != null)
+                H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.DataType.Size);
         }
 
         #endregion

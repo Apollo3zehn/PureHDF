@@ -115,6 +115,7 @@ namespace HDF5.NET.Tests
             TestData.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
             TestData.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
             TestData.TinyData = new byte[] { 99 };
+            TestData.SmallData = Enumerable.Range(0, 100).ToArray();
             TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
             TestData.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
         }
@@ -128,6 +129,7 @@ namespace HDF5.NET.Tests
         public static TestStructString[] StringTestStructData { get; }
 
         public static byte[] TinyData { get; }
+        public static int[] SmallData { get; }
         public static int[] MediumData { get; }
         public static int[] HugeData { get; }
     }
