@@ -30,7 +30,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("numerical").GetAttribute(name);
+                var attribute = root.Group("numerical").Attribute(name);
                 var actual = attribute.Read<T>();
 
                 // Assert
@@ -48,7 +48,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("struct").GetAttribute("nonnullable");
+                var attribute = root.Group("struct").Attribute("nonnullable");
                 var actual = attribute.Read<TestStructL1>();
 
                 // Assert
@@ -66,7 +66,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("struct").GetAttribute("nullable");
+                var attribute = root.Group("struct").Attribute("nullable");
 
                 Func<FieldInfo, string> converter = fieldInfo =>
                 {
@@ -96,7 +96,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("string").GetAttribute(name);
+                var attribute = root.Group("string").Attribute(name);
                 var actual = attribute.ReadString();
 
                 // Assert
@@ -114,7 +114,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("bitfield").GetAttribute("bitfield");
+                var attribute = root.Group("bitfield").Attribute("bitfield");
                 var actual = attribute.Read<TestBitfield>();
 
                 // Assert
@@ -132,7 +132,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("opaque").GetAttribute("opaque");
+                var attribute = root.Group("opaque").Attribute("opaque");
                 var actual = attribute.Read<int>();
 
                 // Assert
@@ -150,7 +150,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("array").GetAttribute("array");
+                var attribute = root.Group("array").Attribute("array");
                 var actual = attribute
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);
@@ -173,7 +173,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("struct").GetAttribute("nullable");
+                var attribute = root.Group("struct").Attribute("nullable");
                 var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
 
                 // Assert
@@ -191,7 +191,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("tiny");
+                var parent = root.Group("tiny");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<byte>();
 
@@ -210,7 +210,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("huge");
+                var parent = root.Group("huge");
                 var attribute = parent.Attributes.First();
                 var actual = attribute.Read<int>();
 
@@ -230,7 +230,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("mass_attributes");
+                var parent = root.Group("mass_attributes");
                 var attributes = parent.Attributes.ToList();
 
                 foreach (var attribute in attributes)

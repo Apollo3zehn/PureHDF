@@ -31,7 +31,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset($"/numerical/{name}");
+                var dataset = root.Dataset($"/numerical/{name}");
                 var actual = dataset.Read<T>();
 
                 // Assert
@@ -49,7 +49,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset("/struct/nonnullable");
+                var dataset = root.Dataset("/struct/nonnullable");
                 var actual = dataset.Read<TestStructL1>();
 
                 // Assert
@@ -67,7 +67,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset("/struct/nullable");
+                var dataset = root.Dataset("/struct/nullable");
 
                 Func<FieldInfo, string> converter = fieldInfo =>
                 {
@@ -97,7 +97,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset($"/string/{name}");
+                var dataset = root.Dataset($"/string/{name}");
                 var actual = dataset.ReadString();
 
                 // Assert
@@ -115,7 +115,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetGroup("bitfield").GetDataset("bitfield");
+                var dataset = root.Group("bitfield").Dataset("bitfield");
                 var actual = dataset.Read<TestBitfield>();
 
                 // Assert
@@ -133,7 +133,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetGroup("opaque").GetDataset("opaque");
+                var dataset = root.Group("opaque").Dataset("opaque");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -151,7 +151,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetGroup("array").GetDataset("array");
+                var dataset = root.Group("array").Dataset("array");
                 var actual = dataset
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);
@@ -174,7 +174,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset($"/struct/nullable");
+                var dataset = root.Dataset($"/struct/nullable");
                 var exception = Assert.Throws<Exception>(() => dataset.ReadCompound<TestStructStringL1>());
 
                 // Assert
@@ -192,8 +192,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("compact");
-                var dataset = parent.GetDataset("compact");
+                var parent = root.Group("compact");
+                var dataset = parent.Dataset("compact");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -221,7 +221,7 @@ namespace HDF5.NET.Tests.Reading
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var parent = root;
-                var dataset = parent.GetDataset("DS1");
+                var dataset = parent.Dataset("DS1");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -239,8 +239,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("contiguous");
-                var dataset = parent.GetDataset("contiguous");
+                var parent = root.Group("contiguous");
+                var dataset = parent.Dataset("contiguous");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -266,8 +266,8 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var group = root.GetGroup("fillvalue");
-            var dataset = group.GetDataset($"{LayoutClass.Contiguous}");
+            var group = root.Group("fillvalue");
+            var dataset = group.Dataset($"{LayoutClass.Contiguous}");
             var actual = dataset.Read<int>();
 
             // Assert
@@ -292,8 +292,8 @@ namespace HDF5.NET.Tests.Reading
 
                     // Act
                     using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                    var parent = root.GetGroup("chunked");
-                    var dataset = parent.GetDataset("chunked");
+                    var parent = root.Group("chunked");
+                    var dataset = parent.Dataset("chunked");
                     var actual = dataset.Read<int>();
 
                     // Assert
@@ -313,8 +313,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_single_chunk");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_single_chunk");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -331,8 +331,8 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("chunked");
-            var dataset = parent.GetDataset("chunked_implicit");
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_implicit");
             var actual = dataset.Read<int>();
 
             // Assert
@@ -350,8 +350,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_fixed_array");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_fixed_array");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -370,8 +370,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_fixed_array_paged");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_fixed_array_paged");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -390,8 +390,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_extensible_array_elements");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_extensible_array_elements");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -410,8 +410,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_extensible_array_data_blocks");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_extensible_array_data_blocks");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -430,8 +430,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_extensible_array_secondary_blocks");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_extensible_array_secondary_blocks");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -450,8 +450,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("chunked");
-                var dataset = parent.GetDataset("chunked_btree2");
+                var parent = root.Group("chunked");
+                var dataset = parent.Dataset("chunked_btree2");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -473,8 +473,8 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var group = root.GetGroup("fillvalue");
-                var dataset = group.GetDataset($"{LayoutClass.Chunked}");
+                var group = root.Group("fillvalue");
+                var dataset = group.Dataset($"{LayoutClass.Chunked}");
                 var actual = dataset.Read<int>();
 
                 // Assert
@@ -524,20 +524,20 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
 
             var attribute = root
-                .GetGroup("small")
-                .GetAttribute("small");
+                .Group("small")
+                .Attribute("small");
 
             var dataset_compact = root
-                .GetGroup("compact")
-                .GetDataset("compact");
+                .Group("compact")
+                .Dataset("compact");
 
             var dataset_contiguous = root
-                .GetGroup("contiguous")
-                .GetDataset("contiguous");
+                .Group("contiguous")
+                .Dataset("contiguous");
 
             var dataset_chunked = root
-                .GetGroup("chunked")
-                .GetDataset("chunked_single_chunk");
+                .Group("chunked")
+                .Dataset("chunked_single_chunk");
 
             var attribute_expected = new int[TestData.SmallData.Length];
             EndiannessConverter.Convert<int>(TestData.SmallData, attribute_expected);

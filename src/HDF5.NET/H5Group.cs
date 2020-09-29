@@ -85,12 +85,12 @@ namespace HDF5.NET
             return this.Get(path, linkAccess, resolveSymboliclink: true);
         }
 
-        public H5Group GetGroup(string path)
+        public H5Group Group(string path)
         {
-            return this.GetGroup(path, null);
+            return this.Group(path, null);
         }
 
-        public H5Group GetGroup(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5Group Group(string path, H5LinkAccessPropertyList? linkAccess)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5Group;
@@ -101,13 +101,12 @@ namespace HDF5.NET
             return castedLink;
         }
 
-
-        public H5Dataset GetDataset(string path)
+        public H5Dataset Dataset(string path)
         {
-            return this.GetDataset(path, null);
+            return this.Dataset(path, null);
         }
 
-        public H5Dataset GetDataset(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5Dataset Dataset(string path, H5LinkAccessPropertyList? linkAccess)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5Dataset;
@@ -118,13 +117,12 @@ namespace HDF5.NET
             return castedLink;
         }
 
-
-        public H5CommitedDatatype GetCommitedDatatype(string path)
+        public H5CommitedDatatype CommitedDatatype(string path)
         {
-            return this.GetCommitedDatatype(path, null);
+            return this.CommitedDatatype(path, null);
         }
 
-        public H5CommitedDatatype GetCommitedDatatype(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccessPropertyList? linkAccess)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5CommitedDatatype;
@@ -135,12 +133,12 @@ namespace HDF5.NET
             return castedLink;
         }
 
-        public H5SymbolicLink GetSymbolicLink(string path)
+        public H5SymbolicLink SymbolicLink(string path)
         {
-            return this.GetSymbolicLink(path, null);
+            return this.SymbolicLink(path, null);
         }
 
-        public H5SymbolicLink GetSymbolicLink(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5SymbolicLink SymbolicLink(string path, H5LinkAccessPropertyList? linkAccess)
         {
             var link = this.Get(path, linkAccess, resolveSymboliclink: false);
             var castedLink = link as H5SymbolicLink;

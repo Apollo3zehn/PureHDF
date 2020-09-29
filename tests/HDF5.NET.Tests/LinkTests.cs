@@ -79,7 +79,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var group = root.GetGroup(path);
+                var group = root.Group(path);
 
                 // Assert
                 Assert.Equal(expected, group.Name);
@@ -97,7 +97,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var group = root.GetGroup("mass_links");
+                var group = root.Group("mass_links");
 
                 // Assert
                 var actual = group.Children.Count();
@@ -118,7 +118,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var group = root.GetDataset(path);
+                var group = root.Dataset(path);
 
                 // Assert
                 Assert.Equal(expected, group.Name);
@@ -140,7 +140,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var parent = root.GetGroup("mass_attributes");
+                var parent = root.Group("mass_attributes");
                 var actual = parent.AttributeExists(attributeName);
 
                 // Assert
@@ -157,7 +157,7 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("mass_attributes");
+            var parent = root.Group("mass_attributes");
             var actual = parent.AttributeExists("字形碼 / 字形码, Zìxíngmǎ");
 
             // Assert
@@ -175,10 +175,10 @@ namespace HDF5.NET.Tests.Reading
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
 
-                var dataset_hard_1 = root.GetDataset("links/hard_link_1/dataset");
-                var dataset_hard_2 = root.GetDataset("links/hard_link_2/dataset");
-                var dataset_soft_2 = root.GetDataset("links/soft_link_2/dataset");
-                var dataset_direct = root.GetDataset("links/dataset");
+                var dataset_hard_1 = root.Dataset("links/hard_link_1/dataset");
+                var dataset_hard_2 = root.Dataset("links/hard_link_2/dataset");
+                var dataset_soft_2 = root.Dataset("links/soft_link_2/dataset");
+                var dataset_direct = root.Dataset("links/dataset");
             });
         }
 
@@ -241,7 +241,7 @@ namespace HDF5.NET.Tests.Reading
                 ? (H5LinkAccessPropertyList?)null
                 : new H5LinkAccessPropertyList() { ExternalFilePrefix = prefix };
 
-            var dataset = root.GetDataset("/links/external_link/Hello from external file =)", linkAccess);
+            var dataset = root.Dataset("/links/external_link/Hello from external file =)", linkAccess);
         }
 
         [Fact]

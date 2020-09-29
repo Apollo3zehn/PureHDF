@@ -20,7 +20,7 @@ using var root = H5File.Open(<TODO: improve signature>);
 
 ```cs
 // get nested group
-var group = root.GetGroup("/my/nested/group");
+var group = root.Group("/my/nested/group");
 ```
 
 #### Dataset
@@ -28,17 +28,17 @@ var group = root.GetGroup("/my/nested/group");
 ```cs
 
 // get dataset in group
-var dataset = group.GetDataset("myDataset");
+var dataset = group.Dataset("myDataset");
 
 // alternatively, use the full path
-var dataset = group.GetDataset("/my/nested/group/myDataset");
+var dataset = group.Dataset("/my/nested/group/myDataset");
 ```
 
 #### Commited Data Type
 
 ```cs
 // get commited data type in group
-var commitedDatatype = group.GetCommitedDatatype("myCommitedDatatype");
+var commitedDatatype = group.CommitedDatatype("myCommitedDatatype");
 ```
 
 #### Any Link Type
@@ -55,7 +55,7 @@ If you do not want the library to transparently follow a link but instead get th
 
 ```cs
 // hard link, soft link or external file link
-var symbolicLink = group.GetSymbolicLink("mySymbolicLink");
+var symbolicLink = group.SymbolicLink("mySymbolicLink");
 ```
 
 ### 1.2 Additional Info
@@ -69,7 +69,7 @@ You can either set an environment variable:
  Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
 ```
 
-Or you can pass the prefix as an overload parameter to one of the different `Get` methods:
+Or you can pass the prefix as an overload parameter:
 
 ```cs
 var linkAccess = new H5LinkAccessPropertyList() 
@@ -77,7 +77,7 @@ var linkAccess = new H5LinkAccessPropertyList()
     ExternalFilePrefix = prefix 
 }
 
-var dataset = group.GetDataset(path, linkAccess);
+var dataset = group.Dataset(path, linkAccess);
 ```
 
 #### Iteration
@@ -106,10 +106,10 @@ An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic 
 
 ```cs
 // get attribute of group
-var attribute = group.GetAttribute("myAttributeOnAGroup");
+var attribute = group.Attribute("myAttributeOnAGroup");
 
 // get attribute of dataset
-var attribute = dataset.GetAttribute("myAttributeOnADataset");
+var attribute = dataset.Attribute("myAttributeOnADataset");
 ```
 
 ## 3. Data

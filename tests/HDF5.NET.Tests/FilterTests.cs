@@ -61,7 +61,7 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var dataset = root.GetDataset(datasetName);
+            var dataset = root.Dataset(datasetName);
 
             if (shouldSuccess)
             {
@@ -88,8 +88,8 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset("fletcher");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset("fletcher");
             var actual = dataset.Read<int>();
 
             // Assert
@@ -105,8 +105,8 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset("deflate");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset("deflate");
             var actual = dataset.Read<int>();
 
             // Assert
@@ -122,8 +122,8 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset("multi");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset("multi");
             var actual = dataset.Read<int>();
 
             // Assert
@@ -160,8 +160,8 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset($"shuffle_{bytesOfType}");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
             // Act
@@ -201,8 +201,8 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset($"shuffle_{bytesOfType}");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
             // Act
@@ -242,8 +242,8 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset($"shuffle_{bytesOfType}");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
             // Act
@@ -269,8 +269,8 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var parent = root.GetGroup("filtered");
-            var dataset = parent.GetDataset($"shuffle_{bytesOfType}");
+            var parent = root.Group("filtered");
+            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
 
             // Act
