@@ -59,7 +59,7 @@ namespace HDF5.NET.Tests.Reading
             var actual = expected
                 .Cast<int>()
                 .ToArray()
-                .ToArray2D(new long[] { 4, -1 });
+                .ToArray2D(4, -1);
 
             // Assert
             Assert.Equal(expected.Rank, actual.Rank);
@@ -92,7 +92,7 @@ namespace HDF5.NET.Tests.Reading
             var actual = expected
                 .Cast<int>()
                 .ToArray()
-                .ToArray3D(new long[] { -1, 7, 2 });
+                .ToArray3D(-1, 7, 2);
 
             // Assert
             Assert.Equal(expected.Rank, actual.Rank);

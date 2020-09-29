@@ -48,8 +48,8 @@ namespace HDF5.NET
                                                  Span<byte> data,
                                                  Func<FieldInfo, string> getName) where T : struct
         {
-            if (datatype.Class != DatatypeMessageClass.Compount)
-                throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compount}'.");
+            if (datatype.Class != DatatypeMessageClass.Compound)
+                throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
 
             var type = typeof(T);
             var fieldInfoMap = new Dictionary<string, FieldProperties>();

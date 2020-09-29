@@ -18,7 +18,7 @@ namespace HDF5.NET.Tests.Reading
             _logger = logger;
         }
 
-        public static IList<object[]> DatasetNumericalTestData = TestData.DatasetNumericalTestData;
+        public static IList<object[]> DatasetNumericalTestData = TestData.DatasetNumericalData;
 
         [Theory]
         [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
@@ -53,7 +53,7 @@ namespace HDF5.NET.Tests.Reading
                 var actual = dataset.Read<TestStructL1>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.NonNullableTestStructData));
+                Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
             });
         }
 
@@ -78,11 +78,11 @@ namespace HDF5.NET.Tests.Reading
                 var actual = dataset.ReadCompound<TestStructString>(converter);
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.StringTestStructData));
+                Assert.True(actual.SequenceEqual(TestData.StringStructData));
             });
         }
 
-        // Fixed-length string attribute (UTF8) is not supported because 
+        // Fixed-length string dataset (UTF8) is not supported because 
         // it is incompatible with variable byte length per character.
         [Theory]
         [InlineData("fixed", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
@@ -102,6 +102,65 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Bitfield()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitFieldDataset(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset = root.GetGroup("bitfield").GetDataset("bitfield");
+                var actual = dataset.Read<TestBitfield>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.BitfieldData));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Opaque()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaqueDataset(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset = root.GetGroup("opaque").GetDataset("opaque");
+                var actual = dataset.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.SmallData));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Array()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArrayDataset(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset = root.GetGroup("array").GetDataset("array");
+                var actual = dataset
+                    .Read<int>()
+                    .ToArray4D(2, 3, 4, 5);
+
+                var expected_casted = TestData.ArrayData.Cast<int>().ToArray();
+                var actual_casted = actual.Cast<int>().ToArray();
+
+                // Assert
+                Assert.True(actual_casted.SequenceEqual(expected_casted));
             });
         }
 

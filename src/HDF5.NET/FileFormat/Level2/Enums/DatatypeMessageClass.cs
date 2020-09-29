@@ -8,7 +8,7 @@
         String = 3,
         BitField = 4,
         Opaque = 5,
-        Compount = 6,
+        Compound = 6,
         Reference = 7,
         Enumerated = 8,
         VariableLength = 9,

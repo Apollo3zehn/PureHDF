@@ -19,11 +19,11 @@ namespace HDF5.NET
                 DatatypeMessageClass.String         => new StringBitFieldDescription(reader),
                 DatatypeMessageClass.BitField       => new BitFieldBitFieldDescription(reader),
                 DatatypeMessageClass.Opaque         => new OpaqueBitFieldDescription(reader),
-                DatatypeMessageClass.Compount       => new CompoundBitFieldDescription(reader),
+                DatatypeMessageClass.Compound       => new CompoundBitFieldDescription(reader),
                 DatatypeMessageClass.Reference      => new ReferenceBitFieldDescription(reader),
                 DatatypeMessageClass.Enumerated     => new EnumerationBitFieldDescription(reader),
                 DatatypeMessageClass.VariableLength => new VariableLengthBitFieldDescription(reader),
-                DatatypeMessageClass.Array          => null,
+                DatatypeMessageClass.Array          => new ArrayBitFieldDescription(reader),
                 _ => throw new NotSupportedException($"The data type message class '{this.Class}' is not supported.")
             };
 
@@ -31,32 +31,27 @@ namespace HDF5.NET
 
             var memberCount = 1;
 
-            if (this.Class == DatatypeMessageClass.Compount && this.BitField != null)
+            if (this.Class == DatatypeMessageClass.Compound)
                 memberCount = ((CompoundBitFieldDescription)this.BitField).MemberCount;
 
             this.Properties = new List<DatatypePropertyDescription>(memberCount);
 
             for (int i = 0; i < memberCount; i++)
             {
-                DatatypePropertyDescription? properties = (this.Version, this.Class) switch
+                DatatypePropertyDescription? properties = this.Class switch
                 {
-                    (_, DatatypeMessageClass.FixedPoint) => new FixedPointPropertyDescription(reader),
-                    (_, DatatypeMessageClass.FloatingPoint) => new FloatingPointPropertyDescription(reader),
-                    (_, DatatypeMessageClass.Time) => new TimePropertyDescription(reader),
-                    (_, DatatypeMessageClass.String) => null,
-                    (_, DatatypeMessageClass.BitField) => new BitFieldPropertyDescription(reader),
-                    (_, DatatypeMessageClass.Opaque) => new OpaquePropertyDescription(reader, this.GetOpaqueTagByteLength()),
-                    (1, DatatypeMessageClass.Compount) => new CompoundPropertyDescription1(reader),
-                    (2, DatatypeMessageClass.Compount) => new CompoundPropertyDescription2(reader),
-                    (3, DatatypeMessageClass.Compount) => new CompoundPropertyDescription3(reader, this.Size),
-                    (_, DatatypeMessageClass.Reference) => null,
-                    (1, DatatypeMessageClass.Enumerated) => new EnumerationPropertyDescription12(reader, this.Size, this.GetEnumMemberCount()),
-                    (2, DatatypeMessageClass.Enumerated) => new EnumerationPropertyDescription12(reader, this.Size, this.GetEnumMemberCount()),
-                    (3, DatatypeMessageClass.Enumerated) => new EnumerationPropertyDescription3(reader, this.Size, this.GetEnumMemberCount()),
-                    (_, DatatypeMessageClass.VariableLength) => new VariableLengthPropertyDescription(reader),
-                    (2, DatatypeMessageClass.Array) => new ArrayPropertyDescription2(reader),
-                    (3, DatatypeMessageClass.Array) => new ArrayPropertyDescription3(reader),
-                    (_, _) => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
+                    DatatypeMessageClass.FixedPoint => new FixedPointPropertyDescription(reader),
+                    DatatypeMessageClass.FloatingPoint => new FloatingPointPropertyDescription(reader),
+                    DatatypeMessageClass.Time => new TimePropertyDescription(reader),
+                    DatatypeMessageClass.String => null,
+                    DatatypeMessageClass.BitField => new BitFieldPropertyDescription(reader),
+                    DatatypeMessageClass.Opaque => new OpaquePropertyDescription(reader, this.GetOpaqueTagByteLength()),
+                    DatatypeMessageClass.Compound => new CompoundPropertyDescription(reader, this.Version, this.Size),
+                    DatatypeMessageClass.Reference => null,
+                    DatatypeMessageClass.Enumerated => new EnumerationPropertyDescription(reader, this.Version, this.Size, this.GetEnumMemberCount()),
+                    DatatypeMessageClass.VariableLength => new VariableLengthPropertyDescription(reader),
+                    DatatypeMessageClass.Array => new ArrayPropertyDescription(reader, this.Version),
+                    _ => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
                 };
 
                 if (properties != null)
@@ -68,7 +63,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        public DatatypeBitFieldDescription? BitField { get; set; }
+        public DatatypeBitFieldDescription BitField { get; set; }
         public uint Size { get; set; }
         public List<DatatypePropertyDescription> Properties { get; set; }
 

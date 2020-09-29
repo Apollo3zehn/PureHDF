@@ -94,23 +94,28 @@ namespace HDF5.NET
 
         public string[] ReadString()
         {
-            var data = this.Read<byte>();
+            var data = this.Read<byte>(skipTypeCheck: true);
             return H5Utils.ReadString(this.Datatype, data, this.File.Superblock);
         }
 
-        internal T[] Read<T>(bool skipShuffle) where T : struct
+        internal T[] Read<T>(bool skipTypeCheck = false, bool skipShuffle = false) where T : struct
         {
-            switch (this.Datatype.Class)
+            if (!skipTypeCheck)
             {
-                case DatatypeMessageClass.FixedPoint:
-                case DatatypeMessageClass.FloatingPoint:
-                case DatatypeMessageClass.BitField:
-                case DatatypeMessageClass.Opaque:
-                case DatatypeMessageClass.Enumerated:
-                    break;
+                switch (this.Datatype.Class)
+                {
+                    case DatatypeMessageClass.FixedPoint:
+                    case DatatypeMessageClass.FloatingPoint:
+                    case DatatypeMessageClass.BitField:
+                    case DatatypeMessageClass.Opaque:
+                    case DatatypeMessageClass.Compound:
+                    case DatatypeMessageClass.Enumerated:
+                    case DatatypeMessageClass.Array:
+                        break;
 
-                default:
-                    throw new Exception($"This method can only be used with one of the following classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}' and '{DatatypeMessageClass.Enumerated}'.");
+                    default:
+                        throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
+                }
             }
 
             // for testing only

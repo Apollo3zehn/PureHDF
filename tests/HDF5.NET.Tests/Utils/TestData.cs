@@ -90,7 +90,23 @@ namespace HDF5.NET.Tests
             TestData.BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
                                                          TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 };
 
-            TestData.AttributeNumericalTestData = new List<object[]>
+            TestData.ArrayData = new int[2, 3, 4, 5];
+
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int k = 0; k < 4; k++)
+                    {
+                        for (int l = 0; l < 5; l++)
+                        {
+                            TestData.ArrayData[i, j, k, l] = i * j * j * k * l;
+                        }
+                    }
+                }
+            }
+
+            TestData.AttributeNumericalData = new List<object[]>
             {
                 new object[] { "A1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
                 new object[] { "A2", new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
@@ -105,7 +121,7 @@ namespace HDF5.NET.Tests
                 new object[] {"A11", TestData.EnumData },
             };
 
-            TestData.DatasetNumericalTestData = new List<object[]>
+            TestData.DatasetNumericalData = new List<object[]>
             {
                 new object[] { "D1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
                 new object[] { "D2", new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
@@ -120,8 +136,8 @@ namespace HDF5.NET.Tests
                 new object[] {"D11", TestData.EnumData },
             };
 
-            TestData.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
-            TestData.StringTestStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+            TestData.NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
+            TestData.StringStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
             TestData.TinyData = new byte[] { 99 };
             TestData.SmallData = Enumerable.Range(0, 100).ToArray();
             TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
@@ -130,14 +146,15 @@ namespace HDF5.NET.Tests
 
         public static TestEnum[] EnumData { get; }
         public static TestBitfield[] BitfieldData { get; }
+        public static int[,,,] ArrayData { get; }
 
-        public static IList<object[]> AttributeNumericalTestData { get; }
+        public static IList<object[]> AttributeNumericalData { get; }
 
-        public static IList<object[]> DatasetNumericalTestData { get; }
+        public static IList<object[]> DatasetNumericalData { get; }
 
-        public static TestStructL1[] NonNullableTestStructData { get; }
+        public static TestStructL1[] NonNullableStructData { get; }
 
-        public static TestStructString[] StringTestStructData { get; }
+        public static TestStructString[] StringStructData { get; }
 
         public static byte[] TinyData { get; }
         public static int[] SmallData { get; }

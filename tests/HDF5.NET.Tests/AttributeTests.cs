@@ -17,7 +17,7 @@ namespace HDF5.NET.Tests.Reading
             _logger = logger;
         }
 
-        public static IList<object[]> AttributeNumericalTestData = TestData.AttributeNumericalTestData;
+        public static IList<object[]> AttributeNumericalTestData = TestData.AttributeNumericalData;
 
         [Theory]
         [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
@@ -52,7 +52,7 @@ namespace HDF5.NET.Tests.Reading
                 var actual = attribute.Read<TestStructL1>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.NonNullableTestStructData));
+                Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
             });
         }
 
@@ -77,7 +77,7 @@ namespace HDF5.NET.Tests.Reading
                 var actual = attribute.ReadCompound<TestStructString>(converter);
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.StringTestStructData));
+                Assert.True(actual.SequenceEqual(TestData.StringStructData));
             });
         }
 
@@ -137,6 +137,29 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.SmallData));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Array()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArrayAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.GetGroup("array").GetAttribute("array");
+                var actual = attribute
+                    .Read<int>()
+                    .ToArray4D(2, 3, 4, 5);
+
+                var expected_casted = TestData.ArrayData.Cast<int>().ToArray();
+                var actual_casted = actual.Cast<int>().ToArray();
+
+                // Assert
+                Assert.True(actual_casted.SequenceEqual(expected_casted));
             });
         }
 
@@ -215,7 +238,7 @@ namespace HDF5.NET.Tests.Reading
                     var actual = attribute.ReadCompound<TestStructL1>();
 
                     // Assert
-                    Assert.True(actual.SequenceEqual(TestData.NonNullableTestStructData));
+                    Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
                 }
 
                 Assert.Equal(expectedCount, attributes.Count);

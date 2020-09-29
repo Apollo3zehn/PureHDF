@@ -10,14 +10,15 @@ The implemention follows the [HDF5 File Format Specification](https://support.hd
 
 ## 1. Links
 
-### 1.1 Link Access
-#### File and Group
+```cs
+// open HDF5 file, the returned H5File instance represents the root group ('/')
+using var root = H5File.Open(<TODO: improve signature>);
+```
+
+### 1.1 Get Link
+#### Group
 
 ```cs
-
-// open HDF5 file, it represents the root group ('/')
-using var root = H5File.Open(<TODO: improve signature>);
-
 // get nested group
 var group = root.GetGroup("/my/nested/group");
 ```
@@ -36,13 +37,15 @@ var dataset = group.GetDataset("/my/nested/group/myDataset");
 #### Commited Data Type
 
 ```cs
+// get commited data type in group
 var commitedDatatype = group.GetCommitedDatatype("myCommitedDatatype");
 ```
 
-#### Unspecified Link
-If you do not know what kind of link to expect at a given path, use the following code:
+#### Any Link Type
+When you do not know what kind of link to expect at a given path, use the following code:
 
 ```cs
+// get H5Link (base class of all link types)
 var link = group.Get("/path/to/unknown/link");
 ```
 
@@ -52,11 +55,11 @@ If you do not want the library to transparently follow a link but instead get th
 
 ```cs
 // hard link, soft link or external file link
-var link = group.GetSymbolicLink("mySymbolicLink");
+var symbolicLink = group.GetSymbolicLink("mySymbolicLink");
 ```
 
 ### 1.2 Additional Info
-#### External Link
+#### External File Link
 
 With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
 
@@ -109,9 +112,9 @@ var attribute = group.GetAttribute("myAttributeOnAGroup");
 var attribute = dataset.GetAttribute("myAttributeOnADataset");
 ```
 
-## 3. Reading Data
+## 3. Data
 
-The following code works for both, datasets and attributes.
+The following code samples work for both, datasets and attributes.
 
 ```cs
 // class: fixed-point
@@ -121,9 +124,6 @@ var data = dataset.Read<int>();
 var data = dataset.Read<double>();
 
 // class: string
-var data = dataset.ReadString();
-
-// class: variable length
 var data = dataset.ReadString();
 
 // class: bitfield
@@ -145,7 +145,7 @@ var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.M
 var data = dataset.Read<byte>();
 var data = dataset.Read<MyOpaqueStruct>();
 
-// class: compount
+// class: compound
 var data = dataset.Read<MyNonNullableStruct>();
 var data = dataset.ReadCompound<MyNullableStruct>();
 
@@ -158,6 +158,16 @@ enum MyEnum : short /* make sure the enum in HDF file is based on the same type 
 }
 
 var data = dataset.Read<MyEnum>();
+
+// class: variable length
+var data = dataset.ReadString();
+
+// class: array
+var data = dataset
+    .Read<int>()
+    /* dataset dims = int[2, 3] */
+    /*   array dims = int[4, 5] */
+    .ToArray4D(2, 3, 4, 5);
 
 // class: time
 // -> not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)

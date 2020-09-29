@@ -2,21 +2,24 @@
 
 namespace HDF5.NET
 {
-    public class EnumerationPropertyDescription3 : DatatypePropertyDescription
+    public class EnumerationPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public EnumerationPropertyDescription3(H5BinaryReader reader, uint valueSize, ushort memberCount) : base(reader)
+        public EnumerationPropertyDescription(H5BinaryReader reader, byte version, uint valueSize, ushort memberCount) : base(reader)
         {
             // base type
             this.BaseType = new DatatypeMessage(reader);
 
             // names
-            this.Names = new List<string>((int)memberCount);
+            this.Names = new List<string>(memberCount);
 
             for (int i = 0; i < memberCount; i++)
             {
-                this.Names.Add(H5Utils.ReadNullTerminatedString(reader, pad: false));
+                if (version <= 2)
+                    this.Names.Add(H5Utils.ReadNullTerminatedString(reader, pad: true));
+                else
+                    this.Names.Add(H5Utils.ReadNullTerminatedString(reader, pad: false));
             }
 
             // values

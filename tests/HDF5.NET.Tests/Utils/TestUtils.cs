@@ -107,7 +107,7 @@ namespace HDF5.NET.Tests
             var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
 
             // numeric attributes
-            foreach (var entry in TestData.AttributeNumericalTestData)
+            foreach (var entry in TestData.AttributeNumericalData)
             {
                 var attributeData = (Array)entry[1];
                 var type = attributeData
@@ -188,6 +188,30 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
+        public static unsafe void AddArrayAttribute(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "array");
+            var spaceId = H5S.create_simple(2, new ulong[] { 2, 3 }, new ulong[] { 2, 3 });
+
+            var attributeData = TestData.ArrayData;
+            var attributeTypeId = H5T.array_create(H5T.NATIVE_INT32, 2, new ulong[] { 4, 5 });
+            var attributeId = H5A.create(groupId, "array", attributeTypeId, spaceId);
+
+            fixed (void* ptr = attributeData)
+            {
+                res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
+            }
+
+            res = H5T.close(attributeTypeId);
+            res = H5A.close(attributeId);
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
         public static unsafe void AddStructAttributes(long fileId)
         {
             long res;
@@ -200,7 +224,7 @@ namespace HDF5.NET.Tests
             // non-nullable struct
             var attributeTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
             var attributeId = H5A.create(groupId, "nonnullable", attributeTypeId, spaceId);
-            var attributeData = TestData.NonNullableTestStructData;
+            var attributeData = TestData.NonNullableStructData;
 
             fixed (void* ptr = attributeData)
             {
@@ -213,7 +237,7 @@ namespace HDF5.NET.Tests
             // nullable struct
             var attributeTypeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
             var attributeIdNullable = H5A.create(groupId, "nullable", attributeTypeIdNullable, spaceId);
-            var attributeDataNullable = TestData.StringTestStructData;
+            var attributeDataNullable = TestData.StringStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
@@ -349,7 +373,7 @@ namespace HDF5.NET.Tests
                     attributeId = H5A.create(groupId, name, attributeTypeId, spaceId);
                 }
 
-                var attributeData = TestData.NonNullableTestStructData;
+                var attributeData = TestData.NonNullableStructData;
 
                 fixed (void* ptr = attributeData)
                 {
@@ -470,7 +494,7 @@ namespace HDF5.NET.Tests
             // "extendible contiguous non-external dataset not allowed"
             var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
 
-            foreach (var entry in TestData.DatasetNumericalTestData)
+            foreach (var entry in TestData.DatasetNumericalData)
             {
                 var datasetData = (Array)entry[1];
                 var type = datasetData
@@ -513,7 +537,7 @@ namespace HDF5.NET.Tests
             // non-nullable struct
             var datasetTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
             var datasetId = H5D.create(groupId, "nonnullable", datasetTypeId, spaceId);
-            var datasetData = TestData.NonNullableTestStructData;
+            var datasetData = TestData.NonNullableStructData;
 
             fixed (void* ptr = datasetData)
             {
@@ -526,7 +550,7 @@ namespace HDF5.NET.Tests
             // nullable struct
             var datasetTypeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
             var datasetIdNullable = H5D.create(groupId, "nullable", datasetTypeIdNullable, spaceId);
-            var datasetDataNullable = TestData.StringTestStructData;
+            var datasetDataNullable = TestData.StringStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
@@ -630,6 +654,80 @@ namespace HDF5.NET.Tests
 
             res = H5T.close(datasetTypeIdVarUTF8);
             res = H5D.close(datasetIdVarUTF8);
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddBitFieldDataset(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.BitfieldData.Length;
+            var groupId = H5G.create(fileId, "bitfield");
+            var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+
+            var datasetData = TestData.BitfieldData;
+            var datasetId = H5D.create(groupId, "bitfield", H5T.STD_B16LE, spaceId);
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, H5T.STD_B16LE, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5D.close(datasetId);
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddOpaqueDataset(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.SmallData.Length * 2;
+            var groupId = H5G.create(fileId, "opaque");
+            var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+
+            var datasetData = TestData.SmallData;
+            var datasetTypeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
+            res = H5T.set_tag(datasetTypeId, "Opaque Test Tag");
+
+            var datasetId = H5D.create(groupId, "opaque", datasetTypeId, spaceId);
+
+            fixed (void* ptr = datasetData)
+            {
+                res = H5D.write(datasetId, datasetTypeId, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5T.close(datasetTypeId);
+            res = H5D.close(datasetId);
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddArrayDataset(long fileId)
+        {
+            long res;
+
+            var groupId = H5G.create(fileId, "array");
+            var spaceId = H5S.create_simple(2, new ulong[] { 2, 3 }, new ulong[] { 2, 3 });
+
+            var attributeData = TestData.ArrayData;
+            var attributeTypeId = H5T.array_create(H5T.NATIVE_INT32, 2, new ulong[] { 4, 5 });
+            var attributeId = H5D.create(groupId, "array", attributeTypeId, spaceId);
+
+            fixed (void* ptr = attributeData)
+            {
+                res = H5D.write(attributeId, attributeTypeId, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5T.close(attributeTypeId);
+            res = H5D.close(attributeId);
 
             //
             res = H5S.close(spaceId);
