@@ -10,7 +10,8 @@ The implemention follows the [HDF5 File Format Specification](https://support.hd
 
 ## 1. Links
 
-### File and Groups
+### 1.1 Link Access
+#### File and Group
 
 ```cs
 
@@ -21,7 +22,7 @@ using var root = H5File.Open(<TODO: improve signature>);
 var group = root.GetGroup("/my/nested/group");
 ```
 
-### Datasets
+#### Dataset
 
 ```cs
 
@@ -30,39 +31,34 @@ var dataset = group.GetDataset("myDataset");
 
 // alternatively, use the full path
 var dataset = group.GetDataset("/my/nested/group/myDataset");
-
-// read data
-var data = dataset.Read<int>();
-var stringData = dataset.ReadString(); // not yet implemented
-var compoundData = dataset.ReadCompound<T>(); // not yet implemented
-
-// read enums
-enum MyEnum : short /* just make sure the HDF enum is based on the same type */
-{
-    MyValue1 = 1,
-    MyValue2 = 2,
-    MyValue3 = 3
-}
-
-var data = dataset.Read<MyEnum>();
 ```
 
-### Commited Data Types
+#### Commited Data Type
 
 ```cs
 var commitedDatatype = group.GetCommitedDatatype("myCommitedDatatype");
 ```
 
-### Unknown Link Type
-If you do not know what kind of link to expect, use the following code:
+#### Unspecified Link
+If you do not know what kind of link to expect at a given path, use the following code:
 
 ```cs
 var link = group.Get("/path/to/unknown/link");
 ```
 
-### External Links
+#### Symbolic Link
 
-If an external link points to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
+If you do not want the library to transparently follow a link but instead get the link itself, use the following:
+
+```cs
+// hard link, soft link or external file link
+var link = group.GetSymbolicLink("mySymbolicLink");
+```
+
+### 1.2 Additional Info
+#### External Link
+
+With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
 
 You can either set an environment variable:
 
@@ -78,10 +74,12 @@ var linkAccess = new H5LinkAccessPropertyList()
     ExternalFilePrefix = prefix 
 }
 
-var dataset = root.GetDataset(path, linkAccess);
+var dataset = group.GetDataset(path, linkAccess);
 ```
 
-### Iteration
+#### Iteration
+
+Iterate through all link in a group:
 
 ```cs
 foreach (var link in group.Children)
@@ -109,15 +107,65 @@ var attribute = group.GetAttribute("myAttributeOnAGroup");
 
 // get attribute of dataset
 var attribute = dataset.GetAttribute("myAttributeOnADataset");
-
-// read data
-var data = attribute.Read<int>();
-var stringData = attribute.ReadString();
-var compoundData = attribute.ReadCompound<T>();
 ```
+
+## 3. Reading Data
+
+The following code works for both, datasets and attributes.
+
+```cs
+// class: fixed-point
+var data = dataset.Read<int>();
+
+// class: floating-point
+var data = dataset.Read<double>();
+
+// class: string
+var data = dataset.ReadString();
+
+// class: variable length
+var data = dataset.ReadString();
+
+// class: bitfield
+[Flags]
+enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
+{
+    MainValve_Open          = 0x0001
+    AuxValve_1_Open         = 0x0002
+    AuxValve_2_Open         = 0x0004
+    MainEngine_Ready        = 0x0008
+    FallbackEngine_Ready    = 0x0010
+    // ...
+}
+
+var data = dataset.Read<SystemStatus>();
+var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.MainEngine_Ready);
+
+// class: opaque
+var data = dataset.Read<byte>();
+var data = dataset.Read<MyOpaqueStruct>();
+
+// class: compount
+var data = dataset.Read<MyNonNullableStruct>();
+var data = dataset.ReadCompound<MyNullableStruct>();
+
+// class: enumerated
+enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
+{
+    MyValue1 = 1,
+    MyValue2 = 2,
+    // ...
+}
+
+var data = dataset.Read<MyEnum>();
+
+// class: time
+// -> not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
+```
+
 For more information on compound data, see section [Reading compound data](#Reading-compound-data).
 
-## 3. Filters
+## 4. Filters
 
 ### Built-in Filters
 - Shuffle (hardware accelerated, SSE2/AVX2)
@@ -167,7 +215,7 @@ public static Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] paramete
      filterFunc: BloscHelper.FilterFunc);
 ```
 
-## 4. Advanced Scenarios
+## 5. Advanced Scenarios
 
 ### Reading Multidimensional Data
 
@@ -249,13 +297,4 @@ Func<FieldInfo, string> converter = fieldInfo =>
 
 // Use that name translator.
 var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(converter);
-```
-
-### Accessing Symbolic Links
-
-If you do not want the library to transparently follow a link but instead get the link itself, use the following:
-
-```cs
-// hard link, soft link or external file link
-var link = root.GetSymbolicLink("mySymbolicLink");
 ```

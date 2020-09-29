@@ -104,11 +104,13 @@ namespace HDF5.NET
             {
                 case DatatypeMessageClass.FixedPoint:
                 case DatatypeMessageClass.FloatingPoint:
+                case DatatypeMessageClass.BitField:
+                case DatatypeMessageClass.Opaque:
                 case DatatypeMessageClass.Enumerated:
                     break;
 
                 default:
-                    throw new Exception($"This method can only be used for data type classes '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}' and '{DatatypeMessageClass.Enumerated}'.");
+                    throw new Exception($"This method can only be used with one of the following classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}' and '{DatatypeMessageClass.Enumerated}'.");
             }
 
             // for testing only

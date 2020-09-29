@@ -87,6 +87,9 @@ namespace HDF5.NET.Tests
             TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a, 
                                                  TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };
 
+            TestData.BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+                                                         TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 };
+
             TestData.AttributeNumericalTestData = new List<object[]>
             {
                 new object[] { "A1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
@@ -125,6 +128,9 @@ namespace HDF5.NET.Tests
             TestData.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
         }
 
+        public static TestEnum[] EnumData { get; }
+        public static TestBitfield[] BitfieldData { get; }
+
         public static IList<object[]> AttributeNumericalTestData { get; }
 
         public static IList<object[]> DatasetNumericalTestData { get; }
@@ -137,6 +143,5 @@ namespace HDF5.NET.Tests
         public static int[] SmallData { get; }
         public static int[] MediumData { get; }
         public static int[] HugeData { get; }
-        public static TestEnum[] EnumData { get; }
     }
 }

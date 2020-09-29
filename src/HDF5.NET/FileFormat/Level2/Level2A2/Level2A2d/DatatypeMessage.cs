@@ -45,7 +45,7 @@ namespace HDF5.NET
                     (_, DatatypeMessageClass.Time) => new TimePropertyDescription(reader),
                     (_, DatatypeMessageClass.String) => null,
                     (_, DatatypeMessageClass.BitField) => new BitFieldPropertyDescription(reader),
-                    (_, DatatypeMessageClass.Opaque) => new OpaquePropertyDescription(reader),
+                    (_, DatatypeMessageClass.Opaque) => new OpaquePropertyDescription(reader, this.GetOpaqueTagByteLength()),
                     (1, DatatypeMessageClass.Compount) => new CompoundPropertyDescription1(reader),
                     (2, DatatypeMessageClass.Compount) => new CompoundPropertyDescription2(reader),
                     (3, DatatypeMessageClass.Compount) => new CompoundPropertyDescription3(reader, this.Size),
@@ -109,6 +109,16 @@ namespace HDF5.NET
         #endregion
 
         #region Method
+
+        private byte GetOpaqueTagByteLength()
+        {
+            var opaqueDescription = this.BitField as OpaqueBitFieldDescription;
+
+            if (opaqueDescription != null)
+                return opaqueDescription.AsciiTagByteLength;
+            else
+                throw new FormatException($"For opaque types, the bit field description must be an instance of type '{nameof(OpaqueBitFieldDescription)}'.");
+        }
 
         private ushort GetEnumMemberCount()
         {

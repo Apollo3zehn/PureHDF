@@ -138,6 +138,56 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
+        public static unsafe void AddBitFieldAttribute(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.BitfieldData.Length;
+            var groupId = H5G.create(fileId, "bitfield");
+            var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+
+            var attributeData = TestData.BitfieldData;
+            var attributeId = H5A.create(groupId, "bitfield", H5T.STD_B16LE, spaceId);
+
+            fixed (void* ptr = attributeData)
+            {
+                res = H5A.write(attributeId, H5T.STD_B16LE, new IntPtr(ptr));
+            }
+
+            res = H5A.close(attributeId);
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
+        public static unsafe void AddOpaqueAttribute(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.SmallData.Length * 2;
+            var groupId = H5G.create(fileId, "opaque");
+            var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+
+            var attributeData = TestData.SmallData;
+            var attributeTypeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
+            res = H5T.set_tag(attributeTypeId, "Opaque Test Tag");
+
+            var attributeId = H5A.create(groupId, "opaque", attributeTypeId, spaceId);
+
+            fixed (void* ptr = attributeData)
+            {
+                res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
+            }
+
+            res = H5T.close(attributeTypeId);
+            res = H5A.close(attributeId);
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
         public static unsafe void AddStructAttributes(long fileId)
         {
             long res;

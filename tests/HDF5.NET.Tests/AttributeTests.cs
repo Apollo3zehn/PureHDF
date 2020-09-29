@@ -81,6 +81,83 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
+        // Fixed-length string attribute (UTF8) is not supported because 
+        // it is incompatible with variable byte length per character.
+        [Theory]
+        [InlineData("fixed", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variable", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
+        public void CanReadAttribute_String(string name, string[] expected)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAtributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.GetGroup("string").GetAttribute(name);
+                var actual = attribute.ReadString();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Bitfield()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitFieldAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.GetGroup("bitfield").GetAttribute("bitfield");
+                var actual = attribute.Read<TestBitfield>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.BitfieldData));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Opaque()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaqueAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.GetGroup("opaque").GetAttribute("opaque");
+                var actual = attribute.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.SmallData));
+            });
+        }
+
+        [Fact]
+        public void ThrowsForNestedNullableStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.GetGroup("struct").GetAttribute("nullable");
+                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
+
+                // Assert
+                Assert.Contains("Nested nullable fields are not supported.", exception.Message);
+            });
+        }
+
         [Fact]
         public void CanReadAttribute_Tiny()
         {
@@ -142,47 +219,6 @@ namespace HDF5.NET.Tests.Reading
                 }
 
                 Assert.Equal(expectedCount, attributes.Count);
-            });
-        }
-
-        // Fixed-length string attribute (UTF8) is not supported because 
-        // it is incompatible with variable byte length per character.
-        [Theory]
-        [InlineData("fixed", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
-        [InlineData("variable", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
-        [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
-        public void CanReadAttribute_String(string name, string[] expected)
-        {
-            TestUtils.RunForAllVersions(version =>
-            {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAtributes(fileId));
-
-                // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("string").GetAttribute(name);
-                var actual = attribute.ReadString();
-
-                // Assert
-                Assert.True(actual.SequenceEqual(expected));
-            });
-        }
-
-        [Fact]
-        public void ThrowsForNestedNullableStruct()
-        {
-            TestUtils.RunForAllVersions(version =>
-            {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
-
-                // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("struct").GetAttribute("nullable");
-                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
-
-                // Assert
-                Assert.Contains("Nested nullable fields are not supported.", exception.Message);
             });
         }
     }
