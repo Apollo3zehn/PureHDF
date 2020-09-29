@@ -17,7 +17,7 @@ namespace HDF5.NET
         {
             _superblock = superblock;
 
-            this.BTreeAddress = superblock.ReadLength(reader);
+            this.BTree1Address = superblock.ReadLength(reader);
             this.NameHeapAddress = superblock.ReadLength(reader);
         }
 
@@ -25,7 +25,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        public ulong BTreeAddress { get; set; }
+        public ulong BTree1Address { get; set; }
         public ulong NameHeapAddress { get; set; }
 
         public LocalHeap LocalHeap
@@ -43,7 +43,7 @@ namespace HDF5.NET
 
         public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
         {
-            this.Reader.Seek((long)this.BTreeAddress, SeekOrigin.Begin);
+            this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
             return new BTree1Node<BTree1GroupKey>(this.Reader, _superblock, decodeKey);
         }
 

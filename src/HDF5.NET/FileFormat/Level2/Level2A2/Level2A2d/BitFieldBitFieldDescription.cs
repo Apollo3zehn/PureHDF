@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class BitFieldBitFieldDescription : DatatypeBitFieldDescription
+    public class BitFieldBitFieldDescription : DatatypeBitFieldDescription, IByteOrderAware
     {
         #region Constructors
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
@@ -75,22 +76,81 @@ namespace HDF5.NET
             return true;
         }
 
-        public T Get<T>(string path) where T : H5Link
-        {
-            return (T)this.Get(path);
-        }
-
         public H5Link Get(string path)
         {
-            return this.InternalGet(path, resolveSymboliclink: true);
+            return this.Get(path, null);
         }
 
-        public H5SymbolicLink GetSymbolicLink(string path)
+        public H5Link Get(string path, H5LinkAccessPropertyList? linkAccess)
         {
-            return (H5SymbolicLink)this.InternalGet(path, resolveSymboliclink: false);
+            return this.Get(path, linkAccess, resolveSymboliclink: true);
         }
 
-        private H5Link InternalGet(string path, bool resolveSymboliclink = true)
+        public H5Group Group(string path)
+        {
+            return this.Group(path, null);
+        }
+
+        public H5Group Group(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess);
+            var castedLink = link as H5Group;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Group)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
+        }
+
+        public H5Dataset Dataset(string path)
+        {
+            return this.Dataset(path, null);
+        }
+
+        public H5Dataset Dataset(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess);
+            var castedLink = link as H5Dataset;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Dataset)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
+        }
+
+        public H5CommitedDatatype CommitedDatatype(string path)
+        {
+            return this.CommitedDatatype(path, null);
+        }
+
+        public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess);
+            var castedLink = link as H5CommitedDatatype;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5CommitedDatatype)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
+        }
+
+        public H5SymbolicLink SymbolicLink(string path)
+        {
+            return this.SymbolicLink(path, null);
+        }
+
+        public H5SymbolicLink SymbolicLink(string path, H5LinkAccessPropertyList? linkAccess)
+        {
+            var link = this.Get(path, linkAccess, resolveSymboliclink: false);
+            var castedLink = link as H5SymbolicLink;
+
+            if (castedLink == null)
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5SymbolicLink)} because it is of type {link.GetType().Name}.");
+
+            return castedLink;
+        }
+
+        private H5Link Get(string path, H5LinkAccessPropertyList? linkAccess, bool resolveSymboliclink = true)
         {
             if (path == "/")
                 return this;
@@ -117,7 +177,7 @@ namespace HDF5.NET
                     }
                     else
                     {
-                        group = symbolicLink.Target as H5Group;
+                        group = symbolicLink.GetTarget(linkAccess) as H5Group;
 
                         if (group == null)
                             throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
@@ -133,7 +193,7 @@ namespace HDF5.NET
             symbolicLink = current as H5SymbolicLink;
 
             if (symbolicLink != null && resolveSymboliclink)
-                current = symbolicLink.Target;
+                current = symbolicLink.GetTarget(linkAccess);
 
             return current;
         }
@@ -142,10 +202,22 @@ namespace HDF5.NET
         {
             link = null;
 
+            // scratch pad info seems to be unused in HDF5 reference implementation (search for stab.btree_addr)
+
             /* cached data */
+            /*
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
+
+                this.File.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
+                var tree = new BTree1Node<BTree1GroupKey>(this.File.Reader, this.File.Superblock, this.DecodeGroupKey);
+                var b = tree.EnumerateNodes().ToList();
+
+                this.File.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
+                var heap = new LocalHeap(this.File.Reader, this.File.Superblock);
+                var c = heap.GetObjectName(0);
+
 
                 var success = _scratchPad
                     .GetBTree1(this.DecodeGroupKey)
@@ -160,6 +232,7 @@ namespace HDF5.NET
                 }
             }
             else
+            */
             {
                 var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
 
@@ -241,7 +314,10 @@ namespace HDF5.NET
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
 
+            // scratch pad info seems to be unused in HDF5 reference implementation (search for stab.btree_addr)
+
             /* cached data */
+            /*
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
@@ -256,6 +332,7 @@ namespace HDF5.NET
                 }
             }
             else
+            */
             {
                 var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
 
@@ -397,30 +474,23 @@ namespace HDF5.NET
         {
             return linkMessage.LinkInfo switch
             {
-                HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
-                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
-                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
-                _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
+                HardLinkInfo hard           => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
+                SoftLinkInfo soft           => new H5SymbolicLink(linkMessage, this),
+                ExternalLinkInfo external   => new H5SymbolicLink(linkMessage, this),
+                _                           => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
+        private protected H5Link InstantiateUncachedLink(string name, ObjectHeader objectHeader)
         {
-            if (objectHeader != null)
+            return objectHeader.ObjectType switch
             {
-                return objectHeader.ObjectType switch
-                {
-                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
-                    H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
-                    _ => throw new Exception("Unknown object type.")
-                };
-            }
-            else
-            {
-                throw new Exception("Unknown object type.");
-            }
+                H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
+                H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
+                H5ObjectType.CommitedDatatype => new H5CommitedDatatype(name, objectHeader),
+                _ => throw new Exception("Unknown object type.")
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -430,9 +500,10 @@ namespace HDF5.NET
 
             return entry.ScratchPad switch
             {
-                ObjectHeaderScratchPad objectScratch => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
-                SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
-                _ => this.InstantiateUncachedLink(name, entry.ObjectHeader)
+                ObjectHeaderScratchPad objectScratch    => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
+                SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
+                _ when entry.ObjectHeader != null       => this.InstantiateUncachedLink(name, entry.ObjectHeader),
+                _                                       => throw new Exception("Unknown object type.")
             };
         }
 

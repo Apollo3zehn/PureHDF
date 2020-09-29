@@ -13,7 +13,9 @@ namespace HDF5.NET.Tests
         public string StringValue2;
 
         public byte ByteValue;
-        public short ShortValue;
+
+        [H5Name("ShortValue")]
+        public short ShortValueWithCustomName;
 
         public TestStructL2 L2Struct;
     }

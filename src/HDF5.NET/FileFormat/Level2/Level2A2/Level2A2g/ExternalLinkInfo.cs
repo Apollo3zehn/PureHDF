@@ -24,7 +24,7 @@ namespace HDF5.NET
             this.Flags = (byte)((data & 0x0F) >> 0); // take only lower 4 bits
 
             // file name
-            this.FileName = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            this.FilePath = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
             // full object path
             this.FullObjectPath = H5Utils.ReadNullTerminatedString(reader, pad: false);
@@ -66,7 +66,7 @@ namespace HDF5.NET
             }
         }
 
-        public string FileName { get; set; }
+        public string FilePath { get; set; }
         public string FullObjectPath { get; set; }
 
         #endregion

@@ -1,4 +1,4 @@
-**Project is not yet released because support for reading partial datasets (hyperslabs) and support for virtual datasets and external files is still missing.**
+**Project is not yet released because support for reading partial datasets (hyperslabs) and support for virtual datasets still missing.**
 
 # HDF5.NET
 
@@ -8,65 +8,185 @@ A pure C# library that makes reading of HDF5 files (groups, datasets, attributes
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html)
 
-## 1. Getting Started
-
-### HDF5 File and Groups
+## 1. Links
 
 ```cs
-
-// open HDF5 file
+// open HDF5 file, the returned H5File instance represents the root group ('/')
 using var root = H5File.Open(<TODO: improve signature>);
-
-// get nested group
-var group = root.Get<H5Group>("/my/nested/group");
 ```
 
-### Datasets
+### 1.1 Get Link
+#### Group
+
+```cs
+// get nested group
+var group = root.Group("/my/nested/group");
+```
+
+#### Dataset
 
 ```cs
 
 // get dataset in group
-var dataset = group.Get<H5Dataset>("mydataset");
+var dataset = group.Dataset("myDataset");
 
 // alternatively, use the full path
-var dataset = group.Get<H5Dataset>("/my/nested/group/mydataset");
-
-// read data
-var data = dataset.Read<int>();
-var stringData = dataset.ReadString(); // not yet implemented
-var compoundData = dataset.ReadCompound<T>(); // not yet implemented
+var dataset = group.Dataset("/my/nested/group/myDataset");
 ```
 
-### Attributes
+#### Commited Data Type
+
+```cs
+// get commited data type in group
+var commitedDatatype = group.CommitedDatatype("myCommitedDatatype");
+```
+
+#### Any Link Type
+When you do not know what kind of link to expect at a given path, use the following code:
+
+```cs
+// get H5Link (base class of all link types)
+var link = group.Get("/path/to/unknown/link");
+```
+
+#### Symbolic Link
+
+If you do not want the library to transparently follow a link but instead get the link itself, use the following:
+
+```cs
+// hard link, soft link or external file link
+var symbolicLink = group.SymbolicLink("mySymbolicLink");
+```
+
+### 1.2 Additional Info
+#### External File Link
+
+With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
+
+You can either set an environment variable:
+
+```cs
+ Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
+```
+
+Or you can pass the prefix as an overload parameter:
+
+```cs
+var linkAccess = new H5LinkAccessPropertyList() 
+{
+    ExternalFilePrefix = prefix 
+}
+
+var dataset = group.Dataset(path, linkAccess);
+```
+
+#### Iteration
+
+Iterate through all link in a group:
+
+```cs
+foreach (var link in group.Children)
+{
+    var message = link switch
+    {
+        H5Group group               => $"I am a group and my name is '{group.Name}'.",
+        H5Dataset dataset           => $"I am a dataset, call me '{dataset.Name}'.",
+        H5CommitedDatatype datatype => $"I am the data type '{datatype.Name}'.",
+        H5UnresolvedLink lostLink   => $"I cannot find my link target =( shame on '{lostLink.Name}'."
+        _                           => throw new Exception("Unknown link type");
+    }
+
+    Console.WriteLine(message)
+}
+```
+
+An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed. Section [Accessing Symbolic Links](#Accessing-Symbolic-Links) describes how to get the symbolic link itself instead of its target.
+
+## 2. Attributes
 
 ```cs
 // get attribute of group
-var attribute = group.GetAttribute("myAttributeOnAGroup");
+var attribute = group.Attribute("myAttributeOnAGroup");
 
 // get attribute of dataset
-var attribute = dataset.GetAttribute("myAttributeOnADataset");
-
-// read data
-var data = attribute.Read<int>();
-var stringData = attribute.ReadString();
-var compoundData = attribute.ReadCompound<T>();
+var attribute = dataset.Attribute("myAttributeOnADataset");
 ```
+
+## 3. Data
+
+The following code samples work for datasets as well as attributes.
+
+```cs
+// class: fixed-point
+var data = dataset.Read<int>();
+
+// class: floating-point
+var data = dataset.Read<double>();
+
+// class: string
+var data = dataset.ReadString();
+
+// class: bitfield
+[Flags]
+enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
+{
+    MainValve_Open          = 0x0001
+    AuxValve_1_Open         = 0x0002
+    AuxValve_2_Open         = 0x0004
+    MainEngine_Ready        = 0x0008
+    FallbackEngine_Ready    = 0x0010
+    // ...
+}
+
+var data = dataset.Read<SystemStatus>();
+var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.MainEngine_Ready);
+
+// class: opaque
+var data = dataset.Read<byte>();
+var data = dataset.Read<MyOpaqueStruct>();
+
+// class: compound
+var data = dataset.Read<MyNonNullableStruct>();      /* option 1 */
+var data = dataset.ReadCompound<MyNullableStruct>(); /* option 2 */
+
+// class: reference
+var data = dataset.Read<ulong>();
+var firstLink = root.Get(data.First());
+
+// class: enumerated
+enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
+{
+    MyValue1 = 1,
+    MyValue2 = 2,
+    // ...
+}
+
+var data = dataset.Read<MyEnum>();
+
+// class: variable length
+var data = dataset.ReadString();
+
+// class: array
+var data = dataset
+    .Read<int>()
+    /* dataset dims = int[2, 3] */
+    /*   array dims = int[4, 5] */
+    .ToArray4D(2, 3, 4, 5);
+
+// class: time
+// -> not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
+```
+
 For more information on compound data, see section [Reading compound data](#Reading-compound-data).
 
-### Links
-```cs
-// hard link, soft link or external file link
-var link = root.GetSymbolicLink("mySymbolicLink");
-```
+## 4. Filters
 
-## 2. Filters
-
-### Built-in filters
-- Shuffle
+### Built-in Filters
+- Shuffle (hardware accelerated, SSE2/AVX2)
 - Fletcher32
 - Deflate (zlib)
 
-### External filters
+### External Filters
 Before you can use external filters, you need to register them using ```H5Filter.Register(...)```. This method accepts a filter identifier, a filter name and the actual filter function.
 
 This function could look like the following and should be adapted to your specific filter library:
@@ -90,7 +210,7 @@ public static Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] paramete
 
 ```
 
-### Tested external filters
+### Tested External Filters
 - c-blosc2 (using [Blosc2.PInvoke](blosc2.pinvoke))
 
 ### How to use Blosc / Blosc2
@@ -109,9 +229,22 @@ public static Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] paramete
      filterFunc: BloscHelper.FilterFunc);
 ```
 
-## 3. Advanced Scenarios
+## 5. Advanced Scenarios
 
-### Reading compound data
+### Reading Multidimensional Data
+
+Sometimes you want to read the data as multidimensional arrays. In that case use one of the `byte[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
+
+```cs
+var data3D = dataset
+    .Read<int>()
+    .ToArray3D(new long[] { -1, 7, 2 });
+```
+
+The methods accepts a `long[]` with the new array dimensions. This feature works similar to Matlab's [reshape](https://de.mathworks.com/help/matlab/ref/reshape.html) function. A slightly adapted citation explains the behavior:
+> When you use `-1` to automatically calculate a dimension size, the dimensions that you *do* explicitly specify must divide evenly into the number of elements in the input array.
+
+### Reading Compound Data
 
 ##### Structs without nullable fields
 
@@ -136,9 +269,11 @@ var compoundData = dataset.Read<SimpleStruct>();
 
 Just make sure the field offset attributes matches the field offsets defined in the HDF5 file when the dataset was created.
 
+*This method does not require that the structs field names match since they are simply mapped by their offset.*
+
 ##### Structs with nullable fields
 
-If have a struct with string fields, you need to use the slower `ReadCompound` method:
+If you have a struct with string fields, you need to use the slower `ReadCompound` method:
 
 ```cs
 public struct NullableStruct
@@ -151,6 +286,29 @@ public struct NullableStruct
 }
 
 var compoundData = dataset.ReadCompound<NullableStruct>();
+var compoundData = attribute.ReadCompound<NullableStruct>();
 ```
 
-Please note that in this case no special attributes are required at the expense of lower performance.
+*This method requires no special attributes but it is mandatory that the field names match exactly to those in the HDF5 file. If you would like to use custom field names, consider the following solution:*
+
+```cs
+
+// Apply the H5NameAttribute to the field with custom name.
+public struct NullableStructWithCustomFieldName
+{
+    [H5Name("FloatValue")]
+    public float FloatValueWithCustomName;
+
+    // ... more fields
+}
+
+// Create a name translator.
+Func<FieldInfo, string> converter = fieldInfo =>
+{
+    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+    return attribute != null ? attribute.Name : fieldInfo.Name;
+};
+
+// Use that name translator.
+var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(converter);
+```

@@ -46,7 +46,7 @@ namespace HDF5.NET
                 HeaderMessageType.NIL                       => new NilMessage(reader),
                 HeaderMessageType.Dataspace                 => new DataspaceMessage(reader, superblock),
                 HeaderMessageType.LinkInfo                  => new LinkInfoMessage(reader, superblock),
-                HeaderMessageType.DataType                  => new DatatypeMessage(reader),
+                HeaderMessageType.Datatype                  => new DatatypeMessage(reader),
                 HeaderMessageType.OldFillValue              => new OldFillValueMessage(reader),
                 HeaderMessageType.FillValue                 => new FillValueMessage(reader),
                 HeaderMessageType.Link                      => new LinkMessage(reader, superblock),

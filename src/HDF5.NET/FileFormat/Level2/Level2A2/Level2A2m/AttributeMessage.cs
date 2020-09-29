@@ -26,13 +26,13 @@ namespace HDF5.NET
                 this.Flags = (AttributeMessageFlags)reader.ReadByte();
 
             // name size
-            this.NameSize = reader.ReadUInt16();
+            var nameSize = reader.ReadUInt16();
 
             // datatype size
-            this.DatatypeSize = reader.ReadUInt16();
+            var datatypeSize = reader.ReadUInt16();
 
             // dataspace size
-            this.DataspaceSize = reader.ReadUInt16();
+            var dataspaceSize = reader.ReadUInt16();
 
             // name character set encoding
             if (this.Version == 3)
@@ -49,8 +49,8 @@ namespace HDF5.NET
 
             if (this.Version == 1)
             {
-                var paddedSize = (int)(Math.Ceiling(this.DatatypeSize / 8.0) * 8);
-                var remainingSize = paddedSize - this.DatatypeSize;
+                var paddedSize = (int)(Math.Ceiling(datatypeSize / 8.0) * 8);
+                var remainingSize = paddedSize - datatypeSize;
                 reader.ReadBytes(remainingSize);
             }
 
@@ -59,8 +59,8 @@ namespace HDF5.NET
 
             if (this.Version == 1)
             {
-                var paddedSize = (int)(Math.Ceiling(this.DataspaceSize / 8.0) * 8);
-                var remainingSize = paddedSize - this.DataspaceSize;
+                var paddedSize = (int)(Math.Ceiling(dataspaceSize / 8.0) * 8);
+                var remainingSize = paddedSize - dataspaceSize;
                 this.Reader.Seek(remainingSize, SeekOrigin.Current);
             }
 
@@ -96,9 +96,6 @@ namespace HDF5.NET
         }
 
         public AttributeMessageFlags Flags { get; set; }
-        public ushort NameSize { get; set; }
-        public ushort DatatypeSize { get; set; }
-        public ushort DataspaceSize { get; set; }
         public CharacterSetEncoding NameEncoding { get; set; }
         public string Name { get; set; }
         public DatatypeMessage Datatype { get; set; }

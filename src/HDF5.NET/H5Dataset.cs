@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}: Class = '{DataType.Class}'")]
-    public class H5Dataset : H5AttributableLink
+    [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
+    public class H5Dataset : H5AttributableLink, IDataContainer
     {
         #region Constructors
 
@@ -28,7 +29,7 @@ namespace HDF5.NET
                     this.Dataspace = (DataspaceMessage)message.Data;
 
                 else if (type == typeof(DatatypeMessage))
-                    this.DataType = (DatatypeMessage)message.Data;
+                    this.Datatype = (DatatypeMessage)message.Data;
 
                 else if (type == typeof(FillValueMessage))
                     this.FillValue = (FillValueMessage)message.Data;
@@ -47,7 +48,7 @@ namespace HDF5.NET
             if (this.Dataspace == null)
                 throw new Exception("The dataspace message is missing.");
 
-            if (this.DataType == null)
+            if (this.Datatype == null)
                 throw new Exception("The data type message is missing.");
 
             if (this.FillValue == null)
@@ -62,7 +63,7 @@ namespace HDF5.NET
 
         public DataspaceMessage Dataspace { get; } = null!;
 
-        public DatatypeMessage DataType { get; } = null!;
+        public DatatypeMessage Datatype { get; } = null!;
 
         public FillValueMessage FillValue { get; } = null!;
 
@@ -74,13 +75,50 @@ namespace HDF5.NET
 
         #region Methods
 
-        public T[] Read<T>() where T : unmanaged
+        public T[] Read<T>() where T : struct
         {
             return this.Read<T>(skipShuffle: false);
         }
 
-        internal T[] Read<T>(bool skipShuffle) where T : unmanaged
+        public T[] ReadCompound<T>() where T : struct
         {
+            return this.ReadCompound<T>(fieldInfo => fieldInfo.Name);
+        }
+
+        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) where T : struct
+        {
+            var data = this.Read<byte>();
+
+            return H5Utils.ReadCompound<T>(this.Datatype, this.Dataspace, this.File.Superblock, data, getName);
+        }
+
+        public string[] ReadString()
+        {
+            var data = this.Read<byte>(skipTypeCheck: true);
+            return H5Utils.ReadString(this.Datatype, data, this.File.Superblock);
+        }
+
+        internal T[] Read<T>(bool skipTypeCheck = false, bool skipShuffle = false) where T : struct
+        {
+            if (!skipTypeCheck)
+            {
+                switch (this.Datatype.Class)
+                {
+                    case DatatypeMessageClass.FixedPoint:
+                    case DatatypeMessageClass.FloatingPoint:
+                    case DatatypeMessageClass.BitField:
+                    case DatatypeMessageClass.Opaque:
+                    case DatatypeMessageClass.Compound:
+                    case DatatypeMessageClass.Reference:
+                    case DatatypeMessageClass.Enumerated:
+                    case DatatypeMessageClass.Array:
+                        break;
+
+                    default:
+                        throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Reference}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
+                }
+            }
+
             // for testing only
             if (skipShuffle && this.FilterPipeline != null)
             {
@@ -136,30 +174,33 @@ namespace HDF5.NET
             }
         }
 
-        private T[] ReadCompact<T>() where T : unmanaged
+        private T[] ReadCompact<T>() where T : struct
         {
+            byte[] buffer;
+
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
 #warning untested
-                return MemoryMarshal
-                    .Cast<byte, T>(layout12.CompactData)
-                    .ToArray();
+                buffer = layout12.CompactData;
             }
             else if (this.DataLayout is DataLayoutMessage3 layout34)
             {
                 var compact = (CompactStoragePropertyDescription)layout34.Properties;
-
-                return MemoryMarshal
-                    .Cast<byte, T>(compact.RawData)
-                    .ToArray();
+                buffer = compact.RawData;
             }
             else
             {
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
+
+            var result = MemoryMarshal
+                    .Cast<byte, T>(buffer);
+
+            this.EnsureEndianness(buffer);
+            return result.ToArray();
         }
 
-        private T[] ReadContiguous<T>() where T : unmanaged
+        private T[] ReadContiguous<T>() where T : struct
         {
             ulong address;
 
@@ -182,7 +223,8 @@ namespace HDF5.NET
 
             if (this.File.Superblock.IsUndefinedAddress(address))
             {
-                buffer.Fill(this.FillValue.Value);
+                if (this.FillValue.IsDefined)
+                    buffer.Fill(this.FillValue.Value);
             }
             else
             {
@@ -190,10 +232,11 @@ namespace HDF5.NET
                 this.File.Reader.Read(buffer);
             }
 
+            this.EnsureEndianness(buffer);
             return result;
         }
 
-        private T[] ReadChunked<T>() where T : unmanaged
+        private T[] ReadChunked<T>() where T : struct
         {
             var buffer = this.GetBuffer<T>(out var result);
 
@@ -201,7 +244,8 @@ namespace HDF5.NET
             {
                 if (this.File.Superblock.IsUndefinedAddress(layout12.DataAddress))
                 {
-                    buffer.Fill(this.FillValue.Value);
+                    if (this.FillValue.IsDefined)
+                        buffer.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -217,7 +261,8 @@ namespace HDF5.NET
 
                 if (this.File.Superblock.IsUndefinedAddress(chunked4.Address))
                 {
-                    buffer.Fill(this.FillValue.Value);
+                    if (this.FillValue.IsDefined)
+                        buffer.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -268,7 +313,8 @@ namespace HDF5.NET
 
                 if (this.File.Superblock.IsUndefinedAddress(chunked3.Address))
                 {
-                    buffer.Fill(this.FillValue.Value);
+                    if (this.FillValue.IsDefined)
+                        buffer.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -282,6 +328,7 @@ namespace HDF5.NET
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
 
+            this.EnsureEndianness(buffer);
             return result;
         }
 
@@ -483,10 +530,10 @@ namespace HDF5.NET
             }
         }
 
-        private Span<byte> GetBuffer<T>(out T[] result) where T : unmanaged
+        private Span<byte> GetBuffer<T>(out T[] result) where T : struct
         {
             // first, get byte size
-            var byteSize = this.CalculateByteSize(this.Dataspace.DimensionSizes) * this.DataType.Size;
+            var byteSize = this.CalculateByteSize(this.Dataspace.DimensionSizes) * this.Datatype.Size;
 
             // second, convert file type (e.g. 2 bytes) to T (e.g. 4 bytes)
             var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
@@ -564,6 +611,14 @@ namespace HDF5.NET
                 chunkSizeLength = 8;
 
             return chunkSizeLength;
+        }
+
+        private void EnsureEndianness(Span<byte> buffer)
+        {
+            var byteOrderAware = this.Datatype.BitField as IByteOrderAware;
+
+            if (byteOrderAware != null)
+                H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.Datatype.Size);
         }
 
         #endregion

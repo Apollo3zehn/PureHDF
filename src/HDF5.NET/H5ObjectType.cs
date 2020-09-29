@@ -6,6 +6,6 @@
         Undefined,
         Group,
         Dataset,
-        CommitedDataType
+        CommitedDatatype
     }
 }

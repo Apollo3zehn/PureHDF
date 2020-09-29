@@ -73,7 +73,7 @@ namespace HDF5.NET
             return this.TryGetAttributeMessage(name, out var _);
         }
 
-        public H5Attribute GetAttribute(string name)
+        public H5Attribute Attribute(string name)
         {
             if (!this.TryGetAttributeMessage(name, out var attributeMessage))
                 throw new Exception($"Could not find attribute '{name}'.");

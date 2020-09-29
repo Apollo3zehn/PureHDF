@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
@@ -7,25 +10,26 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private string _filePath;
         private bool _deleteOnClose;
 
         #endregion
 
         #region Constructors
 
-        private H5File(H5BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string filePath, bool deleteOnClose)
+        private H5File(H5BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string absoluteFilePath, bool deleteOnClose)
             : base(objectHeader)
         {
             this.Reader = reader;
             this.Superblock = superblock;
-            _filePath = filePath;
+            this.Path = absoluteFilePath;
             _deleteOnClose = deleteOnClose;
         }
 
         #endregion
 
         #region Properties
+
+        public string Path { get; } = ":memory:";
 
         internal H5BinaryReader Reader { get; }
         internal Superblock Superblock { get; }
@@ -44,7 +48,8 @@ namespace HDF5.NET
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
-            var reader = new H5BinaryReader(System.IO.File.Open(filePath, mode, fileAccess, fileShare));
+            var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
+            var reader = new H5BinaryReader(System.IO.File.Open(absoluteFilePath, mode, fileAccess, fileShare));
 
             // superblock
             int stepSize = 512;
@@ -99,16 +104,32 @@ namespace HDF5.NET
             return new H5File(reader, superblock, objectHeader, filePath, deleteOnClose);
         }
 
+        public H5Link Get(ulong reference)
+        {
+            try
+            {
+                this.Reader.Seek((long)reference, SeekOrigin.Begin);
+                var objectHeader = ObjectHeader.Construct(this.Reader, this.Superblock);
+
+#error How did they get the link name? recusively? (https://docs.h5py.org/en/stable/refs.html)
+                return this.InstantiateUncachedLink(string.Empty, objectHeader);
+            }
+            catch
+            {
+                throw new Exception($"Unable to dereference object with reference '{reference}'.");
+            }
+        }
+
         public void Dispose()
         {
-            GlobalHeapCache.Clear(this.Superblock);
+            H5Cache.Clear(this.Superblock);
             this.Reader.Dispose();
 
-            if (_deleteOnClose)
+            if (_deleteOnClose && System.IO.File.Exists(this.Path))
             {
                 try
                 {
-                    System.IO.File.Delete(_filePath);
+                    System.IO.File.Delete(this.Path);
                 }
                 catch
                 {

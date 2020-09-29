@@ -36,7 +36,7 @@ namespace HDF5.NET
             var headerSize = 8UL + superblock.LengthsSize;
             var remaining = this.CollectionSize;
 
-            while (remaining >= headerSize)
+            while (remaining > headerSize)
             {
                 var before = reader.BaseStream.Position;
                 var globalHeapObject = new GlobalHeapObject(reader, superblock);

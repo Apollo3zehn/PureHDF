@@ -1,0 +1,284 @@
+﻿using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace HDF5.NET.Tests.Reading
+{
+    public class AttributeTests
+    {
+        private readonly ITestOutputHelper _logger;
+
+        public AttributeTests(ITestOutputHelper logger)
+        {
+            _logger = logger;
+        }
+
+        public static IList<object[]> AttributeNumericalTestData = TestData.AttributeNumericalData;
+
+        [Theory]
+        [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
+        public void CanReadAttribute_Numerical<T>(string name, T[] expected) where T : struct
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumericalAttributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("numerical").Attribute(name);
+                var actual = attribute.Read<T>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_NonNullableStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("struct").Attribute("nonnullable");
+                var actual = attribute.Read<TestStructL1>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_NullableStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("struct").Attribute("nullable");
+
+                Func<FieldInfo, string> converter = fieldInfo =>
+                {
+                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    return attribute != null ? attribute.Name : fieldInfo.Name;
+                };
+
+                var actual = attribute.ReadCompound<TestStructString>(converter);
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.StringStructData));
+            });
+        }
+
+        // Fixed-length string attribute (UTF8) is not supported because 
+        // it is incompatible with variable byte length per character.
+        [Theory]
+        [InlineData("fixed", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variable", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
+        public void CanReadAttribute_String(string name, string[] expected)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAttributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("string").Attribute(name);
+                var actual = attribute.ReadString();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Bitfield()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitFieldAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("bitfield").Attribute("bitfield");
+                var actual = attribute.Read<TestBitfield>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.BitfieldData));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Opaque()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaqueAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("opaque").Attribute("opaque");
+                var actual = attribute.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.SmallData));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Array()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArrayAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("array").Attribute("array");
+                var actual = attribute
+                    .Read<int>()
+                    .ToArray4D(2, 3, 4, 5);
+
+                var expected_casted = TestData.ArrayData.Cast<int>().ToArray();
+                var actual_casted = actual.Cast<int>().ToArray();
+
+                // Assert
+                Assert.True(actual_casted.SequenceEqual(expected_casted));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Reference()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReferenceAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute_references = root.Group("reference").Attribute("reference");
+                var references = attribute_references.Read<ulong>();
+
+                var dereferenced = references
+                    .Select(references => root.Get(references))
+                    .ToArray();
+
+                // Assert
+                for (int i = 0; i < TestData.DatasetNumericalData.Count; i++)
+                {
+                    var dataset = (H5Dataset)dereferenced[i];
+                    var expected = (Array)TestData.DatasetNumericalData[i][1];
+                    var elementType = expected.GetType().GetElementType();
+
+                    var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
+                    var generic = method.MakeGenericMethod(elementType);
+                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected });
+
+                    Assert.True(result);
+                }
+            });
+#error what about region references? (https://docs.h5py.org/en/stable/refs.html)
+        }
+
+        [Fact]
+        public void ThrowsForNestedNullableStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("struct").Attribute("nullable");
+                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
+
+                // Assert
+                Assert.Contains("Nested nullable fields are not supported.", exception.Message);
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Tiny()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTinyAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Group("tiny");
+                var attribute = parent.Attributes.First();
+                var actual = attribute.Read<byte>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.TinyData));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Huge()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddHugeAttribute(fileId, version));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Group("huge");
+                var attribute = parent.Attributes.First();
+                var actual = attribute.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(TestData.HugeData[0..actual.Length]));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_MassAmount()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
+                var expectedCount = 1000;
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Group("mass_attributes");
+                var attributes = parent.Attributes.ToList();
+
+                foreach (var attribute in attributes)
+                {
+                    var actual = attribute.ReadCompound<TestStructL1>();
+
+                    // Assert
+                    Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
+                }
+
+                Assert.Equal(expectedCount, attributes.Count);
+            });
+        }
+    }
+}

@@ -2,22 +2,22 @@
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}: Class = '{DataType.Class}'")]
-    public class H5CommitedDataType : H5Link
+    [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
+    public class H5CommitedDatatype : H5Link
     {
         #region Constructors
 
-        internal H5CommitedDataType(string name, ObjectHeader objectHeader) 
+        internal H5CommitedDatatype(string name, ObjectHeader objectHeader) 
             : base(name)
         {
-            this.DataType = objectHeader.GetMessage<DatatypeMessage>();
+            this.Datatype = objectHeader.GetMessage<DatatypeMessage>();
         }
 
         #endregion
 
         #region Properties
 
-        public DatatypeMessage DataType { get; }
+        public DatatypeMessage Datatype { get; }
 
         #endregion
     }

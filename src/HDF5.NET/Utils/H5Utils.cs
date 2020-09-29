@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace HDF5.NET
@@ -38,6 +40,103 @@ namespace HDF5.NET
                 result += 1;
 
             return result;
+        }
+
+        public static unsafe T[] ReadCompound<T>(DatatypeMessage datatype,
+                                                 DataspaceMessage dataspace,
+                                                 Superblock superblock,
+                                                 Span<byte> data,
+                                                 Func<FieldInfo, string> getName) where T : struct
+        {
+            if (datatype.Class != DatatypeMessageClass.Compound)
+                throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
+
+            var type = typeof(T);
+            var fieldInfoMap = new Dictionary<string, FieldProperties>();
+
+            foreach (var fieldInfo in type.GetFields())
+            {
+                var name = getName(fieldInfo);
+
+                var isNotSupported = H5Utils.IsReferenceOrContainsReferences(fieldInfo.FieldType)
+                                  && fieldInfo.FieldType != typeof(string);
+
+                if (isNotSupported)
+                    throw new Exception("Nested nullable fields are not supported.");
+
+                fieldInfoMap[name] = new FieldProperties()
+                {
+                    FieldInfo = fieldInfo,
+                    Offset = Marshal.OffsetOf(type, fieldInfo.Name)
+                };
+            }
+
+            var properties = datatype.Properties
+                .Cast<CompoundPropertyDescription>()
+                .ToList();
+
+            var sourceOffset = 0UL;
+            var sourceRawBytes = data;
+            var sourceElementSize = datatype.Size;
+
+            var targetArraySize = dataspace.DimensionSizes.Aggregate((x, y) => x * y);
+            var targetArray = new T[targetArraySize];
+            var targetElementSize = Marshal.SizeOf<T>();
+
+            for (int i = 0; i < targetArray.Length; i++)
+            {
+                var targetRawBytes = new byte[targetElementSize];
+                var stringMap = new Dictionary<FieldProperties, string>();
+
+                foreach (var property in properties)
+                {
+                    if (!fieldInfoMap.TryGetValue(property.Name, out var fieldInfo))
+                        throw new Exception($"The property named '{property.Name}' in the HDF5 data type does not exist in the provided structure of type '{typeof(T)}'.");
+
+                    var fieldSize = (int)property.MemberTypeMessage.Size;
+
+                    // strings
+                    if (fieldInfo.FieldInfo.FieldType == typeof(string))
+                    {
+                        var sourceIndex = (int)(sourceOffset + property.MemberByteOffset);
+                        var sourceIndexEnd = sourceIndex + fieldSize;
+                        var targetIndex = fieldInfo.Offset.ToInt64();
+                        var value = H5Utils.ReadString(property.MemberTypeMessage, sourceRawBytes[sourceIndex..sourceIndexEnd], superblock);
+
+                        stringMap[fieldInfo] = value[0];
+                    }
+                    // other value types
+                    else
+                    {
+                        for (uint j = 0; j < fieldSize; j++)
+                        {
+                            var sourceIndex = sourceOffset + property.MemberByteOffset + j;
+                            var targetIndex = fieldInfo.Offset.ToInt64() + j;
+
+                            targetRawBytes[targetIndex] = sourceRawBytes[(int)sourceIndex];
+                        }
+                    }
+                }
+
+                sourceOffset += sourceElementSize;
+
+                fixed (byte* ptr = targetRawBytes.AsSpan())
+                {
+                    // http://benbowen.blog/post/fun_with_makeref/
+                    // https://stackoverflow.com/questions/4764573/why-is-typedreference-behind-the-scenes-its-so-fast-and-safe-almost-magical
+                    // Both do not work because struct layout is different with __makeref:
+                    // https://stackoverflow.com/questions/1918037/layout-of-net-value-type-in-memory
+                    targetArray[i] = Marshal.PtrToStructure<T>(new IntPtr(ptr));
+
+                    foreach (var entry in stringMap)
+                    {
+                        var reference = __makeref(targetArray[i]);
+                        entry.Key.FieldInfo.SetValueDirect(reference, entry.Value);
+                    }
+                }
+            }
+
+            return targetArray;
         }
 
         public static string[] ReadString(DatatypeMessage datatype, Span<byte> data, Superblock superblock)
@@ -171,6 +270,20 @@ namespace HDF5.NET
             var generic = method.MakeGenericMethod(type);
 
             return (bool)generic.Invoke(null, null);
+        }
+
+        public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)
+        {
+            if (byteOrder == ByteOrder.VaxEndian)
+                throw new Exception("VAX-endian byte order is not supported.");
+
+            var isLittleEndian = BitConverter.IsLittleEndian;
+
+            if ((isLittleEndian && byteOrder != ByteOrder.LittleEndian) ||
+               (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
+            {
+                EndiannessConverter.Convert((int)bytesOfType, source, destination);
+            }
         }
 
         private static ulong ReadUlongArbitrary(H5BinaryReader reader, ulong size)

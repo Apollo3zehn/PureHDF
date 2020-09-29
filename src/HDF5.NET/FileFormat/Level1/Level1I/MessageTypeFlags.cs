@@ -6,7 +6,7 @@ namespace HDF5.NET
     public enum MessageTypeFlags : ushort
     {
         Dataspace = 1,
-        DataType = 2,
+        Datatype = 2,
         FillValue = 4,
         FilterPipeline = 8,
         Attribute = 16
