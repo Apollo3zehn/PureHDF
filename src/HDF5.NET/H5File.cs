@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
@@ -99,6 +102,22 @@ namespace HDF5.NET
             }
 
             return new H5File(reader, superblock, objectHeader, filePath, deleteOnClose);
+        }
+
+        public H5Link Get(ulong reference)
+        {
+            try
+            {
+                this.Reader.Seek((long)reference, SeekOrigin.Begin);
+                var objectHeader = ObjectHeader.Construct(this.Reader, this.Superblock);
+
+#error How did they get the link name? recusively? (https://docs.h5py.org/en/stable/refs.html)
+                return this.InstantiateUncachedLink(string.Empty, objectHeader);
+            }
+            catch
+            {
+                throw new Exception($"Unable to dereference object with reference '{reference}'.");
+            }
         }
 
         public void Dispose()

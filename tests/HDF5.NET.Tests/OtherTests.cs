@@ -68,6 +68,7 @@ namespace HDF5.NET.Tests.Reading
             {
                 Assert.Equal(expected.GetLength(i), actual.GetLength(i));
             }
+
             Assert.True(actual.Cast<int>().SequenceEqual(expected.Cast<int>()));
         }
 

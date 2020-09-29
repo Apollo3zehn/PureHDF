@@ -114,7 +114,7 @@ var attribute = dataset.Attribute("myAttributeOnADataset");
 
 ## 3. Data
 
-The following code samples work for both, datasets and attributes.
+The following code samples work for datasets as well as attributes.
 
 ```cs
 // class: fixed-point
@@ -146,8 +146,12 @@ var data = dataset.Read<byte>();
 var data = dataset.Read<MyOpaqueStruct>();
 
 // class: compound
-var data = dataset.Read<MyNonNullableStruct>();
-var data = dataset.ReadCompound<MyNullableStruct>();
+var data = dataset.Read<MyNonNullableStruct>();      /* option 1 */
+var data = dataset.ReadCompound<MyNullableStruct>(); /* option 2 */
+
+// class: reference
+var data = dataset.Read<ulong>();
+var firstLink = root.Get(data.First());
 
 // class: enumerated
 enum MyEnum : short /* make sure the enum in HDF file is based on the same type */

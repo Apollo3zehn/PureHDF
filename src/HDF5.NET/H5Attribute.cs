@@ -44,12 +44,13 @@ namespace HDF5.NET
                 case DatatypeMessageClass.BitField:
                 case DatatypeMessageClass.Opaque:
                 case DatatypeMessageClass.Compound:
+                case DatatypeMessageClass.Reference:
                 case DatatypeMessageClass.Enumerated:
                 case DatatypeMessageClass.Array:
                     break;
 
                 default:
-                    throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
+                    throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Reference}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
             }
 
             var buffer = this.Message.Data;

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using Xunit;
 
 namespace HDF5.NET.Tests
 {
@@ -12,7 +13,7 @@ namespace HDF5.NET.Tests
     {
         public static void RunForAllVersions(Action<H5F.libver_t> action)
         {
-            var versions = new H5F.libver_t[] 
+            var versions = new H5F.libver_t[]
             {
                 H5F.libver_t.EARLIEST,
                 H5F.libver_t.V18,
@@ -133,7 +134,7 @@ namespace HDF5.NET.Tests
 
                 res = H5A.close(attributeId);
             }
-           
+
             res = H5S.close(spaceId);
             res = H5G.close(groupId);
         }
@@ -212,6 +213,39 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
+        public static unsafe void AddReferenceAttribute(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.DatasetNumericalData.Count;
+            var groupId = H5G.create(fileId, "reference");
+            var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+
+            TestUtils.AddNumericalDatasets(fileId);
+
+            var attributeData = new ulong[length];
+
+            fixed (ulong* ptr = attributeData)
+            {
+                var referenceGroupId = H5G.open(fileId, "numerical");
+
+                for (ulong i = 0; i < length; i++)
+                {
+                    res = H5R.create(new IntPtr(ptr + i), referenceGroupId, $"D{i + 1}", H5R.type_t.OBJECT, -1);
+                }
+
+                var attributeId = H5A.create(groupId, "reference", H5T.STD_REF_OBJ, spaceId);
+                res = H5A.write(attributeId, H5T.STD_REF_OBJ, new IntPtr(ptr));
+
+                res = H5A.close(attributeId);
+                res = H5G.close(referenceGroupId);
+            }
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
         public static unsafe void AddStructAttributes(long fileId)
         {
             long res;
@@ -270,7 +304,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddStringAtributes(long fileId)
+        public static unsafe void AddStringAttributes(long fileId)
         {
             long res;
 
@@ -734,6 +768,39 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
+        public static unsafe void AddReferenceDataset(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.DatasetNumericalData.Count;
+            var groupId = H5G.create(fileId, "reference");
+            var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
+
+            TestUtils.AddNumericalDatasets(fileId);
+
+            var datasetData = new ulong[length];
+
+            fixed (ulong* ptr = datasetData)
+            {
+                var referenceGroupId = H5G.open(fileId, "numerical");
+
+                for (ulong i = 0; i < length; i++)
+                {
+                    res = H5R.create(new IntPtr(ptr + i), referenceGroupId, $"D{i + 1}", H5R.type_t.OBJECT, -1);
+                }
+
+                var datasetId = H5D.create(groupId, "reference", H5T.STD_REF_OBJ, spaceId);
+                res = H5D.write(datasetId, H5T.STD_REF_OBJ, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+
+                res = H5D.close(datasetId);
+                res = H5G.close(referenceGroupId);
+            }
+
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
+
         public static unsafe void AddCompactDataset(long fileId)
         {
             long res;
@@ -761,7 +828,7 @@ namespace HDF5.NET.Tests
             long res;
 
             var length = (ulong)TestData.HugeData.Length;
-            var groupId = H5G.create(fileId, "contiguous");         
+            var groupId = H5G.create(fileId, "contiguous");
             var spaceId = H5S.create_simple(1, new ulong[] { length }, new ulong[] { length });
             var datasetId = H5D.create(groupId, "contiguous", H5T.NATIVE_INT, spaceId);
             var dataset = TestData.HugeData;
@@ -1169,6 +1236,12 @@ namespace HDF5.NET.Tests
             res = H5S.close(spaceId);
             res = H5D.close(datasetId);
             res = H5G.close(groupId);
+        }
+
+        public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected) where T : struct
+        {
+            var actual = dataset.Read<T>();
+            return actual.SequenceEqual(expected);
         }
 
         private static long GetHdfTypeIdFromType(Type type)

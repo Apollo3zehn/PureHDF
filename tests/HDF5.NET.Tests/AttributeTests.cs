@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -92,7 +94,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAtributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -161,6 +163,40 @@ namespace HDF5.NET.Tests.Reading
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));
             });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Reference()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReferenceAttribute(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute_references = root.Group("reference").Attribute("reference");
+                var references = attribute_references.Read<ulong>();
+
+                var dereferenced = references
+                    .Select(references => root.Get(references))
+                    .ToArray();
+
+                // Assert
+                for (int i = 0; i < TestData.DatasetNumericalData.Count; i++)
+                {
+                    var dataset = (H5Dataset)dereferenced[i];
+                    var expected = (Array)TestData.DatasetNumericalData[i][1];
+                    var elementType = expected.GetType().GetElementType();
+
+                    var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
+                    var generic = method.MakeGenericMethod(elementType);
+                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected });
+
+                    Assert.True(result);
+                }
+            });
+#error what about region references? (https://docs.h5py.org/en/stable/refs.html)
         }
 
         [Fact]

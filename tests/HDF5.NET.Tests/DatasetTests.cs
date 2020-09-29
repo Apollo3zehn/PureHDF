@@ -165,6 +165,39 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Fact]
+        public void CanReadDataset_Reference()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReferenceDataset(fileId));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset_references = root.Group("reference").Dataset("reference");
+                var references = dataset_references.Read<ulong>();
+
+                var dereferenced = references
+                    .Select(references => root.Get(references))
+                    .ToArray();
+
+                // Assert
+                for (int i = 0; i < TestData.DatasetNumericalData.Count; i++)
+                {
+                    var dataset = (H5Dataset)dereferenced[i];
+                    var expected = (Array)TestData.DatasetNumericalData[i][1];
+                    var elementType = expected.GetType().GetElementType();
+
+                    var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
+                    var generic = method.MakeGenericMethod(elementType);
+                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected });
+
+                    Assert.True(result);
+                }
+            });
+        }
+
+        [Fact]
         public void ThrowsForNestedNullableStruct()
         {
             TestUtils.RunForAllVersions(version =>

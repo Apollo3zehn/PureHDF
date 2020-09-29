@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
@@ -473,30 +474,23 @@ namespace HDF5.NET
         {
             return linkMessage.LinkInfo switch
             {
-                HardLinkInfo hard => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
-                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this),
-                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this),
-                _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
+                HardLinkInfo hard           => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
+                SoftLinkInfo soft           => new H5SymbolicLink(linkMessage, this),
+                ExternalLinkInfo external   => new H5SymbolicLink(linkMessage, this),
+                _                           => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5Link InstantiateUncachedLink(string name, ObjectHeader? objectHeader)
+        private protected H5Link InstantiateUncachedLink(string name, ObjectHeader objectHeader)
         {
-            if (objectHeader != null)
+            return objectHeader.ObjectType switch
             {
-                return objectHeader.ObjectType switch
-                {
-                    H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
-                    H5ObjectType.CommitedDatatype => new H5CommitedDatatype(name, objectHeader),
-                    _ => throw new Exception("Unknown object type.")
-                };
-            }
-            else
-            {
-                throw new Exception("Unknown object type.");
-            }
+                H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
+                H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
+                H5ObjectType.CommitedDatatype => new H5CommitedDatatype(name, objectHeader),
+                _ => throw new Exception("Unknown object type.")
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -506,9 +500,10 @@ namespace HDF5.NET
 
             return entry.ScratchPad switch
             {
-                ObjectHeaderScratchPad objectScratch => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
-                SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
-                _ => this.InstantiateUncachedLink(name, entry.ObjectHeader)
+                ObjectHeaderScratchPad objectScratch    => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
+                SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
+                _ when entry.ObjectHeader != null       => this.InstantiateUncachedLink(name, entry.ObjectHeader),
+                _                                       => throw new Exception("Unknown object type.")
             };
         }
 
