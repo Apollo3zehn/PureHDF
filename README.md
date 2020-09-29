@@ -50,7 +50,7 @@ var data = dataset.Read<MyEnum>();
 ### Commited Data Types
 
 ```cs
-var commitedDataType = group.GetCommitedDataType("myCommitedDataType");
+var commitedDatatype = group.GetCommitedDatatype("myCommitedDatatype");
 ```
 
 ### Unknown Link Type
@@ -90,7 +90,7 @@ foreach (var link in group.Children)
     {
         H5Group group               => $"I am a group and my name is '{group.Name}'.",
         H5Dataset dataset           => $"I am a dataset, call me '{dataset.Name}'.",
-        H5CommitedDataType dataType => $"I am the data type '{dataType.Name}'.",
+        H5CommitedDatatype datatype => $"I am the data type '{datatype.Name}'.",
         H5UnresolvedLink lostLink   => $"I cannot find my link target =( shame on '{lostLink.Name}'."
         _                           => throw new Exception("Unknown link type");
     }

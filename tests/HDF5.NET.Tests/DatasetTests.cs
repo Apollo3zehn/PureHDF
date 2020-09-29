@@ -22,16 +22,16 @@ namespace HDF5.NET.Tests.Reading
 
         [Theory]
         [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
-        public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : unmanaged
+        public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : struct
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumericalDatasets(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset($"/typed/{name}");
+                var dataset = root.GetDataset($"/numerical/{name}");
                 var actual = dataset.Read<T>();
 
                 // Assert
@@ -45,11 +45,11 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructDatasets(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset("/typed/D14");
+                var dataset = root.GetDataset("/struct/nonnullable");
                 var actual = dataset.Read<TestStructL1>();
 
                 // Assert
@@ -63,11 +63,11 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructDatasets(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset("/typed/D15");
+                var dataset = root.GetDataset("/struct/nullable");
 
                 Func<FieldInfo, string> converter = fieldInfo =>
                 {
@@ -85,19 +85,19 @@ namespace HDF5.NET.Tests.Reading
         // Fixed-length string attribute (UTF8) is not supported because 
         // it is incompatible with variable byte length per character.
         [Theory]
-        [InlineData("D11", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
-        [InlineData("D12", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
-        [InlineData("D13", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
+        [InlineData("fixed", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variable", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
         public void CanReadDataset_String(string name, string[] expected)
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringDatasets(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset($"/typed/{name}");
+                var dataset = root.GetDataset($"/string/{name}");
                 var actual = dataset.ReadString();
 
                 // Assert
@@ -111,11 +111,11 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructDatasets(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset = root.GetDataset($"/typed/D15");
+                var dataset = root.GetDataset($"/struct/nullable");
                 var exception = Assert.Throws<Exception>(() => dataset.ReadCompound<TestStructStringL1>());
 
                 // Assert

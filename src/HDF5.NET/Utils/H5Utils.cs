@@ -42,13 +42,13 @@ namespace HDF5.NET
             return result;
         }
 
-        public static unsafe T[] ReadCompound<T>(DatatypeMessage dataType,
+        public static unsafe T[] ReadCompound<T>(DatatypeMessage datatype,
                                                  DataspaceMessage dataspace,
                                                  Superblock superblock,
                                                  Span<byte> data,
                                                  Func<FieldInfo, string> getName) where T : struct
         {
-            if (dataType.Class != DatatypeMessageClass.Compount)
+            if (datatype.Class != DatatypeMessageClass.Compount)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compount}'.");
 
             var type = typeof(T);
@@ -71,13 +71,13 @@ namespace HDF5.NET
                 };
             }
 
-            var properties = dataType.Properties
+            var properties = datatype.Properties
                 .Cast<CompoundPropertyDescription>()
                 .ToList();
 
             var sourceOffset = 0UL;
             var sourceRawBytes = data;
-            var sourceElementSize = dataType.Size;
+            var sourceElementSize = datatype.Size;
 
             var targetArraySize = dataspace.DimensionSizes.Aggregate((x, y) => x * y);
             var targetArray = new T[targetArraySize];

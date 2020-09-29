@@ -119,18 +119,18 @@ namespace HDF5.NET
         }
 
 
-        public H5CommitedDataType GetCommitedDataType(string path)
+        public H5CommitedDatatype GetCommitedDatatype(string path)
         {
-            return this.GetCommitedDataType(path, null);
+            return this.GetCommitedDatatype(path, null);
         }
 
-        public H5CommitedDataType GetCommitedDataType(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5CommitedDatatype GetCommitedDatatype(string path, H5LinkAccessPropertyList? linkAccess)
         {
             var link = this.Get(path, linkAccess);
-            var castedLink = link as H5CommitedDataType;
+            var castedLink = link as H5CommitedDatatype;
 
             if (castedLink == null)
-                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5CommitedDataType)} because it is of type {link.GetType().Name}.");
+                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5CommitedDatatype)} because it is of type {link.GetType().Name}.");
 
             return castedLink;
         }
@@ -491,7 +491,7 @@ namespace HDF5.NET
                 {
                     H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
                     H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
-                    H5ObjectType.CommitedDataType => new H5CommitedDataType(name, objectHeader),
+                    H5ObjectType.CommitedDatatype => new H5CommitedDatatype(name, objectHeader),
                     _ => throw new Exception("Unknown object type.")
                 };
             }

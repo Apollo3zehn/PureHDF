@@ -99,11 +99,11 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddTypedAttributes(long fileId)
+        public static unsafe void AddNumericalAttributes(long fileId)
         {
             long res;
 
-            var groupId = H5G.create(fileId, "typed");
+            var groupId = H5G.create(fileId, "numerical");
             var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 3, 3, 4 });
 
             // numeric attributes
@@ -116,8 +116,16 @@ namespace HDF5.NET.Tests
 
                 var typeId = TestUtils.GetHdfTypeIdFromType(type);
                 var attributeId = H5A.create(groupId, (string)entry[0], typeId, spaceId);
-                var handle = GCHandle.Alloc(attributeData, GCHandleType.Pinned);
 
+                if (type == typeof(TestEnum))
+                {
+                    attributeData = attributeData
+                        .OfType<object>()
+                        .Select(value => (short)value)
+                        .ToArray();
+                }
+
+                var handle = GCHandle.Alloc(attributeData, GCHandleType.Pinned);
                 var ptr = handle.AddrOfPinnedObject().ToPointer();
                 res = H5A.write(attributeId, typeId, new IntPtr(ptr));
 
@@ -126,125 +134,139 @@ namespace HDF5.NET.Tests
                 res = H5A.close(attributeId);
             }
            
-            // fixed length string attribute (ASCII)
-            var attributeTypeId11 = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(attributeTypeId11, new IntPtr(2));
-            res = H5T.set_cset(attributeTypeId11, H5T.cset_t.ASCII);
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
 
-            var attributeId11 = H5A.create(groupId, "A11", attributeTypeId11, spaceId);
-            var attributeData11 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var attributeData11Char = attributeData11
-                .SelectMany(value => Encoding.ASCII.GetBytes(value))
-                .ToArray();
+        public static unsafe void AddStructAttributes(long fileId)
+        {
+            long res;
 
-            fixed (void* ptr = attributeData11Char)
-            {
-                res = H5A.write(attributeId11, attributeTypeId11, new IntPtr(ptr));
-            }
+            var groupId = H5G.create(fileId, "struct");
 
-            res = H5T.close(attributeTypeId11);
-            res = H5A.close(attributeId11);
-
-            // variable length string attribute (ASCII)
-            var attributeTypeId12 = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(attributeTypeId12, H5T.VARIABLE);
-            res = H5T.set_cset(attributeTypeId12, H5T.cset_t.ASCII);
-
-            var attributeId12 = H5A.create(groupId, "A12", attributeTypeId12, spaceId);
-            var attributeData12 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var attributeData12IntPtr = attributeData12.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
-
-            fixed (void* ptr = attributeData12IntPtr)
-            {
-                res = H5A.write(attributeId12, attributeTypeId12, new IntPtr(ptr));
-            }
-
-            foreach (var ptr in attributeData12IntPtr)
-            {
-                Marshal.FreeCoTaskMem(ptr);
-            }
-
-            res = H5T.close(attributeTypeId12);
-            res = H5A.close(attributeId12);
-
-            // variable length string attribute (UTF8)
-            var attributeTypeId13 = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(attributeTypeId13, H5T.VARIABLE);
-            res = H5T.set_cset(attributeTypeId13, H5T.cset_t.UTF8);
-
-            var attributeId13 = H5A.create(groupId, "A13", attributeTypeId13, spaceId);
-            var attributeData13 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
-            var attributeData13IntPtr = attributeData13.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
-
-            fixed (void* ptr = attributeData13IntPtr)
-            {
-                res = H5A.write(attributeId13, attributeTypeId13, new IntPtr(ptr));
-            }
-
-            foreach (var ptr in attributeData13IntPtr)
-            {
-                Marshal.FreeCoTaskMem(ptr);
-            }
-
-            res = H5T.close(attributeTypeId13);
-            res = H5A.close(attributeId13);
+            // "extendible contiguous non-external dataset not allowed"
+            var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
 
             // non-nullable struct
-            var attributeTypeId14 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
-            var attributeId14 = H5A.create(groupId, "A14", attributeTypeId14, spaceId);
-            var attributeData14 = TestData.NonNullableTestStructData;
+            var attributeTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var attributeId = H5A.create(groupId, "nonnullable", attributeTypeId, spaceId);
+            var attributeData = TestData.NonNullableTestStructData;
 
-            fixed (void* ptr = attributeData14)
+            fixed (void* ptr = attributeData)
             {
-                res = H5A.write(attributeId14, attributeTypeId14, new IntPtr(ptr));
+                res = H5A.write(attributeId, attributeTypeId, new IntPtr(ptr));
             }
 
-            res = H5T.close(attributeTypeId14);
-            res = H5A.close(attributeId14);
+            res = H5T.close(attributeTypeId);
+            res = H5A.close(attributeId);
 
             // nullable struct
-            var attributeTypeId15 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
-            var attributeId15 = H5A.create(groupId, "A15", attributeTypeId15, spaceId);
-            var attributeData15 = TestData.StringTestStructData;
+            var attributeTypeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
+            var attributeIdNullable = H5A.create(groupId, "nullable", attributeTypeIdNullable, spaceId);
+            var attributeDataNullable = TestData.StringTestStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
             var elementSize = Marshal.SizeOf<TestStructString>();
-            var totalByteLength = elementSize * attributeData15.Length;
-            var attributeData15Ptr = Marshal.AllocHGlobal(totalByteLength);
+            var totalByteLength = elementSize * attributeDataNullable.Length;
+            var attributeDataNullablePtr = Marshal.AllocHGlobal(totalByteLength);
             var counter = 0;
 
-            attributeData15.Cast<ValueType>().ToList().ForEach(x =>
+            attributeDataNullable.Cast<ValueType>().ToList().ForEach(x =>
             {
                 var sourcePtr = Marshal.AllocHGlobal(elementSize);
                 Marshal.StructureToPtr(x, sourcePtr, false);
 
                 var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
-                var target = new Span<byte>(IntPtr.Add(attributeData15Ptr, elementSize * counter).ToPointer(), elementSize);
+                var target = new Span<byte>(IntPtr.Add(attributeDataNullablePtr, elementSize * counter).ToPointer(), elementSize);
 
                 source.CopyTo(target);
                 counter++;
                 Marshal.FreeHGlobal(sourcePtr);
             });
 
-            H5A.write(attributeId15, attributeTypeId15, attributeData15Ptr);
-            Marshal.FreeHGlobal(attributeData15Ptr);
+            H5A.write(attributeIdNullable, attributeTypeIdNullable, attributeDataNullablePtr);
+            Marshal.FreeHGlobal(attributeDataNullablePtr);
 
-            res = H5T.close(attributeTypeId15);
-            res = H5A.close(attributeId15);
+            res = H5T.close(attributeTypeIdNullable);
+            res = H5A.close(attributeIdNullable);
 
-            // enum
-            var enumData = TestData.EnumData;
-            var enumTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestEnum));
-            var enumAttributeId = H5A.create(groupId, "A16", enumTypeId, spaceId);
-            var enumHandle = GCHandle.Alloc(enumData, GCHandleType.Pinned);
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
 
-            var enumPtr = enumHandle.AddrOfPinnedObject().ToPointer();
-            res = H5A.write(enumAttributeId, enumTypeId, new IntPtr(enumPtr));
+        public static unsafe void AddStringAtributes(long fileId)
+        {
+            long res;
 
-            enumHandle.Free();
+            var groupId = H5G.create(fileId, "string");
 
-            res = H5A.close(enumAttributeId);
+            // "extendible contiguous non-external dataset not allowed"
+            var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
+
+            // fixed length string attribute (ASCII)
+            var attributeTypeIdFixed = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(attributeTypeIdFixed, new IntPtr(2));
+            res = H5T.set_cset(attributeTypeIdFixed, H5T.cset_t.ASCII);
+
+            var attributeIdFixed = H5A.create(groupId, "fixed", attributeTypeIdFixed, spaceId);
+            var attributeDataFixed = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var attributeDataFixedChar = attributeDataFixed
+                .SelectMany(value => Encoding.ASCII.GetBytes(value))
+                .ToArray();
+
+            fixed (void* ptr = attributeDataFixedChar)
+            {
+                res = H5A.write(attributeIdFixed, attributeTypeIdFixed, new IntPtr(ptr));
+            }
+
+            res = H5T.close(attributeTypeIdFixed);
+            res = H5A.close(attributeIdFixed);
+
+            // variable length string attribute (ASCII)
+            var attributeTypeIdVar = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(attributeTypeIdVar, H5T.VARIABLE);
+            res = H5T.set_cset(attributeTypeIdVar, H5T.cset_t.ASCII);
+
+            var attributeIdVar = H5A.create(groupId, "variable", attributeTypeIdVar, spaceId);
+            var attributeDataVar = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var attributeDataVarIntPtr = attributeDataVar.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+
+            fixed (void* ptr = attributeDataVarIntPtr)
+            {
+                res = H5A.write(attributeIdVar, attributeTypeIdVar, new IntPtr(ptr));
+            }
+
+            foreach (var ptr in attributeDataVarIntPtr)
+            {
+                Marshal.FreeCoTaskMem(ptr);
+            }
+
+            res = H5T.close(attributeTypeIdVar);
+            res = H5A.close(attributeIdVar);
+
+            // variable length string attribute (UTF8)
+            var attributeTypeIdVarUTF8 = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(attributeTypeIdVarUTF8, H5T.VARIABLE);
+            res = H5T.set_cset(attributeTypeIdVarUTF8, H5T.cset_t.UTF8);
+
+            var attributeIdVarUTF8 = H5A.create(groupId, "variableUTF8", attributeTypeIdVarUTF8, spaceId);
+            var attributeDataVarUTF8 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
+            var attributeDataVarUTF8IntPtr = attributeDataVarUTF8.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+
+            fixed (void* ptr = attributeDataVarUTF8IntPtr)
+            {
+                res = H5A.write(attributeIdVarUTF8, attributeTypeIdVarUTF8, new IntPtr(ptr));
+            }
+
+            foreach (var ptr in attributeDataVarUTF8IntPtr)
+            {
+                Marshal.FreeCoTaskMem(ptr);
+            }
+
+            res = H5T.close(attributeTypeIdVarUTF8);
+            res = H5A.close(attributeIdVarUTF8);
 
             //
             res = H5S.close(spaceId);
@@ -389,16 +411,15 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static unsafe void AddTypedDatasets(long fileId)
+        public static unsafe void AddNumericalDatasets(long fileId)
         {
             long res;
 
-            var groupId = H5G.create(fileId, "typed");
+            var groupId = H5G.create(fileId, "numerical");
 
             // "extendible contiguous non-external dataset not allowed"
             var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
 
-            // numeric datasets
             foreach (var entry in TestData.DatasetNumericalTestData)
             {
                 var datasetData = (Array)entry[1];
@@ -408,8 +429,16 @@ namespace HDF5.NET.Tests
 
                 var typeId = TestUtils.GetHdfTypeIdFromType(type);
                 var datasetId = H5D.create(groupId, (string)entry[0], typeId, spaceId);
-                var handle = GCHandle.Alloc(datasetData, GCHandleType.Pinned);
 
+                if (type == typeof(TestEnum))
+                {
+                    datasetData = datasetData
+                        .OfType<object>()
+                        .Select(value => (short)value)
+                        .ToArray();
+                }
+
+                var handle = GCHandle.Alloc(datasetData, GCHandleType.Pinned);
                 var ptr = handle.AddrOfPinnedObject().ToPointer();
                 res = H5D.write(datasetId, typeId, spaceId, H5S.ALL, 0, new IntPtr(ptr));
 
@@ -418,125 +447,139 @@ namespace HDF5.NET.Tests
                 res = H5D.close(datasetId);
             }
 
-            // fixed length string dataset (ASCII)
-            var datasetTypeId11 = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(datasetTypeId11, new IntPtr(2));
-            res = H5T.set_cset(datasetTypeId11, H5T.cset_t.ASCII);
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
 
-            var datasetId11 = H5D.create(groupId, "D11", datasetTypeId11, spaceId);
-            var datasetData11 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var datasetData11Char = datasetData11
-                .SelectMany(value => Encoding.ASCII.GetBytes(value))
-                .ToArray();
+        public static unsafe void AddStructDatasets(long fileId)
+        {
+            long res;
 
-            fixed (void* ptr = datasetData11Char)
-            {
-                res = H5D.write(datasetId11, datasetTypeId11, spaceId, H5S.ALL, 0, new IntPtr(ptr));
-            }
+            var groupId = H5G.create(fileId, "struct");
 
-            res = H5T.close(datasetTypeId11);
-            res = H5D.close(datasetId11);
-
-            // variable length string dataset (ASCII)
-            var datasetTypeId12 = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(datasetTypeId12, H5T.VARIABLE);
-            res = H5T.set_cset(datasetTypeId12, H5T.cset_t.ASCII);
-
-            var datasetId12 = H5D.create(groupId, "D12", datasetTypeId12, spaceId);
-            var datasetData12 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var datasetData12IntPtr = datasetData12.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
-
-            fixed (void* ptr = datasetData12IntPtr)
-            {
-                res = H5D.write(datasetId12, datasetTypeId12, spaceId, H5S.ALL, 0, new IntPtr(ptr));
-            }
-
-            foreach (var ptr in datasetData12IntPtr)
-            {
-                Marshal.FreeCoTaskMem(ptr);
-            }
-
-            res = H5T.close(datasetTypeId12);
-            res = H5D.close(datasetId12);
-
-            // variable length string dataset (UTF8)
-            var datasetTypeId13 = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(datasetTypeId13, H5T.VARIABLE);
-            res = H5T.set_cset(datasetTypeId13, H5T.cset_t.UTF8);
-
-            var datasetId13 = H5D.create(groupId, "D13", datasetTypeId13, spaceId);
-            var datasetData13 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
-            var datasetData13IntPtr = datasetData13.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
-
-            fixed (void* ptr = datasetData13IntPtr)
-            {
-                res = H5D.write(datasetId13, datasetTypeId13, spaceId, H5S.ALL, 0, new IntPtr(ptr));
-            }
-
-            foreach (var ptr in datasetData13IntPtr)
-            {
-                Marshal.FreeCoTaskMem(ptr);
-            }
-
-            res = H5T.close(datasetTypeId13);
-            res = H5D.close(datasetId13);
+            // "extendible contiguous non-external dataset not allowed"
+            var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
 
             // non-nullable struct
-            var datasetTypeId14 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
-            var datasetId14 = H5D.create(groupId, "D14", datasetTypeId14, spaceId);
-            var datasetData14 = TestData.NonNullableTestStructData;
+            var datasetTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var datasetId = H5D.create(groupId, "nonnullable", datasetTypeId, spaceId);
+            var datasetData = TestData.NonNullableTestStructData;
 
-            fixed (void* ptr = datasetData14)
+            fixed (void* ptr = datasetData)
             {
-                res = H5D.write(datasetId14, datasetTypeId14, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+                res = H5D.write(datasetId, datasetTypeId, spaceId, H5S.ALL, 0, new IntPtr(ptr));
             }
 
-            res = H5T.close(datasetTypeId14);
-            res = H5D.close(datasetId14);
+            res = H5T.close(datasetTypeId);
+            res = H5D.close(datasetId);
 
             // nullable struct
-            var datasetTypeId15 = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
-            var datasetId15 = H5D.create(groupId, "D15", datasetTypeId15, spaceId);
-            var datasetData15 = TestData.StringTestStructData;
+            var datasetTypeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
+            var datasetIdNullable = H5D.create(groupId, "nullable", datasetTypeIdNullable, spaceId);
+            var datasetDataNullable = TestData.StringTestStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
             var elementSize = Marshal.SizeOf<TestStructString>();
-            var totalByteLength = elementSize * datasetData15.Length;
-            var datasetData15Ptr = Marshal.AllocHGlobal(totalByteLength);
+            var totalByteLength = elementSize * datasetDataNullable.Length;
+            var datasetDataNullablePtr = Marshal.AllocHGlobal(totalByteLength);
             var counter = 0;
 
-            datasetData15.Cast<ValueType>().ToList().ForEach(x =>
+            datasetDataNullable.Cast<ValueType>().ToList().ForEach(x =>
             {
                 var sourcePtr = Marshal.AllocHGlobal(elementSize);
                 Marshal.StructureToPtr(x, sourcePtr, false);
 
                 var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
-                var target = new Span<byte>(IntPtr.Add(datasetData15Ptr, elementSize * counter).ToPointer(), elementSize);
+                var target = new Span<byte>(IntPtr.Add(datasetDataNullablePtr, elementSize * counter).ToPointer(), elementSize);
 
                 source.CopyTo(target);
                 counter++;
                 Marshal.FreeHGlobal(sourcePtr);
             });
 
-            H5D.write(datasetId15, datasetTypeId15, spaceId, H5S.ALL, 0, datasetData15Ptr);
-            Marshal.FreeHGlobal(datasetData15Ptr);
+            H5D.write(datasetIdNullable, datasetTypeIdNullable, spaceId, H5S.ALL, 0, datasetDataNullablePtr);
+            Marshal.FreeHGlobal(datasetDataNullablePtr);
 
-            res = H5T.close(datasetTypeId15);
-            res = H5D.close(datasetId15);
+            res = H5T.close(datasetTypeIdNullable);
+            res = H5D.close(datasetIdNullable);
 
-            // enum
-            var enumData = TestData.EnumData;
-            var enumTypeId = TestUtils.GetHdfTypeIdFromType(typeof(TestEnum));
-            var enumDatasetId = H5A.create(groupId, "D16", enumTypeId, spaceId);
-            var enumHandle = GCHandle.Alloc(enumData, GCHandleType.Pinned);
+            //
+            res = H5S.close(spaceId);
+            res = H5G.close(groupId);
+        }
 
-            var enumPtr = enumHandle.AddrOfPinnedObject().ToPointer();
-            res = H5A.write(enumDatasetId, enumTypeId, new IntPtr(enumPtr));
+        public static unsafe void AddStringDatasets(long fileId)
+        {
+            long res;
 
-            enumHandle.Free();
+            var groupId = H5G.create(fileId, "string");
 
-            res = H5A.close(enumDatasetId);
+            // "extendible contiguous non-external dataset not allowed"
+            var spaceId = H5S.create_simple(3, new ulong[] { 2, 2, 3 }, new ulong[] { 2, 2, 3 });
+
+            // fixed length string dataset (ASCII)
+            var datasetTypeIdFixed = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(datasetTypeIdFixed, new IntPtr(2));
+            res = H5T.set_cset(datasetTypeIdFixed, H5T.cset_t.ASCII);
+
+            var datasetIdFixed = H5D.create(groupId, "fixed", datasetTypeIdFixed, spaceId);
+            var datasetDataFixed = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var datasetDataFixedChar = datasetDataFixed
+                .SelectMany(value => Encoding.ASCII.GetBytes(value))
+                .ToArray();
+
+            fixed (void* ptr = datasetDataFixedChar)
+            {
+                res = H5D.write(datasetIdFixed, datasetTypeIdFixed, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            res = H5T.close(datasetTypeIdFixed);
+            res = H5D.close(datasetIdFixed);
+
+            // variable length string dataset (ASCII)
+            var datasetTypeIdVar = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(datasetTypeIdVar, H5T.VARIABLE);
+            res = H5T.set_cset(datasetTypeIdVar, H5T.cset_t.ASCII);
+
+            var datasetIdVar = H5D.create(groupId, "variable", datasetTypeIdVar, spaceId);
+            var datasetDataVar = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var datasetDataVarIntPtr = datasetDataVar.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+
+            fixed (void* ptr = datasetDataVarIntPtr)
+            {
+                res = H5D.write(datasetIdVar, datasetTypeIdVar, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            foreach (var ptr in datasetDataVarIntPtr)
+            {
+                Marshal.FreeCoTaskMem(ptr);
+            }
+
+            res = H5T.close(datasetTypeIdVar);
+            res = H5D.close(datasetIdVar);
+
+            // variable length string dataset (UTF8)
+            var datasetTypeIdVarUTF8 = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(datasetTypeIdVarUTF8, H5T.VARIABLE);
+            res = H5T.set_cset(datasetTypeIdVarUTF8, H5T.cset_t.UTF8);
+
+            var datasetIdVarUTF8 = H5D.create(groupId, "variableUTF8", datasetTypeIdVarUTF8, spaceId);
+            var datasetDataVarUTF8 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
+            var datasetDataVarUTF8IntPtr = datasetDataVarUTF8.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+
+            fixed (void* ptr = datasetDataVarUTF8IntPtr)
+            {
+                res = H5D.write(datasetIdVarUTF8, datasetTypeIdVarUTF8, spaceId, H5S.ALL, 0, new IntPtr(ptr));
+            }
+
+            foreach (var ptr in datasetDataVarUTF8IntPtr)
+            {
+                Marshal.FreeCoTaskMem(ptr);
+            }
+
+            res = H5T.close(datasetTypeIdVarUTF8);
+            res = H5D.close(datasetIdVarUTF8);
 
             //
             res = H5S.close(spaceId);

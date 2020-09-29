@@ -21,16 +21,16 @@ namespace HDF5.NET.Tests.Reading
 
         [Theory]
         [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
-        public void CanReadAttribute_Numerical<T>(string name, T[] expected) where T : unmanaged
+        public void CanReadAttribute_Numerical<T>(string name, T[] expected) where T : struct
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumericalAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("typed").GetAttribute(name);
+                var attribute = root.GetGroup("numerical").GetAttribute(name);
                 var actual = attribute.Read<T>();
 
                 // Assert
@@ -44,11 +44,11 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("typed").GetAttribute("A14");
+                var attribute = root.GetGroup("struct").GetAttribute("nonnullable");
                 var actual = attribute.Read<TestStructL1>();
 
                 // Assert
@@ -62,11 +62,11 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("typed").GetAttribute("A15");
+                var attribute = root.GetGroup("struct").GetAttribute("nullable");
 
                 Func<FieldInfo, string> converter = fieldInfo =>
                 {
@@ -148,19 +148,19 @@ namespace HDF5.NET.Tests.Reading
         // Fixed-length string attribute (UTF8) is not supported because 
         // it is incompatible with variable byte length per character.
         [Theory]
-        [InlineData("A11", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
-        [InlineData("A12", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
-        [InlineData("A13", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
+        [InlineData("fixed", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variable", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" })]
+        [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
         public void CanReadAttribute_String(string name, string[] expected)
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAtributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("typed").GetAttribute(name);
+                var attribute = root.GetGroup("string").GetAttribute(name);
                 var actual = attribute.ReadString();
 
                 // Assert
@@ -174,11 +174,11 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTypedAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute = root.GetGroup("typed").GetAttribute("A15");
+                var attribute = root.GetGroup("struct").GetAttribute("nullable");
                 var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
 
                 // Assert

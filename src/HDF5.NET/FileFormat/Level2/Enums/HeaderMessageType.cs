@@ -5,7 +5,7 @@
         NIL = 0x000,
         Dataspace = 0x0001,
         LinkInfo = 0x0002,
-        DataType = 0x0003,
+        Datatype = 0x0003,
         OldFillValue = 0x004,
         FillValue = 0x0005,
         Link = 0x0006,

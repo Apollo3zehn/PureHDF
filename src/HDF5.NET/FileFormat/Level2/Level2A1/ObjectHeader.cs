@@ -146,10 +146,10 @@ namespace HDF5.NET
             }
 
             var condition = headerMessages.Count == 1 &&
-                            headerMessages[0].Type == HeaderMessageType.DataType;
+                            headerMessages[0].Type == HeaderMessageType.Datatype;
 
             if (condition)
-                return H5ObjectType.CommitedDataType;
+                return H5ObjectType.CommitedDatatype;
             else
                 return H5ObjectType.Undefined;
         }

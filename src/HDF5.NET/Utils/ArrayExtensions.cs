@@ -104,7 +104,7 @@ namespace HDF5.NET
             }
         }
 
-        private static unsafe void CopyData<T>(T[] source, void* target) where T : unmanaged
+        private static unsafe void CopyData<T>(T[] source, void* target) where T : struct
         {
             var sourceBytes = MemoryMarshal.AsBytes(source.AsSpan());
             var bytePtr = (byte*)target;

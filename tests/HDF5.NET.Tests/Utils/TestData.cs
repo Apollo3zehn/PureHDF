@@ -84,7 +84,8 @@ namespace HDF5.NET.Tests
 
         static TestData()
         {
-            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a };
+            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a, 
+                                                 TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };
 
             TestData.AttributeNumericalTestData = new List<object[]>
             {
@@ -98,7 +99,7 @@ namespace HDF5.NET.Tests
                 new object[] { "A8", new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
                 new object[] { "A9", new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 } },
                 new object[] {"A10", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 } },
-                new object[] {"A16", TestData.EnumData },
+                new object[] {"A11", TestData.EnumData },
             };
 
             TestData.DatasetNumericalTestData = new List<object[]>
@@ -113,7 +114,7 @@ namespace HDF5.NET.Tests
                 new object[] { "D8", new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
                 new object[] { "D9", new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 } },
                 new object[] {"D10", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 } },
-                new object[] {"D16", TestData.EnumData },
+                new object[] {"D11", TestData.EnumData },
             };
 
             TestData.NonNullableTestStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };

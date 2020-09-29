@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
-    public class H5Attribute : IH5DataContainer
+    public class H5Attribute : IDataContainer
     {
         #region Fields
 
@@ -35,8 +35,19 @@ namespace HDF5.NET
 
         #region Methods
 
-        public T[] Read<T>() where T : unmanaged
+        public T[] Read<T>() where T : struct
         {
+            switch (this.Message.Datatype.Class)
+            {
+                case DatatypeMessageClass.FixedPoint:
+                case DatatypeMessageClass.FloatingPoint:
+                case DatatypeMessageClass.Enumerated:
+                    break;
+
+                default:
+                    throw new Exception($"This method can only be used for data type classes '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}' and '{DatatypeMessageClass.Enumerated}'.");
+            }
+
             var buffer = this.Message.Data;
             var byteOrderAware = this.Message.Datatype.BitField as IByteOrderAware;
 

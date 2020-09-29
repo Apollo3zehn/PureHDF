@@ -10,8 +10,8 @@ using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}: Class = '{DataType.Class}'")]
-    public class H5Dataset : H5AttributableLink, IH5DataContainer
+    [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
+    public class H5Dataset : H5AttributableLink, IDataContainer
     {
         #region Constructors
 
@@ -29,7 +29,7 @@ namespace HDF5.NET
                     this.Dataspace = (DataspaceMessage)message.Data;
 
                 else if (type == typeof(DatatypeMessage))
-                    this.DataType = (DatatypeMessage)message.Data;
+                    this.Datatype = (DatatypeMessage)message.Data;
 
                 else if (type == typeof(FillValueMessage))
                     this.FillValue = (FillValueMessage)message.Data;
@@ -48,7 +48,7 @@ namespace HDF5.NET
             if (this.Dataspace == null)
                 throw new Exception("The dataspace message is missing.");
 
-            if (this.DataType == null)
+            if (this.Datatype == null)
                 throw new Exception("The data type message is missing.");
 
             if (this.FillValue == null)
@@ -63,7 +63,7 @@ namespace HDF5.NET
 
         public DataspaceMessage Dataspace { get; } = null!;
 
-        public DatatypeMessage DataType { get; } = null!;
+        public DatatypeMessage Datatype { get; } = null!;
 
         public FillValueMessage FillValue { get; } = null!;
 
@@ -75,12 +75,10 @@ namespace HDF5.NET
 
         #region Methods
 
-        public T[] Read<T>() where T : unmanaged
+        public T[] Read<T>() where T : struct
         {
             return this.Read<T>(skipShuffle: false);
         }
-
-#error ReadEnum is missing, README.MD is not fully correcty (enum part)
 
         public T[] ReadCompound<T>() where T : struct
         {
@@ -91,17 +89,28 @@ namespace HDF5.NET
         {
             var data = this.Read<byte>();
 
-            return H5Utils.ReadCompound<T>(this.DataType, this.Dataspace, this.File.Superblock, data, getName);
+            return H5Utils.ReadCompound<T>(this.Datatype, this.Dataspace, this.File.Superblock, data, getName);
         }
 
         public string[] ReadString()
         {
             var data = this.Read<byte>();
-            return H5Utils.ReadString(this.DataType, data, this.File.Superblock);
+            return H5Utils.ReadString(this.Datatype, data, this.File.Superblock);
         }
 
-        internal T[] Read<T>(bool skipShuffle) where T : unmanaged
+        internal T[] Read<T>(bool skipShuffle) where T : struct
         {
+            switch (this.Datatype.Class)
+            {
+                case DatatypeMessageClass.FixedPoint:
+                case DatatypeMessageClass.FloatingPoint:
+                case DatatypeMessageClass.Enumerated:
+                    break;
+
+                default:
+                    throw new Exception($"This method can only be used for data type classes '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}' and '{DatatypeMessageClass.Enumerated}'.");
+            }
+
             // for testing only
             if (skipShuffle && this.FilterPipeline != null)
             {
@@ -157,7 +166,7 @@ namespace HDF5.NET
             }
         }
 
-        private T[] ReadCompact<T>() where T : unmanaged
+        private T[] ReadCompact<T>() where T : struct
         {
             byte[] buffer;
 
@@ -183,7 +192,7 @@ namespace HDF5.NET
             return result.ToArray();
         }
 
-        private T[] ReadContiguous<T>() where T : unmanaged
+        private T[] ReadContiguous<T>() where T : struct
         {
             ulong address;
 
@@ -219,7 +228,7 @@ namespace HDF5.NET
             return result;
         }
 
-        private T[] ReadChunked<T>() where T : unmanaged
+        private T[] ReadChunked<T>() where T : struct
         {
             var buffer = this.GetBuffer<T>(out var result);
 
@@ -513,10 +522,10 @@ namespace HDF5.NET
             }
         }
 
-        private Span<byte> GetBuffer<T>(out T[] result) where T : unmanaged
+        private Span<byte> GetBuffer<T>(out T[] result) where T : struct
         {
             // first, get byte size
-            var byteSize = this.CalculateByteSize(this.Dataspace.DimensionSizes) * this.DataType.Size;
+            var byteSize = this.CalculateByteSize(this.Dataspace.DimensionSizes) * this.Datatype.Size;
 
             // second, convert file type (e.g. 2 bytes) to T (e.g. 4 bytes)
             var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
@@ -598,10 +607,10 @@ namespace HDF5.NET
 
         private void EnsureEndianness(Span<byte> buffer)
         {
-            var byteOrderAware = this.DataType.BitField as IByteOrderAware;
+            var byteOrderAware = this.Datatype.BitField as IByteOrderAware;
 
             if (byteOrderAware != null)
-                H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.DataType.Size);
+                H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.Datatype.Size);
         }
 
         #endregion

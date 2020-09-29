@@ -10,7 +10,7 @@ namespace HDF5.NET
 {
     public static class EndiannessConverter
     {
-        public unsafe static void Convert<T>(Span<T> source, Span<T> destination) where T : unmanaged
+        public unsafe static void Convert<T>(Span<T> source, Span<T> destination) where T : struct
         {
             var bytesOfType = Unsafe.SizeOf<T>();
             EndiannessConverter.Convert(bytesOfType, MemoryMarshal.AsBytes(source), MemoryMarshal.AsBytes(destination));

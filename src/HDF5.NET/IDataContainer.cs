@@ -3,9 +3,9 @@ using System.Reflection;
 
 namespace HDF5.NET
 {
-    internal interface IH5DataContainer
+    internal interface IDataContainer
     {
-        T[] Read<T>() where T : unmanaged;
+        T[] Read<T>() where T : struct;
 
         T[] ReadCompound<T>() where T : struct;
 
