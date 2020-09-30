@@ -7,7 +7,6 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5NamedReference _reference;
         private ObjectHeader? _header;
         private ObjectReferenceCountMessage? _objectReferenceCount;
 
@@ -18,13 +17,13 @@ namespace HDF5.NET
         internal H5Object(H5Context context, H5NamedReference reference)
         {
             this.Context = context;
-            _reference = reference;
+            this.Reference = reference;
         }
 
         internal H5Object(H5Context context, H5NamedReference reference, ObjectHeader header)
         {
             this.Context = context;
-            _reference = reference;
+            this.Reference = reference;
             _header = header;
         }
 
@@ -32,11 +31,13 @@ namespace HDF5.NET
 
         #region Properties
 
-        public string Name => _reference.Name;
+        public string Name => this.Reference.Name;
 
         public uint ReferenceCount => this.ObjectReferenceCount == null
             ? 1
             : this.ObjectReferenceCount.ReferenceCount;
+
+        public H5NamedReference Reference { get; }
 
         internal H5Context Context { get; }
 
@@ -59,9 +60,9 @@ namespace HDF5.NET
         {
             get
             {
-                if (_header == null && !this.Context.Superblock.IsUndefinedAddress(_reference.Value))
+                if (_header == null)
                 {
-                    this.Context.Reader.Seek((long)_reference.Value, SeekOrigin.Begin);
+                    this.Context.Reader.Seek((long)this.Reference.Value, SeekOrigin.Begin);
                     _header = ObjectHeader.Construct(this.Context);
                 }
 
