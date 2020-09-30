@@ -92,13 +92,16 @@ namespace HDF5.NET
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
             }
 
-            var context = new H5Context(reader, superblock);
-            var reference = new H5NamedReference("/", address);
 
             reader.Seek((long)address, SeekOrigin.Begin);
+            var context = new H5Context(reader, superblock);
             var header = ObjectHeader.Construct(context);
 
-            return new H5File(context, reference, header, filePath, deleteOnClose);
+            var file = new H5File(context, default, header, filePath, deleteOnClose);
+            var reference = new H5NamedReference(file, "/", address);
+            file.Reference = reference;
+
+            return file;
         }
 
         public H5Object Get(H5Reference reference)
@@ -107,9 +110,9 @@ namespace HDF5.NET
             {
                 this.Context.Reader.Seek((long)reference.Value, SeekOrigin.Begin);
                 var objectHeader = ObjectHeader.Construct(this.Context);
-                var namedReference = new H5NamedReference("", reference.Value);
+                var namedReference = new H5NamedReference(this, "", reference.Value);
 
-                return namedReference.Dereference(this, this.Context);
+                return namedReference.Dereference();
             }
             catch
             {

@@ -6,7 +6,7 @@ using File = System.IO.File;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Target = '{Target}'")]
-    public class H5SymbolicLink : ILink
+    internal class H5SymbolicLink
     {
         #region Constructors
 

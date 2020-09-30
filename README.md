@@ -8,14 +8,14 @@ A pure C# library that makes reading of HDF5 files (groups, datasets, attributes
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html)
 
-## 1. Links
+## 1. Objects
 
 ```cs
 // open HDF5 file, the returned H5File instance represents the root group ('/')
 using var root = H5File.Open(<TODO: improve signature>);
 ```
 
-### 1.1 Get Link
+### 1.1 Get Object
 #### Group
 
 ```cs
@@ -41,21 +41,12 @@ var dataset = group.Dataset("/my/nested/group/myDataset");
 var commitedDatatype = group.CommitedDatatype("myCommitedDatatype");
 ```
 
-#### Any Link Type
+#### Any Object Type
 When you do not know what kind of link to expect at a given path, use the following code:
 
 ```cs
-// get H5Link (base class of all link types)
-var link = group.Get("/path/to/unknown/link");
-```
-
-#### Symbolic Link
-
-If you do not want the library to transparently follow a link but instead get the link itself, use the following:
-
-```cs
-// hard link, soft link or external file link
-var symbolicLink = group.SymbolicLink("mySymbolicLink");
+// get H5Object (base class of all HDF5 object types)
+var myH5Object = group.Get("/path/to/unknown/object");
 ```
 
 ### 1.2 Additional Info
@@ -100,7 +91,7 @@ foreach (var link in group.Children)
 }
 ```
 
-An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed. Section [Accessing Symbolic Links](#Accessing-Symbolic-Links) describes how to get the symbolic link itself instead of its target.
+An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
 
 ## 2. Attributes
 

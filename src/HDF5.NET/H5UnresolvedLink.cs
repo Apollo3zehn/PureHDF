@@ -8,17 +8,11 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal H5UnresolvedLink(string name, Exception ex) 
-            : base(default, new H5NamedReference(name, Superblock.UndefinedAddress))
+        internal H5UnresolvedLink(H5File file, string name) 
+            : base(default, new H5NamedReference(file, name, Superblock.UndefinedAddress))
         {
-            this.Reason = ex;
+            //
         }
-
-        #endregion
-
-        #region Properties
-
-        public Exception Reason { get; }
 
         #endregion
     }

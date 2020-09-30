@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public abstract class H5Object : ILink
+    public abstract class H5Object
     {
         #region Fields
 
@@ -37,7 +37,7 @@ namespace HDF5.NET
             ? 1
             : this.ObjectReferenceCount.ReferenceCount;
 
-        public H5NamedReference Reference { get; }
+        public H5NamedReference Reference { get; internal set; }
 
         internal H5Context Context { get; }
 

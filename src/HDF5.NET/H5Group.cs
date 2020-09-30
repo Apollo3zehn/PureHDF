@@ -27,17 +27,17 @@ namespace HDF5.NET
             //
         }
 
+        internal H5Group(H5File file, H5Context context, H5NamedReference reference)
+           : base(context, reference)
+        {
+            _file = file;
+            _scratchPad = reference.ScratchPad;
+        }
+
         internal H5Group(H5File file, H5Context context, H5NamedReference reference, ObjectHeader header)
             : base(context, reference, header)
         {
             _file = file;
-        }
-
-        internal H5Group(H5File file, H5Context context, H5NamedReference reference, ObjectHeaderScratchPad? scratchPad)
-            : base(context, reference)
-        {
-            _file = file;
-            _scratchPad = scratchPad;
         }
 
         #endregion
@@ -81,7 +81,7 @@ namespace HDF5.NET
         {
             return this
                 .InternalGet(path, linkAccess)
-                .Dereference(this.File, this.Context);
+                .Dereference();
         }
 
         public H5Group Group(string path)
@@ -136,7 +136,7 @@ namespace HDF5.NET
         {
             return this
                 .EnumerateReferences(linkAccess)
-                .Select(reference => reference.Dereference(this.File, this.Context));
+                .Select(reference => reference.Dereference());
         }
 
         #region Private
@@ -152,7 +152,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < segments.Length; i++)
             {
-                var group = current.Dereference(this.File, this.Context) as H5Group;
+                var group = current.Dereference() as H5Group;
 
                 if (group == null)
                     return false;
@@ -177,7 +177,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < segments.Length; i++)
             {
-                var group = current.Dereference(this.File, this.Context) as H5Group;
+                var group = current.Dereference() as H5Group;
 
                 if (group == null)
                     throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
@@ -473,7 +473,7 @@ namespace HDF5.NET
         {
             return linkMessage.LinkInfo switch
             {
-                HardLinkInfo hard => new H5NamedReference(linkMessage.LinkName, hard.HeaderAddress),
+                HardLinkInfo hard => new H5NamedReference(this.File, linkMessage.LinkName, hard.HeaderAddress),
                 SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this).GetTarget(linkAccess),
                 ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this).GetTarget(linkAccess),
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
@@ -488,15 +488,22 @@ namespace HDF5.NET
         private H5NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccessPropertyList linkAccess)
         {
             var name = heap.GetObjectName(entry.LinkNameOffset);
-            var reference = new H5NamedReference(name, entry.HeaderAddress);
+            var reference = new H5NamedReference(this.File, name, entry.HeaderAddress);
 
             return entry.ScratchPad switch
             {
-                ObjectHeaderScratchPad objectScratch => reference,//new H5Group(this.File, this.Context, reference, objectScratch),
+                ObjectHeaderScratchPad objectScratch => this.AddScratchPad(reference, objectScratch),
                 SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess),
                 _ when !this.Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
                 _ => throw new Exception("Unknown object type.")
             };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private H5NamedReference AddScratchPad(H5NamedReference reference, ObjectHeaderScratchPad scratchPad)
+        {
+            reference.ScratchPad = scratchPad;
+            return reference;
         }
 
         private IEnumerable<SymbolTableNode> EnumerateSymbolTableNodes(BTree1Node<BTree1GroupKey> btree1)
