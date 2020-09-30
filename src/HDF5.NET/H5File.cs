@@ -13,11 +13,13 @@ namespace HDF5.NET
 
         #region Constructors
 
-        private H5File(H5BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string absoluteFilePath, bool deleteOnClose)
-            : base(objectHeader)
+        private H5File(H5Context context,
+                       H5NamedReference reference,
+                       ObjectHeader header,
+                       string absoluteFilePath,
+                       bool deleteOnClose)
+            : base(context, reference, header)
         {
-            this.Reader = reader;
-            this.Superblock = superblock;
             this.Path = absoluteFilePath;
             _deleteOnClose = deleteOnClose;
         }
@@ -27,9 +29,6 @@ namespace HDF5.NET
         #region Properties
 
         public string Path { get; } = ":memory:";
-
-        internal H5BinaryReader Reader { get; }
-        internal Superblock Superblock { get; }
 
         #endregion
 
@@ -76,39 +75,41 @@ namespace HDF5.NET
 
             reader.BaseAddress = superblock.BaseAddress;
 
-            ObjectHeader objectHeader;
+            ulong address;
             var superblock01 = superblock as Superblock01;
 
             if (superblock01 != null)
             {
-                var nullableObjectHeader = superblock01.RootGroupSymbolTableEntry.ObjectHeader;
-
-                if (nullableObjectHeader == null)
-                    throw new Exception("The root group object header is not allocated.");
-
-                objectHeader = nullableObjectHeader;
+                address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
             }
             else
             {
                 var superblock23 = superblock as Superblock23;
 
                 if (superblock23 != null)
-                    objectHeader = superblock23.RootGroupObjectHeader;
+                    address = superblock23.RootGroupObjectHeaderAddress;
                 else
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
             }
 
-            return new H5File(reader, superblock, objectHeader, filePath, deleteOnClose);
+            var context = new H5Context(reader, superblock);
+            var reference = new H5NamedReference("/", address);
+
+            reader.Seek((long)address, SeekOrigin.Begin);
+            var header = ObjectHeader.Construct(context);
+
+            return new H5File(context, reference, header, filePath, deleteOnClose);
         }
 
-        public H5Link Get(ulong reference)
+        public H5Object Get(H5Reference reference)
         {
             try
             {
-                this.Reader.Seek((long)reference, SeekOrigin.Begin);
-                var objectHeader = ObjectHeader.Construct(this.Reader, this.Superblock);
+                this.Context.Reader.Seek((long)reference.Value, SeekOrigin.Begin);
+                var objectHeader = ObjectHeader.Construct(this.Context);
+                var namedReference = new H5NamedReference("", reference.Value);
 
-                return this.InstantiateUncachedLink(string.Empty, objectHeader);
+                return namedReference.Dereference(this, this.Context);
             }
             catch
             {
@@ -118,8 +119,8 @@ namespace HDF5.NET
 
         public void Dispose()
         {
-            H5Cache.Clear(this.Superblock);
-            this.Reader.Dispose();
+            H5Cache.Clear(this.Context.Superblock);
+            this.Context.Reader.Dispose();
 
             if (_deleteOnClose && System.IO.File.Exists(this.Path))
             {

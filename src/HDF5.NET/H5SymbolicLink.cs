@@ -1,23 +1,27 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using File = System.IO.File;
 
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Target = '{Target}'")]
-    public class H5SymbolicLink : H5Link
+    public class H5SymbolicLink : ILink
     {
         #region Constructors
 
-        internal H5SymbolicLink(string name, string linkValue, H5Group parent) : base(name)
+        internal H5SymbolicLink(string name, string linkValue, H5Group parent)
         {
-            this.LinkValue = linkValue;
+            this.Name = name;
+            this.Value = linkValue;
             this.Parent = parent;
         }
 
-        internal H5SymbolicLink(LinkMessage linkMessage, H5Group parent) : base(linkMessage.LinkName)
+        internal H5SymbolicLink(LinkMessage linkMessage, H5Group parent)
         {
-            (this.LinkValue, this.FullObjectPath) = linkMessage.LinkInfo switch
+            this.Name = linkMessage.LinkName;
+
+            (this.Value, this.ObjectPath) = linkMessage.LinkInfo switch
             {
                 SoftLinkInfo softLink           => (softLink.Value, null),
                 ExternalLinkInfo externalLink   => (externalLink.FilePath, externalLink.FullObjectPath),
@@ -31,9 +35,11 @@ namespace HDF5.NET
 
         #region Properties
 
-        public string LinkValue { get; }
+        public string Name { get; }
 
-        public string? FullObjectPath { get; }
+        public string Value { get; }
+
+        public string? ObjectPath { get; }
 
         internal H5Group Parent { get; }
 
@@ -41,21 +47,21 @@ namespace HDF5.NET
 
         #region Methods
 
-        public H5Link GetTarget(H5LinkAccessPropertyList linkAccess)
+        public H5Object GetTarget(H5LinkAccessPropertyList linkAccess)
         {
             try
             {
                 // this file
-                if (string.IsNullOrWhiteSpace(this.FullObjectPath))
+                if (string.IsNullOrWhiteSpace(this.ObjectPath))
                 {
-                    return this.Parent.Get(this.LinkValue);
+                    return this.Parent.Get(this.Value);
                 }
                 // external file
                 else
                 {
-                    var absoluteFilePath = this.ConstructExternalFilePath(this.LinkValue, linkAccess);
-                    var objectPath = this.FullObjectPath;
-                    var externalFile = H5Cache.GetH5File(this.Parent.File.Superblock, absoluteFilePath);
+                    var absoluteFilePath = this.ConstructExternalFilePath(this.Value, linkAccess);
+                    var objectPath = this.ObjectPath;
+                    var externalFile = H5Cache.GetH5File(this.Parent.Context.Superblock, absoluteFilePath);
 
                     return externalFile.Get(objectPath, linkAccess);
                 }

@@ -6,61 +6,25 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public abstract class H5AttributableLink : H5Link
+    public abstract class H5AttributableObject : H5Object
     {
-        #region Fields
-
-        private ulong _objectHeaderAddress;
-        private ObjectHeader? _objectHeader;
-
-        #endregion
-
         #region Constructors
 
-        // only for H5File constructor
-        public H5AttributableLink(ObjectHeader objectHeader) : base("/")
+        internal H5AttributableObject(H5Context context, H5NamedReference reference, ObjectHeader header) 
+            : base(context, reference, header)
         {
-            var file = this as H5File;
-
-            if (file == null)
-                throw new Exception($"This constructor is only intended for the {nameof(H5File)} class.");
-
-            this.File = file;
-
-            _objectHeader = objectHeader;
+            //
         }
 
-        public H5AttributableLink(H5File file, string name, ObjectHeader objectHeader) : base(name)
+        internal H5AttributableObject(H5Context context, H5NamedReference reference) 
+            : base(context, reference)
         {
-            this.File = file;
-            _objectHeader = objectHeader;
-        }
-
-        public H5AttributableLink(H5File file, string name, ulong objectHeaderAddress) : base(name)
-        {
-            this.File = file;
-            _objectHeaderAddress = objectHeaderAddress;
+            //
         }
 
         #endregion
 
         #region Properties
-
-        public H5File File { get; }
-
-        protected ObjectHeader ObjectHeader
-        {
-            get
-            {
-                if (_objectHeader == null)
-                {
-                    this.File.Reader.Seek((long)_objectHeaderAddress, SeekOrigin.Begin);
-                    _objectHeader = ObjectHeader.Construct(this.File.Reader, this.File.Superblock);
-                }
-
-                return _objectHeader;
-            }
-        }
 
         public IEnumerable<H5Attribute> Attributes => this.EnumerateAttributes();
 
@@ -78,13 +42,13 @@ namespace HDF5.NET
             if (!this.TryGetAttributeMessage(name, out var attributeMessage))
                 throw new Exception($"Could not find attribute '{name}'.");
 
-            return new H5Attribute(attributeMessage, this.File.Superblock);
+            return new H5Attribute(attributeMessage, this.Context.Superblock);
         }
 
         private bool TryGetAttributeMessage(string name, [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)
         {
             // get attribute from attribute message
-            attributeMessage = this.ObjectHeader
+            attributeMessage = this.Header
                 .GetMessages<AttributeMessage>()
                 .FirstOrDefault(message => message.Name == name);
 
@@ -95,7 +59,7 @@ namespace HDF5.NET
             // get attribute from attribute info
             else
             {
-                var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+                var attributeInfoMessages = this.Header.GetMessages<AttributeInfoMessage>();
 
                 if (attributeInfoMessages.Any())
                 {
@@ -104,7 +68,7 @@ namespace HDF5.NET
 
                     var attributeInfoMessage = attributeInfoMessages.First();
 
-                    if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
+                    if (!this.Context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                     {
                         if (this.TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out attributeMessage))
                             return true;
@@ -123,15 +87,15 @@ namespace HDF5.NET
             // => do not use "if/else"
 
             // attributes are stored compactly
-            var attributeMessages1 = this.ObjectHeader.GetMessages<AttributeMessage>();
+            var attributeMessages1 = this.Header.GetMessages<AttributeMessage>();
 
             foreach (var attributeMessage in attributeMessages1)
             {
-                yield return new H5Attribute(attributeMessage, this.File.Superblock);
+                yield return new H5Attribute(attributeMessage, this.Context.Superblock);
             }
 
             // attributes are stored densely
-            var attributeInfoMessages = this.ObjectHeader.GetMessages<AttributeInfoMessage>();
+            var attributeInfoMessages = this.Header.GetMessages<AttributeInfoMessage>();
 
             if (attributeInfoMessages.Any())
             {
@@ -140,13 +104,13 @@ namespace HDF5.NET
 
                 var attributeInfoMessage = attributeInfoMessages.First();
 
-                if (!this.File.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
+                if (!this.Context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                 {
                     var attributeMessages2 = this.EnumerateAttributeMessagesFromAttributeInfoMessage(attributeInfoMessage);
 
                     foreach (var attributeMessage in attributeMessages2)
                     {
-                        yield return new H5Attribute(attributeMessage, this.File.Superblock);
+                        yield return new H5Attribute(attributeMessage, this.Context.Superblock);
                     }
                 }
             }
@@ -168,8 +132,8 @@ namespace HDF5.NET
             {
 #warning duplicate1
                 using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
-                var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
-                var message = heapId.Read(reader => new AttributeMessage(reader, this.File.Superblock), ref record01Cache);
+                var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
+                var message = heapId.Read(reader => new AttributeMessage(reader, this.Context.Superblock), ref record01Cache);
 
                 yield return message;
             }
@@ -202,8 +166,8 @@ namespace HDF5.NET
                 {
 #warning duplicate2
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
-                    var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new AttributeMessage(reader, this.File.Superblock));
+                    var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
+                    candidate = heapId.Read(reader => new AttributeMessage(reader, this.Context.Superblock));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison

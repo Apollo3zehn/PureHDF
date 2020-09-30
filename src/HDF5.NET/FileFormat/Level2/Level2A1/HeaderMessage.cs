@@ -15,64 +15,64 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public HeaderMessage(H5BinaryReader reader, Superblock superblock, byte version, bool withCreationOrder = false) : base(reader)
+        internal HeaderMessage(H5Context context, byte version, bool withCreationOrder = false) : base(context.Reader)
         {
             this.Version = version;
             this.WithCreationOrder = withCreationOrder;
 
             // version
             if (version == 1)
-                this.Type = (HeaderMessageType)reader.ReadUInt16();
+                this.Type = (HeaderMessageType)context.Reader.ReadUInt16();
             else if (version == 2)
-                this.Type = (HeaderMessageType)reader.ReadByte();
+                this.Type = (HeaderMessageType)context.Reader.ReadByte();
 
             // data size
-            this.DataSize = reader.ReadUInt16();
+            this.DataSize = context.Reader.ReadUInt16();
 
             // flags
-            this.Flags = (HeaderMessageFlags)reader.ReadByte();
+            this.Flags = (HeaderMessageFlags)context.Reader.ReadByte();
 
             // reserved / creation order
             if (version == 1)
-                reader.ReadBytes(3);
+                context.Reader.ReadBytes(3);
             else if (version == 2 && withCreationOrder)
-                this.CreationOrder = reader.ReadUInt16();
+                this.CreationOrder = context.Reader.ReadUInt16();
 
             // data
-            var readerPosition1 = reader.BaseStream.Position;
+            var readerPosition1 = context.Reader.BaseStream.Position;
 
             this.Data = this.Type switch
             {
-                HeaderMessageType.NIL                       => new NilMessage(reader),
-                HeaderMessageType.Dataspace                 => new DataspaceMessage(reader, superblock),
-                HeaderMessageType.LinkInfo                  => new LinkInfoMessage(reader, superblock),
-                HeaderMessageType.Datatype                  => new DatatypeMessage(reader),
-                HeaderMessageType.OldFillValue              => new OldFillValueMessage(reader),
-                HeaderMessageType.FillValue                 => new FillValueMessage(reader),
-                HeaderMessageType.Link                      => new LinkMessage(reader, superblock),
-                HeaderMessageType.ExternalDataFiles         => new ExternalFileListMessage(reader, superblock),
-                HeaderMessageType.DataLayout                => DataLayoutMessage.Construct(reader, superblock),
-                HeaderMessageType.Bogus                     => new BogusMessage(reader),
-                HeaderMessageType.GroupInfo                 => new GroupInfoMessage(reader),
-                HeaderMessageType.FilterPipeline            => new FilterPipelineMessage(reader),
-                HeaderMessageType.Attribute                 => new AttributeMessage(reader, superblock),
-                HeaderMessageType.ObjectComment             => new ObjectCommentMessage(reader),
-                HeaderMessageType.OldObjectModificationTime => new OldObjectModificationTimeMessage(reader),
-                HeaderMessageType.SharedMessageTable        => new SharedMessageTableMessage(reader, superblock),
-                HeaderMessageType.ObjectHeaderContinuation  => new ObjectHeaderContinuationMessage(reader, superblock),
-                HeaderMessageType.SymbolTable               => new SymbolTableMessage(reader, superblock),
-                HeaderMessageType.ObjectModification        => new ObjectModificationMessage(reader),
-                HeaderMessageType.BTreeKValues              => new BTreeKValuesMessage(reader),
-                HeaderMessageType.DriverInfo                => new DriverInfoMessage(reader),
-                HeaderMessageType.AttributeInfo             => new AttributeInfoMessage(reader, superblock),
-                HeaderMessageType.ObjectReferenceCount      => new ObjectReferenceCountMessage(reader),
+                HeaderMessageType.NIL                       => new NilMessage(context.Reader),
+                HeaderMessageType.Dataspace                 => new DataspaceMessage(context.Reader, context.Superblock),
+                HeaderMessageType.LinkInfo                  => new LinkInfoMessage(context.Reader, context.Superblock),
+                HeaderMessageType.Datatype                  => new DatatypeMessage(context.Reader),
+                HeaderMessageType.OldFillValue              => new OldFillValueMessage(context.Reader),
+                HeaderMessageType.FillValue                 => new FillValueMessage(context.Reader),
+                HeaderMessageType.Link                      => new LinkMessage(context.Reader, context.Superblock),
+                HeaderMessageType.ExternalDataFiles         => new ExternalFileListMessage(context.Reader, context.Superblock),
+                HeaderMessageType.DataLayout                => DataLayoutMessage.Construct(context.Reader, context.Superblock),
+                HeaderMessageType.Bogus                     => new BogusMessage(context.Reader),
+                HeaderMessageType.GroupInfo                 => new GroupInfoMessage(context.Reader),
+                HeaderMessageType.FilterPipeline            => new FilterPipelineMessage(context.Reader),
+                HeaderMessageType.Attribute                 => new AttributeMessage(context.Reader, context.Superblock),
+                HeaderMessageType.ObjectComment             => new ObjectCommentMessage(context.Reader),
+                HeaderMessageType.OldObjectModificationTime => new OldObjectModificationTimeMessage(context.Reader),
+                HeaderMessageType.SharedMessageTable        => new SharedMessageTableMessage(context.Reader, context.Superblock),
+                HeaderMessageType.ObjectHeaderContinuation  => new ObjectHeaderContinuationMessage(context.Reader, context.Superblock),
+                HeaderMessageType.SymbolTable               => new SymbolTableMessage(context.Reader, context.Superblock),
+                HeaderMessageType.ObjectModification        => new ObjectModificationMessage(context.Reader),
+                HeaderMessageType.BTreeKValues              => new BTreeKValuesMessage(context.Reader),
+                HeaderMessageType.DriverInfo                => new DriverInfoMessage(context.Reader),
+                HeaderMessageType.AttributeInfo             => new AttributeInfoMessage(context.Reader, context.Superblock),
+                HeaderMessageType.ObjectReferenceCount      => new ObjectReferenceCountMessage(context.Reader),
                 _ => throw new NotSupportedException($"The message type '{this.Type}' is not supported.")
             };
 
-            var readerPosition2 = reader.BaseStream.Position;
+            var readerPosition2 = context.Reader.BaseStream.Position;
             var paddingBytes = this.DataSize - (readerPosition2 - readerPosition1);
 
-            reader.ReadBytes((int)paddingBytes);
+            context.Reader.ReadBytes((int)paddingBytes);
         }
 
         #endregion

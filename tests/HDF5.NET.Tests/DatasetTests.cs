@@ -175,10 +175,10 @@ namespace HDF5.NET.Tests.Reading
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var dataset_references = root.Group("reference").Dataset("reference");
-                var references = dataset_references.Read<ulong>();
+                var references = dataset_references.Read<H5Reference>();
 
                 var dereferenced = references
-                    .Select(references => root.Get(references))
+                    .Select(reference => root.Get(reference))
                     .ToArray();
 
                 // Assert

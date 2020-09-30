@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 
 namespace HDF5.NET
 {
@@ -21,7 +20,7 @@ namespace HDF5.NET
             this.LinkNameOffset = superblock.ReadOffset(reader);
             
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
+            this.HeaderAddress = superblock.ReadOffset(reader);
 
             // cache type
             this.CacheType = (CacheType)reader.ReadUInt32();
@@ -52,25 +51,9 @@ namespace HDF5.NET
         #region Properties
 
         public ulong LinkNameOffset { get; set; }
-        public ulong ObjectHeaderAddress { get; set; }
+        public ulong HeaderAddress { get; set; }
         public CacheType CacheType { get; set; }
         public ScratchPad? ScratchPad { get; set; }
-
-        public ObjectHeader? ObjectHeader
-        {
-            get
-            {
-                if (!_superblock.IsUndefinedAddress(this.ObjectHeaderAddress))
-                {
-                    this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                    return ObjectHeader.Construct(this.Reader, _superblock);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
 
         #endregion
     }

@@ -60,6 +60,8 @@ namespace HDF5.NET
         public ulong BaseAddress { get; set; }
         public ulong EndOfFileAddress { get; set; }
 
+        public static ulong UndefinedAddress => 0xFFFFFFFFFFFFFFFF;
+
         #endregion
 
         #region Methods
@@ -88,6 +90,11 @@ namespace HDF5.NET
         public ulong ReadLength(H5BinaryReader reader)
         {
             return H5Utils.ReadUlong(reader, this.LengthsSize);
+        }
+
+        internal bool IsUndefinedAddress(object headerAddress)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -34,7 +34,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var actual = root.LinkExists(path);
+                var actual = root.Exists(path);
 
                 // Assert
                 Assert.Equal(expected, actual);
@@ -55,11 +55,16 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassLinks(fileId));
+                string filePath;
+
+                if (withEmptyFile)
+                    filePath = TestUtils.PrepareTestFile(version, fileId => { });
+                else
+                    filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassLinks(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var actual = root.LinkExists(path);
+                var actual = root.Exists(path);
 
                 // Assert
                 Assert.Equal(expected, actual);

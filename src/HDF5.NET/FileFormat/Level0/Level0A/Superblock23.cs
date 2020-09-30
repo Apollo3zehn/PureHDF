@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class Superblock23 : Superblock
     {
@@ -26,31 +24,6 @@ namespace HDF5.NET
         public ulong SuperblockExtensionAddress { get; set; }
         public ulong RootGroupObjectHeaderAddress { get; set; }
         public uint SuperblockChecksum { get; set; }
-
-        public ObjectHeader? SuperblockExtension
-        {
-            get
-            {
-                if (this.IsUndefinedAddress(this.SuperblockExtensionAddress))
-                {
-                    return null;
-                }
-                else
-                {
-                    this.Reader.Seek((long)this.SuperblockExtensionAddress, SeekOrigin.Begin);
-                    return ObjectHeader.Construct(this.Reader, this);
-                }
-            }
-        }
-
-        public ObjectHeader RootGroupObjectHeader
-        {
-            get
-            {
-                this.Reader.Seek((long)this.RootGroupObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Construct(this.Reader, this);
-            }
-        }
 
         #endregion
     }

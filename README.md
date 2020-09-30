@@ -150,7 +150,7 @@ var data = dataset.Read<MyNonNullableStruct>();      /* option 1 */
 var data = dataset.ReadCompound<MyNullableStruct>(); /* option 2 */
 
 // class: reference
-var data = dataset.Read<ulong>();
+var data = dataset.Read<H5Reference>();
 var firstLink = root.Get(data.First());
 
 // class: enumerated

@@ -7,7 +7,6 @@ namespace HDF5.NET
 {
     public abstract class ObjectHeader : FileBlock
     {
-        private ulong gapSize;
         #region Constructors
 
         public ObjectHeader(H5BinaryReader reader) : base(reader)
@@ -42,32 +41,31 @@ namespace HDF5.NET
                 .Cast<T>();
         }
 
-        public static ObjectHeader Construct(H5BinaryReader reader, Superblock superblock)
+        internal static ObjectHeader Construct(H5Context context)
         {
             // get version
-            var version = reader.ReadByte();
+            var version = context.Reader.ReadByte();
 
             // must be a version 2+ object header
             if (version != 1)
             {
-                var signature = new byte[] { version }.Concat(reader.ReadBytes(3)).ToArray();
+                var signature = new byte[] { version }.Concat(context.Reader.ReadBytes(3)).ToArray();
                 H5Utils.ValidateSignature(signature, ObjectHeader2.Signature);
-                version = reader.ReadByte();
+                version = context.Reader.ReadByte();
             }
 
             return version switch
             {
-                1 => new ObjectHeader1(reader, superblock, version),
-                2 => new ObjectHeader2(reader, superblock, version),
+                1 => new ObjectHeader1(context, version),
+                2 => new ObjectHeader2(context, version),
                 _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
             };
         }
 
-        protected List<HeaderMessage> ReadHeaderMessages(H5BinaryReader reader,
-                                                         Superblock superblock,
-                                                         ulong objectHeaderSize,
-                                                         byte version,
-                                                         bool withCreationOrder = false)
+        private protected List<HeaderMessage> ReadHeaderMessages(H5Context context,
+                                                                 ulong objectHeaderSize,
+                                                                 byte version,
+                                                                 bool withCreationOrder = false)
         {
             var headerMessages = new List<HeaderMessage>();
             var continuationMessages = new List<ObjectHeaderContinuationMessage>();
@@ -93,7 +91,7 @@ namespace HDF5.NET
 
             while (remainingBytes > gapSize)
             {
-                var message = new HeaderMessage(reader, superblock, version, withCreationOrder);
+                var message = new HeaderMessage(context, version, withCreationOrder);
 
                 remainingBytes -= message.DataSize + prefixSize;
 
@@ -105,16 +103,16 @@ namespace HDF5.NET
 
             foreach (var continuationMessage in continuationMessages)
             {
-                reader.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+                context.Reader.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
 
                 if (version == 1)
                 {
-                    var messages = this.ReadHeaderMessages(reader, superblock, continuationMessage.Length, version);
+                    var messages = this.ReadHeaderMessages(context, continuationMessage.Length, version);
                     headerMessages.AddRange(messages);
                 }
                 else if (version == 2)
                 {
-                    var continuationBlock = new ObjectHeaderContinuationBlock2(reader, superblock, continuationMessage.Length, version, withCreationOrder);
+                    var continuationBlock = new ObjectHeaderContinuationBlock2(context, continuationMessage.Length, version, withCreationOrder);
                     var messages = continuationBlock.HeaderMessages;
                     headerMessages.AddRange(messages);
                 }

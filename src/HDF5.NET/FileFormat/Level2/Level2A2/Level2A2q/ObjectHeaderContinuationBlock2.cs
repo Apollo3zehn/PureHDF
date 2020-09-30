@@ -6,14 +6,15 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public ObjectHeaderContinuationBlock2(H5BinaryReader reader, Superblock superblock, ulong objectHeaderSize, byte version, bool withCreationOrder) : base(reader)
+        internal ObjectHeaderContinuationBlock2(H5Context context, ulong objectHeaderSize, byte version, bool withCreationOrder) 
+            : base(context.Reader)
         {
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = context.Reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
 
             // header messages
-            var messages = this.ReadHeaderMessages(reader, superblock, objectHeaderSize - 8, version, withCreationOrder);
+            var messages = this.ReadHeaderMessages(context, objectHeaderSize - 8, version, withCreationOrder);
             this.HeaderMessages.AddRange(messages);
 
 #warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */

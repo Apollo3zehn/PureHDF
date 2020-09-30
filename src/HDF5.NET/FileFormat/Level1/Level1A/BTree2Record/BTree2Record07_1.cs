@@ -1,4 +1,4 @@
-﻿//using System.IO;
+//using System.IO;
 
 //namespace HDF5.NET
 //{
@@ -13,12 +13,9 @@
 
 //        #region Constructors
 
-//        public BTree2Record07_1(H5BinaryReader reader, Superblock superblock, MessageLocation messageLocation) 
+//        public BTree2Record07_1(H5BinaryReader reader, MessageLocation messageLocation) 
 //            : base(messageLocation)
 //        {
-//            _reader = reader;
-//            _superblock = superblock;
-
 //            // hash
 //            this.Hash = reader.ReadBytes(4);
 
@@ -29,10 +26,10 @@
 //            this.MessageType = (HeaderMessageType)reader.ReadByte();
 
 //            // object header index
-//            this.ObjectHeaderIndex = reader.ReadUInt16();
+//            this.HeaderIndex = reader.ReadUInt16();
 
 //            // object header address
-//            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
+//            this.HeaderAddress = superblock.ReadOffset(reader);
 //        }
 
 //        #endregion
@@ -41,17 +38,8 @@
 
 //        public byte[] Hash { get; set; }
 //        public HeaderMessageType MessageType { get; set; }
-//        public ushort ObjectHeaderIndex { get; set; }
-//        public ulong ObjectHeaderAddress { get; set; }
-
-//        public ObjectHeader ObjectHeader
-//        {
-//            get
-//            {
-//                _reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-//                return ObjectHeader.Construct(_reader, _superblock);
-//            }
-//        }
+//        public ushort HeaderIndex { get; set; }
+//        public ulong HeaderAddress { get; set; }
 
 //        #endregion
 //    }
