@@ -40,10 +40,10 @@ namespace HDF5.NET
 
             // link length
             var linkLengthFieldLength = (ulong)(1 << (this.Flags & 0x03));
-            this.LinkNameLength = H5Utils.ReadUlong(this.Reader, linkLengthFieldLength);
+            var linkNameLength = H5Utils.ReadUlong(this.Reader, linkLengthFieldLength);
 
             // link name
-            this.LinkName = H5Utils.ReadFixedLengthString(reader, (int)this.LinkNameLength, this.LinkNameEncoding);
+            this.LinkName = H5Utils.ReadFixedLengthString(reader, (int)linkNameLength, this.LinkNameEncoding);
 
             // link info
             this.LinkInfo = this.LinkType switch
@@ -79,7 +79,6 @@ namespace HDF5.NET
         public LinkType LinkType { get; set; }
         public ulong CreationOrder { get; set; }
         public CharacterSetEncoding LinkNameEncoding { get; set; }
-        public ulong LinkNameLength { get; set; }
         public string LinkName { get; set; }
         public LinkInfo LinkInfo { get; set; }
 

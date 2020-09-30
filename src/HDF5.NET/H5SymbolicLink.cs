@@ -41,7 +41,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public H5Link GetTarget(H5LinkAccessPropertyList? linkAccess)
+        public H5Link GetTarget(H5LinkAccessPropertyList linkAccess)
         {
             try
             {
@@ -66,7 +66,7 @@ namespace HDF5.NET
             }
         }
 
-        private string ConstructExternalFilePath(string externalFilePath, H5LinkAccessPropertyList? linkAccess)
+        private string ConstructExternalFilePath(string externalFilePath, H5LinkAccessPropertyList linkAccess)
         {
             // h5Fint.c (H5F_prefix_open_file)
             // reference: https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
@@ -107,9 +107,9 @@ namespace HDF5.NET
                 }
 
                 // link access property list
-                if (linkAccess.HasValue)
+                if (!string.IsNullOrWhiteSpace(linkAccess.ExternalFilePrefix))
                 {
-                    var propPrefix = linkAccess.Value.ExternalFilePrefix;
+                    var propPrefix = linkAccess.ExternalFilePrefix;
                     var propResult = PathCombine(propPrefix, externalFilePath);
 
                     if (File.Exists(propResult))

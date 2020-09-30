@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -196,7 +195,6 @@ namespace HDF5.NET.Tests.Reading
                     Assert.True(result);
                 }
             });
-#error what about region references? (https://docs.h5py.org/en/stable/refs.html)
         }
 
         [Fact]

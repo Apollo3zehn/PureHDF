@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
@@ -111,7 +108,6 @@ namespace HDF5.NET
                 this.Reader.Seek((long)reference, SeekOrigin.Begin);
                 var objectHeader = ObjectHeader.Construct(this.Reader, this.Superblock);
 
-#error How did they get the link name? recusively? (https://docs.h5py.org/en/stable/refs.html)
                 return this.InstantiateUncachedLink(string.Empty, objectHeader);
             }
             catch
