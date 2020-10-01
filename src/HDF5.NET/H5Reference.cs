@@ -9,7 +9,7 @@
 
         #region Properties
 
-        public ulong Value { get; set; }
+        internal ulong Value { get; set; }
 
         #endregion
     }

@@ -258,10 +258,11 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-            var link = root.Get("/links/external_link");
+            var link = root.Get("/links/external_link") as H5UnresolvedLink;
 
             // Assert
-            Assert.True(link.GetType() == typeof(H5UnresolvedLink));
+            Assert.NotNull(link);
+            Assert.Equal("Unable to open external file 'not-existing.h5'.", link.Reason.Message);
         }
 
         [Fact]
