@@ -63,7 +63,7 @@ You can either set an environment variable:
 Or you can pass the prefix as an overload parameter:
 
 ```cs
-var linkAccess = new H5LinkAccessPropertyList() 
+var linkAccess = new H5LinkAccessProperties() 
 {
     ExternalFilePrefix = prefix 
 }

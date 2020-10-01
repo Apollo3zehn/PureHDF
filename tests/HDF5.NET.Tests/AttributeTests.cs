@@ -18,7 +18,7 @@ namespace HDF5.NET.Tests.Reading
             _logger = logger;
         }
 
-        public static IList<object[]> AttributeNumericalTestData = TestData.AttributeNumericalData;
+        public static IList<object[]> AttributeNumericalTestData = TestData.NumericalData;
 
         [Theory]
         [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
@@ -27,7 +27,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumericalAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumerical(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -45,7 +45,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -63,7 +63,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -93,7 +93,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddString(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -111,7 +111,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitFieldAttribute(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitField(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -129,7 +129,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaqueAttribute(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -147,7 +147,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArrayAttribute(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -170,7 +170,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReferenceAttribute(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReference(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -182,10 +182,10 @@ namespace HDF5.NET.Tests.Reading
                     .ToArray();
 
                 // Assert
-                for (int i = 0; i < TestData.DatasetNumericalData.Count; i++)
+                for (int i = 0; i < TestData.NumericalData.Count; i++)
                 {
                     var dataset = (H5Dataset)dereferenced[i];
-                    var expected = (Array)TestData.DatasetNumericalData[i][1];
+                    var expected = (Array)TestData.NumericalData[i][1];
                     var elementType = expected.GetType().GetElementType();
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
@@ -203,7 +203,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -221,7 +221,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTinyAttribute(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTiny(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -240,7 +240,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddHugeAttribute(fileId, version));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddHuge(fileId, ContainerType.Attribute, version));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -259,7 +259,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
                 var expectedCount = 1000;
 
                 // Act

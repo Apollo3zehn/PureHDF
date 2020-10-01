@@ -8,26 +8,37 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal H5NamedReference(H5File file, string name, ulong value)
+        internal H5NamedReference(string name, ulong value, H5File file)
         {
-            this.File = file;
             this.Name = name;
             this.Value = value;
+            this.File = file;
             this.ScratchPad = null;
+            this.Exception = null;
+        }
+
+        internal H5NamedReference(string name, ulong value)
+        {
+            this.Name = name;
+            this.Value = value;
+            this.File = null;
+            this.ScratchPad = null;
+            this.Exception = null;
         }
 
         #endregion
 
         #region Properties
 
-        public string Name { get; }
+        public string Name { get; internal set; }
 
-        public ulong Value { get; }
+        internal ulong Value { get; }
 
-        internal H5File File { get; }
+        internal H5File? File { get; }
 
         internal ObjectHeaderScratchPad? ScratchPad { get; set; }
 
+        internal Exception? Exception { get; set; }
 
         #endregion
 
@@ -36,9 +47,9 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal H5Object Dereference()
         {
-            if (this.Equals(default(H5NamedReference)))
+            if (this.File == null)
             {
-                return new H5UnresolvedLink(this.File, this.Name);
+                return new H5UnresolvedLink(this);
             }
             else if (this.ScratchPad != null)
             {

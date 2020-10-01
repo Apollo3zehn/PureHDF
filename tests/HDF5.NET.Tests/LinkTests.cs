@@ -2,6 +2,7 @@ using HDF.PInvoke;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -141,7 +142,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -158,7 +159,7 @@ namespace HDF5.NET.Tests.Reading
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassAttributes(fileId));
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -243,8 +244,8 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
 
             var linkAccess = string.IsNullOrWhiteSpace(prefix) 
-                ? new H5LinkAccessPropertyList()
-                : new H5LinkAccessPropertyList() { ExternalFilePrefix = prefix };
+                ? new H5LinkAccessProperties()
+                : new H5LinkAccessProperties() { ExternalFilePrefix = prefix };
 
             var dataset = root.Dataset("/links/external_link/Hello from external file =)", linkAccess);
         }
@@ -261,6 +262,25 @@ namespace HDF5.NET.Tests.Reading
 
             // Assert
             Assert.True(link.GetType() == typeof(H5UnresolvedLink));
+        }
+
+        [Fact]
+        public void CanDerefenceWithCircularReferences()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCircularReference(fileId));
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var value = root.Group("/circular/child/rainbow's end").Reference.Value;
+                var groupReference = new H5Reference(value);
+
+                // Act
+                var group = root.Get(groupReference);
+
+                // Assert
+                Assert.Equal("rainbow's end", group.Name);
+            });
         }
     }
 }

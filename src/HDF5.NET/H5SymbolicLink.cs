@@ -47,17 +47,29 @@ namespace HDF5.NET
 
         #region Methods
 
-        public H5NamedReference GetTarget(H5LinkAccessPropertyList linkAccess)
+        public H5NamedReference GetTarget(H5LinkAccessProperties linkAccess)
         {
-            try
+            // this file
+            if (string.IsNullOrWhiteSpace(this.ObjectPath))
             {
-                // this file
-                if (string.IsNullOrWhiteSpace(this.ObjectPath))
+                try
                 {
-                    return this.Parent.InternalGet(this.Value, linkAccess);
+                    var reference = this.Parent.InternalGet(this.Value, linkAccess);
+                    reference.Name = this.Name;
+                    return reference;
                 }
-                // external file
-                else
+                catch (Exception ex)
+                {
+                    return new H5NamedReference(this.Name, Superblock.UndefinedAddress)
+                    {
+                        Exception = ex
+                    };
+                }
+            }
+            // external file
+            else
+            {
+                try
                 {
                     var absoluteFilePath = this.ConstructExternalFilePath(this.Value, linkAccess);
                     var objectPath = this.ObjectPath;
@@ -65,14 +77,17 @@ namespace HDF5.NET
 
                     return externalFile.InternalGet(objectPath, linkAccess);
                 }
-            }
-            catch
-            {
-                return default;
+                catch (Exception ex)
+                {
+                    return new H5NamedReference(this.Name, Superblock.UndefinedAddress)
+                    {
+                        Exception = ex
+                    };
+                }
             }
         }
 
-        private string ConstructExternalFilePath(string externalFilePath, H5LinkAccessPropertyList linkAccess)
+        private string ConstructExternalFilePath(string externalFilePath, H5LinkAccessProperties linkAccess)
         {
             // h5Fint.c (H5F_prefix_open_file)
             // reference: https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm

@@ -399,5 +399,87 @@ namespace HDF5.NET.Tests.Reading
                 _logger.WriteLine($"AVX2: {avx2:F1} ms");
             }
         }
+
+
+        [Fact]
+        public void CanReadBigEndian()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId =>
+            {
+                TestUtils.AddSmall(fileId, ContainerType.Attribute);
+                TestUtils.AddCompactDataset(fileId);
+                TestUtils.AddContiguousDataset(fileId);
+                TestUtils.AddChunkedDataset_Single_Chunk(fileId, withShuffle: false);
+            });
+
+            /* modify file to declare datasets and attributes layout as big-endian */
+            using (var reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
+            using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite)))
+            {
+                reader.BaseStream.Seek(0x121, SeekOrigin.Begin);
+                var data1 = reader.ReadByte();
+                writer.BaseStream.Seek(0x121, SeekOrigin.Begin);
+                writer.Write((byte)(data1 | 0x01));
+
+                reader.BaseStream.Seek(0x39C, SeekOrigin.Begin);
+                var data2 = reader.ReadByte();
+                writer.BaseStream.Seek(0x39C, SeekOrigin.Begin);
+                writer.Write((byte)(data2 | 0x01));
+
+                reader.BaseStream.Seek(0x6DB, SeekOrigin.Begin);
+                var data3 = reader.ReadByte();
+                writer.BaseStream.Seek(0x6DB, SeekOrigin.Begin);
+                writer.Write((byte)(data3 | 0x01));
+
+                reader.BaseStream.Seek(0x89A, SeekOrigin.Begin);
+                var data4 = reader.ReadByte();
+                writer.BaseStream.Seek(0x89A, SeekOrigin.Begin);
+                writer.Write((byte)(data4 | 0x01));
+            };
+
+            /* continue */
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+
+            var attribute = root
+                .Group("small")
+                .Attribute("small");
+
+            var dataset_compact = root
+                .Group("compact")
+                .Dataset("compact");
+
+            var dataset_contiguous = root
+                .Group("contiguous")
+                .Dataset("contiguous");
+
+            var dataset_chunked = root
+                .Group("chunked")
+                .Dataset("chunked_single_chunk");
+
+            var attribute_expected = new int[TestData.SmallData.Length];
+            EndiannessConverter.Convert<int>(TestData.SmallData, attribute_expected);
+
+            var dataset_compact_expected = new int[TestData.SmallData.Length];
+            EndiannessConverter.Convert<int>(TestData.SmallData, dataset_compact_expected);
+
+            var dataset_contiguous_expected = new int[TestData.HugeData.Length];
+            EndiannessConverter.Convert<int>(TestData.HugeData, dataset_contiguous_expected);
+
+            var dataset_chunked_expected = new int[TestData.MediumData.Length];
+            EndiannessConverter.Convert<int>(TestData.MediumData, dataset_chunked_expected);
+
+            // Act
+            var attribute_actual = attribute.Read<int>();
+            var dataset_compact_actual = dataset_compact.Read<int>();
+            var dataset_contiguous_actual = dataset_contiguous.Read<int>();
+            var dataset_chunked_actual = dataset_chunked.Read<int>();
+
+            // Assert
+            Assert.True(dataset_compact_actual.SequenceEqual(dataset_compact_expected));
+            Assert.True(dataset_contiguous_actual.SequenceEqual(dataset_contiguous_expected));
+            Assert.True(dataset_chunked_actual.SequenceEqual(dataset_chunked_expected));
+        }
     }
 }

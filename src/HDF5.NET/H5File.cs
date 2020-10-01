@@ -98,26 +98,10 @@ namespace HDF5.NET
             var header = ObjectHeader.Construct(context);
 
             var file = new H5File(context, default, header, filePath, deleteOnClose);
-            var reference = new H5NamedReference(file, "/", address);
+            var reference = new H5NamedReference("/", address, file);
             file.Reference = reference;
 
             return file;
-        }
-
-        public H5Object Get(H5Reference reference)
-        {
-            try
-            {
-                this.Context.Reader.Seek((long)reference.Value, SeekOrigin.Begin);
-                var objectHeader = ObjectHeader.Construct(this.Context);
-                var namedReference = new H5NamedReference(this, "", reference.Value);
-
-                return namedReference.Dereference();
-            }
-            catch
-            {
-                throw new Exception($"Unable to dereference object with reference '{reference}'.");
-            }
         }
 
         public void Dispose()

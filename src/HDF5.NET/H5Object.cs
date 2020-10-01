@@ -33,9 +33,7 @@ namespace HDF5.NET
 
         public string Name => this.Reference.Name;
 
-        public uint ReferenceCount => this.ObjectReferenceCount == null
-            ? 1
-            : this.ObjectReferenceCount.ReferenceCount;
+        public uint ReferenceCount => this.GetReferenceCount();
 
         public H5NamedReference Reference { get; internal set; }
 
@@ -68,6 +66,23 @@ namespace HDF5.NET
 
                 return _header;
             }
+        }
+
+        #endregion
+
+        #region Methods
+
+        private uint GetReferenceCount()
+        {
+            var header1 = this.Header as ObjectHeader1;
+
+            if (header1 != null)
+                return header1.ObjectReferenceCount;
+
+            else
+                return this.ObjectReferenceCount == null
+                    ? 1
+                    : this.ObjectReferenceCount.ReferenceCount;
         }
 
         #endregion
