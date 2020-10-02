@@ -84,12 +84,12 @@ namespace HDF5.NET
                 .Dereference();
         }
 
-        public H5Object Get(H5Reference reference)
+        public H5Object Get(H5ObjectReference reference)
         {
             return this.Get(reference, new H5LinkAccessProperties());
         }
 
-        public H5Object Get(H5Reference reference, H5LinkAccessProperties linkAccess)
+        public H5Object Get(H5ObjectReference reference, H5LinkAccessProperties linkAccess)
         {
             if (this.Reference.Value == reference.Value)
                 return this;
@@ -206,7 +206,7 @@ namespace HDF5.NET
             return current;
         }
 
-        internal H5NamedReference InternalGet(H5Reference reference, H5LinkAccessProperties linkAccess)
+        internal H5NamedReference InternalGet(H5ObjectReference reference, H5LinkAccessProperties linkAccess)
         {
             var alreadyVisted = new HashSet<ulong>();
 
@@ -323,7 +323,7 @@ namespace HDF5.NET
             return false;
         }
 
-        internal bool TryGetReference(H5Reference reference, HashSet<ulong> alreadyVisited, H5LinkAccessProperties linkAccess, int recursionLevel, out H5NamedReference namedReference)
+        internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccessProperties linkAccess, int recursionLevel, out H5NamedReference namedReference)
         {
             // similar to H5Gint.c (H5G_visit)
             if (recursionLevel >= 100)

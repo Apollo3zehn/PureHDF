@@ -12,7 +12,7 @@ namespace HDF5.NET.Tests
     {
         #region Links
 
-        public static unsafe void AddSimple(long fileId)
+        public static unsafe void AddSomeLinks(long fileId)
         {
             long res;
 
@@ -421,6 +421,26 @@ namespace HDF5.NET.Tests
 
         #region Shared
 
+        public static unsafe void AddDataspaceScalar(long fileId, ContainerType container)
+        {
+            var spaceId = H5S.create(H5S.class_t.SCALAR);
+            var data = new double[] { -1.2234234e-3 };
+
+            fixed (void* dataPtr = data)
+            {
+                TestUtils.Add(container, fileId, "dataspace", "scalar", H5T.NATIVE_DOUBLE, dataPtr, spaceId);
+            }
+
+            H5S.close(spaceId);
+        }
+
+        public static unsafe void AddDataspaceNull(long fileId, ContainerType container)
+        {
+            var spaceId = H5S.create(H5S.class_t.NULL);
+            TestUtils.Add(container, fileId, "dataspace", "null", H5T.NATIVE_DOUBLE, null, spaceId);
+            H5S.close(spaceId);
+        }
+
         public static unsafe void AddNumerical(long fileId, ContainerType container)
         {
             var dims = new ulong[] { 2, 2, 3 };
@@ -484,7 +504,7 @@ namespace HDF5.NET.Tests
             res = H5T.close(typeId);
         }
 
-        public static unsafe void AddReference(long fileId, ContainerType container)
+        public static unsafe void AddObjectReference(long fileId, ContainerType container)
         {
             long res;
 
@@ -502,8 +522,32 @@ namespace HDF5.NET.Tests
                     res = H5R.create(new IntPtr(ptr + i), referenceGroupId, $"D{i + 1}", H5R.type_t.OBJECT, -1);
                 }
 
-                TestUtils.Add(container, fileId, "reference", "reference", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
+                TestUtils.Add(container, fileId, "reference", "object_reference", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
 
+                res = H5G.close(referenceGroupId);
+            }
+        }
+
+        public static unsafe void AddRegionReference(long fileId, ContainerType container)
+        {
+            long res;
+
+            TestUtils.AddSmall(fileId, ContainerType.Dataset);
+
+            var length = 1UL;
+            var data = new ulong[length];
+
+            fixed (ulong* ptr = data)
+            {
+                var referenceGroupId = H5G.open(fileId, "small");
+                var spaceId = H5S.create_simple(1, new ulong[] { length }, null);
+                var coordinates = new ulong[] { 2, 4, 6, 8 };
+                res = H5S.select_elements(spaceId, H5S.seloper_t.SET, new IntPtr(4), coordinates);
+                res = H5R.create(new IntPtr(ptr), referenceGroupId, "small", H5R.type_t.DATASET_REGION, spaceId);
+
+                TestUtils.Add(container, fileId, "reference", "region_reference", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), length);
+
+                res = H5S.close(spaceId);
                 res = H5G.close(referenceGroupId);
             }
         }
@@ -711,17 +755,23 @@ namespace HDF5.NET.Tests
         {
             long res;
 
+            if (dims1 == null)
+                dims1 = dims0;
+
+            var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
+            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl);
+            res = H5S.close(spaceId);
+        }
+
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, long spaceId, long cpl = 0)
+        {
+            long res;
             long groupId;
 
             if (H5L.exists(fileId, groupName) > 0)
                 groupId = H5G.open(fileId, groupName);
             else
                 groupId = H5G.create(fileId, groupName);
-
-            if (dims1 == null)
-                dims1 = dims0;
-
-            var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
 
             long id;
 
@@ -731,7 +781,7 @@ namespace HDF5.NET.Tests
 
                 if ((int)dataPtr != 0)
                     res = H5D.write(id, typeId, spaceId, H5S.ALL, 0, new IntPtr(dataPtr));
-                
+
                 res = H5D.close(id);
             }
             else
@@ -744,7 +794,6 @@ namespace HDF5.NET.Tests
                 res = H5A.close(id);
             }
 
-            res = H5S.close(spaceId);
             res = H5G.close(groupId);
         }
 

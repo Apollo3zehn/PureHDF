@@ -18,13 +18,13 @@ namespace HDF5.NET
             reader.ReadBytes(4);
 
             // object size
-            this.ObjectSize = superblock.ReadLength(reader);
+            var objectSize = superblock.ReadLength(reader);
 
             // object data
-            this.ObjectData = reader.ReadBytes((int)this.ObjectSize);
+            this.ObjectData = reader.ReadBytes((int)objectSize);
 
-            var paddedSize = (int)(Math.Ceiling(this.ObjectSize / 8.0) * 8);
-            var remainingSize = paddedSize - (int)this.ObjectSize;
+            var paddedSize = (int)(Math.Ceiling(objectSize / 8.0) * 8);
+            var remainingSize = paddedSize - (int)objectSize;
             reader.ReadBytes(remainingSize);
         }
 
@@ -34,7 +34,6 @@ namespace HDF5.NET
 
         public ushort HeapObjectIndex { get; set; }
         public ushort ReferenceCount { get; set; }
-        public ulong ObjectSize { get; set; }
         public byte[] ObjectData { get; set; }
 
         #endregion

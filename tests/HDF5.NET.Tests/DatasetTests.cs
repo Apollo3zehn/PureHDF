@@ -20,6 +20,42 @@ namespace HDF5.NET.Tests.Reading
 
         public static IList<object[]> DatasetNumericalTestData = TestData.NumericalData;
 
+        [Fact]
+        public void CanReadDataset_Dataspace_Scalar()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceScalar(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("dataspace").Dataset("scalar");
+                var actual = attribute.Read<double>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Dataspace_Null()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceNull(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("dataspace").Dataset("null");
+                var actual = attribute.Read<double>();
+
+                // Assert
+                Assert.True(actual.Length == 0);
+            });
+        }
+
         [Theory]
         [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
         public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : struct
@@ -165,17 +201,17 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Fact]
-        public void CanReadDataset_Reference()
+        public void CanReadDataset_Reference_Object()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReference(fileId, ContainerType.Dataset));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddObjectReference(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset_references = root.Group("reference").Dataset("reference");
-                var references = dataset_references.Read<H5Reference>();
+                var dataset_references = root.Group("reference").Dataset("object_reference");
+                var references = dataset_references.Read<H5ObjectReference>();
 
                 var dereferenced = references
                     .Select(reference => root.Get(reference))
@@ -194,6 +230,40 @@ namespace HDF5.NET.Tests.Reading
 
                     Assert.True(result);
                 }
+            });
+        }
+
+        [Fact(Skip = "Not yet fully implemented.")]
+        public void CanReadDataset_Reference_Region()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset_references = root.Group("reference").Dataset("region_reference");
+                var references = dataset_references.Read<H5RegionReference>();
+
+                var reference = references[0];
+                root.Context.Reader.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+
+                // H5Rint.c (H5R__get_region)
+#warning use more structs?
+                var globalHeapId = new GlobalHeapId(root.Context.Superblock)
+                {
+                    CollectionAddress = reference.CollectionAddress,
+                    ObjectIndex = reference.ObjectIndex
+                };
+                
+                var globalHeapCollection = globalHeapId.Collection;
+                var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
+                var localReader = new H5BinaryReader(new MemoryStream(globalHeapObject.ObjectData));
+                var address = root.Context.Superblock.ReadOffset(localReader);
+                var selection = new DataspaceSelection(localReader);
+
+                throw new NotImplementedException();
             });
         }
 

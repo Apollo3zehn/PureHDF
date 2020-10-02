@@ -11,16 +11,16 @@ namespace HDF5.NET
             // flags
             this.Flags = (ChunkedStoragePropertyFlags)reader.ReadByte();
 
-            // dimensionality
-            this.Dimensionality = reader.ReadByte();
+            // rank
+            this.Rank = reader.ReadByte();
 
             // dimension size encoded length
             this.DimensionSizeEncodedLength = reader.ReadByte();
 
             // dimension sizes
-            this.DimensionSizes = new ulong[this.Dimensionality];
+            this.DimensionSizes = new ulong[this.Rank];
 
-            for (uint i = 0; i < this.Dimensionality; i++)
+            for (uint i = 0; i < this.Rank; i++)
             {
                 this.DimensionSizes[i] = H5Utils.ReadUlong(reader, this.DimensionSizeEncodedLength);
             }

@@ -2,7 +2,6 @@ using HDF.PInvoke;
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -30,7 +29,7 @@ namespace HDF5.NET.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId =>
                 {
                     if (!withEmptyFile)
-                        TestUtils.AddSimple(fileId);
+                        TestUtils.AddSomeLinks(fileId);
                 });
 
                 // Act
@@ -81,7 +80,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSimple(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSomeLinks(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -120,7 +119,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSimple(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSomeLinks(fileId));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -274,7 +273,7 @@ namespace HDF5.NET.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCircularReference(fileId));
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
                 var value = root.Group("/circular/child/rainbow's end").Reference.Value;
-                var groupReference = new H5Reference(value);
+                var groupReference = new H5ObjectReference() { Value = value };
 
                 // Act
                 var group = root.Get(groupReference);

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum DataspaceMessageType : byte
+    public enum DataspaceType : byte
     {
         Scalar = 0,
         Simple = 1,

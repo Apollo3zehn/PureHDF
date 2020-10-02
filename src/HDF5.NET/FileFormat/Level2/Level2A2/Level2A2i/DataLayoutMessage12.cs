@@ -17,8 +17,8 @@ namespace HDF5.NET
             // version
             this.Version = version;
 
-            // dimensionality
-            this.Dimensionality = reader.ReadByte();
+            // rank
+            this.Rank = reader.ReadByte();
 
             // layout class
             this.LayoutClass = (LayoutClass)reader.ReadByte();
@@ -36,9 +36,9 @@ namespace HDF5.NET
             };
 
             // dimension sizes
-            this.DimensionSizes = new uint[this.Dimensionality];
+            this.DimensionSizes = new uint[this.Rank];
 
-            for (int i = 0; i < this.Dimensionality; i++)
+            for (int i = 0; i < this.Rank; i++)
             {
                 this.DimensionSizes[i] = reader.ReadUInt32();
             }
@@ -50,8 +50,8 @@ namespace HDF5.NET
             // compact data size
             if (this.LayoutClass == LayoutClass.Compact)
             {
-                this.CompactDataSize = reader.ReadUInt32();
-                this.CompactData = reader.ReadBytes((int)this.CompactDataSize);
+                var compactDataSize = reader.ReadUInt32();
+                this.CompactData = reader.ReadBytes((int)compactDataSize);
             }
             else
             {
@@ -78,11 +78,10 @@ namespace HDF5.NET
             }
         }
 
-        public byte Dimensionality { get; set; }
+        public byte Rank { get; set; }
         public ulong DataAddress { get; set; }
         public uint[] DimensionSizes { get; set; }
         public uint DatasetElementSize { get; set; }
-        public uint CompactDataSize { get; set; }
         public byte[] CompactData { get; set; }
 
         #endregion

@@ -249,15 +249,15 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    var chunkSize = this.CalculateByteSize(layout12.DimensionSizes);
+                    var chunkSize = H5Utils.CalculateSize(layout12.DimensionSizes);
                     this.Context.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
-                    this.ReadChunkedBTree1(buffer, layout12.Dimensionality, chunkSize);
+                    this.ReadChunkedBTree1(buffer, layout12.Rank, chunkSize);
                 }                
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
             {
                 var chunked4 = (ChunkedStoragePropertyDescription4)layout4.Properties;
-                var chunkSize = this.CalculateByteSize(chunked4.DimensionSizes);
+                var chunkSize = H5Utils.CalculateSize(chunked4.DimensionSizes);
 
                 if (this.Context.Superblock.IsUndefinedAddress(chunked4.Address))
                 {
@@ -299,7 +299,7 @@ namespace HDF5.NET
                         // more than one dimension of unlimited extent
                         case ChunkIndexingType.BTree2:
                             var btree2Info = (BTree2IndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadChunkedBTree2(buffer, (byte)(chunked4.Dimensionality - 1), chunkSize);
+                            this.ReadChunkedBTree2(buffer, (byte)(chunked4.Rank - 1), chunkSize);
                             break;
 
                         default:
@@ -318,9 +318,9 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    var chunkSize = this.CalculateByteSize(chunked3.DimensionSizes);
+                    var chunkSize = H5Utils.CalculateSize(chunked3.DimensionSizes);
                     this.Context.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
-                    this.ReadChunkedBTree1(buffer, (byte)(chunked3.Dimensionality - 1), chunkSize);
+                    this.ReadChunkedBTree1(buffer, (byte)(chunked3.Rank - 1), chunkSize);
                 }
             }
             else
@@ -332,10 +332,10 @@ namespace HDF5.NET
             return result;
         }
 
-        private void ReadChunkedBTree1(Span<byte> buffer, byte dimensionality, ulong chunkSize)
+        private void ReadChunkedBTree1(Span<byte> buffer, byte rank, ulong chunkSize)
         {
             // btree1
-            Func<BTree1RawDataChunksKey> decodeKey = () => this.DecodeRawDataChunksKey(dimensionality);
+            Func<BTree1RawDataChunksKey> decodeKey = () => this.DecodeRawDataChunksKey(rank);
             var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.Context.Reader, this.Context.Superblock, decodeKey);
             var nodes = btree1.EnumerateNodes().ToList();
             var childAddresses = nodes.SelectMany(key => key.ChildAddresses).ToArray();
@@ -353,14 +353,14 @@ namespace HDF5.NET
             }
         }
 
-        private void ReadChunkedBTree2(Span<byte> buffer, byte dimensionality, ulong chunkSize)
+        private void ReadChunkedBTree2(Span<byte> buffer, byte rank, ulong chunkSize)
         {
             var offset = 0UL;
 
             if (this.FilterPipeline == null)
             {
                 // btree2
-                Func<BTree2Record10> decodeKey = () => this.DecodeRecord10(dimensionality);
+                Func<BTree2Record10> decodeKey = () => this.DecodeRecord10(rank);
                 var btree2 = new BTree2Header<BTree2Record10>(this.Context.Reader, this.Context.Superblock, decodeKey);
                 var records = btree2
                     .EnumerateRecords()
@@ -377,7 +377,7 @@ namespace HDF5.NET
             {
                 // btree2
                 var chunkSizeLength = this.ComputeChunkSizeLength(chunkSize);
-                Func<BTree2Record11> decodeKey = () => this.DecodeRecord11(dimensionality, chunkSizeLength);
+                Func<BTree2Record11> decodeKey = () => this.DecodeRecord11(rank, chunkSizeLength);
                 var btree2 = new BTree2Header<BTree2Record11>(this.Context.Reader, this.Context.Superblock, decodeKey);
                 var records = btree2
                     .EnumerateRecords()
@@ -533,7 +533,7 @@ namespace HDF5.NET
         private Span<byte> GetBuffer<T>(out T[] result) where T : struct
         {
             // first, get byte size
-            var byteSize = this.CalculateByteSize(this.Dataspace.DimensionSizes) * this.Datatype.Size;
+            var byteSize = H5Utils.CalculateSize(this.Dataspace.DimensionSizes, this.Dataspace.Type) * this.Datatype.Size;
 
             // second, convert file type (e.g. 2 bytes) to T (e.g. 4 bytes)
             var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
@@ -543,26 +543,6 @@ namespace HDF5.NET
             var buffer = MemoryMarshal.AsBytes(result.AsSpan());
 
             return buffer;
-        }
-
-        private ulong CalculateByteSize(uint[] dimensionSizes)
-        {
-            var byteSize = 0UL;
-
-            if (dimensionSizes.Any())
-                byteSize = dimensionSizes.Aggregate((x, y) => x * y);
-
-            return byteSize;
-        }
-
-        private ulong CalculateByteSize(ulong[] dimensionSizes)
-        {
-            var byteSize = 0UL;
-
-            if (dimensionSizes.Any())
-                byteSize = dimensionSizes.Aggregate((x, y) => x * y);
-
-            return byteSize;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -626,21 +606,21 @@ namespace HDF5.NET
         #region Callbacks
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte dimensionality)
+        private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank)
         {
-            return new BTree1RawDataChunksKey(this.Context.Reader, dimensionality);
+            return new BTree1RawDataChunksKey(this.Context.Reader, rank);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record10 DecodeRecord10(byte dimensionality)
+        private BTree2Record10 DecodeRecord10(byte rank)
         {
-            return new BTree2Record10(this.Context.Reader, this.Context.Superblock, dimensionality);
+            return new BTree2Record10(this.Context.Reader, this.Context.Superblock, rank);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record11 DecodeRecord11(byte dimensionality, uint chunkSizeLength)
+        private BTree2Record11 DecodeRecord11(byte rank, uint chunkSizeLength)
         {
-            return new BTree2Record11(this.Context.Reader, this.Context.Superblock, dimensionality, chunkSizeLength);
+            return new BTree2Record11(this.Context.Reader, this.Context.Superblock, rank, chunkSizeLength);
         }
 
         #endregion

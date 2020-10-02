@@ -20,6 +20,42 @@ namespace HDF5.NET.Tests.Reading
 
         public static IList<object[]> AttributeNumericalTestData = TestData.NumericalData;
 
+        [Fact]
+        public void CanReadAttribute_Dataspace_Scalar()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceScalar(fileId, ContainerType.Attribute));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("dataspace").Attribute("scalar");
+                var actual = attribute.Read<double>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
+            });
+        }
+        
+        [Fact]
+        public void CanReadAttribute_Dataspace_Null()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceNull(fileId, ContainerType.Attribute));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("dataspace").Attribute("null");
+                var actual = attribute.Read<double>();
+
+                // Assert
+                Assert.True(actual.Length == 0);
+            });
+        }
+
         [Theory]
         [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
         public void CanReadAttribute_Numerical<T>(string name, T[] expected) where T : struct
@@ -165,17 +201,17 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Fact]
-        public void CanReadAttribute_Reference()
+        public void CanReadAttribute_Reference_Object()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReference(fileId, ContainerType.Attribute));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddObjectReference(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var attribute_references = root.Group("reference").Attribute("reference");
-                var references = attribute_references.Read<H5Reference>();
+                var attribute_references = root.Group("reference").Attribute("object_reference");
+                var references = attribute_references.Read<H5ObjectReference>();
 
                 var dereferenced = references
                     .Select(reference => root.Get(reference))

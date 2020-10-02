@@ -18,8 +18,8 @@ namespace HDF5.NET
                     // member byte offset
                     this.MemberByteOffset = reader.ReadUInt32();
 
-                    // dimensionality
-                    var dimensionality = reader.ReadByte();
+                    // rank
+                    var rank = reader.ReadByte();
 
                     // padding bytes
                     reader.ReadBytes(3);

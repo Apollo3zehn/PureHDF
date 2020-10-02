@@ -1,4 +1,4 @@
-**Project is not yet released because support for reading partial datasets (hyperslabs) and support for virtual datasets still missing.**
+**Project is not yet released because support for reading partial datasets (hyperslabs), virtual datasets and region references (IV.B. Disk Format: Level 2B) is still missing.**
 
 # HDF5.NET
 
@@ -150,7 +150,7 @@ The following code samples work for datasets as well as attributes.
 
 // class: reference
 
-    var data = dataset.Read<H5Reference>();
+    var data = dataset.Read<H5ObjectReference>();
     var firstRef = data.First();
 
     /* NOTE: Dereferencing would be quite fast if the object's name

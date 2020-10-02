@@ -21,7 +21,7 @@ namespace HDF5.NET
             reader.ReadBytes(4);
 
             // length
-            this.Length = reader.ReadUInt32();
+            var length = reader.ReadUInt32();
 
             // rank
             this.Rank = reader.ReadUInt32();
@@ -30,10 +30,9 @@ namespace HDF5.NET
             this.PointCount = reader.ReadUInt32();
 
             // point data
-            var totalSize = this.PointCount * this.Rank;
-            this.PointData = new uint[totalSize];
+            this.PointData = new uint[this.Rank * this.PointCount];
 
-            for (int i = 0; i < totalSize; i++)
+            for (int i = 0; i < (length - 8) / 4; i++)
             {
                 this.PointData[i] = reader.ReadUInt32();
             }
@@ -58,7 +57,6 @@ namespace HDF5.NET
             }
         }
 
-        public uint Length { get; set; }
         public uint Rank { get; set; }
         public uint PointCount { get; set; }
         public uint[] PointData { get; set; }

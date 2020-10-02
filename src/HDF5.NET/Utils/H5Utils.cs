@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -79,7 +80,7 @@ namespace HDF5.NET
             var sourceRawBytes = data;
             var sourceElementSize = datatype.Size;
 
-            var targetArraySize = dataspace.DimensionSizes.Aggregate((x, y) => x * y);
+            var targetArraySize = H5Utils.CalculateSize(dataspace.DimensionSizes, dataspace.Type);
             var targetArray = new T[targetArraySize];
             var targetElementSize = Marshal.SizeOf<T>();
 
@@ -283,6 +284,35 @@ namespace HDF5.NET
                (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
             {
                 EndiannessConverter.Convert((int)bytesOfType, source, destination);
+            }
+        }
+
+        public static ulong CalculateSize(IEnumerable<uint> dimensionSizes, DataspaceType type = DataspaceType.Simple)
+        {
+            return H5Utils.CalculateSize(dimensionSizes.Select(value => (ulong)value), type);
+        }
+
+        public static ulong CalculateSize(IEnumerable<ulong> dimensionSizes, DataspaceType type = DataspaceType.Simple)
+        {
+            switch (type)
+            {
+                case DataspaceType.Scalar:
+                    return 1;
+
+                case DataspaceType.Simple:
+
+                    var byteSize = 0UL;
+
+                    if (dimensionSizes.Any())
+                        byteSize = dimensionSizes.Aggregate((x, y) => x * y);
+
+                    return byteSize;
+
+                case DataspaceType.Null:
+                    return 0;
+
+                default:
+                    throw new Exception($"The dataspace type '{type}' is not supported.");
             }
         }
 

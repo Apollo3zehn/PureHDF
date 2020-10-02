@@ -10,6 +10,12 @@
 
         #region Constructors
 
+        public GlobalHeapId(Superblock superblock)
+            : base(null)
+        {
+            _superblock = superblock;
+        }
+
         public GlobalHeapId(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
