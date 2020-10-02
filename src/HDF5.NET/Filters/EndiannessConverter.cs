@@ -27,7 +27,7 @@ namespace HDF5.NET
 
             else
 #endif
-                EndiannessConverter.Convert(bytesOfType, source, destination);
+                EndiannessConverterGeneric.Convert(bytesOfType, source, destination);
         }
     }
 }
