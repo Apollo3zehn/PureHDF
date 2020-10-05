@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using Xunit.Abstractions;
 
 namespace HDF5.NET.Tests
 {
@@ -135,6 +136,53 @@ namespace HDF5.NET.Tests
         #endregion
 
         #region Datasets
+
+        public static unsafe void AddExternalDataset(long fileId, string datasetName, string pathPrefix)
+        {
+            long res;
+
+            var bytesoftype = 4;
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+            res = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
+
+            // a (more than one chunk in file)
+            var pathA = Path.Combine(pathPrefix, "a.raw");
+
+            if (File.Exists(pathA))
+                File.Delete(pathA);
+
+            res = H5P.set_external(dcpl_id, pathA, new IntPtr(120), (ulong)(10 * bytesoftype));
+            res = H5P.set_external(dcpl_id, pathA, new IntPtr(80), (ulong)(10 * bytesoftype));
+            res = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
+
+            // b (file size smaller than set size)
+            var pathB = Path.Combine(pathPrefix, "b.raw");
+
+            if (File.Exists(pathB))
+                File.Delete(pathB);
+
+            res = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
+
+            // c (normal file)
+            var pathC = Path.Combine(pathPrefix, "c.raw");
+
+            if (File.Exists(pathC))
+                File.Delete(pathC);
+
+            res = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
+
+            // write data
+            TestUtils.Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), cpl: dcpl_id);
+
+            // truncate file b
+            using (var fileStream2 = File.OpenWrite(pathB))
+            {
+                fileStream2.SetLength(10);
+            };
+
+            res = H5P.close(dcpl_id);
+        }
 
         public static unsafe void AddCompactDataset(long fileId)
         {
@@ -801,6 +849,23 @@ namespace HDF5.NET.Tests
         {
             var actual = dataset.Read<T>();
             return actual.SequenceEqual(expected);
+        }
+
+        public static void CaptureHdfLibOutput(ITestOutputHelper logger)
+        {
+            H5E.set_auto(H5E.DEFAULT, ErrorDelegateMethod, IntPtr.Zero);
+
+            int ErrorDelegateMethod(long estack, IntPtr client_data)
+            {
+                H5E.walk(estack, H5E.direction_t.H5E_WALK_DOWNWARD, WalkDelegateMethod, IntPtr.Zero);
+                return 0;
+            }
+
+            int WalkDelegateMethod(uint n, ref H5E.error_t err_desc, IntPtr client_data)
+            {
+                logger.WriteLine($"{n}: {err_desc.desc}");
+                return 0;
+            }
         }
 
         private static long GetHdfTypeIdFromType(Type type)

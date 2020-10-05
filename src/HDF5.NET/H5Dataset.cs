@@ -11,7 +11,7 @@ using System.Runtime.InteropServices;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
-    public class H5Dataset : H5AttributableObject, IDataContainer
+    public class H5Dataset : H5AttributableObject
     {
         #region Constructors
 
@@ -39,6 +39,9 @@ namespace HDF5.NET
 
                 else if (type == typeof(ObjectModificationMessage))
                     this.ObjectModification = (ObjectModificationMessage)message.Data;
+
+                else if (type == typeof(ExternalFileListMessage))
+                    this.ExternalFileList = (ExternalFileListMessage)message.Data;
             }
 
             // check that required fields are set
@@ -70,6 +73,8 @@ namespace HDF5.NET
         public FilterPipelineMessage? FilterPipeline { get; }
 
         public ObjectModificationMessage? ObjectModification { get; }
+
+        public ExternalFileListMessage? ExternalFileList { get; }
 
         #endregion
 
@@ -223,7 +228,10 @@ namespace HDF5.NET
 
             if (this.Context.Superblock.IsUndefinedAddress(address))
             {
-                if (this.FillValue.IsDefined)
+                if (this.ExternalFileList != null)
+                    this.ReadExternalFileList(buffer, this.ExternalFileList);
+
+                else if (this.FillValue.IsDefined)
                     buffer.Fill(this.FillValue.Value);
             }
             else
@@ -527,6 +535,35 @@ namespace HDF5.NET
             else
             {
                 return dataBlock.Elements;
+            }
+        }
+
+        private void ReadExternalFileList(Span<byte> buffer, ExternalFileListMessage externalFileList)
+        {
+#error implement split buffer to be able to read ulong files
+            var bufferOffset = 0;
+            var remainingSize = buffer.Length;
+
+            foreach (var slotDefinition in externalFileList.SlotDefinitions)
+            {
+                #error what if file is too large here?
+                var length = Math.Min(remainingSize, (int)slotDefinition.Size);
+                var heap = externalFileList.Heap;
+                var filePath = heap.GetObjectName(slotDefinition.NameHeapOffset);
+#error construct final file path
+
+
+                using var fileStream = File.OpenRead(filePath);
+                fileStream.Seek((long)slotDefinition.Offset, SeekOrigin.Begin);
+
+                var actualLength = Math.Min(length, fileStream.Length);
+#error what if file is too large here?
+                var currentBuffer = buffer.Slice(bufferOffset, (int)actualLength);
+
+                fileStream.Read(currentBuffer);
+
+                bufferOffset += length;
+                remainingSize -= length;
             }
         }
 

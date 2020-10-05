@@ -128,9 +128,9 @@ namespace HDF5.NET
                 }
 
                 // link access property list
-                if (!string.IsNullOrWhiteSpace(linkAccess.ExternalFilePrefix))
+                if (!string.IsNullOrWhiteSpace(linkAccess.ExternalLinkPrefix))
                 {
-                    var propPrefix = linkAccess.ExternalFilePrefix;
+                    var propPrefix = linkAccess.ExternalLinkPrefix;
                     var propResult = PathCombine(propPrefix, externalFilePath);
 
                     if (File.Exists(propResult))

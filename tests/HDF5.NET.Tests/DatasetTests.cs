@@ -285,6 +285,32 @@ namespace HDF5.NET.Tests.Reading
             }));
         }
 
+        [Theory]
+        [InlineData("relative", "")]
+        public void CanReadDataset_External(string datasetName, string pathPrefix)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, datasetName, pathPrefix));
+                var expected = TestData.MediumData;
+
+                for (int i = 33; i < 40; i++)
+                {
+                    expected[i] = 0;
+                }
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Group("external");
+                var dataset = parent.Dataset(datasetName);
+                var actual = dataset.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
         [Fact]
         public void CanReadDataset_Compact()
         {

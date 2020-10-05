@@ -2,6 +2,6 @@
 {
     public struct H5LinkAccessProperties
     {
-        public string ExternalFilePrefix { get; set; }
+        public string ExternalLinkPrefix { get; set; }
     }
 }
