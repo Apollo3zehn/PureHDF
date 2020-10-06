@@ -137,17 +137,18 @@ namespace HDF5.NET.Tests
 
         #region Datasets
 
-        public static unsafe void AddExternalDataset(long fileId, string datasetName, string pathPrefix)
+        public static unsafe void AddExternalDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
         {
             long res;
 
             var bytesoftype = 4;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            var dapl_id = H5P.create(H5P.DATASET_ACCESS);
 
             res = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             // a (more than one chunk in file)
-            var pathA = Path.Combine(pathPrefix, "a.raw");
+            var pathA = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, "a.raw"), datasetAccess);
 
             if (File.Exists(pathA))
                 File.Delete(pathA);
@@ -157,7 +158,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // b (file size smaller than set size)
-            var pathB = Path.Combine(pathPrefix, "b.raw");
+            var pathB = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, "b.raw"), datasetAccess);
 
             if (File.Exists(pathB))
                 File.Delete(pathB);
@@ -165,7 +166,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // c (normal file)
-            var pathC = Path.Combine(pathPrefix, "c.raw");
+            var pathC = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, "c.raw"), datasetAccess);
 
             if (File.Exists(pathC))
                 File.Delete(pathC);
@@ -173,7 +174,10 @@ namespace HDF5.NET.Tests
             res = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
 
             // write data
-            TestUtils.Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), cpl: dcpl_id);
+            if (datasetAccess.ExternalFilePrefix != null)
+                H5P.set_efile_prefix(dapl_id, datasetAccess.ExternalFilePrefix);
+
+            TestUtils.Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), apl: dapl_id, cpl: dcpl_id);
 
             // truncate file b
             using (var fileStream2 = File.OpenWrite(pathB))
@@ -181,6 +185,7 @@ namespace HDF5.NET.Tests
                 fileStream2.SetLength(10);
             };
 
+            res = H5P.close(dapl_id);
             res = H5P.close(dcpl_id);
         }
 
@@ -770,36 +775,36 @@ namespace HDF5.NET.Tests
             return filePath;
         }
 
-        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, long cpl = 0)
+        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, long cpl = 0, long apl = 0)
             where T : unmanaged
         {
             var length = (ulong)data.Length;
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, data, length, cpl);
+            TestUtils.Add(container, fileId, groupName, elementName, typeId, data, length, cpl, apl);
         }
 
-        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong length, long cpl = 0)
+        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong length, long cpl = 0, long apl = 0)
             where T : unmanaged
         {
             var dims0 = new ulong[] { length };
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, data, dims0, dims0, cpl);
+            TestUtils.Add(container, fileId, groupName, elementName, typeId, data, dims0, dims0, cpl, apl);
         }
 
-        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong[] dims0, ulong[] dims1 = null, long cpl = 0)
+        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong[] dims0, ulong[] dims1 = null, long cpl = 0, long apl = 0)
             where T : unmanaged
         {
             fixed (void* dataPtr = data)
             {
-                TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims1, cpl);
+                TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims1, cpl, apl);
             }
         }
 
-        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong length, long cpl = 0)
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong length, long cpl = 0, long apl = 0)
         {
             var dims0 = new ulong[] { length };
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl);
+            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl, apl);
         }
 
-        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[] dims1 = null, long cpl = 0)
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[] dims1 = null, long cpl = 0, long apl = 0)
         {
             long res;
 
@@ -807,11 +812,11 @@ namespace HDF5.NET.Tests
                 dims1 = dims0;
 
             var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl);
+            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl, apl);
             res = H5S.close(spaceId);
         }
 
-        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, long spaceId, long cpl = 0)
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, long spaceId, long cpl = 0, long apl = 0)
         {
             long res;
             long groupId;
@@ -825,7 +830,7 @@ namespace HDF5.NET.Tests
 
             if (container == ContainerType.Dataset)
             {
-                id = H5D.create(groupId, Encoding.UTF8.GetBytes(elementName), typeId, spaceId, dcpl_id: cpl);
+                id = H5D.create(groupId, Encoding.UTF8.GetBytes(elementName), typeId, spaceId, dcpl_id: cpl, dapl_id: apl);
 
                 if ((int)dataPtr != 0)
                     res = H5D.write(id, typeId, spaceId, H5S.ALL, 0, new IntPtr(dataPtr));

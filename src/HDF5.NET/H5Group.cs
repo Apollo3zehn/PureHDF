@@ -45,7 +45,7 @@ namespace HDF5.NET
         #region Properties
 
         public IEnumerable<H5Object> Children
-            => this.GetChildren(new H5LinkAccessProperties());
+            => this.GetChildren(new H5LinkAccess());
 
         internal H5File File
         {
@@ -62,34 +62,19 @@ namespace HDF5.NET
 
         #region Public
 
-        public bool Exists(string path)
-        {
-            return this.Exists(path, new H5LinkAccessProperties());
-        }
-
-        public bool Exists(string path, H5LinkAccessProperties linkAccess)
+        public bool Exists(string path, H5LinkAccess linkAccess = default)
         {
             return this.InternalExists(path, linkAccess);
         }
 
-        public H5Object Get(string path)
-        {
-            return this.Get(path, new H5LinkAccessProperties());
-        }
-
-        public H5Object Get(string path, H5LinkAccessProperties linkAccess)
+        public H5Object Get(string path, H5LinkAccess linkAccess = default)
         {
             return this
                 .InternalGet(path, linkAccess)
                 .Dereference();
         }
 
-        public H5Object Get(H5ObjectReference reference)
-        {
-            return this.Get(reference, new H5LinkAccessProperties());
-        }
-
-        public H5Object Get(H5ObjectReference reference, H5LinkAccessProperties linkAccess)
+        public H5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default)
         {
             if (this.Reference.Value == reference.Value)
                 return this;
@@ -99,12 +84,7 @@ namespace HDF5.NET
                 .Dereference();
         }
 
-        public H5Group Group(string path)
-        {
-            return this.Group(path, new H5LinkAccessProperties());
-        }
-
-        public H5Group Group(string path, H5LinkAccessProperties linkAccess)
+        public H5Group Group(string path, H5LinkAccess linkAccess = default)
         {
             var link = this.Get(path, linkAccess);
             var group = link as H5Group;
@@ -115,12 +95,7 @@ namespace HDF5.NET
             return group;
         }
 
-        public H5Dataset Dataset(string path)
-        {
-            return this.Dataset(path, new H5LinkAccessProperties());
-        }
-
-        public H5Dataset Dataset(string path, H5LinkAccessProperties linkAccess)
+        public H5Dataset Dataset(string path, H5LinkAccess linkAccess = default)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5Dataset;
@@ -131,12 +106,7 @@ namespace HDF5.NET
             return castedLink;
         }
 
-        public H5CommitedDatatype CommitedDatatype(string path)
-        {
-            return this.CommitedDatatype(path, new H5LinkAccessProperties());
-        }
-
-        public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccessProperties linkAccess)
+        public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccess linkAccess = default)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5CommitedDatatype;
@@ -147,7 +117,7 @@ namespace HDF5.NET
             return castedLink;
         }
 
-        public IEnumerable<H5Object> GetChildren(H5LinkAccessProperties linkAccess)
+        public IEnumerable<H5Object> GetChildren(H5LinkAccess linkAccess = default)
         {
             return this
                 .EnumerateReferences(linkAccess)
@@ -156,7 +126,7 @@ namespace HDF5.NET
 
         #region Private
 
-        private bool InternalExists(string path, H5LinkAccessProperties linkAccess)
+        private bool InternalExists(string path, H5LinkAccess linkAccess)
         {
             if (path == "/")
                 return true;
@@ -181,7 +151,7 @@ namespace HDF5.NET
             return true;
         }
 
-        internal H5NamedReference InternalGet(string path, H5LinkAccessProperties linkAccess)
+        internal H5NamedReference InternalGet(string path, H5LinkAccess linkAccess)
         {
             if (path == "/")
                 return this.File.Reference;
@@ -206,7 +176,7 @@ namespace HDF5.NET
             return current;
         }
 
-        internal H5NamedReference InternalGet(H5ObjectReference reference, H5LinkAccessProperties linkAccess)
+        internal H5NamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
         {
             var alreadyVisted = new HashSet<ulong>();
 
@@ -216,7 +186,7 @@ namespace HDF5.NET
                 throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
         }
 
-        private bool TryGetReference(string name, H5LinkAccessProperties linkAccess, out H5NamedReference namedReference)
+        private bool TryGetReference(string name, H5LinkAccess linkAccess, out H5NamedReference namedReference)
         {
             namedReference = default;
 
@@ -323,7 +293,7 @@ namespace HDF5.NET
             return false;
         }
 
-        internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccessProperties linkAccess, int recursionLevel, out H5NamedReference namedReference)
+        internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out H5NamedReference namedReference)
         {
             // similar to H5Gint.c (H5G_visit)
             if (recursionLevel >= 100)
@@ -374,7 +344,7 @@ namespace HDF5.NET
             return false;
         }
 
-        private IEnumerable<H5NamedReference> EnumerateReferences(H5LinkAccessProperties linkAccess)
+        private IEnumerable<H5NamedReference> EnumerateReferences(H5LinkAccess linkAccess)
         {
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
@@ -537,7 +507,7 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccessProperties linkAccess)
+        private H5NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
         {
             return linkMessage.LinkInfo switch
             {
@@ -553,7 +523,7 @@ namespace HDF5.NET
         #region Symbol Table
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccessProperties linkAccess)
+        private H5NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
         {
             var name = heap.GetObjectName(entry.LinkNameOffset);
             var reference = new H5NamedReference(name, entry.HeaderAddress, this.File);

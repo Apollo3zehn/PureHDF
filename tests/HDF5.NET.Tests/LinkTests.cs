@@ -243,8 +243,8 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
 
             var linkAccess = string.IsNullOrWhiteSpace(prefix) 
-                ? new H5LinkAccessProperties()
-                : new H5LinkAccessProperties() { ExternalLinkPrefix = prefix };
+                ? new H5LinkAccess()
+                : new H5LinkAccess() { ExternalLinkPrefix = prefix };
 
             var dataset = root.Dataset("/links/external_link/Hello from external file =)", linkAccess);
         }

@@ -286,13 +286,28 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [InlineData("relative", "")]
-        public void CanReadDataset_External(string datasetName, string pathPrefix)
+        [InlineData("absolute")]
+        [InlineData("relative")]
+        [InlineData("prefix")]
+        public void CanReadDataset_External(string datasetName)
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, datasetName, pathPrefix));
+                var absolutePrefix = datasetName == "absolute" 
+                    ? Path.GetTempPath() 
+                    : string.Empty;
+
+                var externalFilePrefix = datasetName == "prefix"
+                   ? Path.GetTempPath()
+                   : null;
+
+                var datasetAccess = new H5DatasetAccess()
+                {
+                    ExternalFilePrefix = externalFilePrefix
+                };
+
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, datasetName, absolutePrefix, datasetAccess));
                 var expected = TestData.MediumData;
 
                 for (int i = 33; i < 40; i++)

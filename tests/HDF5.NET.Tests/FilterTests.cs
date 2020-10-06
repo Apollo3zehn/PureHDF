@@ -162,7 +162,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -203,7 +203,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -244,7 +244,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -271,7 +271,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(skipShuffle: true);
+            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
 
             // Act
 

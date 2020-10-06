@@ -78,32 +78,44 @@ namespace HDF5.NET
 
         #endregion
 
-        #region Methods
+        #region Public
 
-        public T[] Read<T>() where T : struct
+        public T[] Read<T>(H5DatasetAccess datasetAccess = default) where T : struct
         {
-            return this.Read<T>(skipShuffle: false);
+            return this.Read<T>(datasetAccess, skipShuffle: false);
         }
 
-        public T[] ReadCompound<T>() where T : struct
+        public T[] ReadCompound<T>(H5DatasetAccess datasetAccess = default) where T : struct
         {
-            return this.ReadCompound<T>(fieldInfo => fieldInfo.Name);
+            return this.ReadCompound<T>(fieldInfo => fieldInfo.Name, datasetAccess);
         }
 
-        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) where T : struct
+        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName, H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = this.Read<byte>();
-
+            var data = this.Read<byte>(datasetAccess);
             return H5Utils.ReadCompound<T>(this.Datatype, this.Dataspace, this.Context.Superblock, data, getName);
         }
 
-        public string[] ReadString()
+        public string[] ReadString(H5DatasetAccess datasetAccess = default)
         {
-            var data = this.Read<byte>(skipTypeCheck: true);
+            var data = this.Read<byte>(datasetAccess, skipTypeCheck: true);
             return H5Utils.ReadString(this.Datatype, data, this.Context.Superblock);
         }
 
-        internal T[] Read<T>(bool skipTypeCheck = false, bool skipShuffle = false) where T : struct
+        #endregion
+
+        #region Private
+
+#warning Reading large files
+        /* Reading large files
+         * Compact: no problem
+         * Contiguous: just make sure that the hyperslab is divided into < 2 GB chunks
+         * Chunked: Chunk size is max 2 GB, but decompressed data will be larger. This means 
+         * that the returned buffer must not be a Span<T> or Memory<T>.
+         * Virtual: a combination of the solutions above
+         */
+
+        internal T[] Read<T>(H5DatasetAccess datasetAccess, bool skipTypeCheck = false, bool skipShuffle = false) where T : struct
         {
             if (!skipTypeCheck)
             {
@@ -153,7 +165,7 @@ namespace HDF5.NET
                 // storage size of the array. The offset of an element from the 
                 // beginning of the storage area is computed as in a C array.
                 case LayoutClass.Contiguous:
-                    return this.ReadContiguous<T>();
+                    return this.ReadContiguous<T>(datasetAccess);
 
                 // Chunked: The array domain is regularly decomposed into chunks,
                 // and each chunk is allocated and stored separately. This layout 
@@ -205,7 +217,7 @@ namespace HDF5.NET
             return result.ToArray();
         }
 
-        private T[] ReadContiguous<T>() where T : struct
+        private T[] ReadContiguous<T>(H5DatasetAccess datasetAccess) where T : struct
         {
             ulong address;
 
@@ -229,7 +241,7 @@ namespace HDF5.NET
             if (this.Context.Superblock.IsUndefinedAddress(address))
             {
                 if (this.ExternalFileList != null)
-                    this.ReadExternalFileList(buffer, this.ExternalFileList);
+                    this.ReadExternalFileList(buffer, this.ExternalFileList, datasetAccess);
 
                 else if (this.FillValue.IsDefined)
                     buffer.Fill(this.FillValue.Value);
@@ -538,29 +550,35 @@ namespace HDF5.NET
             }
         }
 
-        private void ReadExternalFileList(Span<byte> buffer, ExternalFileListMessage externalFileList)
+        private void ReadExternalFileList(Span<byte> buffer, ExternalFileListMessage externalFileList, H5DatasetAccess datasetAccess)
         {
-#error implement split buffer to be able to read ulong files
             var bufferOffset = 0;
             var remainingSize = buffer.Length;
 
             foreach (var slotDefinition in externalFileList.SlotDefinitions)
             {
-                #error what if file is too large here?
                 var length = Math.Min(remainingSize, (int)slotDefinition.Size);
                 var heap = externalFileList.Heap;
-                var filePath = heap.GetObjectName(slotDefinition.NameHeapOffset);
-#error construct final file path
+                var name = heap.GetObjectName(slotDefinition.NameHeapOffset);
+                var filePath = H5Utils.ConstructExternalFilePath(name, datasetAccess);
 
+                if (!File.Exists(filePath))
+                    throw new Exception($"External file '{filePath}' does not exist.");
 
-                using var fileStream = File.OpenRead(filePath);
-                fileStream.Seek((long)slotDefinition.Offset, SeekOrigin.Begin);
+                try
+                {
+                    using var fileStream = File.OpenRead(filePath);
+                    fileStream.Seek((long)slotDefinition.Offset, SeekOrigin.Begin);
 
-                var actualLength = Math.Min(length, fileStream.Length);
-#error what if file is too large here?
-                var currentBuffer = buffer.Slice(bufferOffset, (int)actualLength);
+                    var actualLength = Math.Min(length, fileStream.Length);
+                    var currentBuffer = buffer.Slice(bufferOffset, (int)actualLength);
 
-                fileStream.Read(currentBuffer);
+                    fileStream.Read(currentBuffer);
+                }
+                catch
+                {
+                    throw new Exception($"Unable to open external file '{filePath}'.");
+                }
 
                 bufferOffset += length;
                 remainingSize -= length;
