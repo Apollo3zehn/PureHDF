@@ -33,4 +33,16 @@
     </None>
   </ItemGroup>
 
+  <!-- Workaround, see https://github.com/HDFGroup/HDF.PInvoke.1.10/issues/15 -->
+  <PropertyGroup>
+    <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'True'">True</IsWindows>
+    <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'True'">True</IsLinux>
+  </PropertyGroup>
+
+  <Target Name="CopyNativeLib" AfterTargets="Build">
+    <Copy Condition="$(IsLinux) == 'True'"
+          SourceFiles="$(NuGetPackageRoot)\hdf.pinvoke.1.10\1.10.610\runtimes\linux-x64\native\libhdf5.so"
+          DestinationFolder="$(OutDir)" />
+  </Target>
+
 </Project>

@@ -106,6 +106,8 @@ namespace HDF5.NET
 
         #region Private
 
+#warning use implicit cast operator for multi dim arrays? http://dontcodetired.com/blog/post/Writing-Implicit-and-Explicit-C-Conversion-Operators
+
 #warning Reading large files
         /* Reading large files
          * Compact: no problem
