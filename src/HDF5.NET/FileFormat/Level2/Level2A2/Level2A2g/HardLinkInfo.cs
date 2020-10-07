@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class HardLinkInfo : LinkInfo
     {
@@ -18,23 +16,14 @@ namespace HDF5.NET
             _superblock = superblock;
 
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
+            this.HeaderAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
 
         #region Properties
 
-        public ulong ObjectHeaderAddress { get; set; }
-
-        public ObjectHeader ObjectHeader
-        {
-            get
-            {
-                this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Construct(this.Reader, _superblock);
-            }
-        }
+        public ulong HeaderAddress { get; set; }
 
         #endregion
     }

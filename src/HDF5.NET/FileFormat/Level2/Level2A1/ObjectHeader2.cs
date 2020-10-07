@@ -13,28 +13,28 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader2(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        internal ObjectHeader2(H5Context context, byte version) : base(context.Reader)
         {
             // version
             this.Version = version;
 
             // flags
-            this.Flags = (ObjectHeaderFlags)reader.ReadByte();
+            this.Flags = (ObjectHeaderFlags)context.Reader.ReadByte();
 
             // access time, modification time, change time and birth time
             if (this.Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
             {
-                this.AccessTime = reader.ReadUInt32();
-                this.ModificationTime = reader.ReadUInt32();
-                this.ChangeTime = reader.ReadUInt32();
-                this.BirthTime = reader.ReadUInt32();
+                this.AccessTime = context.Reader.ReadUInt32();
+                this.ModificationTime = context.Reader.ReadUInt32();
+                this.ChangeTime = context.Reader.ReadUInt32();
+                this.BirthTime = context.Reader.ReadUInt32();
             }
 
             // maximum compact attributes count and minimum dense attributes count
             if (this.Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
             {
-                this.MaximumCompactAttributesCount = reader.ReadUInt16();
-                this.MinimumDenseAttributesCount = reader.ReadUInt16();
+                this.MaximumCompactAttributesCount = context.Reader.ReadUInt16();
+                this.MinimumDenseAttributesCount = context.Reader.ReadUInt16();
             }
 
             // size of chunk 0
@@ -43,7 +43,7 @@ namespace HDF5.NET
 
             // header messages
             var withCreationOrder = this.Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
-            var messages = this.ReadHeaderMessages(reader, superblock, this.SizeOfChunk0, version: 2, withCreationOrder);
+            var messages = this.ReadHeaderMessages(context, this.SizeOfChunk0, version: 2, withCreationOrder);
             this.HeaderMessages.AddRange(messages);
 
 #warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */

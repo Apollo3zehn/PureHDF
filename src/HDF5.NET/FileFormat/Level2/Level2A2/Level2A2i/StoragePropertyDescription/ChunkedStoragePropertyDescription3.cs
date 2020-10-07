@@ -6,16 +6,16 @@
 
         public ChunkedStoragePropertyDescription3(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            // dimensionality
-            this.Dimensionality = reader.ReadByte();
+            // rank
+            this.Rank = reader.ReadByte();
 
             // address
             this.Address = superblock.ReadOffset(reader);
 
             // dimension sizes
-            this.DimensionSizes = new uint[this.Dimensionality];
+            this.DimensionSizes = new uint[this.Rank];
 
-            for (uint i = 0; i < this.Dimensionality; i++)
+            for (uint i = 0; i < this.Rank; i++)
             {
                 this.DimensionSizes[i] = reader.ReadUInt32();
             }

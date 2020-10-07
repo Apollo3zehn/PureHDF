@@ -18,16 +18,52 @@ namespace HDF5.NET.Tests.Reading
             _logger = logger;
         }
 
-        public static IList<object[]> DatasetNumericalTestData = TestData.DatasetNumericalData;
+        public static IList<object[]> DatasetNumericalTestData = TestData.NumericalData;
+
+        [Fact]
+        public void CanReadDataset_Dataspace_Scalar()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceScalar(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("dataspace").Dataset("scalar");
+                var actual = attribute.Read<double>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Dataspace_Null()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceNull(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var attribute = root.Group("dataspace").Dataset("null");
+                var actual = attribute.Read<double>();
+
+                // Assert
+                Assert.True(actual.Length == 0);
+            });
+        }
 
         [Theory]
         [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
         public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : struct
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumericalDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddNumerical((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -36,16 +72,16 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
-            });
+            }));
         }
 
         [Fact]
         public void CanReadDataset_NonNullableStruct()
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -54,16 +90,16 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
-            });
+            }));
         }
 
         [Fact]
         public void CanReadDataset_NullableStruct()
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -79,7 +115,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.StringStructData));
-            });
+            }));
         }
 
         // Fixed-length string dataset (UTF8) is not supported because 
@@ -90,10 +126,10 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
         public void CanReadDataset_String(string name, string[] expected)
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStringDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddString((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -102,16 +138,16 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
-            });
+            }));
         }
 
         [Fact]
         public void CanReadDataset_Bitfield()
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitFieldDataset(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddBitField((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -120,16 +156,16 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.BitfieldData));
-            });
+            }));
         }
 
         [Fact]
         public void CanReadDataset_Opaque()
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaqueDataset(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddOpaque((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -138,16 +174,16 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.SmallData));
-            });
+            }));
         }
 
         [Fact]
         public void CanReadDataset_Array()
         {
-            TestUtils.RunForAllVersions(version =>
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArrayDataset(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddArray((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -161,31 +197,31 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));
-            });
+            }));
         }
 
         [Fact]
-        public void CanReadDataset_Reference()
+        public void CanReadDataset_Reference_Object()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddReferenceDataset(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddObjectReference(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                var dataset_references = root.Group("reference").Dataset("reference");
-                var references = dataset_references.Read<ulong>();
+                var dataset_references = root.Group("reference").Dataset("object_reference");
+                var references = dataset_references.Read<H5ObjectReference>();
 
                 var dereferenced = references
-                    .Select(references => root.Get(references))
+                    .Select(reference => root.Get(reference))
                     .ToArray();
 
                 // Assert
-                for (int i = 0; i < TestData.DatasetNumericalData.Count; i++)
+                for (int i = 0; i < TestData.NumericalData.Count; i++)
                 {
                     var dataset = (H5Dataset)dereferenced[i];
-                    var expected = (Array)TestData.DatasetNumericalData[i][1];
+                    var expected = (Array)TestData.NumericalData[i][1];
                     var elementType = expected.GetType().GetElementType();
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
@@ -197,13 +233,47 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-        [Fact]
-        public void ThrowsForNestedNullableStruct()
+        [Fact(Skip = "Not yet fully implemented.")]
+        public void CanReadDataset_Reference_Region()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStructDatasets(fileId));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset_references = root.Group("reference").Dataset("region_reference");
+                var references = dataset_references.Read<H5RegionReference>();
+
+                var reference = references[0];
+                root.Context.Reader.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+
+                // H5Rint.c (H5R__get_region)
+#warning use more structs?
+                var globalHeapId = new GlobalHeapId(root.Context.Superblock)
+                {
+                    CollectionAddress = reference.CollectionAddress,
+                    ObjectIndex = reference.ObjectIndex
+                };
+                
+                var globalHeapCollection = globalHeapId.Collection;
+                var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
+                var localReader = new H5BinaryReader(new MemoryStream(globalHeapObject.ObjectData));
+                var address = root.Context.Superblock.ReadOffset(localReader);
+                var selection = new DataspaceSelection(localReader);
+
+                throw new NotImplementedException();
+            });
+        }
+
+        [Fact]
+        public void ThrowsForNestedNullableStruct()
+        {
+            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -212,6 +282,47 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.Contains("Nested nullable fields are not supported.", exception.Message);
+            }));
+        }
+
+        [Theory]
+        [InlineData("absolute")]
+        [InlineData("relative")]
+        [InlineData("prefix")]
+        public void CanReadDataset_External(string datasetName)
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var absolutePrefix = datasetName == "absolute" 
+                    ? Path.GetTempPath() 
+                    : string.Empty;
+
+                var externalFilePrefix = datasetName == "prefix"
+                   ? Path.GetTempPath()
+                   : null;
+
+                var datasetAccess = new H5DatasetAccess()
+                {
+                    ExternalFilePrefix = externalFilePrefix
+                };
+
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, datasetName, absolutePrefix, datasetAccess));
+                var expected = TestData.MediumData;
+
+                for (int i = 33; i < 40; i++)
+                {
+                    expected[i] = 0;
+                }
+
+                // Act
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var parent = root.Group("external");
+                var dataset = parent.Dataset(datasetName);
+                var actual = dataset.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
             });
         }
 
@@ -513,87 +624,6 @@ namespace HDF5.NET.Tests.Reading
                 // Assert
                 Assert.Equal(expected, actual);
             });
-        }
-
-        [Fact]
-        public void CanReadBigEndian()
-        {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId =>
-            {
-                TestUtils.AddSmallAttribute(fileId);
-                TestUtils.AddCompactDataset(fileId);
-                TestUtils.AddContiguousDataset(fileId);
-                TestUtils.AddChunkedDataset_Single_Chunk(fileId, withShuffle: false);
-            });
-
-            /* modify file to declare datasets and attributes layout as big-endian */
-            using (var reader = new BinaryReader(File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)))
-            using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Open, FileAccess.Write, FileShare.ReadWrite)))
-            {
-                reader.BaseStream.Seek(0x121, SeekOrigin.Begin);
-                var data1 = reader.ReadByte();
-                writer.BaseStream.Seek(0x121, SeekOrigin.Begin);
-                writer.Write((byte)(data1 | 0x01));
-
-                reader.BaseStream.Seek(0x39C, SeekOrigin.Begin);
-                var data2 = reader.ReadByte();
-                writer.BaseStream.Seek(0x39C, SeekOrigin.Begin);
-                writer.Write((byte)(data2 | 0x01));
-
-                reader.BaseStream.Seek(0x6DB, SeekOrigin.Begin);
-                var data3 = reader.ReadByte();
-                writer.BaseStream.Seek(0x6DB, SeekOrigin.Begin);
-                writer.Write((byte)(data3 | 0x01));
-
-                reader.BaseStream.Seek(0x89A, SeekOrigin.Begin);
-                var data4 = reader.ReadByte();
-                writer.BaseStream.Seek(0x89A, SeekOrigin.Begin);
-                writer.Write((byte)(data4 | 0x01));
-            };
-
-            /* continue */
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-
-            var attribute = root
-                .Group("small")
-                .Attribute("small");
-
-            var dataset_compact = root
-                .Group("compact")
-                .Dataset("compact");
-
-            var dataset_contiguous = root
-                .Group("contiguous")
-                .Dataset("contiguous");
-
-            var dataset_chunked = root
-                .Group("chunked")
-                .Dataset("chunked_single_chunk");
-
-            var attribute_expected = new int[TestData.SmallData.Length];
-            EndiannessConverter.Convert<int>(TestData.SmallData, attribute_expected);
-
-            var dataset_compact_expected = new int[TestData.SmallData.Length];
-            EndiannessConverter.Convert<int>(TestData.SmallData, dataset_compact_expected);
-
-            var dataset_contiguous_expected = new int[TestData.HugeData.Length];
-            EndiannessConverter.Convert<int>(TestData.HugeData, dataset_contiguous_expected);
-
-            var dataset_chunked_expected = new int[TestData.MediumData.Length];
-            EndiannessConverter.Convert<int>(TestData.MediumData, dataset_chunked_expected);
-
-            // Act
-            var attribute_actual = attribute.Read<int>();
-            var dataset_compact_actual = dataset_compact.Read<int>();
-            var dataset_contiguous_actual = dataset_contiguous.Read<int>();
-            var dataset_chunked_actual = dataset_chunked.Read<int>();
-
-            // Assert
-            Assert.True(dataset_compact_actual.SequenceEqual(dataset_compact_expected));
-            Assert.True(dataset_contiguous_actual.SequenceEqual(dataset_contiguous_expected));
-            Assert.True(dataset_chunked_actual.SequenceEqual(dataset_chunked_expected));
         }
     }
 }

@@ -6,27 +6,27 @@
 
         public ArrayPropertyDescription(H5BinaryReader reader, byte version) : base(reader)
         {
-            // dimensionality
-            this.Dimensionality = reader.ReadByte();
+            // rank
+            this.Rank = reader.ReadByte();
 
             // reserved
             if (version == 2)
                 reader.ReadBytes(3);
 
             // dimension sizes
-            this.DimensionSizes = new uint[this.Dimensionality];
+            this.DimensionSizes = new uint[this.Rank];
 
-            for (int i = 0; i < this.Dimensionality; i++)
+            for (int i = 0; i < this.Rank; i++)
             {
                 this.DimensionSizes[i] = reader.ReadUInt32();
             }
 
             // permutation indices
-            this.PermutationIndices = new uint[this.Dimensionality];
+            this.PermutationIndices = new uint[this.Rank];
 
             if (version == 2)
             {
-                for (int i = 0; i < this.Dimensionality; i++)
+                for (int i = 0; i < this.Rank; i++)
                 {
                     this.PermutationIndices[i] = reader.ReadUInt32();
                 }
@@ -40,7 +40,7 @@
 
         #region Properties
 
-        public byte Dimensionality { get; set; }
+        public byte Rank { get; set; }
         public uint[] DimensionSizes { get; set; }
         public uint[] PermutationIndices { get; set; }
         public DatatypeMessage BaseType { get; set; }

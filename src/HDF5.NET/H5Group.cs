@@ -4,110 +4,98 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}")]
-    public class H5Group : H5AttributableLink
+    public class H5Group : H5AttributableObject
     {
         #region Fields
 
+        private H5File? _file;
         private ObjectHeaderScratchPad? _scratchPad;
 
         #endregion
 
         #region Constructors
 
-        // only for root group
-        internal H5Group(ObjectHeader objectHeader)
-           : base(objectHeader)
-        {
-            //   
-        }
-
-        internal H5Group(H5File file, string name, ObjectHeader objectHeader)
-            : base(file, name, objectHeader)
+        // Only for H5File constructor
+        internal H5Group(H5Context context, H5NamedReference reference, ObjectHeader header)
+           : base(context, reference, header)
         {
             //
         }
 
-        internal H5Group(H5File file, string name, ulong objectHeaderAddress, ObjectHeaderScratchPad? scratchPad)
-            : base(file, name, objectHeaderAddress)
+        internal H5Group(H5File file, H5Context context, H5NamedReference reference)
+           : base(context, reference)
         {
-            _scratchPad = scratchPad;
+            _file = file;
+            _scratchPad = reference.ScratchPad;
+        }
+
+        internal H5Group(H5File file, H5Context context, H5NamedReference reference, ObjectHeader header)
+            : base(context, reference, header)
+        {
+            _file = file;
         }
 
         #endregion
 
         #region Properties
 
-        public IEnumerable<H5Link> Children => this.EnumerateLinks();
+        public IEnumerable<H5Object> Children
+            => this.GetChildren(new H5LinkAccess());
+
+        internal H5File File
+        {
+            get
+            {
+                if (_file == null)
+                    return (H5File)this;
+                else
+                    return _file;
+            }
+        }
 
         #endregion
 
-        #region Methods
+        #region Public
 
-        public bool LinkExists(string path)
+        public bool Exists(string path, H5LinkAccess linkAccess = default)
         {
-            if (!path.StartsWith('/'))
-                return false;
-
-            if (path == "/")
-                return true;
-
-            var segments = path.Split('/');
-            var current = (H5Link)this;
-
-            foreach (var pathSegment in segments.Skip(1))
-            {
-                var group = current as H5Group;
-
-                if (group == null)
-                    return false;
-
-                if (!group.TryGetLink(pathSegment, out var link))
-                    return false;
-
-                current = link;
-            }
-
-            return true;
+            return this.InternalExists(path, linkAccess);
         }
 
-        public H5Link Get(string path)
+        public H5Object Get(string path, H5LinkAccess linkAccess = default)
         {
-            return this.Get(path, null);
+            return this
+                .InternalGet(path, linkAccess)
+                .Dereference();
         }
 
-        public H5Link Get(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default)
         {
-            return this.Get(path, linkAccess, resolveSymboliclink: true);
+            if (this.Reference.Value == reference.Value)
+                return this;
+
+            return this
+                .InternalGet(reference, linkAccess)
+                .Dereference();
         }
 
-        public H5Group Group(string path)
-        {
-            return this.Group(path, null);
-        }
-
-        public H5Group Group(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5Group Group(string path, H5LinkAccess linkAccess = default)
         {
             var link = this.Get(path, linkAccess);
-            var castedLink = link as H5Group;
+            var group = link as H5Group;
 
-            if (castedLink == null)
+            if (group == null)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Group)} because it is of type {link.GetType().Name}.");
 
-            return castedLink;
+            return group;
         }
 
-        public H5Dataset Dataset(string path)
-        {
-            return this.Dataset(path, null);
-        }
-
-        public H5Dataset Dataset(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5Dataset Dataset(string path, H5LinkAccess linkAccess = default)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5Dataset;
@@ -118,12 +106,7 @@ namespace HDF5.NET
             return castedLink;
         }
 
-        public H5CommitedDatatype CommitedDatatype(string path)
-        {
-            return this.CommitedDatatype(path, null);
-        }
-
-        public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccessPropertyList? linkAccess)
+        public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccess linkAccess = default)
         {
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5CommitedDatatype;
@@ -134,88 +117,90 @@ namespace HDF5.NET
             return castedLink;
         }
 
-        public H5SymbolicLink SymbolicLink(string path)
+        public IEnumerable<H5Object> GetChildren(H5LinkAccess linkAccess = default)
         {
-            return this.SymbolicLink(path, null);
+            return this
+                .EnumerateReferences(linkAccess)
+                .Select(reference => reference.Dereference());
         }
 
-        public H5SymbolicLink SymbolicLink(string path, H5LinkAccessPropertyList? linkAccess)
-        {
-            var link = this.Get(path, linkAccess, resolveSymboliclink: false);
-            var castedLink = link as H5SymbolicLink;
+        #region Private
 
-            if (castedLink == null)
-                throw new Exception($"The requested link exists but cannot be casted to {nameof(H5SymbolicLink)} because it is of type {link.GetType().Name}.");
-
-            return castedLink;
-        }
-
-        private H5Link Get(string path, H5LinkAccessPropertyList? linkAccess, bool resolveSymboliclink = true)
+        private bool InternalExists(string path, H5LinkAccess linkAccess)
         {
             if (path == "/")
-                return this;
+                return true;
 
             var isRooted = path.StartsWith('/');
             var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-            var current = (H5Link)(isRooted ? this.File : this);
-
-            H5SymbolicLink? symbolicLink;
+            var current = isRooted ? this.File.Reference : this.Reference;
 
             for (int i = 0; i < segments.Length; i++)
             {
-                // either it is a group
-                var group = current as H5Group;
+                var group = current.Dereference() as H5Group;
 
                 if (group == null)
-                {
-                    // or it is a symbolic link to a group
-                    symbolicLink = current as H5SymbolicLink;
+                    return false;
 
-                    if (symbolicLink == null)
-                    {
-                        throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
-                    }
-                    else
-                    {
-                        group = symbolicLink.GetTarget(linkAccess) as H5Group;
+                if (!group.TryGetReference(segments[i], linkAccess, out var reference))
+                    return false;
 
-                        if (group == null)
-                            throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
-                    }
-                }
-
-                if (!group.TryGetLink(segments[i], out var link))
-                    throw new Exception($"Could not find part of the path '{path}'.");
-
-                current = link;
+                current = reference;
             }
 
-            symbolicLink = current as H5SymbolicLink;
+            return true;
+        }
 
-            if (symbolicLink != null && resolveSymboliclink)
-                current = symbolicLink.GetTarget(linkAccess);
+        internal H5NamedReference InternalGet(string path, H5LinkAccess linkAccess)
+        {
+            if (path == "/")
+                return this.File.Reference;
+
+            var isRooted = path.StartsWith('/');
+            var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
+            var current = isRooted ? this.File.Reference : this.Reference;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var group = current.Dereference() as H5Group;
+
+                if (group == null)
+                    throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
+
+                if (!group.TryGetReference(segments[i], linkAccess, out var reference))
+                    throw new Exception($"Could not find part of the path '{path}'.");
+
+                current = reference;
+            }
 
             return current;
         }
 
-        private bool TryGetLink(string name, [NotNullWhen(returnValue: true)] out H5Link? link)
+        internal H5NamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
         {
-            link = null;
+            var alreadyVisted = new HashSet<ulong>();
 
-            // scratch pad info seems to be unused in HDF5 reference implementation (search for stab.btree_addr)
+            if (this.TryGetReference(reference, alreadyVisted, linkAccess, recursionLevel: 0, out var namedReference))
+                return namedReference;
+            else
+                throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
+        }
+
+        private bool TryGetReference(string name, H5LinkAccess linkAccess, out H5NamedReference namedReference)
+        {
+            namedReference = default;
 
             /* cached data */
-            /*
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
 
-                this.File.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
-                var tree = new BTree1Node<BTree1GroupKey>(this.File.Reader, this.File.Superblock, this.DecodeGroupKey);
+                this.Context.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
+                var tree = new BTree1Node<BTree1GroupKey>(this.Context.Reader, this.Context.Superblock, this.DecodeGroupKey);
                 var b = tree.EnumerateNodes().ToList();
 
-                this.File.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
-                var heap = new LocalHeap(this.File.Reader, this.File.Superblock);
+                this.Context.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
+                var heap = new LocalHeap(this.Context.Reader, this.Context.Superblock);
                 var c = heap.GetObjectName(0);
 
 
@@ -227,14 +212,13 @@ namespace HDF5.NET
 
                 if (success)
                 {
-                    link = this.InstantiateLinkForSymbolTableEntry(localHeap, userData.SymbolTableEntry);
+                    namedReference = this.GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess);
                     return true;
                 }
             }
             else
-            */
             {
-                var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
+                var symbolTableHeaderMessages = this.Header.GetMessages<SymbolTableMessage>();
 
                 if (symbolTableHeaderMessages.Any())
                 {
@@ -256,13 +240,13 @@ namespace HDF5.NET
 
                     if (success)
                     {
-                        link = this.InstantiateLinkForSymbolTableEntry(localHeap, userData.SymbolTableEntry);
+                        namedReference = this.GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess);
                         return true;
                     }
                 }
                 else
                 {
-                    var linkInfoMessages = this.ObjectHeader.GetMessages<LinkInfoMessage>();
+                    var linkInfoMessages = this.Header.GetMessages<LinkInfoMessage>();
 
                     if (linkInfoMessages.Any())
                     {
@@ -274,11 +258,11 @@ namespace HDF5.NET
                         /* New (1.8) indexed format (in combination with Group Info Message) 
                          * IV.A.2.c. The Link Info Message 
                          * Optional; may not be repeated. */
-                        if (!this.File.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                        if (!this.Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
                         {
                             if (this.TryGetLinkMessageFromLinkInfoMessage(lmessage, name, out var linkMessage))
                             {
-                                link = this.InstantiateLink(linkMessage);
+                                namedReference = this.GetObjectReference(linkMessage, linkAccess);
                                 return true;
                             }
                         }
@@ -288,13 +272,13 @@ namespace HDF5.NET
                          * in the Link Info Message is set to the "undefined address" value. */
                         else
                         {
-                            var linkMessage = this.ObjectHeader
+                            var linkMessage = this.Header
                                 .GetMessages<LinkMessage>()
                                 .FirstOrDefault(message => message.LinkName == name);
 
                             if (linkMessage != null)
                             {
-                                link = this.InstantiateLink(linkMessage);
+                                namedReference = this.GetObjectReference(linkMessage, linkAccess);
                                 return true;
                             }
                         }
@@ -309,32 +293,79 @@ namespace HDF5.NET
             return false;
         }
 
-        private IEnumerable<H5Link> EnumerateLinks()
+        internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out H5NamedReference namedReference)
+        {
+            // similar to H5Gint.c (H5G_visit)
+            if (recursionLevel >= 100)
+                throw new Exception("Too much recursion.");
+
+            bool skip = false;
+            namedReference = default;
+
+            /* If its ref count is > 1, we add it to the list of visited objects
+             * (because it could come up again during traversal) */
+            if (this.ReferenceCount > 1)
+            {
+                if (alreadyVisited.Contains(this.Reference.Value))
+                    skip = true;
+                else
+                    alreadyVisited.Add(this.Reference.Value);
+            }
+
+            if (!skip) 
+            {
+                var references = this
+                    .EnumerateReferences(linkAccess)
+                    .ToList();
+
+                namedReference = references
+                    .FirstOrDefault(current => current.Value == reference.Value);
+
+                if (namedReference.Name != null /* if struct value is not equal to default */)
+                {
+                    return true;
+                }
+                else
+                {
+                    // search childs for reference
+                    foreach (var childReference in references)
+                    {
+                        var group = childReference.Dereference() as H5Group;
+
+                        if (group != null)
+                        {
+                            if (group.TryGetReference(reference, alreadyVisited, linkAccess, recursionLevel + 1, out namedReference))
+                                return true;
+                        }
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private IEnumerable<H5NamedReference> EnumerateReferences(H5LinkAccess linkAccess)
         {
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
 
-            // scratch pad info seems to be unused in HDF5 reference implementation (search for stab.btree_addr)
-
             /* cached data */
-            /*
             if (_scratchPad != null)
             {
                 var localHeap = _scratchPad.LocalHeap;
-                var links = this
+                var references = this
                     .EnumerateSymbolTableNodes(_scratchPad.GetBTree1(this.DecodeGroupKey))
                     .SelectMany(node => node.GroupEntries
-                    .Select(entry => this.InstantiateLinkForSymbolTableEntry(localHeap, entry)));
+                    .Select(entry => this.GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess)));
 
-                foreach (var link in links)
+                foreach (var reference in references)
                 {
-                    yield return link;
+                    yield return reference;
                 }
             }
             else
-            */
             {
-                var symbolTableHeaderMessages = this.ObjectHeader.GetMessages<SymbolTableMessage>();
+                var symbolTableHeaderMessages = this.Header.GetMessages<SymbolTableMessage>();
 
                 if (symbolTableHeaderMessages.Any())
                 {
@@ -347,19 +378,19 @@ namespace HDF5.NET
 
                     var smessage = symbolTableHeaderMessages.First();
                     var localHeap = smessage.LocalHeap;
-                    var links = this
+                    var references = this
                         .EnumerateSymbolTableNodes(smessage.GetBTree1(this.DecodeGroupKey))
                         .SelectMany(node => node.GroupEntries
-                        .Select(entry => this.InstantiateLinkForSymbolTableEntry(localHeap, entry)));
+                        .Select(entry => this.GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess)));
 
-                    foreach (var link in links)
+                    foreach (var reference in references)
                     {
-                        yield return link;
+                        yield return reference;
                     }
                 }
                 else
                 {
-                    var linkInfoMessages = this.ObjectHeader.GetMessages<LinkInfoMessage>();
+                    var linkInfoMessages = this.Header.GetMessages<LinkInfoMessage>();
 
                     if (linkInfoMessages.Any())
                     {
@@ -373,7 +404,7 @@ namespace HDF5.NET
                         /* New (1.8) indexed format (in combination with Group Info Message) 
                          * IV.A.2.c. The Link Info Message 
                          * Optional; may not be repeated. */
-                        if (!this.File.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                        if (!this.Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
                             linkMessages = this.EnumerateLinkMessagesFromLinkInfoMessage(lmessage);
 
                         /* New (1.8) compact format
@@ -381,12 +412,12 @@ namespace HDF5.NET
                          * A group is storing its links compactly when the fractal heap address 
                          * in the Link Info Message is set to the "undefined address" value. */
                         else
-                            linkMessages = this.ObjectHeader.GetMessages<LinkMessage>();
+                            linkMessages = this.Header.GetMessages<LinkMessage>();
 
                         // build links
                         foreach (var linkMessage in linkMessages)
                         {
-                            yield return this.InstantiateLink(linkMessage);
+                            yield return this.GetObjectReference(linkMessage, linkAccess);
                         }
                     }
                     else
@@ -396,6 +427,12 @@ namespace HDF5.NET
                 }
             }
         }
+
+        #endregion
+
+        #endregion
+
+        #region Link Message
 
         private IEnumerable<LinkMessage> EnumerateLinkMessagesFromLinkInfoMessage(LinkInfoMessage infoMessage)
         {
@@ -411,11 +448,11 @@ namespace HDF5.NET
             foreach (var record in records)
             {
                 using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
-                var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
+                var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
 
                 yield return heapId.Read(reader =>
                 {
-                    var message = new LinkMessage(reader, this.File.Superblock);
+                    var message = new LinkMessage(reader, this.Context.Superblock);
                     return message;
                 }, ref record01Cache);
             }
@@ -448,8 +485,8 @@ namespace HDF5.NET
                 {
 #warning duplicate2
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
-                    var heapId = FractalHeapId.Construct(this.File.Reader, this.File.Superblock, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new LinkMessage(reader, this.File.Superblock));
+                    var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
+                    candidate = heapId.Read(reader => new LinkMessage(reader, this.Context.Superblock));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
@@ -470,41 +507,41 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5Link InstantiateLink(LinkMessage linkMessage)
+        private H5NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
         {
             return linkMessage.LinkInfo switch
             {
-                HardLinkInfo hard           => this.InstantiateUncachedLink(linkMessage.LinkName, hard.ObjectHeader),
-                SoftLinkInfo soft           => new H5SymbolicLink(linkMessage, this),
-                ExternalLinkInfo external   => new H5SymbolicLink(linkMessage, this),
-                _                           => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
+                HardLinkInfo hard => new H5NamedReference(linkMessage.LinkName, hard.HeaderAddress, this.File),
+                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this).GetTarget(linkAccess),
+                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this).GetTarget(linkAccess),
+                _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }
 
+        #endregion
+
+        #region Symbol Table
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private protected H5Link InstantiateUncachedLink(string name, ObjectHeader objectHeader)
+        private H5NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
         {
-            return objectHeader.ObjectType switch
+            var name = heap.GetObjectName(entry.LinkNameOffset);
+            var reference = new H5NamedReference(name, entry.HeaderAddress, this.File);
+
+            return entry.ScratchPad switch
             {
-                H5ObjectType.Group => new H5Group(this.File, name, objectHeader),
-                H5ObjectType.Dataset => new H5Dataset(this.File, name, objectHeader),
-                H5ObjectType.CommitedDatatype => new H5CommitedDatatype(name, objectHeader),
+                ObjectHeaderScratchPad objectScratch => this.AddScratchPad(reference, objectScratch),
+                SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess),
+                _ when !this.Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
                 _ => throw new Exception("Unknown object type.")
             };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5Link InstantiateLinkForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry)
+        private H5NamedReference AddScratchPad(H5NamedReference reference, ObjectHeaderScratchPad scratchPad)
         {
-            var name = heap.GetObjectName(entry.LinkNameOffset);
-
-            return entry.ScratchPad switch
-            {
-                ObjectHeaderScratchPad objectScratch    => new H5Group(this.File, name, entry.ObjectHeaderAddress, objectScratch),
-                SymbolicLinkScratchPad linkScratch      => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this),
-                _ when entry.ObjectHeader != null       => this.InstantiateUncachedLink(name, entry.ObjectHeader),
-                _                                       => throw new Exception("Unknown object type.")
-            };
+            reference.ScratchPad = scratchPad;
+            return reference;
         }
 
         private IEnumerable<SymbolTableNode> EnumerateSymbolTableNodes(BTree1Node<BTree1GroupKey> btree1)
@@ -513,8 +550,8 @@ namespace HDF5.NET
             {
                 return node.ChildAddresses.Select(address =>
                 {
-                    this.File.Reader.Seek((long)address, SeekOrigin.Begin);
-                    return new SymbolTableNode(this.File.Reader, this.File.Superblock);
+                    this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
+                    return new SymbolTableNode(this.Context.Reader, this.Context.Superblock);
                 });
             });
         }
@@ -561,8 +598,8 @@ namespace HDF5.NET
             /*
              * Load the symbol table node for exclusive access.
              */
-            this.File.Reader.Seek((long)address, SeekOrigin.Begin);
-            var symbolTableNode = new SymbolTableNode(this.File.Reader, this.File.Superblock);
+            this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
+            var symbolTableNode = new SymbolTableNode(this.Context.Reader, this.Context.Superblock);
 
             /*
              * Binary search.
@@ -593,7 +630,7 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1GroupKey DecodeGroupKey()
         {
-            return new BTree1GroupKey(this.File.Reader, this.File.Superblock);
+            return new BTree1GroupKey(this.Context.Reader, this.Context.Superblock);
         }
 
         #endregion

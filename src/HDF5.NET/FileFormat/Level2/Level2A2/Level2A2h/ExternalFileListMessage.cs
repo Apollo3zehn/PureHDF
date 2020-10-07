@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace HDF5.NET
@@ -37,11 +36,11 @@ namespace HDF5.NET
             this.HeapAddress = superblock.ReadOffset(reader);
 
             // slot definitions
-            this.SlotDefinitions = new List<ExternalFileListSlot>(this.UsedSlotCount);
+            this.SlotDefinitions = new ExternalFileListSlot[this.UsedSlotCount];
 
             for (int i = 0; i < this.UsedSlotCount; i++)
             {
-                this.SlotDefinitions.Add(new ExternalFileListSlot(reader, superblock));
+                this.SlotDefinitions[i] = new ExternalFileListSlot(reader, superblock);
             }
         }
 
@@ -67,7 +66,7 @@ namespace HDF5.NET
         public ushort AllocatedSlotCount { get; set; }
         public ushort UsedSlotCount { get; set; }
         public ulong HeapAddress { get; set; }
-        public List<ExternalFileListSlot> SlotDefinitions { get; set; }
+        public ExternalFileListSlot[] SlotDefinitions { get; set; }
 
         public LocalHeap Heap
         {

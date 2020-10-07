@@ -4,20 +4,21 @@ using System.Diagnostics;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}")]
-    public class H5UnresolvedLink : H5Link
+    public class H5UnresolvedLink : H5Object
     {
         #region Constructors
 
-        internal H5UnresolvedLink(string name, Exception ex) : base(name)
+        internal H5UnresolvedLink(H5NamedReference reference) 
+            : base(default, reference)
         {
-            this.Reason = ex;
+            this.Reason = reference.Exception;
         }
 
         #endregion
 
         #region Properties
 
-        public Exception Reason { get; }
+        public Exception? Reason { get; }
 
         #endregion
     }

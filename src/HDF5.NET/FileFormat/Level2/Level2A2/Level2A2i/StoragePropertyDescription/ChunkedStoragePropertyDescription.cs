@@ -13,7 +13,7 @@
 
         #region Properties
 
-        public byte Dimensionality { get; set; }
+        public byte Rank { get; set; }
         public ulong Address { get; set; }
 
         #endregion

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
@@ -16,11 +13,13 @@ namespace HDF5.NET
 
         #region Constructors
 
-        private H5File(H5BinaryReader reader, Superblock superblock, ObjectHeader objectHeader, string absoluteFilePath, bool deleteOnClose)
-            : base(objectHeader)
+        private H5File(H5Context context,
+                       H5NamedReference reference,
+                       ObjectHeader header,
+                       string absoluteFilePath,
+                       bool deleteOnClose)
+            : base(context, reference, header)
         {
-            this.Reader = reader;
-            this.Superblock = superblock;
             this.Path = absoluteFilePath;
             _deleteOnClose = deleteOnClose;
         }
@@ -30,9 +29,6 @@ namespace HDF5.NET
         #region Properties
 
         public string Path { get; } = ":memory:";
-
-        internal H5BinaryReader Reader { get; }
-        internal Superblock Superblock { get; }
 
         #endregion
 
@@ -79,51 +75,39 @@ namespace HDF5.NET
 
             reader.BaseAddress = superblock.BaseAddress;
 
-            ObjectHeader objectHeader;
+            ulong address;
             var superblock01 = superblock as Superblock01;
 
             if (superblock01 != null)
             {
-                var nullableObjectHeader = superblock01.RootGroupSymbolTableEntry.ObjectHeader;
-
-                if (nullableObjectHeader == null)
-                    throw new Exception("The root group object header is not allocated.");
-
-                objectHeader = nullableObjectHeader;
+                address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
             }
             else
             {
                 var superblock23 = superblock as Superblock23;
 
                 if (superblock23 != null)
-                    objectHeader = superblock23.RootGroupObjectHeader;
+                    address = superblock23.RootGroupObjectHeaderAddress;
                 else
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
             }
 
-            return new H5File(reader, superblock, objectHeader, filePath, deleteOnClose);
-        }
 
-        public H5Link Get(ulong reference)
-        {
-            try
-            {
-                this.Reader.Seek((long)reference, SeekOrigin.Begin);
-                var objectHeader = ObjectHeader.Construct(this.Reader, this.Superblock);
+            reader.Seek((long)address, SeekOrigin.Begin);
+            var context = new H5Context(reader, superblock);
+            var header = ObjectHeader.Construct(context);
 
-#error How did they get the link name? recusively? (https://docs.h5py.org/en/stable/refs.html)
-                return this.InstantiateUncachedLink(string.Empty, objectHeader);
-            }
-            catch
-            {
-                throw new Exception($"Unable to dereference object with reference '{reference}'.");
-            }
+            var file = new H5File(context, default, header, filePath, deleteOnClose);
+            var reference = new H5NamedReference("/", address, file);
+            file.Reference = reference;
+
+            return file;
         }
 
         public void Dispose()
         {
-            H5Cache.Clear(this.Superblock);
-            this.Reader.Dispose();
+            H5Cache.Clear(this.Context.Superblock);
+            this.Context.Reader.Dispose();
 
             if (_deleteOnClose && System.IO.File.Exists(this.Path))
             {

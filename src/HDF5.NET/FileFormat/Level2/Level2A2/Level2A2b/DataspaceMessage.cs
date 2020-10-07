@@ -15,29 +15,38 @@ namespace HDF5.NET
         public DataspaceMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             this.Version = reader.ReadByte();
-            this.Dimensionality = reader.ReadByte();
-            this.Flags = (DataspaceMessageFlags)reader.ReadByte();
+            this.Rank = reader.ReadByte();
+            var flags = (DataspaceMessageFlags)reader.ReadByte();
 
             if (this.Version == 1)
-                reader.ReadBytes(5); 
-            else if (this.Version == 2)
-                this.Flags = (DataspaceMessageFlags)reader.ReadByte();
+            {
+                if (this.Rank > 0)
+                    this.Type = DataspaceType.Simple;
+                else
+                    this.Type = DataspaceType.Scalar;
 
-            this.DimensionSizes = new ulong[this.Dimensionality];
+                reader.ReadBytes(5);
+            }
+            else
+            {
+                this.Type = (DataspaceType)reader.ReadByte();
+            }
 
-            var dimensionMaxSizesArePresent = this.Flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes);
-            var permutationIndicesArePresent = this.Flags.HasFlag(DataspaceMessageFlags.PermuationIndices);
+            this.DimensionSizes = new ulong[this.Rank];
 
-            for (int i = 0; i < this.Dimensionality; i++)
+            var dimensionMaxSizesArePresent = flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes);
+            var permutationIndicesArePresent = flags.HasFlag(DataspaceMessageFlags.PermuationIndices);
+
+            for (int i = 0; i < this.Rank; i++)
             {
                 this.DimensionSizes[i] = superblock.ReadLength(reader);
             }
 
             if (dimensionMaxSizesArePresent)
             {
-                this.DimensionMaxSizes = new ulong[this.Dimensionality];
+                this.DimensionMaxSizes = new ulong[this.Rank];
                 
-                for (int i = 0; i < this.Dimensionality; i++)
+                for (int i = 0; i < this.Rank; i++)
                 {
                     this.DimensionMaxSizes[i] = superblock.ReadLength(reader);
                 }
@@ -45,9 +54,9 @@ namespace HDF5.NET
 
             if (permutationIndicesArePresent)
             {
-                this.PermutationIndices = new ulong[this.Dimensionality];
+                this.PermutationIndices = new ulong[this.Rank];
 
-                for (int i = 0; i < this.Dimensionality; i++)
+                for (int i = 0; i < this.Rank; i++)
                 {
                     this.PermutationIndices[i] = superblock.ReadLength(reader);
                 }
@@ -73,9 +82,8 @@ namespace HDF5.NET
             }
         }
 
-        public byte Dimensionality { get; set; }
-        public DataspaceMessageFlags Flags { get; set; }
-        public DataspaceMessageType Type { get; set; }
+        public byte Rank { get; set; }
+        public DataspaceType Type { get; set; }
         public ulong[] DimensionSizes { get; set; }
         public ulong[]? DimensionMaxSizes { get; set; }
         public ulong[]? PermutationIndices { get; set; }

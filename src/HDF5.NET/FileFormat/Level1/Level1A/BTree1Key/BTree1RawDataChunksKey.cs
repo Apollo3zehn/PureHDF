@@ -4,14 +4,14 @@
     {
         #region Constructors
 
-        public BTree1RawDataChunksKey(H5BinaryReader reader, byte dimensionality)
+        public BTree1RawDataChunksKey(H5BinaryReader reader, byte rank)
         {
             this.ChunkSize = reader.ReadUInt32();
             this.FilterMask = reader.ReadUInt32();
 
-            this.ChunkOffsets = new ulong[dimensionality + 1];
+            this.ChunkOffsets = new ulong[rank + 1];
 
-            for (byte i = 0; i < dimensionality + 1; i++)
+            for (byte i = 0; i < rank + 1; i++)
             {
                 this.ChunkOffsets[i] = reader.ReadUInt64();
             }

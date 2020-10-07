@@ -1,4 +1,4 @@
-**Project is not yet released because support for reading partial datasets (hyperslabs) and support for virtual datasets still missing.**
+**Project is not yet released because support for reading partial datasets (hyperslabs), virtual datasets and region references (IV.B. Disk Format: Level 2B) is still missing.**
 
 # HDF5.NET
 
@@ -8,14 +8,14 @@ A pure C# library that makes reading of HDF5 files (groups, datasets, attributes
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html)
 
-## 1. Links
+## 1. Objects
 
 ```cs
 // open HDF5 file, the returned H5File instance represents the root group ('/')
 using var root = H5File.Open(<TODO: improve signature>);
 ```
 
-### 1.1 Get Link
+### 1.1 Get Object
 #### Group
 
 ```cs
@@ -41,21 +41,12 @@ var dataset = group.Dataset("/my/nested/group/myDataset");
 var commitedDatatype = group.CommitedDatatype("myCommitedDatatype");
 ```
 
-#### Any Link Type
+#### Any Object Type
 When you do not know what kind of link to expect at a given path, use the following code:
 
 ```cs
-// get H5Link (base class of all link types)
-var link = group.Get("/path/to/unknown/link");
-```
-
-#### Symbolic Link
-
-If you do not want the library to transparently follow a link but instead get the link itself, use the following:
-
-```cs
-// hard link, soft link or external file link
-var symbolicLink = group.SymbolicLink("mySymbolicLink");
+// get H5Object (base class of all HDF5 object types)
+var myH5Object = group.Get("/path/to/unknown/object");
 ```
 
 ### 1.2 Additional Info
@@ -72,7 +63,7 @@ You can either set an environment variable:
 Or you can pass the prefix as an overload parameter:
 
 ```cs
-var linkAccess = new H5LinkAccessPropertyList() 
+var linkAccess = new H5LinkAccessProperties() 
 {
     ExternalFilePrefix = prefix 
 }
@@ -100,7 +91,7 @@ foreach (var link in group.Children)
 }
 ```
 
-An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed. Section [Accessing Symbolic Links](#Accessing-Symbolic-Links) describes how to get the symbolic link itself instead of its target.
+An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
 
 ## 2. Attributes
 
@@ -118,60 +109,84 @@ The following code samples work for datasets as well as attributes.
 
 ```cs
 // class: fixed-point
-var data = dataset.Read<int>();
+
+    var data = dataset.Read<int>();
 
 // class: floating-point
-var data = dataset.Read<double>();
+
+    var data = dataset.Read<double>();
 
 // class: string
-var data = dataset.ReadString();
+
+    var data = dataset.ReadString();
 
 // class: bitfield
-[Flags]
-enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
-{
-    MainValve_Open          = 0x0001
-    AuxValve_1_Open         = 0x0002
-    AuxValve_2_Open         = 0x0004
-    MainEngine_Ready        = 0x0008
-    FallbackEngine_Ready    = 0x0010
-    // ...
-}
 
-var data = dataset.Read<SystemStatus>();
-var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.MainEngine_Ready);
+    [Flags]
+    enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
+    {
+        MainValve_Open          = 0x0001
+        AuxValve_1_Open         = 0x0002
+        AuxValve_2_Open         = 0x0004
+        MainEngine_Ready        = 0x0008
+        FallbackEngine_Ready    = 0x0010
+        // ...
+    }
+
+    var data = dataset.Read<SystemStatus>();
+    var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.MainEngine_Ready);
 
 // class: opaque
-var data = dataset.Read<byte>();
-var data = dataset.Read<MyOpaqueStruct>();
+
+    var data = dataset.Read<byte>();
+    var data = dataset.Read<MyOpaqueStruct>();
 
 // class: compound
-var data = dataset.Read<MyNonNullableStruct>();      /* option 1 */
-var data = dataset.ReadCompound<MyNullableStruct>(); /* option 2 */
+
+    /* option 1 (faster) */
+    var data = dataset.Read<MyNonNullableStruct>();
+    /* option 2 (slower, for more info see the link below after this code block) */
+    var data = dataset.ReadCompound<MyNullableStruct>();
 
 // class: reference
-var data = dataset.Read<ulong>();
-var firstLink = root.Get(data.First());
+
+    var data = dataset.Read<H5ObjectReference>();
+    var firstRef = data.First();
+
+    /* NOTE: Dereferencing would be quite fast if the object's name
+     * was known. Instead, the library searches recursively for the  
+     * object. Do not dereference using a parent (group) that contains
+     * any circular soft links. Hard links are no problem.
+     */
+
+    /* option 1 (faster) */
+    var firstObject = directParent.Get(firstRef);
+
+    /* option 1 (slower, use if you don't know the objects parent) */
+    var firstObject = root.Get(firstRef);
 
 // class: enumerated
-enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
-{
-    MyValue1 = 1,
-    MyValue2 = 2,
-    // ...
-}
 
-var data = dataset.Read<MyEnum>();
+    enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
+    {
+        MyValue1 = 1,
+        MyValue2 = 2,
+        // ...
+    }
+
+    var data = dataset.Read<MyEnum>();
 
 // class: variable length
-var data = dataset.ReadString();
+
+    var data = dataset.ReadString();
 
 // class: array
-var data = dataset
-    .Read<int>()
-    /* dataset dims = int[2, 3] */
-    /*   array dims = int[4, 5] */
-    .ToArray4D(2, 3, 4, 5);
+
+    var data = dataset
+        .Read<int>()
+        /* dataset dims = int[2, 3] */
+        /*   array dims = int[4, 5] */
+        .ToArray4D(2, 3, 4, 5);
 
 // class: time
 // -> not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)

@@ -12,30 +12,30 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader1(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        internal ObjectHeader1(H5Context context, byte version) : base(context.Reader)
         {
             // version
             this.Version = version;
 
             // reserved
-            reader.ReadByte();
+            context.Reader.ReadByte();
 
             // header messages count
-            this.HeaderMessagesCount = reader.ReadUInt16();
+            this.HeaderMessagesCount = context.Reader.ReadUInt16();
 
             // object reference count
-            this.ObjectReferenceCount = reader.ReadUInt32();
+            this.ObjectReferenceCount = context.Reader.ReadUInt32();
 
             // object header size
-            this.ObjectHeaderSize = reader.ReadUInt32();
+            this.ObjectHeaderSize = context.Reader.ReadUInt32();
 
             // header messages
 
             // read padding bytes that align the following message to an 8 byte boundary
             if (this.ObjectHeaderSize > 0)
-                reader.ReadBytes(4);
+                context.Reader.ReadBytes(4);
 
-            var messages = this.ReadHeaderMessages(reader, superblock, this.ObjectHeaderSize, 1);
+            var messages = this.ReadHeaderMessages(context, this.ObjectHeaderSize, 1);
             this.HeaderMessages.AddRange(messages);
         }
 

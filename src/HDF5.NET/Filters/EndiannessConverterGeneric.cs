@@ -5,9 +5,16 @@ namespace HDF5.NET
 {
     public static class EndiannessConverterGeneric
     {
-        public static unsafe void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
+        public unsafe static void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
         {
-#warning Only the generic algorithm requires a different destination buffer.
+            // Actually, only the generic algorithm requires a dedicated destination buffer.
+            // Problem: If new buffer is created in this method, hardware accelerated methods
+            // won't know about that new buffer. If instead new buffer is created in unsafe
+            // overload below, the newly created pointer would be lost. Returning new buffer
+            // as simple return values would be possible, but requires a copy operation
+            // from source to new destination in the hardware accelerated implementions
+            // when they hand over control to the generic algorithm.
+            // Concluding, it is easier to work with independet source and destination buffers.
             fixed (byte* src = source, dest = destination)
             {
                 EndiannessConverterGeneric.Convert(bytesOfType, 0, source.Length, src, dest);

@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public class ObjectHeaderSharedMessageRecord : SharedMessageRecord
     {
@@ -41,15 +39,6 @@ namespace HDF5.NET
         public HeaderMessageType MessageType { get; set; }
         public ushort CreationIndex { get; set; }
         public ulong ObjectHeaderAddress { get; set; }
-
-        public ObjectHeader ObjectHeader
-        {
-            get
-            {
-                this.Reader.Seek((long)this.ObjectHeaderAddress, SeekOrigin.Begin);
-                return ObjectHeader.Construct(this.Reader, _superblock);
-            }
-        }
 
         #endregion
     }

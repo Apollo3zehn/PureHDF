@@ -106,22 +106,7 @@ namespace HDF5.NET.Tests
                 }
             }
 
-            TestData.AttributeNumericalData = new List<object[]>
-            {
-                new object[] { "A1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
-                new object[] { "A2", new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
-                new object[] { "A3", new uint[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
-                new object[] { "A4", new ulong[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
-                new object[] { "A5", new sbyte[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
-                new object[] { "A6", new short[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
-                new object[] { "A7", new int[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
-                new object[] { "A8", new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
-                new object[] { "A9", new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 } },
-                new object[] {"A10", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 } },
-                new object[] {"A11", TestData.EnumData },
-            };
-
-            TestData.DatasetNumericalData = new List<object[]>
+            TestData.NumericalData = new List<object[]>
             {
                 new object[] { "D1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
                 new object[] { "D2", new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
@@ -148,9 +133,7 @@ namespace HDF5.NET.Tests
         public static TestBitfield[] BitfieldData { get; }
         public static int[,,,] ArrayData { get; }
 
-        public static IList<object[]> AttributeNumericalData { get; }
-
-        public static IList<object[]> DatasetNumericalData { get; }
+        public static IList<object[]> NumericalData { get; }
 
         public static TestStructL1[] NonNullableStructData { get; }
 
