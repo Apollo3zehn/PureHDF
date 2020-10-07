@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-    <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.final" />
+    <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update1.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.611" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
