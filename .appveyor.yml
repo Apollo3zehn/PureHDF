@@ -28,7 +28,6 @@ build_script:
 - ps: dotnet build ./src/HDF5.NET/HDF5.NET.csproj -c $Env:CONFIGURATION /p:Build=$Env:APPVEYOR_BUILD_NUMBER /p:IsFinalBuild=$Env:APPVEYOR_REPO_TAG
 
 test_script:
-- ps: dotnet msbuild -target:DownloadContentFiles /p:Configuration=$Env:CONFIGURATION ./tests/HDF5.NET.Tests/HDF5.NET.Tests.csproj
 - ps: dotnet test ./tests/HDF5.NET.Tests -c $Env:CONFIGURATION /p:BuildProjectReferences=false
 
 artifacts:
