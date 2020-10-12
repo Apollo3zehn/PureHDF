@@ -63,9 +63,9 @@ You can either set an environment variable:
 Or you can pass the prefix as an overload parameter:
 
 ```cs
-var linkAccess = new H5LinkAccessProperties() 
+var linkAccess = new H5LinkAccess() 
 {
-    ExternalFilePrefix = prefix 
+    ExternalLinkPrefix = prefix 
 }
 
 var dataset = group.Dataset(path, linkAccess);
