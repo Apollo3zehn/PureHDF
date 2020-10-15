@@ -193,8 +193,45 @@ namespace HDF5.NET
             }
         }
 
+#warning Use this instead of SpanExtensions!
+        // https://docs.microsoft.com/en-us/dotnet/api/system.array?view=netcore-3.1
+        // max array length is 0X7FEFFFFF = int.MaxValue - 1024^2 bytes
+        // max multi dim array length seems to be 0X7FEFFFFF x 2, but not confirmation found
+        private unsafe T ReadCompactMultiDim<T>()
+        {
+            // vllt. einfach eine zweite Read<T> Methode (z.B. ReadMultiDim), 
+            // die keine generic constraint hat (leider), aber T zuerst auf IsArray
+            // geprüft wird
+            // beide Methoden definieren dann ein Lambda, um den Buffer entsprechender
+            // Größe zu erzeugen. Dieser Buffer wird dann gefüllt und kann von der 
+            // jeweiligen Methode mit dem korrekten Typ zurückgegeben werden
+
+            //var a = this.ReadCompactMultiDim<T[,,]>();
+            var type = typeof(T);
+
+            var lengths = new int[] { 100, 200, 10 };
+            var size = lengths.Aggregate(1L, (x, y) => x * y);
+            object[] args = lengths.Cast<object>().ToArray();
+
+            var buffer = (T)Activator.CreateInstance(type, args);
+
+            var handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
+            try
+            {
+                var span = new Span<byte>(handle.AddrOfPinnedObject().ToPointer(), (int)size);
+                span.Fill(0x25);
+                return buffer;
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
         private T[] ReadCompact<T>() where T : struct
         {
+            var a = this.ReadCompactMultiDim<T[,,]>();
+
             byte[] buffer;
 
             if (this.DataLayout is DataLayoutMessage12 layout12)
