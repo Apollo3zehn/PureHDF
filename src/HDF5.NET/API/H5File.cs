@@ -47,7 +47,15 @@ namespace HDF5.NET
                 throw new Exception("This library only works on little endian systems.");
 
             var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
-            var reader = new H5BinaryReader(System.IO.File.Open(absoluteFilePath, mode, fileAccess, fileShare));
+            var stream = System.IO.File.Open(absoluteFilePath, mode, fileAccess, fileShare);
+
+            return H5File.Open(stream, absoluteFilePath, deleteOnClose);
+        }
+
+#warning Stream + filepath does not make sense. Improve constructors generally.
+        public static H5File Open(Stream stream, string absoluteFilePath, bool deleteOnClose)
+        {
+            var reader = new H5BinaryReader(stream);
 
             // superblock
             int stepSize = 512;
@@ -99,7 +107,7 @@ namespace HDF5.NET
             var context = new H5Context(reader, superblock);
             var header = ObjectHeader.Construct(context);
 
-            var file = new H5File(context, default, header, filePath, deleteOnClose);
+            var file = new H5File(context, default, header, absoluteFilePath, deleteOnClose);
             var reference = new H5NamedReference("/", address, file);
             file.Reference = reference;
 

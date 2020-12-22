@@ -1,4 +1,4 @@
-﻿#if NETCOREAPP3_0
+﻿#if NET5_0
 
 using System;
 using System.Runtime.Intrinsics;

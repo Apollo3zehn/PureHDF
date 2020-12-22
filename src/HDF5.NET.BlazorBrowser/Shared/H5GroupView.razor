@@ -1,0 +1,39 @@
+﻿@if (this.Group is not null)
+{
+    <MatNavSubMenu Expanded="true">
+        <MatNavSubMenuHeader>
+            <MatNavItem AllowSelection="false"><MatIcon Icon="@MatIconNames.Insert_drive_file"></MatIcon>&nbsp; @this.Group.Name</MatNavItem>
+        </MatNavSubMenuHeader>
+        <MatNavSubMenuList>
+            <Virtualize Items="@this.Group.Children.ToList()" Context="h5Object">
+                @if (h5Object.GetType() == typeof(H5Group))
+                {
+                    <H5GroupView Group="(H5Group)h5Object"></H5GroupView>
+                }
+                else if (h5Object.GetType() == typeof(H5Dataset))
+                {
+                    <MatNavItem>
+                        <span><MatIcon Icon="@MatIconNames.Bar_chart"></MatIcon>&nbsp; @h5Object.Name</span>
+                    </MatNavItem>
+                }
+                else if (h5Object.GetType() == typeof(H5CommitedDatatype))
+                {
+                    <MatNavItem>
+                        <span><MatIcon Icon="@MatIconNames.Merge_type"></MatIcon>&nbsp; @h5Object.Name</span>
+                    </MatNavItem>
+                }
+                else if (h5Object.GetType() == typeof(H5UnresolvedLink))
+                {
+                    <MatNavItem>
+                        <span><MatIcon Icon="@MatIconNames.Link"></MatIcon>&nbsp; @h5Object.Name</span>
+                    </MatNavItem>
+                }
+            </Virtualize>
+        </MatNavSubMenuList>
+    </MatNavSubMenu>
+}
+
+@code{
+    [Parameter]
+    public H5Group Group { get; set; }
+}

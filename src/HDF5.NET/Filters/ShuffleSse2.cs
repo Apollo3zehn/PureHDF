@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
 
-#if NETCOREAPP3_0
+#if NET5_0
 
 using System;
 using System.Runtime.Intrinsics;
