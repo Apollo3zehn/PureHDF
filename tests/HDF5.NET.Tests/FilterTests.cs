@@ -79,6 +79,11 @@ namespace HDF5.NET.Tests.Reading
             }
         }
 
+        public void CanDefilterBZip2(string datasetName, bool shouldSuccess)
+        {
+#error Implement test.
+        }
+
         [Fact]
         public void CanDefilterFletcher()
         {

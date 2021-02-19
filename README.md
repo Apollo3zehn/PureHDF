@@ -226,14 +226,15 @@ public static Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] paramete
 ```
 
 ### Tested External Filters
-- c-blosc2 (using [Blosc2.PInvoke](blosc2.pinvoke))
+- c-blosc2 (using [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke))
+- bzip2 (using [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
 ### How to use Blosc / Blosc2
 (1) Install the P/Invoke package:
 
 `dotnet package add Blosc2.PInvoke`
 
-(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/dev/tests/HDF5.NET.Tests/BloscHelper.cs#L9-L75) to your code.
+(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/BloscHelper.cs) to your code.
 
 (3) Register Blosc:
 
@@ -242,6 +243,22 @@ public static Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] paramete
      identifier: (FilterIdentifier)32001, 
      name: "blosc2", 
      filterFunc: BloscHelper.FilterFunc);
+```
+
+### How to use BZip2
+(1) Install the SharpZipLib package:
+
+`dotnet package add SharpZipLib`
+
+(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/BZip2Helper.cs) to your code.
+
+(3) Register BZip2:
+
+```cs
+ H5Filter.Register(
+     identifier: (FilterIdentifier)307, 
+     name: "bzip2", 
+     filterFunc: BZip2Helper.FilterFunc);
 ```
 
 ## 5. Advanced Scenarios
