@@ -398,7 +398,9 @@ namespace HDF5.NET
             var btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.Context.Reader, this.Context.Superblock, decodeKey);
             var nodes = btree1.EnumerateNodes().ToList();
             var childAddresses = nodes.SelectMany(key => key.ChildAddresses).ToArray();
-            var keys = nodes.SelectMany(key => key.Keys).ToArray();
+
+            // get keys (but always ignore last key)
+            var keys = nodes.SelectMany(key => key.Keys[..^1]).ToArray();
 
             // read data
             var offset = 0UL;
