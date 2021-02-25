@@ -223,6 +223,19 @@ namespace HDF5.NET.Tests
             res = H5P.close(dcpl_id);
         }
 
+        public static unsafe void AddChunkedDatasetForHyperslab(long fileId)
+        {
+            long res;
+
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            var dims = new ulong[] { 2, 3, 6 };
+
+            res = H5P.set_chunk(dcpl_id, 3, new ulong[] { 1, 2, 3 });
+
+            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "hyperslab", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            res = H5P.close(dcpl_id);
+        }
+
         public static unsafe void AddChunkedDataset_Legacy(long fileId, bool withShuffle)
         {
             long res;
