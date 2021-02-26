@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,9 +21,37 @@ namespace HDF5.NET
                 throw new Exception($"The actual signature '{actualString}' does not match the expected signature '{expectedString}'.");
         }
 
+        // from https://stackoverflow.com/questions/4423838/cartesian-product-n-x-m-dynamic-array
+        public static IEnumerable<IEnumerable<T>> CartesianProduct<T>(this IEnumerable<IEnumerable<T>> sequences)
+        {
+            IEnumerable<IEnumerable<T>> emptyProduct = new[] 
+            {
+                Enumerable.Empty<T>() 
+            };
+
+            return sequences.Aggregate(
+                emptyProduct,
+                (accumulator, sequence) =>
+                    from accseq in accumulator
+                    from item in sequence
+                    select accseq.Concat(new[] { item }));
+        }
+
         public static bool IsPowerOfTwo(ulong x)
         {
             return (x != 0) && ((x & (x - 1)) == 0);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong FloorDiv(ulong x, ulong y)
+        {
+            return x / y;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CeilDiv(ulong x, ulong y)
+        {
+            return x % y == 0 ? x / y : x / y + 1;
         }
 
         public static ulong FindMinByteCount(ulong value)
