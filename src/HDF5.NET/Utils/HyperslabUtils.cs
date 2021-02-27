@@ -60,77 +60,77 @@ namespace HDF5.NET
 
             foreach (var chunkProjections in H5Utils.CartesianProduct(allProjections))
             {
-                HyperslabUtils.CopyChunkData(copyInfo, dimension: 0, sourceStarts, targetStarts, chunkProjections.ToArray());
+                HyperslabUtils.ProcessProjections(copyInfo, dimension: 0, sourceStarts, targetStarts, chunkProjections.ToArray());
             }
         }
 
-        private static void CopyChunkData(CopyInfo copyInfo, int dimension, ulong[] sourceStarts, ulong[] targetStarts, SliceProjection[] chunkProjections)
+        private static void ProcessProjections(CopyInfo copyInfo, int dimension, ulong[] sourceStarts, ulong[] targetStarts, SliceProjection[] chunkProjections)
         {
-            // go deeper (only until second last dimension to avoid too many function calls)
+            // This method is called recursively until source and target
+            // starts array is filled. Then the actual data are copied.
+
+            var projection = chunkProjections[dimension];
+            sourceStarts[dimension] = projection.ChunkSlice.Start;
+            targetStarts[dimension] = projection.MemorySlice.Start;
+
+            // track progress for all except the last dimension
             if (dimension < copyInfo.Rank - 1)
             {
-                var projection = chunkProjections[dimension];
-                var sourceStart = projection.ChunkSlice.Start;
-                var targetStart = projection.MemorySlice.Start;
-
-                for (ulong i = 0; i < projection.MemorySlice.Length; i++)
+                for (ulong i = 0; i < projection.ChunkSlice.Length; i++)
                 {
-                    sourceStarts[dimension] = sourceStart;
-                    targetStarts[dimension] = targetStart;
-                    HyperslabUtils.CopyChunkData(copyInfo, dimension + 1, sourceStarts, targetStarts, chunkProjections);
-                    sourceStart += projection.ChunkSlice.Stride;
-                    targetStart += projection.MemorySlice.Stride;
+                    HyperslabUtils.ProcessProjections(copyInfo, dimension + 1, sourceStarts, targetStarts, chunkProjections);
+                    sourceStarts[dimension] += projection.ChunkSlice.Stride;
+                    targetStarts[dimension] += projection.MemorySlice.Stride;
                 }
             }
-            // copy
+            // copy data
             else
             {
-#warning necessary because loop above ends early .. 
-                var projection = chunkProjections[copyInfo.Rank - 1];
-                sourceStarts[copyInfo.Rank - 1] = projection.ChunkSlice.Start;
-                targetStarts[copyInfo.Rank - 1] = projection.MemorySlice.Start;
+                HyperslabUtils.CopyChunkData(copyInfo, sourceStarts, targetStarts, chunkProjections);
+            }
+        }
 
-                // linear indices
-                var chunkIndex = 0UL;
-                var sourceOffset = 0UL;
-                var targetOffset = 0UL;
+        private static void CopyChunkData(CopyInfo copyInfo, ulong[] sourceStarts, ulong[] targetStarts, SliceProjection[] chunkProjections)
+        {
+            // linear indices
+            var chunkIndex = 0UL;
+            var sourceOffset = 0UL;
+            var targetOffset = 0UL;
 
-                for (int i = 0; i < copyInfo.Rank; i++)
-                {
+            for (int i = 0; i < copyInfo.Rank; i++)
+            {
 #warning pull chunkIndex calculation out of this function
-                    chunkIndex = chunkIndex * copyInfo.NormalizedDatasetDims[i] + chunkProjections[i].ChunkIndex;
-                    sourceOffset = sourceOffset * copyInfo.ChunkDims[i] + sourceStarts[i];
-                    targetOffset = targetOffset * copyInfo.ChunkDims[i] + targetStarts[i];
-                }
+                chunkIndex = chunkIndex * copyInfo.NormalizedDatasetDims[i] + chunkProjections[i].ChunkIndex;
+                sourceOffset = sourceOffset * copyInfo.ChunkDims[i] + sourceStarts[i];
+                targetOffset = targetOffset * copyInfo.ChunkDims[i] + targetStarts[i];
+            }
 
-                // find chunk and last projection
-                var chunk = copyInfo
-                    .Chunks[chunkIndex];
+            // find chunk and last projection
+            var chunk = copyInfo.Chunks[chunkIndex];
+            var lastProjection = chunkProjections.Last();
 
-                var lastProjection = chunkProjections.Last();
+            // bulk copy
+            if (lastProjection.ChunkSlice.Stride == 1 
+             && lastProjection.MemorySlice.Stride == 1)
+            {
+                var length = lastProjection.MemorySlice.Length;
+                var source = chunk.Slice((int)sourceOffset * copyInfo.TypeSize, (int)length * copyInfo.TypeSize);
+                var target = copyInfo.Target.Slice((int)targetOffset * copyInfo.TypeSize);
 
-                // bulk copy
-                if (lastProjection.ChunkSlice.Stride == 1)
+                source.CopyTo(target);
+            }
+            // for loop
+            else
+            {
+                var currentSourceOffset = sourceOffset;
+                var target = copyInfo.Target.Slice((int)targetOffset);
+
+                for (ulong i = 0; i < lastProjection.MemorySlice.Length; i++)
                 {
-                    var length = lastProjection.MemorySlice.Length;
-                    var source = chunk.Slice((int)sourceOffset * copyInfo.TypeSize, (int)length * copyInfo.TypeSize);
-                    var target = copyInfo.Target.Slice((int)targetOffset * copyInfo.TypeSize);
-
+                    var source = chunk.Slice((int)currentSourceOffset * copyInfo.TypeSize, copyInfo.TypeSize);
                     source.CopyTo(target);
-                }
-                // for loop
-                else
-                {
-                    var currentSourceOffset = sourceOffset;
-                    var target = copyInfo.Target.Slice((int)targetOffset);
-
-                    for (ulong i = 0; i < lastProjection.MemorySlice.Length; i++)
-                    {
-                        var source = chunk.Slice((int)currentSourceOffset * copyInfo.TypeSize, copyInfo.TypeSize);
-                        source.CopyTo(target);
-                        target = target.Slice(copyInfo.TypeSize);
-                        currentSourceOffset += lastProjection.ChunkSlice.Stride;
-                    }
+                    target = target.Slice(copyInfo.TypeSize);
+                    currentSourceOffset += lastProjection.ChunkSlice.Stride;
                 }
             }
         }
