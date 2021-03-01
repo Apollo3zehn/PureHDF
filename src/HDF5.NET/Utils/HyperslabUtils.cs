@@ -8,58 +8,37 @@ namespace System.Runtime.CompilerServices
     public record IsExternalInit;
 }
 
-// based on https://github.com/Unidata/netcdf-c/blob/master/libnczarr/zchunking.c
+// see also: https://github.com/Unidata/netcdf-c/blob/master/libnczarr/zchunking.c
 namespace HDF5.NET
 {
-    internal record ChunkRange(ulong Start, ulong Stop);
     internal record SliceProjectionResult(int Dimension, SliceProjection[] SliceProjections);
 
-    internal record Slice
+    internal record Slice(ulong Start, ulong Stop, ulong Stride)
     {
-        public ulong Start { get; set; }
-        public ulong Stop { get; set; }
-        public ulong Stride { get; set; }
-        public ulong Length => H5Utils.CeilDiv(this.Stop - this.Start, this.Stride);
-    }
-
-    internal class SliceProjection
-    {
-        public ulong ChunkIndex { get; set; }
-        public Slice ChunkSlice { get; set; }
-        public Slice MemorySlice { get; set; }
-
-        internal bool Skip { get; set; }
-        internal ulong Last { get; set; }
-        internal ulong Offset { get; set; }
-
-        public override bool Equals(object obj)
+        internal static Slice Create(ulong start, ulong count, ulong stride)
         {
-            var other = obj as SliceProjection;
-
-            if (other != null &&
-                this.ChunkIndex.Equals(other.ChunkIndex) &&
-                this.ChunkSlice.Equals(other.ChunkSlice) &&
-                this.MemorySlice.Equals(other.MemorySlice))
-                return true;
-
-            else
-                return false;
+            var stop = start + count * stride;
+            return new Slice(start, stop, stride);
         }
 
-        public override int GetHashCode()
+        public ulong Count => (this.Stop - this.Start) / this.Stride;
+        public ulong Length => this.Count * this.Stride;
+
+        public void Verify()
         {
-            return 
-                1 * this.ChunkIndex.GetHashCode() +
-                3 * this.ChunkSlice.GetHashCode() +
-                5 * this.MemorySlice.GetHashCode();
+            if (this.Stop < this.Start)
+                throw new Exception("'Start' must be greater or equal to 'Stop'.");
+
+            if (this.Stride == 0)
+                throw new Exception("'Stride' must be greater than zero.");
         }
     }
 
-    internal record HyperslabSettings(int Rank, ulong[] DatasetDims, ulong[] ChunkDims);
+    internal record SliceProjection(ulong ChunkIndex, Slice ChunkSlice, Slice MemorySlice);
+    internal record HyperslabSettings(int Rank, ulong[] DatasetDims, ulong[] ChunkDims, ulong[] MemoryDims);
 
     internal record CopyInfo(int Rank, ulong[] NormalizedDatasetDims, ulong[] ChunkDims, SliceProjectionResult[] SliceProjectionResults, int TypeSize, Memory<byte>[] Chunks, Memory<byte> Target);
 
-#warning everything to (u)int? because chunk size is limited? but target array is not limited .... should work anyway
     internal static class HyperslabUtils
     {
         public static void Copy(CopyInfo copyInfo)
@@ -150,30 +129,31 @@ namespace HDF5.NET
     {
         #region Methods
 
-        public SliceProjectionResult[] ComputeSliceProjections(HyperslabSettings settings, Slice[] slices)
+        public SliceProjectionResult[] ComputeSliceProjections(Slice[] datasetSlices, Slice[] memorySlices, HyperslabSettings settings)
         {
+            var rank = settings.Rank;
+
+            if (settings.ChunkDims.Length != rank ||
+                settings.DatasetDims.Length != rank ||
+                settings.MemoryDims.Length != rank ||
+                datasetSlices.Length != rank)
+                throw new Exception($"The chunk, dataset, memory and slice array dimensions must match the rank of '{rank}'.");
+
             return Enumerable.Range(0, settings.Rank)
                 .Select(dimension =>
                 {
-                    var slice = slices[dimension];
-                    var datasetDim = settings.DatasetDims[dimension];
-                    var chunkDim = settings.ChunkDims[dimension];
+                    var slice = datasetSlices[dimension];
+                    var datasetLength = settings.DatasetDims[dimension];
 
                     // validate input data
-                    this.VerifySlice(slice);
+                    slice.Verify();
 
-                    if (slice.Stop > datasetDim)
+                    if ((slice.Stop - slice.Stride) >= datasetLength)
                         throw new Exception("The slice exceeds the dataset size.");
 
-                    // calculate touched chunk range
-                    var start = H5Utils.FloorDiv(slice.Start, chunkDim);
-                    var stop = H5Utils.CeilDiv(slice.Stop, chunkDim);
-                    var range = new ChunkRange(start, stop);
-
-                    // calculate projections
+                    // compute projections
                     var projections = this
-                        .ComputeProjectionsPerSlice(settings, dimension, slice, range)
-                        .Where(projection => !projection.Skip)
+                        .ComputeProjectionsPerSlice(settings, dimension, slice)
                         .ToArray();
 
                     return new SliceProjectionResult(dimension, projections);
@@ -181,158 +161,89 @@ namespace HDF5.NET
                 .ToArray();
         }
 
-        private void ComputeProjections(HyperslabSettings settings, int dimension, ulong chunkIndex, Slice slice, uint n, SliceProjection[] projections)
+        private SliceProjection[] ComputeProjectionsPerSlice(HyperslabSettings settings, int dimension, Slice datasetSlice)
         {
-            SliceProjection previous = null;
+            // prepare projections list
+            var chunkLength = settings.ChunkDims[dimension];
+            var firstChunk = H5Utils.FloorDiv(datasetSlice.Start, chunkLength);
+            var lastChunk = H5Utils.CeilDiv(datasetSlice.Stop, chunkLength);
+            var count = (int)(lastChunk - firstChunk);
+            var projections = new List<SliceProjection>(capacity: count);
 
-            var datasetDims = settings.DatasetDims[dimension]; /* the dimension length for r'th dimension */
-            var chunkDims = settings.ChunkDims[dimension]; /* the chunk length corresponding to the dimension */
+            // loop over the full range
+            var chunkIndex = firstChunk;
+            var isFirst = true;
 
-            if (projections[n] == null)
-                projections[n] = new SliceProjection();
-
-            var projection = projections[n];
-
-            if (n > 0)
+            while (true)
             {
-                /* Find last non-skipped projection */
-                for (var i = n - 1; i >= 0; i--) /* walk backward */
-                {
-                    if (!projections[i].Skip)
-                    {
-                        previous = projections[i];
-                        break;
-                    }
-                }
+                // get projection
+                var projection = this.ComputeProjection(isFirst, dimension, chunkIndex, datasetSlice, settings);
+                projections.Add(projection);
 
-                if (previous == null)
-                    throw new Exception("Unable to find previous projection.");
+                // determine next chunk
+                var absoluteStop = chunkLength * chunkIndex + projection.ChunkSlice.Stop;
+                var absoluteNext = absoluteStop + datasetSlice.Stride;
+
+                if (absoluteNext > settings.DatasetDims[dimension])
+                    break;
+
+                chunkIndex = H5Utils.FloorDiv(absoluteNext, chunkLength);
+                
+                // clean up
+                isFirst = false;
             }
 
-            projection.ChunkIndex = chunkIndex;
-            projection.Offset = chunkDims * chunkIndex; /* with respect to dimension (WRD) */
+            return projections.ToArray();
+        }
 
-            /* limit in the n'th touched chunk, taking dimlen and stride->stop into account. */
-            var abslimit = (chunkIndex + 1) * chunkDims;
+        // Assumption: It is guaranteed that this chunk contains at least a single point
+        private SliceProjection ComputeProjection(bool isFirst, int dimension, ulong chunkIndex, Slice datasetSlice, HyperslabSettings settings)
+        {
+            var datasetLength = settings.DatasetDims[dimension];
+            var chunkLength = settings.ChunkDims[dimension];
 
-            if (abslimit > slice.Stop) 
-                abslimit = slice.Stop;
+            /* calculate optimized start, i.e position of first point in chunk */
+            ulong optimizedStart;
 
-            if (abslimit > datasetDims) 
-                abslimit = datasetDims;
-
-            var limit = abslimit - projection.Offset;
-
-            /* See if the next point after the last one in prev lands in the current projection.
-            If not, then we have skipped the current chunk. Also take limit into account.
-            Note by definition, n must be greater than zero because we always start in a relevant chunk.
-            */
-
-            ulong ioPos;
-            ulong first;
-
-            if (n == 0)
+            if (isFirst)
             {
-                /* initial case: original slice start is in 1st projection */
-                first = slice.Start - projection.Offset;
-                ioPos = 0;
+                optimizedStart = datasetSlice.Start % chunkLength;
             }
-            else /* n > 0 */
+            else if (datasetSlice.Stride == 1)
             {
-                if (previous == null)
-                    throw new Exception("Unable to find previous projection.");
-
-                /* Use absolute offsets for these computations to avoid negative values */
-                ulong abslastpoint, absnextpoint, absthislast;
-
-                /* abs last point touched in prev projection */
-                abslastpoint = previous.Offset + previous.Last;
-
-                /* Compute the abs last touchable point in this chunk */
-                absthislast = projection.Offset + limit;
-
-                /* Compute next point touched after the last point touched in previous projection;
-                note that the previous projection might be wrt a chunk other than the immediately preceding
-                one (because the intermediate ones were skipped).
-                */
-                absnextpoint = abslastpoint + slice.Stride; /* abs next point to be touched */
-
-                if (absnextpoint >= absthislast)
-                {
-                    /* this chunk is being skipped */
-                    projection.Skip = true;
-                    return;
-                }
-
-                /* Compute start point in this chunk */
-                /* basically absnextpoint - abs start of this projection */
-                first = absnextpoint - projection.Offset;
-
-                /* Compute the memory location of this first point in this chunk */
-                ioPos = H5Utils.CeilDiv(projection.Offset - slice.Start, slice.Stride);
+                optimizedStart = 0;
             }
-
-            ulong stop;
-
-            if (slice.Stop > abslimit)
-                stop = chunkDims;
             else
-                stop = slice.Stop - projection.Offset;
-
-            /* Compute the slice relative to this chunk. Recall the possibility that start + stride >= limit */
-            projection.ChunkSlice = new Slice()
             {
-                Start = first,
-                Stop = stop,
-                Stride = slice.Stride,
-            };
+                var absoluteStart = chunkIndex * chunkLength;
+                var startDistance = absoluteStart - datasetSlice.Start;
+                var consumedStartStride = startDistance % datasetSlice.Stride;
 
-            this.VerifySlice(projection.ChunkSlice);
-
-            /* Last place to be touched */
-            var ioCount = H5Utils.CeilDiv(stop - first, slice.Stride);
-            projection.Last = first + (slice.Stride * (ioCount - 1));
-
-            projection.MemorySlice = new Slice()
-            {
-                Start = ioPos,
-                Stop = ioPos + ioCount,
-                Stride = 1,
-            };
-
-            this.VerifySlice(projection.MemorySlice);
-        }
-
-        private SliceProjection[] ComputeProjectionsPerSlice(HyperslabSettings settings, int dimension, Slice slice, ChunkRange range)
-        {
-            /* Part fill the Slice Projections */
-            var count = (uint)(range.Stop - range.Start);
-            var projections = new SliceProjection[count];
-
-            /* Iterate over each chunk that intersects slice to produce projection */
-            uint n;
-            ulong chunkIndex;
-
-            for (n = 0, chunkIndex = range.Start; chunkIndex < range.Stop; chunkIndex++, n++)
-            {
-                this.ComputeProjections(settings, dimension, chunkIndex, slice, n, projections);
+                optimizedStart = (datasetSlice.Stride - consumedStartStride) % datasetSlice.Stride;
             }
 
-            return projections;
-        }
+            /* calculate optimized stop, i.e. position of last point in chunk + 1 */
+            var absoluteStop = Math.Min((chunkIndex + 1) * chunkLength, datasetLength);
+            var stopDistance = absoluteStop - datasetSlice.Start;
 
-        #endregion
+            var consumedStopStride = stopDistance % datasetSlice.Stride;
 
-        #region Utils
+            if (consumedStopStride == 0)
+                consumedStopStride = datasetSlice.Stride;
 
-        private void VerifySlice(Slice slice)
-        {
-            if (slice.Stop < slice.Start)
-                throw new Exception("'Slice.Start' must be greater or equal to 'slice.Stop'.");
+            var relativeStop = absoluteStop % chunkLength;
 
-            if (slice.Stride == 0)
-                throw new Exception("'Slice.Stride' must be greater than zero.");
-        }
+            if (relativeStop == 0)
+                relativeStop = chunkLength;
+
+            var optimizedStop = relativeStop - consumedStopStride + 1;
+
+            /* collect & return */
+            var chunkSlice = new Slice(optimizedStart, optimizedStop, datasetSlice.Stride);
+            var memorySlice = new Slice(0, 0, 0);
+
+            return new SliceProjection(chunkIndex, chunkSlice, memorySlice);
+        }      
 
         #endregion
     }
