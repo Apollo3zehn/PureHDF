@@ -8,335 +8,181 @@ namespace System.Runtime.CompilerServices
     public record IsExternalInit;
 }
 
-// see also: https://github.com/Unidata/netcdf-c/blob/master/libnczarr/zchunking.c
 namespace HDF5.NET
 {
-    internal record SliceProjectionResult(int Dimension, SliceProjection[] SliceProjections);
-    internal record SliceProjection(ulong ChunkIndex, Slice ChunkSlice);
-
     internal record CopyInfo
         (int Rank, 
-        SliceProjectionResult[] SliceProjectionResults, 
-        Slice[] DatasetSlices,
-        Slice[] MemorySlices,
-        ulong[] DatasetDims,
-        ulong[] ChunkDims,
-        ulong[] MemoryDims,
-        Memory<byte>[] ChunkBuffers,
-        Memory<byte> MemoryBuffer,
+        ulong[] SourceDims,
+        ulong[] SourceChunkDims,
+        ulong[] TargetDims,
+        ulong[] TargetChunkDims,
+        HyperslabSelection SourceSelection,
+        HyperslabSelection TargetSelection,
+        Memory<byte>[] SourceBuffers,
+        Memory<byte>[] TargetBuffers,
         int TypeSize);
 
-    internal record Slice(ulong Start, ulong Stop, ulong Stride)
+    internal struct Step
     {
-        internal static Slice Create(ulong start, ulong count, ulong stride)
-        {
-            var stop = start + count * stride;
-            return new Slice(start, stop, stride);
-        }
-
-        public ulong Count => H5Utils.CeilDiv(this.Stop - this.Start, this.Stride);
-        public ulong Length => this.Count * this.Stride;
-
-        public void Verify()
-        {
-            if (this.Stop < this.Start)
-                throw new Exception("'Start' must be greater or equal to 'Stop'.");
-
-            if (this.Stride == 0)
-                throw new Exception("'Stride' must be greater than zero.");
-        }
+        public ulong Chunk { get; init; }
+        public ulong Offset { get; init; }
+        public ulong Length { get; init; }
     }
 
     internal static class HyperslabUtils
     {
-        public static SliceProjectionResult[] ComputeSliceProjections(int rank, Slice[] datasetSlices, ulong[] datasetDims, ulong[] chunkDims)
-        {
-            if (chunkDims.Length != rank ||
-                datasetDims.Length != rank ||
-                datasetSlices.Length != rank)
-                throw new Exception($"The chunk, dataset and slice array dimensions be of rank '{rank}'.");
-
-            return Enumerable
-                .Range(0, rank)
-                .Select(dimension =>
-                {
-                    var datasetSlice = datasetSlices[dimension];
-                    var datasetLength = datasetDims[dimension];
-
-                    // validate input data
-                    datasetSlice.Verify();
-
-                    if ((datasetSlice.Stop - datasetSlice.Stride + 1) > datasetLength)
-                        throw new Exception("The slice exceeds the dataset size.");
-
-                    // compute projections
-                    var chunkLength = chunkDims[dimension];
-
-                    var projections = HyperslabUtils
-                        .ComputeProjectionsPerSlice(chunkLength, datasetSlice)
-                        .ToArray();
-
-                    return new SliceProjectionResult(dimension, projections);
-                })
-                .ToArray();
-        }
-
-        private static SliceProjection[] ComputeProjectionsPerSlice(ulong chunkLength, Slice datasetSlice)
-        {
-            // compute absolute last point position
-            var absoluteLast = HyperslabUtils.GetLast(datasetSlice.Start, datasetSlice.Stop, datasetSlice.Stride);
-
-            // compute first chunk, last chunk and prepare projections list
-            var firstChunk = H5Utils.FloorDiv(datasetSlice.Start, chunkLength);
-            var lastChunk = H5Utils.CeilDiv(absoluteLast, chunkLength);
-            var count = (int)(lastChunk - firstChunk);
-            var projections = new List<SliceProjection>(capacity: count);
-
-            // loop over the full range
-            var chunkIndex = firstChunk;
-            var isFirst = true;
-
-            while (true)
-            {
-                // get projection
-                var projection = HyperslabUtils.ComputeProjection(isFirst, datasetSlice, absoluteLast, chunkIndex, chunkLength);
-                projections.Add(projection);
-
-                // determine next chunk
-                var absoluteStop = chunkLength * chunkIndex + projection.ChunkSlice.Stop;
-                var absoluteNext = absoluteStop + datasetSlice.Stride;
-
-                if (absoluteNext > absoluteLast)
-                    break;
-
-                chunkIndex = H5Utils.FloorDiv(absoluteNext, chunkLength);
-
-                // clean up
-                isFirst = false;
-            }
-
-            return projections.ToArray();
-        }
-
-        private static SliceProjection ComputeProjection(bool isFirst, Slice datasetSlice, ulong absoluteLast, ulong chunkIndex, ulong chunkLength)
-        {
-            // Assumption: It is guaranteed that the current chunk contains at least a single point
-
-            /* calculate optimized start, i.e position of first point in chunk */
-            ulong optimizedStart;
-
-            if (isFirst)
-            {
-                optimizedStart = datasetSlice.Start % chunkLength;
-            }
-            else if (datasetSlice.Stride == 1)
-            {
-                optimizedStart = 0;
-            }
-            else
-            {
-                var absoluteStart = chunkIndex * chunkLength;
-                var startDistance = absoluteStart - datasetSlice.Start;
-                var consumedStartStride = startDistance % datasetSlice.Stride;
-
-                optimizedStart = (datasetSlice.Stride - consumedStartStride) % datasetSlice.Stride;
-            }
-
-            /* calculate optimized stop, i.e. position of last point in chunk + 1 */
-            var absoluteStop = Math.Min((chunkIndex + 1) * chunkLength, absoluteLast);
-            var absoluteOptimizedStop = HyperslabUtils.GetLast(datasetSlice.Start, absoluteStop, datasetSlice.Stride);
-            var optimizedStop = absoluteOptimizedStop % chunkLength;
- 
-            if (optimizedStop == 0)
-                optimizedStop = chunkLength;
-
-            /* collect & return */
-            var chunkSlice = new Slice(optimizedStart, optimizedStop, datasetSlice.Stride);
-            return new SliceProjection(chunkIndex, chunkSlice);
-        }
-
-        private static ulong GetLast(ulong start, ulong stop, ulong stride)
-        {
-            var distance = stop - start;
-            var consumedStride = distance % stride;
-
-            if (consumedStride == 0)
-                consumedStride = stride;
-
-            return stop - consumedStride + 1;
-        }
-
         public static void Copy(CopyInfo copyInfo)
         {
-            // validate input data
-            if (copyInfo.SliceProjectionResults.Length != copyInfo.Rank)
-                throw new Exception($"The slice projection results array dimensions must be of rank '{copyInfo.Rank}'");
+            // validate rank
+#warning check what happens if e.g. rank = 0
 
-            if (copyInfo.MemoryBuffer.Length != (int)copyInfo.MemoryDims.Aggregate((ulong)copyInfo.TypeSize, (x, y) => x * y))
-                throw new Exception("Length of memory buffer must match the specified memory dimensions.");
+            if (copyInfo.SourceDims.Length != copyInfo.Rank ||
+                copyInfo.SourceChunkDims.Length != copyInfo.Rank ||
+                copyInfo.TargetDims.Length != copyInfo.Rank ||
+                copyInfo.TargetChunkDims.Length != copyInfo.Rank ||
+                copyInfo.SourceSelection.Rank != copyInfo.Rank ||
+                copyInfo.TargetSelection.Rank != copyInfo.Rank)
+                throw new Exception($"The dimensionality of all arrays must be of rank '{copyInfo.Rank}'");
 
-            var sourceSelectionSize = copyInfo;
+            // validate selections
+            if (copyInfo.SourceSelection.GetTotalCount() != copyInfo.TargetSelection.GetTotalCount())
+                throw new Exception("The length of the source selection and target selection are not equal.");
 
-            // all projections
-            var allProjections = copyInfo.SliceProjectionResults
-                .Select(result => result.SliceProjections);
+            for (int dimension = 0; dimension < copyInfo.Rank; dimension++)
+            {
+                if (copyInfo.SourceSelection.GetStop(dimension) > copyInfo.SourceDims[dimension])
+                    throw new Exception("The source selection size exceeds the limits of the source buffer.");
+
+                if (copyInfo.TargetSelection.GetStop(dimension) > copyInfo.TargetDims[dimension])
+                    throw new Exception("The target selection size exceeds the limits of the target buffer.");
+            }
 
             // memory walker
-            var memoryWalker = HyperslabUtils
-                .Walk(copyInfo.Rank, copyInfo.MemorySlices, copyInfo.MemoryDims)
+            var sourceWalker = HyperslabUtils
+                .Walk(copyInfo.Rank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
                 .GetEnumerator();
 
-            memoryWalker.MoveNext();
+            var targetWalker = HyperslabUtils
+               .Walk(copyInfo.Rank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
+               .GetEnumerator();
 
-            var memorySlice = copyInfo.MemorySlices.Last();
-            var memoryRemaining = memorySlice.Count;
-            var memoryOffset = memoryWalker.Current;
-
-            // normalized dataset dimensions
-            var normalizedDatasetDims = new ulong[3];
-
-            for (ulong i = 0; i < 3; i++)
+            if (sourceWalker.MoveNext() && targetWalker.MoveNext())
             {
-                normalizedDatasetDims[i] = H5Utils.CeilDiv(copyInfo.DatasetDims[i], copyInfo.ChunkDims[i]);
+
             }
 
-            // for each combination
-            foreach (var projections in H5Utils.CartesianProduct(allProjections))
-            {
-                var chunkIndices = projections
-                    .Select(projection => projection.ChunkIndex)
-                    .ToArray();
-
-                var linearChunkIndex = chunkIndices
-                    .ToLinearIndex(normalizedDatasetDims);
-
-                var chunkBuffer = copyInfo
-                    .ChunkBuffers[linearChunkIndex];
-
-                var chunkSlices = projections
-                    .Select(projection => projection.ChunkSlice)
-                    .ToArray();
-
-                var datasetWalker = HyperslabUtils
-                    .Walk(copyInfo.Rank, chunkSlices, copyInfo.ChunkDims);
-
-                HyperslabUtils.ProcessChunk(chunkBuffer, chunkSlices.Last(), datasetWalker,
-                                            copyInfo.MemoryBuffer, memorySlice, memoryWalker,
-                                            ref memoryRemaining,
-                                            ref memoryOffset,
-                                            copyInfo);
-            }
-        }
-
-        private static void ProcessChunk(Memory<byte> chunkBuffer,
-                                         Slice datasetSlice,
-                                         IEnumerable<ulong> datasetWalker,
-                                         Memory<byte> memoryBuffer,
-                                         Slice memorySlice,
-                                         IEnumerator<ulong> memoryWalker,
-                                         ref ulong memoryRemaining,
-                                         ref ulong memoryOffset,
-                                         CopyInfo copyInfo)
-        {
-#warning This method could fail due to Span's int32 limitation.
-
-            var chunkBufferSpan = chunkBuffer.Span;
-            var memoryBufferSpan = memoryBuffer.Span;
-            var bulkCopy = datasetSlice.Stride == 1 && memorySlice.Stride == 1;
-
-            foreach (var datasetBaseOffset in datasetWalker)
-            {
-                var chunkRemaining = datasetSlice.Count;
-                var chunkOffset = datasetBaseOffset;
-
-                while (chunkRemaining > 0)
-                {
-                    var count = Math.Min(chunkRemaining, memoryRemaining);
-
-                    if (bulkCopy)
-                    {
-                        var source = chunkBufferSpan.Slice((int)chunkOffset * copyInfo.TypeSize, (int)count * copyInfo.TypeSize);
-                        var target = memoryBufferSpan.Slice((int)memoryOffset * copyInfo.TypeSize); 
-
-                        source.CopyTo(target);
-
-                        chunkOffset += count;
-                        memoryOffset += count;
-                    }
-                    else
-                    {
-
-#warning Optimzable with intrinsics?
-                        for (int i = 0; i < (int)count; i++)
-                        {
-                            for (int j = 0; j < copyInfo.TypeSize; j++)
-                            {
-                                memoryBufferSpan[(int)memoryOffset * copyInfo.TypeSize + j]
-                                    = chunkBufferSpan[(int)chunkOffset * copyInfo.TypeSize + j];
-                            }
-
-                            chunkOffset += datasetSlice.Stride;
-                            memoryOffset += memorySlice.Stride;
-                        }
-                    }
-
-                    chunkRemaining -= count;
-                    memoryRemaining -= count;
-
-                    if (memoryRemaining == 0)
-                    {
-                        memoryRemaining = memorySlice.Length;
-                        memoryWalker.MoveNext();
-                        memoryOffset = memoryWalker.Current;
-                    }
-                }
-            }
-        }
         
-        public static IEnumerable<ulong> Walk(int rank, Slice[] slices, ulong[] dims)
+        }
+
+        public static IEnumerable<Step> Walk(int rank, ulong[] dims, ulong[] chunkDims, HyperslabSelection selection)
         {
-            // verify data
+            /* prepare some useful arrays */
+            var offsets = new ulong[rank];
+            var stops = new ulong[rank];
+            var strides = new ulong[rank];
+            var blocks = new ulong[rank];
+            var gaps = new ulong[rank];
+            var datasetDimsInChunkUnits = new ulong[rank];
+            var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
+
             for (int dimension = 0; dimension < rank; dimension++)
             {
-                var length = dims[dimension];
-                var slice = slices[dimension];
-                slice.Verify();
-
-                /* This does not work because stop is not always aligned, somtimes it is "optimized stop" which 
-                   might be smaller than the stride length which causes an ulong underflow. */
-                //if ((slice.Stop - slice.Stride) >= length)
-                //    throw new Exception("The slice length exceeds the buffer length.");
+                offsets[dimension] = selection.Starts[dimension];
+                stops[dimension] = selection.GetStop(dimension);
+                strides[dimension] = selection.Strides[dimension];
+                blocks[dimension] = selection.Blocks[dimension];
+                gaps[dimension] = strides[dimension] - blocks[dimension];
+                datasetDimsInChunkUnits[dimension] = H5Utils.CeilDiv(dims[dimension], chunkDims[dimension]);
             }
 
-            // walk
-            var state = new ulong[rank];
-            return InternalWalk(dimension: 0, state, rank, slices, dims);
-        }
+            /* prepare last dimension variables */
+            var lastDimStop = stops[rank - 1];
+            var lastDimBlock = blocks[rank - 1];
+            var lastDimGap = gaps[rank - 1];
+            var lastChunkDim = chunkDims[rank - 1];
+            var supportsBulkCopy = lastDimGap == 0;
 
-        private static IEnumerable<ulong> InternalWalk(int dimension, ulong[] state, int rank, Slice[] slices, ulong[] dims)
-        {
-            // This method is called recursively until state array
-            // is filled. Then the actual data are copied.
-            var slice = slices[dimension];
-            state[dimension] = slice.Start;
-
-            // track progress for all except the last dimension
-            if (dimension < rank - 1)
+            /* loop until all data have been processed */
+            while (true)
             {
-                for (ulong i = 0; i < slice.Count; i++)
+                /* compute number of consecutive points in current slice */
+                ulong totalLength;
+
+                if (supportsBulkCopy)
+                    totalLength = lastDimStop - offsets[rank - 1];
+
+                else
+                    totalLength = lastDimBlock;
+
+                /* with the full length of consecutive points known, here comes the chunk logic: */
                 {
-                    foreach (var index in HyperslabUtils.InternalWalk(dimension + 1, state, rank, slices, dims))
+                    var remaining = totalLength;
+
+                    while (remaining > 0)
                     {
-                        yield return index;
+                        var offsetsInChunkUnits = new ulong[rank];
+                        var chunkOffsets = new ulong[rank];
+
+#warning Optimizable? to not always recalculate chunk data?
+                        for (int dimension = 0; dimension < rank; dimension++)
+                        {
+                            offsetsInChunkUnits[dimension] = offsets[dimension] / chunkDims[dimension];
+                            chunkOffsets[dimension] = offsets[dimension] % chunkDims[dimension];
+                        }
+
+                        var chunk = offsetsInChunkUnits.ToLinearIndex(datasetDimsInChunkUnits);
+                        var offset = chunkOffsets.ToLinearIndex(chunkDims);
+                        var currentLength = Math.Min(lastChunkDim - chunkOffsets[rank - 1], remaining);
+
+                        yield return new Step()
+                        {
+                            Chunk = chunk,
+                            Offset = offset,
+                            Length = currentLength
+                        };
+
+                        remaining -= currentLength;
+                        offsets[rank - 1] += currentLength;
+                    }
+                }
+
+                /* add gap */
+                offsets[rank - 1] += lastDimGap;
+
+                /* iterate backwards through all dimensions */
+                for (int dimension = rank - 1; dimension >= 0; dimension--)
+                {
+                    if (dimension != rank - 1)
+                    {
+                        /* go one step forward */
+                        offsets[dimension] += 1;
+
+                        /* if we have reached a gap, skip that gap */
+                        var consumedStride = (offsets[dimension] - selection.Starts[dimension]) % strides[dimension];
+
+                        if (consumedStride == blocks[dimension])
+                            offsets[dimension] += gaps[dimension];
                     }
 
-                    state[dimension] += slice.Stride;
+                    /* if the current slice is fully processed */
+                    if (offsets[dimension] >= stops[dimension])
+                    {
+                        /* if there is more to process, reset the offset and 
+                         * repeat the loop for the next higher dimension */
+                        if (dimension > 0)
+                            offsets[dimension] = selection.Starts[dimension];
+
+                        /* else, we are done! */
+                        else
+                            yield break;
+                    }
+
+                    /* otherwise, break the loop */
+                    else
+                    {
+                        break;
+                    }
                 }
-            }
-            // return current offset
-            else
-            {
-                yield return state.ToLinearIndex(dims);
             }
         }
 
