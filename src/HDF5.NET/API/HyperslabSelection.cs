@@ -32,7 +32,7 @@ namespace HDF5.NET
         public HyperslabSelection(int rank, ulong[] starts, ulong[] strides, ulong[] counts, ulong[] blocks)
         {
             if (starts.Length != rank || strides.Length != rank || counts.Length != rank || blocks.Length != rank)
-                throw new Exception($"The start, stride, count, and block arrays must be the same size as the rank '{rank}'.");
+                throw new RankException($"The start, stride, count, and block arrays must be the same size as the rank '{rank}'.");
 
             this.Rank = rank;
             this.StartsField = starts.ToArray();
@@ -43,10 +43,10 @@ namespace HDF5.NET
             for (int i = 0; i < this.Rank; i++)
             {
                 if (this.StridesField[i] == 0)
-                    throw new Exception("Stride must be > 0.");
+                    throw new ArgumentException("Stride must be > 0.");
 
                 if (this.StridesField[i] < this.BlocksField[i])
-                    throw new Exception("Stride must be >= block.");
+                    throw new ArgumentException("Stride must be >= block.");
             }
         }
 
@@ -62,11 +62,11 @@ namespace HDF5.NET
 
         public ulong GetTotalCount()
         {
-            var totalCount = 0UL;
+            var totalCount = 1UL;
 
             for (int i = 0; i < this.Rank; i++)
             {
-                totalCount += this.Counts[i] * this.Blocks[i];
+                totalCount *= this.Counts[i] * this.Blocks[i];
             }
 
             return totalCount;
