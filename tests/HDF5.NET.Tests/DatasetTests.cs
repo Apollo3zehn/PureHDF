@@ -60,7 +60,7 @@ namespace HDF5.NET.Tests.Reading
         [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
         public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : struct
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddNumerical((long)fileId, ContainerType.Dataset)));
@@ -72,13 +72,13 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
-            }));
+            });
         }
 
         [Fact]
         public void CanReadDataset_NonNullableStruct()
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
@@ -90,13 +90,13 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
-            }));
+            });
         }
 
         [Fact]
         public void CanReadDataset_NullableStruct()
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
@@ -115,7 +115,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.StringStructData));
-            }));
+            });
         }
 
         // Fixed-length string dataset (UTF8) is not supported because 
@@ -126,7 +126,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("variableUTF8", new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" })]
         public void CanReadDataset_String(string name, string[] expected)
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddString((long)fileId, ContainerType.Dataset)));
@@ -138,13 +138,13 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
-            }));
+            });
         }
 
         [Fact]
         public void CanReadDataset_Bitfield()
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddBitField((long)fileId, ContainerType.Dataset)));
@@ -156,13 +156,13 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.BitfieldData));
-            }));
+            });
         }
 
         [Fact]
         public void CanReadDataset_Opaque()
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddOpaque((long)fileId, ContainerType.Dataset)));
@@ -174,13 +174,13 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(TestData.SmallData));
-            }));
+            });
         }
 
         [Fact]
         public void CanReadDataset_Array()
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddArray((long)fileId, ContainerType.Dataset)));
@@ -197,7 +197,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));
-            }));
+            });
         }
 
         [Fact]
@@ -270,7 +270,7 @@ namespace HDF5.NET.Tests.Reading
         [Fact]
         public void ThrowsForNestedNullableStruct()
         {
-            TestUtils.RunForAllVersions((Action<H5F.libver_t>)(version =>
+            TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
@@ -282,7 +282,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Assert
                 Assert.Contains("Nested nullable fields are not supported.", exception.Message);
-            }));
+            });
         }
 
         [Theory]

@@ -228,9 +228,10 @@ namespace HDF5.NET.Tests
             long res;
 
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            var dims = new ulong[] { 2, 3, 6 };
+            var dims = new ulong[] { 50, 50, 4 };
+            var chunkDims = new ulong[] { 15, 40, 3 };
 
-            res = H5P.set_chunk(dcpl_id, 3, new ulong[] { 1, 2, 3 });
+            res = H5P.set_chunk(dcpl_id, 3, chunkDims);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "hyperslab", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             res = H5P.close(dcpl_id);

@@ -154,33 +154,36 @@ namespace HDF5.NET
             }
         }
 
-        public static void Copy(int rank, CopyInfo copyInfo)
+        public static void Copy(int sourceRank, int targetRank, CopyInfo copyInfo)
         {
             /* validate rank */
-            if (copyInfo.SourceSelection.Rank != rank ||
-                copyInfo.TargetSelection.Rank != rank)
+            if (copyInfo.SourceSelection.Rank != sourceRank ||
+                copyInfo.TargetSelection.Rank != targetRank)
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* validate selections */
             if (copyInfo.SourceSelection.GetTotalCount() != copyInfo.TargetSelection.GetTotalCount())
                 throw new ArgumentException("The length of the source selection and target selection are not equal.");
 
-            for (int dimension = 0; dimension < rank; dimension++)
+            for (int dimension = 0; dimension < sourceRank; dimension++)
             {
                 if (copyInfo.SourceSelection.GetStop(dimension) > copyInfo.SourceDims[dimension])
                     throw new ArgumentException("The source selection size exceeds the limits of the source buffer.");
+            }
 
+            for (int dimension = 0; dimension < targetRank; dimension++)
+            {
                 if (copyInfo.TargetSelection.GetStop(dimension) > copyInfo.TargetDims[dimension])
                     throw new ArgumentException("The target selection size exceeds the limits of the target buffer.");
             }
 
-            /* memory walker */
+            /* walkers */
             var sourceWalker = HyperslabUtils
-                .Walk(rank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
+                .Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
                 .GetEnumerator();
 
             var targetWalker = HyperslabUtils
-               .Walk(rank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
+               .Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
                .GetEnumerator();
 
             /* initialize source walker */

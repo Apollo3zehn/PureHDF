@@ -1,5 +1,7 @@
-﻿using System;
+﻿using HDF.PInvoke;
+using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
@@ -350,7 +352,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            Action action = () => HyperslabUtils.Copy(rank: 2, copyInfo);
+            Action action = () => HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -384,7 +386,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            Action action = () => HyperslabUtils.Copy(rank: 2, copyInfo);
+            Action action = () => HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -429,7 +431,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(rank: 2, copyInfo);
+            HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
         }
@@ -471,7 +473,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(rank: 2, copyInfo);
+            HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert        
         }
@@ -584,7 +586,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(rank: 2, copyInfo);
+            HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -701,7 +703,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(rank: 3, copyInfo);
+            HyperslabUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -829,10 +831,95 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(rank: 3, copyInfo);
+            HyperslabUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Fact]
+        public void CanCopyLikePInvoke()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var datasetDims = new ulong[] { 50, 50, 4 };
+                var chunkDims = new ulong[] { 15, 40, 3 };
+                var memoryDims = new ulong[] { 150, 50 };
+
+                var datasetSelection = new HyperslabSelection(
+                    rank: 3,
+                    starts: new ulong[] { 4, 4, 0 },
+                    strides: new ulong[] { 9, 8, 2 },
+                    counts: new ulong[] { 5, 6, 2 },
+                    blocks: new ulong[] { 6, 5, 2 }
+                );
+
+                var memorySelection = new HyperslabSelection(
+                    rank: 2,
+                    starts: new ulong[] { 2, 1 },
+                    strides: new ulong[] { 70, 17 },
+                    counts: new ulong[] { 2, 2 },
+                    blocks: new ulong[] { 60, 15 }
+                );
+
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetForHyperslab(fileId));
+                var expectedBuffer = new byte[150 * 50 * 4];
+                var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer.AsSpan());
+
+                {
+                    var fileId = H5F.open(filePath, H5F.ACC_RDONLY);
+                    var datasetId = H5D.open(fileId, "/chunked/hyperslab");
+                    
+                    var datasetSpaceId = H5S.create_simple(rank: 3, datasetDims, datasetDims);
+                    var res1 = H5S.select_hyperslab(datasetSpaceId, H5S.seloper_t.SET, 
+                        datasetSelection.Starts.ToArray(), datasetSelection.Strides.ToArray(),
+                        datasetSelection.Counts.ToArray(), datasetSelection.Blocks.ToArray());
+
+                    var memorySpaceId = H5S.create_simple(rank: 2, memoryDims, memoryDims);
+                    var res2 = H5S.select_hyperslab(memorySpaceId, H5S.seloper_t.SET,
+                        memorySelection.Starts.ToArray(), memorySelection.Strides.ToArray(),
+                        memorySelection.Counts.ToArray(), memorySelection.Blocks.ToArray());
+
+                    unsafe
+                    {
+                        fixed (byte* ptr = expectedBuffer)
+                        {
+                            var res3 = H5D.read(datasetId, H5T.NATIVE_INT32, memorySpaceId, datasetSpaceId, 0, new IntPtr(ptr));
+                        }
+                    }
+
+                    H5S.close(memorySpaceId);
+                    H5S.close(datasetSpaceId);
+                    H5D.close(datasetId);
+                    H5F.close(fileId);
+                }
+
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset = root.Dataset("/chunked/hyperslab");
+                var chunkProvider = dataset.CreateChunkProvider();
+
+                var actualBuffer = new byte[600 * 100 * sizeof(int)];
+                var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+
+                var copyInfo = new CopyInfo(
+                    datasetDims,
+                    chunkDims,
+                    memoryDims,
+                    memoryDims,
+                    datasetSelection,
+                    memorySelection,
+                    index => chunkProvider.GetChunk(index),
+                    index => actualBuffer,
+                    TypeSize: 4
+                );
+
+                // Act
+                HyperslabUtils.Copy(sourceRank: 3, targetRank: 2, copyInfo);
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
         }
 
         //[Fact]
