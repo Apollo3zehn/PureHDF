@@ -864,7 +864,8 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected) where T : struct
+        public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected) 
+            where T : unmanaged
         {
             var actual = dataset.Read<T>();
             return actual.SequenceEqual(expected);

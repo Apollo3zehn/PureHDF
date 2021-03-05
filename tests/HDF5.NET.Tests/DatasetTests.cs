@@ -58,7 +58,7 @@ namespace HDF5.NET.Tests.Reading
 
         [Theory]
         [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
-        public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : struct
+        public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
             {

@@ -64,7 +64,7 @@ namespace HDF5.NET
                 return objectHeader.ObjectType switch
                 {
                     H5ObjectType.Group => new H5Group(this.File, context, this, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(context, this, objectHeader),
+                    H5ObjectType.Dataset => new H5Dataset(this.File, context, this, objectHeader),
                     H5ObjectType.CommitedDatatype => new H5CommitedDatatype(context, objectHeader, this),
                     _ => throw new Exception("Unknown object type.")
                 };

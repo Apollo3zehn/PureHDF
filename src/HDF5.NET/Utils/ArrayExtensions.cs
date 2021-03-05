@@ -9,7 +9,8 @@ namespace HDF5.NET
     // https://github.com/HDFGroup/HDF.PInvoke/issues/52
     public static class ArrayExtensions
     {
-        public static unsafe T[,] ToArray2D<T>(this T[] data, long dim0, long dim1) where T : unmanaged
+        public static unsafe T[,] ToArray2D<T>(this T[] data, long dim0, long dim1)
+            where T : unmanaged
         {
             var dims = new long[] { dim0, dim1 };
             ArrayExtensions.ValidateInputData(data, dims);
@@ -23,7 +24,8 @@ namespace HDF5.NET
             return output;
         }
 
-        public static unsafe T[,,] ToArray3D<T>(this T[] data, long dim0, long dim1, long dim2) where T : unmanaged
+        public static unsafe T[,,] ToArray3D<T>(this T[] data, long dim0, long dim1, long dim2) 
+            where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2 };
             ArrayExtensions.ValidateInputData(data, dims);
@@ -37,7 +39,8 @@ namespace HDF5.NET
             return output;
         }
 
-        public static unsafe T[,,,] ToArray4D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3) where T : unmanaged
+        public static unsafe T[,,,] ToArray4D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3) 
+            where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3 };
             ArrayExtensions.ValidateInputData(data, dims);
@@ -51,7 +54,8 @@ namespace HDF5.NET
             return output;
         }
 
-        public static unsafe T[,,,,] ToArray5D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4) where T : unmanaged
+        public static unsafe T[,,,,] ToArray5D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4) 
+            where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3, dim4 };
             ArrayExtensions.ValidateInputData(data, dims);
@@ -65,7 +69,8 @@ namespace HDF5.NET
             return output;
         }
 
-        public static unsafe T[,,,,,] ToArray6D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4, long dim5) where T : unmanaged
+        public static unsafe T[,,,,,] ToArray6D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4, long dim5) 
+            where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3, dim4, dim5 };
             ArrayExtensions.ValidateInputData(data, dims);
@@ -106,7 +111,8 @@ namespace HDF5.NET
             }
         }
 
-        private static unsafe void CopyData<T>(T[] source, void* target) where T : struct
+        private static unsafe void CopyData<T>(T[] source, void* target)
+            where T : unmanaged
         {
             var sourceBytes = MemoryMarshal.AsBytes(source.AsSpan());
             var bytePtr = (byte*)target;

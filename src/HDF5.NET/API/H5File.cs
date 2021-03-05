@@ -10,6 +10,7 @@ namespace HDF5.NET
         #region Fields
 
         private bool _deleteOnClose;
+        private Func<IChunkCache>? _chunkCacheFactory;
 
         #endregion
 
@@ -31,6 +32,24 @@ namespace HDF5.NET
         #region Properties
 
         public string Path { get; } = ":memory:";
+
+        public Func<IChunkCache> ChunkCacheFactory
+        {
+            get
+            {
+                if (_chunkCacheFactory is not null)
+                    return _chunkCacheFactory;
+
+                else
+                    return H5File.DefaultChunkCacheFactory;
+            }
+            set
+            {
+                _chunkCacheFactory = value;
+            }
+        }
+
+        public static Func<IChunkCache> DefaultChunkCacheFactory = () => new SimpleChunkCache();
 
         #endregion
 

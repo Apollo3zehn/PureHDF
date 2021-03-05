@@ -13,11 +13,19 @@ namespace HDF5.NET
     [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
     public class H5Dataset : H5AttributableObject
     {
+        #region Fields
+
+        private H5File _file;
+
+        #endregion
+
         #region Constructors
 
-        internal H5Dataset(H5Context context, H5NamedReference reference, ObjectHeader header) 
+        internal H5Dataset(H5File file, H5Context context, H5NamedReference reference, ObjectHeader header)
             : base(context, reference, header)
         {
+            _file = file;
+
             foreach (var message in this.Header.HeaderMessages)
             {
                 var type = message.Data.GetType();
@@ -80,25 +88,60 @@ namespace HDF5.NET
 
         #region Public
 
-        public T[] Read<T>(H5DatasetAccess datasetAccess = default) where T : struct
+        public T[] Read<T>(
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            return this.Read<T>(datasetAccess, skipShuffle: false);
+            var result = this.Read<T>(
+                datasetAccess, 
+                null, 
+                fileSelection, 
+                memorySelection, 
+                memoryDims, 
+                skipShuffle: false);
+
+            if (result is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return result;
         }
 
-        public T[] ReadCompound<T>(H5DatasetAccess datasetAccess = default) where T : struct
+        public void Read<T>(
+            Memory<T> buffer,
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default) where T : unmanaged
+        {
+            this.Read(
+                datasetAccess,
+                buffer,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                skipShuffle: false);
+        }
+
+        public T[] ReadCompound<T>(H5DatasetAccess datasetAccess = default)
+            where T : struct
         {
             return this.ReadCompound<T>(fieldInfo => fieldInfo.Name, datasetAccess);
         }
 
-        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName, H5DatasetAccess datasetAccess = default) where T : struct
+#error Add missing APIs.
+
+        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName, H5DatasetAccess datasetAccess = default)
+            where T : struct
         {
-            var data = this.Read<byte>(datasetAccess);
+            var data = this.Read<byte>(datasetAccess, null);
             return H5Utils.ReadCompound<T>(this.Datatype, this.Dataspace, this.Context.Superblock, data, getName);
         }
 
         public string[] ReadString(H5DatasetAccess datasetAccess = default)
         {
-            var data = this.Read<byte>(datasetAccess, skipTypeCheck: true);
+            var data = this.Read<byte>(datasetAccess, null, skipTypeCheck: true);
             return H5Utils.ReadString(this.Datatype, data, this.Context.Superblock);
         }
 
@@ -117,7 +160,13 @@ namespace HDF5.NET
          * Virtual: a combination of the solutions above
          */
 
-        internal T[] Read<T>(H5DatasetAccess datasetAccess, bool skipTypeCheck = false, bool skipShuffle = false) where T : struct
+        internal T[]? Read<T>(H5DatasetAccess datasetAccess,
+            Memory<T> buffer,
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            bool skipTypeCheck = false, 
+            bool skipShuffle = false) where T : unmanaged
         {
             if (!skipTypeCheck)
             {
@@ -153,12 +202,44 @@ namespace HDF5.NET
                 }
             }
 
-            switch (this.DataLayout.LayoutClass)
+            /* dims */
+            var datasetDims = this.Dataspace.DimensionSizes;
+            var datasetChunkDims = this.GetDatasetChunkDims();
+
+            /* file selection */
+            if (fileSelection is null)
+                fileSelection = HyperslabSelection.All(datasetDims);
+
+            var totalCount = fileSelection.GetTotalCount();
+
+            /* memory selection */
+            if (memorySelection is null)
+                memorySelection = new HyperslabSelection(start: 0, block: totalCount);
+
+            /* check both selections */
+            var fileHyperslabSelection = fileSelection as HyperslabSelection;
+            var memoryeHyperslabSelection = memorySelection as HyperslabSelection;
+
+            if (fileHyperslabSelection == null || memoryeHyperslabSelection == null)
+                throw new NotSupportedException("Only hyperslab selections are currently supported.");
+
+            /* prepare result buffer */
+            var result = default(T[]);
+            var byteBuffer = default(Memory<byte>);
+
+#error GetBuffer returns wrong size
+            if (buffer.Equals(default))
+                byteBuffer = this.GetBuffer(out result);
+
+            else
+                byteBuffer = buffer.Cast<T, byte>();
+
+            var getSourceBuffer = this.DataLayout.LayoutClass switch
             {
                 // Compact: The array is stored in one contiguous block as part of
                 // this object header message.
-                case LayoutClass.Compact:
-                    return this.ReadCompact<T>();
+                LayoutClass.Compact => index => 
+                    this.ReadCompact<T>(),
 
                 // Contiguous: The array is stored in one contiguous area of the file. 
                 // This layout requires that the size of the array be constant: 
@@ -166,8 +247,9 @@ namespace HDF5.NET
                 // or encryption are not permitted. The message stores the total
                 // storage size of the array. The offset of an element from the 
                 // beginning of the storage area is computed as in a C array.
-                case LayoutClass.Contiguous:
-                    return this.ReadContiguous<T>(datasetAccess);
+#warning Optimize this, do not always load all data!
+                LayoutClass.Contiguous => index => 
+                    this.ReadContiguous<T>(datasetAccess),
 
                 // Chunked: The array domain is regularly decomposed into chunks,
                 // and each chunk is allocated and stored separately. This layout 
@@ -177,26 +259,40 @@ namespace HDF5.NET
                 // entire array; the storage size of the entire array can be 
                 // calculated by traversing the chunk index that stores the chunk 
                 // addresses.
-                case LayoutClass.Chunked:
-                    return this.ReadChunked<T>();
+                LayoutClass.Chunked => index => 
+                    this.ChunkCache.GetChunk(index, () => this.ReadChunked<T>(index)),
 
                 // Virtual: This is only supported for version 4 of the Data Layout 
                 // message. The message stores information that is used to locate 
                 // the global heap collection containing the Virtual Dataset (VDS) 
                 // mapping information. The mapping associates the VDS to the source
                 // dataset elements that are stored across a collection of HDF5 files.
-                case LayoutClass.VirtualStorage:
-                    throw new NotImplementedException();
+                LayoutClass.VirtualStorage => throw new NotImplementedException(),
 
-                default:
-                    throw new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
-            }
+                // default
+                _ => throw new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
+            };
+
+            /* copy info */
+            var copyInfo = new CopyInfo(
+                datasetDims,
+                datasetChunkDims,
+                memoryDims,
+                memoryDims,
+                fileHyperslabSelection,
+                memoryeHyperslabSelection,
+                GetSourceBuffer: getSourceBuffer,
+                GetTargetBuffer: index => buffer.Cast<T, byte>(),
+                typeSize
+            );
+
+            HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryeHyperslabSelection.Rank, copyInfo);
         }
 
 #warning Use this instead of SpanExtensions!
         // https://docs.microsoft.com/en-us/dotnet/api/system.array?view=netcore-3.1
         // max array length is 0X7FEFFFFF = int.MaxValue - 1024^2 bytes
-        // max multi dim array length seems to be 0X7FEFFFFF x 2, but not confirmation found
+        // max multi dim array length seems to be 0X7FEFFFFF x 2, but no confirmation found
         private unsafe T ReadCompactMultiDim<T>()
         {
             // vllt. einfach eine zweite Read<T> Methode (z.B. ReadMultiDim), 
@@ -228,10 +324,10 @@ namespace HDF5.NET
             }
         }
 
-        private T[] ReadCompact<T>() where T : struct
+        private Memory<byte> ReadCompact<T>() 
+            where T : unmanaged
         {
-            var a = this.ReadCompactMultiDim<T[,,]>();
-
+#error Why generic?
             byte[] buffer;
 
             if (this.DataLayout is DataLayoutMessage12 layout12)
@@ -249,15 +345,16 @@ namespace HDF5.NET
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
 
-            var result = MemoryMarshal
-                    .Cast<byte, T>(buffer);
-
             this.EnsureEndianness(buffer);
-            return result.ToArray();
+
+            return buffer
+                .AsMemory();
         }
 
-        private T[] ReadContiguous<T>(H5DatasetAccess datasetAccess) where T : struct
+        private Memory<byte> ReadContiguous<T>(H5DatasetAccess datasetAccess)
+            where T : unmanaged
         {
+#error Why generic?
             ulong address;
 
             if (this.DataLayout is DataLayoutMessage12 layout12)
@@ -274,29 +371,30 @@ namespace HDF5.NET
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
 
-            // read data
             var buffer = this.GetBuffer<T>(out var result);
 
             if (this.Context.Superblock.IsUndefinedAddress(address))
             {
                 if (this.ExternalFileList != null)
-                    this.ReadExternalFileList(buffer, this.ExternalFileList, datasetAccess);
+                    this.ReadExternalFileList(buffer.Span, this.ExternalFileList, datasetAccess);
 
                 else if (this.FillValue.IsDefined)
-                    buffer.Fill(this.FillValue.Value);
+                    buffer.Span.Fill(this.FillValue.Value);
             }
             else
             {
                 this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                this.Context.Reader.Read(buffer);
+                this.Context.Reader.Read(buffer.Span);
             }
 
-            this.EnsureEndianness(buffer);
-            return result;
+            this.EnsureEndianness(buffer.Span);
+            return buffer;
         }
 
-        private T[] ReadChunked<T>() where T : struct
+        private Memory<byte> ReadChunked<T>(ulong index) 
+            where T : unmanaged
         {
+#error Why generic?
             var buffer = this.GetBuffer<T>(out var result);
 
             if (this.DataLayout is DataLayoutMessage12 layout12)
@@ -304,13 +402,13 @@ namespace HDF5.NET
                 if (this.Context.Superblock.IsUndefinedAddress(layout12.DataAddress))
                 {
                     if (this.FillValue.IsDefined)
-                        buffer.Fill(this.FillValue.Value);
+                        buffer.Span.Fill(this.FillValue.Value);
                 }
                 else
                 {
                     var chunkSize = H5Utils.CalculateSize(layout12.DimensionSizes);
                     this.Context.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
-                    this.ReadChunkedBTree1(buffer, layout12.Rank, chunkSize);
+                    this.ReadChunkedBTree1(buffer.Span, layout12.Rank, chunkSize);
                 }                
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
@@ -321,7 +419,7 @@ namespace HDF5.NET
                 if (this.Context.Superblock.IsUndefinedAddress(chunked4.Address))
                 {
                     if (this.FillValue.IsDefined)
-                        buffer.Fill(this.FillValue.Value);
+                        buffer.Span.Fill(this.FillValue.Value);
                 }
                 else
                 {
@@ -332,7 +430,7 @@ namespace HDF5.NET
                         // the current, maximum, and chunk dimension sizes are all the same
                         case ChunkIndexingType.SingleChunk:
                             var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadChunk(buffer, chunkSize);
+                            this.ReadChunk(buffer.Span, chunkSize);
                             break;
 
                         // fixed maximum dimension sizes
@@ -340,25 +438,25 @@ namespace HDF5.NET
                         // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
                         case ChunkIndexingType.Implicit:
                             var @implicitInfo = (ImplicitIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.Context.Reader.Read(buffer);
+                            this.Context.Reader.Read(buffer.Span);
                             break;
 
                         // fixed maximum dimension sizes
                         case ChunkIndexingType.FixedArray:
                             var fixedArrayInfo = (FixedArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadFixedArray(buffer, chunkSize);
+                            this.ReadFixedArray(buffer.Span, chunkSize);
                             break;
 
                         // only one dimension of unlimited extent
                         case ChunkIndexingType.ExtensibleArray:
                             var extensibleArrayInfo = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadExtensibleArray(buffer, chunkSize);
+                            this.ReadExtensibleArray(buffer.Span, chunkSize);
                             break;
 
                         // more than one dimension of unlimited extent
                         case ChunkIndexingType.BTree2:
                             var btree2Info = (BTree2IndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadChunkedBTree2(buffer, (byte)(chunked4.Rank - 1), chunkSize);
+                            this.ReadChunkedBTree2(buffer.Span, (byte)(chunked4.Rank - 1), chunkSize);
                             break;
 
                         default:
@@ -373,13 +471,13 @@ namespace HDF5.NET
                 if (this.Context.Superblock.IsUndefinedAddress(chunked3.Address))
                 {
                     if (this.FillValue.IsDefined)
-                        buffer.Fill(this.FillValue.Value);
+                        buffer.Span.Fill(this.FillValue.Value);
                 }
                 else
                 {
                     var chunkSize = H5Utils.CalculateSize(chunked3.DimensionSizes);
                     this.Context.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
-                    this.ReadChunkedBTree1(buffer, (byte)(chunked3.Rank - 1), chunkSize);
+                    this.ReadChunkedBTree1(buffer.Span, (byte)(chunked3.Rank - 1), chunkSize);
                 }
             }
             else
@@ -387,8 +485,8 @@ namespace HDF5.NET
                 throw new Exception($"Data layout message type '{this.DataLayout.GetType().Name}' is not supported.");
             }
 
-            this.EnsureEndianness(buffer);
-            return result;
+            this.EnsureEndianness(buffer.Span);
+            return buffer;
         }
 
         private void ReadChunkedBTree1(Span<byte> buffer, byte rank, ulong chunkSize)
@@ -626,7 +724,8 @@ namespace HDF5.NET
             }
         }
 
-        private Span<byte> GetBuffer<T>(out T[] result) where T : struct
+        private Memory<byte> GetBuffer<T>(out T[] result) 
+            where T : unmanaged
         {
             // first, get byte size
             var byteSize = H5Utils.CalculateSize(this.Dataspace.DimensionSizes, this.Dataspace.Type) * this.Datatype.Size;
@@ -636,7 +735,10 @@ namespace HDF5.NET
 
             // finally, create buffer
             result = new T[arraySize];
-            var buffer = MemoryMarshal.AsBytes(result.AsSpan());
+
+            var buffer = result
+                .AsMemory()
+                .Cast<T, byte>();
 
             return buffer;
         }

@@ -1,4 +1,4 @@
-**Project is not yet released because support for reading partial datasets (hyperslabs), virtual datasets and region references (IV.B. Disk Format: Level 2B) is still missing.**
+**Project is not yet released because support for reading partial datasets (hyperslabs), virtual datasets, point selections and region references (IV.B. Disk Format: Level 2B) is still missing.**
 
 # HDF5.NET
 

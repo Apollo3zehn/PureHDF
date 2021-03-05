@@ -152,7 +152,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleGeneric<T>(T dummy, int length) where T : struct
+        public void CanUnshuffleGeneric<T>(T dummy, int length)
+            where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -193,7 +194,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleAvx2<T>(T dummy, int length) where T : struct
+        public void CanUnshuffleAvx2<T>(T dummy, int length) 
+            where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -234,7 +236,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleSse2<T>(T dummy, int length) where T : struct
+        public void CanUnshuffleSse2<T>(T dummy, int length) 
+            where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -345,7 +348,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanConvertEndiannessAvx2<T>(T dummy, int length) where T : struct
+        public void CanConvertEndiannessAvx2<T>(T dummy, int length)
+            where T : unmanaged
         {
             // Arrange
             var bytesOfType = Unsafe.SizeOf<T>();

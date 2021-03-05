@@ -35,7 +35,8 @@ namespace HDF5.NET
 
         #region Methods
 
-        public T[] Read<T>() where T : struct
+        public T[] Read<T>()
+            where T : unmanaged
         {
             switch (this.Message.Datatype.Class)
             {
@@ -64,12 +65,14 @@ namespace HDF5.NET
                 .ToArray();
         }
 
-        public T[] ReadCompound<T>() where T : struct
+        public T[] ReadCompound<T>() 
+            where T : struct
         {
             return this.ReadCompound<T>(fieldInfo => fieldInfo.Name);
         }
 
-        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) where T : struct
+        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) 
+            where T : struct
         {
             return H5Utils.ReadCompound<T>(this.Message.Datatype, this.Message.Dataspace, _superblock, this.Message.Data, getName);
         }

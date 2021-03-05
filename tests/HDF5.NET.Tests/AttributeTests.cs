@@ -58,7 +58,8 @@ namespace HDF5.NET.Tests.Reading
 
         [Theory]
         [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
-        public void CanReadAttribute_Numerical<T>(string name, T[] expected) where T : struct
+        public void CanReadAttribute_Numerical<T>(string name, T[] expected) 
+            where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
             {

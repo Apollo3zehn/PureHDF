@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public class HyperslabSelection
+    public class HyperslabSelection : Selection
     {
         internal ulong[] StartsField;
         internal ulong[] StridesField;
@@ -59,6 +59,16 @@ namespace HDF5.NET
         public IReadOnlyList<ulong> Counts => CountsField;
 
         public IReadOnlyList<ulong> Blocks => BlocksField;
+
+        public static HyperslabSelection All(ulong[] dims)
+        {
+            var start = dims.ToArray();
+            start.AsSpan().Fill(0);
+
+            var block = dims;
+
+            return new HyperslabSelection(rank: dims.Length, start, block);
+        }
 
         public ulong GetTotalCount()
         {

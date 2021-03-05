@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -55,11 +56,12 @@ namespace HDF5.NET
             return result;
         }
 
-        public static unsafe T[] ReadCompound<T>(DatatypeMessage datatype,
-                                                 DataspaceMessage dataspace,
-                                                 Superblock superblock,
-                                                 Span<byte> data,
-                                                 Func<FieldInfo, string> getName) where T : struct
+        public static unsafe T[] ReadCompound<T>(
+            DatatypeMessage datatype,
+            DataspaceMessage dataspace,
+            Superblock superblock,
+            Span<byte> data,
+            Func<FieldInfo, string> getName) where T : struct
         {
             if (datatype.Class != DatatypeMessageClass.Compound)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
