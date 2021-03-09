@@ -32,7 +32,7 @@ namespace HDF5.NET
         internal static void ExecutePipeline(List<FilterDescription> pipeline,
                                              ExtendedFilterFlags flags,
                                              Memory<byte> filterBuffer,
-                                             Span<byte> resultBuffer)
+                                             Memory<byte> resultBuffer)
         {
             // H5Z.c (H5Z_pipeline)
 
@@ -62,8 +62,7 @@ namespace HDF5.NET
                     }
                 }
 
-                filterBuffer
-                    .Span[0..resultBuffer.Length]
+                filterBuffer[0..resultBuffer.Length]
                     .CopyTo(resultBuffer);
             }
             /* Write */

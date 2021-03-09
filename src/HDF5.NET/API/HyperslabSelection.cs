@@ -70,7 +70,7 @@ namespace HDF5.NET
             return new HyperslabSelection(rank: dims.Length, start, block);
         }
 
-        public ulong GetTotalCount()
+        public override ulong GetTotalCount()
         {
             var totalCount = 1UL;
 

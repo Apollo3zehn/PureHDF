@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace HDF5.NET
@@ -19,7 +20,7 @@ namespace HDF5.NET
 
         #region Fields
 
-        private Dictionary<ulong, ChunkInfo> _chunkInfoMap;
+        private Dictionary<ulong[], ChunkInfo> _chunkInfoMap;
 
         #endregion
 
@@ -36,7 +37,7 @@ namespace HDF5.NET
             this.ChunkSlotCount = chunkSlotCount;
             this.ByteCount = byteCount;
 
-            _chunkInfoMap = new Dictionary<ulong, ChunkInfo>();
+            _chunkInfoMap = new Dictionary<ulong[], ChunkInfo>(new ArrayEqualityComparer());
         }
 
         #endregion
@@ -54,9 +55,9 @@ namespace HDF5.NET
 
         #region Methdos
 
-        public Memory<byte> GetChunk(ulong index, Func<Memory<byte>> chunkLoader)
+        public Memory<byte> GetChunk(ulong[] indices, Func<Memory<byte>> chunkLoader)
         {
-            if (_chunkInfoMap.TryGetValue(index, out var chunkInfo))
+            if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
             {
                 chunkInfo.LastAccess = DateTime.Now;
             }
@@ -73,7 +74,7 @@ namespace HDF5.NET
                     }
 
                     this.ConsumedBytes += (ulong)chunk.Length;
-                    _chunkInfoMap[index] = chunkInfo;
+                    _chunkInfoMap[indices] = chunkInfo;
                 }
             }
 
@@ -88,6 +89,41 @@ namespace HDF5.NET
 
             this.ConsumedBytes -= (ulong)entry.Value.Chunk.Length;
             _chunkInfoMap.Remove(entry.Key);
+        }
+
+        // https://stackoverflow.com/questions/14663168/an-integer-array-as-a-key-for-dictionary
+        private class ArrayEqualityComparer : IEqualityComparer<ulong[]>
+        {
+            public bool Equals(ulong[] x, ulong[] y)
+            {
+                if (x.Length != y.Length)
+                {
+                    return false;
+                }
+                for (int i = 0; i < x.Length; i++)
+                {
+                    if (x[i] != y[i])
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public int GetHashCode(ulong[] obj)
+            {
+                int result = 17;
+
+                for (int i = 0; i < obj.Length; i++)
+                {
+                    unchecked
+                    {
+                        result = result * 23 + unchecked((int)obj[i]);
+                    }
+                }
+
+                return result;
+            }
         }
 
         #endregion

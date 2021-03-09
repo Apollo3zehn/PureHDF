@@ -1,0 +1,84 @@
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
+
+namespace HDF5.NET
+{
+    internal class UnsafeFillValueStream : Stream
+    {
+        private byte[] _fillValue;
+        private int _length;
+        private long _position;
+
+        public UnsafeFillValueStream(byte[] fillValue)
+        {
+            _fillValue = fillValue.ToArray();
+            _length = _fillValue.Length;
+        }
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => true;
+
+        public override bool CanWrite => false;
+
+        public override long Length => throw new NotImplementedException();
+
+        public override long Position 
+        {
+            get
+            {
+                return _position;
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override unsafe int Read(byte[] buffer, int offset, int count)
+        {
+            unsafe
+            {
+                fixed (byte* ptrSrc = _fillValue, ptrDst = buffer)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        ptrDst[offset + i] = ptrSrc[(_position + i) % _length];
+                    }
+                }
+            }
+
+            _position += count;
+
+            return count;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    _position += offset; return _position;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

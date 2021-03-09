@@ -14,16 +14,16 @@ namespace HDF5.NET.Tests.Reading
 
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                cache.GetChunk((ulong)index, () => new byte[1]);
+                cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[1]);
             }
 
             // Act
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                cache.GetChunk((ulong)index, () => throw new Exception());
+                cache.GetChunk(new ulong[] { (ulong)index }, () => throw new Exception());
             }
 
-            Action action = () => cache.GetChunk(1000, () => throw new Exception());
+            Action action = () => cache.GetChunk(new ulong[] { 1000 }, () => throw new Exception());
 
             // Assert
             Assert.Throws<Exception>(action);
@@ -37,12 +37,12 @@ namespace HDF5.NET.Tests.Reading
 
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                cache.GetChunk((ulong)index, () => new byte[1]);
+                cache.GetChunk(new ulong[]{ (ulong)index }, () => new byte[1]);
             }
 
             // Act
             var before = cache.ConsumedSlots;
-            cache.GetChunk(1000, () => new byte[1]);
+            cache.GetChunk(new ulong[] { 1000 }, () => new byte[1]);
             var after = cache.ConsumedSlots;
 
             // Assert
@@ -55,12 +55,12 @@ namespace HDF5.NET.Tests.Reading
         {
             // Arrange
             var cache = new SimpleChunkCache();
-            cache.GetChunk(0, () => new byte[1024 * 1024]);
+            cache.GetChunk(new ulong[] { 0 }, () => new byte[1024 * 1024]);
 
             // Act
             var before_slots = cache.ConsumedSlots;
             var before_bytes = cache.ConsumedBytes;
-            cache.GetChunk(1, () => new byte[1]);
+            cache.GetChunk(new ulong[] { 1 }, () => new byte[1]);
             var after_slots = cache.ConsumedSlots;
             var after_bytes = cache.ConsumedBytes;
 
@@ -80,10 +80,10 @@ namespace HDF5.NET.Tests.Reading
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
                 if (index == 25)
-                    cache.GetChunk((ulong)index, () => new byte[3]);
+                    cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[3]);
 
                 else
-                    cache.GetChunk((ulong)index, () => new byte[2]);
+                    cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[2]);
             }
 
             await Task.Delay(TimeSpan.FromMilliseconds(100));
@@ -91,13 +91,13 @@ namespace HDF5.NET.Tests.Reading
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
                 if (index != 25)
-                    cache.GetChunk((ulong)index, () => throw new Exception());
+                    cache.GetChunk(new ulong[] { (ulong)index }, () => throw new Exception());
             }
 
             var expected = (520UL * 2 + 1 * 3) - 3 + 2;
 
             // Act
-            cache.GetChunk(1000, () => new byte[2]);
+            cache.GetChunk(new ulong[] { 1000 }, () => new byte[2]);
             var actual = cache.ConsumedBytes;
 
             // Assert

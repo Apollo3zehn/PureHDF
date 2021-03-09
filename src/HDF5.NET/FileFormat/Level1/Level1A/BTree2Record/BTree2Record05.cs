@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System.IO;
+
+namespace HDF5.NET
 {
     public struct BTree2Record05 : IBTree2Record
     {

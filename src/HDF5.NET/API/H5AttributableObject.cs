@@ -152,7 +152,7 @@ namespace HDF5.NET
 
             var success = btree2NameIndex.TryFindRecord(out var record, record =>
             {
-#warning Better to implement comparison code in record (here: BTree2Record08) itself?
+                // H5Abtree2.c (H5A__dense_btree2_name_compare, H5A__dense_fh_name_cmp)
 
                 if (nameHash < record.NameHash)
                 {
@@ -164,7 +164,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-#warning duplicate2
+#warning duplicate
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new AttributeMessage(reader, this.Context.Superblock));

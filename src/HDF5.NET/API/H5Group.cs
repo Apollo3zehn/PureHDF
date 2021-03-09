@@ -208,7 +208,8 @@ namespace HDF5.NET
                     .GetBTree1(this.DecodeGroupKey)
                     .TryFindUserData(out var userData,
                                     (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
-                                    (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
+                                    (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
+                                        => this.NodeFound(localHeap, name, address, out userData));
 
                 if (success)
                 {
@@ -236,7 +237,8 @@ namespace HDF5.NET
                         .GetBTree1(this.DecodeGroupKey)
                         .TryFindUserData(out var userData,
                                         (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
-                                        (ulong address, out BTree1SymbolTableUserData userData) => this.NodeFound(localHeap, name, address, out userData));
+                                        (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
+                                            => this.NodeFound(localHeap, name, address, out userData));
 
                     if (success)
                     {
@@ -471,7 +473,7 @@ namespace HDF5.NET
 
             var success = btree2NameIndex.TryFindRecord(out var record, record =>
             {
-#warning Better to implement comparison code in record (here: BTree2Record05) itself?
+                // H5Gbtree2.c (H5G__dense_btree2_name_compare, H5G__dense_fh_name_cmp)
 
                 if (nameHash < record.NameHash)
                 {
@@ -483,7 +485,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-#warning duplicate2
+#warning duplicate
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new LinkMessage(reader, this.Context.Superblock));
@@ -591,7 +593,7 @@ namespace HDF5.NET
         {
             userData = default;
 
-            // H5Gnode.c (H5G_node_found)
+            // H5Gnode.c (H5G__node_found)
             uint low = 0, index = 0, high;
             int cmp = 1;
 

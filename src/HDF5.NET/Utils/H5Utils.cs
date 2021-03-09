@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -178,7 +178,7 @@ namespace HDF5.NET
 
                 while (position != data.Length)
                 {
-#error Fixed-length string with null terminate padding is not read in correctly. The string is still padded with zero or more \0 characters.
+#warning Fixed-length string with null terminate padding is not read in correctly. The string is still padded with zero or more \0 characters.
                     var value = H5Utils.ReadFixedLengthString(data[position..(position + size)]);
                     result.Add(value);
                     position += size;

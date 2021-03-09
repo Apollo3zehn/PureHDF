@@ -4,16 +4,18 @@
     {
         #region Constructors
 
-        public BTree1RawDataChunksKey(H5BinaryReader reader, byte rank)
+        public BTree1RawDataChunksKey(H5BinaryReader reader, byte rank, uint[] dimensionSizes)
         {
+            // H5Dbtree.c (H5D__btree_decode_key)
+
             this.ChunkSize = reader.ReadUInt32();
             this.FilterMask = reader.ReadUInt32();
 
-            this.ChunkOffsets = new ulong[rank + 1];
+            this.ScaledChunkOffsets = new ulong[rank];
 
-            for (byte i = 0; i < rank + 1; i++)
+            for (byte i = 0; i < rank; i++)
             {
-                this.ChunkOffsets[i] = reader.ReadUInt64();
+                this.ScaledChunkOffsets[i] = reader.ReadUInt64() / dimensionSizes[i];
             }
         }
 
@@ -23,7 +25,7 @@
 
         public uint ChunkSize { get; set; }
         public uint FilterMask { get; set; }
-        public ulong[] ChunkOffsets { get; set; }
+        public ulong[] ScaledChunkOffsets { get; set; }
 
         #endregion
     }

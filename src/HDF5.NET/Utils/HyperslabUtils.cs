@@ -1,12 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-
-#warning Workaround for https://stackoverflow.com/questions/62648189/testing-c-sharp-9-0-in-vs2019-cs0518-isexternalinit-is-not-defined-or-imported
-namespace System.Runtime.CompilerServices
-{
-    public record IsExternalInit;
-}
 
 namespace HDF5.NET
 {
@@ -17,16 +12,21 @@ namespace HDF5.NET
         ulong[] TargetChunkDims,
         HyperslabSelection SourceSelection,
         HyperslabSelection TargetSelection,
-        Func<ulong, Memory<byte>> GetSourceBuffer,
-        Func<ulong, Memory<byte>> GetTargetBuffer,
+        Func<ulong[], Memory<byte>>? GetSourceBuffer,
+        Func<ulong[], Stream>? GetSourceStream,
+        Func<ulong[], Memory<byte>> GetTargetBuffer,
         int TypeSize
     );
 
     internal struct Step
     {
-        public ulong Chunk { get; init; }
+        public ulong[] Chunk { get; init; }
+
         public ulong Offset { get; init; }
+
         public ulong Length { get; init; }
+
+
     }
 
     internal static class HyperslabUtils
@@ -98,13 +98,12 @@ namespace HDF5.NET
                             chunkOffsets[dimension] = offsets[dimension] % chunkDims[dimension];
                         }
 
-                        var chunk = offsetsInChunkUnits.ToLinearIndex(datasetDimsInChunkUnits);
                         var offset = chunkOffsets.ToLinearIndex(chunkDims);
                         var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
 
                         yield return new Step()
                         {
-                            Chunk = chunk,
+                            Chunk = offsetsInChunkUnits,
                             Offset = offset,
                             Length = currentLength
                         };
@@ -186,13 +185,26 @@ namespace HDF5.NET
                .Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
                .GetEnumerator();
 
+            /* select method */
+            if (copyInfo.GetSourceBuffer is not null)
+                HyperslabUtils.CopyMemory(sourceWalker, targetWalker, copyInfo);
+
+            else if (copyInfo.GetSourceStream is not null)
+                HyperslabUtils.CopyStream(sourceWalker, targetWalker, copyInfo);
+
+            else
+                new Exception($"Either GetSourceBuffer() or GetSourceStream must be non-null.");
+        }
+
+        private static void CopyMemory(IEnumerator<Step> sourceWalker, IEnumerator<Step> targetWalker, CopyInfo copyInfo)
+        {
             /* initialize source walker */
             var sourceBuffer = default(Memory<byte>);
-            var lastSourceChunk = 0UL;
+            var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
             var targetBuffer = default(Memory<byte>);
-            var lastTargetChunk = 0UL;
+            var lastTargetChunk = default(ulong[]);
             var currentTarget = default(Memory<byte>);
 
             /* walk until end */
@@ -201,15 +213,15 @@ namespace HDF5.NET
                 /* load next source buffer */
                 var sourceStep = sourceWalker.Current;
 
-                if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ || 
-                    sourceStep.Chunk != lastSourceChunk /* or the chunk has changed */)
+                if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ ||
+                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk) /* or the chunk has changed */)
                 {
                     sourceBuffer = copyInfo.GetSourceBuffer(sourceStep.Chunk);
                     lastSourceChunk = sourceStep.Chunk;
                 }
 
                 var currentSource = sourceBuffer.Slice(
-                    (int)sourceStep.Offset * copyInfo.TypeSize, 
+                    (int)sourceStep.Offset * copyInfo.TypeSize,
                     (int)sourceStep.Length * copyInfo.TypeSize);
 
                 while (currentSource.Length > 0)
@@ -223,15 +235,15 @@ namespace HDF5.NET
                         if (!success || targetStep.Length == 0)
                             throw new UriFormatException("The target walker stopped early.");
 
-                        if (targetBuffer.Length == 0 /* if buffer not assigned yet */ || 
-                            targetStep.Chunk != lastTargetChunk /* or the chunk has changed */)
+                        if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
+                            !targetStep.Chunk.SequenceEqual(lastTargetChunk) /* or the chunk has changed */)
                         {
                             targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
                             lastTargetChunk = targetStep.Chunk;
                         }
-                        
+
                         currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset * copyInfo.TypeSize, 
+                            (int)targetStep.Offset * copyInfo.TypeSize,
                             (int)targetStep.Length * copyInfo.TypeSize);
                     }
 
@@ -243,6 +255,68 @@ namespace HDF5.NET
                         .CopyTo(currentTarget);
 
                     currentSource = currentSource.Slice(length);
+                    currentTarget = currentTarget.Slice(length);
+                }
+            }
+        }
+
+        private static void CopyStream(IEnumerator<Step> sourceWalker, IEnumerator<Step> targetWalker, CopyInfo copyInfo)
+        {
+            /* initialize source walker */
+            var sourceStream = default(Stream);
+            var lastSourceChunk = default(ulong[]);
+
+            /* initialize target walker */
+            var targetBuffer = default(Memory<byte>);
+            var lastTargetChunk = default(ulong[]);
+            var currentTarget = default(Memory<byte>);
+
+            /* walk until end */
+            while (sourceWalker.MoveNext())
+            {
+                /* load next source stream */
+                var sourceStep = sourceWalker.Current;
+
+                if (sourceStream is null /* if stream not assigned yet */ ||
+                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk) /* or the chunk has changed */)
+                {
+                    sourceStream = copyInfo.GetSourceStream(sourceStep.Chunk);
+                    lastSourceChunk = sourceStep.Chunk;
+                }
+
+                sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);        // corresponds to 
+                var currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
+
+                while (currentLength > 0)
+                {
+                    /* load next target buffer */
+                    if (currentTarget.Length == 0)
+                    {
+                        var success = targetWalker.MoveNext();
+                        var targetStep = targetWalker.Current;
+
+                        if (!success || targetStep.Length == 0)
+                            throw new UriFormatException("The target walker stopped early.");
+
+                        if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
+                            !targetStep.Chunk.SequenceEqual(lastTargetChunk) /* or the chunk has changed */)
+                        {
+                            targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
+                            lastTargetChunk = targetStep.Chunk;
+                        }
+
+                        currentTarget = targetBuffer.Slice(
+                            (int)targetStep.Offset * copyInfo.TypeSize,
+                            (int)targetStep.Length * copyInfo.TypeSize);
+                    }
+
+                    /* copy */
+                    var length = Math.Min(currentLength, currentTarget.Length);
+                    sourceStream.Read(currentTarget.Slice(0, length).Span);                             // corresponds to span.CopyTo
+
+                    sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);    // corresponds to 
+                    currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
+
                     currentTarget = currentTarget.Slice(length);
                 }
             }

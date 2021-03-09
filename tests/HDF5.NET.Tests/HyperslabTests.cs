@@ -67,178 +67,178 @@ namespace HDF5.NET.Tests.Reading
             var expected = new Step[]
             {
                 // row 0
-                new Step() { Chunk = 5, Offset = 20, Length = 1 },
-                new Step() { Chunk = 6, Offset = 18, Length = 3 },
-                new Step() { Chunk = 7, Offset = 18, Length = 1 },
-                new Step() { Chunk = 7, Offset = 20, Length = 1 },
-                new Step() { Chunk = 8, Offset = 18, Length = 3 },
-                new Step() { Chunk = 9, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 0}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 1}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 3}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 1, 4}, Offset = 18, Length = 1 },
 
-                new Step() { Chunk = 5, Offset = 23, Length = 1 },
-                new Step() { Chunk = 6, Offset = 21, Length = 3 },
-                new Step() { Chunk = 7, Offset = 21, Length = 1 },
-                new Step() { Chunk = 7, Offset = 23, Length = 1 },
-                new Step() { Chunk = 8, Offset = 21, Length = 3 },
-                new Step() { Chunk = 9, Offset = 21, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 0}, Offset = 23, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 1}, Offset = 21, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 21, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 23, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 1, 3}, Offset = 21, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 1, 4}, Offset = 21, Length = 1 },
 
-                new Step() { Chunk = 10, Offset = 26, Length = 1 },
-                new Step() { Chunk = 11, Offset = 24, Length = 3 },
-                new Step() { Chunk = 12, Offset = 24, Length = 1 },
-                new Step() { Chunk = 12, Offset = 26, Length = 1 },
-                new Step() { Chunk = 13, Offset = 24, Length = 3 },
-                new Step() { Chunk = 14, Offset = 24, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 2, 0}, Offset = 26, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 2, 1}, Offset = 24, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 2, 2}, Offset = 24, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 2, 2}, Offset = 26, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 2, 3}, Offset = 24, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 2, 4}, Offset = 24, Length = 1 },
 
-                new Step() { Chunk = 15, Offset = 20, Length = 1 },
-                new Step() { Chunk = 16, Offset = 18, Length = 3 },
-                new Step() { Chunk = 17, Offset = 18, Length = 1 },
-                new Step() { Chunk = 17, Offset = 20, Length = 1 },
-                new Step() { Chunk = 18, Offset = 18, Length = 3 },
-                new Step() { Chunk = 19, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 3, 0}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 3, 1}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 3, 2}, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 3, 2}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {0, 3, 3}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {0, 3, 4}, Offset = 18, Length = 1 },
 
                 // row 1
-                new Step() { Chunk = 30, Offset = 2, Length = 1 },
-                new Step() { Chunk = 31, Offset = 0, Length = 3 },
-                new Step() { Chunk = 32, Offset = 0, Length = 1 },
-                new Step() { Chunk = 32, Offset = 2, Length = 1 },
-                new Step() { Chunk = 33, Offset = 0, Length = 3 },
-                new Step() { Chunk = 34, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 0, Length = 1 },
 
-                new Step() { Chunk = 30, Offset = 5, Length = 1 },
-                new Step() { Chunk = 31, Offset = 3, Length = 3 },
-                new Step() { Chunk = 32, Offset = 3, Length = 1 },
-                new Step() { Chunk = 32, Offset = 5, Length = 1 },
-                new Step() { Chunk = 33, Offset = 3, Length = 3 },
-                new Step() { Chunk = 34, Offset = 3, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 5, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 3, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 3, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 5, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 3, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 3, Length = 1 },
 
-                new Step() { Chunk = 35, Offset = 8, Length = 1 },
-                new Step() { Chunk = 36, Offset = 6, Length = 3 },
-                new Step() { Chunk = 37, Offset = 6, Length = 1 },
-                new Step() { Chunk = 37, Offset = 8, Length = 1 },
-                new Step() { Chunk = 38, Offset = 6, Length = 3 },
-                new Step() { Chunk = 39, Offset = 6, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 0}, Offset = 8, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 1}, Offset = 6, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 6, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 8, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 3}, Offset = 6, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 2, 4}, Offset = 6, Length = 1 },
 
-                new Step() { Chunk = 40, Offset = 2, Length = 1 },
-                new Step() { Chunk = 41, Offset = 0, Length = 3 },
-                new Step() { Chunk = 42, Offset = 0, Length = 1 },
-                new Step() { Chunk = 42, Offset = 2, Length = 1 },
-                new Step() { Chunk = 43, Offset = 0, Length = 3 },
-                new Step() { Chunk = 44, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 0}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 1}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 3}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 3, 4}, Offset = 0, Length = 1 },
 
                 // row 2
-                new Step() { Chunk = 30, Offset = 11, Length = 1 },
-                new Step() { Chunk = 31, Offset = 9, Length = 3 },
-                new Step() { Chunk = 32, Offset = 9, Length = 1 },
-                new Step() { Chunk = 32, Offset = 11, Length = 1 },
-                new Step() { Chunk = 33, Offset = 9, Length = 3 },
-                new Step() { Chunk = 34, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 9, Length = 1 },
 
-                new Step() { Chunk = 30, Offset = 14, Length = 1 },
-                new Step() { Chunk = 31, Offset = 12, Length = 3 },
-                new Step() { Chunk = 32, Offset = 12, Length = 1 },
-                new Step() { Chunk = 32, Offset = 14, Length = 1 },
-                new Step() { Chunk = 33, Offset = 12, Length = 3 },
-                new Step() { Chunk = 34, Offset = 12, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 14, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 12, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 12, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 14, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 12, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 12, Length = 1 },
 
-                new Step() { Chunk = 35, Offset = 17, Length = 1 },
-                new Step() { Chunk = 36, Offset = 15, Length = 3 },
-                new Step() { Chunk = 37, Offset = 15, Length = 1 },
-                new Step() { Chunk = 37, Offset = 17, Length = 1 },
-                new Step() { Chunk = 38, Offset = 15, Length = 3 },
-                new Step() { Chunk = 39, Offset = 15, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 0}, Offset = 17, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 1}, Offset = 15, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 15, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 17, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 2, 3}, Offset = 15, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 2, 4}, Offset = 15, Length = 1 },
 
-                new Step() { Chunk = 40, Offset = 11, Length = 1 },
-                new Step() { Chunk = 41, Offset = 9, Length = 3 },
-                new Step() { Chunk = 42, Offset = 9, Length = 1 },
-                new Step() { Chunk = 42, Offset = 11, Length = 1 },
-                new Step() { Chunk = 43, Offset = 9, Length = 3 },
-                new Step() { Chunk = 44, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 0}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 1}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {1, 3, 3}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {1, 3, 4}, Offset = 9, Length = 1 },
 
                 // row 3
-                new Step() { Chunk = 55, Offset = 20, Length = 1 },
-                new Step() { Chunk = 56, Offset = 18, Length = 3 },
-                new Step() { Chunk = 57, Offset = 18, Length = 1 },
-                new Step() { Chunk = 57, Offset = 20, Length = 1 },
-                new Step() { Chunk = 58, Offset = 18, Length = 3 },
-                new Step() { Chunk = 59, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 0}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 1}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 3}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 1, 4}, Offset = 18, Length = 1 },
 
-                new Step() { Chunk = 55, Offset = 23, Length = 1 },
-                new Step() { Chunk = 56, Offset = 21, Length = 3 },
-                new Step() { Chunk = 57, Offset = 21, Length = 1 },
-                new Step() { Chunk = 57, Offset = 23, Length = 1 },
-                new Step() { Chunk = 58, Offset = 21, Length = 3 },
-                new Step() { Chunk = 59, Offset = 21, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 0}, Offset = 23, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 1}, Offset = 21, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 21, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 23, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 1, 3}, Offset = 21, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 1, 4}, Offset = 21, Length = 1 },
 
-                new Step() { Chunk = 60, Offset = 26, Length = 1 },
-                new Step() { Chunk = 61, Offset = 24, Length = 3 },
-                new Step() { Chunk = 62, Offset = 24, Length = 1 },
-                new Step() { Chunk = 62, Offset = 26, Length = 1 },
-                new Step() { Chunk = 63, Offset = 24, Length = 3 },
-                new Step() { Chunk = 64, Offset = 24, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 2, 0}, Offset = 26, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 2, 1}, Offset = 24, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 2, 2}, Offset = 24, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 2, 2}, Offset = 26, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 2, 3}, Offset = 24, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 2, 4}, Offset = 24, Length = 1 },
 
-                new Step() { Chunk = 65, Offset = 20, Length = 1 },
-                new Step() { Chunk = 66, Offset = 18, Length = 3 },
-                new Step() { Chunk = 67, Offset = 18, Length = 1 },
-                new Step() { Chunk = 67, Offset = 20, Length = 1 },
-                new Step() { Chunk = 68, Offset = 18, Length = 3 },
-                new Step() { Chunk = 69, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 3, 0}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 3, 1}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 3, 2}, Offset = 18, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 3, 2}, Offset = 20, Length = 1 },
+                new Step() { Chunk = new ulong[] {2, 3, 3}, Offset = 18, Length = 3 },
+                new Step() { Chunk = new ulong[] {2, 3, 4}, Offset = 18, Length = 1 },
 
                 // row 4
-                new Step() { Chunk = 80, Offset = 2, Length = 1 },
-                new Step() { Chunk = 81, Offset = 0, Length = 3 },
-                new Step() { Chunk = 82, Offset = 0, Length = 1 },
-                new Step() { Chunk = 82, Offset = 2, Length = 1 },
-                new Step() { Chunk = 83, Offset = 0, Length = 3 },
-                new Step() { Chunk = 84, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 0, Length = 1 },
 
-                new Step() { Chunk = 80, Offset = 5, Length = 1 },
-                new Step() { Chunk = 81, Offset = 3, Length = 3 },
-                new Step() { Chunk = 82, Offset = 3, Length = 1 },
-                new Step() { Chunk = 82, Offset = 5, Length = 1 },
-                new Step() { Chunk = 83, Offset = 3, Length = 3 },
-                new Step() { Chunk = 84, Offset = 3, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 5, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 3, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 3, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 5, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 3, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 3, Length = 1 },
 
-                new Step() { Chunk = 85, Offset = 8, Length = 1 },
-                new Step() { Chunk = 86, Offset = 6, Length = 3 },
-                new Step() { Chunk = 87, Offset = 6, Length = 1 },
-                new Step() { Chunk = 87, Offset = 8, Length = 1 },
-                new Step() { Chunk = 88, Offset = 6, Length = 3 },
-                new Step() { Chunk = 89, Offset = 6, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 0}, Offset = 8, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 1}, Offset = 6, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 6, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 8, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 3}, Offset = 6, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 2, 4}, Offset = 6, Length = 1 },
 
-                new Step() { Chunk = 90, Offset = 2, Length = 1 },
-                new Step() { Chunk = 91, Offset = 0, Length = 3 },
-                new Step() { Chunk = 92, Offset = 0, Length = 1 },
-                new Step() { Chunk = 92, Offset = 2, Length = 1 },
-                new Step() { Chunk = 93, Offset = 0, Length = 3 },
-                new Step() { Chunk = 94, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 0}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 1}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 0, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 2, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 3}, Offset = 0, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 3, 4}, Offset = 0, Length = 1 },
 
                 // row 5
-                new Step() { Chunk = 80, Offset = 11, Length = 1 },
-                new Step() { Chunk = 81, Offset = 9, Length = 3 },
-                new Step() { Chunk = 82, Offset = 9, Length = 1 },
-                new Step() { Chunk = 82, Offset = 11, Length = 1 },
-                new Step() { Chunk = 83, Offset = 9, Length = 3 },
-                new Step() { Chunk = 84, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 9, Length = 1 },
 
-                new Step() { Chunk = 80, Offset = 14, Length = 1 },
-                new Step() { Chunk = 81, Offset = 12, Length = 3 },
-                new Step() { Chunk = 82, Offset = 12, Length = 1 },
-                new Step() { Chunk = 82, Offset = 14, Length = 1 },
-                new Step() { Chunk = 83, Offset = 12, Length = 3 },
-                new Step() { Chunk = 84, Offset = 12, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 14, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 12, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 12, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 14, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 12, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 12, Length = 1 },
 
-                new Step() { Chunk = 85, Offset = 17, Length = 1 },
-                new Step() { Chunk = 86, Offset = 15, Length = 3 },
-                new Step() { Chunk = 87, Offset = 15, Length = 1 },
-                new Step() { Chunk = 87, Offset = 17, Length = 1 },
-                new Step() { Chunk = 88, Offset = 15, Length = 3 },
-                new Step() { Chunk = 89, Offset = 15, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 0}, Offset = 17, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 1}, Offset = 15, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 15, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 17, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 2, 3}, Offset = 15, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 2, 4}, Offset = 15, Length = 1 },
 
-                new Step() { Chunk = 90, Offset = 11, Length = 1 },
-                new Step() { Chunk = 91, Offset = 9, Length = 3 },
-                new Step() { Chunk = 92, Offset = 9, Length = 1 },
-                new Step() { Chunk = 92, Offset = 11, Length = 1 },
-                new Step() { Chunk = 93, Offset = 9, Length = 3 },
-                new Step() { Chunk = 94, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 0}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 1}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 9, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 11, Length = 1 },
+                new Step() { Chunk = new ulong[] {3, 3, 3}, Offset = 9, Length = 3 },
+                new Step() { Chunk = new ulong[] {3, 3, 4}, Offset = 9, Length = 1 }
             };
 
             // Act
@@ -348,6 +348,7 @@ namespace HDF5.NET.Tests.Reading
                 targetSelection,
                 null,
                 null,
+                null,
                 0
             );
 
@@ -380,6 +381,7 @@ namespace HDF5.NET.Tests.Reading
                 null,
                 sourceSelection,
                 targetSelection,
+                null,
                 null,
                 null,
                 0
@@ -425,8 +427,9 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                index => null,
-                index => null,
+                indices => null,
+                indices => null,
+                indices => null,
                 TypeSize: 4
             );
 
@@ -467,8 +470,9 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                index => null,
-                index => null,
+                indices => null,
+                indices => null,
+                indices => null,
                 TypeSize: 4
             );
 
@@ -572,6 +576,7 @@ namespace HDF5.NET.Tests.Reading
 
             var actualBuffer = new byte[10 * 10 * sizeof(int)];
             var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+            var datasetDimsInChunkUnits = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var copyInfo = new CopyInfo(
                 datasetDims,
@@ -580,8 +585,9 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                index => chunksBuffers[index],
-                index => actualBuffer,
+                indices => chunksBuffers[indices.ToLinearIndex(datasetDimsInChunkUnits)],
+                indices => null,
+                indices => actualBuffer,
                 TypeSize: 4
             );
 
@@ -615,10 +621,9 @@ namespace HDF5.NET.Tests.Reading
         public void CanCopySmall3D_Block1_Stride1()
         {
             // Arrange
-            var sourceDims = new ulong[] { 2, 3, 6 };
-            var sourceChunkDims = new ulong[] { 1, 2, 3 };
-            var targetDims = new ulong[] { 5, 6, 11 };
-            var targetChunkDims = targetDims;
+            var datasetDims = new ulong[] { 2, 3, 6 };
+            var chunkDims = new ulong[] { 1, 2, 3 };
+            var memoryDims = new ulong[] { 5, 6, 11 };
 
             var sourceSelection = new HyperslabSelection(rank: 3,
                 starts: new ulong[] { 0, 1, 1 },
@@ -665,7 +670,7 @@ namespace HDF5.NET.Tests.Reading
             var s8 = MemoryMarshal.Cast<byte, int>(sourceBuffer8);
             s8[0] = 33; s8[1] = 34; s8[2] = 35; s8[3] = 0; s8[4] = 0; s8[5] = 0;
 
-            var sourceBuffers = new Memory<byte>[]
+            var chunksBuffers = new Memory<byte>[]
             {
                 sourceBuffer1,
                 sourceBuffer2,
@@ -689,16 +694,18 @@ namespace HDF5.NET.Tests.Reading
 
             var actualBuffer = new byte[5 * 6 * 11 * sizeof(int)];
             var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+            var datasetDimsInChunkUnits = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var copyInfo = new CopyInfo(
-                sourceDims,
-                sourceChunkDims,
-                targetDims,
-                targetChunkDims,
+                datasetDims,
+                chunkDims,
+                memoryDims,
+                memoryDims,
                 sourceSelection,
                 targetSelection,
-                index => sourceBuffers[index],
-                index => actualBuffer,
+                indices => chunksBuffers[indices.ToLinearIndex(datasetDimsInChunkUnits)],
+                indices => null,
+                indices => actualBuffer,
                 TypeSize: 4
             );
 
@@ -801,6 +808,7 @@ namespace HDF5.NET.Tests.Reading
 
             var expectedBuffer = new byte[11 * 11 * 12 * sizeof(int)];
             var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer);
+            var datasetDimsInChunkUnits = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             expected[277] = 1;
             expected[280] = 2;
@@ -825,8 +833,9 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                index => chunksBuffers[index],
-                index => actualBuffer,
+                indices => chunksBuffers[indices.ToLinearIndex(datasetDimsInChunkUnits)],
+                indices => null,
+                indices => actualBuffer,
                 TypeSize: 4
             );
 

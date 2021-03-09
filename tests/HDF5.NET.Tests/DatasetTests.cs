@@ -291,6 +291,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("prefix")]
         public void CanReadDataset_External(string datasetName)
         {
+            // got error message "external storage not supported with chunked layout" -> skip chunked and compact layout
+
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
