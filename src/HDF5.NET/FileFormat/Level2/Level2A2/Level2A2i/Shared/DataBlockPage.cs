@@ -5,13 +5,13 @@
         #region Constructors
 
         public DataBlockPage(H5BinaryReader reader,
-                                       Superblock superblock,
-                                       ulong elementsPerPage,
-                                       ClientID clientID,
-                                       uint chunkSizeLength)
+                             Superblock superblock,
+                             ulong elementCount,
+                             ClientID clientID,
+                             uint chunkSizeLength)
         {
             // elements
-            this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, elementsPerPage, clientID, chunkSizeLength);
+            this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, elementCount, clientID, chunkSizeLength);
 
             // checksum
             this.Checksum = reader.ReadUInt32();

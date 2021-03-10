@@ -1,7 +1,6 @@
 ﻿using HDF5.NET.BlazorBrowser.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using System;
 using System.IO;
 using System.Threading.Tasks;
 

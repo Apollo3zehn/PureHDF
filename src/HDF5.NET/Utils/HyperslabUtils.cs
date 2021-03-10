@@ -25,8 +25,6 @@ namespace HDF5.NET
         public ulong Offset { get; init; }
 
         public ulong Length { get; init; }
-
-
     }
 
     internal static class HyperslabUtils
@@ -157,7 +155,11 @@ namespace HDF5.NET
         {
             /* validate rank */
             if (copyInfo.SourceSelection.Rank != sourceRank ||
-                copyInfo.TargetSelection.Rank != targetRank)
+                copyInfo.TargetSelection.Rank != targetRank ||
+                copyInfo.SourceDims.Length != copyInfo.SourceSelection.Rank || 
+                copyInfo.SourceChunkDims.Length != copyInfo.SourceSelection.Rank ||
+                copyInfo.TargetDims.Length != copyInfo.TargetSelection.Rank ||
+                copyInfo.TargetChunkDims.Length != copyInfo.TargetSelection.Rank)
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* validate selections */
@@ -315,7 +317,7 @@ namespace HDF5.NET
                     sourceStream.Read(currentTarget.Slice(0, length).Span);                             // corresponds to span.CopyTo
 
                     sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);    // corresponds to 
-                    currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
+                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;                        // sourceBuffer.Slice()
 
                     currentTarget = currentTarget.Slice(length);
                 }

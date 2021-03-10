@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -71,7 +70,7 @@ namespace HDF5.NET
             {
                 if (_slotStream is null || _loadSlot)
                 {
-                    _slotStream = _slotStreams.Last(stream => _position >= stream.Offset);
+                    _slotStream = _slotStreams.Last(stream => stream.Offset <= _position);
                     _slotStream.Seek(_position - _slotStream.Offset, SeekOrigin.Begin);
                     _loadSlot = false;
                 }

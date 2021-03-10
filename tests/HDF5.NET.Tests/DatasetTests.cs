@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -195,6 +196,9 @@ namespace HDF5.NET.Tests.Reading
                 var expected_casted = TestData.ArrayData.Cast<int>().ToArray();
                 var actual_casted = actual.Cast<int>().ToArray();
 
+                var b = MemoryMarshal.AsBytes(expected_casted.AsSpan());
+                var c = MemoryMarshal.AsBytes(actual_casted.AsSpan());
+
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));
             });
@@ -291,8 +295,12 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("prefix")]
         public void CanReadDataset_External(string datasetName)
         {
-            // got error message "external storage not supported with chunked layout" -> skip chunked and compact layout
+            // WARNING:
+            // It seems that there is a bug in the native HDF library. In this test, sometimes the fill value
+            // is defined with a value of 99, which must come from test 'CanReadDataset_Contiguous_With_FillValue_And_AllocationLate'.
 
+            // INFO:
+            // HDF lib says "external storage not supported with chunked layout". Same is true for compact layout.
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
@@ -324,6 +332,19 @@ namespace HDF5.NET.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
+                _logger.WriteLine(actual[1000].ToString());
+                _logger.WriteLine(expected[1000].ToString());
+
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    if (actual[i] != expected[i])
+                    {
+                        _logger.WriteLine("index_" + i.ToString());
+                        _logger.WriteLine(actual[i].ToString());
+                        _logger.WriteLine(expected[i].ToString());
+                    }
+                }
+
                 Assert.True(actual.SequenceEqual(expected));
             });
         }

@@ -30,6 +30,7 @@ namespace HDF5.NET
         }
 
         internal static void ExecutePipeline(List<FilterDescription> pipeline,
+                                             uint filterMask,
                                              ExtendedFilterFlags flags,
                                              Memory<byte> filterBuffer,
                                              Memory<byte> resultBuffer)
@@ -41,6 +42,10 @@ namespace HDF5.NET
             {
                 for (int i = pipeline.Count; i > 0; --i)
                 {
+                    /* check if filter should be skipped */
+                    if (((filterMask >> i) & 0x0001) > 0)
+                        continue;
+
                     var filter = pipeline[i - 1];
                     var registration = H5Filter.Registrations.FirstOrDefault(current => current.Identifier == filter.Identifier);
 

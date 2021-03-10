@@ -11,9 +11,9 @@
             this.ChunkSize = reader.ReadUInt32();
             this.FilterMask = reader.ReadUInt32();
 
-            this.ScaledChunkOffsets = new ulong[rank];
+            this.ScaledChunkOffsets = new ulong[rank + 1];
 
-            for (byte i = 0; i < rank; i++)
+            for (byte i = 0; i < rank + 1; i++)
             {
                 this.ScaledChunkOffsets[i] = reader.ReadUInt64() / dimensionSizes[i];
             }

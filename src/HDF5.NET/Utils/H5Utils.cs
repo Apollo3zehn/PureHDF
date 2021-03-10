@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +11,23 @@ namespace HDF5.NET
 {
     internal static class H5Utils
     {
+        // H5VMprivate.h (H5VM_bit_get)
+        public static byte[] SequentialBitMask { get; } = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+
+        public static uint ComputeChunkSizeLength(ulong chunkSize)
+        {
+            // H5Dearray.c (H5D__earray_crt_context)
+            /* Compute the size required for encoding the size of a chunk, allowing
+             *      for an extra byte, in case the filter makes the chunk larger.
+             */
+            var chunkSizeLength = 1 + ((uint)Math.Log(chunkSize, 2) + 8) / 8;
+
+            if (chunkSizeLength > 8)
+                chunkSizeLength = 8;
+
+            return chunkSizeLength;
+        }
+
         public static void ValidateSignature(byte[] actual, byte[] expected)
         {
             var actualString = Encoding.ASCII.GetString(actual);
@@ -316,12 +331,12 @@ namespace HDF5.NET
 
                 case DataspaceType.Simple:
 
-                    var byteSize = 0UL;
+                    var totalSize = 0UL;
 
                     if (dimensionSizes.Any())
-                        byteSize = dimensionSizes.Aggregate((x, y) => x * y);
+                        totalSize = dimensionSizes.Aggregate((x, y) => x * y);
 
-                    return byteSize;
+                    return totalSize;
 
                 case DataspaceType.Null:
                     return 0;

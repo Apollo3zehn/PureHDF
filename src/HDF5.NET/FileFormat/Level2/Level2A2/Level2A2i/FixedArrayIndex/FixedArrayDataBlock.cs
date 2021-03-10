@@ -53,6 +53,13 @@ namespace HDF5.NET
 
             // checksum
             this.Checksum = reader.ReadUInt32();
+
+            // last page element count
+            if (header.EntriesCount % this.ElementsPerPage == 0)
+                this.LastPageElementCount = this.ElementsPerPage;
+
+            else
+                this.LastPageElementCount = header.EntriesCount % this.ElementsPerPage;
         }
 
         #endregion
@@ -89,6 +96,8 @@ namespace HDF5.NET
         public ulong ElementsPerPage { get; }
 
         public ulong PageCount { get; }
+
+        public ulong LastPageElementCount { get; }
 
         #endregion
     }

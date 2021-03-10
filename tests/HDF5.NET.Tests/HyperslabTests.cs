@@ -1,7 +1,6 @@
 ﻿using HDF.PInvoke;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
@@ -247,7 +246,17 @@ namespace HDF5.NET.Tests.Reading
                 .ToArray();
 
             // Assert
-            Assert.True(expected.SequenceEqual(actual));
+            for (int i = 0; i < actual.Length; i++)
+            {
+                var actual_current = actual[i];
+                var expected_current = expected[i];
+
+                Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
+                Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
+                Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
+                Assert.Equal(actual_current.Offset, expected_current.Offset);
+                Assert.Equal(actual_current.Length, expected_current.Length);
+            }
         }
 
         [Fact(Skip = "Only for performance tests.")]

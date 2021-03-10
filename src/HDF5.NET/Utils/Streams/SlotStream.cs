@@ -67,7 +67,7 @@ namespace HDF5.NET
                         throw new Exception("The offset exceeds the stream length.");
 
                     _stream = this.EnsureStream();
-                    _stream.Seek(offset, origin);
+                    _stream.Seek(offset + (long)_slot.Offset, origin);
                     _position = offset;
 
                     return _position;

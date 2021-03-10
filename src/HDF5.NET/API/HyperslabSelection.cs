@@ -70,6 +70,11 @@ namespace HDF5.NET
             return new HyperslabSelection(rank: dims.Length, start, block);
         }
 
+        public static HyperslabSelection Scalar()
+        {
+            return new HyperslabSelection(0, 1);
+        }
+
         public override ulong GetTotalCount()
         {
             var totalCount = 1UL;
@@ -79,7 +84,9 @@ namespace HDF5.NET
                 totalCount *= this.Counts[i] * this.Blocks[i];
             }
 
-            return totalCount;
+            return this.Rank > 0 
+                ? totalCount 
+                : 0;
         }
 
         internal ulong GetStop(int dimension)

@@ -148,7 +148,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             // a (more than one chunk in file)
-            var pathA = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, "a.raw"), datasetAccess);
+            var pathA = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_a.raw"), datasetAccess);
 
             if (File.Exists(pathA))
                 File.Delete(pathA);
@@ -158,7 +158,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // b (file size smaller than set size)
-            var pathB = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, "b.raw"), datasetAccess);
+            var pathB = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.raw"), datasetAccess);
 
             if (File.Exists(pathB))
                 File.Delete(pathB);
@@ -166,7 +166,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // c (normal file)
-            var pathC = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, "c.raw"), datasetAccess);
+            var pathC = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_c.raw"), datasetAccess);
 
             if (File.Exists(pathC))
                 File.Delete(pathC);

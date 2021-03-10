@@ -1,5 +1,4 @@
-﻿using HDF5.NET;
-using Microsoft.AspNetCore.Components.Forms;
+﻿using Microsoft.AspNetCore.Components.Forms;
 
 namespace HDF5.NET.BlazorBrowser.Core
 {

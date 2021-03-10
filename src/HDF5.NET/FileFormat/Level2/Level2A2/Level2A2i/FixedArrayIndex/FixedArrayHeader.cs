@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
@@ -79,15 +78,6 @@ namespace HDF5.NET
         public ulong DataBlockAddress { get; }
 
         public uint Checksum { get; }
-
-        public FixedArrayDataBlock DataBlock
-        {
-            get
-            {
-                this.Reader.Seek((long)this.DataBlockAddress, SeekOrigin.Begin);
-                return new FixedArrayDataBlock(this.Reader, _superblock, this, _chunkSizeLength);
-            }
-        }
 
         #endregion
     }

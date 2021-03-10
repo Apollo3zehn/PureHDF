@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public partial class H5Dataset : H5AttributableObject
+    public partial class H5Dataset
     {
-        private void ReadBTree2Chunk(Memory<byte> buffer, byte rank, ulong chunkSize, ulong[] indices)
+        private void ReadBTree2Chunk(Memory<byte> buffer, byte rank, ulong chunkSize, ulong[] chunkIndices)
         {
             if (this.FilterPipeline == null)
             {
@@ -17,19 +17,24 @@ namespace HDF5.NET
                 var success = btree2.TryFindRecord(out var record, record =>
                 {
                     // H5Dbtree2.c (H5D__bt2_compare)
-                    return this.VectorCompare(rank, indices, record.ScaledOffsets);
+                    return this.VectorCompare(rank, chunkIndices, record.ScaledOffsets);
                 });
 
-                if (!success)
-                    record.Address = Superblock.UndefinedAddress;
-
                 // read data
-                this.SeekAndReadChunk(buffer, chunkSize, record.Address);
+                if (success)
+                {
+                    this.SeekAndReadChunk(buffer, chunkSize, 0, record.Address);
+                }
+                else
+                {
+                    if (this.FillValue.IsDefined)
+                        buffer.Span.Fill(this.FillValue.Value);
+                }
             }
             else
             {
                 // btree2
-                var chunkSizeLength = this.ComputeChunkSizeLength(chunkSize);
+                var chunkSizeLength = H5Utils.ComputeChunkSizeLength(chunkSize);
                 Func<BTree2Record11> decodeKey = () => this.DecodeRecord11(rank, chunkSizeLength);
                 var btree2 = new BTree2Header<BTree2Record11>(this.Context.Reader, this.Context.Superblock, decodeKey);
 
@@ -37,14 +42,19 @@ namespace HDF5.NET
                 var success = btree2.TryFindRecord(out var record, record =>
                 {
                     // H5Dbtree2.c (H5D__bt2_compare)
-                    return this.VectorCompare(rank, indices, record.ScaledOffsets);
+                    return this.VectorCompare(rank, chunkIndices, record.ScaledOffsets);
                 });
 
-                if (!success)
-                    record.Address = Superblock.UndefinedAddress;
-
                 // read data
-                this.SeekAndReadChunk(buffer, record.ChunkSize, record.Address);
+                if (success)
+                {
+                    this.SeekAndReadChunk(buffer, record.ChunkSize, record.FilterMask, record.Address);
+                }
+                else
+                {
+                    if (this.FillValue.IsDefined)
+                        buffer.Span.Fill(this.FillValue.Value);
+                }
             }
         }
 

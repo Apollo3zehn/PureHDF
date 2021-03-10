@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public partial class H5Dataset : H5AttributableObject
+    public partial class H5Dataset
     {
-        private void ReadBTree1Chunk(Memory<byte> buffer, byte rank, uint[] dimensionSizes, ulong[] indices)
+        private void ReadBTree1Chunk(Memory<byte> buffer, byte rank, uint[] dimensionSizes, ulong[] chunkIndices)
         {
             // btree1
             Func<BTree1RawDataChunksKey> decodeKey = () => this.DecodeRawDataChunksKey(rank, dimensionSizes);
@@ -14,15 +14,20 @@ namespace HDF5.NET
             // get key and child address
             var success = btree1
                         .TryFindUserData(out var userData,
-                                        (leftKey, rightKey) => this.NodeCompare3(rank, indices, leftKey, rightKey),
+                                        (leftKey, rightKey) => this.NodeCompare3(rank, chunkIndices, leftKey, rightKey),
                                         (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData) 
-                                            => this.NodeFound(rank, dimensionSizes, address, leftKey, out userData));
-
-            if (!success)
-                userData.ChildAddress = Superblock.UndefinedAddress;
+                                            => this.NodeFound(rank, chunkIndices, address, leftKey, out userData));
 
             // read data
-            this.SeekAndReadChunk(buffer, userData.ChunkSize, userData.ChildAddress);
+            if (success)
+            {
+                this.SeekAndReadChunk(buffer, userData.ChunkSize, userData.FilterMask, userData.ChildAddress);
+            }
+            else
+            {
+                if (this.FillValue.IsDefined)
+                    buffer.Span.Fill(this.FillValue.Value);
+            }           
         }
 
         #region Callbacks
@@ -45,8 +50,10 @@ namespace HDF5.NET
             /* indexed storage B-tree... */
             if (rank == 2)
             {
-                if (indices[0] > rightKey.ScaledChunkOffsets[0])
+                if (indices[0] >= rightKey.ScaledChunkOffsets[0])
                     return 1;
+
+                /* not sure why original code has another else-if at this point */
 
                 else if (indices[0] < leftKey.ScaledChunkOffsets[0])
                     return -1;
@@ -65,7 +72,7 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool NodeFound(byte rank, uint[] indices, ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
+        private bool NodeFound(byte rank, ulong[] indices, ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
         {
             // H5Dbtree.c (H5D__btree_found)
 

@@ -89,6 +89,26 @@ namespace HDF5.NET
 
         #region Public
 
+        public byte[] Read(
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default)
+        {
+            var result = this.Read<byte>(
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+
+            if (result is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return result;
+        }
+
         public T[] Read<T>(
             Selection? fileSelection = default,
             Selection? memorySelection = default,
@@ -152,15 +172,6 @@ namespace HDF5.NET
 
 #warning use implicit cast operator for multi dim arrays? http://dontcodetired.com/blog/post/Writing-Implicit-and-Explicit-C-Conversion-Operators
 
-#warning Reading large files
-        /* Reading large files
-         * Compact: no problem
-         * Contiguous: just make sure that the hyperslab is divided into < 2 GB chunks
-         * Chunked: Chunk size is max 2 GB, but decompressed data will be larger. This means 
-         * that the returned buffer must not be a Span<T> or Memory<T>.
-         * Virtual: a combination of the solutions above
-         */
-
         internal T[]? Read<T>(
             Memory<T> buffer,
             Selection? fileSelection = default,
@@ -204,17 +215,47 @@ namespace HDF5.NET
                 }
             }
 
-            /* dims */
-            var datasetDims = this.Dataspace.DimensionSizes;
+            /* dims & file selection */
+            var datasetDims = default(ulong[]);
+            var result = default(T[]);
+
+            switch (this.Dataspace.Type)
+            {
+                case DataspaceType.Scalar:
+
+                    datasetDims = new ulong[] { 1 };
+
+                    if (fileSelection is null)
+                        fileSelection = HyperslabSelection.Scalar();
+
+                    break;
+
+                case DataspaceType.Simple:
+
+                    datasetDims = this.Dataspace.DimensionSizes;
+
+                    if (fileSelection is null)
+                        fileSelection = HyperslabSelection.All(datasetDims);
+
+                    break;
+
+                case DataspaceType.Null:
+                    return new T[0];
+
+                default:
+                    throw new Exception($"Unsupported data space type '{this.Dataspace.Type}'.");
+            }
+
+            /* chunk dims */
             var datasetChunkDims = this.DataLayout.LayoutClass == LayoutClass.Chunked
                 ? this.GetChunkDims()
                 : datasetDims;
 
-            /* file selection */
-            if (fileSelection is null)
-                fileSelection = HyperslabSelection.All(datasetDims);
-
+            /* result buffer */
             var totalCount = fileSelection.GetTotalCount();
+
+            if (buffer.Equals(default))
+                buffer = this.GetBuffer(totalCount, out result);
 
             /* memory selection */
             if (memorySelection is null)
@@ -222,25 +263,16 @@ namespace HDF5.NET
 
             /* check both selections */
             var fileHyperslabSelection = fileSelection as HyperslabSelection;
-            var memoryeHyperslabSelection = memorySelection as HyperslabSelection;
+            var memoryHyperslabSelection = memorySelection as HyperslabSelection;
 
-            if (fileHyperslabSelection == null || memoryeHyperslabSelection == null)
+            if (fileHyperslabSelection == null || memoryHyperslabSelection == null)
                 throw new NotSupportedException("Only hyperslab selections are currently supported.");
 
             /* memory dims */
             if (memoryDims is null)
-                memoryDims = new ulong[totalCount];
+                memoryDims = new ulong[] { totalCount };
 
-            /* result buffer */
-            var byteBuffer = default(Memory<byte>);
-            var result = default(T[]);
-
-            if (buffer.Equals(default))
-                byteBuffer = this.GetBuffer(totalCount, out result);
-
-            else
-                byteBuffer = buffer.Cast<T, byte>();
-
+            /* buffer provider */
             Func<ulong[], Memory<byte>>? getSourceBuffer = this.DataLayout.LayoutClass switch
             {
                 /* Compact: The array is stored in one contiguous block as part of
@@ -259,7 +291,7 @@ namespace HDF5.NET
                  * addresses. 
                  */
                 LayoutClass.Chunked => indices =>
-                    datasetAccess.ChunkCacheFactory().GetChunk(indices, () => this.ReadChunk(indices)),
+                    this.GetChunkCache(datasetAccess).GetChunk(indices, () => this.ReadChunk(indices)),
 
                 /* Virtual: This is only supported for version 4 of the Data Layout 
                  * message. The message stores information that is used to locate 
@@ -273,7 +305,7 @@ namespace HDF5.NET
                 _ => null
             };
 
-            Func<ulong[], Stream>? getSourceStream = this.DataLayout.LayoutClass switch
+            var sourceStream = this.DataLayout.LayoutClass switch
             {
                 /* Contiguous: The array is stored in one contiguous area of the file. 
                  * This layout requires that the size of the array be constant: 
@@ -282,33 +314,43 @@ namespace HDF5.NET
                  * storage size of the array. The offset of an element from the 
                  * beginning of the storage area is computed as in a C array.
                  */
-                LayoutClass.Contiguous => indices =>
-                    this.ReadContiguousAsStream(datasetAccess),
+                LayoutClass.Contiguous => this.ReadContiguousAsStream(datasetAccess),
 
                 /* default */
                 _ => null
             };
 
-            if (getSourceBuffer is null && getSourceStream is null)
-                new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
+            Func<ulong[], Stream>? getSourceStream = sourceStream is not null
+                ? indices => sourceStream
+                : null;
 
-            /* copy info */
-            var copyInfo = new CopyInfo(
-                datasetDims,
-                datasetChunkDims,
-                memoryDims,
-                memoryDims,
-                fileHyperslabSelection,
-                memoryeHyperslabSelection,
-                GetSourceBuffer: getSourceBuffer,
-                GetSourceStream: getSourceStream,
-                GetTargetBuffer: indices => buffer.Cast<T, byte>(),
-                TypeSize: Marshal.SizeOf<T>()
-            );
+            try
+            {
+                if (getSourceBuffer is null && getSourceStream is null)
+                    new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
 
-            HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryeHyperslabSelection.Rank, copyInfo);
+                /* copy info */
+                var copyInfo = new CopyInfo(
+                    datasetDims,
+                    datasetChunkDims,
+                    memoryDims,
+                    memoryDims,
+                    fileHyperslabSelection,
+                    memoryHyperslabSelection,
+                    GetSourceBuffer: getSourceBuffer,
+                    GetSourceStream: getSourceStream,
+                    GetTargetBuffer: indices => buffer.Cast<T, byte>(),
+                    TypeSize: (int)this.Datatype.Size
+                );
 
-            return result;
+                HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
+
+                return result;
+            }
+            finally
+            {
+                sourceStream?.Dispose();
+            }
         }
 
 #warning Use this instead of SpanExtensions!
@@ -400,7 +442,7 @@ namespace HDF5.NET
             else
             {
                 this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                return this.Context.Reader.BaseStream;
+                return new OffsetStream(this.Context.Reader.BaseStream, this.Context.Reader.BaseStream.Position);
             }
         }
 
@@ -411,7 +453,7 @@ namespace HDF5.NET
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
                 chunkDims = layout12
-                    .DimensionSizes[..^1]
+                    .DimensionSizes
                     .Select(value => (ulong)value)
                     .ToArray();
             }
@@ -420,14 +462,17 @@ namespace HDF5.NET
                 var chunked3 = (ChunkedStoragePropertyDescription3)layout3.Properties;
 
                 chunkDims = chunked3
-                    .DimensionSizes
+                    .DimensionSizes[..^1]
                     .Select(value => (ulong)value)
                     .ToArray();
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
             {
                 var chunked4 = (ChunkedStoragePropertyDescription4)layout4.Properties;
-                chunkDims = chunked4.DimensionSizes;
+
+                chunkDims = chunked4
+                    .DimensionSizes[..^1]
+                    .ToArray();
             }
             else
             {
@@ -437,14 +482,14 @@ namespace HDF5.NET
             return chunkDims;
         }
 
-        private byte[] ReadChunk(ulong[] indices)
+        private byte[] ReadChunk(ulong[] chunkIndices)
         {
-            var buffer = default(byte[]);
+            byte[] buffer;
 
             if (this.DataLayout is DataLayoutMessage12 layout12)
             {
-                var chunkSize = H5Utils.CalculateSize(layout12.DimensionSizes);
-                buffer = new byte[chunkSize];
+                var chunkByteSize = H5Utils.CalculateSize(layout12.DimensionSizes);
+                buffer = new byte[chunkByteSize];
 
                 if (this.Context.Superblock.IsUndefinedAddress(layout12.DataAddress))
                 {
@@ -454,14 +499,14 @@ namespace HDF5.NET
                 else
                 {
                     this.Context.Reader.Seek((int)layout12.DataAddress, SeekOrigin.Begin);
-                    this.ReadBTree1Chunk(buffer, (byte)(layout12.Rank - 0), layout12.DimensionSizes, indices);
+                    this.ReadBTree1Chunk(buffer, (byte)(layout12.Rank - 0), layout12.DimensionSizes, chunkIndices);
                 }
             }
             else if (this.DataLayout is DataLayoutMessage3 layout3 && !(this.DataLayout is DataLayoutMessage4))
             {
                 var chunked3 = (ChunkedStoragePropertyDescription3)layout3.Properties;
-                var chunkSize = H5Utils.CalculateSize(chunked3.DimensionSizes);
-                buffer = new byte[chunkSize];
+                var chunkByteSize = H5Utils.CalculateSize(chunked3.DimensionSizes);
+                buffer = new byte[chunkByteSize];
 
                 if (this.Context.Superblock.IsUndefinedAddress(chunked3.Address))
                 {
@@ -471,14 +516,14 @@ namespace HDF5.NET
                 else
                 {
                     this.Context.Reader.Seek((int)chunked3.Address, SeekOrigin.Begin);
-                    this.ReadBTree1Chunk(buffer, (byte)(chunked3.Rank - 1), chunked3.DimensionSizes, indices);
+                    this.ReadBTree1Chunk(buffer, (byte)(chunked3.Rank - 1), chunked3.DimensionSizes, chunkIndices);
                 }
             }
             else if (this.DataLayout is DataLayoutMessage4 layout4)
             {
                 var chunked4 = (ChunkedStoragePropertyDescription4)layout4.Properties;
-                var chunkSize = H5Utils.CalculateSize(chunked4.DimensionSizes);
-                buffer = new byte[chunkSize];
+                var chunkByteSize = H5Utils.CalculateSize(chunked4.DimensionSizes);
+                buffer = new byte[chunkByteSize];
 
                 if (this.Context.Superblock.IsUndefinedAddress(chunked4.Address))
                 {
@@ -487,40 +532,65 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    this.Context.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
-
                     switch (chunked4.ChunkIndexingType)
                     {
                         // the current, maximum, and chunk dimension sizes are all the same
                         case ChunkIndexingType.SingleChunk:
-                            var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadChunk(buffer, chunkSize);
+
+                            if (chunked4.Flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
+                            {
+                                var singleChunkInfo = (SingleChunkIndexingInformation)chunked4.IndexingTypeInformation;
+                                this.SeekAndReadChunk(buffer, singleChunkInfo.FilteredChunkSize, singleChunkInfo.ChunkFilters, chunked4.Address);
+                            }
+                            else
+                            {
+                                this.SeekAndReadChunk(buffer, chunkByteSize, 0, chunked4.Address);
+                            }
+
                             break;
 
                         // fixed maximum dimension sizes
                         // no filter applied to the dataset
                         // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
                         case ChunkIndexingType.Implicit:
+
                             var implicitInfo = (ImplicitIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.Context.Reader.Read(buffer);
+
+                            var datasetDimsInChunkUnits1 = this.Dataspace.DimensionSizes
+                                .Select((dim, i) => H5Utils.CeilDiv(dim, chunked4.DimensionSizes[i]))
+                                .ToArray();
+
+                            var chunkIndex1 = chunkIndices.ToLinearIndex(datasetDimsInChunkUnits1);
+                            var chunkOffset = chunkIndex1 * chunkByteSize;
+                            this.SeekAndReadChunk(buffer, chunkByteSize, 0, chunked4.Address + chunkOffset);
                             break;
 
                         // fixed maximum dimension sizes
                         case ChunkIndexingType.FixedArray:
+
                             var fixedArrayInfo = (FixedArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadFixedArray(buffer, chunkSize);
+
+                            var datasetDimsInChunkUnits2 = this.Dataspace.DimensionSizes
+                                .Select((dim, i) => H5Utils.CeilDiv(dim, chunked4.DimensionSizes[i]))
+                                .ToArray();
+
+                            var chunkIndex2 = chunkIndices.ToLinearIndex(datasetDimsInChunkUnits2);
+                            this.Context.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
+                            this.ReadFixedArray(buffer, chunkByteSize, chunkIndex2);
                             break;
 
                         // only one dimension of unlimited extent
                         case ChunkIndexingType.ExtensibleArray:
                             var extensibleArrayInfo = (ExtensibleArrayIndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadExtensibleArray(buffer, chunkSize);
+                            this.Context.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
+                            this.ReadExtensibleArray(buffer, chunkByteSize);
                             break;
 
                         // more than one dimension of unlimited extent
                         case ChunkIndexingType.BTree2:
                             var btree2Info = (BTree2IndexingInformation)chunked4.IndexingTypeInformation;
-                            this.ReadBTree2Chunk(buffer, (byte)(chunked4.Rank - 1), chunkSize, indices);
+                            this.Context.Reader.Seek((int)chunked4.Address, SeekOrigin.Begin);
+                            this.ReadBTree2Chunk(buffer, (byte)(chunked4.Rank - 1), chunkByteSize, chunkIndices);
                             break;
 
                         default:
@@ -534,49 +604,6 @@ namespace HDF5.NET
             }
 
             return buffer;
-        }
-
-        private void ReadFixedArray(Memory<byte> buffer, ulong chunkSize)
-        {
-            //            var chunkSizeLength = this.ComputeChunkSizeLength(chunkSize);
-            //            var header = new FixedArrayHeader(this.Context.Reader, this.Context.Superblock, chunkSizeLength);
-            //            var dataBlock = header.DataBlock;
-
-            //            IEnumerable<DataBlockElement> elements;
-
-            //            if (dataBlock.PageCount > 0)
-            //            {
-            //                var pages = new List<DataBlockPage>((int)dataBlock.PageCount);
-
-            //                for (int i = 0; i < (int)dataBlock.PageCount; i++)
-            //                {
-            //                    var page = new DataBlockPage(this.Context.Reader, this.Context.Superblock, dataBlock.ElementsPerPage, dataBlock.ClientID, chunkSizeLength);
-            //                    pages.Add(page);
-            //                }
-
-            //                elements = pages.SelectMany(page => page.Elements);
-            //            }
-            //            else
-            //            {
-            //                elements = dataBlock.Elements.AsEnumerable();
-            //            }
-
-            //            var index = 0UL;
-            //            var enumerator = elements.GetEnumerator();
-
-            //            for (ulong i = 0; i < header.EntriesCount; i++)
-            //            {
-            //                enumerator.MoveNext();
-            //                var element = enumerator.Current;
-
-            //                // if page/element is initialized (see also datablock.PageBitmap)
-            //                if (element.Address > 0)
-            //                    this.SeekAndReadChunk(buffer, element.ChunkSize, element.Address);
-
-            //#error Fill?
-
-            //                index++;
-            //            }
         }
 
         // for later: H5EA__lookup_elmt
@@ -672,7 +699,7 @@ namespace HDF5.NET
             }
         }
 
-        private Memory<byte> GetBuffer<T>(ulong totalCount, out T[] result)
+        private Memory<T> GetBuffer<T>(ulong totalCount, out T[] result)
             where T : unmanaged
         {
 #warning review this when correcting code for generics
@@ -686,29 +713,19 @@ namespace HDF5.NET
             // finally, create the buffer
             result = new T[arraySize];
 
-            var buffer = result
-                .AsMemory()
-                .Cast<T, byte>();
-
-            return buffer;
+            return result
+                .AsMemory();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SeekAndReadChunk(Memory<byte> buffer, ulong rawChunkSize, ulong address)
+        private void SeekAndReadChunk(Memory<byte> buffer, ulong rawChunkSize, uint filterMask, ulong address)
         {
-            if (this.Context.Superblock.IsUndefinedAddress(address))
-            {
-                buffer.Span.Fill(this.FillValue.Value);
-            }
-            else
-            {
-                this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                this.ReadChunk(buffer, rawChunkSize);
-            }
+            this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
+            this.ReadChunk(buffer, rawChunkSize, filterMask);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReadChunk(Memory<byte> buffer, ulong rawChunkSize)
+        private void ReadChunk(Memory<byte> buffer, ulong rawChunkSize, uint filterMask)
         {
             if (this.FilterPipeline == null)
             {
@@ -720,22 +737,8 @@ namespace HDF5.NET
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
                 this.Context.Reader.Read(filterBuffer.Span);
 
-                H5Filter.ExecutePipeline(this.FilterPipeline.FilterDescriptions, ExtendedFilterFlags.Reverse, filterBuffer, buffer);
+                H5Filter.ExecutePipeline(this.FilterPipeline.FilterDescriptions, filterMask, ExtendedFilterFlags.Reverse, filterBuffer, buffer);
             }
-        }
-
-        private uint ComputeChunkSizeLength(ulong chunkSize)
-        {
-            // H5Dearray.c (H5D__earray_crt_context)
-            /* Compute the size required for encoding the size of a chunk, allowing
-             *      for an extra byte, in case the filter makes the chunk larger.
-             */
-            var chunkSizeLength = 1 + ((uint)Math.Log(chunkSize, 2) + 8) / 8;
-
-            if (chunkSizeLength > 8)
-                chunkSizeLength = 8;
-
-            return chunkSizeLength;
         }
 
         private void EnsureEndianness(Span<byte> buffer)
@@ -759,6 +762,19 @@ namespace HDF5.NET
             }
 
             return 0;
+        }
+
+        private IChunkCache GetChunkCache(H5DatasetAccess datasetAccess)
+        {
+            var chunkCacheFactory = datasetAccess.ChunkCacheFactory;
+
+            if (chunkCacheFactory == null)
+                chunkCacheFactory = _file.ChunkCacheFactory;
+
+            if (chunkCacheFactory == null)
+                chunkCacheFactory = H5File.DefaultChunkCacheFactory;
+
+            return chunkCacheFactory();
         }
 
         #endregion
