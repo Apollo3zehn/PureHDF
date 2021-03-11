@@ -17,7 +17,6 @@
 
         #region Properties
 
-        public ulong Address { get; set; }
         public uint Index { get; set; }
 
         #endregion

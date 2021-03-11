@@ -338,7 +338,7 @@ public struct NullableStructWithCustomFieldName
 Func<FieldInfo, string> converter = fieldInfo =>
 {
     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-    return attribute != null ? attribute.Name : fieldInfo.Name;
+    return attribute is not null ? attribute.Name : fieldInfo.Name;
 };
 
 // Use that name translator.

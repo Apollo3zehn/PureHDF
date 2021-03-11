@@ -42,7 +42,7 @@ namespace HDF5.NET
         public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache)
         {
             // huge objects b-tree v2
-            if (record01Cache == null)
+            if (record01Cache is null)
             {
                 _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
                 var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock, this.DecodeRecord01);

@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-@if (this.AppState != null && this.AppState.Files.Any())
+@if (this.AppState is not null && this.AppState.Files.Any())
 {
     <MatNavMenu Class="nav-menu">
         @foreach (var file in this.AppState.Files)

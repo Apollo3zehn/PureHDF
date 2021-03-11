@@ -10,7 +10,7 @@
             this.Size = reader.ReadUInt16();
 
             // raw data
-            this.RawData = reader.ReadBytes((int)this.Size);
+            this.RawData = reader.ReadBytes(this.Size);
         }
 
         #endregion

@@ -43,7 +43,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_objectReferenceCount == null)
+                if (_objectReferenceCount is null)
                 {
                     _objectReferenceCount = this.Header
                         .GetMessages<ObjectReferenceCountMessage>()
@@ -58,7 +58,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_header == null)
+                if (_header is null)
                 {
                     this.Context.Reader.Seek((long)this.Reference.Value, SeekOrigin.Begin);
                     _header = ObjectHeader.Construct(this.Context);
@@ -76,11 +76,11 @@ namespace HDF5.NET
         {
             var header1 = this.Header as ObjectHeader1;
 
-            if (header1 != null)
+            if (header1 is not null)
                 return header1.ObjectReferenceCount;
 
             else
-                return this.ObjectReferenceCount == null
+                return this.ObjectReferenceCount is null
                     ? 1
                     : this.ObjectReferenceCount.ReferenceCount;
         }

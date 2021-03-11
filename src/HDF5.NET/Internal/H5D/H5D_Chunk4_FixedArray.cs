@@ -1,31 +1,42 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace HDF5.NET
 {
-    public partial class H5Dataset
+    internal class H5D_Chunk4_FixedArray : H5D_Chunk4
     {
-        private void ReadFixedArray(Memory<byte> buffer, ulong chunkSize, ulong chunkIndex)
+        private FixedArrayHeader _header;
+
+        public H5D_Chunk4_FixedArray(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) : 
+            base(dataset, layout, datasetAccess)
+        {
+            //
+        }
+
+        protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
             // H5Dfarray.c (H5D__farray_idx_get_addr)
 
-            var chunkSizeLength = H5Utils.ComputeChunkSizeLength(chunkSize);
-            var header = new FixedArrayHeader(this.Context.Reader, this.Context.Superblock, chunkSizeLength);
+            var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
+
+            if (_header == null)
+            {
+                this.Dataset.Context.Reader.Seek((long)this.Dataset.DataLayout.Address, SeekOrigin.Begin);
+                _header = new FixedArrayHeader(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, chunkSizeLength);
+            }
 
             /* Check if the fixed array data block has been allocated on disk yet */
-            if (this.Context.Superblock.IsUndefinedAddress(header.DataBlockAddress))
+            if (this.Dataset.Context.Superblock.IsUndefinedAddress(_header.DataBlockAddress))
             {
                 /* Call the class's 'fill' callback */
-                if (this.FillValue.IsDefined)
-                    buffer.Span.Fill(this.FillValue.Value);
-
-                return;
+                return ChunkInfo.None;
             }
             else
             {
                 /* Get the data block */
-                this.Context.Reader.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
-                var dataBlock = new FixedArrayDataBlock(this.Context.Reader, this.Context.Superblock, header, chunkSizeLength);
+                this.Dataset.Context.Reader.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
+                var dataBlock = new FixedArrayDataBlock(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, _header, chunkSizeLength);
+
+                var chunkIndex = chunkIndices.ToLinearIndex(this.ScaledDatasetDims);
 
                 /* Check for paged data block */
                 if (dataBlock.PageCount > 0)
@@ -42,8 +53,8 @@ namespace HDF5.NET
                         var elementIndex = chunkIndex % dataBlock.ElementsPerPage;
 
                         /* Compute the address of the data block */
-                        var pageSize =  dataBlock.ElementsPerPage * header.EntrySize + 4;
-                        var pageAddress = this.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
+                        var pageSize =  dataBlock.ElementsPerPage * _header.EntrySize + 4;
+                        var pageAddress = this.Dataset.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
 
                         /* Check for using last page, to set the number of elements on the page */
                         ulong elementCount;
@@ -55,27 +66,24 @@ namespace HDF5.NET
                             elementCount = dataBlock.ElementsPerPage;
 
                         /* Protect the data block page */
-                        this.Context.Reader.Seek(pageAddress, SeekOrigin.Begin);
-                        var page = new DataBlockPage(this.Context.Reader, this.Context.Superblock, elementCount, dataBlock.ClientID, chunkSizeLength);
+                        this.Dataset.Context.Reader.Seek(pageAddress, SeekOrigin.Begin);
+                        var page = new DataBlockPage(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, elementCount, dataBlock.ClientID, chunkSizeLength);
 
                         /* Retrieve element from data block */
                         var element = page.Elements[elementIndex];
-                        this.SeekAndReadChunk(buffer, element.ChunkSize, element.FilterMask, element.Address);
+                        return new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask);
                     }
                     else
                     {
                         /* Call the class's 'fill' callback */
-                        if (this.FillValue.IsDefined)
-                            buffer.Span.Fill(this.FillValue.Value);
-
-                        return;
+                        return ChunkInfo.None;
                     }
                 }
                 else
                 {
                     /* Retrieve element from data block */
                     var element = dataBlock.Elements[chunkIndex];
-                    this.SeekAndReadChunk(buffer, element.ChunkSize, element.FilterMask, element.Address);
+                    return new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask);
                 }
             }
         }

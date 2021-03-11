@@ -46,7 +46,7 @@ namespace HDF5.NET
             var strides = new ulong[rank];
             var blocks = new ulong[rank];
             var gaps = new ulong[rank];
-            var datasetDimsInChunkUnits = new ulong[rank];
+            var scaledDatasetDims = new ulong[rank];
             var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
 
             for (int dimension = 0; dimension < rank; dimension++)
@@ -56,7 +56,7 @@ namespace HDF5.NET
                 strides[dimension] = selection.Strides[dimension];
                 blocks[dimension] = selection.Blocks[dimension];
                 gaps[dimension] = strides[dimension] - blocks[dimension];
-                datasetDimsInChunkUnits[dimension] = H5Utils.CeilDiv(dims[dimension], chunkDims[dimension]);
+                scaledDatasetDims[dimension] = H5Utils.CeilDiv(dims[dimension], chunkDims[dimension]);
             }
 
             /* prepare last dimension variables */
@@ -87,12 +87,12 @@ namespace HDF5.NET
 
                     while (remaining > 0)
                     {
-                        var offsetsInChunkUnits = new ulong[rank];
+                        var scaledOffsets = new ulong[rank];
                         var chunkOffsets = new ulong[rank];
 
                         for (int dimension = 0; dimension < rank; dimension++)
                         {
-                            offsetsInChunkUnits[dimension] = offsets[dimension] / chunkDims[dimension];
+                            scaledOffsets[dimension] = offsets[dimension] / chunkDims[dimension];
                             chunkOffsets[dimension] = offsets[dimension] % chunkDims[dimension];
                         }
 
@@ -101,7 +101,7 @@ namespace HDF5.NET
 
                         yield return new Step()
                         {
-                            Chunk = offsetsInChunkUnits,
+                            Chunk = scaledOffsets,
                             Offset = offset,
                             Length = currentLength
                         };
@@ -153,13 +153,9 @@ namespace HDF5.NET
 
         public static void Copy(int sourceRank, int targetRank, CopyInfo copyInfo)
         {
-            /* validate rank */
+            /* validate rank of selections */
             if (copyInfo.SourceSelection.Rank != sourceRank ||
-                copyInfo.TargetSelection.Rank != targetRank ||
-                copyInfo.SourceDims.Length != copyInfo.SourceSelection.Rank || 
-                copyInfo.SourceChunkDims.Length != copyInfo.SourceSelection.Rank ||
-                copyInfo.TargetDims.Length != copyInfo.TargetSelection.Rank ||
-                copyInfo.TargetChunkDims.Length != copyInfo.TargetSelection.Rank)
+                copyInfo.TargetSelection.Rank != targetRank)
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* validate selections */
@@ -177,6 +173,13 @@ namespace HDF5.NET
                 if (copyInfo.TargetSelection.GetStop(dimension) > copyInfo.TargetDims[dimension])
                     throw new ArgumentException("The target selection size exceeds the limits of the target buffer.");
             }
+
+            /* validate rank of dims */
+            if (copyInfo.SourceDims.Length != copyInfo.SourceSelection.Rank ||
+                copyInfo.SourceChunkDims.Length != copyInfo.SourceSelection.Rank ||
+                copyInfo.TargetDims.Length != copyInfo.TargetSelection.Rank ||
+                copyInfo.TargetChunkDims.Length != copyInfo.TargetSelection.Rank)
+                throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* walkers */
             var sourceWalker = HyperslabUtils

@@ -14,7 +14,6 @@
         #region Properties
 
         public byte Rank { get; set; }
-        public ulong Address { get; set; }
 
         #endregion
     }

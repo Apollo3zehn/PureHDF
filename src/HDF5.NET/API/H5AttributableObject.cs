@@ -30,6 +30,8 @@ namespace HDF5.NET
 
         #endregion
 
+#warning Add File Property?
+
         #region Methods
 
         public bool AttributeExists(string name)
@@ -52,7 +54,7 @@ namespace HDF5.NET
                 .GetMessages<AttributeMessage>()
                 .FirstOrDefault(message => message.Name == name);
 
-            if (attributeMessage != null)
+            if (attributeMessage is not null)
             {
                 return true;
             }
@@ -177,7 +179,7 @@ namespace HDF5.NET
 
             if (success)
             {
-                if (candidate == null)
+                if (candidate is null)
                     throw new Exception("This should never happen. Just to satisfy the compiler.");
 
                 attributeMessage = candidate;

@@ -174,7 +174,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
 
             // write data
-            if (datasetAccess.ExternalFilePrefix != null)
+            if (datasetAccess.ExternalFilePrefix is not null)
                 H5P.set_efile_prefix(dapl_id, datasetAccess.ExternalFilePrefix);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), apl: dapl_id, cpl: dcpl_id);
@@ -822,7 +822,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            if (dims1 == null)
+            if (dims1 is null)
                 dims1 = dims0;
 
             var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
@@ -963,7 +963,7 @@ namespace HDF5.NET.Tests
                 {
                     var fieldType = TestUtils.GetHdfTypeIdFromType(fieldInfo.FieldType);
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    var hdfFieldName = attribute != null ? attribute.Name : fieldInfo.Name;
+                    var hdfFieldName = attribute is not null ? attribute.Name : fieldInfo.Name;
 
                     H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(elementType, fieldInfo.Name), fieldType);
 

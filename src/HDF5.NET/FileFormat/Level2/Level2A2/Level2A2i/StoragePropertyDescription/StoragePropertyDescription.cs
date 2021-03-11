@@ -6,5 +6,7 @@
         {
             //
         }
+
+        public ulong Address { get; protected set; } = Superblock.UndefinedAddress;
     }
 }

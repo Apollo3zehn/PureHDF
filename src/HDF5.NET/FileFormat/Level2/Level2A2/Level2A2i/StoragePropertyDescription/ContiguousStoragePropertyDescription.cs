@@ -14,7 +14,6 @@
 
         #region Properties
 
-        public ulong Address { get; set; }
         public ulong Size { get; set; }
 
         #endregion

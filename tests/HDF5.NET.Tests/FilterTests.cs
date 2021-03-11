@@ -135,7 +135,7 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(TestData.MediumData));
         }
 
-#warning 16 byte and arbitrary number of bytes tests missing
+#error 16 byte and arbitrary number of bytes tests missing
         [Theory]
         [InlineData((byte)1, 1001)]
         [InlineData((short)2, 732)]

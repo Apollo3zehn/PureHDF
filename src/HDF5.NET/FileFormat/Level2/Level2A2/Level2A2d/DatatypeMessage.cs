@@ -54,7 +54,7 @@ namespace HDF5.NET
                     _ => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
                 };
 
-                if (properties != null)
+                if (properties is not null)
                     this.Properties.Add(properties);
             }
         }
@@ -109,7 +109,7 @@ namespace HDF5.NET
         {
             var opaqueDescription = this.BitField as OpaqueBitFieldDescription;
 
-            if (opaqueDescription != null)
+            if (opaqueDescription is not null)
                 return opaqueDescription.AsciiTagByteLength;
             else
                 throw new FormatException($"For opaque types, the bit field description must be an instance of type '{nameof(OpaqueBitFieldDescription)}'.");
@@ -119,7 +119,7 @@ namespace HDF5.NET
         {
             var enumerationDescription = this.BitField as EnumerationBitFieldDescription;
 
-            if (enumerationDescription != null)
+            if (enumerationDescription is not null)
                 return enumerationDescription.MemberCount;
             else
                 throw new FormatException($"For enumeration types, the bit field description must be an instance of type '{nameof(EnumerationBitFieldDescription)}'.");

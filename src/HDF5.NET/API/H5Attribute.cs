@@ -57,7 +57,7 @@ namespace HDF5.NET
             var buffer = this.Message.Data;
             var byteOrderAware = this.Message.Datatype.BitField as IByteOrderAware;
 
-            if (byteOrderAware != null)
+            if (byteOrderAware is not null)
                 H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.Message.Datatype.Size);
 
             return MemoryMarshal

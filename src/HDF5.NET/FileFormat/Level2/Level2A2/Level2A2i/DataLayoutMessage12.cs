@@ -27,7 +27,7 @@ namespace HDF5.NET
             reader.ReadBytes(5);
 
             // data address
-            this.DataAddress = this.LayoutClass switch
+            this.Address = this.LayoutClass switch
             {
                 LayoutClass.Compact     => ulong.MaxValue, // invalid address
                 LayoutClass.Contiguous  => superblock.ReadOffset(reader),
@@ -79,7 +79,6 @@ namespace HDF5.NET
         }
 
         public byte Rank { get; set; }
-        public ulong DataAddress { get; set; }
         public uint[] DimensionSizes { get; set; }
         public uint DatasetElementSize { get; set; }
         public byte[] CompactData { get; set; }

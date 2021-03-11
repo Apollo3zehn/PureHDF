@@ -47,11 +47,11 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal H5Object Dereference()
         {
-            if (this.File == null)
+            if (this.File is null)
             {
                 return new H5UnresolvedLink(this);
             }
-            else if (this.ScratchPad != null)
+            else if (this.ScratchPad is not null)
             {
                 return new H5Group(this.File, this.File.Context, this);
             }

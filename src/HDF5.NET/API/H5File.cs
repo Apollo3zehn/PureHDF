@@ -107,7 +107,7 @@ namespace HDF5.NET
             ulong address;
             var superblock01 = superblock as Superblock01;
 
-            if (superblock01 != null)
+            if (superblock01 is not null)
             {
                 address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
             }
@@ -115,7 +115,7 @@ namespace HDF5.NET
             {
                 var superblock23 = superblock as Superblock23;
 
-                if (superblock23 != null)
+                if (superblock23 is not null)
                     address = superblock23.RootGroupObjectHeaderAddress;
                 else
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");

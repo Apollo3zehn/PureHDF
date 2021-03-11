@@ -109,7 +109,7 @@ namespace HDF5.NET.Tests.Reading
                 Func<FieldInfo, string> converter = fieldInfo =>
                 {
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return attribute != null ? attribute.Name : fieldInfo.Name;
+                    return attribute is not null ? attribute.Name : fieldInfo.Name;
                 };
 
                 var actual = dataset.ReadCompound<TestStructString>(converter);
@@ -332,19 +332,6 @@ namespace HDF5.NET.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                _logger.WriteLine(actual[1000].ToString());
-                _logger.WriteLine(expected[1000].ToString());
-
-                for (int i = 0; i < actual.Length; i++)
-                {
-                    if (actual[i] != expected[i])
-                    {
-                        _logger.WriteLine("index_" + i.ToString());
-                        _logger.WriteLine(actual[i].ToString());
-                        _logger.WriteLine(expected[i].ToString());
-                    }
-                }
-
                 Assert.True(actual.SequenceEqual(expected));
             });
         }

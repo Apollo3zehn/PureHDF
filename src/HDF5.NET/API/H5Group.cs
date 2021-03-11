@@ -51,7 +51,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_file == null)
+                if (_file is null)
                     return (H5File)this;
                 else
                     return _file;
@@ -89,7 +89,7 @@ namespace HDF5.NET
             var link = this.Get(path, linkAccess);
             var group = link as H5Group;
 
-            if (group == null)
+            if (group is null)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Group)} because it is of type {link.GetType().Name}.");
 
             return group;
@@ -100,7 +100,7 @@ namespace HDF5.NET
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5Dataset;
 
-            if (castedLink == null)
+            if (castedLink is null)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Dataset)} because it is of type {link.GetType().Name}.");
 
             return castedLink;
@@ -111,7 +111,7 @@ namespace HDF5.NET
             var link = this.Get(path, linkAccess);
             var castedLink = link as H5CommitedDatatype;
 
-            if (castedLink == null)
+            if (castedLink is null)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5CommitedDatatype)} because it is of type {link.GetType().Name}.");
 
             return castedLink;
@@ -139,7 +139,7 @@ namespace HDF5.NET
             {
                 var group = current.Dereference() as H5Group;
 
-                if (group == null)
+                if (group is null)
                     return false;
 
                 if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -164,7 +164,7 @@ namespace HDF5.NET
             {
                 var group = current.Dereference() as H5Group;
 
-                if (group == null)
+                if (group is null)
                     throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
 
                 if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -191,7 +191,7 @@ namespace HDF5.NET
             namedReference = default;
 
             /* cached data */
-            if (_scratchPad != null)
+            if (_scratchPad is not null)
             {
                 var localHeap = _scratchPad.LocalHeap;
 
@@ -278,7 +278,7 @@ namespace HDF5.NET
                                 .GetMessages<LinkMessage>()
                                 .FirstOrDefault(message => message.LinkName == name);
 
-                            if (linkMessage != null)
+                            if (linkMessage is not null)
                             {
                                 namedReference = this.GetObjectReference(linkMessage, linkAccess);
                                 return true;
@@ -323,7 +323,7 @@ namespace HDF5.NET
                 namedReference = references
                     .FirstOrDefault(current => current.Value == reference.Value);
 
-                if (namedReference.Name != null /* if struct value is not equal to default */)
+                if (namedReference.Name is not null /* if struct value is not equal to default */)
                 {
                     return true;
                 }
@@ -334,7 +334,7 @@ namespace HDF5.NET
                     {
                         var group = childReference.Dereference() as H5Group;
 
-                        if (group != null)
+                        if (group is not null)
                         {
                             if (group.TryGetReference(reference, alreadyVisited, linkAccess, recursionLevel + 1, out namedReference))
                                 return true;
@@ -352,7 +352,7 @@ namespace HDF5.NET
             // section "Group implementations in HDF5"
 
             /* cached data */
-            if (_scratchPad != null)
+            if (_scratchPad is not null)
             {
                 var localHeap = _scratchPad.LocalHeap;
                 var references = this
@@ -498,7 +498,7 @@ namespace HDF5.NET
 
             if (success)
             {
-                if (candidate == null)
+                if (candidate is null)
                     throw new Exception("This should never happen. Just to satisfy the compiler.");
 
                 linkMessage = candidate;

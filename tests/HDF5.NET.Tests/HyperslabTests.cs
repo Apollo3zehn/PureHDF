@@ -585,7 +585,7 @@ namespace HDF5.NET.Tests.Reading
 
             var actualBuffer = new byte[10 * 10 * sizeof(int)];
             var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
-            var datasetDimsInChunkUnits = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var copyInfo = new CopyInfo(
                 datasetDims,
@@ -594,7 +594,7 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => chunksBuffers[indices.ToLinearIndex(datasetDimsInChunkUnits)],
+                indices => chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)],
                 indices => null,
                 indices => actualBuffer,
                 TypeSize: 4
@@ -703,7 +703,7 @@ namespace HDF5.NET.Tests.Reading
 
             var actualBuffer = new byte[5 * 6 * 11 * sizeof(int)];
             var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
-            var datasetDimsInChunkUnits = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var copyInfo = new CopyInfo(
                 datasetDims,
@@ -712,7 +712,7 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 sourceSelection,
                 targetSelection,
-                indices => chunksBuffers[indices.ToLinearIndex(datasetDimsInChunkUnits)],
+                indices => chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)],
                 indices => null,
                 indices => actualBuffer,
                 TypeSize: 4
@@ -817,7 +817,7 @@ namespace HDF5.NET.Tests.Reading
 
             var expectedBuffer = new byte[11 * 11 * 12 * sizeof(int)];
             var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer);
-            var datasetDimsInChunkUnits = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             expected[277] = 1;
             expected[280] = 2;
@@ -842,7 +842,7 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => chunksBuffers[indices.ToLinearIndex(datasetDimsInChunkUnits)],
+                indices => chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)],
                 indices => null,
                 indices => actualBuffer,
                 TypeSize: 4

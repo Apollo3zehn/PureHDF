@@ -14,6 +14,21 @@ namespace HDF5.NET
         // H5VMprivate.h (H5VM_bit_get)
         public static byte[] SequentialBitMask { get; } = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int VectorCompare(byte rank, ulong[] v1, ulong[] v2)
+        {
+            for (int i = 0; i < rank; i++)
+            {
+                if (v1[i] < v2[i])
+                    return -1;
+
+                if (v1[i] > v2[i])
+                    return 1;
+            }
+
+            return 0;
+        }
+
         public static uint ComputeChunkSizeLength(ulong chunkSize)
         {
             // H5Dearray.c (H5D__earray_crt_context)
@@ -183,7 +198,7 @@ namespace HDF5.NET
             {
                 var bitField = datatype.BitField as StringBitFieldDescription;
 
-                if (bitField == null)
+                if (bitField is null)
                     throw new Exception("String bit field desciption must not be null.");
 
                 if (bitField.PaddingType != PaddingType.NullTerminate)
@@ -193,7 +208,7 @@ namespace HDF5.NET
 
                 while (position != data.Length)
                 {
-#warning Fixed-length string with null terminate padding is not read in correctly. The string is still padded with zero or more \0 characters.
+#error Fixed-length string with null terminate padding is not read in correctly. The string is still padded with zero or more \0 characters.
                     var value = H5Utils.ReadFixedLengthString(data[position..(position + size)]);
                     result.Add(value);
                     position += size;
@@ -203,7 +218,7 @@ namespace HDF5.NET
             {
                 var bitField = datatype.BitField as VariableLengthBitFieldDescription;
 
-                if (bitField == null)
+                if (bitField is null)
                     throw new Exception("Variable-length bit field desciption must not be null.");
 
                 if (bitField.Type != VariableLengthType.String)
@@ -367,7 +382,7 @@ namespace HDF5.NET
                 var envVariable = Environment
                     .GetEnvironmentVariable("HDF5_EXT_PREFIX");
 
-                if (envVariable != null)
+                if (envVariable is not null)
                 {
                     // cannot work in Windows
                     //var envPrefixes = envVariable.Split(":");

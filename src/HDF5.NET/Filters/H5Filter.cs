@@ -49,7 +49,7 @@ namespace HDF5.NET
                     var filter = pipeline[i - 1];
                     var registration = H5Filter.Registrations.FirstOrDefault(current => current.Identifier == filter.Identifier);
 
-                    if (registration == null)
+                    if (registration is null)
                     {
                         var filterName = string.IsNullOrWhiteSpace(filter.Name) ? "unnamed filter" : filter.Name;
                         throw new Exception($"Could not find filter '{filterName}' with ID '{filter.Identifier}'. Make sure the filter has been registered using H5Filter.Register(...).");

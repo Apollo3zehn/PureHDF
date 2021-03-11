@@ -17,6 +17,8 @@ namespace HDF5.NET
 
         public LayoutClass LayoutClass { get; set; }
 
+        public ulong Address { get; set; }
+
         #endregion
 
         #region Methods

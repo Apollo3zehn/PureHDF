@@ -109,7 +109,7 @@ namespace HDF5.NET.Tests.Reading
                 Func<FieldInfo, string> converter = fieldInfo =>
                 {
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return attribute != null ? attribute.Name : fieldInfo.Name;
+                    return attribute is not null ? attribute.Name : fieldInfo.Name;
                 };
 
                 var actual = attribute.ReadCompound<TestStructString>(converter);

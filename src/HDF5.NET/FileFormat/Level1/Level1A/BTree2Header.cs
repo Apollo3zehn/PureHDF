@@ -185,7 +185,7 @@ namespace HDF5.NET
                 this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
                 var internalNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount, depth, _decodeKey);
 
-                if (internalNode == null)
+                if (internalNode is null)
                     throw new Exception("Unable to load B-tree internal node.");
 
                 /* Locate node pointer for child */
@@ -257,7 +257,7 @@ namespace HDF5.NET
         {
             var rootNode = this.RootNode;
 
-            if (rootNode != null)
+            if (rootNode is not null)
                 return this.EnumerateRecords(rootNode, this.Depth);
             else
                 return new List<T>();
@@ -271,7 +271,7 @@ namespace HDF5.NET
             // internal node
             var internalNode = node as BTree2InternalNode<T>;
 
-            if (internalNode != null)
+            if (internalNode is not null)
             {
                 var records = node.Records
                     .Cast<T>()

@@ -30,6 +30,9 @@ namespace HDF5.NET
                 (4, LayoutClass.VirtualStorage) => new VirtualStoragePropertyDescription(reader, superblock),
                 _ => throw new NotSupportedException($"The layout class '{this.LayoutClass}' is not supported for the data layout message version '{this.Version}'.")
             };
+
+            // address
+            this.Address = this.Properties.Address;
         }
 
         #endregion
