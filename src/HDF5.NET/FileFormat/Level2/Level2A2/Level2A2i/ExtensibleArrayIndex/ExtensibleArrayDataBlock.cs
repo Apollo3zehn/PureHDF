@@ -46,6 +46,9 @@ namespace HDF5.NET
             if (this.PageCount == 0)
                 this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, elementsCount, this.ClientID, chunkSizeLength);
 
+            else
+                this.Elements = new DataBlockElement[0];
+
             // checksum
             this.Checksum = reader.ReadUInt32();
         }
@@ -75,7 +78,7 @@ namespace HDF5.NET
 
         public ulong HeaderAddress { get; }
 
-        public DataBlockElement[]? Elements { get; }
+        public DataBlockElement[] Elements { get; }
 
         public ulong Checksum { get; }
 

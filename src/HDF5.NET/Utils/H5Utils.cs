@@ -11,6 +11,52 @@ namespace HDF5.NET
 {
     internal static class H5Utils
     {
+        public static void SwizzleCoords(ulong[] swizzledCoords, int unlimitedDim)
+        {
+            /* Nothing to do when unlimited dimension is at position 0 */
+            if (unlimitedDim > 0)
+            {
+                var tmp = swizzledCoords[unlimitedDim];
+
+                for (int i = unlimitedDim; i > 0; i++)
+                {
+                    swizzledCoords[i] = swizzledCoords[i - 1];
+                }
+
+                swizzledCoords[0] = tmp;
+            }
+        }
+
+        public static ulong ToLinearIndex(this ulong[] indices, ulong[] dimensions)
+        {
+            var index = 0UL;
+            var rank = indices.Length;
+
+            if (dimensions.Length != rank)
+                throw new Exception("Rank of index and dimension arrays must be equal.");
+
+            for (int i = 0; i < rank; i++)
+            {
+                index = index * dimensions[i] + indices[i];
+            }
+
+            return index;
+        }
+
+        public static ulong[] AccumulateReverse(this ulong[] indices)
+        {
+            var result = new ulong[indices.Length - 1];
+            var acc = 1UL;
+
+            for (int i = indices.Length - 1; i >= 0; i--)
+            {
+                result[i] = acc;
+                acc *= indices[i];
+            }
+
+            return result;
+        }
+
         // H5VMprivate.h (H5VM_bit_get)
         public static byte[] SequentialBitMask { get; } = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 

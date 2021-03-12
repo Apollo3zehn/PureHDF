@@ -10,7 +10,7 @@
 
         protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
-            var chunkIndex = chunkIndices.ToLinearIndex(this.ScaledDatasetDims);
+            var chunkIndex = chunkIndices.ToLinearIndex(this.ScaledDims);
             var chunkOffset = chunkIndex * this.ChunkByteSize;
 
             return new ChunkInfo(this.Dataset.DataLayout.Address + chunkOffset, this.ChunkByteSize, 0);

@@ -56,17 +56,21 @@ namespace HDF5.NET
 
         public ulong ChunkByteSize { get; private set; }
 
-        public ulong[] DatasetDims { get; private set; }
+        public ulong[] Dims { get; private set; }
 
-        public ulong[]? DatasetMaxDims { get; private set; }
+        public ulong[] MaxDims { get; private set; }
 
-        public ulong[] ScaledDatasetDims { get; private set; }
+        public ulong[] ScaledDims { get; private set; }
 
-        public ulong[] ScaledDatasetMaxDims { get; private set; }
+        public ulong[] ScaledMaxDims { get; private set; }
 
-        public ulong TotalScaledDatasetDims { get; private set; }
+        public ulong[] DownChunkCounts { get; private set; }
 
-        public ulong TotalScaledDatasetMaxDims { get; private set; }
+        public ulong[] DownMaxChunkCounts { get; private set; }
+
+        public ulong TotalChunkCount { get; private set; }
+
+        public ulong TotalMaxChunkCount { get; private set; }
 
         #endregion
 
@@ -107,21 +111,44 @@ namespace HDF5.NET
 
         public override void Initialize()
         {
+            // H5Dchunk.c (H5D__chunk_set_info_real)
+
             this.RawChunkDims = this.GetRawChunkDims();
             this.ChunkDims = this.RawChunkDims[..^1].ToArray();
             this.ChunkRank = (byte)this.ChunkDims.Length;
             this.ChunkByteSize = H5Utils.CalculateSize(this.ChunkDims) * this.Dataset.Datatype.Size;
-            this.DatasetDims = this.Dataset.Dataspace.DimensionSizes;
-            this.DatasetMaxDims = this.Dataset.Dataspace.DimensionMaxSizes;
-            this.TotalScaledDatasetDims = 1;
-            this.TotalScaledDatasetMaxDims = 1;
+            this.Dims = this.Dataset.Dataspace.DimensionSizes;
+            this.MaxDims = this.Dataset.Dataspace.DimensionMaxSizes;
+            this.TotalChunkCount = 1;
+            this.TotalMaxChunkCount = 1;
 
-            this.ScaledDatasetDims = new ulong[this.ChunkRank];
+            this.ScaledDims = new ulong[this.ChunkRank];
 
             for (int i = 0; i < this.ChunkRank; i++)
             {
-                this.ScaledDatasetDims[i] = H5Utils.CeilDiv(this.DatasetDims[i], this.ChunkDims[i]);
+                this.ScaledDims[i] = H5Utils.CeilDiv(this.Dims[i], this.ChunkDims[i]);
+
+                if (this.MaxDims[i] == H5Constants.Unlimited)
+                {
+                    this.ScaledMaxDims[i] = H5Constants.Unlimited;
+                }
+                else
+                {
+                    this.ScaledMaxDims[i] = H5Utils.CeilDiv(this.MaxDims[i], this.ChunkDims[i]);
+                }
+
+                this.TotalChunkCount *= this.ScaledDims[i];
+
+                if (this.ScaledMaxDims[i] == H5Constants.Unlimited || this.TotalMaxChunkCount == H5Constants.Unlimited)
+                    this.TotalMaxChunkCount = H5Constants.Unlimited;
+
+                else
+                    this.TotalMaxChunkCount *= this.ScaledMaxDims[i];
             }
+
+            /* Get the "down" sizes for each dimension */
+            this.DownChunkCounts = this.Dims.AccumulateReverse();
+            this.DownMaxChunkCounts = this.MaxDims.AccumulateReverse();
         }
 
         public override ulong[] GetChunkDims()

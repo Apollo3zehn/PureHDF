@@ -4,7 +4,7 @@ namespace HDF5.NET
 {
     internal class H5D_Chunk4_FixedArray : H5D_Chunk4
     {
-        private FixedArrayHeader _header;
+        private FixedArrayHeader? _header;
 
         public H5D_Chunk4_FixedArray(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) : 
             base(dataset, layout, datasetAccess)
@@ -36,7 +36,7 @@ namespace HDF5.NET
                 this.Dataset.Context.Reader.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
                 var dataBlock = new FixedArrayDataBlock(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, _header, chunkSizeLength);
 
-                var chunkIndex = chunkIndices.ToLinearIndex(this.ScaledDatasetDims);
+                var chunkIndex = chunkIndices.ToLinearIndex(this.ScaledDims);
 
                 /* Check for paged data block */
                 if (dataBlock.PageCount > 0)

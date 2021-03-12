@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace HDF5.NET
 {
@@ -51,6 +52,10 @@ namespace HDF5.NET
                     this.DimensionMaxSizes[i] = superblock.ReadLength(reader);
                 }
             }
+            else
+            {
+                this.DimensionMaxSizes = this.DimensionSizes.ToArray();
+            }
 
             if (permutationIndicesArePresent)
             {
@@ -85,7 +90,7 @@ namespace HDF5.NET
         public byte Rank { get; set; }
         public DataspaceType Type { get; set; }
         public ulong[] DimensionSizes { get; set; }
-        public ulong[]? DimensionMaxSizes { get; set; }
+        public ulong[] DimensionMaxSizes { get; set; }
         public ulong[]? PermutationIndices { get; set; }
 
         #endregion

@@ -16,9 +16,9 @@ namespace HDF5.NET
         public ExtensibleArrayIndexBlock(H5BinaryReader reader, Superblock superblock, ExtensibleArrayHeader header, uint chunkSizeLength)
         {
             // H5EAiblock.c (H5EA__iblock_alloc)
-            ulong secondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
+            this.SecondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
             ulong dataBlockPointerCount = (ulong)(2 * (header.SecondaryBlockMinimumDataBlockPointerCount - 1));
-            ulong secondaryBlockPointerCount = header.SecondaryBlockCount - secondaryBlockDataBlockAddressCount;
+            ulong secondaryBlockPointerCount = header.SecondaryBlockCount - this.SecondaryBlockDataBlockAddressCount;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -88,6 +88,8 @@ namespace HDF5.NET
         public ulong[] SecondaryBlockAddresses { get; }
 
         public ulong Checksum { get; }
+
+        public ulong SecondaryBlockDataBlockAddressCount { get; }
 
         #endregion
     }

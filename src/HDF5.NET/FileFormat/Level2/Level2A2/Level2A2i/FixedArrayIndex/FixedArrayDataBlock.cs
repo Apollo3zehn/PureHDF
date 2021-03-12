@@ -45,11 +45,16 @@ namespace HDF5.NET
 
             // page bitmap
             if (this.PageCount > 0)
+            {
                 this.PageBitmap = reader.ReadBytes((int)pageBitmapSize);
-
+                this.Elements = new DataBlockElement[0];
+            }
             // elements
             else
+            {
+                this.PageBitmap = new byte[0];
                 this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, header.EntriesCount, this.ClientID, chunkSizeLength);
+            }
 
             // checksum
             this.Checksum = reader.ReadUInt32();
@@ -87,9 +92,9 @@ namespace HDF5.NET
 
         public ulong HeaderAddress { get; }
 
-        public byte[]? PageBitmap { get; }
+        public byte[] PageBitmap { get; }
 
-        public DataBlockElement[]? Elements { get; }
+        public DataBlockElement[] Elements { get; }
 
         public ulong Checksum { get; }
 

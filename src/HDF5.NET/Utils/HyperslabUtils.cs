@@ -326,22 +326,6 @@ namespace HDF5.NET
                 }
             }
         }
-
-        public static ulong ToLinearIndex(this ulong[] indices, ulong[] dimensions)
-        {
-            var index = 0UL;
-            var rank = indices.Length;
-
-            if (dimensions.Length != rank)
-                throw new Exception("Rank of index and dimension arrays must be equal.");
-
-            for (int i = 0; i < rank; i++)
-            {
-                index = index * dimensions[i] + indices[i];
-            }
-
-            return index;
-        }
     }
 }
 
