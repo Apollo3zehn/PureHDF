@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public class FixedArrayDataBlock
+    public class FixedArrayDataBlock<T>
     {
         #region Fields
 
@@ -13,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayDataBlock(H5BinaryReader reader, Superblock superblock, FixedArrayHeader header, uint chunkSizeLength)
+        public FixedArrayDataBlock(H5BinaryReader reader, Superblock superblock, FixedArrayHeader header, Func<H5BinaryReader, T> decode)
         {
             // H5FAdblock.c (H5FA__dblock_alloc)
             this.ElementsPerPage = 1UL << header.PageBits;
@@ -32,7 +33,7 @@ namespace HDF5.NET
 
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, FixedArrayDataBlock.Signature);
+            H5Utils.ValidateSignature(signature, FixedArrayDataBlock<T>.Signature);
 
             // version
             this.Version = reader.ReadByte();
@@ -47,13 +48,17 @@ namespace HDF5.NET
             if (this.PageCount > 0)
             {
                 this.PageBitmap = reader.ReadBytes((int)pageBitmapSize);
-                this.Elements = new DataBlockElement[0];
+                this.Elements = new T[0];
             }
             // elements
             else
             {
                 this.PageBitmap = new byte[0];
-                this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, header.EntriesCount, this.ClientID, chunkSizeLength);
+
+                this.Elements = Enumerable
+                    .Range(0, (int)header.EntriesCount)
+                    .Select(i => decode(reader))
+                    .ToArray();
             }
 
             // checksum
@@ -82,7 +87,7 @@ namespace HDF5.NET
             set
             {
                 if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(FixedArrayDataBlock)} are supported.");
+                    throw new FormatException($"Only version 0 instances of type {nameof(FixedArrayDataBlock<T>)} are supported.");
 
                 _version = value;
             }
@@ -94,7 +99,7 @@ namespace HDF5.NET
 
         public byte[] PageBitmap { get; }
 
-        public DataBlockElement[] Elements { get; }
+        public T[] Elements { get; }
 
         public ulong Checksum { get; }
 

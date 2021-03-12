@@ -15,10 +15,9 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayHeader(H5BinaryReader reader, Superblock superblock, uint chunkSizeLength) : base(reader)
+        public FixedArrayHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
-            _chunkSizeLength = chunkSizeLength;
 
             // signature
             var signature = reader.ReadBytes(4);

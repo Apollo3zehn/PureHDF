@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace HDF5.NET
@@ -14,7 +15,9 @@ namespace HDF5.NET
         private ulong[] _swizzledDownMaxChunkCounts;
 
         private ExtensibleArrayHeader? _header;
-        private ExtensibleArrayIndexBlock? _indexBlock;
+
+#warning This is necessary because generic version cannot be stored here without non-generic base class. Solution would be a generic thread safe per-dataset/file cache
+        private object? _indexBlock;
 
         #endregion
 
@@ -98,21 +101,45 @@ namespace HDF5.NET
             /* Check for filters on chunks */
             if (this.Dataset.FilterPipeline is not null)
             {
-                return this.GetElement(chunkIndex);
+                var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
+
+                var element = this.GetElement(chunkIndex, reader =>
+                {
+                    return new FilteredDataBlockElement()
+                    {
+                        Address = this.Dataset.Context.Superblock.ReadOffset(reader),
+                        ChunkSize = (uint)H5Utils.ReadUlong(reader, chunkSizeLength),
+                        FilterMask = reader.ReadUInt32()
+                    };
+                });
+
+                return element is not null
+                    ? new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask)
+                    : ChunkInfo.None;
             }
             else
             {
-                return this.GetElement(chunkIndex) with
+                var element = this.GetElement(chunkIndex, reader =>
                 {
-                    Size = this.ChunkByteSize
-                };
+                    return new DataBlockElement()
+                    {
+                        Address = this.Dataset.Context.Superblock.ReadOffset(reader)
+                    };
+                });
+
+                return element is not null
+                    ? new ChunkInfo(element.Address, this.ChunkByteSize, 0)
+                    : ChunkInfo.None;
             }
         }
 
-        private ChunkInfo GetElement(ulong index)
+        private T? GetElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
         {
             if (_header is null)
+            {
+                this.Dataset.Context.Reader.Seek((long)this.Dataset.DataLayout.Address, SeekOrigin.Begin);
                 _header = new ExtensibleArrayHeader(this.Dataset.Context.Reader, this.Dataset.Context.Superblock);
+            }
 
             // H5EA.c (H5EA_get)
 
@@ -120,36 +147,42 @@ namespace HDF5.NET
             if (index >= _header.MaximumIndexSet)
             {
                 /* Call the class's 'fill' callback */
-                return ChunkInfo.None;
+                return null;
             }
             else
             {
                 /* Look up the array metadata containing the element we want to set */
-                return this.LookupElement(index);
+                return this.LookupElement(index, decode);
             }
         }
 
-        private ChunkInfo LookupElement(ulong index)
+        private T? LookupElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
             var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
 
             /* Check if we should create the index block */
             if (this.Dataset.Context.Superblock.IsUndefinedAddress(_header.IndexBlockAddress))
-                return ChunkInfo.None;
+                return null;
 
             /* Protect index block */
             if (_indexBlock is null)
             {
                 this.Dataset.Context.Reader.Seek((long)_header.IndexBlockAddress, SeekOrigin.Begin);
-                _indexBlock = new ExtensibleArrayIndexBlock(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, _header, chunkSizeLength);
+
+                _indexBlock = new ExtensibleArrayIndexBlock<T>(
+                    this.Dataset.Context.Reader, 
+                    this.Dataset.Context.Superblock,
+                    _header, 
+                    decode);
             }
+
+            var indexBlock = (ExtensibleArrayIndexBlock<T>)_indexBlock;
 
             /* Check if element is in index block */
             if (index < _header.IndexBlockElementsCount)
             {
-                var element = _indexBlock.Elements[index];
-                return new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask);
+                return indexBlock.Elements[index];
             }
             else
             {
@@ -160,7 +193,7 @@ namespace HDF5.NET
                 var elementIndex = index - (_header.IndexBlockElementsCount + _header.SecondaryBlockInfos[secondaryBlockIndex].ElementStartIndex);
 
                 /* Check for data block containing element address in the index block */
-                if (secondaryBlockIndex < _indexBlock.SecondaryBlockDataBlockAddressCount)
+                if (secondaryBlockIndex < indexBlock.SecondaryBlockDataBlockAddressCount)
                 {
                     /* Compute the data block index in index block */
                     var dataBlockIndex =
@@ -168,49 +201,53 @@ namespace HDF5.NET
                         elementIndex / _header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     /* Check if the data block has been allocated on disk yet */
-                    if (this.Dataset.Context.Superblock.IsUndefinedAddress(_indexBlock.DataBlockAddresses[dataBlockIndex]))
-                        return ChunkInfo.None;
+                    if (this.Dataset.Context.Superblock.IsUndefinedAddress(indexBlock.DataBlockAddresses[dataBlockIndex]))
+                        return null;
 
                     /* Protect data block */
-                    this.Dataset.Context.Reader.Seek((long)_indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
+                    this.Dataset.Context.Reader.Seek((long)indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
                     var elementsCount = _header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
-                    var dataBlock = new ExtensibleArrayDataBlock(
+                    var dataBlock = new ExtensibleArrayDataBlock<T>(
                         this.Dataset.Context.Reader,
                         this.Dataset.Context.Superblock,
                         _header,
-                        chunkSizeLength,
-                        elementsCount);
+                        elementsCount,
+                        decode);
 
                     /* Adjust index to offset in data block */
                     elementIndex %= _header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     /* Set 'thing' info to refer to the data block */
-                    var element = dataBlock.Elements[elementIndex];
-                    return new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask);
+                    return dataBlock.Elements[elementIndex];
                 }
                 else
                 {
                     /* Calculate offset of super block in index block's array */
-                    var secondaryBlockOffset = secondaryBlockIndex - _indexBlock.SecondaryBlockDataBlockAddressCount;
+                    var secondaryBlockOffset = secondaryBlockIndex - indexBlock.SecondaryBlockDataBlockAddressCount;
 
                     /* Check if the super block has been allocated on disk yet */
-                    if (this.Dataset.Context.Superblock.IsUndefinedAddress(_indexBlock.SecondaryBlockAddresses[secondaryBlockOffset]))
-                        return ChunkInfo.None;
+                    if (this.Dataset.Context.Superblock.IsUndefinedAddress(indexBlock.SecondaryBlockAddresses[secondaryBlockOffset]))
+                        return null;
 
                     /* Protect super block */
-                    this.Dataset.Context.Reader.Seek((long)_indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
-                    var secondaryBlock = new ExtensibleArraySecondaryBlock(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, _header, secondaryBlockIndex);
+                    this.Dataset.Context.Reader.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
+
+                    var secondaryBlock = new ExtensibleArraySecondaryBlock(
+                        this.Dataset.Context.Reader,
+                        this.Dataset.Context.Superblock, 
+                        _header, 
+                        secondaryBlockIndex);
 
                     /* Compute the data block index in super block */
-                    var dataBlockIndex = elementIndex / secondaryBlock.ElementsCount;
+                    var dataBlockIndex = elementIndex / secondaryBlock.ElementCount;
 
                     /* Check if the data block has been allocated on disk yet */
                     if (this.Dataset.Context.Superblock.IsUndefinedAddress(secondaryBlock.DataBlockAddresses[dataBlockIndex]))
-                        return ChunkInfo.None;
+                        return null;
 
                     /* Adjust index to offset in data block */
-                    elementIndex %= secondaryBlock.ElementsCount;
+                    elementIndex %= secondaryBlock.ElementCount;
 
                     /* Check if the data block is paged */
                     if (secondaryBlock.DataBlockPageCount > 0)
@@ -231,7 +268,7 @@ namespace HDF5.NET
                             // H5EA_DBLOCK_PREFIX_SIZE
                             this.Dataset.Context.Superblock.OffsetsSize + _header.ArrayOffsetsSize +
                             // H5EA_DBLOCK_SIZE
-                            secondaryBlock.ElementsCount * _header.ElementSize +    /* Elements in data block */
+                            secondaryBlock.ElementCount * _header.ElementSize +    /* Elements in data block */
                             secondaryBlock.DataBlockPageCount * 4;                  /* Checksum for each page */
 
                         var dataBlockPageAddress = secondaryBlock.DataBlockAddresses[dataBlockIndex] + dataBlockPrefixSize +
@@ -242,35 +279,33 @@ namespace HDF5.NET
                         var bitMaskIndex = (int)pageIndex % 8;
 
                         if ((pageBitmapEntry & H5Utils.SequentialBitMask[bitMaskIndex]) == 0)
-                            return ChunkInfo.None;
+                            return null;
 
                         /* Protect data block page */
                         this.Dataset.Context.Reader.Seek((long)dataBlockPageAddress, SeekOrigin.Begin);
-                        var dataBlockPage = new DataBlockPage(this.Dataset.Context.Reader,
-                                                     this.Dataset.Context.Superblock,
-                                                     _header.DataBlockPageElementsCount,
-                                                     dataBlock.ClientID,
-                                                     chunkSizeLength);
+
+                        var dataBlockPage = new DataBlockPage<T>(
+                            this.Dataset.Context.Reader,
+                            _header.DataBlockPageElementsCount, 
+                            decode);
 
                         /* Set 'thing' info to refer to the data block page */
-                        var element = dataBlockPage.Elements[elementIndex];
-                        return new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask);
+                        return dataBlockPage.Elements[elementIndex];
                     }
                     else
                     {
                         /* Protect data block */
                         this.Dataset.Context.Reader.Seek((long)secondaryBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
 
-                        var dataBlock = new ExtensibleArrayDataBlock(
+                        var dataBlock = new ExtensibleArrayDataBlock<T>(
                             this.Dataset.Context.Reader,
                             this.Dataset.Context.Superblock,
                             _header,
-                            chunkSizeLength,
-                            secondaryBlock.ElementsCount);
+                            secondaryBlock.ElementCount,
+                            decode);
 
                         /* Set 'thing' info to refer to the data block */
-                        var element = dataBlock.Elements[elementIndex];
-                        return new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask);
+                        return dataBlock.Elements[elementIndex];
                     }
                 }
             }

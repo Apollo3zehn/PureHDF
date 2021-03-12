@@ -1,17 +1,19 @@
-﻿namespace HDF5.NET
+﻿using System;
+using System.Linq;
+
+namespace HDF5.NET
 {
-    public class DataBlockPage
+    public class DataBlockPage<T>
     {
         #region Constructors
 
-        public DataBlockPage(H5BinaryReader reader,
-                             Superblock superblock,
-                             ulong elementCount,
-                             ClientID clientID,
-                             uint chunkSizeLength)
+        public DataBlockPage(H5BinaryReader reader, ulong elementCount, Func<H5BinaryReader, T> decode)
         {
             // elements
-            this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, elementCount, clientID, chunkSizeLength);
+            this.Elements = Enumerable
+                .Range(0, (int)elementCount)
+                .Select(i => decode(reader))
+                .ToArray();
 
             // checksum
             this.Checksum = reader.ReadUInt32();
@@ -21,7 +23,7 @@
 
         #region Properties
 
-        public DataBlockElement[] Elements { get; }
+        public T[] Elements { get; }
 
         public ulong Checksum { get; }
 

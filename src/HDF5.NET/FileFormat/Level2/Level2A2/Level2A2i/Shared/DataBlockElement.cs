@@ -1,14 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    public struct DataBlockElement
+    public class DataBlockElement
     {
         #region Properties
 
         public ulong Address { get; set; }
-
-        public uint ChunkSize { get; set; }
-
-        public uint FilterMask { get; set; }
 
         #endregion
     }

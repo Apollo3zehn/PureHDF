@@ -19,15 +19,15 @@ namespace HDF5.NET
 
             /* Compute/cache information */
             var dataBlocksCount = header.SecondaryBlockInfos[index].DataBlockCount;
-            this.ElementsCount = header.SecondaryBlockInfos[index].ElementsCount;
+            this.ElementCount = header.SecondaryBlockInfos[index].ElementsCount;
             this.DataBlockPageCount = 0UL;
             var dataBlockPageInitBitMaskSize = 0UL;
 
             /* Check if # of elements in data blocks requires paging */
-            if (this.ElementsCount > header.DataBlockPageElementsCount)
+            if (this.ElementCount > header.DataBlockPageElementsCount)
             {
                 /* Compute # of pages in each data block from this super block */
-                this.DataBlockPageCount = this.ElementsCount / header.DataBlockPageElementsCount;
+                this.DataBlockPageCount = this.ElementCount / header.DataBlockPageElementsCount;
 
                 /* Sanity check that we have at least 2 pages in data block */
                 if (this.DataBlockPageCount < 2)
@@ -100,7 +100,7 @@ namespace HDF5.NET
             set
             {
                 if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(FixedArrayDataBlock)} are supported.");
+                    throw new FormatException($"Only version 0 instances of type {nameof(ExtensibleArraySecondaryBlock)} are supported.");
 
                 _version = value;
             }
@@ -118,7 +118,7 @@ namespace HDF5.NET
 
         public ulong Checksum { get; }
 
-        public ulong ElementsCount { get; }
+        public ulong ElementCount { get; }
 
         public ulong DataBlockPageCount { get; }
 
