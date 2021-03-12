@@ -64,7 +64,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddNumerical((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddNumerical(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -82,7 +82,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -100,7 +100,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -130,7 +130,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddString((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddString(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -148,7 +148,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddBitField((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddBitField(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -166,7 +166,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddOpaque((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
@@ -184,7 +184,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddArray((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddArray(fileId, ContainerType.Dataset)));
 
                 // Act
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);

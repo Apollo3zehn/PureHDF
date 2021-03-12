@@ -27,37 +27,80 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("zlib", true)]
         [InlineData("zstd", true)]
         [InlineData("blosclz_bit", true)]
-        public void CanDefilterBlosc2(string datasetName, bool shouldSuccess)
+        public void CanDefilterBlosc2(string datasetName, bool shouldSucceed)
         {
+            // # https://github.com/silx-kit/hdf5plugin
             // import h5py
             // import hdf5plugin
-
-            // def blosc_opts(complevel=9, complib='blosc:lz4', shuffle=True):
-            //     shuffle = 2 if shuffle == 'bit' else 1 if shuffle else 0
-            //     compressors = ['blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd']
-            //     complib = ['blosc:' + c for c in compressors].index(complib)
-            //     args = {
-            //         'compression': 32001,
-            //         'compression_opts': (0, 0, 0, 0, complevel, shuffle, complib)
-            //     }
-            //     if shuffle:
-            //         args['shuffle'] = False
-            //     return args
-
+            //
+            // data = list(range(0, 1000))
+            //
             // with h5py.File('blosc.h5', 'w') as f:
-            //     f.create_dataset('blosclz', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:blosclz', True))
-            //     f.create_dataset('lz4', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:lz4', True))
-            //     f.create_dataset('lz4hc', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:lz4hc', True))
-            //     f.create_dataset('snappy', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:snappy', True))
-            //     f.create_dataset('zlib', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:zlib', True))
-            //     f.create_dataset('zstd', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:zstd', True))
-            //     f.create_dataset('blosclz_bit', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:blosclz', 'bit'))
+            //     f.create_dataset('blosclz',      data=data, **hdf5plugin.Blosc(cname='blosclz', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('lz4',          data=data, **hdf5plugin.Blosc(cname='lz4', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('lz4hc',        data=data, **hdf5plugin.Blosc(cname='lz4hc', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('snappy',       data=data, **hdf5plugin.Blosc(cname='snappy', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('zlib',         data=data, **hdf5plugin.Blosc(cname='zlib', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('zstd',         data=data, **hdf5plugin.Blosc(cname='zstd', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('blosclz_bit',  data=data, **hdf5plugin.Blosc(cname='zlib', clevel=9, shuffle=hdf5plugin.Blosc.BITSHUFFLE))
 
             // Arrange
             var filePath = "./testfiles/blosc.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
             H5Filter.Register(identifier: (FilterIdentifier)32001, name: "blosc2", filterFunc: BloscHelper.FilterFunc);
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var dataset = root.Dataset(datasetName);
+
+            if (shouldSucceed)
+            {
+                var actual = dataset.Read<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            }
+            else
+            {
+                var exception = Assert.Throws<Exception>(() => dataset.Read<int>());
+
+                // Assert
+                Assert.Contains("snappy", exception.InnerException.Message);
+            }
+        }
+
+        public void CanDefilterBZip2(string datasetName, bool shouldSuccess)
+        {
+            H5Z.can_apply_func_t can_apply = (dcpl_id, type_id, space_id) => 1;
+
+            var buf_size = IntPtr.Zero;
+            var buf = IntPtr.Zero;
+
+            H5Z.func_t filter = (uint flags, IntPtr cd_nelmts, uint[] cd_values, IntPtr nbytes, ref IntPtr buf_size, ref IntPtr buf) =>
+            {
+                return IntPtr.Zero;
+            };
+
+            var filter_class = new H5Z.class_t()
+            {
+                name = "bzip2",
+                id = (H5Z.filter_t)307,
+                encoder_present = 1,
+                decoder_present = 0,
+                can_apply = can_apply,
+                filter = filter,
+                set_local = null,
+                version = 0
+            };
+
+            var res = H5Z.register(ref filter_class);
+
+            // Arrange
+            var filePath = "./testfiles/bzip2.h5";
+            var expected = Enumerable.Range(0, 1000).ToArray();
+
+            H5Filter.Register(identifier: (FilterIdentifier)307, name: "bzip2", filterFunc: BloscHelper.FilterFunc);
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -77,11 +120,6 @@ namespace HDF5.NET.Tests.Reading
                 // Assert
                 Assert.Contains("snappy", exception.InnerException.Message);
             }
-        }
-
-        public void CanDefilterBZip2(string datasetName, bool shouldSuccess)
-        {
-#warning Implement test.
         }
 
         [Fact]
@@ -135,7 +173,7 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(TestData.MediumData));
         }
 
-#error 16 byte and arbitrary number of bytes tests missing
+//#error 16 byte and arbitrary number of bytes tests missing
         [Theory]
         [InlineData((byte)1, 1001)]
         [InlineData((short)2, 732)]
