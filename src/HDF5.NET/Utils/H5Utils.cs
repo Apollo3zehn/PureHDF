@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,7 +45,7 @@ namespace HDF5.NET
 
         public static ulong[] AccumulateReverse(this ulong[] indices)
         {
-            var result = new ulong[indices.Length - 1];
+            var result = new ulong[indices.Length];
             var acc = 1UL;
 
             for (int i = indices.Length - 1; i >= 0; i--)

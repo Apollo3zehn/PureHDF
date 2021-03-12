@@ -75,7 +75,7 @@ namespace HDF5.NET
             set
             {
                 if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(FixedArrayDataBlock)} are supported.");
+                    throw new FormatException($"Only version 0 instances of type {nameof(ExtensibleArrayDataBlock<T>)} are supported.");
 
                 _version = value;
             }

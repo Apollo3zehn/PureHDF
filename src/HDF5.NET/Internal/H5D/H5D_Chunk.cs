@@ -123,19 +123,17 @@ namespace HDF5.NET
             this.TotalMaxChunkCount = 1;
 
             this.ScaledDims = new ulong[this.ChunkRank];
+            this.ScaledMaxDims = new ulong[this.ChunkRank];
 
             for (int i = 0; i < this.ChunkRank; i++)
             {
                 this.ScaledDims[i] = H5Utils.CeilDiv(this.Dims[i], this.ChunkDims[i]);
 
                 if (this.MaxDims[i] == H5Constants.Unlimited)
-                {
                     this.ScaledMaxDims[i] = H5Constants.Unlimited;
-                }
+
                 else
-                {
                     this.ScaledMaxDims[i] = H5Utils.CeilDiv(this.MaxDims[i], this.ChunkDims[i]);
-                }
 
                 this.TotalChunkCount *= this.ScaledDims[i];
 

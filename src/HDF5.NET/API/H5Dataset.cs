@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET
@@ -332,7 +333,7 @@ namespace HDF5.NET
             var byteSize = totalCount * this.Datatype.Size;
 
             // second, convert file type (e.g. 2 bytes) to T (e.g. 4 bytes)
-            var arraySize = byteSize / (ulong)Marshal.SizeOf<T>();
+            var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
 
             // finally, create the buffer
             result = new T[arraySize];
