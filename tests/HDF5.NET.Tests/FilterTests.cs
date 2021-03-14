@@ -70,56 +70,36 @@ namespace HDF5.NET.Tests.Reading
             }
         }
 
-        public void CanDefilterBZip2(string datasetName, bool shouldSuccess)
+        [Fact]
+        public void CanDefilterBZip2()
         {
-            H5Z.can_apply_func_t can_apply = (dcpl_id, type_id, space_id) => 1;
+            // # Works only with Linux! On Windows, deflate is used instead.
+            // import numpy
+            // import tables
 
-            var buf_size = IntPtr.Zero;
-            var buf = IntPtr.Zero;
 
-            H5Z.func_t filter = (uint flags, IntPtr cd_nelmts, uint[] cd_values, IntPtr nbytes, ref IntPtr buf_size, ref IntPtr buf) =>
-            {
-                return IntPtr.Zero;
-            };
+            // fileName = 'bzip2.h5'
+            // shape = (1000,)
+            // atom = tables.Int32Atom()
+            // filters = tables.Filters(complevel=9, complib='bzip2')
 
-            var filter_class = new H5Z.class_t()
-            {
-                name = "bzip2",
-                id = (H5Z.filter_t)307,
-                encoder_present = 1,
-                decoder_present = 0,
-                can_apply = can_apply,
-                filter = filter,
-                set_local = null,
-                version = 0
-            };
-
-            var res = H5Z.register(ref filter_class);
+            // with tables.open_file(fileName, 'w') as f:
+            //     dataset = f.create_carray(f.root, 'bzip2', atom, shape, filters=filters)
+            //     dataset[:] = list(range(0, 1000))
 
             // Arrange
             var filePath = "./testfiles/bzip2.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
-            H5Filter.Register(identifier: (FilterIdentifier)307, name: "bzip2", filterFunc: BloscHelper.FilterFunc);
+            H5Filter.Register(identifier: (FilterIdentifier)307, name: "bzip2", filterFunc: BZip2Helper.FilterFunc);
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var dataset = root.Dataset(datasetName);
+            var dataset = root.Dataset("bzip2");
+            var actual = dataset.Read<int>();
 
-            if (shouldSuccess)
-            {
-                var actual = dataset.Read<int>();
-
-                // Assert
-                Assert.True(actual.SequenceEqual(expected));
-            }
-            else
-            {
-                var exception = Assert.Throws<Exception>(() => dataset.Read<int>());
-
-                // Assert
-                Assert.Contains("snappy", exception.InnerException.Message);
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
         }
 
         [Fact]
