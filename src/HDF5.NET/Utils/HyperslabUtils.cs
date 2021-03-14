@@ -289,8 +289,8 @@ namespace HDF5.NET
                     lastSourceChunk = sourceStep.Chunk;
                 }
 
-                sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);        // corresponds to 
-                var currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
+                sourceStream?.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);        // corresponds to 
+                var currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                          // sourceBuffer.Slice()
 
                 while (currentLength > 0)
                 {
@@ -317,10 +317,10 @@ namespace HDF5.NET
 
                     /* copy */
                     var length = Math.Min(currentLength, currentTarget.Length);
-                    sourceStream.Read(currentTarget.Slice(0, length).Span);                             // corresponds to span.CopyTo
+                    sourceStream?.Read(currentTarget.Slice(0, length).Span);                             // corresponds to span.CopyTo
 
-                    sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);    // corresponds to 
-                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;                        // sourceBuffer.Slice()
+                    sourceStream?.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);    // corresponds to 
+                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
 
                     currentTarget = currentTarget.Slice(length);
                 }
