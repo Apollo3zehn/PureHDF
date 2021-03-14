@@ -295,12 +295,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("prefix")]
         public void CanReadDataset_External(string datasetName)
         {
-            // WARNING:
-            // It seems that there is a bug in the native HDF library. In this test, sometimes the fill value
-            // is defined with a value of 99, which must come from test 'CanReadDataset_Contiguous_With_FillValue_And_AllocationLate'.
-
             // INFO:
             // HDF lib says "external storage not supported with chunked layout". Same is true for compact layout.
+            
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
@@ -326,12 +323,18 @@ namespace HDF5.NET.Tests.Reading
                 }
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
                 var parent = root.Group("external");
                 var dataset = parent.Dataset(datasetName);
                 var actual = dataset.Read<int>();
 
                 // Assert
+                _logger.WriteLine(filePath);
+                for (int i = 30; i < 42; i++)
+                {
+                    _logger.WriteLine($"{i} / {actual[i]} / {expected[i]}");
+                }
+
                 Assert.True(actual.SequenceEqual(expected));
             });
         }

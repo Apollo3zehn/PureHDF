@@ -159,7 +159,7 @@ namespace HDF5.NET
             return _chunkCache.GetChunk(chunkIndices, () => this.ReadChunk(chunkIndices));
         }
 
-        public override Stream GetStream(ulong[] chunkIndices)
+        public override Stream? GetStream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

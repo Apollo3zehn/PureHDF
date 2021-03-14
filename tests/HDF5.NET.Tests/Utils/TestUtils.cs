@@ -389,7 +389,6 @@ namespace HDF5.NET.Tests
                 res = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
-
             res = H5P.close(dcpl_id);
         }
 

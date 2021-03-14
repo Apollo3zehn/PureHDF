@@ -60,7 +60,7 @@ namespace HDF5.NET
 
         public abstract Memory<byte> GetBuffer(ulong[] chunkIndices);
 
-        public abstract Stream GetStream(ulong[] chunkIndices);
+        public abstract Stream? GetStream(ulong[] chunkIndices);
 
         #endregion
 

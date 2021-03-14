@@ -50,7 +50,7 @@ namespace HDF5.NET
             return buffer;
         }
 
-        public override Stream GetStream(ulong[] chunkIndices)
+        public override Stream? GetStream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

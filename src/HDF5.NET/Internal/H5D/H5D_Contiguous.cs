@@ -7,7 +7,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private Stream _stream;
+        private Stream? _stream;
 
         #endregion
 
@@ -33,7 +33,7 @@ namespace HDF5.NET
             throw new NotImplementedException();
         }
 
-        public override Stream GetStream(ulong[] chunkIndices)
+        public override Stream? GetStream(ulong[] chunkIndices)
         {
             var address = this.Dataset.DataLayout.Address;
 
@@ -48,7 +48,7 @@ namespace HDF5.NET
                         _stream = new UnsafeFillValueStream(this.Dataset.FillValue.Value);
 
                     else
-                        _stream = new UnsafeFillValueStream(new byte[0]);
+                        _stream = null;
                 }
                 else
                 {
