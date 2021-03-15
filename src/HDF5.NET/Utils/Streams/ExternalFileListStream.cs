@@ -64,6 +64,12 @@ namespace HDF5.NET
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            // WARNING: Original "buffer" is a Memory<byte> and to be compatible with stream,
+            // the method Stream.Read uses an internal ArrayPool array which is not cleared
+            // after return. This means that the buffer could container data from previous tests.
+            // Therefore, always read the returned number of bytes and do NOT SKIP any data, e.g.
+            // when a file is smaller than the corresponding slot!
+
             var remaining = count;
 
             while (remaining > 0)

@@ -51,7 +51,15 @@ namespace HDF5.NET
             var length = (int)Math.Min(this.Length - this.Position, count);
 
             _stream = this.EnsureStream();
-            _stream.Read(buffer, offset, length);
+
+            var actualLength = _stream.Read(buffer, offset, length);
+
+            // If file is shorter than slot: fill remaining buffer with zeros.
+            buffer
+                .AsSpan()
+                .Slice(offset + actualLength, length - actualLength)
+                .Fill(0);
+
             _position += length;
 
             return length;
