@@ -244,7 +244,8 @@ namespace HDF5.NET
                 throw new Exception($"Attribute data type class '{datatype.Class}' cannot be read as string.");
 
             var size = (int)datatype.Size;
-            var result = new List<string>();
+            var count = data.Length / size;
+            var result = new string[count];
 
             if (isFixed)
             {
@@ -263,12 +264,12 @@ namespace HDF5.NET
                     _                           => throw new Exception("Unsupported padding type.")
                 };
 
-                while (position != data.Length)
+                for (int i = 0; i < count; i++)
                 {
                     var value = H5Utils.ReadFixedLengthString(data[position..(position + size)]);
 
                     value = trim(value);
-                    result.Add(value);
+                    result[i] = value;
                     position += size;
                 }
             }
@@ -297,7 +298,7 @@ namespace HDF5.NET
                         _ => throw new Exception("Unsupported padding type.")
                     };
 
-                    while (dataReader.BaseStream.Position != data.Length)
+                    for (int i = 0; i < count; i++)
                     {
                         var dataSize = dataReader.ReadUInt32(); // for what do we need this?
                         var globalHeapId = new GlobalHeapId(dataReader, superblock);
@@ -306,7 +307,7 @@ namespace HDF5.NET
                         var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
                         value = trim(value);
-                        result.Add(value);
+                        result[i] = value;
                     }
                 }
             }
