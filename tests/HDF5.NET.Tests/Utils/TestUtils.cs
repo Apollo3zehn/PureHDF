@@ -665,33 +665,107 @@ namespace HDF5.NET.Tests
 
             var dims = new ulong[] { 2, 2, 3 }; /* "extendible contiguous non-external dataset not allowed" */
 
-            // fixed length string attribute (ASCII)
-            var typeIdFixed = H5T.copy(H5T.C_S1);
-            res = H5T.set_size(typeIdFixed, new IntPtr(2));
-            res = H5T.set_cset(typeIdFixed, H5T.cset_t.ASCII);
+            // fixed length string attribute + null terminate (ASCII)
+            var typeIdFixed_nullterm = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(typeIdFixed_nullterm, new IntPtr(4));
+            res = H5T.set_cset(typeIdFixed_nullterm, H5T.cset_t.ASCII);
+            res = H5T.set_strpad(typeIdFixed_nullterm, H5T.str_t.NULLTERM);
 
-            var dataFixed = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var dataFixedChar = dataFixed
+            var dataFixed_nullterm = new string[] { "00\00", "11\0 ", "22\0 ", "3\0  ", "44 \0", "555\0", "66 \0", "77\0 ", "  \0 ", "AA \0", "ZZ \0", "!!\0 " };
+            var dataFixedChar_nullterm = dataFixed_nullterm
                 .SelectMany(value => Encoding.ASCII.GetBytes(value))
                 .ToArray();
 
-            TestUtils.Add(container, fileId, "string", "fixed", typeIdFixed, dataFixedChar.AsSpan(), dims);
+            TestUtils.Add(container, fileId, "string", "fixed+nullterm", typeIdFixed_nullterm, dataFixedChar_nullterm.AsSpan(), dims);
 
-            res = H5T.close(typeIdFixed);
+            res = H5T.close(typeIdFixed_nullterm);
+
+            // fixed length string attribute + null padding (ASCII)
+            var typeIdFixed_nullpad = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(typeIdFixed_nullpad, new IntPtr(4));
+            res = H5T.set_cset(typeIdFixed_nullpad, H5T.cset_t.ASCII);
+            res = H5T.set_strpad(typeIdFixed_nullpad, H5T.str_t.NULLPAD);
+
+            var dataFixed_nullpad = new string[] { "0\00\0", "11\0\0", "22\0\0", "3 \0\0", " 4\0\0", "55 5", "66\0\0", "77\0\0", "  \0\0", "AA\0\0", "ZZ\0\0", "!!\0\0" };
+            var dataFixedChar_nullpad = dataFixed_nullpad
+                .SelectMany(value => Encoding.ASCII.GetBytes(value))
+                .ToArray();
+
+            TestUtils.Add(container, fileId, "string", "fixed+nullpad", typeIdFixed_nullpad, dataFixedChar_nullpad.AsSpan(), dims);
+
+            res = H5T.close(typeIdFixed_nullpad);
+
+            // fixed length string attribute + space padding (ASCII)
+            var typeIdFixed_spacepad = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(typeIdFixed_spacepad, new IntPtr(4));
+            res = H5T.set_cset(typeIdFixed_spacepad, H5T.cset_t.ASCII);
+            res = H5T.set_strpad(typeIdFixed_spacepad, H5T.str_t.SPACEPAD);
+
+            var dataFixed_spacepad = new string[] { "00  ", "11  ", "22  ", "3   ", " 4  ", "55 5", "66  ", "77  ", "    ", "AA  ", "ZZ  ", "!!  " };
+            var dataFixedChar_spacepad = dataFixed_spacepad
+                .SelectMany(value => Encoding.ASCII.GetBytes(value))
+                .ToArray();
+
+            TestUtils.Add(container, fileId, "string", "fixed+spacepad", typeIdFixed_spacepad, dataFixedChar_spacepad.AsSpan(), dims);
+
+            res = H5T.close(typeIdFixed_spacepad);
 
             // variable length string attribute (ASCII)
             var typeIdVar = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVar, H5T.VARIABLE);
             res = H5T.set_cset(typeIdVar, H5T.cset_t.ASCII);
+            res = H5T.set_strpad(typeIdVar, H5T.str_t.NULLPAD);
 
-            var dataVar = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var dataVarIntPtr = dataVar.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+            var dataVar = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var dataVarChar = dataVar
+               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
+               .ToArray();
 
-            TestUtils.Add(container, fileId, "string", "variable", typeIdVar, dataVarIntPtr.AsSpan(), dims);
-
-            foreach (var ptr in dataVarIntPtr)
+            fixed (byte* dataVarPtr = dataVarChar)
             {
-                Marshal.FreeCoTaskMem(ptr);
+                var basePtr = new IntPtr(dataVarPtr);
+
+                var addresses = new IntPtr[]
+                {
+                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 4), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
+                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
+                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34)
+                };
+
+                fixed (void* dataVarAddressesPtr = addresses)
+                {
+                    TestUtils.Add(container, fileId, "string", "variable", typeIdVar, dataVarAddressesPtr, dims);
+                }
+            }
+
+            res = H5T.close(typeIdVar);
+
+            // variable length string attribute + space padding (ASCII)
+            var typeIdVar_spacepad = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(typeIdVar_spacepad, H5T.VARIABLE);
+            res = H5T.set_cset(typeIdVar_spacepad, H5T.cset_t.ASCII);
+            res = H5T.set_strpad(typeIdVar_spacepad, H5T.str_t.SPACEPAD);
+
+            var dataVar_spacepad = new string[] { "001  ", "1 1 ", "22  ", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var dataVarChar_spacepad = dataVar_spacepad
+               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
+               .ToArray();
+
+            fixed (byte* dataVarPtr_spacepad = dataVarChar_spacepad)
+            {
+                var basePtr = new IntPtr(dataVarPtr_spacepad);
+
+                var addresses = new IntPtr[]
+                {
+                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 6), IntPtr.Add(basePtr, 11), IntPtr.Add(basePtr, 16),
+                    IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22), IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28),
+                    IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34), IntPtr.Add(basePtr, 37), IntPtr.Add(basePtr, 40)
+                };
+
+                fixed (void* addressesPtr = addresses)
+                {
+                    TestUtils.Add(container, fileId, "string", "variable+spacepad", typeIdVar_spacepad, addressesPtr, dims);
+                }
             }
 
             res = H5T.close(typeIdVar);
@@ -700,18 +774,29 @@ namespace HDF5.NET.Tests
             var typeIdVarUTF8 = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVarUTF8, H5T.VARIABLE);
             res = H5T.set_cset(typeIdVarUTF8, H5T.cset_t.UTF8);
+            res = H5T.set_strpad(typeIdVarUTF8, H5T.str_t.NULLPAD);
 
-            var dataVarUTF8 = new string[] { "00", "11", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
-            var dataVarUTF8IntPtr = dataVarUTF8.Select(x => Marshal.StringToCoTaskMemUTF8(x)).ToArray();
+            var dataVarUTF8 = new string[] { "00", "111", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
+            var dataVarCharUTF8 = dataVarUTF8
+               .SelectMany(value => Encoding.UTF8.GetBytes(value + '\0'))
+               .ToArray();
 
-            TestUtils.Add(container, fileId, "string", "variableUTF8", typeIdVarUTF8, dataVarUTF8IntPtr.AsSpan(), dims);
-
-            foreach (var ptr in dataVarUTF8IntPtr)
+            fixed (byte* dataVarPtrUTF8 = dataVarCharUTF8)
             {
-                Marshal.FreeCoTaskMem(ptr);
-            }
+                var basePtr = new IntPtr(dataVarPtrUTF8);
 
-            res = H5T.close(typeIdVarUTF8);
+                var addresses = new IntPtr[]
+                {
+                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 3), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
+                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
+                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 33), IntPtr.Add(basePtr, 40)
+                };
+
+                fixed (void* addressesPtr = addresses)
+                {
+                    TestUtils.Add(container, fileId, "string", "variableUTF8", typeIdVarUTF8, addressesPtr, dims);
+                }
+            }
         }
 
         public static unsafe void AddMass(long fileId, ContainerType container)

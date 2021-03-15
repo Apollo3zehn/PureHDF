@@ -232,6 +232,12 @@ namespace HDF5.NET
 
         public static string[] ReadString(DatatypeMessage datatype, Span<byte> data, Superblock superblock)
         {
+            /* Padding
+             * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
+             * Search for "null terminate": null terminate and null padding are essentially
+             * the same when simply reading them from file.
+             */
+
             var isFixed = datatype.Class == DatatypeMessageClass.String;
 
             if (!isFixed && datatype.Class != DatatypeMessageClass.VariableLength)
@@ -247,21 +253,31 @@ namespace HDF5.NET
                 if (bitField is null)
                     throw new Exception("String bit field desciption must not be null.");
 
-                if (bitField.PaddingType != PaddingType.NullTerminate)
-                    throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
-
                 var position = 0;
+
+                Func<string, string> trim = bitField.PaddingType switch
+                {
+                    PaddingType.NullTerminate   => value => value.Split('\0', 2)[0],
+                    PaddingType.NullPad         => value => value.TrimEnd('\0'),
+                    PaddingType.SpacePad        => value => value.TrimEnd(' '),
+                    _                           => throw new Exception("Unsupported padding type.")
+                };
 
                 while (position != data.Length)
                 {
-#error Fixed-length string with null terminate padding is not read in correctly. The string is still padded with zero or more \0 characters.
                     var value = H5Utils.ReadFixedLengthString(data[position..(position + size)]);
+
+                    value = trim(value);
                     result.Add(value);
                     position += size;
                 }
             }
             else
             {
+                /* String is always split after first \0 when writing data to file. 
+                 * In other words, padding type only matters when reading data.
+                 */
+
                 var bitField = datatype.BitField as VariableLengthBitFieldDescription;
 
                 if (bitField is null)
@@ -270,12 +286,17 @@ namespace HDF5.NET
                 if (bitField.Type != VariableLengthType.String)
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
-                if (bitField.PaddingType != PaddingType.NullTerminate)
-                    throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
-
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
                 using (var dataReader = new H5BinaryReader(new MemoryStream(data.ToArray())))
                 {
+                    Func<string, string> trim = bitField.PaddingType switch
+                    {
+                        PaddingType.NullTerminate => value => value,
+                        PaddingType.NullPad => value => value,
+                        PaddingType.SpacePad => value => value.TrimEnd(' '),
+                        _ => throw new Exception("Unsupported padding type.")
+                    };
+
                     while (dataReader.BaseStream.Position != data.Length)
                     {
                         var dataSize = dataReader.ReadUInt32(); // for what do we need this?
@@ -284,6 +305,7 @@ namespace HDF5.NET
                         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
                         var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
+                        value = trim(value);
                         result.Add(value);
                     }
                 }
