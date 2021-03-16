@@ -1,10 +1,8 @@
 using System;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
     public partial class H5Dataset : H5AttributableObject
     {
         #region Properties

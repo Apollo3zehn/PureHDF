@@ -1,30 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
-    public class H5Attribute
+    public partial class H5Attribute
     {
-        #region Fields
-
-        private Superblock _superblock;
-
-        #endregion
-
-        #region Constructors
-
-        internal H5Attribute(AttributeMessage message, Superblock superblock)
-        {
-            this.Message = message;
-            _superblock = superblock;
-        }
-
-        #endregion
-
         #region Properties
 
         public AttributeMessage Message { get; }

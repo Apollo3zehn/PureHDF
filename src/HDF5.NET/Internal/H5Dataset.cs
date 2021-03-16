@@ -1,11 +1,13 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public partial class H5Dataset : H5AttributableObject
+    [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
+    public partial class H5Dataset
     {
         #region Constructors
 

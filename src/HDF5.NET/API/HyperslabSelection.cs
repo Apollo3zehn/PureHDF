@@ -4,13 +4,8 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public class HyperslabSelection : Selection
+    public partial class HyperslabSelection : Selection
     {
-        internal ulong[] StartsField;
-        internal ulong[] StridesField;
-        internal ulong[] CountsField;
-        internal ulong[] BlocksField;
-
         public HyperslabSelection(ulong start, ulong block)
             : this(rank: 1, new ulong[] { start }, new ulong[] { block })
         {
@@ -87,22 +82,6 @@ namespace HDF5.NET
             return this.Rank > 0 
                 ? totalCount 
                 : 0;
-        }
-
-        internal ulong GetStop(int dimension)
-        {
-            // prevent underflow of ulong
-            if (this.Counts[dimension] == 0)
-            {
-                return 0;
-            }
-            else
-            {
-                return
-                    this.Starts[dimension] +
-                    this.Counts[dimension] * this.Strides[dimension] -
-                    (this.Strides[dimension] - this.Blocks[dimension]);
-            }
         }
     }
 }

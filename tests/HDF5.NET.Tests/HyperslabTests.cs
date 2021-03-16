@@ -973,30 +973,5 @@ namespace HDF5.NET.Tests.Reading
                 Assert.True(actual.SequenceEqual(expected));
             });
         }
-
-        //[Fact]
-        //public void CanReadHyperslab()
-        //{
-        //    TestUtils.RunForAllVersions(version =>
-        //    {
-        //        // Arrange
-        //        var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetForHyperslab(fileId));
-
-        //        // Act
-        //        using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-        //        var parent = root.Group("chunked");
-        //        var dataset = parent.Dataset("hyperslab");
-
-        //        foreach (var attribute in attributes)
-        //        {
-        //            var actual = attribute.ReadCompound<TestStructL1>();
-
-        //            // Assert
-        //            Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
-        //        }
-
-        //        Assert.Equal(expectedCount, attributes.Count);
-        //    });
-        //}
     }
 }
