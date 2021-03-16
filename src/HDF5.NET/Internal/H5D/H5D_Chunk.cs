@@ -145,8 +145,8 @@ namespace HDF5.NET
             }
 
             /* Get the "down" sizes for each dimension */
-            this.DownChunkCounts = this.Dims.AccumulateReverse();
-            this.DownMaxChunkCounts = this.MaxDims.AccumulateReverse();
+            this.DownChunkCounts = this.ScaledDims.AccumulateReverse();
+            this.DownMaxChunkCounts = this.ScaledMaxDims.AccumulateReverse();
         }
 
         public override ulong[] GetChunkDims()
@@ -181,8 +181,17 @@ namespace HDF5.NET
             else
             {
                 var chunkInfo = this.GetChunkInfo(chunkIndices);
-                this.Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                this.ReadChunk(buffer, chunkInfo.Size, chunkInfo.FilterMask);
+
+                if (this.Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
+                {
+                    if (this.Dataset.FillValue.IsDefined)
+                        buffer.AsSpan().Fill(this.Dataset.FillValue.Value);
+                }
+                else
+                {
+                    this.Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    this.ReadChunk(buffer, chunkInfo.Size, chunkInfo.FilterMask);
+                }
             }
 
             return buffer;

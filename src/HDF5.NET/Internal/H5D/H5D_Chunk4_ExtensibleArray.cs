@@ -90,12 +90,12 @@ namespace HDF5.NET
                     .Select((swizzledCoord, i) => H5Utils.CeilDiv(swizzledCoord, _swizzledChunkDims[i]))
                     .ToArray();
 
-                chunkIndex = swizzledScaledDims.ToLinearIndex(_swizzledDownMaxChunkCounts);
+                chunkIndex = swizzledScaledDims.ToLinearIndexPrecomputed(_swizzledDownMaxChunkCounts);
             }
             else
             {
                 /* Calculate the index of this chunk */
-                chunkIndex = chunkIndices.ToLinearIndex(this.DownMaxChunkCounts);
+                chunkIndex = chunkIndices.ToLinearIndexPrecomputed(this.DownMaxChunkCounts);
             }
 
             /* Check for filters on chunks */

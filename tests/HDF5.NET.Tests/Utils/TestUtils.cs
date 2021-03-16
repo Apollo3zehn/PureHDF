@@ -1,4 +1,4 @@
-﻿using HDF.PInvoke;
+using HDF.PInvoke;
 using System;
 using System.IO;
 using System.Linq;
@@ -228,8 +228,8 @@ namespace HDF5.NET.Tests
             long res;
 
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            var dims = new ulong[] { 50, 50, 4 };
-            var chunkDims = new ulong[] { 15, 40, 3 };
+            var dims = new ulong[] { 25, 25, 4 };
+            var chunkDims = new ulong[] { 7, 20, 3 };
 
             res = H5P.set_chunk(dcpl_id, 3, chunkDims);
 
@@ -245,7 +245,7 @@ namespace HDF5.NET.Tests
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -280,7 +280,7 @@ namespace HDF5.NET.Tests
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -297,7 +297,7 @@ namespace HDF5.NET.Tests
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
             res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_implicit", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
@@ -312,7 +312,7 @@ namespace HDF5.NET.Tests
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -329,7 +329,7 @@ namespace HDF5.NET.Tests
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -347,7 +347,7 @@ namespace HDF5.NET.Tests
             var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -365,7 +365,7 @@ namespace HDF5.NET.Tests
             var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -383,7 +383,7 @@ namespace HDF5.NET.Tests
             var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
@@ -401,7 +401,7 @@ namespace HDF5.NET.Tests
             var dims1 = new ulong[] { H5S.UNLIMITED, H5S.UNLIMITED };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);

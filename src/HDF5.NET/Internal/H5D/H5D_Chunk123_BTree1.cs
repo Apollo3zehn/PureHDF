@@ -67,9 +67,13 @@ namespace HDF5.NET
             }
 
             // get key and child address
+            var extendedChunkIndices = chunkIndices
+                .Append(0UL)
+                .ToArray();
+
             var success = _btree1
                         .TryFindUserData(out var userData,
-                                        (leftKey, rightKey) => this.NodeCompare3(this.ChunkRank, chunkIndices, leftKey, rightKey),
+                                        (leftKey, rightKey) => this.NodeCompare3(this.ChunkRank, extendedChunkIndices, leftKey, rightKey),
                                         (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
                                             => this.NodeFound(this.ChunkRank, chunkIndices, address, leftKey, out userData));
 
@@ -103,7 +107,9 @@ namespace HDF5.NET
                 if (indices[0] >= rightKey.ScaledChunkOffsets[0])
                     return 1;
 
-                /* not sure why original code has another else-if at this point */
+                else if (indices[0] == rightKey.ScaledChunkOffsets[0] &&
+                         indices[1] >= rightKey.ScaledChunkOffsets[1])
+                    return 1;
 
                 else if (indices[0] < leftKey.ScaledChunkOffsets[0])
                     return -1;
@@ -111,10 +117,10 @@ namespace HDF5.NET
 
             else
             {
-                if (H5Utils.VectorCompare(rank, indices, rightKey.ScaledChunkOffsets) >= 0)
+                if (H5Utils.VectorCompare((byte)(rank + 1), indices, rightKey.ScaledChunkOffsets) >= 0)
                     return 1;
 
-                else if (H5Utils.VectorCompare(rank, indices, leftKey.ScaledChunkOffsets) < 0)
+                else if (H5Utils.VectorCompare((byte)(rank + 1), indices, leftKey.ScaledChunkOffsets) < 0)
                     return -1;
             }
 

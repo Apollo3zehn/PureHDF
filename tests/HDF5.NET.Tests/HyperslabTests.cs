@@ -1,6 +1,7 @@
 ﻿using HDF.PInvoke;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
@@ -855,34 +856,34 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(expected));
         }
 
-        [Fact]
-        public void CanCopyLikePInvoke()
+        [Fact(Skip = "C library does not give correct 'expected' array :-/")]
+        public void CanCopyLikeCLib()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var datasetDims = new ulong[] { 50, 50, 4 };
-                var chunkDims = new ulong[] { 15, 40, 3 };
-                var memoryDims = new ulong[] { 150, 50 };
+                var datasetDims = new ulong[] { 25, 25, 4 };
+                var chunkDims = new ulong[] { 7, 20, 3 };
+                var memoryDims = new ulong[] { 75, 25 };
 
                 var datasetSelection = new HyperslabSelection(
                     rank: 3,
-                    starts: new ulong[] { 4, 4, 0 },
-                    strides: new ulong[] { 9, 8, 2 },
-                    counts: new ulong[] { 5, 6, 2 },
-                    blocks: new ulong[] { 6, 5, 2 }
+                    starts: new ulong[] { 2, 2, 0 },
+                    strides: new ulong[] { 5, 8, 2 },
+                    counts: new ulong[] { 5, 3, 2 },
+                    blocks: new ulong[] { 3, 5, 2 }
                 );
 
                 var memorySelection = new HyperslabSelection(
                     rank: 2,
                     starts: new ulong[] { 2, 1 },
-                    strides: new ulong[] { 70, 17 },
-                    counts: new ulong[] { 2, 2 },
-                    blocks: new ulong[] { 60, 15 }
+                    strides: new ulong[] { 35, 17 },
+                    counts: new ulong[] { 2, 1 },
+                    blocks: new ulong[] { 30, 15 }
                 );
 
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetForHyperslab(fileId));
-                var expectedBuffer = new byte[150 * 50 * 4];
+                var expectedBuffer = new byte[memoryDims[0] * memoryDims[1] * 4];
                 var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer.AsSpan());
 
                 {
@@ -904,6 +905,9 @@ namespace HDF5.NET.Tests.Reading
                         fixed (byte* ptr = expectedBuffer)
                         {
                             var res3 = H5D.read(datasetId, H5T.NATIVE_INT32, memorySpaceId, datasetSpaceId, 0, new IntPtr(ptr));
+
+                            if (res3 < 0)
+                                throw new Exception("Unable to read data.");
                         }
                     }
 
@@ -913,30 +917,60 @@ namespace HDF5.NET.Tests.Reading
                     H5F.close(fileId);
                 }
 
-                //using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
-                //var dataset = root.Dataset("/chunked/hyperslab");
-                //var chunkProvider = dataset.();
+                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                var dataset = root.Dataset("/chunked/hyperslab");
 
-                //var actualBuffer = new byte[600 * 100 * sizeof(int)];
-                //var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+                /* get intermediate data (only for Matlab visualization) */
+                var intermediateBuffer = new byte[datasetDims[0] * datasetDims[1] * datasetDims[2] * 4];
+                var intermediate = MemoryMarshal.Cast<byte, int>(intermediateBuffer);
 
-                //var copyInfo = new CopyInfo(
-                //    datasetDims,
-                //    chunkDims,
-                //    memoryDims,
-                //    memoryDims,
-                //    datasetSelection,
-                //    memorySelection,
-                //    index => chunkProvider.GetChunk(index),
-                //    index => actualBuffer,
-                //    TypeSize: 4
-                //);
+                var chunkProviderIntermediate = H5D_Chunk.Create(dataset, default);
+                chunkProviderIntermediate.Initialize();
 
-                //// Act
-                //HyperslabUtils.Copy(sourceRank: 3, targetRank: 2, copyInfo);
+                var copyInfoInterMediate = new CopyInfo(
+                    datasetDims,
+                    chunkDims,
+                    datasetDims,
+                    datasetDims,
+                    datasetSelection,
+                    datasetSelection,
+                    indices => chunkProviderIntermediate.GetBuffer(indices),
+                    indices => null,
+                    indices => intermediateBuffer,
+                    TypeSize: 4
+                );
 
-                //// Assert
-                //Assert.True(actual.SequenceEqual(expected));
+                HyperslabUtils.Copy(sourceRank: 3, targetRank: 3, copyInfoInterMediate);
+
+                /* get actual data */
+                var actualBuffer = new byte[memoryDims[0] * memoryDims[1] * 4];
+                var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+
+                var chunkProvider = H5D_Chunk.Create(dataset, default);
+                chunkProvider.Initialize();
+
+                var copyInfo = new CopyInfo(
+                    datasetDims,
+                    chunkDims,
+                    memoryDims,
+                    memoryDims,
+                    datasetSelection,
+                    memorySelection,
+                    indices => chunkProvider.GetBuffer(indices),
+                    indices => null,
+                    indices => actualBuffer,
+                    TypeSize: 4
+                );
+
+                // Act
+                HyperslabUtils.Copy(sourceRank: 3, targetRank: 2, copyInfo);
+
+                //var intermediateForMatlab = string.Join(',', intermediate.ToArray().Select(value => value.ToString()));
+                //var actualForMatlab = string.Join(',', actual.ToArray().Select(value => value.ToString()));
+                //var expectedForMatlab = string.Join(',', expected.ToArray().Select(value => value.ToString()));
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
             });
         }
 

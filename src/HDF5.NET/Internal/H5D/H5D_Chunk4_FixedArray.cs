@@ -18,7 +18,7 @@ namespace HDF5.NET
             // H5Dfarray.c (H5D__farray_idx_get_addr)
 
             /* Calculate the index of this chunk */
-            var chunkIndex = chunkIndices.ToLinearIndex(this.DownMaxChunkCounts);
+            var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(this.DownMaxChunkCounts);
 
             /* Check for filters on chunks */
             if (this.Dataset.FilterPipeline is not null)

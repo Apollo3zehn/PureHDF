@@ -62,7 +62,8 @@ namespace HDF5.NET
             }
             else
             {
-                chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, chunkLoader.Invoke());
+                var buffer = chunkLoader.Invoke();
+                chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, buffer);
                 var chunk = chunkInfo.Chunk;
 
                 if ((ulong)chunk.Length <= this.ByteCount)

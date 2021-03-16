@@ -43,15 +43,33 @@ namespace HDF5.NET
             return index;
         }
 
-        public static ulong[] AccumulateReverse(this ulong[] indices)
+        public static ulong ToLinearIndexPrecomputed(this ulong[] indices, ulong[] totalSize)
         {
-            var result = new ulong[indices.Length];
+            // H5VM.c (H5VM_array_offset_pre)
+            var index = 0UL;
+            var rank = indices.Length;
+
+            if (totalSize.Length != rank)
+                throw new Exception("Rank of index and total size arrays must be equal.");
+
+            /* Compute offset in array */
+            for (int i = 0; i < rank; i++)
+            {
+                index += totalSize[i] * indices[i];
+            }
+
+            return index;
+        }
+
+        public static ulong[] AccumulateReverse(this ulong[] totalSize)
+        {
+            var result = new ulong[totalSize.Length];
             var acc = 1UL;
 
-            for (int i = indices.Length - 1; i >= 0; i--)
+            for (int i = totalSize.Length - 1; i >= 0; i--)
             {
                 result[i] = acc;
-                acc *= indices[i];
+                acc *= totalSize[i];
             }
 
             return result;
