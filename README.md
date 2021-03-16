@@ -1,4 +1,4 @@
-**Project is not yet released because support for reading partial datasets (hyperslabs), virtual datasets, point selections and region references (IV.B. Disk Format: Level 2B) is still missing.**
+**See https://github.com/Apollo3zehn/HDF5.NET/issues/9 for not yet implemented features.**
 
 # HDF5.NET
 
@@ -194,7 +194,44 @@ The following code samples work for datasets as well as attributes.
 
 For more information on compound data, see section [Reading compound data](#Reading-compound-data).
 
-## 4. Filters
+## 4. Partial I/O and Hyperslabs
+
+Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With HDF5.NET, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
+
+```cs
+var dataset = root.Dataset("myDataset");
+var memoryDims = new ulong[] { 75, 25 };
+
+var datasetSelection = new HyperslabSelection(
+    rank: 3,
+    starts: new ulong[] { 2, 2, 0 },
+    strides: new ulong[] { 5, 8, 2 },
+    counts: new ulong[] { 5, 3, 2 },
+    blocks: new ulong[] { 3, 5, 2 }
+);
+
+var memorySelection = new HyperslabSelection(
+    rank: 2,
+    starts: new ulong[] { 2, 1 },
+    strides: new ulong[] { 35, 17 },
+    counts: new ulong[] { 2, 1 },
+    blocks: new ulong[] { 30, 15 }
+);
+
+var result = dataset
+    .Read<int>(
+        fileSelection: datasetSelection,
+        memorySelection: memorySelection,
+        memoryDims: memoryDims
+    )
+    .ToArray2D(75, 25);
+``` 
+
+All shown parameters are optional. For example, when the `fileSelection` parameter is unspecified, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
+
+Additionally, there is an overload method that allows you to provide your own buffer.
+
+## 5. Filters
 
 ### Built-in Filters
 - Shuffle (hardware accelerated, SSE2/AVX2)
@@ -207,7 +244,10 @@ Before you can use external filters, you need to register them using ```H5Filter
 This function could look like the following and should be adapted to your specific filter library:
 
 ```cs
-public static Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+public static Memory<byte> FilterFunc(
+    H5FilterFlags flags, 
+    uint[] parameters, 
+    Memory<byte> buffer)
 {
     // Decompressing
     if (flags.HasFlag(H5FilterFlags.Decompress))
@@ -261,7 +301,7 @@ public static Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Me
      filterFunc: BZip2Helper.FilterFunc);
 ```
 
-## 5. Advanced Scenarios
+## 6. Advanced Scenarios
 
 ### Reading Multidimensional Data
 
