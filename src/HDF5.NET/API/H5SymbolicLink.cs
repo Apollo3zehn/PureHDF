@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal partial class H5SymbolicLink
+    public partial class H5SymbolicLink
     {
         #region Properties
 

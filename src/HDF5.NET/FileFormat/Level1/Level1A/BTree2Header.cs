@@ -6,7 +6,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class BTree2Header<T> : FileBlock where T : struct, IBTree2Record
+    internal class BTree2Header<T> : FileBlock where T : struct, IBTree2Record
     {
         #region Fields
 

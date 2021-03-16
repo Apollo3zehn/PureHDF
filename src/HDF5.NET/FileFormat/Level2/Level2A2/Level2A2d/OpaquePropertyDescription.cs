@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class OpaquePropertyDescription : DatatypePropertyDescription
+    internal class OpaquePropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

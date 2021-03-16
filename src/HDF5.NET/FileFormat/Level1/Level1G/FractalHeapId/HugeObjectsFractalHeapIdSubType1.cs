@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public class HugeObjectsFractalHeapIdSubType1 : FractalHeapId
+    internal class HugeObjectsFractalHeapIdSubType1 : FractalHeapId
     {
         #region Fields
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct BTree1RawDataChunkUserData
+    internal struct BTree1RawDataChunkUserData
     {
         #region Properties
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class OldObjectModificationTimeMessage : Message
+    internal class OldObjectModificationTimeMessage : Message
     {
         #region Constructors
 

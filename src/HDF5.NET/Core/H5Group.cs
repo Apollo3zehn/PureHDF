@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}")]
-    public partial class H5Group
+    partial class H5Group
     {
         #region Fields
 
@@ -399,7 +399,7 @@ namespace HDF5.NET
 
             var fractalHeap = linkInfoMessage.FractalHeap;
             var btree2NameIndex = linkInfoMessage.BTree2NameIndex;
-            var nameHash = H5Checksum.JenkinsLookup3(name);
+            var nameHash = ChecksumUtils.JenkinsLookup3(name);
             var candidate = default(LinkMessage);
 
             var success = btree2NameIndex.TryFindRecord(out var record, record =>

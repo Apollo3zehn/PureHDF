@@ -4,12 +4,12 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    internal static class H5Checksum
+    internal static class ChecksumUtils
     {
         public static uint JenkinsLookup3(string key)
         {
             var bytes = Encoding.UTF8.GetBytes(key);
-            return H5Checksum.JenkinsLookup3Internal(bytes, 0);
+            return ChecksumUtils.JenkinsLookup3Internal(bytes, 0);
         }
 
         /*
@@ -65,12 +65,12 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void JenkinsLookup3Mix(ref uint a, ref uint b, ref uint c)
         {
-            a -= c; a ^= H5Checksum.JenkinsLookup3Rot(c, 4);    c += b;
-            b -= a; b ^= H5Checksum.JenkinsLookup3Rot(a, 6);    a += c;
-            c -= b; c ^= H5Checksum.JenkinsLookup3Rot(b, 8);    b += a;
-            a -= c; a ^= H5Checksum.JenkinsLookup3Rot(c, 16);   c += b;
-            b -= a; b ^= H5Checksum.JenkinsLookup3Rot(a, 19);   a += c;
-            c -= b; c ^= H5Checksum.JenkinsLookup3Rot(b, 4);    b += a;
+            a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 4);    c += b;
+            b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 6);    a += c;
+            c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 8);    b += a;
+            a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 16);   c += b;
+            b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 19);   a += c;
+            c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 4);    b += a;
         }
 
         /*
@@ -101,13 +101,13 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void JenkinsLookup3Final(ref uint a, ref uint b, ref uint c)
         {
-            c ^= b; c -= H5Checksum.JenkinsLookup3Rot(b, 14);
-            a ^= c; a -= H5Checksum.JenkinsLookup3Rot(c, 11);
-            b ^= a; b -= H5Checksum.JenkinsLookup3Rot(a, 25);
-            c ^= b; c -= H5Checksum.JenkinsLookup3Rot(b, 16);
-            a ^= c; a -= H5Checksum.JenkinsLookup3Rot(c, 4);
-            b ^= a; b -= H5Checksum.JenkinsLookup3Rot(a, 14);
-            c ^= b; c -= H5Checksum.JenkinsLookup3Rot(b, 24);
+            c ^= b; c -= ChecksumUtils.JenkinsLookup3Rot(b, 14);
+            a ^= c; a -= ChecksumUtils.JenkinsLookup3Rot(c, 11);
+            b ^= a; b -= ChecksumUtils.JenkinsLookup3Rot(a, 25);
+            c ^= b; c -= ChecksumUtils.JenkinsLookup3Rot(b, 16);
+            a ^= c; a -= ChecksumUtils.JenkinsLookup3Rot(c, 4);
+            b ^= a; b -= ChecksumUtils.JenkinsLookup3Rot(a, 14);
+            c ^= b; c -= ChecksumUtils.JenkinsLookup3Rot(b, 24);
         }
 
         /*
@@ -163,7 +163,7 @@ namespace HDF5.NET
                     c += ((uint)k[9]) << 8;
                     c += ((uint)k[10]) << 16;
                     c += ((uint)k[11]) << 24;
-                    H5Checksum.JenkinsLookup3Mix(ref a, ref b, ref c);
+                    ChecksumUtils.JenkinsLookup3Mix(ref a, ref b, ref c);
                     length -= 12;
                     k += 12;
                 }
@@ -188,7 +188,7 @@ namespace HDF5.NET
                         throw new Exception("This Should never be executed!");
                 }
 
-                H5Checksum.JenkinsLookup3Final(ref a, ref b, ref c);
+                ChecksumUtils.JenkinsLookup3Final(ref a, ref b, ref c);
 
                 return c;
             }

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class DriverInfoBlock : FileBlock
+    internal class DriverInfoBlock : FileBlock
     {
         #region Fields
 

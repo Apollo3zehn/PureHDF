@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public abstract class ObjectHeader : FileBlock
+    internal abstract class ObjectHeader : FileBlock
     {
         #region Constructors
 
@@ -20,7 +20,7 @@ namespace HDF5.NET
 
         public List<HeaderMessage> HeaderMessages { get; }
 
-        public H5ObjectType ObjectType { get; protected set; }
+        public ObjectType ObjectType { get; protected set; }
 
         #endregion
 
@@ -123,7 +123,7 @@ namespace HDF5.NET
             return headerMessages;
         }
 
-        private H5ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
+        private ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
         {
             foreach (var message in headerMessages)
             {
@@ -133,10 +133,10 @@ namespace HDF5.NET
                     case HeaderMessageType.Link:
                     case HeaderMessageType.GroupInfo:
                     case HeaderMessageType.SymbolTable:
-                        return H5ObjectType.Group;
+                        return ObjectType.Group;
 
                     case HeaderMessageType.DataLayout:
-                        return H5ObjectType.Dataset;
+                        return ObjectType.Dataset;
 
                     default:
                         break;
@@ -147,9 +147,9 @@ namespace HDF5.NET
                             headerMessages[0].Type == HeaderMessageType.Datatype;
 
             if (condition)
-                return H5ObjectType.CommitedDatatype;
+                return ObjectType.CommitedDatatype;
             else
-                return H5ObjectType.Undefined;
+                return ObjectType.Undefined;
         }
 
         #endregion

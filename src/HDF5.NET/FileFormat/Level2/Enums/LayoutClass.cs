@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum LayoutClass : byte
+    internal enum LayoutClass : byte
     {
         Compact = 0,
         Contiguous = 1,

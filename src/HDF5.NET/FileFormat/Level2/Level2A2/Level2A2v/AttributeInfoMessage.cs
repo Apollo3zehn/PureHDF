@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public class AttributeInfoMessage : Message
+    internal class AttributeInfoMessage : Message
     {
         #region Fields
 

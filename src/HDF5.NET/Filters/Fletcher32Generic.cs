@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public static class Fletcher32Generic
+    internal static class Fletcher32Generic
     {
         public static unsafe uint Fletcher32(Span<byte> data) 
         {

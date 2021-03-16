@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     // https://support.hdfgroup.org/HDF5/doc_resource/H5Fill_Behavior.html
-    public class FillValueMessage : Message
+    internal class FillValueMessage : Message
     {
         #region Fields
 

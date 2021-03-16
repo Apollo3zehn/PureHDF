@@ -6,7 +6,7 @@ namespace HDF5.NET
 {
     // https://support.hdfgroup.org/HDF5/doc/H5.user/Caching.html
     // https://support.hdfgroup.org/HDF5/faq/perfissues.html
-    public partial class SimpleChunkCache : IChunkCache
+    partial class SimpleChunkCache : IChunkCache
     {
         #region Records
 

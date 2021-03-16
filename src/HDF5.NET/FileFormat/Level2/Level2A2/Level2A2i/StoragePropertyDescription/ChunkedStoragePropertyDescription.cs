@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public abstract class ChunkedStoragePropertyDescription : StoragePropertyDescription
+    internal abstract class ChunkedStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 

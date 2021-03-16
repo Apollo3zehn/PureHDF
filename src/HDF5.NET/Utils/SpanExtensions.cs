@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public static class SpanExtensions
+    internal static class SpanExtensions
     {
         public static void Fill(this Span<byte> buffer, byte[] fillValue)
         {

@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class AttributeMessage : Message
+    internal class AttributeMessage : Message
     {
         #region Fields
 

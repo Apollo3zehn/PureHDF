@@ -6,9 +6,9 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public delegate bool FoundDelegate<T, TUserData>(ulong address, T leftNode, out TUserData userData);
+    internal delegate bool FoundDelegate<T, TUserData>(ulong address, T leftNode, out TUserData userData);
 
-    public class BTree1Node<T> where T : struct, IBTree1Key
+    internal class BTree1Node<T> where T : struct, IBTree1Key
     {
         #region Fields
 

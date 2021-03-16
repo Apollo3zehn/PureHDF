@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public partial class HyperslabSelection : Selection
+    partial class HyperslabSelection : Selection
     {
         internal ulong[] StartsField;
         internal ulong[] StridesField;

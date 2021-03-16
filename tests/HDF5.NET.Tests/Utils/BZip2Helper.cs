@@ -6,10 +6,10 @@ namespace HDF5.NET.Tests
 {
     public static class BZip2Helper
     {
-        public static unsafe Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        public static unsafe Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             /* We're decompressing */
-            if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+            if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 using var sourceStream = new MemorySpanStream(buffer);
                 using var targetStream = new MemoryStream();

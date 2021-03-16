@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum DatatypeMessageClass : byte
+    internal enum DatatypeMessageClass : byte
     {
         FixedPoint = 0,
         FloatingPoint = 1,

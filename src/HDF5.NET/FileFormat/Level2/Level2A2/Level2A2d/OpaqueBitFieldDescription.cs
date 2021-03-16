@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class OpaqueBitFieldDescription : DatatypeBitFieldDescription
+    internal class OpaqueBitFieldDescription : DatatypeBitFieldDescription
     {
         #region Constructors
 

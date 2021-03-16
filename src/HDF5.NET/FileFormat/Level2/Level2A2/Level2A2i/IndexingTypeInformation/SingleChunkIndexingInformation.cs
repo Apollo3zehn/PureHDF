@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class SingleChunkIndexingInformation : IndexingInformation
+    internal class SingleChunkIndexingInformation : IndexingInformation
     {
         #region Constructors
 

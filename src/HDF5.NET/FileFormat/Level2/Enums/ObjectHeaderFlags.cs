@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [Flags]
-    public enum ObjectHeaderFlags : byte
+    internal enum ObjectHeaderFlags : byte
     {
         SizeOfChunk1 = 1,
         SizeOfChunk2 = 2,

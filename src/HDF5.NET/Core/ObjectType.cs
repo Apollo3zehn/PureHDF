@@ -1,7 +1,7 @@
 ﻿namespace HDF5.NET
 {
     // I. Introduction
-    public enum H5ObjectType
+    internal enum ObjectType
     {
         Undefined,
         Group,

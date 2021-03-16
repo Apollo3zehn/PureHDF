@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum FractalHeapIdType : byte
+    internal enum FractalHeapIdType : byte
     {
         Managed = 0,
         Huge = 1,

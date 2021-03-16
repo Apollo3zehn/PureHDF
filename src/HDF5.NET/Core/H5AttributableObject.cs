@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public abstract partial class H5AttributableObject : H5Object
+    abstract partial class H5AttributableObject : H5Object
     {
         #region Constructors
 
@@ -128,7 +128,7 @@ namespace HDF5.NET
 
             var fractalHeap = attributeInfoMessage.FractalHeap;
             var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
-            var nameHash = H5Checksum.JenkinsLookup3(name);
+            var nameHash = ChecksumUtils.JenkinsLookup3(name);
             var candidate = default(AttributeMessage);
 
             var success = btree2NameIndex.TryFindRecord(out var record, record =>

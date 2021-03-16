@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class LocalHeap : FileBlock
+    internal class LocalHeap : FileBlock
     {
         #region Fields
 

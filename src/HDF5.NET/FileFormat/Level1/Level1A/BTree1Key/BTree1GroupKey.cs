@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct BTree1GroupKey : IBTree1Key
+    internal struct BTree1GroupKey : IBTree1Key
     {
         #region Constructors
 

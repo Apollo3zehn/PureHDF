@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class FixedPointBitFieldDescription : DatatypeBitFieldDescription, IByteOrderAware
+    internal class FixedPointBitFieldDescription : DatatypeBitFieldDescription, IByteOrderAware
     {
         #region Constructors
 

@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
-    public partial class H5CommitedDatatype : H5Object
+    partial class H5CommitedDatatype : H5Object
     {
         #region Constructors
 
@@ -12,6 +12,12 @@ namespace HDF5.NET
         {
             this.Datatype = header.GetMessage<DatatypeMessage>();
         }
+
+        #endregion
+
+        #region Properties
+
+        internal DatatypeMessage Datatype { get; }
 
         #endregion
     }

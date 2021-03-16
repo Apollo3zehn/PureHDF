@@ -44,7 +44,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace HDF5.NET
 {
-    public static class ShuffleAvx2
+    internal static class ShuffleAvx2
     {
         public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {

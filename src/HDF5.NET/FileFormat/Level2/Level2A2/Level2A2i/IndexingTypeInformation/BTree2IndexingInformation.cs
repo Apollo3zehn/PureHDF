@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class BTree2IndexingInformation : IndexingInformation
+    internal class BTree2IndexingInformation : IndexingInformation
     {
         #region Constructors
 

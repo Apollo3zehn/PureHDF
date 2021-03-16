@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public abstract class Superblock : FileBlock
+    internal abstract class Superblock : FileBlock
     {
         #region Fields
 

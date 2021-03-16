@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public class LinkInfoMessage : Message
+    internal class LinkInfoMessage : Message
     {
         #region Fields
 

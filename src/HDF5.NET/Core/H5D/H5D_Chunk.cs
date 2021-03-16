@@ -210,7 +210,7 @@ namespace HDF5.NET
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
                 this.Dataset.Context.Reader.Read(filterBuffer.Span);
 
-                H5Filter.ExecutePipeline(this.Dataset.FilterPipeline.FilterDescriptions, filterMask, ExtendedFilterFlags.Reverse, filterBuffer, buffer);
+                H5Filter.ExecutePipeline(this.Dataset.FilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }
         }
 

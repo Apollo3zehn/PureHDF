@@ -207,10 +207,10 @@ Before you can use external filters, you need to register them using ```H5Filter
 This function could look like the following and should be adapted to your specific filter library:
 
 ```cs
-public static Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+public static Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
 {
     // Decompressing
-    if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+    if (flags.HasFlag(H5FilterFlags.Decompress))
     {
         // pseudo code
         byte[] decompressedData = MyFilter.Decompress(parameters, buffer.Span);
@@ -284,7 +284,7 @@ Structs without any nullable fields (i.e. no strings and other reference types) 
 
 ```cs
 [StructLayout(LayoutKind.Explicit, Size = 5)]
-public struct SimpleStruct
+internal struct SimpleStruct
 {
     [FieldOffset(0)]
     public byte ByteValue;
@@ -308,7 +308,7 @@ Just make sure the field offset attributes matches the field offsets defined in 
 If you have a struct with string fields, you need to use the slower `ReadCompound` method:
 
 ```cs
-public struct NullableStruct
+internal struct NullableStruct
 {
     public float FloatValue;
     public string StringValue1;
@@ -326,7 +326,7 @@ var compoundData = attribute.ReadCompound<NullableStruct>();
 ```cs
 
 // Apply the H5NameAttribute to the field with custom name.
-public struct NullableStructWithCustomFieldName
+internal struct NullableStructWithCustomFieldName
 {
     [H5Name("FloatValue")]
     public float FloatValueWithCustomName;

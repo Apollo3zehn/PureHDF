@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum BTree2Type : byte
+    internal enum BTree2Type : byte
     {
         Testing = 0,
         IndexingIndirectlyAccessed_NonFilteredHugeFractalHeapObjects = 1,

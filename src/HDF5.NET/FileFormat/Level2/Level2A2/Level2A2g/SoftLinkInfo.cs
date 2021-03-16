@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class SoftLinkInfo : LinkInfo
+    internal class SoftLinkInfo : LinkInfo
     {
         #region Constructors
 

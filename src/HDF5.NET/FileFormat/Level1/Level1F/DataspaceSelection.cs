@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class DataspaceSelection : FileBlock
+    internal class DataspaceSelection : FileBlock
     {
         #region Constructors
 

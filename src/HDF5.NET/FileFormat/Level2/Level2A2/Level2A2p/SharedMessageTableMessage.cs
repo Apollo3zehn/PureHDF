@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class SharedMessageTableMessage : Message
+    internal class SharedMessageTableMessage : Message
     {
         #region Fields
 

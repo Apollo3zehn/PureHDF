@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Type}")]
-    public class HeaderMessage : FileBlock
+    internal class HeaderMessage : FileBlock
     {
         #region Fields
 

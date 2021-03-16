@@ -6,7 +6,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace HDF5.NET
 {
-    public static class ShuffleFilter
+    internal static class ShuffleFilter
     {
         public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {

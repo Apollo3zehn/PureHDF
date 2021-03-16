@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public class DataBlockPage<T>
+    internal class DataBlockPage<T>
     {
         #region Constructors
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class ContiguousStoragePropertyDescription : StoragePropertyDescription
+    internal class ContiguousStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 

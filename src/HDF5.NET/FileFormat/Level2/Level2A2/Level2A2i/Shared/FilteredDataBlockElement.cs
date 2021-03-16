@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FilteredDataBlockElement : DataBlockElement
+    internal class FilteredDataBlockElement : DataBlockElement
     {
         #region Properties
 

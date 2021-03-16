@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class CompactStoragePropertyDescription : StoragePropertyDescription
+    internal class CompactStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 

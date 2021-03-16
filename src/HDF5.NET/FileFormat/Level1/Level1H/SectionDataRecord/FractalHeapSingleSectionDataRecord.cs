@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FractalHeapFirstRowSectionDataRecord : SectionDataRecord
+    internal class FractalHeapFirstRowSectionDataRecord : SectionDataRecord
     {
         #region Constructors
 

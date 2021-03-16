@@ -9,8 +9,6 @@ namespace HDF5.NET
     {
         #region Properties
 
-        public AttributeMessage Message { get; }
-
         public string Name => this.Message.Name;
 
         #endregion

@@ -8,7 +8,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace HDF5.NET
 {
-    public static class EndiannessConverter
+    internal static class EndiannessConverter
     {
         public unsafe static void Convert<T>(Span<T> source, Span<T> destination) 
             where T : unmanaged

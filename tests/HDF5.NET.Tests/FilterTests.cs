@@ -48,7 +48,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = "./testfiles/blosc.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
-            H5Filter.Register(identifier: (FilterIdentifier)32001, name: "blosc2", filterFunc: BloscHelper.FilterFunc);
+            H5Filter.Register(identifier: (H5FilterID)32001, name: "blosc2", filterFunc: BloscHelper.FilterFunc);
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -91,7 +91,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = "./testfiles/bzip2.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
-            H5Filter.Register(identifier: (FilterIdentifier)307, name: "bzip2", filterFunc: BZip2Helper.FilterFunc);
+            H5Filter.Register(identifier: (H5FilterID)307, name: "bzip2", filterFunc: BZip2Helper.FilterFunc);
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);

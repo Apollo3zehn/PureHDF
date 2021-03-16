@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class H5S_SEL_ALL : H5S_SEL
+    internal class H5S_SEL_ALL : H5S_SEL
     {
         #region Fields
 

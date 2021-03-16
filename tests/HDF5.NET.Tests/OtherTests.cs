@@ -35,7 +35,7 @@ namespace HDF5.NET.Tests.Reading
             // Arrange
 
             // Act
-            var actual = H5Checksum.JenkinsLookup3(key);
+            var actual = ChecksumUtils.JenkinsLookup3(key);
 
             // Assert
             Assert.Equal(expected, actual);

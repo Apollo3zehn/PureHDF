@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class TinyObjectsFractalHeapIdSubType2 : TinyObjectsFractalHeapIdSubType1
+    internal class TinyObjectsFractalHeapIdSubType2 : TinyObjectsFractalHeapIdSubType1
     {
         #region Fields
 

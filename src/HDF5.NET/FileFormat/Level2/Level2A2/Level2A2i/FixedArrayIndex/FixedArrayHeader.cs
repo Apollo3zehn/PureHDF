@@ -3,13 +3,12 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class FixedArrayHeader : FileBlock
+    internal class FixedArrayHeader : FileBlock
     {
         #region Fields
 
         private byte _version;
         private Superblock _superblock;
-        private uint _chunkSizeLength;
 
         #endregion
 

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class BogusMessage : Message
+    internal class BogusMessage : Message
     {
         #region Fields
 

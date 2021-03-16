@@ -4,7 +4,7 @@ using System.Diagnostics;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Target = '{Target}'")]
-    internal partial class H5SymbolicLink
+    partial class H5SymbolicLink
     {
         #region Constructors
 

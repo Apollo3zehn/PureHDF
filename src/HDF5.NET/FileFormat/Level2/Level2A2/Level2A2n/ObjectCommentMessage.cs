@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class ObjectCommentMessage : Message
+    internal class ObjectCommentMessage : Message
     {
         #region Constructors
 

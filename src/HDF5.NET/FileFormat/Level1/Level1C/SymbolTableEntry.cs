@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class SymbolTableEntry : FileBlock
+    internal class SymbolTableEntry : FileBlock
     {
         #region Fields
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    struct BTree2NodeInfo
+    internal struct BTree2NodeInfo
     {
         public uint MaxRecordCount { get; set; }
         public uint SplitRecordCount { get; set; }

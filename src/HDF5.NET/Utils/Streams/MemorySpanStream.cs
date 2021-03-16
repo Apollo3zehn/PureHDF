@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class MemorySpanStream : Stream
+    internal class MemorySpanStream : Stream
     {
         private long _position;
         private Memory<byte> _memory;

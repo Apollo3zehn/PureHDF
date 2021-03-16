@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public abstract class DataLayoutMessage : Message
+    internal abstract class DataLayoutMessage : Message
     {
         #region Constructors
 

@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
-    public partial class H5Attribute
+    partial class H5Attribute
     {
         #region Fields
 
@@ -18,6 +18,12 @@ namespace HDF5.NET
             this.Message = message;
             _superblock = superblock;
         }
+
+        #endregion
+
+        #region Properties
+
+        internal AttributeMessage Message { get; }
 
         #endregion
     }

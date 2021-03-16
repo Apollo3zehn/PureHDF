@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace HDF5.NET
 {
-    public class DatatypeMessage : Message
+    internal class DatatypeMessage : Message
     {
         #region Constructors
 

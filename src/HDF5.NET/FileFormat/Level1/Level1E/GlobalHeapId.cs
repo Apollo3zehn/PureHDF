@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class GlobalHeapId : FileBlock
+    internal class GlobalHeapId : FileBlock
     {
         #region Fields
 

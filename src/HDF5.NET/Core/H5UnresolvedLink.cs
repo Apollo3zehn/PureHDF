@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}")]
-    public partial class H5UnresolvedLink : H5Object
+    partial class H5UnresolvedLink : H5Object
     {
         #region Constructors
 

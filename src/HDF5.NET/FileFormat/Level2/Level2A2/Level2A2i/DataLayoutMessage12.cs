@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class DataLayoutMessage12 : DataLayoutMessage
+    internal class DataLayoutMessage12 : DataLayoutMessage
     {
         #region Fields
 

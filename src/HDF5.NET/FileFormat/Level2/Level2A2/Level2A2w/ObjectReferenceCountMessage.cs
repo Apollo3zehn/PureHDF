@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ObjectReferenceCountMessage : Message
+    internal class ObjectReferenceCountMessage : Message
     {
         #region Fields
 

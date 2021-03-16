@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
-    public partial class H5Dataset
+    partial class H5Dataset
     {
         #region Constructors
 
@@ -60,19 +60,19 @@ namespace HDF5.NET
 
         #region Properties
 
-        public DataLayoutMessage DataLayout { get; } = null!;
+        internal DataLayoutMessage DataLayout { get; } = null!;
 
-        public DataspaceMessage Dataspace { get; } = null!;
+        internal DataspaceMessage Dataspace { get; } = null!;
 
-        public DatatypeMessage Datatype { get; } = null!;
+        internal DatatypeMessage Datatype { get; } = null!;
 
-        public FillValueMessage FillValue { get; } = null!;
+        internal FillValueMessage FillValue { get; } = null!;
 
-        public FilterPipelineMessage? FilterPipeline { get; }
+        internal FilterPipelineMessage? FilterPipeline { get; }
 
-        public ObjectModificationMessage? ObjectModification { get; }
+        internal ObjectModificationMessage? ObjectModification { get; }
 
-        public ExternalFileListMessage? ExternalFileList { get; }
+        internal ExternalFileListMessage? ExternalFileList { get; }
 
         #endregion
 

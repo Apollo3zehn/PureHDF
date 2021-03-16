@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class GlobalHeapObject : FileBlock
+    internal class GlobalHeapObject : FileBlock
     {
         #region Constructors
 

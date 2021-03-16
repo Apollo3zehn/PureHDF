@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class ObjectHeaderScratchPad : ScratchPad
+    internal class ObjectHeaderScratchPad : ScratchPad
     {
         #region Fields
 

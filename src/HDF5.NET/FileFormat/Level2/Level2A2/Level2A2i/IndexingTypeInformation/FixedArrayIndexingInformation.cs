@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class FixedArrayIndexingInformation : IndexingInformation
+    internal class FixedArrayIndexingInformation : IndexingInformation
     {
         #region Constructors
 

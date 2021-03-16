@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class CompoundPropertyDescription : DatatypePropertyDescription
+    internal class CompoundPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

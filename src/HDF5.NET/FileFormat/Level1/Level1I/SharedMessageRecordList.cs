@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class SharedMessageRecordList : FileBlock
+    internal class SharedMessageRecordList : FileBlock
     {
         #region Constructors
 

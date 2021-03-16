@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum SpaceAllocationTime : byte
+    internal enum SpaceAllocationTime : byte
     {
         NotUsed = 0,
         EarlyAllocation = 1,

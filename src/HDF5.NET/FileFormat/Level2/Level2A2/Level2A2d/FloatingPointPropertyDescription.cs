@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FloatingPointPropertyDescription : DatatypePropertyDescription
+    internal class FloatingPointPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class VirtualStoragePropertyDescription : StoragePropertyDescription
+    internal class VirtualStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 

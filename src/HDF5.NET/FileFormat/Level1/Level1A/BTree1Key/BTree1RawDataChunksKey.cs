@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct BTree1RawDataChunksKey : IBTree1Key
+    internal struct BTree1RawDataChunksKey : IBTree1Key
     {
         #region Constructors
 

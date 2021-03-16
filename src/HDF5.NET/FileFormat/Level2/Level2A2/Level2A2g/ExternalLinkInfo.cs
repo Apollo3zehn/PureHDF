@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ExternalLinkInfo : LinkInfo
+    internal class ExternalLinkInfo : LinkInfo
     {
         #region Fields
 

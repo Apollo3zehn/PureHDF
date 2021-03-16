@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum MantissaNormalization : byte
+    internal enum MantissaNormalization : byte
     {
         NoNormalization = 0,
         MsbIsAlwaysSet = 1,

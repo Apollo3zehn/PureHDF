@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [Flags]
-    public enum MessageTypeFlags : ushort
+    internal enum MessageTypeFlags : ushort
     {
         Dataspace = 1,
         Datatype = 2,

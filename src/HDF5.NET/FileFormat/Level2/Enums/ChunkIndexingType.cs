@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum ChunkIndexingType : byte
+    internal enum ChunkIndexingType : byte
     {
         SingleChunk = 1,
         Implicit = 2,

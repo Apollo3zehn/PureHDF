@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public abstract partial class H5Object
+    abstract partial class H5Object
     {
         #region Fields
 

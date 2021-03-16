@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class ObjectHeader2 : ObjectHeader
+    internal class ObjectHeader2 : ObjectHeader
     {
         #region Fields
 

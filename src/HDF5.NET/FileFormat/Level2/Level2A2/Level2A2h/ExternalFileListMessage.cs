@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class ExternalFileListMessage : Message
+    internal class ExternalFileListMessage : Message
     {
         #region Fields
 

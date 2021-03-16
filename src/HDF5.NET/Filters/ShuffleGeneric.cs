@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public static class ShuffleGeneric
+    internal static class ShuffleGeneric
     {
         public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {

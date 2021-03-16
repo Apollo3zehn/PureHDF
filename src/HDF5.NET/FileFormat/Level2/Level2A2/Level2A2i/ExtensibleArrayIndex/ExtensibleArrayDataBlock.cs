@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class ExtensibleArrayDataBlock<T>
+    internal class ExtensibleArrayDataBlock<T>
     {
         #region Fields
 

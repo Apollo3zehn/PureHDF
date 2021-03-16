@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class H5BinaryReader : BinaryReader
+    internal class H5BinaryReader : BinaryReader
     {
         #region Constructors
 

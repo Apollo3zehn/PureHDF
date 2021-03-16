@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public class SymbolTableMessage : Message
+    internal class SymbolTableMessage : Message
     {
         #region Fields
 

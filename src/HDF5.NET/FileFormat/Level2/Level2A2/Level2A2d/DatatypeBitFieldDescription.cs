@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public abstract class DatatypeBitFieldDescription : FileBlock
+    internal abstract class DatatypeBitFieldDescription : FileBlock
     {
         #region Constructors
 

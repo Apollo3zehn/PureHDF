@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    public partial struct H5NamedReference
+    partial struct H5NamedReference
     {
         #region Constructors
 
@@ -61,9 +61,9 @@ namespace HDF5.NET
 
                 return objectHeader.ObjectType switch
                 {
-                    H5ObjectType.Group => new H5Group(this.File, context, this, objectHeader),
-                    H5ObjectType.Dataset => new H5Dataset(this.File, context, this, objectHeader),
-                    H5ObjectType.CommitedDatatype => new H5CommitedDatatype(context, objectHeader, this),
+                    ObjectType.Group => new H5Group(this.File, context, this, objectHeader),
+                    ObjectType.Dataset => new H5Dataset(this.File, context, this, objectHeader),
+                    ObjectType.CommitedDatatype => new H5CommitedDatatype(context, objectHeader, this),
                     _ => throw new Exception("Unknown object type.")
                 };
             }

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class NilMessage : Message
+    internal class NilMessage : Message
     {
         #region Constructors
 

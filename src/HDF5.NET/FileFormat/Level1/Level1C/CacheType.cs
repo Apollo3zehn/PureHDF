@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum CacheType : uint
+    internal enum CacheType : uint
     {
         NoCache = 0,
         ObjectHeader = 1,

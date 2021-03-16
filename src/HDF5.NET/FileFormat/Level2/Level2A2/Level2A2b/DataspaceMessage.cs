@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public class DataspaceMessage : Message
+    internal class DataspaceMessage : Message
     {
         #region Fields
 

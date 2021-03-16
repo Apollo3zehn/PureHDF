@@ -3,7 +3,7 @@ using System.IO;
 
 namespace HDF5.NET
 {
-    public partial class H5File
+    partial class H5File
     {
 
 #warning K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum LinkType : byte
+    internal enum LinkType : byte
     {
         Hard = 0,
         Soft = 1,

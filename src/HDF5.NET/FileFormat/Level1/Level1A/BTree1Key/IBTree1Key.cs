@@ -1,6 +1,6 @@
 ﻿namespace HDF5
 {
-    public interface IBTree1Key
+    internal interface IBTree1Key
     {
         //
     }

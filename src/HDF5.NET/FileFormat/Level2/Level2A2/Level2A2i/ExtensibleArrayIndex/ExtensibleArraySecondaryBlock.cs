@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class ExtensibleArraySecondaryBlock
+    internal class ExtensibleArraySecondaryBlock
     {
         #region Fields
 

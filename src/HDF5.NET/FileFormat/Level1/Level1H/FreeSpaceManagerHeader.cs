@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class FreeSpaceManagerHeader : FileBlock
+    internal class FreeSpaceManagerHeader : FileBlock
     {
         #region Fields
 

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ObjectHeader1 : ObjectHeader
+    internal class ObjectHeader1 : ObjectHeader
     {
         #region Fields
 
