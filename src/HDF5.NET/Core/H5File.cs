@@ -17,7 +17,7 @@ namespace HDF5.NET
         #region Constructors
 
         private H5File(H5Context context,
-                       H5NamedReference reference,
+                       NamedReference reference,
                        ObjectHeader header,
                        string absoluteFilePath,
                        bool deleteOnClose)
@@ -102,7 +102,7 @@ namespace HDF5.NET
             var header = ObjectHeader.Construct(context);
 
             var file = new H5File(context, default, header, absoluteFilePath, deleteOnClose);
-            var reference = new H5NamedReference("/", address, file);
+            var reference = new NamedReference("/", address, file);
             file.Reference = reference;
 
             return file;

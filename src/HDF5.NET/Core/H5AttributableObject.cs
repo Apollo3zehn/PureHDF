@@ -10,13 +10,13 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal H5AttributableObject(H5Context context, H5NamedReference reference, ObjectHeader header) 
+        internal H5AttributableObject(H5Context context, NamedReference reference, ObjectHeader header) 
             : base(context, reference, header)
         {
             //
         }
 
-        internal H5AttributableObject(H5Context context, H5NamedReference reference) 
+        internal H5AttributableObject(H5Context context, NamedReference reference) 
             : base(context, reference)
         {
             //

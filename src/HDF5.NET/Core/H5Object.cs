@@ -14,13 +14,13 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal H5Object(H5Context context, H5NamedReference reference)
+        internal H5Object(H5Context context, NamedReference reference)
         {
             this.Context = context;
             this.Reference = reference;
         }
 
-        internal H5Object(H5Context context, H5NamedReference reference, ObjectHeader header)
+        internal H5Object(H5Context context, NamedReference reference, ObjectHeader header)
         {
             this.Context = context;
             this.Reference = reference;
@@ -32,6 +32,10 @@ namespace HDF5.NET
         #region Properties
 
         internal H5Context Context { get; }
+
+        internal uint ReferenceCount => this.GetReferenceCount();
+
+        internal NamedReference Reference { get; set; }
 
         private ObjectReferenceCountMessage? ObjectReferenceCount
         {

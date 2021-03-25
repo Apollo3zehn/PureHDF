@@ -1,9 +1,36 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace HDF5.NET
 {
-    public partial class H5SymbolicLink
+    [DebuggerDisplay("{Name}: Target = '{Target}'")]
+    internal class SymbolicLink
     {
+        #region Constructors
+
+        public SymbolicLink(string name, string linkValue, H5Group parent)
+        {
+            this.Name = name;
+            this.Value = linkValue;
+            this.Parent = parent;
+        }
+
+        public SymbolicLink(LinkMessage linkMessage, H5Group parent)
+        {
+            this.Name = linkMessage.LinkName;
+
+            (this.Value, this.ObjectPath) = linkMessage.LinkInfo switch
+            {
+                SoftLinkInfo softLink           => (softLink.Value, null),
+                ExternalLinkInfo externalLink   => (externalLink.FilePath, externalLink.FullObjectPath),
+                _                               => throw new Exception($"The link info type '{linkMessage.LinkInfo.GetType().Name}' is not supported.")
+            };
+
+            this.Parent = parent;
+        }
+
+        #endregion
+
         #region Properties
 
         public string Name { get; }
@@ -12,11 +39,13 @@ namespace HDF5.NET
 
         public string? ObjectPath { get; }
 
+        public H5Group Parent { get; }
+
         #endregion
 
         #region Methods
 
-        public H5NamedReference GetTarget(H5LinkAccess linkAccess)
+        public NamedReference GetTarget(H5LinkAccess linkAccess)
         {
             // this file
             if (string.IsNullOrWhiteSpace(this.ObjectPath))
@@ -29,7 +58,7 @@ namespace HDF5.NET
                 }
                 catch (Exception ex)
                 {
-                    return new H5NamedReference(this.Name, Superblock.UndefinedAddress)
+                    return new NamedReference(this.Name, Superblock.UndefinedAddress)
                     {
                         Exception = ex
                     };
@@ -48,7 +77,7 @@ namespace HDF5.NET
                 }
                 catch (Exception ex)
                 {
-                    return new H5NamedReference(this.Name, Superblock.UndefinedAddress)
+                    return new NamedReference(this.Name, Superblock.UndefinedAddress)
                     {
                         Exception = ex
                     };
