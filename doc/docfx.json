@@ -1,0 +1,52 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [
+            "**/*.csproj"
+          ],
+          "src": "./../src/HDF5.NET"
+        }
+      ],
+      "dest": "./api",
+      "filter": "filterConfig.yml",
+      "properties": {
+        "TargetFramework": "net50"
+      }
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "*.md",
+          "toc.yml"
+        ]
+      },
+      {
+        "files": [
+          "api/**.yml",
+          "api/index.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appTitle": "HDF5.NET",
+      "_appFooter": "Copyright © 2021 Vincent Wilms",
+      "_appFaviconPath": "images/icon.ico",
+      "_appLogoPath": "images/logo.svg"
+    },
+    "fileMetadataFiles": [],
+    "template":["default","templates/material"],
+    "markdownEngineName": "markdig"
+  }
+}
