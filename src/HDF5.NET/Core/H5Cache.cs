@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 
@@ -10,8 +11,8 @@ namespace HDF5.NET
 
         static H5Cache()
         {
-            _globalHeapMap = new Dictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>>();
-            _fileMap = new Dictionary<Superblock, Dictionary<string, H5File>>();
+            _globalHeapMap = new ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>>();
+            _fileMap = new ConcurrentDictionary<Superblock, Dictionary<string, H5File>>();
         }
 
         #endregion
@@ -22,7 +23,7 @@ namespace HDF5.NET
         {
             // global heap
             if (_globalHeapMap.ContainsKey(superblock))
-                _globalHeapMap.Remove(superblock);
+                _globalHeapMap.Remove(superblock, out var _);
 
 
             // file map
@@ -35,7 +36,7 @@ namespace HDF5.NET
                     h5File.Dispose();
                 }
 
-                _fileMap.Remove(superblock);
+                _fileMap.Remove(superblock, out var _);
             }
         }
 
@@ -43,14 +44,14 @@ namespace HDF5.NET
 
         #region Global Heap
 
-        private static Dictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+        private static ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
         public static GlobalHeapCollection GetGlobalHeapObject(H5BinaryReader reader, Superblock superblock, ulong address)
         {
             if (!_globalHeapMap.TryGetValue(superblock, out var addressToCollectionMap))
             {
                 addressToCollectionMap = new Dictionary<ulong, GlobalHeapCollection>();
-                _globalHeapMap[superblock] = addressToCollectionMap;
+                _globalHeapMap.AddOrUpdate(superblock, addressToCollectionMap, (_, addressToCollectionMap) => addressToCollectionMap);
             }
 
             if (!addressToCollectionMap.TryGetValue(address, out var collection))
@@ -72,7 +73,7 @@ namespace HDF5.NET
 
         #region File Handles
 
-        private static Dictionary<Superblock, Dictionary<string, H5File>> _fileMap;
+        private static ConcurrentDictionary<Superblock, Dictionary<string, H5File>> _fileMap;
 
         public static H5File GetH5File(Superblock superblock, string absoluteFilePath)
         {
@@ -85,7 +86,7 @@ namespace HDF5.NET
             if (!_fileMap.TryGetValue(superblock, out var pathToH5FileMap))
             {
                 pathToH5FileMap = new Dictionary<string, H5File>();
-                _fileMap[superblock] = pathToH5FileMap;
+                _fileMap.AddOrUpdate(superblock, pathToH5FileMap, (_, pathToH5FileMap) => pathToH5FileMap);
             }
 
             if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))

@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 namespace HDF5.NET
 {
@@ -12,7 +12,7 @@ namespace HDF5.NET
 
         static H5Filter()
         {
-            H5Filter.Registrations = new List<H5FilterRegistration>();
+            H5Filter.Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
 
             H5Filter.Register(H5FilterID.Shuffle, "shuffle", H5Filter.ShuffleFilterFunc);
             H5Filter.Register(H5FilterID.Fletcher32, "fletcher", H5Filter.Fletcher32FilterFunc);
@@ -25,7 +25,7 @@ namespace HDF5.NET
 
         #region Properties
 
-        internal static List<H5FilterRegistration> Registrations { get; set; }
+        internal static ConcurrentDictionary<FilterIdentifier, H5FilterRegistration> Registrations { get; set; }
 
         #endregion
 
@@ -49,9 +49,8 @@ namespace HDF5.NET
                         continue;
 
                     var filter = pipeline[i - 1];
-                    var registration = H5Filter.Registrations.FirstOrDefault(current => current.Identifier == filter.Identifier);
 
-                    if (registration is null)
+                    if (!H5Filter.Registrations.TryGetValue(filter.Identifier, out var registration))
                     {
                         var filterName = string.IsNullOrWhiteSpace(filter.Name) ? "unnamed filter" : filter.Name;
                         throw new Exception($"Could not find filter '{filterName}' with ID '{filter.Identifier}'. Make sure the filter has been registered using H5Filter.Register(...).");
