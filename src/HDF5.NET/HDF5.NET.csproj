@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An managed .h5 file reader and writer without native dependencies.</Description>
+    <Description>A pure .NET library that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy. </Description>
     <PackageTags>HDF5 hierarchical data file H5</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFrameworks>netstandard2.1;net5.0</TargetFrameworks>
