@@ -4,11 +4,11 @@ using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
-    partial struct H5NamedReference
+    internal struct NamedReference
     {
         #region Constructors
 
-        internal H5NamedReference(string name, ulong value, H5File file)
+        public NamedReference(string name, ulong value, H5File file)
         {
             this.Name = name;
             this.Value = value;
@@ -17,7 +17,7 @@ namespace HDF5.NET
             this.Exception = null;
         }
 
-        internal H5NamedReference(string name, ulong value)
+        public NamedReference(string name, ulong value)
         {
             this.Name = name;
             this.Value = value;
@@ -30,20 +30,22 @@ namespace HDF5.NET
 
         #region Properties
 
-        internal ulong Value { get; }
+        public string Name { get; set; }
 
-        internal H5File? File { get; }
+        public ulong Value { get; }
 
-        internal ObjectHeaderScratchPad? ScratchPad { get; set; }
+        public H5File? File { get; }
 
-        internal Exception? Exception { get; set; }
+        public ObjectHeaderScratchPad? ScratchPad { get; set; }
+
+        public Exception? Exception { get; set; }
 
         #endregion
 
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal H5Object Dereference()
+        public H5Object Dereference()
         {
             if (this.File is null)
             {

@@ -21,20 +21,20 @@ namespace HDF5.NET
         #region Constructors
 
         // Only for H5File constructor
-        internal H5Group(H5Context context, H5NamedReference reference, ObjectHeader header)
+        internal H5Group(H5Context context, NamedReference reference, ObjectHeader header)
            : base(context, reference, header)
         {
             //
         }
 
-        internal H5Group(H5File file, H5Context context, H5NamedReference reference)
+        internal H5Group(H5File file, H5Context context, NamedReference reference)
            : base(context, reference)
         {
             _file = file;
             _scratchPad = reference.ScratchPad;
         }
 
-        internal H5Group(H5File file, H5Context context, H5NamedReference reference, ObjectHeader header)
+        internal H5Group(H5File file, H5Context context, NamedReference reference, ObjectHeader header)
             : base(context, reference, header)
         {
             _file = file;
@@ -84,7 +84,7 @@ namespace HDF5.NET
             return true;
         }
 
-        internal H5NamedReference InternalGet(string path, H5LinkAccess linkAccess)
+        internal NamedReference InternalGet(string path, H5LinkAccess linkAccess)
         {
             if (path == "/")
                 return this.File.Reference;
@@ -109,7 +109,7 @@ namespace HDF5.NET
             return current;
         }
 
-        internal H5NamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
+        internal NamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
         {
             var alreadyVisted = new HashSet<ulong>();
 
@@ -119,7 +119,7 @@ namespace HDF5.NET
                 throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
         }
 
-        private bool TryGetReference(string name, H5LinkAccess linkAccess, out H5NamedReference namedReference)
+        private bool TryGetReference(string name, H5LinkAccess linkAccess, out NamedReference namedReference)
         {
             namedReference = default;
 
@@ -228,7 +228,7 @@ namespace HDF5.NET
             return false;
         }
 
-        internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out H5NamedReference namedReference)
+        internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NamedReference namedReference)
         {
             // similar to H5Gint.c (H5G_visit)
             if (recursionLevel >= 100)
@@ -279,7 +279,7 @@ namespace HDF5.NET
             return false;
         }
 
-        private IEnumerable<H5NamedReference> EnumerateReferences(H5LinkAccess linkAccess)
+        private IEnumerable<NamedReference> EnumerateReferences(H5LinkAccess linkAccess)
         {
             // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
             // section "Group implementations in HDF5"
@@ -440,13 +440,13 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
+        private NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
         {
             return linkMessage.LinkInfo switch
             {
-                HardLinkInfo hard => new H5NamedReference(linkMessage.LinkName, hard.HeaderAddress, this.File),
-                SoftLinkInfo soft => new H5SymbolicLink(linkMessage, this).GetTarget(linkAccess),
-                ExternalLinkInfo external => new H5SymbolicLink(linkMessage, this).GetTarget(linkAccess),
+                HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, this.File),
+                SoftLinkInfo soft => new SymbolicLink(linkMessage, this).GetTarget(linkAccess),
+                ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess),
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }
@@ -456,22 +456,22 @@ namespace HDF5.NET
         #region Symbol Table
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
+        private NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
         {
             var name = heap.GetObjectName(entry.LinkNameOffset);
-            var reference = new H5NamedReference(name, entry.HeaderAddress, this.File);
+            var reference = new NamedReference(name, entry.HeaderAddress, this.File);
 
             return entry.ScratchPad switch
             {
                 ObjectHeaderScratchPad objectScratch => this.AddScratchPad(reference, objectScratch),
-                SymbolicLinkScratchPad linkScratch => new H5SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess),
+                SymbolicLinkScratchPad linkScratch => new SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess),
                 _ when !this.Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
                 _ => throw new Exception("Unknown object type.")
             };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private H5NamedReference AddScratchPad(H5NamedReference reference, ObjectHeaderScratchPad scratchPad)
+        private NamedReference AddScratchPad(NamedReference reference, ObjectHeaderScratchPad scratchPad)
         {
             reference.ScratchPad = scratchPad;
             return reference;
