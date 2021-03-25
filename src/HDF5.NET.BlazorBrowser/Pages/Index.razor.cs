@@ -27,7 +27,7 @@ namespace HDF5.NET.BlazorBrowser.Pages
             var fileContainer = new FileContainer()
             {
                 BrowserFile = e.File,
-                H5File = H5File.Open(stream, string.Empty, deleteOnClose: false)
+                H5File = H5File.Open(stream)
             };
 
             this.AppState.Files.Add(fileContainer);

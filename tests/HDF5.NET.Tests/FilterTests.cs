@@ -110,7 +110,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Fletcher(fileId));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("fletcher");
             var actual = dataset.Read<int>();
@@ -127,7 +127,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_ZLib(fileId));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("deflate");
             var actual = dataset.Read<int>();
@@ -144,7 +144,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Multi(fileId));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("multi");
             var actual = dataset.Read<int>();
@@ -183,7 +183,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(null, skipShuffle: true);
@@ -225,7 +225,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
@@ -267,7 +267,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
@@ -294,7 +294,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
@@ -467,7 +467,7 @@ namespace HDF5.NET.Tests.Reading
             };
 
             /* continue */
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
             var attribute = root
                 .Group("small")

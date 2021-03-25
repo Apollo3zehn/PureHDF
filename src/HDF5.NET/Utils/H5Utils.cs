@@ -471,7 +471,7 @@ namespace HDF5.NET
 
                 if (envVariable is not null)
                 {
-                    // cannot work in Windows
+                    // cannot work on Windows
                     //var envPrefixes = envVariable.Split(":");
 
                     //foreach (var envPrefix in envPrefixes)

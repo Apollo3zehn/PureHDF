@@ -12,7 +12,7 @@ The implemention follows the [HDF5 File Format Specification](https://support.hd
 
 ```cs
 // open HDF5 file, the returned H5File instance represents the root group ('/')
-using var root = H5File.Open(<TODO: improve signature>);
+using var root = H5File.OpenRead(filePath);
 ```
 
 ### 1.1 Get Object

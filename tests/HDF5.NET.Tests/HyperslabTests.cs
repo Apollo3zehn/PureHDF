@@ -1,7 +1,6 @@
 ﻿using HDF.PInvoke;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Xunit;
@@ -917,7 +916,7 @@ namespace HDF5.NET.Tests.Reading
                     H5F.close(fileId);
                 }
 
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("/chunked/hyperslab");
 
                 /* get intermediate data (only for Matlab visualization) */

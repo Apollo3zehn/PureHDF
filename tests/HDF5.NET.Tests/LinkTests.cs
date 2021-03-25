@@ -33,7 +33,7 @@ namespace HDF5.NET.Tests.Reading
                 });
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var actual = root.Exists(path);
 
                 // Assert
@@ -63,7 +63,7 @@ namespace HDF5.NET.Tests.Reading
                     filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassLinks(fileId));
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var actual = root.Exists(path);
 
                 // Assert
@@ -83,7 +83,7 @@ namespace HDF5.NET.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSomeLinks(fileId));
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var group = root.Group(path);
 
                 // Assert
@@ -101,7 +101,7 @@ namespace HDF5.NET.Tests.Reading
                 var expected = 1000;
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var group = root.Group("mass_links");
 
                 // Assert
@@ -122,7 +122,7 @@ namespace HDF5.NET.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSomeLinks(fileId));
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var group = root.Dataset(path);
 
                 // Assert
@@ -144,7 +144,7 @@ namespace HDF5.NET.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var parent = root.Group("mass_attributes");
                 var actual = parent.AttributeExists(attributeName);
 
@@ -161,7 +161,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("mass_attributes");
             var actual = parent.AttributeExists("字形碼 / 字形码, Zìxíngmǎ");
 
@@ -178,7 +178,7 @@ namespace HDF5.NET.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddLinks(fileId));
 
                 // Act
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
                 var dataset_hard_1 = root.Dataset("links/hard_link_1/dataset");
                 var dataset_hard_2 = root.Dataset("links/hard_link_2/dataset");
@@ -240,7 +240,7 @@ namespace HDF5.NET.Tests.Reading
             res = H5F.close(externalFileId);
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
             var linkAccess = string.IsNullOrWhiteSpace(prefix) 
                 ? new H5LinkAccess()
@@ -256,7 +256,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, "not-existing.h5"));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var link = root.Get("/links/external_link") as H5UnresolvedLink;
 
             // Assert
@@ -271,7 +271,7 @@ namespace HDF5.NET.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCircularReference(fileId));
-                using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var value = root.Group("/circular/child/rainbow's end").Reference.Value;
                 var groupReference = new H5ObjectReference() { Value = value };
 

@@ -31,15 +31,81 @@ namespace HDF5.NET
 
         #region Methods
 
-        internal static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose)
+        internal static H5File OpenReadCore(string filePath, bool deleteOnClose = false)
+        {
+            return H5File.OpenCore(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose);
+        }
+
+        internal static H5File OpenCore(string filePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose = false)
+        {
+            var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
+            var stream = System.IO.File.Open(absoluteFilePath, fileMode, fileAccess, fileShare);
+
+            return H5File.OpenCore(stream, absoluteFilePath, deleteOnClose);
+        }
+
+        private static H5File OpenCore(Stream stream, string absoluteFilePath, bool deleteOnClose = false)
         {
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
-            var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
-            var stream = System.IO.File.Open(absoluteFilePath, mode, fileAccess, fileShare);
+            var reader = new H5BinaryReader(stream);
 
-            return H5File.Open(stream, absoluteFilePath, deleteOnClose);
+            // superblock
+            int stepSize = 512;
+            var signature = reader.ReadBytes(8);
+
+            while (!H5File.ValidateSignature(signature, Superblock.FormatSignature))
+            {
+                reader.Seek(stepSize - 8, SeekOrigin.Current);
+
+                if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                    throw new Exception("The file is not a valid HDF 5 file.");
+
+                signature = reader.ReadBytes(8);
+                stepSize *= 2;
+            }
+
+            var version = reader.ReadByte();
+
+            var superblock = (Superblock)(version switch
+            {
+                0 => new Superblock01(reader, version),
+                1 => new Superblock01(reader, version),
+                2 => new Superblock23(reader, version),
+                3 => new Superblock23(reader, version),
+                _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
+            });
+
+            reader.BaseAddress = superblock.BaseAddress;
+
+            ulong address;
+            var superblock01 = superblock as Superblock01;
+
+            if (superblock01 is not null)
+            {
+                address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
+            }
+            else
+            {
+                var superblock23 = superblock as Superblock23;
+
+                if (superblock23 is not null)
+                    address = superblock23.RootGroupObjectHeaderAddress;
+                else
+                    throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
+            }
+
+
+            reader.Seek((long)address, SeekOrigin.Begin);
+            var context = new H5Context(reader, superblock);
+            var header = ObjectHeader.Construct(context);
+
+            var file = new H5File(context, default, header, absoluteFilePath, deleteOnClose);
+            var reference = new H5NamedReference("/", address, file);
+            file.Reference = reference;
+
+            return file;
         }
 
         private static bool ValidateSignature(byte[] actual, byte[] expected)
