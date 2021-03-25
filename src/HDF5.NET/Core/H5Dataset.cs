@@ -192,9 +192,13 @@ namespace HDF5.NET
             /* result buffer */
             var result = default(T[]);
             var totalCount = fileSelection.GetTotalCount();
+            var byteSize = totalCount * this.Datatype.Size;
 
             if (buffer.Equals(default))
-                buffer = this.GetBuffer(totalCount, out result);
+                buffer = this.GetBuffer(byteSize, out result);
+
+            else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length < byteSize)
+                throw new Exception("The provided target buffer is too small.");
 
             /* memory selection */
             if (memorySelection is null)
@@ -230,7 +234,7 @@ namespace HDF5.NET
 
             HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
 
-            /* endianness */
+            /* ensure correct endianness */
             var byteOrderAware = this.Datatype.BitField as IByteOrderAware;
             var destination = MemoryMarshal.AsBytes(buffer.Span);
             var source = destination.ToArray();
@@ -238,19 +242,22 @@ namespace HDF5.NET
             if (byteOrderAware is not null)
                 H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, this.Datatype.Size);
 
+            /* return */
             return result;
         }
 
-        private Memory<T> GetBuffer<T>(ulong totalCount, out T[] result)
+        private Memory<T> GetBuffer<T>(ulong byteSize, out T[] result)
             where T : unmanaged
         {
-            // first, get byte size
-            var byteSize = totalCount * this.Datatype.Size;
+            // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)
+            var sizeOfT = (ulong)Unsafe.SizeOf<T>();
 
-            // second, convert file type (e.g. 2 bytes) to T (e.g. 4 bytes)
+            if (byteSize % sizeOfT != 0)
+                throw new Exception("The size of the target buffer (number of selected elements times the datasets data-type byte size) must be a multiple of the byte size of the generic parameter T.");
+
             var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
 
-            // finally, create the buffer
+            // create the buffer
             result = new T[arraySize];
 
             return result
