@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
@@ -129,7 +130,7 @@ namespace HDF5.NET
             }
 
             /* buffer provider */
-            H5D_Base bufferProvider = this.DataLayout.LayoutClass switch
+            using H5D_Base bufferProvider = this.DataLayout.LayoutClass switch
             {
                 /* Compact: The array is stored in one contiguous block as part of
                  * this object header message. 
@@ -210,40 +211,39 @@ namespace HDF5.NET
             if (memoryDims is null)
                 memoryDims = new ulong[] { totalCount };
 
-            try
-            {
-                if (getSourceBuffer is null && getSourceStream is null)
-                    new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
+            if (getSourceBuffer is null && getSourceStream is null)
+                new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
 
-                /* copy info */
-                var copyInfo = new CopyInfo(
-                    datasetDims,
-                    datasetChunkDims,
-                    memoryDims,
-                    memoryDims,
-                    fileHyperslabSelection,
-                    memoryHyperslabSelection,
-                    GetSourceBuffer: getSourceBuffer,
-                    GetSourceStream: getSourceStream,
-                    GetTargetBuffer: indices => buffer.Cast<T, byte>(),
-                    TypeSize: (int)this.Datatype.Size
-                );
+            /* copy info */
+            var copyInfo = new CopyInfo(
+                datasetDims,
+                datasetChunkDims,
+                memoryDims,
+                memoryDims,
+                fileHyperslabSelection,
+                memoryHyperslabSelection,
+                GetSourceBuffer: getSourceBuffer,
+                GetSourceStream: getSourceStream,
+                GetTargetBuffer: indices => buffer.Cast<T, byte>(),
+                TypeSize: (int)this.Datatype.Size
+            );
 
-                HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
+            HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
 
-                return result;
-            }
-            finally
-            {
-                bufferProvider.Dispose();
-            }
+            /* endianness */
+            var byteOrderAware = this.Datatype.BitField as IByteOrderAware;
+            var destination = MemoryMarshal.AsBytes(buffer.Span);
+            var source = destination.ToArray();
+
+            if (byteOrderAware is not null)
+                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, this.Datatype.Size);
+
+            return result;
         }
 
         private Memory<T> GetBuffer<T>(ulong totalCount, out T[] result)
             where T : unmanaged
         {
-#warning review this when correcting code for generics
-
             // first, get byte size
             var byteSize = totalCount * this.Datatype.Size;
 
@@ -255,14 +255,6 @@ namespace HDF5.NET
 
             return result
                 .AsMemory();
-        }
-
-        private void EnsureEndianness(Span<byte> buffer)
-        {
-            var byteOrderAware = this.Datatype.BitField as IByteOrderAware;
-
-            if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(buffer.ToArray(), buffer, byteOrderAware.ByteOrder, this.Datatype.Size);
         }
 
         #endregion
