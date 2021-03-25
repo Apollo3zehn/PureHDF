@@ -317,7 +317,7 @@ namespace HDF5.NET.Tests.Reading
                 };
 
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, datasetName, absolutePrefix, datasetAccess));
-                var expected = TestData.MediumData;
+                var expected = TestData.MediumData.ToArray();
 
                 for (int i = 33; i < 40; i++)
                 {
