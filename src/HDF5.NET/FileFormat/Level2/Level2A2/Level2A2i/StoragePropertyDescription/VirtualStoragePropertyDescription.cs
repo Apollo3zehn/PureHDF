@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class VirtualStoragePropertyDescription : StoragePropertyDescription
+    internal class VirtualStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 
@@ -17,7 +17,6 @@
 
         #region Properties
 
-        public ulong Address { get; set; }
         public uint Index { get; set; }
 
         #endregion

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FamilyDriverInfo : DriverInfo
+    internal class FamilyDriverInfo : DriverInfo
     {
         #region Constructors
 

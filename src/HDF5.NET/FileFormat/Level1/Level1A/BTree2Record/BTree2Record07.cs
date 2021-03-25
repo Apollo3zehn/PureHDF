@@ -2,7 +2,7 @@
 
 //namespace HDF5.NET
 //{
-//    public struct BTree2Record07 : IBTree2Record
+//    internal struct BTree2Record07 : IBTree2Record
 //    {
 //        #region Constructors
 

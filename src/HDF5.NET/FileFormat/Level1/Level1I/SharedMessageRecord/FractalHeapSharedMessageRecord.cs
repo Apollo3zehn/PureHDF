@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FractalHeapSharedMessageRecord : SharedMessageRecord
+    internal class FractalHeapSharedMessageRecord : SharedMessageRecord
     {
         #region Constructors
 

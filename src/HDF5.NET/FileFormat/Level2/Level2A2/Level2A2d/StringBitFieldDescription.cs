@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class StringBitFieldDescription : DatatypeBitFieldDescription
+    internal class StringBitFieldDescription : DatatypeBitFieldDescription
     {
         #region Constructors
 

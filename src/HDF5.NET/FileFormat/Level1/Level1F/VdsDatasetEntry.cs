@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class VdsDatasetEntry : FileBlock
+    internal class VdsDatasetEntry : FileBlock
     {
         #region Constructors
 

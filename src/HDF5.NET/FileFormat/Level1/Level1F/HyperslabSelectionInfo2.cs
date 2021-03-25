@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class HyperslabSelectionInfo2 : HyperslabSelectionInfo
+    internal class HyperslabSelectionInfo2 : HyperslabSelectionInfo
     {
         #region Constructors
 

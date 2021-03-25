@@ -2,7 +2,7 @@
 
 //namespace HDF5.NET
 //{
-//    public class BTree2Record07_1 : BTree2Record07
+//    internal class BTree2Record07_1 : BTree2Record07
 //    {
 //        #region Fields
 

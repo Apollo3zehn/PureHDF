@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum BTree2NodePosition
+    internal enum BTree2NodePosition
     {
         Root,
         Right,

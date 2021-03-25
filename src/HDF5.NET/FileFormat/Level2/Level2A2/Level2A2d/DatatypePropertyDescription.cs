@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public abstract class DatatypePropertyDescription : FileBlock
+    internal abstract class DatatypePropertyDescription : FileBlock
     {
         public DatatypePropertyDescription(H5BinaryReader reader) : base(reader)
         {

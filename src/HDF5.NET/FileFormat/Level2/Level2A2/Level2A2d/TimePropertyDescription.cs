@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class TimePropertyDescription : DatatypePropertyDescription
+    internal class TimePropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

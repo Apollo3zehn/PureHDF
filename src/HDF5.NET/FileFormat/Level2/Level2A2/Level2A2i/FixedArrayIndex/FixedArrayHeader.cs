@@ -1,25 +1,22 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public class FixedArrayHeader : FileBlock
+    internal class FixedArrayHeader : FileBlock
     {
         #region Fields
 
         private byte _version;
         private Superblock _superblock;
-        private uint _chunkSizeLength;
 
         #endregion
 
         #region Constructors
 
-        public FixedArrayHeader(H5BinaryReader reader, Superblock superblock, uint chunkSizeLength) : base(reader)
+        public FixedArrayHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             _superblock = superblock;
-            _chunkSizeLength = chunkSizeLength;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -79,15 +76,6 @@ namespace HDF5.NET
         public ulong DataBlockAddress { get; }
 
         public uint Checksum { get; }
-
-        public FixedArrayDataBlock DataBlock
-        {
-            get
-            {
-                this.Reader.Seek((long)this.DataBlockAddress, SeekOrigin.Begin);
-                return new FixedArrayDataBlock(this.Reader, _superblock, this, _chunkSizeLength);
-            }
-        }
 
         #endregion
     }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class SymbolTableNode : FileBlock
+    internal class SymbolTableNode : FileBlock
     {
         #region Fields
 

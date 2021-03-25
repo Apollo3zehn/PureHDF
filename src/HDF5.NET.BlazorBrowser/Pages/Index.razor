@@ -1,0 +1,22 @@
+﻿@page "/"
+
+@if (this.AppState is not null && this.AppState.Files.Any())
+{
+    <MatNavMenu Class="nav-menu">
+        @foreach (var file in this.AppState.Files)
+        {
+            <H5GroupView Group="file.H5File"></H5GroupView>
+        }
+    </MatNavMenu>
+}
+else
+{
+    <div class="drop-area">
+        <InputFile accept=".h5"
+                   OnChange="this.OnInputFileChange" />
+
+        <MatHeadline2>Drop your HDF 5 file here ...</MatHeadline2>
+    </div>
+}
+
+

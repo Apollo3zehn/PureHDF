@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct ExtensibleArraySecondaryBlockInformation
+    internal struct ExtensibleArraySecondaryBlockInformation
     {
         // H5EApkg.h (H5EA_sblk_info_t)
         #region Properties

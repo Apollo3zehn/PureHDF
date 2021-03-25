@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class ExternalFileListSlot : FileBlock
+    internal class ExternalFileListSlot : FileBlock
     {
         #region Constructors
 

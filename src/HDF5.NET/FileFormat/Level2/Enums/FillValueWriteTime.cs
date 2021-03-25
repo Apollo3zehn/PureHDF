@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum FillValueWriteTime : byte
+    internal enum FillValueWriteTime : byte
     {
         OnAllocation = 0,
         Never = 1,

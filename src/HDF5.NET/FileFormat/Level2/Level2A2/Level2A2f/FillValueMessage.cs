@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     // https://support.hdfgroup.org/HDF5/doc_resource/H5Fill_Behavior.html
-    public class FillValueMessage : Message
+    internal class FillValueMessage : Message
     {
         #region Fields
 
@@ -18,6 +18,8 @@ namespace HDF5.NET
             // version
             this.Version = reader.ReadByte();
 
+            uint size;
+
             switch (this.Version)
             {
                 case 1:
@@ -25,8 +27,8 @@ namespace HDF5.NET
                     this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
                     this.FillTime = (FillValueWriteTime)reader.ReadByte();
                     this.IsDefined = reader.ReadByte() == 1;
-                    this.Size = reader.ReadUInt32();
-                    this.Value = reader.ReadBytes((int)this.Size);
+                    size = reader.ReadUInt32();
+                    this.Value = reader.ReadBytes((int)size);
 
                     break;
 
@@ -38,8 +40,8 @@ namespace HDF5.NET
 
                     if (this.IsDefined)
                     {
-                        this.Size = reader.ReadUInt32();
-                        this.Value = reader.ReadBytes((int)this.Size);
+                        size = reader.ReadUInt32();
+                        this.Value = reader.ReadBytes((int)size);
                     }
 
                     break;
@@ -53,8 +55,8 @@ namespace HDF5.NET
 
                     if (this.IsDefined)
                     {
-                        this.Size = reader.ReadUInt32();
-                        this.Value = reader.ReadBytes((int)this.Size);
+                        size = reader.ReadUInt32();
+                        this.Value = reader.ReadBytes((int)size);
                     }
 
                     break;
@@ -86,7 +88,6 @@ namespace HDF5.NET
         public SpaceAllocationTime AllocationTime { get; set; }
         public FillValueWriteTime FillTime { get; set; }
         public bool IsDefined { get; set; }
-        public uint Size { get; set; }
         public byte[] Value { get; set; }
 
         #endregion

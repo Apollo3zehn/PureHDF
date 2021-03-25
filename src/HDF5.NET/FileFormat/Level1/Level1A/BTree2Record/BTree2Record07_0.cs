@@ -1,6 +1,6 @@
 ﻿//namespace HDF5.NET
 //{
-//    public class BTree2Record07_0 : BTree2Record07
+//    internal class BTree2Record07_0 : BTree2Record07
 //    {
 //        #region Constructors
 

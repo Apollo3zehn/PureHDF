@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class GroupInfoMessage : Message
+    internal class GroupInfoMessage : Message
     {
         #region Fields
 

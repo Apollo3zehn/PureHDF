@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ExtensibleArrayIndexingInformation : IndexingInformation
+    internal class ExtensibleArrayIndexingInformation : IndexingInformation
     {
         #region Constructors
 

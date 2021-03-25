@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class DataLayoutMessage4 : DataLayoutMessage3
+    internal class DataLayoutMessage4 : DataLayoutMessage3
     {
         #region Constructors
 

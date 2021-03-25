@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class SharedMessage12 : FileBlock
+    internal class SharedMessage12 : FileBlock
     {
         #region Fields
 

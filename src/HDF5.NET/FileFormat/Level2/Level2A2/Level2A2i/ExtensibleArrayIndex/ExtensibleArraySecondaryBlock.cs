@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class ExtensibleArraySecondaryBlock
+    internal class ExtensibleArraySecondaryBlock
     {
         #region Fields
 
@@ -19,22 +19,25 @@ namespace HDF5.NET
 
             /* Compute/cache information */
             var dataBlocksCount = header.SecondaryBlockInfos[index].DataBlockCount;
-            var elementsCount = header.SecondaryBlockInfos[index].ElementsCount;
-            var dataBlockPageCount = 0UL;
+            this.ElementCount = header.SecondaryBlockInfos[index].ElementsCount;
+            this.DataBlockPageCount = 0UL;
             var dataBlockPageInitBitMaskSize = 0UL;
 
             /* Check if # of elements in data blocks requires paging */
-            if (elementsCount > header.DataBlockPageElementsCount)
+            if (this.ElementCount > header.DataBlockPageElementsCount)
             {
                 /* Compute # of pages in each data block from this super block */
-                dataBlockPageCount = elementsCount / header.DataBlockPageElementsCount;
+                this.DataBlockPageCount = this.ElementCount / header.DataBlockPageElementsCount;
 
                 /* Sanity check that we have at least 2 pages in data block */
-                if (dataBlockPageCount < 2)
+                if (this.DataBlockPageCount < 2)
                     throw new Exception("There must be at least two pages in the data block.");
 
                 /* Compute size of buffer for each data block's 'page init' bitmask */
-                dataBlockPageInitBitMaskSize = dataBlockPageCount + 7 / 8;
+                dataBlockPageInitBitMaskSize = this.DataBlockPageCount + 7 / 8;
+
+                /* Compute data block page size */
+                this.DataBlockPageSize = header.DataBlockPageElementsCount * header.ElementSize + 4;
             }
 
             // signature
@@ -57,14 +60,18 @@ namespace HDF5.NET
             // H5EAcache.c (H5EA__cache_sblock_deserialize)
 
             /* Check for 'page init' bitmasks for this super block */
-            if (dataBlockPageCount > 0)
+            if (this.DataBlockPageCount > 0)
             {
                 /* Compute total size of 'page init' buffer */
                 var totalPageInitSize = dataBlocksCount * dataBlockPageInitBitMaskSize;
 
                 /* Retrieve the 'page init' bitmasks */
                 this.PageBitmap = reader.ReadBytes((int)totalPageInitSize);
-            }     
+            }
+            else
+            {
+                this.PageBitmap = new byte[0];
+            }
 
             // data block addresses
             this.DataBlockAddresses = new ulong[dataBlocksCount];
@@ -93,7 +100,7 @@ namespace HDF5.NET
             set
             {
                 if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(FixedArrayDataBlock)} are supported.");
+                    throw new FormatException($"Only version 0 instances of type {nameof(ExtensibleArraySecondaryBlock)} are supported.");
 
                 _version = value;
             }
@@ -105,11 +112,17 @@ namespace HDF5.NET
 
         public ulong BlockOffset { get; }
 
-        public byte[]? PageBitmap { get; }
+        public byte[] PageBitmap { get; }
 
         public ulong[] DataBlockAddresses { get; }
 
         public ulong Checksum { get; }
+
+        public ulong ElementCount { get; }
+
+        public ulong DataBlockPageCount { get; }
+
+        public ulong DataBlockPageSize { get; }
 
         #endregion
     }

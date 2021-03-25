@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +11,102 @@ namespace HDF5.NET
 {
     internal static class H5Utils
     {
+        public static void SwizzleCoords(ulong[] swizzledCoords, int unlimitedDim)
+        {
+            /* Nothing to do when unlimited dimension is at position 0 */
+            if (unlimitedDim > 0)
+            {
+                var tmp = swizzledCoords[unlimitedDim];
+
+                for (int i = unlimitedDim; i > 0; i++)
+                {
+                    swizzledCoords[i] = swizzledCoords[i - 1];
+                }
+
+                swizzledCoords[0] = tmp;
+            }
+        }
+
+        public static ulong ToLinearIndex(this ulong[] indices, ulong[] dimensions)
+        {
+            var index = 0UL;
+            var rank = indices.Length;
+
+            if (dimensions.Length != rank)
+                throw new Exception("Rank of index and dimension arrays must be equal.");
+
+            for (int i = 0; i < rank; i++)
+            {
+                index = index * dimensions[i] + indices[i];
+            }
+
+            return index;
+        }
+
+        public static ulong ToLinearIndexPrecomputed(this ulong[] indices, ulong[] totalSize)
+        {
+            // H5VM.c (H5VM_array_offset_pre)
+            var index = 0UL;
+            var rank = indices.Length;
+
+            if (totalSize.Length != rank)
+                throw new Exception("Rank of index and total size arrays must be equal.");
+
+            /* Compute offset in array */
+            for (int i = 0; i < rank; i++)
+            {
+                index += totalSize[i] * indices[i];
+            }
+
+            return index;
+        }
+
+        public static ulong[] AccumulateReverse(this ulong[] totalSize)
+        {
+            var result = new ulong[totalSize.Length];
+            var acc = 1UL;
+
+            for (int i = totalSize.Length - 1; i >= 0; i--)
+            {
+                result[i] = acc;
+                acc *= totalSize[i];
+            }
+
+            return result;
+        }
+
+        // H5VMprivate.h (H5VM_bit_get)
+        public static byte[] SequentialBitMask { get; } = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int VectorCompare(byte rank, ulong[] v1, ulong[] v2)
+        {
+            for (int i = 0; i < rank; i++)
+            {
+                if (v1[i] < v2[i])
+                    return -1;
+
+                if (v1[i] > v2[i])
+                    return 1;
+            }
+
+            return 0;
+        }
+
+        public static uint ComputeChunkSizeLength(ulong chunkSize)
+        {
+            // H5Dearray.c (H5D__earray_crt_context)
+            /* Compute the size required for encoding the size of a chunk, allowing
+             *      for an extra byte, in case the filter makes the chunk larger.
+             */
+            var chunkSizeLength = 1 + ((uint)Math.Log(chunkSize, 2) + 8) / 8;
+
+            if (chunkSizeLength > 8)
+                chunkSizeLength = 8;
+
+            return chunkSizeLength;
+        }
+
         public static void ValidateSignature(byte[] actual, byte[] expected)
         {
             var actualString = Encoding.ASCII.GetString(actual);
@@ -24,6 +119,18 @@ namespace HDF5.NET
         public static bool IsPowerOfTwo(ulong x)
         {
             return (x != 0) && ((x & (x - 1)) == 0);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong FloorDiv(ulong x, ulong y)
+        {
+            return x / y;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong CeilDiv(ulong x, ulong y)
+        {
+            return x % y == 0 ? x / y : x / y + 1;
         }
 
         public static ulong FindMinByteCount(ulong value)
@@ -43,11 +150,12 @@ namespace HDF5.NET
             return result;
         }
 
-        public static unsafe T[] ReadCompound<T>(DatatypeMessage datatype,
-                                                 DataspaceMessage dataspace,
-                                                 Superblock superblock,
-                                                 Span<byte> data,
-                                                 Func<FieldInfo, string> getName) where T : struct
+        public static unsafe T[] ReadCompound<T>(
+            DatatypeMessage datatype,
+            DataspaceMessage dataspace,
+            Superblock superblock,
+            Span<byte> data,
+            Func<FieldInfo, string> getName) where T : struct
         {
             if (datatype.Class != DatatypeMessageClass.Compound)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
@@ -142,50 +250,73 @@ namespace HDF5.NET
 
         public static string[] ReadString(DatatypeMessage datatype, Span<byte> data, Superblock superblock)
         {
+            /* Padding
+             * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
+             * Search for "null terminate": null terminate and null padding are essentially
+             * the same when simply reading them from file.
+             */
+
             var isFixed = datatype.Class == DatatypeMessageClass.String;
 
             if (!isFixed && datatype.Class != DatatypeMessageClass.VariableLength)
                 throw new Exception($"Attribute data type class '{datatype.Class}' cannot be read as string.");
 
             var size = (int)datatype.Size;
-            var result = new List<string>();
+            var count = data.Length / size;
+            var result = new string[count];
 
             if (isFixed)
             {
                 var bitField = datatype.BitField as StringBitFieldDescription;
 
-                if (bitField == null)
+                if (bitField is null)
                     throw new Exception("String bit field desciption must not be null.");
-
-                if (bitField.PaddingType != PaddingType.NullTerminate)
-                    throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
 
                 var position = 0;
 
-                while (position != data.Length)
+                Func<string, string> trim = bitField.PaddingType switch
+                {
+                    PaddingType.NullTerminate   => value => value.Split('\0', 2)[0],
+                    PaddingType.NullPad         => value => value.TrimEnd('\0'),
+                    PaddingType.SpacePad        => value => value.TrimEnd(' '),
+                    _                           => throw new Exception("Unsupported padding type.")
+                };
+
+                for (int i = 0; i < count; i++)
                 {
                     var value = H5Utils.ReadFixedLengthString(data[position..(position + size)]);
-                    result.Add(value);
+
+                    value = trim(value);
+                    result[i] = value;
                     position += size;
                 }
             }
             else
             {
+                /* String is always split after first \0 when writing data to file. 
+                 * In other words, padding type only matters when reading data.
+                 */
+
                 var bitField = datatype.BitField as VariableLengthBitFieldDescription;
 
-                if (bitField == null)
+                if (bitField is null)
                     throw new Exception("Variable-length bit field desciption must not be null.");
 
                 if (bitField.Type != VariableLengthType.String)
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
-                if (bitField.PaddingType != PaddingType.NullTerminate)
-                    throw new Exception($"Only padding type '{PaddingType.NullTerminate}' is supported.");
-
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
                 using (var dataReader = new H5BinaryReader(new MemoryStream(data.ToArray())))
                 {
-                    while (dataReader.BaseStream.Position != data.Length)
+                    Func<string, string> trim = bitField.PaddingType switch
+                    {
+                        PaddingType.NullTerminate => value => value,
+                        PaddingType.NullPad => value => value,
+                        PaddingType.SpacePad => value => value.TrimEnd(' '),
+                        _ => throw new Exception("Unsupported padding type.")
+                    };
+
+                    for (int i = 0; i < count; i++)
                     {
                         var dataSize = dataReader.ReadUInt32(); // for what do we need this?
                         var globalHeapId = new GlobalHeapId(dataReader, superblock);
@@ -193,7 +324,8 @@ namespace HDF5.NET
                         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
                         var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
-                        result.Add(value);
+                        value = trim(value);
+                        result[i] = value;
                     }
                 }
             }
@@ -301,12 +433,12 @@ namespace HDF5.NET
 
                 case DataspaceType.Simple:
 
-                    var byteSize = 0UL;
+                    var totalSize = 0UL;
 
                     if (dimensionSizes.Any())
-                        byteSize = dimensionSizes.Aggregate((x, y) => x * y);
+                        totalSize = dimensionSizes.Aggregate((x, y) => x * y);
 
-                    return byteSize;
+                    return totalSize;
 
                 case DataspaceType.Null:
                     return 0;
@@ -337,9 +469,9 @@ namespace HDF5.NET
                 var envVariable = Environment
                     .GetEnvironmentVariable("HDF5_EXT_PREFIX");
 
-                if (envVariable != null)
+                if (envVariable is not null)
                 {
-                    // cannot work in Windows
+                    // cannot work on Windows
                     //var envPrefixes = envVariable.Split(":");
 
                     //foreach (var envPrefix in envPrefixes)

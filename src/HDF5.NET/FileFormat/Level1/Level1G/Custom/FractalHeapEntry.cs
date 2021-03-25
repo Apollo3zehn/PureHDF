@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct FractalHeapEntry
+    internal struct FractalHeapEntry
     {
         #region Properties
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class LocalHeap : FileBlock
+    internal class LocalHeap : FileBlock
     {
         #region Fields
 
@@ -66,7 +66,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_data == null)
+                if (_data is null)
                 {
                     this.Reader.Seek((long)this.DataSegmentAddress, SeekOrigin.Begin);
                     _data = this.Reader.ReadBytes((int)this.DataSegmentSize);

@@ -2,9 +2,7 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
-    <!-- Workaround, see https://github.com/HDFGroup/HDF.PInvoke.1.10/issues/15 -->
-    <RestoreAdditionalProjectSources>$(OutputPath)</RestoreAdditionalProjectSources>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +10,7 @@
     <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update1.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.611" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
+    <PackageReference Include="SharpZipLib" Version="1.3.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>
@@ -27,6 +26,9 @@
     <None Update="testfiles\blosc.h5">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="testfiles\bzip2.h5">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="testfiles\h5ex_d_compact.h5">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -34,11 +36,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-  <!-- Workaround, see https://github.com/HDFGroup/HDF.PInvoke.1.10/issues/15 -->
-  <Target Name="DownloadContentFiles">
-    <DownloadFile SourceUrl="https://ci.appveyor.com/api/buildjobs/7s0p95ywu3xx4lhx/artifacts/artifacts%2Fpackages%2FHDF.PInvoke.1.10.1.10.611.nupkg" DestinationFolder="$(OutputPath)" DestinationFileName="HDF.PInvoke.1.10.1.10.611.nupkg">
-    </DownloadFile>
-  </Target>
 
 </Project>

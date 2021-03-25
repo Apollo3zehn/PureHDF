@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FilesSectionDataRecord : SectionDataRecord
+    internal class FilesSectionDataRecord : SectionDataRecord
     {
         #region Constructors
 

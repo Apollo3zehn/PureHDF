@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class DriverInfoMessage : Message
+    internal class DriverInfoMessage : Message
     {
         #region Fields
 

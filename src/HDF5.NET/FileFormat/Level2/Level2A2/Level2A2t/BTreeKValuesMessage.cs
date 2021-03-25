@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class BTreeKValuesMessage : Message
+    internal class BTreeKValuesMessage : Message
     {
         #region Fields
 

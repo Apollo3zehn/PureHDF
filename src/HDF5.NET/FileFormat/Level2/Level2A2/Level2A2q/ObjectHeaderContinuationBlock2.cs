@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ObjectHeaderContinuationBlock2 : ObjectHeader
+    internal class ObjectHeaderContinuationBlock2 : ObjectHeader
     {
         #region Constructors
 

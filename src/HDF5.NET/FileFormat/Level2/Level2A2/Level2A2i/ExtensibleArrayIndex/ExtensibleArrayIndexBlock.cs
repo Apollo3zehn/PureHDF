@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public class ExtensibleArrayIndexBlock
+    internal class ExtensibleArrayIndexBlock<T>
     {
         #region Fields
 
@@ -13,16 +14,20 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ExtensibleArrayIndexBlock(H5BinaryReader reader, Superblock superblock, ExtensibleArrayHeader header, uint chunkSizeLength)
+        public ExtensibleArrayIndexBlock(
+            H5BinaryReader reader, 
+            Superblock superblock, 
+            ExtensibleArrayHeader header, 
+            Func<H5BinaryReader, T> decode)
         {
             // H5EAiblock.c (H5EA__iblock_alloc)
-            ulong secondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
+            this.SecondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
             ulong dataBlockPointerCount = (ulong)(2 * (header.SecondaryBlockMinimumDataBlockPointerCount - 1));
-            ulong secondaryBlockPointerCount = header.SecondaryBlockCount - secondaryBlockDataBlockAddressCount;
+            ulong secondaryBlockPointerCount = header.SecondaryBlockCount - this.SecondaryBlockDataBlockAddressCount;
 
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock.Signature);
+            H5Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
 
             // version
             this.Version = reader.ReadByte();
@@ -34,7 +39,10 @@ namespace HDF5.NET
             this.HeaderAddress = superblock.ReadOffset(reader);
 
             // elements
-            this.Elements = ArrayIndexUtils.ReadElements(reader, superblock, header.IndexBlockElementsCount, this.ClientID, chunkSizeLength);
+            this.Elements = Enumerable
+                .Range(0, header.IndexBlockElementsCount)
+                .Select(i => decode(reader))
+                .ToArray();
 
             // data block addresses
             this.DataBlockAddresses = new ulong[dataBlockPointerCount];
@@ -71,7 +79,7 @@ namespace HDF5.NET
             set
             {
                 if (value != 0)
-                    throw new FormatException($"Only version 0 instances of type {nameof(FixedArrayDataBlock)} are supported.");
+                    throw new FormatException($"Only version 0 instances of type {nameof(ExtensibleArrayIndexBlock<T>)} are supported.");
 
                 _version = value;
             }
@@ -81,13 +89,15 @@ namespace HDF5.NET
 
         public ulong HeaderAddress { get; }
 
-        public DataBlockElement[] Elements { get; }
+        public T[] Elements { get; }
 
         public ulong[] DataBlockAddresses { get; }
 
         public ulong[] SecondaryBlockAddresses { get; }
 
         public ulong Checksum { get; }
+
+        public ulong SecondaryBlockDataBlockAddressCount { get; }
 
         #endregion
     }

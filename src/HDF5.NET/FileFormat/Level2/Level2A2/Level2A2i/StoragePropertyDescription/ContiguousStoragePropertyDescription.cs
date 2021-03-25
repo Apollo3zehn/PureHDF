@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class ContiguousStoragePropertyDescription : StoragePropertyDescription
+    internal class ContiguousStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 
@@ -14,7 +14,6 @@
 
         #region Properties
 
-        public ulong Address { get; set; }
         public ulong Size { get; set; }
 
         #endregion

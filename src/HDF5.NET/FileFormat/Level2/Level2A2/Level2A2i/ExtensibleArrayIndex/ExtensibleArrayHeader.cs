@@ -1,26 +1,20 @@
 ﻿using System;
-using System.IO;
 using System.Text;
 
 namespace HDF5.NET
 {
-    public class ExtensibleArrayHeader : FileBlock
+    internal class ExtensibleArrayHeader : FileBlock
     {
         #region Fields
 
         private byte _version;
-        private Superblock _superblock;
-        private uint _chunkSizeLength;
 
         #endregion
 
         #region Constructors
 
-        public ExtensibleArrayHeader(H5BinaryReader reader, Superblock superblock, uint chunkSizeLength) : base(reader)
+        public ExtensibleArrayHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            _superblock = superblock;
-            _chunkSizeLength = chunkSizeLength;
-
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, ExtensibleArrayHeader.Signature);
@@ -108,18 +102,12 @@ namespace HDF5.NET
 
         public uint Checksum { get; }
 
-        public ExtensibleArrayIndexBlock IndexBlock
-        {
-            get
-            {
-                this.Reader.Seek((long)this.IndexBlockAddress, SeekOrigin.Begin);
-                return new ExtensibleArrayIndexBlock(this.Reader, _superblock, this, _chunkSizeLength);
-            }
-        }
-
         public ulong SecondaryBlockCount { get; private set; }
+
         public ulong DataBlockPageElementsCount { get; private set; }
+
         public byte ArrayOffsetsSize { get; private set; }
+
         public ExtensibleArraySecondaryBlockInformation[] SecondaryBlockInfos { get; private set; }
 
         #endregion

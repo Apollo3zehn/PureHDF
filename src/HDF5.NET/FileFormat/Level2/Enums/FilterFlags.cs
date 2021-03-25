@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [Flags]
-    public enum FilterFlags : ushort
+    internal enum FilterFlags : ushort
     {
         Optional = 0x0001
     }

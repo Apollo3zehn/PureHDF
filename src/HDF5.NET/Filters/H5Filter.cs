@@ -1,56 +1,62 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 
 namespace HDF5.NET
 {
-    public delegate Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer);
-
-    public static class H5Filter
+    static partial class H5Filter
     {
+        #region Constructors
+
         static H5Filter()
         {
-            H5Filter.Registrations = new List<H5FilterRegistration>();
+            H5Filter.Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
 
-            H5Filter.Register(FilterIdentifier.Shuffle, "shuffle", H5Filter.ShuffleFilterFunc);
-            H5Filter.Register(FilterIdentifier.Fletcher32, "fletcher", H5Filter.Fletcher32FilterFunc);
-            H5Filter.Register(FilterIdentifier.Nbit, "nbit", H5Filter.NbitFilterFunc);
-            H5Filter.Register(FilterIdentifier.ScaleOffset, "scaleoffset", H5Filter.NbitFilterFunc);
-            H5Filter.Register(FilterIdentifier.Deflate, "deflate", H5Filter.DeflateFilterFunc);
+            H5Filter.Register(H5FilterID.Shuffle, "shuffle", H5Filter.ShuffleFilterFunc);
+            H5Filter.Register(H5FilterID.Fletcher32, "fletcher", H5Filter.Fletcher32FilterFunc);
+            H5Filter.Register(H5FilterID.Nbit, "nbit", H5Filter.NbitFilterFunc);
+            H5Filter.Register(H5FilterID.ScaleOffset, "scaleoffset", H5Filter.NbitFilterFunc);
+            H5Filter.Register(H5FilterID.Deflate, "deflate", H5Filter.DeflateFilterFunc);
         }
 
-        internal static List<H5FilterRegistration> Registrations { get; set; }
+        #endregion
 
-        public static void Register(FilterIdentifier identifier, string name, FilterFunc filterFunc)
-        {
-            var registration = new H5FilterRegistration(identifier, name, filterFunc);
-            H5Filter.Registrations.Add(registration);
-        }
+        #region Properties
+
+        internal static ConcurrentDictionary<FilterIdentifier, H5FilterRegistration> Registrations { get; set; }
+
+        #endregion
+
+        #region Methods
 
         internal static void ExecutePipeline(List<FilterDescription> pipeline,
-                                             ExtendedFilterFlags flags,
+                                             uint filterMask,
+                                             H5FilterFlags flags,
                                              Memory<byte> filterBuffer,
-                                             Span<byte> resultBuffer)
+                                             Memory<byte> resultBuffer)
         {
             // H5Z.c (H5Z_pipeline)
 
             /* Read */
-            if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+            if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 for (int i = pipeline.Count; i > 0; --i)
                 {
-                    var filter = pipeline[i - 1];
-                    var registration = H5Filter.Registrations.FirstOrDefault(current => current.Identifier == filter.Identifier);
+                    /* check if filter should be skipped */
+                    if (((filterMask >> i) & 0x0001) > 0)
+                        continue;
 
-                    if (registration == null)
+                    var filter = pipeline[i - 1];
+
+                    if (!H5Filter.Registrations.TryGetValue(filter.Identifier, out var registration))
                     {
                         var filterName = string.IsNullOrWhiteSpace(filter.Name) ? "unnamed filter" : filter.Name;
                         throw new Exception($"Could not find filter '{filterName}' with ID '{filter.Identifier}'. Make sure the filter has been registered using H5Filter.Register(...).");
                     }
 
-                    var tmpFlags = (ExtendedFilterFlags)((ushort)flags | (ushort)filter.Flags);
+                    var tmpFlags = (H5FilterFlags)((ushort)flags | (ushort)filter.Flags);
 
                     try
                     {
@@ -62,8 +68,7 @@ namespace HDF5.NET
                     }
                 }
 
-                filterBuffer
-                    .Span[0..resultBuffer.Length]
+                filterBuffer[0..resultBuffer.Length]
                     .CopyTo(resultBuffer);
             }
             /* Write */
@@ -73,12 +78,14 @@ namespace HDF5.NET
             }
         }
 
+        #endregion
+
         #region Built-in filters
 
-        private static Memory<byte> ShuffleFilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        private static Memory<byte> ShuffleFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             // read
-            if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+            if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 var unfilteredBuffer = new byte[buffer.Length];
                 ShuffleFilter.Unshuffle((int)parameters[0], buffer.Span, unfilteredBuffer);
@@ -96,18 +103,18 @@ namespace HDF5.NET
             }
         }
 
-        private static Memory<byte> Fletcher32FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        private static Memory<byte> Fletcher32FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             // H5Zfletcher32.c (H5Z_filter_fletcher32)
 
             // read
-            if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+            if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 var bufferWithoutChecksum = buffer[0..^4];
 
                 /* Do checksum if it's enabled for read; otherwise skip it
                  * to save performance. */
-                if (!flags.HasFlag(ExtendedFilterFlags.SkipEdc))
+                if (!flags.HasFlag(H5FilterFlags.SkipEdc))
                 {
                     /* Get the stored checksum */
                     var storedFletcher_bytes = buffer.Span[^4..^0];
@@ -130,23 +137,23 @@ namespace HDF5.NET
             }
         }
 
-        private static Memory<byte> NbitFilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        private static Memory<byte> NbitFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             throw new Exception($"The filter '{FilterIdentifier.Nbit}' is not yet supported by HDF5.NET.");
         }
 
-        private static Memory<byte> ScaleOffsetFilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        private static Memory<byte> ScaleOffsetFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             throw new Exception($"The filter '{FilterIdentifier.ScaleOffset}' is not yet supported by HDF5.NET.");
         }
 
-        private static Memory<byte> DeflateFilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        private static Memory<byte> DeflateFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             // Span-based (non-stream) compression APIs
             // https://github.com/dotnet/runtime/issues/39327
 
             // read
-            if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+            if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 using var sourceStream = new MemorySpanStream(buffer);
 

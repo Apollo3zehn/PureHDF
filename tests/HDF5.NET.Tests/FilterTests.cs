@@ -27,43 +27,34 @@ namespace HDF5.NET.Tests.Reading
         [InlineData("zlib", true)]
         [InlineData("zstd", true)]
         [InlineData("blosclz_bit", true)]
-        public void CanDefilterBlosc2(string datasetName, bool shouldSuccess)
+        public void CanDefilterBlosc2(string datasetName, bool shouldSucceed)
         {
+            // # https://github.com/silx-kit/hdf5plugin
             // import h5py
             // import hdf5plugin
-
-            // def blosc_opts(complevel=9, complib='blosc:lz4', shuffle=True):
-            //     shuffle = 2 if shuffle == 'bit' else 1 if shuffle else 0
-            //     compressors = ['blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd']
-            //     complib = ['blosc:' + c for c in compressors].index(complib)
-            //     args = {
-            //         'compression': 32001,
-            //         'compression_opts': (0, 0, 0, 0, complevel, shuffle, complib)
-            //     }
-            //     if shuffle:
-            //         args['shuffle'] = False
-            //     return args
-
+            //
+            // data = list(range(0, 1000))
+            //
             // with h5py.File('blosc.h5', 'w') as f:
-            //     f.create_dataset('blosclz', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:blosclz', True))
-            //     f.create_dataset('lz4', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:lz4', True))
-            //     f.create_dataset('lz4hc', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:lz4hc', True))
-            //     f.create_dataset('snappy', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:snappy', True))
-            //     f.create_dataset('zlib', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:zlib', True))
-            //     f.create_dataset('zstd', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:zstd', True))
-            //     f.create_dataset('blosclz_bit', data=list(range(0, 1000)), **blosc_opts(9, 'blosc:blosclz', 'bit'))
+            //     f.create_dataset('blosclz',      data=data, **hdf5plugin.Blosc(cname='blosclz', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('lz4',          data=data, **hdf5plugin.Blosc(cname='lz4', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('lz4hc',        data=data, **hdf5plugin.Blosc(cname='lz4hc', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('snappy',       data=data, **hdf5plugin.Blosc(cname='snappy', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('zlib',         data=data, **hdf5plugin.Blosc(cname='zlib', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('zstd',         data=data, **hdf5plugin.Blosc(cname='zstd', clevel=9, shuffle=hdf5plugin.Blosc.SHUFFLE))
+            //     f.create_dataset('blosclz_bit',  data=data, **hdf5plugin.Blosc(cname='zlib', clevel=9, shuffle=hdf5plugin.Blosc.BITSHUFFLE))
 
             // Arrange
             var filePath = "./testfiles/blosc.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
-            H5Filter.Register(identifier: (FilterIdentifier)32001, name: "blosc2", filterFunc: BloscHelper.FilterFunc);
+            H5Filter.Register(identifier: (H5FilterID)32001, name: "blosc2", filterFunc: BloscHelper.FilterFunc);
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             var dataset = root.Dataset(datasetName);
 
-            if (shouldSuccess)
+            if (shouldSucceed)
             {
                 var actual = dataset.Read<int>();
 
@@ -80,6 +71,38 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Fact]
+        public void CanDefilterBZip2()
+        {
+            // # Works only with Linux! On Windows, deflate is used instead.
+            // import numpy
+            // import tables
+
+
+            // fileName = 'bzip2.h5'
+            // shape = (1000,)
+            // atom = tables.Int32Atom()
+            // filters = tables.Filters(complevel=9, complib='bzip2')
+
+            // with tables.open_file(fileName, 'w') as f:
+            //     dataset = f.create_carray(f.root, 'bzip2', atom, shape, filters=filters)
+            //     dataset[:] = list(range(0, 1000))
+
+            // Arrange
+            var filePath = "./testfiles/bzip2.h5";
+            var expected = Enumerable.Range(0, 1000).ToArray();
+
+            H5Filter.Register(identifier: (H5FilterID)307, name: "bzip2", filterFunc: BZip2Helper.FilterFunc);
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var dataset = root.Dataset("bzip2");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Fact]
         public void CanDefilterFletcher()
         {
             // Arrange
@@ -87,7 +110,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Fletcher(fileId));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("fletcher");
             var actual = dataset.Read<int>();
@@ -104,7 +127,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_ZLib(fileId));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("deflate");
             var actual = dataset.Read<int>();
@@ -121,7 +144,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Multi(fileId));
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("multi");
             var actual = dataset.Read<int>();
@@ -130,7 +153,7 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(TestData.MediumData));
         }
 
-#warning 16 byte and arbitrary number of bytes tests missing
+//#error 16 byte and arbitrary number of bytes tests missing
         [Theory]
         [InlineData((byte)1, 1001)]
         [InlineData((short)2, 732)]
@@ -147,7 +170,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleGeneric<T>(T dummy, int length) where T : struct
+        public void CanUnshuffleGeneric<T>(T dummy, int length)
+            where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -159,10 +183,10 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
+            var actual_shuffled = dataset.Read<byte>(null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -188,7 +212,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleAvx2<T>(T dummy, int length) where T : struct
+        public void CanUnshuffleAvx2<T>(T dummy, int length) 
+            where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -200,7 +225,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: false);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
@@ -229,7 +254,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleSse2<T>(T dummy, int length) where T : struct
+        public void CanUnshuffleSse2<T>(T dummy, int length) 
+            where T : unmanaged
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -241,7 +267,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
@@ -268,7 +294,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
             var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
@@ -340,7 +366,8 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanConvertEndiannessAvx2<T>(T dummy, int length) where T : struct
+        public void CanConvertEndiannessAvx2<T>(T dummy, int length)
+            where T : unmanaged
         {
             // Arrange
             var bytesOfType = Unsafe.SizeOf<T>();
@@ -440,7 +467,7 @@ namespace HDF5.NET.Tests.Reading
             };
 
             /* continue */
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
             var attribute = root
                 .Group("small")

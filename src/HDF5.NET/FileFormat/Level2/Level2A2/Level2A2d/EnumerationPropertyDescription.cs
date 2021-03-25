@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    public class EnumerationPropertyDescription : DatatypePropertyDescription
+    internal class EnumerationPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
-        public EnumerationPropertyDescription(H5BinaryReader reader, byte version, uint valueSize, ushort memberCount) : base(reader)
+        internal EnumerationPropertyDescription(H5BinaryReader reader, byte version, uint valueSize, ushort memberCount) : base(reader)
         {
             // base type
             this.BaseType = new DatatypeMessage(reader);

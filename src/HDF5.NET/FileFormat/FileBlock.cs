@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public abstract class FileBlock
+    internal abstract class FileBlock
     {
         #region Constructors
 

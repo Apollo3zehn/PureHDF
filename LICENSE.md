@@ -2,24 +2,24 @@ GNU LESSER GENERAL PUBLIC LICENSE
 
 Version 3, 29 June 2007
 
-Copyright © 2007 Free Software Foundation, Inc. <http://fsf.org/>
+Copyright ¬© 2007 Free Software Foundation, Inc. <http://fsf.org/>
 
 Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
 
 This version of the GNU Lesser General Public License incorporates the terms and conditions of version 3 of the GNU General Public License, supplemented by the additional permissions listed below.
 0. Additional Definitions.
 
-As used herein, ìthis Licenseî refers to version 3 of the GNU Lesser General Public License, and the ìGNU GPLî refers to version 3 of the GNU General Public License.
+As used herein, ‚Äúthis License‚Äù refers to version 3 of the GNU Lesser General Public License, and the ‚ÄúGNU GPL‚Äù refers to version 3 of the GNU General Public License.
 
-ìThe Libraryî refers to a covered work governed by this License, other than an Application or a Combined Work as defined below.
+‚ÄúThe Library‚Äù refers to a covered work governed by this License, other than an Application or a Combined Work as defined below.
 
-An ìApplicationî is any work that makes use of an interface provided by the Library, but which is not otherwise based on the Library. Defining a subclass of a class defined by the Library is deemed a mode of using an interface provided by the Library.
+An ‚ÄúApplication‚Äù is any work that makes use of an interface provided by the Library, but which is not otherwise based on the Library. Defining a subclass of a class defined by the Library is deemed a mode of using an interface provided by the Library.
 
-A ìCombined Workî is a work produced by combining or linking an Application with the Library. The particular version of the Library with which the Combined Work was made is also called the ìLinked Versionî.
+A ‚ÄúCombined Work‚Äù is a work produced by combining or linking an Application with the Library. The particular version of the Library with which the Combined Work was made is also called the ‚ÄúLinked Version‚Äù.
 
-The ìMinimal Corresponding Sourceî for a Combined Work means the Corresponding Source for the Combined Work, excluding any source code for portions of the Combined Work that, considered in isolation, are based on the Application, and not on the Linked Version.
+The ‚ÄúMinimal Corresponding Source‚Äù for a Combined Work means the Corresponding Source for the Combined Work, excluding any source code for portions of the Combined Work that, considered in isolation, are based on the Application, and not on the Linked Version.
 
-The ìCorresponding Application Codeî for a Combined Work means the object code and/or source code for the Application, including any data and utility programs needed for reproducing the Combined Work from the Application, but excluding the System Libraries of the Combined Work.
+The ‚ÄúCorresponding Application Code‚Äù for a Combined Work means the object code and/or source code for the Application, including any data and utility programs needed for reproducing the Combined Work from the Application, but excluding the System Libraries of the Combined Work.
 1. Exception to Section 3 of the GNU GPL.
 
 You may convey a covered work under sections 3 and 4 of this License without being bound by section 3 of the GNU GPL.
@@ -60,6 +60,6 @@ You may place library facilities that are a work based on the Library side by si
 
 The Free Software Foundation may publish revised and/or new versions of the GNU Lesser General Public License from time to time. Such new versions will be similar in spirit to the present version, but may differ in detail to address new problems or concerns.
 
-Each version is given a distinguishing version number. If the Library as you received it specifies that a certain numbered version of the GNU Lesser General Public License ìor any later versionî applies to it, you have the option of following the terms and conditions either of that published version or of any later version published by the Free Software Foundation. If the Library as you received it does not specify a version number of the GNU Lesser General Public License, you may choose any version of the GNU Lesser General Public License ever published by the Free Software Foundation.
+Each version is given a distinguishing version number. If the Library as you received it specifies that a certain numbered version of the GNU Lesser General Public License ‚Äúor any later version‚Äù applies to it, you have the option of following the terms and conditions either of that published version or of any later version published by the Free Software Foundation. If the Library as you received it does not specify a version number of the GNU Lesser General Public License, you may choose any version of the GNU Lesser General Public License ever published by the Free Software Foundation.
 
 If the Library as you received it specifies that a proxy can decide whether future versions of the GNU Lesser General Public License shall apply, that proxy's public statement of acceptance of any version is permanent authorization for you to choose that version for the Library.

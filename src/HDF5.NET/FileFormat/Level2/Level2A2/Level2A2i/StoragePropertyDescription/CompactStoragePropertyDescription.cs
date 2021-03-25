@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class CompactStoragePropertyDescription : StoragePropertyDescription
+    internal class CompactStoragePropertyDescription : StoragePropertyDescription
     {
         #region Constructors
 
@@ -10,7 +10,7 @@
             this.Size = reader.ReadUInt16();
 
             // raw data
-            this.RawData = reader.ReadBytes((int)this.Size);
+            this.RawData = reader.ReadBytes(this.Size);
         }
 
         #endregion

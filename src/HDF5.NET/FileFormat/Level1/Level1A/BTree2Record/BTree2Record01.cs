@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct BTree2Record01 : IBTree2Record
+    internal struct BTree2Record01 : IBTree2Record
     {
         #region Constructors
 

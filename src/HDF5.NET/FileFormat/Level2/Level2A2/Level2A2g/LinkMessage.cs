@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class LinkMessage : Message
+    internal class LinkMessage : Message
     {
         #region Fields
 

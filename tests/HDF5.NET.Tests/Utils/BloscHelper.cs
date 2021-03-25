@@ -6,7 +6,7 @@ namespace HDF5.NET.Tests
 {
     public static class BloscHelper
     {
-        public static unsafe Memory<byte> FilterFunc(ExtendedFilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        public static unsafe Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             // adapted from https://github.com/Blosc/hdf5-blosc/blob/bd8ee59708f366ac561153858735165d3a543b18/src/blosc_filter.c#L145-L272
             int status = 0;
@@ -41,7 +41,7 @@ namespace HDF5.NET.Tests
             }
 
             /* We're decompressing */
-            if (flags.HasFlag(ExtendedFilterFlags.Reverse))
+            if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 /* Extract the exact outbuf_size from the buffer header.
                 *

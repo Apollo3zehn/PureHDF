@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class VariableLengthPropertyDescription : DatatypePropertyDescription
+    internal class VariableLengthPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class ObjectModificationMessage : Message
+    internal class ObjectModificationMessage : Message
     {
         #region Fields
 

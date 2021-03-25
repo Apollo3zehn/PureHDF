@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class OldFillValueMessage : Message
+    internal class OldFillValueMessage : Message
     {
         #region Constructors
 

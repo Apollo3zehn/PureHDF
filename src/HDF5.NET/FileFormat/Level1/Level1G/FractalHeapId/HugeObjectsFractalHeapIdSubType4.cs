@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace HDF5.NET
 {
-    public class HugeObjectsFractalHeapIdSubType4 : FractalHeapId
+    internal class HugeObjectsFractalHeapIdSubType4 : FractalHeapId
     {
         #region Constructors
 

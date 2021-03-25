@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class FilterDescription : FileBlock
+    internal class FilterDescription : FileBlock
     {
         #region Constructors
 

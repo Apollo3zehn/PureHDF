@@ -3,7 +3,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class BTree2InternalNode<T> : BTree2Node<T> where T : struct, IBTree2Record
+    internal class BTree2InternalNode<T> : BTree2Node<T> where T : struct, IBTree2Record
     {
         #region Constructors
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public abstract class LinkInfo : FileBlock
+    internal abstract class LinkInfo : FileBlock
     {
         #region Constructors
 

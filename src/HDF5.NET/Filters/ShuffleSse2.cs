@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
 
-#if NETCOREAPP3_0
+#if NET5_0
 
 using System;
 using System.Runtime.Intrinsics;
@@ -43,7 +43,7 @@ using System.Runtime.Intrinsics.X86;
 
 namespace HDF5.NET
 {
-    public static class ShuffleSse2
+    internal static class ShuffleSse2
     {
         public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {

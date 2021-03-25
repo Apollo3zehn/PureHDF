@@ -6,9 +6,9 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public delegate bool FoundDelegate<TUserData>(ulong address, out TUserData userData);
+    internal delegate bool FoundDelegate<T, TUserData>(ulong address, T leftNode, out TUserData userData);
 
-    public class BTree1Node<T> where T : struct, IBTree1Key
+    internal class BTree1Node<T> where T : struct, IBTree1Key
     {
         #region Fields
 
@@ -86,7 +86,7 @@ namespace HDF5.NET
 
         public bool TryFindUserData<TUserData>([NotNullWhen(returnValue: true)] out TUserData userData,
                                                Func<T, T, int> compare3,
-                                               FoundDelegate<TUserData> found)
+                                               FoundDelegate<T, TUserData> found)
             where TUserData : struct
         {
             userData = default;
@@ -107,6 +107,7 @@ namespace HDF5.NET
              * Follow the link to the subtree or to the data node.
              */
             var childAddress = this.ChildAddresses[(int)index];
+            var key = this.Keys[index];
 
             if (this.NodeLevel > 0)
             {
@@ -118,7 +119,7 @@ namespace HDF5.NET
             }
             else
             {
-                if (found(childAddress, out userData))
+                if (found(childAddress, key, out userData))
                     return true;
             }
 

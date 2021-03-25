@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public abstract class BTree2Node<T> : FileBlock where T : struct, IBTree2Record
+    internal abstract class BTree2Node<T> : FileBlock where T : struct, IBTree2Record
     {
         #region Fields
 

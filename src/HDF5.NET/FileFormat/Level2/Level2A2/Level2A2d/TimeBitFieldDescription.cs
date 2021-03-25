@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    public class TimeBitFieldDescription : DatatypeBitFieldDescription, IByteOrderAware
+    internal class TimeBitFieldDescription : DatatypeBitFieldDescription, IByteOrderAware
     {
         #region Constructors
 

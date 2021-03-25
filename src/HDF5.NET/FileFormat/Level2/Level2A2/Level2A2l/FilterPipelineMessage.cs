@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace HDF5.NET
 {
-    public class FilterPipelineMessage : Message
+    internal class FilterPipelineMessage : Message
     {
         #region Fields
 

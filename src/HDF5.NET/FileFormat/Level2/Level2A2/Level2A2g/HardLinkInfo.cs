@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class HardLinkInfo : LinkInfo
+    internal class HardLinkInfo : LinkInfo
     {
         #region Fields
 

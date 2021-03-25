@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
@@ -22,7 +21,7 @@ namespace HDF5.NET.Tests.Reading
             var filePath = "testfiles/secret.mat";
 
             // Act
-            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose: true);
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var children = root.Children.ToList();
         }
 
@@ -35,7 +34,7 @@ namespace HDF5.NET.Tests.Reading
             // Arrange
 
             // Act
-            var actual = H5Checksum.JenkinsLookup3(key);
+            var actual = ChecksumUtils.JenkinsLookup3(key);
 
             // Assert
             Assert.Equal(expected, actual);

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum FilterIdentifier : ushort
+    internal enum FilterIdentifier : ushort
     {
         NA = 0,
         Deflate = 1,

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public enum MemberMapping : byte
+    internal enum MemberMapping : byte
     {
         Superblock = 1,
         BTree = 2,

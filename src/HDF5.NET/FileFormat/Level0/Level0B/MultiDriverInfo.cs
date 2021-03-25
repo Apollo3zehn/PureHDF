@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace HDF5.NET
 {
-    public class MultiDriverInfo : DriverInfo
+    internal class MultiDriverInfo : DriverInfo
     {
         #region Constructors
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public abstract class ScratchPad : FileBlock
+    internal abstract class ScratchPad : FileBlock
     {
         #region Constructors
 

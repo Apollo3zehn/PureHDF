@@ -5,7 +5,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class FreeSpaceSectionList : FileBlock
+    internal class FreeSpaceSectionList : FileBlock
     {
         #region Fields
 

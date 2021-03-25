@@ -4,7 +4,7 @@ using System.Text;
 
 namespace HDF5.NET
 {
-    public class FractalHeapIndirectBlock : FileBlock
+    internal class FractalHeapIndirectBlock : FileBlock
     {
         #region Fields
 

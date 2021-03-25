@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class ArrayPropertyDescription : DatatypePropertyDescription
+    internal class ArrayPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

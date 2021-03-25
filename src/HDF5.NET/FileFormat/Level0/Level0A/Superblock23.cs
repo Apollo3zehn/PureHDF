@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class Superblock23 : Superblock
+    internal class Superblock23 : Superblock
     {
         #region Constructors
 

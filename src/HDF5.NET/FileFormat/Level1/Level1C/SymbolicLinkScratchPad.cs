@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class SymbolicLinkScratchPad : ScratchPad
+    internal class SymbolicLinkScratchPad : ScratchPad
     {
         #region Constructors
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace HDF5.NET
 {
-    public class VdsGlobalHeapBlock : FileBlock
+    internal class VdsGlobalHeapBlock : FileBlock
     {
         #region Fields
 

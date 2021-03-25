@@ -127,10 +127,13 @@ namespace HDF5.NET.Tests
             TestData.SmallData = Enumerable.Range(0, 100).ToArray();
             TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
             TestData.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
+            TestData.HyperslabData = Enumerable.Range(0, 2*3*6).ToArray();
         }
 
         public static TestEnum[] EnumData { get; }
+
         public static TestBitfield[] BitfieldData { get; }
+
         public static int[,,,] ArrayData { get; }
 
         public static IList<object[]> NumericalData { get; }
@@ -140,8 +143,13 @@ namespace HDF5.NET.Tests
         public static TestStructString[] StringStructData { get; }
 
         public static byte[] TinyData { get; }
+
         public static int[] SmallData { get; }
+
         public static int[] MediumData { get; }
+
         public static int[] HugeData { get; }
+
+        public static int[] HyperslabData { get; }
     }
 }

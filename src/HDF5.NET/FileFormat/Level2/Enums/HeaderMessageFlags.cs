@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [Flags]
-    public enum HeaderMessageFlags : ushort
+    internal enum HeaderMessageFlags : ushort
     {
         Constant = 1,
         Shared = 2,

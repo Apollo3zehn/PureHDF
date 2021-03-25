@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class BitFieldPropertyDescription : DatatypePropertyDescription
+    internal class BitFieldPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 

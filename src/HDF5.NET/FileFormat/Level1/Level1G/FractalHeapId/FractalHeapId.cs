@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace HDF5.NET
 {
-    public abstract class FractalHeapId
+    internal abstract class FractalHeapId
     {
         #region Methods
 

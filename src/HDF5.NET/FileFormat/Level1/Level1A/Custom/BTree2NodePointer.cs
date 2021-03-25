@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct BTree2NodePointer
+    internal struct BTree2NodePointer
     {
         public ulong Address { get; set; }
         public ushort RecordCount { get; set; }

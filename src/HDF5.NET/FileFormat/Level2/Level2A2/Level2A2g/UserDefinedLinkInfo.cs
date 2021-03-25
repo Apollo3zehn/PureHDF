@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class UserDefinedLinkInfo : LinkInfo
+    internal class UserDefinedLinkInfo : LinkInfo
     {
         #region Constructors
 

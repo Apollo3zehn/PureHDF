@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public class FixedPointPropertyDescription : DatatypePropertyDescription
+    internal class FixedPointPropertyDescription : DatatypePropertyDescription
     {
         #region Constructors
 
