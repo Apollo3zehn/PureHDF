@@ -33,21 +33,21 @@ namespace HDF5.NET
 
         public ulong[] GetDatasetDims()
         {
-            return this.Dataset.Dataspace.Type switch
+            return this.Dataset.InternalDataspace.Type switch
             {
                 DataspaceType.Scalar    => new ulong[] { 1 },
-                DataspaceType.Simple    => this.Dataset.Dataspace.DimensionSizes,
-                _                       => throw new Exception($"Unsupported data space type '{this.Dataset.Dataspace.Type}'.")
+                DataspaceType.Simple    => this.Dataset.InternalDataspace.DimensionSizes,
+                _                       => throw new Exception($"Unsupported data space type '{this.Dataset.InternalDataspace.Type}'.")
             };
         }
 
         public HyperslabSelection GetSelection()
         {
-            return this.Dataset.Dataspace.Type switch
+            return this.Dataset.InternalDataspace.Type switch
             {
                 DataspaceType.Scalar => HyperslabSelection.Scalar(),
                 DataspaceType.Simple => HyperslabSelection.All(this.GetDatasetDims()),
-                _ => throw new Exception($"Unsupported data space type '{this.Dataset.Dataspace.Type}'.")
+                _ => throw new Exception($"Unsupported data space type '{this.Dataset.InternalDataspace.Type}'.")
             };
         }
 

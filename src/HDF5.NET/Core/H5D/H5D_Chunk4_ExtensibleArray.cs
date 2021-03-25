@@ -37,7 +37,7 @@ namespace HDF5.NET
         {
             base.Initialize();
 
-            _unlimitedDim = this.Dataset.Dataspace.DimensionMaxSizes
+            _unlimitedDim = this.Dataset.InternalDataspace.DimensionMaxSizes
                .ToList()
                .FindLastIndex(value => value == H5Constants.Unlimited);
 
@@ -99,7 +99,7 @@ namespace HDF5.NET
             }
 
             /* Check for filters on chunks */
-            if (this.Dataset.FilterPipeline is not null)
+            if (this.Dataset.InternalFilterPipeline is not null)
             {
                 var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
 
@@ -137,7 +137,7 @@ namespace HDF5.NET
         {
             if (_header is null)
             {
-                this.Dataset.Context.Reader.Seek((long)this.Dataset.DataLayout.Address, SeekOrigin.Begin);
+                this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                 _header = new ExtensibleArrayHeader(this.Dataset.Context.Reader, this.Dataset.Context.Superblock);
             }
 

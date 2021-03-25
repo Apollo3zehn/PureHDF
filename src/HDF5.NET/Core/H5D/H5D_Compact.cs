@@ -25,26 +25,26 @@ namespace HDF5.NET
 
         public override ulong[] GetChunkDims()
         {
-            return this.Dataset.Dataspace.DimensionSizes;
+            return this.Dataset.InternalDataspace.DimensionSizes;
         }
 
         public override Memory<byte> GetBuffer(ulong[] chunkIndices)
         {
             byte[] buffer;
 
-            if (this.Dataset.DataLayout is DataLayoutMessage12 layout12)
+            if (this.Dataset.InternalDataLayout is DataLayoutMessage12 layout12)
             {
 #warning untested
                 buffer = layout12.CompactData;
             }
-            else if (this.Dataset.DataLayout is DataLayoutMessage3 layout34)
+            else if (this.Dataset.InternalDataLayout is DataLayoutMessage3 layout34)
             {
                 var compact = (CompactStoragePropertyDescription)layout34.Properties;
                 buffer = compact.RawData;
             }
             else
             {
-                throw new Exception($"Data layout message type '{this.Dataset.DataLayout.GetType().Name}' is not supported.");
+                throw new Exception($"Data layout message type '{this.Dataset.InternalDataLayout.GetType().Name}' is not supported.");
             }
 
             return buffer;

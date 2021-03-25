@@ -11,6 +11,28 @@ namespace HDF5.NET
 
         public string Name => this.Message.Name;
 
+        public H5Dataspace Space
+        {
+            get
+            {
+                if (_space is null)
+                    _space = new H5Dataspace(this.Message.Dataspace);
+
+                return _space;
+            }
+        }
+
+        public H5DataType Type
+        {
+            get
+            {
+                if (_type is null)
+                    _type = new H5DataType(this.Message.Datatype);
+
+                return _type;
+            }
+        }
+
         #endregion
 
         #region Methods

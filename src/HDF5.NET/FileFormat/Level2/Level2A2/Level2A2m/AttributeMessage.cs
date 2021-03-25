@@ -8,6 +8,7 @@ namespace HDF5.NET
         #region Fields
 
         private byte _version;
+        private CharacterSetEncoding _nameEncoding;
 
         #endregion
 
@@ -35,13 +36,13 @@ namespace HDF5.NET
 
             // name character set encoding
             if (this.Version == 3)
-                this.NameEncoding = (CharacterSetEncoding)reader.ReadByte();
+                _nameEncoding = (CharacterSetEncoding)reader.ReadByte();
             
             // name
             if (this.Version == 1)
-                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, encoding: this.NameEncoding);
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true, encoding: _nameEncoding);
             else
-                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, encoding: this.NameEncoding);
+                this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false, encoding: _nameEncoding);
 
             // datatype
             this.Datatype = new DatatypeMessage(reader);
@@ -88,7 +89,6 @@ namespace HDF5.NET
         }
 
         public AttributeMessageFlags Flags { get; set; }
-        public CharacterSetEncoding NameEncoding { get; set; }
         public string Name { get; set; }
         public DatatypeMessage Datatype { get; set; }
         public DataspaceMessage Dataspace { get; set; }

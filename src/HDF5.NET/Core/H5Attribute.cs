@@ -7,6 +7,8 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private H5Dataspace _space;
+        private H5DataType _type;
         private Superblock _superblock;
 
         #endregion

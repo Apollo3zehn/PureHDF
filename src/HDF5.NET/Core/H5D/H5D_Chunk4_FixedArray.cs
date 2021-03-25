@@ -21,7 +21,7 @@ namespace HDF5.NET
             var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(this.DownMaxChunkCounts);
 
             /* Check for filters on chunks */
-            if (this.Dataset.FilterPipeline is not null)
+            if (this.Dataset.InternalFilterPipeline is not null)
             {
                 var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
 
@@ -59,7 +59,7 @@ namespace HDF5.NET
         {
             if (_header == null)
             {
-                this.Dataset.Context.Reader.Seek((long)this.Dataset.DataLayout.Address, SeekOrigin.Begin);
+                this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                 _header = new FixedArrayHeader(this.Dataset.Context.Reader, this.Dataset.Context.Superblock);
             }
 

@@ -10,6 +10,15 @@ namespace HDF5.NET
     [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
     partial class H5Dataset
     {
+        #region Fields
+
+        private H5Dataspace _space;
+        private H5DataType _type;
+        private H5DataLayout _layout;
+        private H5FillValue _fillValue;
+
+        #endregion
+
         #region Constructors
 
         internal H5Dataset(H5File file, H5Context context, H5NamedReference reference, ObjectHeader header)
@@ -22,38 +31,38 @@ namespace HDF5.NET
                 var type = message.Data.GetType();
 
                 if (typeof(DataLayoutMessage).IsAssignableFrom(type))
-                    this.DataLayout = (DataLayoutMessage)message.Data;
+                    this.InternalDataLayout = (DataLayoutMessage)message.Data;
 
                 else if (type == typeof(DataspaceMessage))
-                    this.Dataspace = (DataspaceMessage)message.Data;
+                    this.InternalDataspace = (DataspaceMessage)message.Data;
 
                 else if (type == typeof(DatatypeMessage))
-                    this.Datatype = (DatatypeMessage)message.Data;
+                    this.InternalDataType = (DatatypeMessage)message.Data;
 
                 else if (type == typeof(FillValueMessage))
-                    this.FillValue = (FillValueMessage)message.Data;
+                    this.InternalFillValue = (FillValueMessage)message.Data;
 
                 else if (type == typeof(FilterPipelineMessage))
-                    this.FilterPipeline = (FilterPipelineMessage)message.Data;
+                    this.InternalFilterPipeline = (FilterPipelineMessage)message.Data;
 
                 else if (type == typeof(ObjectModificationMessage))
-                    this.ObjectModification = (ObjectModificationMessage)message.Data;
+                    this.InternalObjectModification = (ObjectModificationMessage)message.Data;
 
                 else if (type == typeof(ExternalFileListMessage))
-                    this.ExternalFileList = (ExternalFileListMessage)message.Data;
+                    this.InternalExternalFileList = (ExternalFileListMessage)message.Data;
             }
 
             // check that required fields are set
-            if (this.DataLayout is null)
+            if (this.InternalDataLayout is null)
                 throw new Exception("The data layout message is missing.");
 
-            if (this.Dataspace is null)
+            if (this.InternalDataspace is null)
                 throw new Exception("The dataspace message is missing.");
 
-            if (this.Datatype is null)
+            if (this.InternalDataType is null)
                 throw new Exception("The data type message is missing.");
 
-            if (this.FillValue is null)
+            if (this.InternalFillValue is null)
                 throw new Exception("The fill value message is missing.");
         }
 
@@ -61,19 +70,19 @@ namespace HDF5.NET
 
         #region Properties
 
-        internal DataLayoutMessage DataLayout { get; } = null!;
+        internal DataLayoutMessage InternalDataLayout { get; } = null!;
 
-        internal DataspaceMessage Dataspace { get; } = null!;
+        internal DataspaceMessage InternalDataspace { get; } = null!;
 
-        internal DatatypeMessage Datatype { get; } = null!;
+        internal DatatypeMessage InternalDataType { get; } = null!;
 
-        internal FillValueMessage FillValue { get; } = null!;
+        internal FillValueMessage InternalFillValue { get; } = null!;
 
-        internal FilterPipelineMessage? FilterPipeline { get; }
+        internal FilterPipelineMessage? InternalFilterPipeline { get; }
 
-        internal ObjectModificationMessage? ObjectModification { get; }
+        internal ObjectModificationMessage? InternalObjectModification { get; }
 
-        internal ExternalFileListMessage? ExternalFileList { get; }
+        internal ExternalFileListMessage? InternalExternalFileList { get; }
 
         #endregion
 
@@ -91,13 +100,13 @@ namespace HDF5.NET
             bool skipShuffle = false) where T : unmanaged
         {
             // short path for null dataspace
-            if (this.Dataspace.Type == DataspaceType.Null)
+            if (this.InternalDataspace.Type == DataspaceType.Null)
                 return new T[0];
 
             // 
             if (!skipTypeCheck)
             {
-                switch (this.Datatype.Class)
+                switch (this.InternalDataType.Class)
                 {
                     case DatatypeMessageClass.FixedPoint:
                     case DatatypeMessageClass.FloatingPoint:
@@ -115,22 +124,22 @@ namespace HDF5.NET
             }
 
             // for testing only
-            if (skipShuffle && this.FilterPipeline is not null)
+            if (skipShuffle && this.InternalFilterPipeline is not null)
             {
                 var filtersToRemove = this
-                    .FilterPipeline
+                    .InternalFilterPipeline
                     .FilterDescriptions
                     .Where(description => description.Identifier == FilterIdentifier.Shuffle)
                     .ToList();
 
                 foreach (var filter in filtersToRemove)
                 {
-                    this.FilterPipeline.FilterDescriptions.Remove(filter);
+                    this.InternalFilterPipeline.FilterDescriptions.Remove(filter);
                 }
             }
 
             /* buffer provider */
-            using H5D_Base bufferProvider = this.DataLayout.LayoutClass switch
+            using H5D_Base bufferProvider = this.InternalDataLayout.LayoutClass switch
             {
                 /* Compact: The array is stored in one contiguous block as part of
                  * this object header message. 
@@ -166,7 +175,7 @@ namespace HDF5.NET
                 LayoutClass.VirtualStorage => throw new NotImplementedException(),
 
                 /* default */
-                _ => throw new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.")
+                _ => throw new Exception($"The data layout class '{this.InternalDataLayout.LayoutClass}' is not supported.")
             };
 
             bufferProvider.Initialize();
@@ -192,7 +201,7 @@ namespace HDF5.NET
             /* result buffer */
             var result = default(T[]);
             var totalCount = fileSelection.GetTotalCount();
-            var byteSize = totalCount * this.Datatype.Size;
+            var byteSize = totalCount * this.InternalDataType.Size;
 
             if (buffer.Equals(default))
                 buffer = this.GetBuffer(byteSize, out result);
@@ -216,7 +225,7 @@ namespace HDF5.NET
                 memoryDims = new ulong[] { totalCount };
 
             if (getSourceBuffer is null && getSourceStream is null)
-                new Exception($"The data layout class '{this.DataLayout.LayoutClass}' is not supported.");
+                new Exception($"The data layout class '{this.InternalDataLayout.LayoutClass}' is not supported.");
 
             /* copy info */
             var copyInfo = new CopyInfo(
@@ -229,18 +238,18 @@ namespace HDF5.NET
                 GetSourceBuffer: getSourceBuffer,
                 GetSourceStream: getSourceStream,
                 GetTargetBuffer: indices => buffer.Cast<T, byte>(),
-                TypeSize: (int)this.Datatype.Size
+                TypeSize: (int)this.InternalDataType.Size
             );
 
             HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
 
             /* ensure correct endianness */
-            var byteOrderAware = this.Datatype.BitField as IByteOrderAware;
+            var byteOrderAware = this.InternalDataType.BitField as IByteOrderAware;
             var destination = MemoryMarshal.AsBytes(buffer.Span);
             var source = destination.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, this.Datatype.Size);
+                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, this.InternalDataType.Size);
 
             /* return */
             return result;

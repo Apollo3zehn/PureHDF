@@ -9,6 +9,50 @@ namespace HDF5.NET
 
         public H5File File { get; }
 
+        public H5Dataspace Space
+        {
+            get
+            {
+                if (_space is null)
+                    _space = new H5Dataspace(this.InternalDataspace);
+
+                return _space;
+            }
+        }
+
+        public H5DataType Type
+        {
+            get
+            {
+                if (_type is null)
+                    _type = new H5DataType(this.InternalDataType);
+
+                return _type;
+            }
+        }
+
+        public H5DataLayout Layout
+        {
+            get
+            {
+                if (_layout is null)
+                    _layout = new H5DataLayout(this.InternalDataLayout);
+
+                return _layout;
+            }
+        }
+
+        public H5FillValue FillValue
+        {
+            get
+            {
+                if (_fillValue is null)
+                    _fillValue = new H5FillValue(this.InternalFillValue);
+
+                return _fillValue;
+            }
+        }
+
         #endregion
 
         #region Public
@@ -90,7 +134,7 @@ namespace HDF5.NET
             if (getName is null)
                 getName = fieldInfo => fieldInfo.Name;
 
-            return H5Utils.ReadCompound<T>(this.Datatype, this.Dataspace, this.Context.Superblock, data, getName);
+            return H5Utils.ReadCompound<T>(this.InternalDataType, this.InternalDataspace, this.Context.Superblock, data, getName);
         }
 
         public string[] ReadString(
@@ -111,7 +155,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5Utils.ReadString(this.Datatype, data, this.Context.Superblock);
+            return H5Utils.ReadString(this.InternalDataType, data, this.Context.Superblock);
         }
 
         #endregion

@@ -27,11 +27,11 @@ namespace HDF5.NET
 
         protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
-            if (this.Dataset.FilterPipeline is null)
+            if (this.Dataset.InternalFilterPipeline is null)
             {
                 if (_btree2_no_filter is null)
                 {
-                    this.Dataset.Context.Reader.Seek((long)this.Dataset.DataLayout.Address, SeekOrigin.Begin);
+                    this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
                     Func<BTree2Record10> decodeKey 
                         = () => this.DecodeRecord10(this.ChunkRank);
@@ -54,7 +54,7 @@ namespace HDF5.NET
             {
                 if (_btree2_filter is null)
                 {
-                    this.Dataset.Context.Reader.Seek((long)this.Dataset.DataLayout.Address, SeekOrigin.Begin);
+                    this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                     var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
 
                     Func<BTree2Record11> decodeKey = 

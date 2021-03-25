@@ -41,7 +41,7 @@ namespace HDF5.NET
 
             _chunkCache = chunkCacheFactory();
 
-            _indexAddressIsUndefined = dataset.Context.Superblock.IsUndefinedAddress(dataset.DataLayout.Address);
+            _indexAddressIsUndefined = dataset.Context.Superblock.IsUndefinedAddress(dataset.InternalDataLayout.Address);
         }
 
         #endregion
@@ -78,7 +78,7 @@ namespace HDF5.NET
 
         public static H5D_Chunk Create(H5Dataset dataset, H5DatasetAccess datasetAccess)
         {
-            return dataset.DataLayout switch
+            return dataset.InternalDataLayout switch
             {
                 DataLayoutMessage12 layout12        => new H5D_Chunk123_BTree1(dataset, layout12, datasetAccess),
 
@@ -105,7 +105,7 @@ namespace HDF5.NET
 
                 DataLayoutMessage3 layout3          => new H5D_Chunk123_BTree1(dataset, layout3, datasetAccess),
 
-                _                                   => throw new Exception($"Data layout message type '{dataset.DataLayout.GetType().Name}' is not supported.")
+                _                                   => throw new Exception($"Data layout message type '{dataset.InternalDataLayout.GetType().Name}' is not supported.")
             };
         }
 
@@ -116,9 +116,9 @@ namespace HDF5.NET
             this.RawChunkDims = this.GetRawChunkDims();
             this.ChunkDims = this.RawChunkDims[..^1].ToArray();
             this.ChunkRank = (byte)this.ChunkDims.Length;
-            this.ChunkByteSize = H5Utils.CalculateSize(this.ChunkDims) * this.Dataset.Datatype.Size;
-            this.Dims = this.Dataset.Dataspace.DimensionSizes;
-            this.MaxDims = this.Dataset.Dataspace.DimensionMaxSizes;
+            this.ChunkByteSize = H5Utils.CalculateSize(this.ChunkDims) * this.Dataset.InternalDataType.Size;
+            this.Dims = this.Dataset.InternalDataspace.DimensionSizes;
+            this.MaxDims = this.Dataset.InternalDataspace.DimensionMaxSizes;
             this.TotalChunkCount = 1;
             this.TotalMaxChunkCount = 1;
 
@@ -175,8 +175,8 @@ namespace HDF5.NET
 #warning This way, fill values will become part of the cache
             if (_indexAddressIsUndefined)
             {
-                if (this.Dataset.FillValue.IsDefined)
-                    buffer.AsSpan().Fill(this.Dataset.FillValue.Value);
+                if (this.Dataset.InternalFillValue.IsDefined)
+                    buffer.AsSpan().Fill(this.Dataset.InternalFillValue.Value);
             }
             else
             {
@@ -184,8 +184,8 @@ namespace HDF5.NET
 
                 if (this.Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
                 {
-                    if (this.Dataset.FillValue.IsDefined)
-                        buffer.AsSpan().Fill(this.Dataset.FillValue.Value);
+                    if (this.Dataset.InternalFillValue.IsDefined)
+                        buffer.AsSpan().Fill(this.Dataset.InternalFillValue.Value);
                 }
                 else
                 {
@@ -200,7 +200,7 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReadChunk(Memory<byte> buffer, ulong rawChunkSize, uint filterMask)
         {
-            if (this.Dataset.FilterPipeline is null)
+            if (this.Dataset.InternalFilterPipeline is null)
             {
                 this.Dataset.Context.Reader.Read(buffer.Span);
             }
@@ -210,7 +210,7 @@ namespace HDF5.NET
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
                 this.Dataset.Context.Reader.Read(filterBuffer.Span);
 
-                H5Filter.ExecutePipeline(this.Dataset.FilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
+                H5Filter.ExecutePipeline(this.Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }
         }
 

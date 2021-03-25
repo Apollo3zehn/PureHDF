@@ -35,17 +35,17 @@ namespace HDF5.NET
 
         public override Stream? GetStream(ulong[] chunkIndices)
         {
-            var address = this.Dataset.DataLayout.Address;
+            var address = this.Dataset.InternalDataLayout.Address;
 
             if (_stream is null)
             {
                 if (this.Dataset.Context.Superblock.IsUndefinedAddress(address))
                 {
-                    if (this.Dataset.ExternalFileList is not null)
-                        _stream = new ExternalFileListStream(this.Dataset.ExternalFileList, this.DatasetAccess);
+                    if (this.Dataset.InternalExternalFileList is not null)
+                        _stream = new ExternalFileListStream(this.Dataset.InternalExternalFileList, this.DatasetAccess);
 
-                    else if (this.Dataset.FillValue.IsDefined)
-                        _stream = new UnsafeFillValueStream(this.Dataset.FillValue.Value);
+                    else if (this.Dataset.InternalFillValue.IsDefined)
+                        _stream = new UnsafeFillValueStream(this.Dataset.InternalFillValue.Value);
 
                     else
                         _stream = null;
