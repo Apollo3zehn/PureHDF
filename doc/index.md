@@ -280,7 +280,7 @@ public static Memory<byte> FilterFunc(
 
 ```cs
  H5Filter.Register(
-     identifier: (FilterIdentifier)32001, 
+     identifier: (H5FilterID)32001, 
      name: "blosc2", 
      filterFunc: BloscHelper.FilterFunc);
 ```
@@ -296,7 +296,7 @@ public static Memory<byte> FilterFunc(
 
 ```cs
  H5Filter.Register(
-     identifier: (FilterIdentifier)307, 
+     identifier: (H5FilterID)307, 
      name: "bzip2", 
      filterFunc: BZip2Helper.FilterFunc);
 ```
