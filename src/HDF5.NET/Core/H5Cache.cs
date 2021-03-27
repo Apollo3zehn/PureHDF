@@ -23,7 +23,7 @@ namespace HDF5.NET
         {
             // global heap
             if (_globalHeapMap.ContainsKey(superblock))
-                _globalHeapMap.Remove(superblock, out var _);
+                _globalHeapMap.TryRemove(superblock, out var _);
 
 
             // file map
@@ -36,7 +36,7 @@ namespace HDF5.NET
                     h5File.Dispose();
                 }
 
-                _fileMap.Remove(superblock, out var _);
+                _fileMap.TryRemove(superblock, out var _);
             }
         }
 

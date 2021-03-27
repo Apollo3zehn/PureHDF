@@ -16,7 +16,10 @@ namespace HDF5.NET.Tests
 
                 BZip2.Decompress(sourceStream, targetStream, isStreamOwner: false);
 
-                return targetStream.GetBuffer();
+                return targetStream
+                    .GetBuffer()
+                    .AsMemory()
+                    .Slice(0, (int)targetStream.Length);
             }
 
             /* We're compressing */
