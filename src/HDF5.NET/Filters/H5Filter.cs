@@ -118,7 +118,7 @@ namespace HDF5.NET
                 {
                     /* Get the stored checksum */
                     var storedFletcher_bytes = buffer.Span[^4..^0];
-                    var storedFletcher = BitConverter.ToUInt32(storedFletcher_bytes.ToArray());
+                    var storedFletcher = BitConverter.ToUInt32(storedFletcher_bytes.ToArray(), 0);
 
                     /* Compute checksum */
                     var fletcher = Fletcher32Generic.Fletcher32(bufferWithoutChecksum.Span);

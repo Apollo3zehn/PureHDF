@@ -12,7 +12,7 @@ namespace HDF5.NET
             this.Identifier = (FilterIdentifier)reader.ReadInt16();
 
             // name length
-            this.NameLength = version switch
+            var nameLength = version switch
             {
                 1                                               => reader.ReadUInt16(),
                 2 when (ushort)this.Identifier >= 256     => reader.ReadUInt16(),
@@ -27,7 +27,7 @@ namespace HDF5.NET
             var clientDataValueCount = reader.ReadUInt16();
 
             // name
-            this.Name = this.NameLength > 0 ? H5Utils.ReadNullTerminatedString(reader, pad: true) : string.Empty;
+            this.Name = nameLength > 0 ? H5Utils.ReadNullTerminatedString(reader, pad: true) : string.Empty;
 
             // client data
             this.ClientData = new uint[clientDataValueCount];
@@ -47,7 +47,6 @@ namespace HDF5.NET
         #region Properties
 
         public FilterIdentifier Identifier { get; set; }
-        public ushort NameLength { get; set; }
         public FilterFlags Flags { get; set; }
         public string Name { get; set; }
         public uint[] ClientData { get; set; }

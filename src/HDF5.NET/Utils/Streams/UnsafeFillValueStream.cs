@@ -22,7 +22,7 @@ namespace HDF5.NET
 
         public override bool CanWrite => false;
 
-        public override long Length => throw new NotImplementedException();
+        public override long Length => long.MaxValue;
 
         public override long Position 
         {

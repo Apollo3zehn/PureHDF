@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+#if NET5_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
+#endif
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,6 +21,9 @@ namespace HDF5.NET.Tests.Reading
             _logger = logger;
         }
 
+#warning remove this once Blosc2.PInvoke is working on .NET Framework
+
+#if NET5_0_OR_GREATER
         [Theory]
         [InlineData("blosclz", true)]
         [InlineData("lz4", true)]
@@ -69,6 +74,7 @@ namespace HDF5.NET.Tests.Reading
                 Assert.Contains("snappy", exception.InnerException.Message);
             }
         }
+#endif
 
         [Fact]
         public void CanDefilterBZip2()
@@ -196,6 +202,7 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.AsSpan().SequenceEqual(expected));
         }
 
+#if NET5_0_OR_GREATER
         [Theory]
         [InlineData((byte)1, 1001)]
         [InlineData((short)2, 732)]
@@ -279,6 +286,7 @@ namespace HDF5.NET.Tests.Reading
             // Assert
             Assert.True(actual.AsSpan().SequenceEqual(expected));
         }
+#endif
 
         [Fact]
         public void ShufflePerformanceTest()
@@ -308,6 +316,7 @@ namespace HDF5.NET.Tests.Reading
             var generic = sw.Elapsed.TotalMilliseconds;
             _logger.WriteLine($"Generic: {generic:F1} ms");
 
+#if NET5_0_OR_GREATER
             /* SSE2 */
             if (Sse2.IsSupported)
             {
@@ -327,6 +336,7 @@ namespace HDF5.NET.Tests.Reading
                 var avx2 = sw.Elapsed.TotalMilliseconds;
                 _logger.WriteLine($"AVX2: {avx2:F1} ms");
             }
+#endif
         }
 
 
@@ -350,6 +360,7 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(expected));
         }
 
+#if NET5_0_OR_GREATER
         [Theory]
         [InlineData((byte)1, 1001)]
         [InlineData((short)2, 732)]
@@ -384,6 +395,7 @@ namespace HDF5.NET.Tests.Reading
             // Assert
             Assert.True(actual.SequenceEqual(expected));
         }
+#endif
 
         [Fact]
         public void ConvertEndiannessPerformanceTest()
@@ -406,6 +418,7 @@ namespace HDF5.NET.Tests.Reading
             var generic = sw.Elapsed.TotalMilliseconds;
             _logger.WriteLine($"Generic: {generic:F1} ms");
 
+#if NET5_0_OR_GREATER
             ///* SSE2 */
             //if (Sse2.IsSupported)
             //{
@@ -425,6 +438,7 @@ namespace HDF5.NET.Tests.Reading
                 var avx2 = sw.Elapsed.TotalMilliseconds;
                 _logger.WriteLine($"AVX2: {avx2:F1} ms");
             }
+#endif
         }
 
 

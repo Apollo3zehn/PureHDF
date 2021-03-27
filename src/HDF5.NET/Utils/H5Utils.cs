@@ -276,7 +276,7 @@ namespace HDF5.NET
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
-                    PaddingType.NullTerminate   => value => value.Split('\0', 2)[0],
+                    PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
                     PaddingType.NullPad         => value => value.TrimEnd('\0'),
                     PaddingType.SpacePad        => value => value.TrimEnd(' '),
                     _                           => throw new Exception("Unsupported padding type.")
@@ -335,12 +335,21 @@ namespace HDF5.NET
 
         public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
+#if NETSTANDARD2_0
+            return encoding switch
+            {
+                CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
+                CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
+                _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+            };
+#else
             return encoding switch
             {
                 CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
                 CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
                 _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
             };
+#endif
         }
 
         public static string ReadFixedLengthString(H5BinaryReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
@@ -397,12 +406,16 @@ namespace HDF5.NET
 
         public static bool IsReferenceOrContainsReferences(Type type)
         {
+#if NETSTANDARD2_0
+            return false;
+#else
             var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
             var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
             var method = typeof(RuntimeHelpers).GetMethod(name, flags);
             var generic = method.MakeGenericMethod(type);
 
             return (bool)generic.Invoke(null, null);
+#endif
         }
 
         public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)

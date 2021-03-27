@@ -64,7 +64,7 @@ namespace HDF5.NET
             if (path == "/")
                 return true;
 
-            var isRooted = path.StartsWith('/');
+            var isRooted = path.StartsWith("/");
             var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
             var current = isRooted ? this.File.Reference : this.Reference;
 
@@ -89,7 +89,7 @@ namespace HDF5.NET
             if (path == "/")
                 return this.File.Reference;
 
-            var isRooted = path.StartsWith('/');
+            var isRooted = path.StartsWith("/");
             var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
             var current = isRooted ? this.File.Reference : this.Reference;
 

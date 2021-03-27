@@ -74,7 +74,7 @@ namespace HDF5.NET
                         buffer[i] = reader.ReadByte();
                     }
 
-                    this.MemberByteOffset = BitConverter.ToUInt64(buffer);
+                    this.MemberByteOffset = BitConverter.ToUInt64(buffer, 0);
 
                     // member type message
                     this.MemberTypeMessage = new DatatypeMessage(reader);

@@ -236,6 +236,7 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
+#if NET5_0_OR_GREATER
         [Fact]
         public void ThrowsForNestedNullableStruct()
         {
@@ -253,6 +254,7 @@ namespace HDF5.NET.Tests.Reading
                 Assert.Contains("Nested nullable fields are not supported.", exception.Message);
             });
         }
+#endif
 
         [Fact]
         public void CanReadAttribute_Tiny()
