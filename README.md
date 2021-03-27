@@ -234,9 +234,11 @@ Additionally, there is an overload method that allows you to provide your own bu
 ## 5. Filters
 
 ### Built-in Filters
-- Shuffle (hardware accelerated, SSE2/AVX2)
+- Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)
 - Fletcher32
 - Deflate (zlib)
+
+<sup>1</sup> NET Standard 2.1 and above
 
 ### External Filters
 Before you can use external filters, you need to register them using ```H5Filter.Register(...)```. This method accepts a filter identifier, a filter name and the actual filter function.
@@ -290,7 +292,7 @@ public static Memory<byte> FilterFunc(
 
 `dotnet package add SharpZipLib`
 
-(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/BZip2Helper.cs) to your code.
+(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/HDF5.NET/blob/master/src/HDF5.NET/Utils/Streams/MemorySpanStream.cs) implementation to your code.
 
 (3) Register BZip2:
 
