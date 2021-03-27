@@ -2,10 +2,14 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net472;net50</TargetFrameworks>
-    
+    <TargetFrameworks>net50</TargetFrameworks>
+
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'True'">
+     <TargetFrameworks>net472;$(TargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
   
   <ItemGroup>
