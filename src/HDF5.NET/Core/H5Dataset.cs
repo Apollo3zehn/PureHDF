@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
-    [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
+    [DebuggerDisplay("{Name}: Class = '{InternalDataType.Class}'")]
     partial class H5Dataset
     {
         #region Fields
