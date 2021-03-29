@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System.Linq;
+
+namespace HDF5.NET
 {
     public partial class H5Dataspace
     {
@@ -8,9 +10,9 @@
 
         public H5DataspaceType Type => (H5DataspaceType)_dataspace.Type;
 
-        public ulong[] Dimensions => _dataspace.DimensionSizes;
+        public ulong[] Dimensions => _dataspace.DimensionSizes.ToArray();
 
-        public ulong[] MaxDimensions => _dataspace.DimensionMaxSizes;
+        public ulong[] MaxDimensions => _dataspace.DimensionMaxSizes.ToArray();
 
         #endregion
     }

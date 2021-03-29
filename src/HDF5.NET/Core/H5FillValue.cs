@@ -13,9 +13,6 @@
         internal H5FillValue(FillValueMessage fillValue)
         {
             _fillValue = fillValue;
-
-            if (fillValue.IsDefined)
-                this.Value = fillValue.Value;
         }
 
         #endregion

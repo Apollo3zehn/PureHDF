@@ -4,9 +4,16 @@
 
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/apollo3zehn/hdf5.net?svg=true)](https://ci.appveyor.com/project/Apollo3zehn/hdf5-net) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
 
-A pure C# library that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy.
+A pure C# library without native dependencies that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy.
 
-The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html)
+The minimum supported target framework is .NET Standard 2.0 which includes
+- .NET Framework 4.6.1+ 
+- .NET Core (all versions) 
+- .NET 5+
+
+This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.
+
+The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html).
 
 ## 1. Objects
 
@@ -73,7 +80,7 @@ var dataset = group.Dataset(path, linkAccess);
 
 #### Iteration
 
-Iterate through all link in a group:
+Iterate through all links in a group:
 
 ```cs
 foreach (var link in group.Children)
