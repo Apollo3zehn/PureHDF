@@ -1,28 +1,14 @@
-﻿namespace HDF5.NET
+﻿using System.Linq;
+
+namespace HDF5.NET
 {
-    public class H5FillValue
+    public partial class H5FillValue
     {
-        #region Fields
-
-        private FillValueMessage _fillValue;
-
-        #endregion
-
         #region Properties
 
-        public byte[]? Value { get; }
-
-        #endregion
-
-        #region Constructors
-
-        internal H5FillValue(FillValueMessage fillValue)
-        {
-            _fillValue = fillValue;
-
-            if (fillValue.IsDefined)
-                this.Value = fillValue.Value;
-        }
+        public byte[]? Value => _fillValue.IsDefined 
+            ? _fillValue.Value.ToArray()
+            : null;
 
         #endregion
     }
