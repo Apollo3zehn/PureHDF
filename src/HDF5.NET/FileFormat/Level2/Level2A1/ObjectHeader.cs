@@ -143,13 +143,16 @@ namespace HDF5.NET
                 }
             }
 
-            var condition = headerMessages.Count == 1 &&
-                            headerMessages[0].Type == HeaderMessageType.Datatype;
+            foreach (var message in headerMessages)
+            {
+                switch (message.Type)
+                {
+                    case HeaderMessageType.Datatype:
+                        return ObjectType.CommitedDatatype;
+                }
+            }
 
-            if (condition)
-                return ObjectType.CommitedDatatype;
-            else
-                return ObjectType.Undefined;
+            return ObjectType.Undefined;
         }
 
         #endregion
