@@ -34,7 +34,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var actual = root.Exists(path);
+                var actual = root.LinkExists(path);
 
                 // Assert
                 Assert.Equal(expected, actual);
@@ -64,7 +64,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var actual = root.Exists(path);
+                var actual = root.LinkExists(path);
 
                 // Assert
                 Assert.Equal(expected, actual);

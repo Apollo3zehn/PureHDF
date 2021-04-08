@@ -15,9 +15,9 @@ namespace HDF5.NET
 
         #region Public
 
-        public bool Exists(string path, H5LinkAccess linkAccess = default)
+        public bool LinkExists(string path, H5LinkAccess linkAccess = default)
         {
-            return this.InternalExists(path, linkAccess);
+            return this.InternalLinkExists(path, linkAccess);
         }
 
         public H5Object Get(string path, H5LinkAccess linkAccess = default)
