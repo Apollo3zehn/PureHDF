@@ -92,11 +92,6 @@ namespace HDF5.NET
             return H5Utils.ReadUlong(reader, this.LengthsSize);
         }
 
-        internal bool IsUndefinedAddress(object headerAddress)
-        {
-            throw new NotImplementedException();
-        }
-
         #endregion
     }
 }

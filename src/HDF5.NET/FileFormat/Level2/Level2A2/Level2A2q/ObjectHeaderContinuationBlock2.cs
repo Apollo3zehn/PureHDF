@@ -7,7 +7,7 @@ namespace HDF5.NET
         #region Constructors
 
         internal ObjectHeaderContinuationBlock2(H5Context context, ulong objectHeaderSize, byte version, bool withCreationOrder) 
-            : base(context.Reader)
+            : base(context)
         {
             // signature
             var signature = context.Reader.ReadBytes(4);

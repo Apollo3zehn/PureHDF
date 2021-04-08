@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal ObjectHeader2(H5Context context, byte version) : base(context.Reader)
+        internal ObjectHeader2(H5Context context, byte version) : base(context)
         {
             // version
             this.Version = version;

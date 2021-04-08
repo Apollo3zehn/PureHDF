@@ -114,7 +114,7 @@ namespace HDF5.NET
 #warning duplicate1
                 using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                 var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
-                var message = heapId.Read(reader => new AttributeMessage(reader, this.Context.Superblock), ref record01Cache);
+                var message = heapId.Read(reader => new AttributeMessage(this.Context, this.Header), ref record01Cache);
 
                 yield return message;
             }
@@ -148,7 +148,7 @@ namespace HDF5.NET
 #warning duplicate
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new AttributeMessage(reader, this.Context.Superblock));
+                    candidate = heapId.Read(reader => new AttributeMessage(this.Context, this.Header));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison

@@ -273,6 +273,25 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
+        [Fact]
+        public void CanReadDataset_Shared_Message()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataWithSharedDataType(fileId, ContainerType.Dataset));
+                var expected = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var attribute_references = root.Group("shared_data_type").Dataset("shared_data_type");
+                var actual = attribute_references.ReadString();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
 #if NET5_0_OR_GREATER
         [Fact]
         public void ThrowsForNestedNullableStruct()

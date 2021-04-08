@@ -3,8 +3,9 @@
 namespace HDF5.NET
 {
     [Flags]
-    internal enum HeaderMessageFlags : ushort
+    internal enum MessageFlags : ushort
     {
+        NoFlags = 0,
         Constant = 1,
         Shared = 2,
         DoNotShare = 4,

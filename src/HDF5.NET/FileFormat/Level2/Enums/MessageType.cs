@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal enum HeaderMessageType : ushort
+    internal enum MessageType : ushort
     {
         NIL = 0x000,
         Dataspace = 0x0001,

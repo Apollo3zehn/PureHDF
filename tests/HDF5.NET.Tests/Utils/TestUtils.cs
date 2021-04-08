@@ -665,7 +665,7 @@ namespace HDF5.NET.Tests
 
             var dims = new ulong[] { 2, 2, 3 }; /* "extendible contiguous non-external dataset not allowed" */
 
-            // fixed length string attribute + null terminate (ASCII)
+            // fixed length string + null terminate (ASCII)
             var typeIdFixed_nullterm = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdFixed_nullterm, new IntPtr(4));
             res = H5T.set_cset(typeIdFixed_nullterm, H5T.cset_t.ASCII);
@@ -680,7 +680,7 @@ namespace HDF5.NET.Tests
 
             res = H5T.close(typeIdFixed_nullterm);
 
-            // fixed length string attribute + null padding (ASCII)
+            // fixed length string + null padding (ASCII)
             var typeIdFixed_nullpad = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdFixed_nullpad, new IntPtr(4));
             res = H5T.set_cset(typeIdFixed_nullpad, H5T.cset_t.ASCII);
@@ -695,7 +695,7 @@ namespace HDF5.NET.Tests
 
             res = H5T.close(typeIdFixed_nullpad);
 
-            // fixed length string attribute + space padding (ASCII)
+            // fixed length string + space padding (ASCII)
             var typeIdFixed_spacepad = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdFixed_spacepad, new IntPtr(4));
             res = H5T.set_cset(typeIdFixed_spacepad, H5T.cset_t.ASCII);
@@ -710,7 +710,7 @@ namespace HDF5.NET.Tests
 
             res = H5T.close(typeIdFixed_spacepad);
 
-            // variable length string attribute (ASCII)
+            // variable length string (ASCII)
             var typeIdVar = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVar, H5T.VARIABLE);
             res = H5T.set_cset(typeIdVar, H5T.cset_t.ASCII);
@@ -740,7 +740,7 @@ namespace HDF5.NET.Tests
 
             res = H5T.close(typeIdVar);
 
-            // variable length string attribute + space padding (ASCII)
+            // variable length string + space padding (ASCII)
             var typeIdVar_spacepad = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVar_spacepad, H5T.VARIABLE);
             res = H5T.set_cset(typeIdVar_spacepad, H5T.cset_t.ASCII);
@@ -829,6 +829,39 @@ namespace HDF5.NET.Tests
         public static unsafe void AddSmall(long fileId, ContainerType container)
         {
             TestUtils.Add(container, fileId, "small", "small", H5T.NATIVE_INT32, TestData.SmallData.AsSpan());
+        }
+
+        public static unsafe void AddDataWithSharedDataType(long fileId, ContainerType container)
+        {
+            long typeId = H5T.copy(H5T.C_S1);
+
+            H5T.set_size(typeId, H5T.VARIABLE);
+            H5T.set_cset(typeId, H5T.cset_t.UTF8);
+            H5T.commit(fileId, "string_t", typeId);
+
+            var data = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var dataChar = data
+               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
+               .ToArray();
+
+            fixed (byte* dataVarPtr = dataChar)
+            {
+                var basePtr = new IntPtr(dataVarPtr);
+
+                var addresses = new IntPtr[]
+                {
+                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 4), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
+                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
+                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34)
+                };
+
+                fixed (void* dataVarAddressesPtr = addresses)
+                {
+                    TestUtils.Add(container, fileId, "shared_data_type", "shared_data_type", typeId, dataVarAddressesPtr, length: 12);
+                }
+            }
+
+            if (H5I.is_valid(typeId) > 0) { H5T.close(typeId); }
         }
 
         #endregion
@@ -930,6 +963,9 @@ namespace HDF5.NET.Tests
             {
                 id = H5D.create(groupId, Encoding.UTF8.GetBytes(elementName), typeId, spaceId, dcpl_id: cpl, dapl_id: apl);
 
+                if (id == -1)
+                    throw new Exception("Could not create dataset.");
+
                 if ((int)dataPtr != 0)
                     res = H5D.write(id, typeId, spaceId, H5S.ALL, 0, new IntPtr(dataPtr));
 
@@ -938,6 +974,9 @@ namespace HDF5.NET.Tests
             else
             {
                 id = H5A.create(groupId, Encoding.UTF8.GetBytes(elementName), typeId, spaceId, acpl_id: cpl);
+
+                if (id == -1)
+                    throw new Exception("Could not create attribute.");
 
                 if ((int)dataPtr != 0)
                     res = H5A.write(id, typeId, new IntPtr(dataPtr));

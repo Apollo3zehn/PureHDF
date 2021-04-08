@@ -7,7 +7,7 @@
         public BTree2Record09(H5BinaryReader reader)
         {
             this.HeapId = reader.ReadBytes(8);
-            this.MessageFlags = (HeaderMessageFlags)reader.ReadByte();
+            this.MessageFlags = (MessageFlags)reader.ReadByte();
             this.CreationOrder = reader.ReadUInt32();
         }
 
@@ -16,7 +16,7 @@
         #region Properties
 
         public byte[] HeapId { get; set; }
-        public HeaderMessageFlags MessageFlags { get; set; }
+        public MessageFlags MessageFlags { get; set; }
         public uint CreationOrder { get; set; }
 
         #endregion

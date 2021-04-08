@@ -22,7 +22,7 @@
             reader.ReadByte();
 
             // message type
-            this.MessageType = (HeaderMessageType)reader.ReadByte();
+            this.MessageType = (MessageType)reader.ReadByte();
 
             // creation index
             this.CreationIndex = reader.ReadUInt16();
@@ -36,7 +36,7 @@
         #region Properties
 
         public uint HashValue { get; set; }
-        public HeaderMessageType MessageType { get; set; }
+        public MessageType MessageType { get; set; }
         public ushort CreationIndex { get; set; }
         public ulong ObjectHeaderAddress { get; set; }
 

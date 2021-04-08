@@ -7,10 +7,19 @@ namespace HDF5.NET
 {
     internal abstract class ObjectHeader : FileBlock
     {
+        #region Fields
+
+        H5Context _context;
+
+        #endregion
+
         #region Constructors
 
-        public ObjectHeader(H5BinaryReader reader) : base(reader)
+        public ObjectHeader(H5Context context) : base(context.Reader)
         {
+            _context = context;
+
+            this.Address = (ulong)context.Reader.BaseStream.Position;
             this.HeaderMessages = new List<HeaderMessage>();
         }
 
@@ -22,9 +31,27 @@ namespace HDF5.NET
 
         public ObjectType ObjectType { get; protected set; }
 
+        public ulong Address { get; }
+
         #endregion
 
         #region Methods
+
+#warning This method could als be static or moved to another type. Is does not strictly belong to object header. Only "this.Address" is required from object header.
+        public T DecodeMessage<T>(MessageFlags messageFlags, Func<T> decode) where T : Message
+        {
+            // H5OShared.h (H5O_SHARED_DECODE)
+
+            if (messageFlags.HasFlag(MessageFlags.Shared))
+            {
+                var sharedMessage = new SharedMessage(_context.Reader, _context.Superblock);
+                return this.DecodeSharedMessage<T>(sharedMessage);
+            }
+            else
+            {
+                return decode();
+            }
+        }
 
         public T GetMessage<T>() where T : Message
         {
@@ -91,11 +118,11 @@ namespace HDF5.NET
 
             while (remainingBytes > gapSize)
             {
-                var message = new HeaderMessage(context, version, withCreationOrder);
+                var message = new HeaderMessage(context, version, this, withCreationOrder);
 
                 remainingBytes -= message.DataSize + prefixSize;
 
-                if (message.Type == HeaderMessageType.ObjectHeaderContinuation)
+                if (message.Type == MessageType.ObjectHeaderContinuation)
                     continuationMessages.Add((ObjectHeaderContinuationMessage)message.Data);
                 else
                     headerMessages.Add(message);
@@ -129,13 +156,13 @@ namespace HDF5.NET
             {
                 switch (message.Type)
                 {
-                    case HeaderMessageType.LinkInfo:
-                    case HeaderMessageType.Link:
-                    case HeaderMessageType.GroupInfo:
-                    case HeaderMessageType.SymbolTable:
+                    case MessageType.LinkInfo:
+                    case MessageType.Link:
+                    case MessageType.GroupInfo:
+                    case MessageType.SymbolTable:
                         return ObjectType.Group;
 
-                    case HeaderMessageType.DataLayout:
+                    case MessageType.DataLayout:
                         return ObjectType.Dataset;
 
                     default:
@@ -147,13 +174,53 @@ namespace HDF5.NET
             {
                 switch (message.Type)
                 {
-                    case HeaderMessageType.Datatype:
+                    case MessageType.Datatype:
                         return ObjectType.CommitedDatatype;
                 }
             }
 
             return ObjectType.Undefined;
         }
+
+        private T DecodeSharedMessage<T>(SharedMessage message) where T : Message
+        {
+            // H5Oshared.c (H5O__shared_read)
+
+            /* Check for implicit shared object header message*/
+            if (message.Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
+            {
+#warning Implement this.
+                throw new NotImplementedException("This code path is not yet implemented.");
+            }
+            else
+            {
+                if (message.Address == this.Address)
+                {
+                    /* The shared message is in the already opened object header.  This
+                     * is possible, for example, if an attribute's datatype is shared in
+                     * the same object header the attribute is in.  Read the message
+                     * directly. */
+#warning Implement this.
+                    throw new NotImplementedException("This code path is not yet implemented.");
+                }
+                else
+                {
+                    /* The shared message is in another object header */
+
+#warning This would greatly benefit from a caching mechanism!
+                    var address = _context.Reader.BaseStream.Position;
+                    _context.Reader.Seek((long)message.Address, SeekOrigin.Begin);
+
+                    var header = ObjectHeader.Construct(_context);
+                    var sharedMessage = header.GetMessage<T>();
+
+                    _context.Reader.Seek(address, SeekOrigin.Begin);
+
+                    return sharedMessage;
+                }
+            }
+        }
+
 
         #endregion
     }
