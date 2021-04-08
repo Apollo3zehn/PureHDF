@@ -21,9 +21,6 @@ namespace HDF5.NET.Tests.Reading
             _logger = logger;
         }
 
-#warning remove this once Blosc2.PInvoke is working on .NET Framework
-
-#if NET5_0_OR_GREATER
         [Theory]
         [InlineData("blosclz", true)]
         [InlineData("lz4", true)]
@@ -74,7 +71,6 @@ namespace HDF5.NET.Tests.Reading
                 Assert.Contains("snappy", exception.InnerException.Message);
             }
         }
-#endif
 
         [Fact]
         public void CanDefilterBZip2()

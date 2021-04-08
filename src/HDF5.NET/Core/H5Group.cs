@@ -59,7 +59,7 @@ namespace HDF5.NET
 
         #region Private
 
-        private bool InternalExists(string path, H5LinkAccess linkAccess)
+        private bool InternalLinkExists(string path, H5LinkAccess linkAccess)
         {
             if (path == "/")
                 return true;
