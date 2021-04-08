@@ -14,7 +14,7 @@
   
   <ItemGroup>
     <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
-    <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update2.final" />
+    <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update3.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.1" />
     <PackageReference Include="SharpZipLib" Version="1.3.1" />
