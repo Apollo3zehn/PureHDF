@@ -75,7 +75,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (!(1 <= value && value <= 15))
+                if (!(1 <= value && value <= 3))
                     throw new Exception("The version number must be in the range of 1..3.");
 
                 this.ClassVersion &= 0x0F;                  // clear bits 4-7
@@ -92,7 +92,7 @@ namespace HDF5.NET
             set
             {
                 if (!(0 <= (byte)value && (byte)value <= 10))
-                    throw new Exception("The version number must be in the range of 1..3.");
+                    throw new Exception("The version number must be in the range of 0..10.");
 
                 this.ClassVersion &= 0xF0;          // clear bits 0-3
                 this.ClassVersion |= (byte)value;   // set bits 0-3, depending on value
