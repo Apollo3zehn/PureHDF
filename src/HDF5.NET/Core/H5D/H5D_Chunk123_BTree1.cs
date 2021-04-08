@@ -104,7 +104,7 @@ namespace HDF5.NET
             /* indexed storage B-tree... */
             if (rank == 1)
             {
-                if (indices[0] >= rightKey.ScaledChunkOffsets[0])
+                if (indices[0] > rightKey.ScaledChunkOffsets[0])
                     return 1;
 
                 else if (indices[0] == rightKey.ScaledChunkOffsets[0] &&
