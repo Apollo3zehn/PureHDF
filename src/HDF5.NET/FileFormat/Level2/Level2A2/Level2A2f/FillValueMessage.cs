@@ -7,6 +7,9 @@ namespace HDF5.NET
     {
         #region Fields
 
+        private static byte[] _defaultValue = new byte[] { 0 };
+
+        private byte[]? _value;
         private byte _version;
 
         #endregion
@@ -15,6 +18,10 @@ namespace HDF5.NET
 
         public FillValueMessage(H5BinaryReader reader) : base(reader)
         {
+            // see also H5dcpl.c (H5P_is_fill_value_defined) and H5Dint.c (H5D__update_oh_info):
+            // if size = 0 then default value should be applied
+            // if size = -1 then fill value is explicitly undefined
+
             // version
             this.Version = reader.ReadByte();
 
@@ -26,9 +33,14 @@ namespace HDF5.NET
 
                     this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
                     this.FillTime = (FillValueWriteTime)reader.ReadByte();
-                    this.IsDefined = reader.ReadByte() == 1;
+
+                    var isDefined1 = reader.ReadByte() == 1;
+
                     size = reader.ReadUInt32();
-                    this.Value = reader.ReadBytes((int)size);
+                    var value = reader.ReadBytes((int)size);
+
+                    if (isDefined1)
+                        this.Value = value;
 
                     break;
 
@@ -36,9 +48,9 @@ namespace HDF5.NET
 
                     this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
                     this.FillTime = (FillValueWriteTime)reader.ReadByte();
-                    this.IsDefined = reader.ReadByte() == 1;
+                    var isDefined2 = reader.ReadByte() == 1;
 
-                    if (this.IsDefined)
+                    if (isDefined2)
                     {
                         size = reader.ReadUInt32();
                         this.Value = reader.ReadBytes((int)size);
@@ -51,12 +63,24 @@ namespace HDF5.NET
                     var flags = reader.ReadByte();
                     this.AllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);   // take only bits 0 and 1
                     this.FillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);          // take only bits 2 and 3
-                    this.IsDefined = (flags & (1 << 5)) > 0;                            // take only bit 5
+                    var isUndefined = (flags & (1 << 4)) > 0;                           // take only bit 4
+                    var isDefined3 = (flags & (1 << 5)) > 0;                            // take only bit 5
 
-                    if (this.IsDefined)
+                    // undefined
+                    if (isUndefined)
+                    {
+                        this.Value = null;
+                    }
+                    // defined
+                    else if (isDefined3)
                     {
                         size = reader.ReadUInt32();
                         this.Value = reader.ReadBytes((int)size);
+                    }
+                    // default
+                    else
+                    {
+                        this.Value = new byte[0];
                     }
 
                     break;
@@ -86,9 +110,24 @@ namespace HDF5.NET
         }
 
         public SpaceAllocationTime AllocationTime { get; set; }
+
         public FillValueWriteTime FillTime { get; set; }
-        public bool IsDefined { get; set; }
-        public byte[] Value { get; set; }
+
+        public byte[]? Value
+        {
+            set
+            {
+                _value = value;
+            }
+            get
+            {
+                if (_value?.Length == 0)
+                    return _defaultValue;
+
+                else
+                    return _value;
+            }
+        }
 
         #endregion
     }

@@ -175,7 +175,7 @@ namespace HDF5.NET
 #warning This way, fill values will become part of the cache
             if (_indexAddressIsUndefined)
             {
-                if (this.Dataset.InternalFillValue.IsDefined)
+                if (this.Dataset.InternalFillValue.Value is not null)
                     buffer.AsSpan().Fill(this.Dataset.InternalFillValue.Value);
             }
             else
@@ -184,7 +184,7 @@ namespace HDF5.NET
 
                 if (this.Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
                 {
-                    if (this.Dataset.InternalFillValue.IsDefined)
+                    if (this.Dataset.InternalFillValue.Value is not null)
                         buffer.AsSpan().Fill(this.Dataset.InternalFillValue.Value);
                 }
                 else

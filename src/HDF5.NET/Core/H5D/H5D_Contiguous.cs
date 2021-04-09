@@ -44,7 +44,7 @@ namespace HDF5.NET
                     if (this.Dataset.InternalExternalFileList is not null)
                         _stream = new ExternalFileListStream(this.Dataset.InternalExternalFileList, this.DatasetAccess);
 
-                    else if (this.Dataset.InternalFillValue.IsDefined)
+                    else if (this.Dataset.InternalFillValue.Value is not null)
                         _stream = new UnsafeFillValueStream(this.Dataset.InternalFillValue.Value);
 
                     else

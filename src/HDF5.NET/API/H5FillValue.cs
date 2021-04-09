@@ -6,9 +6,7 @@ namespace HDF5.NET
     {
         #region Properties
 
-        public byte[]? Value => _fillValue.IsDefined 
-            ? _fillValue.Value.ToArray()
-            : null;
+        public byte[]? Value => _fillValue.Value?.ToArray();
 
         #endregion
     }
