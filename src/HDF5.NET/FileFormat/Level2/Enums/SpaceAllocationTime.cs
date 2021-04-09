@@ -3,8 +3,8 @@
     internal enum SpaceAllocationTime : byte
     {
         NotUsed = 0,
-        EarlyAllocation = 1,
-        LateAllocation = 2,
-        IncrementalAllocation = 3
+        Early = 1,
+        Late = 2,
+        Incremental = 3
     }
 }
