@@ -18,8 +18,7 @@ namespace HDF5.NET.Tests
 
                 return targetStream
                     .GetBuffer()
-                    .AsMemory()
-                    .Slice(0, (int)targetStream.Length);
+                    .AsMemory(0, (int)targetStream.Length);
             }
 
             /* We're compressing */
