@@ -166,7 +166,7 @@ namespace HDF5.NET
 
                 return decompressedStream
                     .GetBuffer()
-                    .AsMemory();
+                    .AsMemory(0, (int)decompressedStream.Length);
             }
 
             // write
