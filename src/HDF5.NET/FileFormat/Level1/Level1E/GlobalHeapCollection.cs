@@ -40,10 +40,15 @@ namespace HDF5.NET
             {
                 var before = reader.BaseStream.Position;
                 var globalHeapObject = new GlobalHeapObject(reader, superblock);
+
+                // Global Heap Object 0 (free space) can appear at the end of the collection.
+                if (globalHeapObject.HeapObjectIndex == 0)
+                    break;
+
                 this.GlobalHeapObjects.Add(globalHeapObject);
                 var after = reader.BaseStream.Position;
                 var consumed = (ulong)(after - before);
-
+                
                 remaining -= consumed;
             }
         }
