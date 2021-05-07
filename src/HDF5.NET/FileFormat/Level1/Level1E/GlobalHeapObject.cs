@@ -11,6 +11,9 @@ namespace HDF5.NET
             // heap object index
             this.HeapObjectIndex = reader.ReadUInt16();
 
+            if (this.HeapObjectIndex == 0)
+                return;
+
             // reference count
             this.ReferenceCount = reader.ReadUInt16();
 
