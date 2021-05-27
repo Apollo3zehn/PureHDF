@@ -10,6 +10,8 @@ using System.Runtime.Intrinsics.X86;
 using Xunit;
 using Xunit.Abstractions;
 
+#error Add test with additional filter (shuffle) to detect wrongly returned filter sizes
+
 namespace HDF5.NET.Tests.Reading
 {
     public class FilterTests
