@@ -264,7 +264,7 @@ namespace HDF5.NET
             if (byteSize % sizeOfT != 0)
                 throw new Exception("The size of the target buffer (number of selected elements times the datasets data-type byte size) must be a multiple of the byte size of the generic parameter T.");
 
-            var arraySize = byteSize / (ulong)Unsafe.SizeOf<T>();
+            var arraySize = byteSize / sizeOfT;
 
             // create the buffer
             result = new T[arraySize];
