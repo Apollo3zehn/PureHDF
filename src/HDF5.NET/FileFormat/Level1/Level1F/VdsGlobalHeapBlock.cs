@@ -16,17 +16,17 @@ namespace HDF5.NET
         public VdsGlobalHeapBlock(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // version
-            this.Version = reader.ReadUInt32();
+            this.Version = reader.ReadByte();
 
             // entry count
             this.EntryCount = superblock.ReadLength(reader);
 
             // vds dataset entries
-            this.VdsDatasetEntries = new List<VdsDatasetEntry>((int)this.EntryCount);
+            this.VdsDatasetEntries = new VdsDatasetEntry[(int)this.EntryCount];
 
             for (ulong i = 0; i < this.EntryCount; i++)
             {
-                this.VdsDatasetEntries.Add(new VdsDatasetEntry(reader));
+                this.VdsDatasetEntries[i] = new VdsDatasetEntry(reader);
             }
 
             // checksum
@@ -53,7 +53,7 @@ namespace HDF5.NET
         }
 
         public ulong EntryCount { get; set; }
-        public List<VdsDatasetEntry> VdsDatasetEntries { get; set; }
+        public VdsDatasetEntry[] VdsDatasetEntries { get; set; }
         public uint Checksum { get; set; }
 
         #endregion

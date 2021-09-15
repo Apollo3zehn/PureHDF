@@ -6,12 +6,11 @@
 
         public VdsDatasetEntry(H5BinaryReader reader) : base(reader)
         {
-#warning Is reading null terminated string correct?
             // source file name
-            this.SourceFileName = H5Utils.ReadNullTerminatedString(reader, pad: true);
+            this.SourceFileName = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
             // source dataset
-            this.SourceDataset = H5Utils.ReadNullTerminatedString(reader, pad: true);
+            this.SourceDataset = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
             // source selection
             this.SourceSelection = new DataspaceSelection(reader);

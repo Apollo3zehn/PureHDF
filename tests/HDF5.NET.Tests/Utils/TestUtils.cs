@@ -411,6 +411,65 @@ namespace HDF5.NET.Tests
             res = H5P.close(dcpl_id);
         }
 
+        public static unsafe void AddVirtualDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
+        {
+            // see VirtualMapping.xlsx for a visualization
+
+            long res;
+
+            var spaceId = H5S.create_simple(1, new ulong[] { 100 }, new ulong[] { 100 });
+            var dapl_id = H5P.create(H5P.DATASET_ACCESS);
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+            // file 1
+            var fileName1 = $"{datasetName}_a.h5";
+            var path1 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, fileName1), datasetAccess);
+
+            if (File.Exists(path1))
+                File.Delete(path1);
+
+            var fileId1 = H5F.create(path1, H5F.ACC_TRUNC);
+            TestUtils.AddSmall(fileId1, ContainerType.Dataset);
+
+            var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)TestData.SmallData.Length }, new ulong[] { (ulong)TestData.SmallData.Length });
+
+            res = H5S.select_hyperslab(spaceId,        H5S.seloper_t.SET, new ulong[] { 50 }, new ulong[] { 2 }, new ulong[] { 20 }, new ulong[] { 1 });
+            res = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 0 }, new ulong[] { 3 }, new ulong[] { 10 }, new ulong[] { 2 });
+            res = H5P.set_virtual(dcpl_id, spaceId, fileName1, "/small/small", sourceSpaceId1);
+
+            // file 2
+            var fileName2 = $"{datasetName}_b.h5";
+            var path2 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.h5"), datasetAccess);
+
+            if (File.Exists(path2))
+                File.Delete(path2);
+
+            var fileId2 = H5F.create(path2, H5F.ACC_TRUNC);
+            TestUtils.AddSmall(fileId2, ContainerType.Dataset);
+
+            var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)TestData.SmallData.Length }, new ulong[] { (ulong)TestData.SmallData.Length });
+
+            res = H5S.select_hyperslab(spaceId, H5S.seloper_t.SET, new ulong[] { 10 }, new ulong[] { 2 }, new ulong[] { 20 }, new ulong[] { 1 });
+            res = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 1 }, new ulong[] { 3 }, new ulong[] { 10 }, new ulong[] { 2 });
+            res = H5P.set_virtual(dcpl_id, spaceId, fileName2, "/small/small", sourceSpaceId2);
+
+            // create virtual dataset
+            var datasetId = H5D.create(fileId, "virtual", H5T.NATIVE_INT32, spaceId, dcpl_id: dcpl_id, dapl_id: dapl_id);
+
+            H5S.close(sourceSpaceId1);
+            H5F.close(fileId1);
+
+            H5S.close(sourceSpaceId2);
+            H5F.close(fileId2);
+
+            H5S.close(spaceId);
+            H5D.close(datasetId);
+
+            res = H5P.close(dapl_id);
+            res = H5P.close(dcpl_id);
+        }
+
+
         #endregion
 
         #region Filter

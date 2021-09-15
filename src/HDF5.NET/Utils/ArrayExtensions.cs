@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET
@@ -39,6 +40,8 @@ namespace HDF5.NET
         private static unsafe void CopyData<T>(T[] source, void* target)
             where T : unmanaged
         {
+#warning Unsafe.CopyBlock
+
             var sourceBytes = MemoryMarshal.AsBytes(source.AsSpan());
             var bytePtr = (byte*)target;
 
