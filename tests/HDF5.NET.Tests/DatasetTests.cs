@@ -668,10 +668,11 @@ namespace HDF5.NET.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
 
                 // Act
-                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var dataset = root.Dataset("virtual");
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+                var dataset = root.Dataset("vds");
                 var actual = dataset.Read<int>();
 
                 // Assert

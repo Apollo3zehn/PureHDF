@@ -417,9 +417,15 @@ namespace HDF5.NET.Tests
 
             long res;
 
-            var spaceId = H5S.create_simple(1, new ulong[] { 100 }, new ulong[] { 100 });
+            var vspaceId = H5S.create_simple(1, new ulong[] { 20 }, new ulong[] { 20 });
             var dapl_id = H5P.create(H5P.DATASET_ACCESS);
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+            unsafe
+            {
+                var value = -1;
+                res = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT32, new IntPtr(&value));
+            }
 
             // file 1
             var fileName1 = $"{datasetName}_a.h5";
@@ -429,13 +435,14 @@ namespace HDF5.NET.Tests
                 File.Delete(path1);
 
             var fileId1 = H5F.create(path1, H5F.ACC_TRUNC);
-            TestUtils.AddSmall(fileId1, ContainerType.Dataset);
+            var dataA = TestData.SmallData.Skip(0).Take(16).ToArray();
+            TestUtils.Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
 
-            var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)TestData.SmallData.Length }, new ulong[] { (ulong)TestData.SmallData.Length });
+            var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)dataA.Length }, new ulong[] { (ulong)dataA.Length });
 
-            res = H5S.select_hyperslab(spaceId,        H5S.seloper_t.SET, new ulong[] { 50 }, new ulong[] { 2 }, new ulong[] { 20 }, new ulong[] { 1 });
-            res = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 0 }, new ulong[] { 3 }, new ulong[] { 10 }, new ulong[] { 2 });
-            res = H5P.set_virtual(dcpl_id, spaceId, fileName1, "/small/small", sourceSpaceId1);
+            res = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 3 });
+            res = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 2 }, new ulong[] { 5 }, new ulong[] { 3 }, new ulong[] { 2 });
+            res = H5P.set_virtual(dcpl_id, vspaceId, fileName1, "/vds/source_a", sourceSpaceId1);
 
             // file 2
             var fileName2 = $"{datasetName}_b.h5";
@@ -445,16 +452,17 @@ namespace HDF5.NET.Tests
                 File.Delete(path2);
 
             var fileId2 = H5F.create(path2, H5F.ACC_TRUNC);
-            TestUtils.AddSmall(fileId2, ContainerType.Dataset);
+            var dataB = TestData.SmallData.Skip(10).Take(16).ToArray();
+            TestUtils.Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
 
-            var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)TestData.SmallData.Length }, new ulong[] { (ulong)TestData.SmallData.Length });
+            var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)dataB.Length }, new ulong[] { (ulong)dataB.Length });
 
-            res = H5S.select_hyperslab(spaceId, H5S.seloper_t.SET, new ulong[] { 10 }, new ulong[] { 2 }, new ulong[] { 20 }, new ulong[] { 1 });
-            res = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 1 }, new ulong[] { 3 }, new ulong[] { 10 }, new ulong[] { 2 });
-            res = H5P.set_virtual(dcpl_id, spaceId, fileName2, "/small/small", sourceSpaceId2);
+            res = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 6 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 2 });
+            res = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 1 });
+            res = H5P.set_virtual(dcpl_id, vspaceId, fileName2, "/vds/source_b", sourceSpaceId2);
 
             // create virtual dataset
-            var datasetId = H5D.create(fileId, "virtual", H5T.NATIVE_INT32, spaceId, dcpl_id: dcpl_id, dapl_id: dapl_id);
+            var datasetId = H5D.create(fileId, "vds", H5T.NATIVE_INT32, vspaceId, dcpl_id: dcpl_id, dapl_id: dapl_id);
 
             H5S.close(sourceSpaceId1);
             H5F.close(fileId1);
@@ -462,7 +470,7 @@ namespace HDF5.NET.Tests
             H5S.close(sourceSpaceId2);
             H5F.close(fileId2);
 
-            H5S.close(spaceId);
+            H5S.close(vspaceId);
             H5D.close(datasetId);
 
             res = H5P.close(dapl_id);
