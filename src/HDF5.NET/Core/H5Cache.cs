@@ -51,7 +51,7 @@ namespace HDF5.NET
             if (!_globalHeapMap.TryGetValue(superblock, out var addressToCollectionMap))
             {
                 addressToCollectionMap = new Dictionary<ulong, GlobalHeapCollection>();
-                _globalHeapMap.AddOrUpdate(superblock, addressToCollectionMap, (_, addressToCollectionMap) => addressToCollectionMap);
+                _globalHeapMap.AddOrUpdate(superblock, addressToCollectionMap, (_, oldAddressToCollectionMap) => addressToCollectionMap);
             }
 
             if (!addressToCollectionMap.TryGetValue(address, out var collection))
@@ -86,7 +86,7 @@ namespace HDF5.NET
             if (!_fileMap.TryGetValue(superblock, out var pathToH5FileMap))
             {
                 pathToH5FileMap = new Dictionary<string, H5File>();
-                _fileMap.AddOrUpdate(superblock, pathToH5FileMap, (_, pathToH5FileMap) => pathToH5FileMap);
+                _fileMap.AddOrUpdate(superblock, pathToH5FileMap, (_, oldPathToH5FileMap) => pathToH5FileMap);
             }
 
             if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
