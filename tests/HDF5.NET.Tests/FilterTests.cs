@@ -123,12 +123,26 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(TestData.MediumData));
         }
 
-        [Fact]
-        public void CanDefilterZLib()
+        [Theory]
+        [InlineData("MicrosoftDeflateStream")]
+        [InlineData("SharpZipLibInflater")]
+        [InlineData("Intel_ISA_L_Inflate")]
+        public void CanDefilterZLib(string filterFuncId)
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_ZLib(fileId));
+
+            FilterFunc func = filterFuncId switch
+            {
+                "MicrosoftDeflateStream" => null, /* default */
+                "SharpZipLibInflater" => DeflateHelper.FilterFunc_SharpZipLib,
+                "Intel_ISA_L_Inflate" => DeflateHelper.FilterFunc_Intel_ISA_L,
+                _ => throw new NotSupportedException($"The filter func ID {filterFuncId} is not supported.")
+            };
+
+            if (func is not null)
+                H5Filter.Register(H5FilterID.Deflate, "deflate", func);
 
             // Act
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
