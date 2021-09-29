@@ -657,27 +657,27 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-        [Fact]
-        public void CanReadDataset_Virtual()
-        {
-#warning Check AddVirtualDataset, is extra path variable required?
-#warning What about datasetAccess? Is it exactly equal to externalPrefix?
-#warning reading Vds Global Heap is not yet fully working
+//        [Fact]
+//        public void CanReadDataset_Virtual()
+//        {
+//#warning Check AddVirtualDataset, is extra path variable required?
+//#warning What about datasetAccess? Is it exactly equal to externalPrefix?
+//#warning reading Vds Global Heap is not yet fully working
 
-            TestUtils.RunForAllVersions(version =>
-            {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
-                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
+//            TestUtils.RunForAllVersions(version =>
+//            {
+//                // Arrange
+//                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+//                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
 
-                // Act
-                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
-                var dataset = root.Dataset("vds");
-                var actual = dataset.Read<int>();
+//                // Act
+//                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+//                var dataset = root.Dataset("vds");
+//                var actual = dataset.Read<int>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(TestData.SmallData));
-            });
-        }
+//                // Assert
+//                Assert.True(actual.SequenceEqual(TestData.SmallData));
+//            });
+//        }
     }
 }
