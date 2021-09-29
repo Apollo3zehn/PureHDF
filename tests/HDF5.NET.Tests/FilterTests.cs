@@ -140,8 +140,8 @@ namespace HDF5.NET.Tests.Reading
             FilterFunc func = filterFuncId switch
             {
                 "MicrosoftDeflateStream" => null, /* default */
-                "SharpZipLibInflater" => DeflateHelper.FilterFunc_SharpZipLib,
-                "Intel_ISA_L_Inflate" => DeflateHelper.FilterFunc_Intel_ISA_L,
+                "SharpZipLibInflater" => DeflateHelper_SharpZipLib.FilterFunc,
+                "Intel_ISA_L_Inflate" => DeflateHelper_Intel_ISA_L.FilterFunc,
                 _ => throw new NotSupportedException($"The filter func ID {filterFuncId} is not supported.")
             };
 

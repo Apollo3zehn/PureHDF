@@ -284,7 +284,7 @@ public static Memory<byte> FilterFunc(
 
 `dotnet package add Intrinsics.ISA-L.PInvoke`
 
-(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/DeflateHelper.cs) to your code.
+(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/DeflateHelper_Intel_ISA_L.cs) to your code.
 
 (3) Register Deflate:
 
@@ -292,7 +292,14 @@ public static Memory<byte> FilterFunc(
  H5Filter.Register(
      identifier: H5FilterID.Deflate, 
      name: "deflate", 
-     filterFunc: DeflateHelper.FilterFunc_Intel_ISA_L);
+     filterFunc: DeflateHelper_Intel_ISA_L.FilterFunc);
+```
+
+(4) Enable unsafe code blocks in `.csproj`:
+```xml
+<PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+</PropertyGroup>
 ```
 
 ### How to use Blosc / Blosc2 (hardware accelerated)
