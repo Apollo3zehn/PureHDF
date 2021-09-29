@@ -275,10 +275,27 @@ public static Memory<byte> FilterFunc(
 ```
 
 ### Tested External Filters
-- c-blosc2 (using [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke))
-- bzip2 (using [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
+- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/HDF5.NET/wiki/Deflate-Benchmark))
+- c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
+- bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
-### How to use Blosc / Blosc2
+### How to use Deflate (hardware accelerated)
+(1) Install the P/Invoke package:
+
+`dotnet package add Intrinsics.ISA-L.PInvoke`
+
+(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/DeflateHelper.cs) to your code.
+
+(3) Register Deflate:
+
+```cs
+ H5Filter.Register(
+     identifier: H5FilterID.Deflate, 
+     name: "deflate", 
+     filterFunc: DeflateHelper.FilterFunc_Intel_ISA_L);
+```
+
+### How to use Blosc / Blosc2 (hardware accelerated)
 (1) Install the P/Invoke package:
 
 `dotnet package add Blosc2.PInvoke`
@@ -311,6 +328,28 @@ public static Memory<byte> FilterFunc(
 ```
 
 ## 6. Advanced Scenarios
+
+### Memory-Mapped File
+
+In some cases, it might be useful to read data from a memory-mapped file instead of a regular `FileStream` to reduce the number of (costly) system calls. Depending on the file structure this may heavily increase random access performance. Here is an example:
+
+```cs
+using var mmf = MemoryMappedFile.CreateFromFile(
+    fileStream, 
+    mapName: default, 
+    capacity: 0, 
+    MemoryMappedFileAccess.Read,
+    HandleInheritability.None);
+
+using var mmfStream = mmf.CreateViewStream(
+    offset: 0, 
+    size: 0,
+    MemoryMappedFileAccess.Read);
+
+using var root = H5File.Open(mmfStream);
+
+...
+```
 
 ### Reading Multidimensional Data
 

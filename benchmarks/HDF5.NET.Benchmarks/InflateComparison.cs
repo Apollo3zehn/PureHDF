@@ -17,8 +17,8 @@ namespace Benchmark
         private byte[] _deflated;
         private byte[] _inflated;
 
-        private MemoryStream _originalStream;
-        private MemoryStream _decompressedStream;
+        private MemoryStream _deflatedStream;
+        private MemoryStream _inflatedStream;
 
         private IntPtr _state_ptr;
         private int _state_length;
@@ -49,8 +49,8 @@ namespace Benchmark
             _inflated = new byte[this.N];
 
             // create memory streams
-            _originalStream = new MemoryStream(_deflated);
-            _decompressedStream = new MemoryStream(_inflated);
+            _deflatedStream = new MemoryStream(_deflated);
+            _inflatedStream = new MemoryStream(_inflated);
 
             // create inflate_state
             _state_length = Unsafe.SizeOf<inflate_state>();
@@ -61,8 +61,8 @@ namespace Benchmark
         [GlobalCleanup]
         public void GlobalCleanup()
         {
-            _originalStream.Dispose();
-            _decompressedStream.Dispose();
+            _deflatedStream.Dispose();
+            _inflatedStream.Dispose();
 
             Marshal.FreeHGlobal(_state_ptr);
         }
@@ -73,11 +73,11 @@ namespace Benchmark
         [Benchmark(Baseline = true)]
         public Memory<byte> MicrosoftDeflateStream()
         {
-            _originalStream.Position = 0;
-            _decompressedStream.Position = 0;
+            _deflatedStream.Position = 0;
+            _inflatedStream.Position = 0;
 
-            using var decompressionStream = new DeflateStream(_originalStream, CompressionMode.Decompress, leaveOpen: true);
-            decompressionStream.CopyTo(_decompressedStream);
+            using var decompressionStream = new DeflateStream(_deflatedStream, CompressionMode.Decompress, leaveOpen: true);
+            decompressionStream.CopyTo(_inflatedStream);
 
             if (_inflated[0] != _original[0] || _inflated[^1] != _original[^1])
                 throw new Exception("Inflate failed.");
@@ -88,15 +88,11 @@ namespace Benchmark
         [Benchmark()]
         public Memory<byte> SharpZipLibInflater()
         {
-            _originalStream.Position = 0;
-            _decompressedStream.Position = 0;
+            _deflatedStream.Position = 0;
+            _inflatedStream.Position = 0;
 
-            using var decompressionStream = new InflaterInputStream(_originalStream, new Inflater(noHeader: true)) 
-            { 
-                IsStreamOwner = false 
-            };
-
-            decompressionStream.CopyTo(_decompressedStream);
+            using var decompressionStream = new InflaterInputStream(_deflatedStream, new Inflater(noHeader: true)) { IsStreamOwner = false };
+            decompressionStream.CopyTo(_inflatedStream);
 
             if (_inflated[0] != _original[0] || _inflated[^1] != _original[^1])
                 throw new Exception("Inflate failed.");

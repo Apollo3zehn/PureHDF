@@ -2,7 +2,6 @@
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using ISA_L.PInvoke;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -84,25 +83,12 @@ namespace HDF5.NET.Tests
                             if (status != inflate_return_values.ISAL_DECOMP_OK)
                                 throw new Exception($"Error encountered while decompressing: {status}.");
 
-                            // double array size
-                            var b = state[0];
-
-                            Debug.WriteLine($"before checking");
-
-                            for (int i = 0; i < 87368; i++)
-                            {
-                                if (b.internal_struct[i] == 5)
-                                    Debug.WriteLine(i);
-                            }
-
-                            Debug.WriteLine($"Yo, availout = {state[0].avail_out}");
-
-
                             length += targetBuffer.Length - (int)state[0].avail_out;
 
-                            if (state[0].internal_struct[21120] != 5 && /* not done */
+                            if (state[0].block_state != isal_block_state.ISAL_BLOCK_FINISH && /* not done */
                                 state[0].avail_out == 0 /* and work to do */)
                             {
+                                // double array size
                                 var tmp = inflated;
                                 inflated = new byte[tmp.Length * 2];
                                 tmp.CopyTo(inflated, 0);

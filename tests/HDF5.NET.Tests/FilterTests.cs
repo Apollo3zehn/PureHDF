@@ -126,7 +126,11 @@ namespace HDF5.NET.Tests.Reading
         [Theory]
         [InlineData("MicrosoftDeflateStream")]
         [InlineData("SharpZipLibInflater")]
+#if NET5_0_OR_GREATER
+        // https://iobservable.net/blog/2013/08/06/clr-limitations/
+        // "It seems that the maximum array base element size is limited to 64KB."
         [InlineData("Intel_ISA_L_Inflate")]
+#endif
         public void CanDefilterZLib(string filterFuncId)
         {
             // Arrange
