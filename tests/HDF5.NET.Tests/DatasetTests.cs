@@ -121,6 +121,7 @@ namespace HDF5.NET.Tests.Reading
 
         // Fixed-length string dataset (UTF8) is not supported because 
         // it is incompatible with variable byte length per character.
+        [Theory]
         [InlineData("fixed+nullterm", new string[] { "00", "11", "22", "3", "44 ", "555", "66 ", "77", "  ", "AA ", "ZZ ", "!!" })]
         [InlineData("fixed+nullpad", new string[] { "0\00", "11", "22", "3 ", " 4", "55 5", "66", "77", "  ", "AA", "ZZ", "!!" })]
         [InlineData("fixed+spacepad", new string[] { "00", "11", "22", "3", " 4", "55 5", "66", "77", "", "AA", "ZZ", "!!" })]
@@ -265,7 +266,7 @@ namespace HDF5.NET.Tests.Reading
                 
                 var globalHeapCollection = globalHeapId.Collection;
                 var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
-                var localReader = new H5BinaryReader(new MemoryStream(globalHeapObject.ObjectData));
+                using var localReader = new H5BinaryReader(new MemoryStream(globalHeapObject.ObjectData));
                 var address = root.Context.Superblock.ReadOffset(localReader);
                 var selection = new DataspaceSelection(localReader);
 
@@ -655,5 +656,28 @@ namespace HDF5.NET.Tests.Reading
                 Assert.Equal(expected, actual);
             });
         }
+
+//        [Fact]
+//        public void CanReadDataset_Virtual()
+//        {
+//#warning Check AddVirtualDataset, is extra path variable required?
+//#warning What about datasetAccess? Is it exactly equal to externalPrefix?
+//#warning reading Vds Global Heap is not yet fully working
+
+//            TestUtils.RunForAllVersions(version =>
+//            {
+//                // Arrange
+//                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+//                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
+
+//                // Act
+//                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+//                var dataset = root.Dataset("vds");
+//                var actual = dataset.Read<int>();
+
+//                // Assert
+//                Assert.True(actual.SequenceEqual(TestData.SmallData));
+//            });
+//        }
     }
 }

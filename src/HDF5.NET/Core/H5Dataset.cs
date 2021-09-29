@@ -172,7 +172,7 @@ namespace HDF5.NET
                  * mapping information. The mapping associates the VDS to the source
                  * dataset elements that are stored across a collection of HDF5 files.
                  */
-                LayoutClass.VirtualStorage => throw new NotImplementedException(),
+                LayoutClass.VirtualStorage => new H5D_Virtual(this, datasetAccess),
 
                 /* default */
                 _ => throw new Exception($"The data layout class '{this.InternalDataLayout.LayoutClass}' is not supported.")

@@ -10,7 +10,7 @@
             reader.ReadBytes(4);
 
             // length
-            this.Length = reader.ReadUInt32();
+            var length = reader.ReadUInt32();
 
             // rank
             this.Rank = reader.ReadUInt32();
@@ -19,7 +19,7 @@
             this.BlockCount = reader.ReadUInt32();
 
             // block offsets
-            var totalOffsets = this.BlockCount * this.Rank;
+            var totalOffsets = this.BlockCount * 2 * this.Rank;
             this.BlockOffsets = new uint[totalOffsets];
 
             for (uint i = 0; i < totalOffsets; i++)
@@ -32,7 +32,6 @@
 
         #region Properties
 
-        public uint Length { get; set; }
         public uint Rank { get; set; }
         public uint BlockCount { get; set; }
         public uint[] BlockOffsets { get; set; }
