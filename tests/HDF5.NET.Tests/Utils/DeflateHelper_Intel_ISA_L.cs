@@ -2,29 +2,26 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace HDF5.NET.Tests
 {
     public static class DeflateHelper_Intel_ISA_L
     {
-        private static IntPtr _state_ptr;
-        private static int _state_length;
+        private static int _state_length = Unsafe.SizeOf<inflate_state>();
 
-        static unsafe DeflateHelper_Intel_ISA_L()
-        {
-            _state_length = Unsafe.SizeOf<inflate_state>();
-            _state_ptr = Marshal.AllocHGlobal(Unsafe.SizeOf<inflate_state>());
-            new Span<byte>(_state_ptr.ToPointer(), _state_length).Fill(0);
-        }
+        private static ThreadLocal<IntPtr> _state_ptr = new ThreadLocal<IntPtr>(
+            valueFactory: DeflateHelper_Intel_ISA_L.CreateState,
+            trackAllValues: false);
 
         public static unsafe Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
             /* We're decompressing */
             if (flags.HasFlag(H5FilterFlags.Decompress))
             {
-                var state = new Span<inflate_state>(_state_ptr.ToPointer(), _state_length);
+                var state = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
 
-                ISAL.isal_inflate_reset(_state_ptr);
+                ISAL.isal_inflate_reset(_state_ptr.Value);
 
                 buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
 
@@ -45,7 +42,7 @@ namespace HDF5.NET.Tests
                             state[0].next_out = ptrOut;
                             state[0].avail_out = (uint)targetBuffer.Length;
 
-                            var status = ISAL.isal_inflate(_state_ptr);
+                            var status = ISAL.isal_inflate(_state_ptr.Value);
 
                             if (status != inflate_return_values.ISAL_DECOMP_OK)
                                 throw new Exception($"Error encountered while decompressing: {status}.");
@@ -78,6 +75,14 @@ namespace HDF5.NET.Tests
             {
                 throw new Exception("Writing data chunks is not yet supported by HDF5.NET.");
             }
+        }
+
+        private static unsafe IntPtr CreateState()
+        {
+            var ptr = Marshal.AllocHGlobal(Unsafe.SizeOf<inflate_state>());
+            new Span<byte>(ptr.ToPointer(), _state_length).Fill(0);
+
+            return ptr;
         }
     }
 }
