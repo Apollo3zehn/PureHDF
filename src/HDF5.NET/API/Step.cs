@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public struct Slice
+    public struct Step
     {
         public ulong[] Coordinates { get; set; }
 

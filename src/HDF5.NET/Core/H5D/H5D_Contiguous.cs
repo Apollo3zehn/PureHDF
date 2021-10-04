@@ -25,7 +25,7 @@ namespace HDF5.NET
 
         public override ulong[] GetChunkDims()
         {
-            return this.GetDatasetDims();
+            return this.Dataset.GetDatasetDims();
         }
 
         public override Memory<byte> GetBuffer(ulong[] chunkIndices)

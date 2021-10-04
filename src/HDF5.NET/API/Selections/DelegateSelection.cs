@@ -5,7 +5,7 @@ namespace HDF5.NET
 {
     public partial class DelegateSelection : Selection
     {
-        public DelegateSelection(ulong elementCount, Func<IEnumerable<Slice>> walker)
+        public DelegateSelection(ulong elementCount, Func<ulong[], IEnumerable<Step>> walker)
         {
             this.ElementCount = elementCount;
             _walker = walker;
@@ -13,9 +13,9 @@ namespace HDF5.NET
 
         public override ulong ElementCount { get; }
 
-        public override IEnumerator<Slice> GetEnumerator()
+        public override IEnumerable<Step> Walk(ulong[] limits)
         {
-            return _walker().GetEnumerator();
+            return _walker(limits);
         }
     }
 }
