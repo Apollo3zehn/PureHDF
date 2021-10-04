@@ -1,5 +1,6 @@
 ﻿using HDF.PInvoke;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -241,7 +242,7 @@ namespace HDF5.NET.Tests.Reading
             };
 
             // Act
-            var actual = HyperslabUtils
+            var actual = SelectionUtils
                 .Walk(rank: 3, dims, chunkDims, selection)
                 .ToArray();
 
@@ -279,7 +280,7 @@ namespace HDF5.NET.Tests.Reading
             // Act
             for (int i = 0; i < 10; i++)
             {
-                HyperslabUtils
+                SelectionUtils
                     .Walk(rank: 3, dims, chunkDims, selection)
                     .ToArray();
             }
@@ -327,7 +328,7 @@ namespace HDF5.NET.Tests.Reading
             var selection = new HyperslabSelection(1, 4, 3, 3);
 
             // Act
-            Action action = () => HyperslabUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
+            Action action = () => SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -362,7 +363,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            Action action = () => HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            Action action = () => SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -397,7 +398,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            Action action = () => HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            Action action = () => SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -443,7 +444,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
         }
@@ -486,7 +487,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert        
         }
@@ -601,7 +602,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -719,7 +720,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
+            SelectionUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -849,7 +850,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            HyperslabUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
+            SelectionUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -939,7 +940,7 @@ namespace HDF5.NET.Tests.Reading
                     TypeSize: 4
                 );
 
-                HyperslabUtils.Copy(sourceRank: 3, targetRank: 3, copyInfoInterMediate);
+                SelectionUtils.Copy(sourceRank: 3, targetRank: 3, copyInfoInterMediate);
 
                 /* get actual data */
                 var actualBuffer = new byte[memoryDims[0] * memoryDims[1] * 4];
@@ -962,7 +963,7 @@ namespace HDF5.NET.Tests.Reading
                 );
 
                 // Act
-                HyperslabUtils.Copy(sourceRank: 3, targetRank: 2, copyInfo);
+                SelectionUtils.Copy(sourceRank: 3, targetRank: 2, copyInfo);
 
                 //var intermediateForMatlab = string.Join(',', intermediate.ToArray().Select(value => value.ToString()));
                 //var actualForMatlab = string.Join(',', actual.ToArray().Select(value => value.ToString()));
