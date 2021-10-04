@@ -10,15 +10,15 @@ namespace HDF5.NET
         ulong[] SourceChunkDims,
         ulong[] TargetDims,
         ulong[] TargetChunkDims,
-        HyperslabSelection SourceSelection,
-        HyperslabSelection TargetSelection,
+        Selection SourceSelection,
+        Selection TargetSelection,
         Func<ulong[], Memory<byte>>? GetSourceBuffer,
         Func<ulong[], Stream>? GetSourceStream,
         Func<ulong[], Memory<byte>> GetTargetBuffer,
         int TypeSize
     );
 
-    internal struct Step
+    internal struct RelativeStep
     {
         public ulong[] Chunk { get; init; }
 
@@ -29,7 +29,7 @@ namespace HDF5.NET
 
     internal static class SelectionUtils
     {
-        public static IEnumerable<Step> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
+        public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
         {
             /* check if there is anythng to do */
             if (selection.ElementCount == 0)
@@ -46,10 +46,15 @@ namespace HDF5.NET
             /* prepare last dimension variables */
             var lastChunkDim = chunkDims[lastDim];
 
-            foreach (var slice in selection)
+            foreach (var step in selection.Walk(limits: dims))
             {
-                var remaining = slice.Length;
+                /* validate rank */
+                if (step.Coordinates.Length != rank)
+                    throw new RankException($"The length of the step coordinates array must match the rank parameter.");
 
+                var remaining = step.Length;
+
+                /* process slice */
                 while (remaining > 0)
                 {
                     var scaledOffsets = new ulong[rank];
@@ -57,14 +62,14 @@ namespace HDF5.NET
 
                     for (int dimension = 0; dimension < rank; dimension++)
                     {
-                        scaledOffsets[dimension] = slice.Coordinates[dimension] / chunkDims[dimension];
-                        chunkOffsets[dimension] = slice.Coordinates[dimension] % chunkDims[dimension];
+                        scaledOffsets[dimension] = step.Coordinates[dimension] / chunkDims[dimension];
+                        chunkOffsets[dimension] = step.Coordinates[dimension] % chunkDims[dimension];
                     }
 
                     var offset = chunkOffsets.ToLinearIndex(chunkDims);
                     var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
 
-                    yield return new Step()
+                    yield return new RelativeStep()
                     {
                         Chunk = scaledOffsets,
                         Offset = offset,
@@ -72,39 +77,22 @@ namespace HDF5.NET
                     };
 
                     remaining -= currentLength;
-                    slice.Coordinates[lastDim] += currentLength;
+                    step.Coordinates[lastDim] += currentLength;
                 }
             }
         }
 
         public static void Copy(int sourceRank, int targetRank, CopyInfo copyInfo)
         {
-            /* validate rank of selections */
-            if (copyInfo.SourceSelection.Rank != sourceRank ||
-                copyInfo.TargetSelection.Rank != targetRank)
-                throw new RankException($"The length of each array parameter must match the rank parameter.");
-
             /* validate selections */
             if (copyInfo.SourceSelection.ElementCount != copyInfo.TargetSelection.ElementCount)
                 throw new ArgumentException("The length of the source selection and target selection are not equal.");
 
-            for (int dimension = 0; dimension < sourceRank; dimension++)
-            {
-                if (copyInfo.SourceSelection.GetStop(dimension) > copyInfo.SourceDims[dimension])
-                    throw new ArgumentException("The source selection size exceeds the limits of the source buffer.");
-            }
-
-            for (int dimension = 0; dimension < targetRank; dimension++)
-            {
-                if (copyInfo.TargetSelection.GetStop(dimension) > copyInfo.TargetDims[dimension])
-                    throw new ArgumentException("The target selection size exceeds the limits of the target buffer.");
-            }
-
             /* validate rank of dims */
-            if (copyInfo.SourceDims.Length != copyInfo.SourceSelection.Rank ||
-                copyInfo.SourceChunkDims.Length != copyInfo.SourceSelection.Rank ||
-                copyInfo.TargetDims.Length != copyInfo.TargetSelection.Rank ||
-                copyInfo.TargetChunkDims.Length != copyInfo.TargetSelection.Rank)
+            if (copyInfo.SourceDims.Length != sourceRank ||
+                copyInfo.SourceChunkDims.Length != sourceRank ||
+                copyInfo.TargetDims.Length != targetRank ||
+                copyInfo.TargetChunkDims.Length != targetRank)
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* walkers */
@@ -127,7 +115,7 @@ namespace HDF5.NET
                 new Exception($"Either GetSourceBuffer() or GetSourceStream must be non-null.");
         }
 
-        private static void CopyMemory(IEnumerator<Step> sourceWalker, IEnumerator<Step> targetWalker, CopyInfo copyInfo)
+        private static void CopyMemory(IEnumerator<RelativeStep> sourceWalker, IEnumerator<RelativeStep> targetWalker, CopyInfo copyInfo)
         {
             /* initialize source walker */
             var sourceBuffer = default(Memory<byte>);
@@ -191,7 +179,7 @@ namespace HDF5.NET
             }
         }
 
-        private static void CopyStream(IEnumerator<Step> sourceWalker, IEnumerator<Step> targetWalker, CopyInfo copyInfo)
+        private static void CopyStream(IEnumerator<RelativeStep> sourceWalker, IEnumerator<RelativeStep> targetWalker, CopyInfo copyInfo)
         {
             /* initialize source walker */
             var sourceStream = default(Stream);

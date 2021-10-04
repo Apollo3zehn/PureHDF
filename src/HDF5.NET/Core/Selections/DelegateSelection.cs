@@ -5,6 +5,6 @@ namespace HDF5.NET
 {
     partial class DelegateSelection : Selection
     {
-        private Func<IEnumerable<Slice>> _walker;
+        private Func<ulong[], IEnumerable<Step>> _walker;
     }
 }

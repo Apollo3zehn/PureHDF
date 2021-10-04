@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -67,30 +67,104 @@ namespace HDF5.NET
 
         public IReadOnlyList<ulong> Blocks => BlocksField;
 
-        public static HyperslabSelection All(ulong[] dims)
-        {
-            var start = dims.ToArray();
-            start.AsSpan().Fill(0);
-
-            var block = dims;
-
-            return new HyperslabSelection(rank: dims.Length, start, block);
-        }
-
-        public static HyperslabSelection Scalar()
-        {
-            return new HyperslabSelection(0, 1);
-        }
-
         public override ulong ElementCount { get; }
 
-        #region IEnumerable
-
-        public override IEnumerator<Slice> GetEnumerator()
+        public override IEnumerable<Step> Walk(ulong[] limits)
         {
-            return this.Walk();
-        }
+            /* Validate arrays */
+            if (limits.Length != this.Rank)
+                throw new RankException("The length of the limits parameter must match this hyperslab's rank.");
 
-        #endregion
+            for (int dimension = 0; dimension < this.Rank; dimension++)
+            {
+                if (this.GetStop(dimension) > limits[dimension])
+                    throw new ArgumentException("The selection exceeds the limits.");
+            }
+
+            /* prepare some useful arrays */
+            var lastDim = this.Rank - 1;
+            var offsets = new ulong[this.Rank];
+            var stops = new ulong[this.Rank];
+            var strides = new ulong[this.Rank];
+            var blocks = new ulong[this.Rank];
+            var gaps = new ulong[this.Rank];
+
+            for (int dimension = 0; dimension < this.Rank; dimension++)
+            {
+                offsets[dimension] = this.Starts[dimension];
+                stops[dimension] = this.GetStop(dimension);
+                strides[dimension] = this.Strides[dimension];
+                blocks[dimension] = this.Blocks[dimension];
+                gaps[dimension] = strides[dimension] - blocks[dimension];
+            }
+
+            /* prepare last dimension variables */
+            var lastDimStop = stops[lastDim];
+            var lastDimBlock = blocks[lastDim];
+            var lastDimGap = gaps[lastDim];
+            var supportsBulkCopy = lastDimGap == 0;
+            var step = new Step() { Coordinates = offsets.ToArray() };
+
+            /* loop until all data have been processed */
+            while (true)
+            {
+                /* compute number of consecutive points in current slice */
+                ulong totalLength;
+
+                if (supportsBulkCopy)
+                    totalLength = lastDimStop - offsets[lastDim];
+
+                else
+                    totalLength = lastDimBlock;
+
+                /* return next step */
+                for (int i = 0; i < offsets.Length; i++)
+                {
+                    step.Coordinates[i] = offsets[i];
+                }
+
+                step.Length = totalLength;
+
+                yield return step;
+
+                /* update offsets array */
+                offsets[lastDim] += totalLength + lastDimGap;
+
+                /* iterate backwards through all dimensions */
+                for (int dimension = lastDim; dimension >= 0; dimension--)
+                {
+                    if (dimension != lastDim)
+                    {
+                        /* go one step forward */
+                        offsets[dimension] += 1;
+
+                        /* if we have reached a gap, skip that gap */
+                        var consumedStride = (offsets[dimension] - this.Starts[dimension]) % strides[dimension];
+
+                        if (consumedStride == blocks[dimension])
+                            offsets[dimension] += gaps[dimension];
+                    }
+
+                    /* if the current slice is fully processed */
+                    if (offsets[dimension] >= stops[dimension])
+                    {
+                        /* if there is more to process, reset the offset and 
+                         * repeat the loop for the next higher dimension */
+                        if (dimension > 0)
+                            offsets[dimension] = this.Starts[dimension];
+
+                        /* else, we are done! */
+                        else
+                            yield break;
+                    }
+
+                    /* otherwise, break the loop */
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
     }
 }

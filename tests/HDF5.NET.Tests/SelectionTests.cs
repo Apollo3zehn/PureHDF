@@ -1,6 +1,5 @@
 ﻿using HDF.PInvoke;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -9,7 +8,7 @@ using Xunit.Abstractions;
 
 namespace HDF5.NET.Tests.Reading
 {
-    public class HyperslabTests
+    public class SelectionTests
     {
         // https://support.hdfgroup.org/HDF5/doc/H5.user/Chunking.html
         // "The write will fail because the selection goes beyond the extent of the dimension" (https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html)
@@ -24,7 +23,7 @@ namespace HDF5.NET.Tests.Reading
 
         private readonly ITestOutputHelper _logger;
 
-        public HyperslabTests(ITestOutputHelper logger)
+        public SelectionTests(ITestOutputHelper logger)
         {
             _logger = logger;
         }
@@ -64,181 +63,181 @@ namespace HDF5.NET.Tests.Reading
                 blocks: new ulong[] { 3, 2, 5 }
             );
 
-            var expected = new Step[]
+            var expected = new RelativeStep[]
             {
                 // row 0
-                new Step() { Chunk = new ulong[] {0, 1, 0}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 1, 1}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 18, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 1, 3}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 1, 4}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 0}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 1}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 2}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 2}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 3}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 4}, Offset = 18, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {0, 1, 0}, Offset = 23, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 1, 1}, Offset = 21, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 21, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 1, 2}, Offset = 23, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 1, 3}, Offset = 21, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 1, 4}, Offset = 21, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 0}, Offset = 23, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 1}, Offset = 21, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 2}, Offset = 21, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 2}, Offset = 23, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 3}, Offset = 21, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 4}, Offset = 21, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {0, 2, 0}, Offset = 26, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 2, 1}, Offset = 24, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 2, 2}, Offset = 24, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 2, 2}, Offset = 26, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 2, 3}, Offset = 24, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 2, 4}, Offset = 24, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 2, 0}, Offset = 26, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 2, 1}, Offset = 24, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 2, 2}, Offset = 24, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 2, 2}, Offset = 26, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 2, 3}, Offset = 24, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 2, 4}, Offset = 24, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {0, 3, 0}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 3, 1}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 3, 2}, Offset = 18, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 3, 2}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {0, 3, 3}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {0, 3, 4}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 3, 0}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 3, 1}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 3, 2}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 3, 2}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 3, 3}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 3, 4}, Offset = 18, Length = 1 },
 
                 // row 1
-                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 0, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 0}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 1}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 3}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 4}, Offset = 0, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 5, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 3, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 3, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 5, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 3, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 3, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 0}, Offset = 5, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 1}, Offset = 3, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 3, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 5, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 3}, Offset = 3, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 4}, Offset = 3, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {1, 2, 0}, Offset = 8, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 2, 1}, Offset = 6, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 6, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 8, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 2, 3}, Offset = 6, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 2, 4}, Offset = 6, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 0}, Offset = 8, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 1}, Offset = 6, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 2}, Offset = 6, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 2}, Offset = 8, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 3}, Offset = 6, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 4}, Offset = 6, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {1, 3, 0}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 3, 1}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 0, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 3, 3}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 3, 4}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 0}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 1}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 2}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 2}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 3}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 4}, Offset = 0, Length = 1 },
 
                 // row 2
-                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 9, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 0}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 1}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 3}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 4}, Offset = 9, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {1, 1, 0}, Offset = 14, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 1}, Offset = 12, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 12, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 2}, Offset = 14, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 1, 3}, Offset = 12, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 1, 4}, Offset = 12, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 0}, Offset = 14, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 1}, Offset = 12, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 12, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 2}, Offset = 14, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 3}, Offset = 12, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 1, 4}, Offset = 12, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {1, 2, 0}, Offset = 17, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 2, 1}, Offset = 15, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 15, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 2, 2}, Offset = 17, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 2, 3}, Offset = 15, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 2, 4}, Offset = 15, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 0}, Offset = 17, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 1}, Offset = 15, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 2}, Offset = 15, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 2}, Offset = 17, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 3}, Offset = 15, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 4}, Offset = 15, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {1, 3, 0}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 3, 1}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 9, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 3, 2}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {1, 3, 3}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {1, 3, 4}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 0}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 1}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 2}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 2}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 3}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {1, 3, 4}, Offset = 9, Length = 1 },
 
                 // row 3
-                new Step() { Chunk = new ulong[] {2, 1, 0}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 1, 1}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 18, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 1, 3}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 1, 4}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 0}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 1}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 2}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 2}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 3}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 4}, Offset = 18, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {2, 1, 0}, Offset = 23, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 1, 1}, Offset = 21, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 21, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 1, 2}, Offset = 23, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 1, 3}, Offset = 21, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 1, 4}, Offset = 21, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 0}, Offset = 23, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 1}, Offset = 21, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 2}, Offset = 21, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 2}, Offset = 23, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 3}, Offset = 21, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 1, 4}, Offset = 21, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {2, 2, 0}, Offset = 26, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 2, 1}, Offset = 24, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 2, 2}, Offset = 24, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 2, 2}, Offset = 26, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 2, 3}, Offset = 24, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 2, 4}, Offset = 24, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 2, 0}, Offset = 26, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 2, 1}, Offset = 24, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 2, 2}, Offset = 24, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 2, 2}, Offset = 26, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 2, 3}, Offset = 24, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 2, 4}, Offset = 24, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {2, 3, 0}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 3, 1}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 3, 2}, Offset = 18, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 3, 2}, Offset = 20, Length = 1 },
-                new Step() { Chunk = new ulong[] {2, 3, 3}, Offset = 18, Length = 3 },
-                new Step() { Chunk = new ulong[] {2, 3, 4}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 3, 0}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 3, 1}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 3, 2}, Offset = 18, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 3, 2}, Offset = 20, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {2, 3, 3}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {2, 3, 4}, Offset = 18, Length = 1 },
 
                 // row 4
-                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 0, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 0}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 1}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 3}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 4}, Offset = 0, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 5, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 3, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 3, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 5, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 3, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 3, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 0}, Offset = 5, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 1}, Offset = 3, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 3, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 5, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 3}, Offset = 3, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 4}, Offset = 3, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {3, 2, 0}, Offset = 8, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 2, 1}, Offset = 6, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 6, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 8, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 2, 3}, Offset = 6, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 2, 4}, Offset = 6, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 0}, Offset = 8, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 1}, Offset = 6, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 2}, Offset = 6, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 2}, Offset = 8, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 3}, Offset = 6, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 4}, Offset = 6, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {3, 3, 0}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 3, 1}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 0, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 2, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 3, 3}, Offset = 0, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 3, 4}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 0}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 1}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 2}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 2}, Offset = 2, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 3}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 4}, Offset = 0, Length = 1 },
 
                 // row 5
-                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 9, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 0}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 1}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 3}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 4}, Offset = 9, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {3, 1, 0}, Offset = 14, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 1}, Offset = 12, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 12, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 2}, Offset = 14, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 1, 3}, Offset = 12, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 1, 4}, Offset = 12, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 0}, Offset = 14, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 1}, Offset = 12, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 12, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 2}, Offset = 14, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 3}, Offset = 12, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 1, 4}, Offset = 12, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {3, 2, 0}, Offset = 17, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 2, 1}, Offset = 15, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 15, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 2, 2}, Offset = 17, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 2, 3}, Offset = 15, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 2, 4}, Offset = 15, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 0}, Offset = 17, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 1}, Offset = 15, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 2}, Offset = 15, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 2}, Offset = 17, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 3}, Offset = 15, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 2, 4}, Offset = 15, Length = 1 },
 
-                new Step() { Chunk = new ulong[] {3, 3, 0}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 3, 1}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 9, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 3, 2}, Offset = 11, Length = 1 },
-                new Step() { Chunk = new ulong[] {3, 3, 3}, Offset = 9, Length = 3 },
-                new Step() { Chunk = new ulong[] {3, 3, 4}, Offset = 9, Length = 1 }
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 0}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 1}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 2}, Offset = 9, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 2}, Offset = 11, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 3}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {3, 3, 4}, Offset = 9, Length = 1 }
             };
 
             // Act
@@ -319,6 +318,44 @@ namespace HDF5.NET.Tests.Reading
             Assert.Throws<ArgumentException>(action);
         }
 
+        [Fact]
+        public void HyperslabWalkThrowsForInvalidLimitsRank()
+        {
+            // Arrange
+            var selection = new HyperslabSelection(
+                rank: 2,
+                starts: new ulong[] { 1, 25 },
+                strides: new ulong[] { 4, 4 },
+                counts: new ulong[] { 4, 4 },
+                blocks: new ulong[] { 2, 3 });
+
+            // Act
+            Action action = () => selection.Walk(limits: new[] { 100UL, 100UL, 100UL }).ToList();
+
+            // Assert
+            Assert.Throws<RankException>(action);
+        }
+
+        [Theory]
+        [InlineData(new ulong[] { 14, 40 })]
+        [InlineData(new ulong[] { 15, 39 })]
+        public void HyperslabWalkThrowsForExceedingLimits(ulong[] limits)
+        {
+            // Arrange
+            var selection = new HyperslabSelection(
+                rank: 2,
+                starts: new ulong[] { 1, 25 },
+                strides: new ulong[] { 4, 4 }, 
+                counts: new ulong[] { 4, 4 },
+                blocks: new ulong[] { 2, 3 });
+
+            // Act
+            Action action = () => selection.Walk(limits: limits).ToList();
+
+            // Assert
+            Assert.Throws<ArgumentException>(action);
+        }
+
         [Theory]
         [InlineData(new ulong[] { 16, 30 }, new ulong[] { 16, 25, 30 } )]
         [InlineData(new ulong[] { 16, 25, 30 }, new ulong[] { 3, 3 })]
@@ -329,41 +366,6 @@ namespace HDF5.NET.Tests.Reading
 
             // Act
             Action action = () => SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
-
-            // Assert
-            Assert.Throws<RankException>(action);
-        }
-
-        [Theory]
-        [InlineData(
-            2, new ulong[] { 1, 1 }, new ulong[] { 4, 4 }, new ulong[] { 4, 4 }, new ulong[] { 2, 3 },
-            1, new ulong[] { 1 }, new ulong[] { 3 }, new ulong[] { 5 }, new ulong[] { 2 })]
-        [InlineData(
-            1, new ulong[] { 1 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 3 },
-            2, new ulong[] { 1, 1 }, new ulong[] { 4, 4 }, new ulong[] { 5, 5 }, new ulong[] { 3, 2 })]
-        public void CopyThrowsForInvalidRank(
-            int sourceRank, ulong[] sourceStarts, ulong[] sourceStrides, ulong[] sourceCounts, ulong[] sourceBlocks,
-            int targetRank, ulong[] targetStarts, ulong[] targetStrides, ulong[] targetCounts, ulong[] targetBlocks)
-        {
-            // Arrange
-            var sourceSelection = new HyperslabSelection(rank: sourceRank, sourceStarts, sourceStrides, sourceCounts, sourceBlocks);
-            var targetSelection = new HyperslabSelection(rank: targetRank, targetStarts, targetStrides, targetCounts, targetBlocks);
-
-            var copyInfo = new CopyInfo(
-                null,
-                null,
-                null,
-                null,
-                sourceSelection,
-                targetSelection,
-                null,
-                null,
-                null,
-                0
-            );
-
-            // Act
-            Action action = () => SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
             Assert.Throws<RankException>(action);
