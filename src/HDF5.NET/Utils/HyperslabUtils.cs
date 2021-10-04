@@ -46,7 +46,6 @@ namespace HDF5.NET
             var strides = new ulong[rank];
             var blocks = new ulong[rank];
             var gaps = new ulong[rank];
-            var scaledDatasetDims = new ulong[rank];
             var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
 
             for (int dimension = 0; dimension < rank; dimension++)
@@ -56,7 +55,6 @@ namespace HDF5.NET
                 strides[dimension] = selection.Strides[dimension];
                 blocks[dimension] = selection.Blocks[dimension];
                 gaps[dimension] = strides[dimension] - blocks[dimension];
-                scaledDatasetDims[dimension] = H5Utils.CeilDiv(dims[dimension], chunkDims[dimension]);
             }
 
             /* prepare last dimension variables */
