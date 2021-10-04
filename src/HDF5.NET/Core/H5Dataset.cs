@@ -217,7 +217,7 @@ namespace HDF5.NET
 
             /* result buffer */
             var result = default(T[]);
-            var totalCount = fileSelection.ElementCount;
+            var totalCount = fileSelection.TotalElementCount;
             var byteSize = totalCount * this.InternalDataType.Size;
 
             if (buffer.Equals(default))

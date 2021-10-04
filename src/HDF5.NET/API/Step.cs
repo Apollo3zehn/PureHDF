@@ -4,6 +4,6 @@
     {
         public ulong[] Coordinates { get; set; }
 
-        public ulong Length { get; set; }
+        public ulong ElementCount { get; set; }
     }
 }

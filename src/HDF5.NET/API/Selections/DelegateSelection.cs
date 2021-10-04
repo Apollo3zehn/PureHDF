@@ -5,13 +5,13 @@ namespace HDF5.NET
 {
     public partial class DelegateSelection : Selection
     {
-        public DelegateSelection(ulong elementCount, Func<ulong[], IEnumerable<Step>> walker)
+        public DelegateSelection(ulong totalElementCount, Func<ulong[], IEnumerable<Step>> walker)
         {
-            this.ElementCount = elementCount;
+            this.TotalElementCount = totalElementCount;
             _walker = walker;
         }
 
-        public override ulong ElementCount { get; }
+        public override ulong TotalElementCount { get; }
 
         public override IEnumerable<Step> Walk(ulong[] limits)
         {

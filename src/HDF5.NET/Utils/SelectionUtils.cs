@@ -32,7 +32,7 @@ namespace HDF5.NET
         public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
         {
             /* check if there is anythng to do */
-            if (selection.ElementCount == 0)
+            if (selection.TotalElementCount == 0)
                 yield break;
 
             /* validate rank */
@@ -52,11 +52,12 @@ namespace HDF5.NET
                 if (step.Coordinates.Length != rank)
                     throw new RankException($"The length of the step coordinates array must match the rank parameter.");
 
-                var remaining = step.Length;
+                var remaining = step.ElementCount;
 
                 /* process slice */
                 while (remaining > 0)
                 {
+#warning Performance issue.
                     var scaledOffsets = new ulong[rank];
                     var chunkOffsets = new ulong[rank];
 
@@ -85,7 +86,7 @@ namespace HDF5.NET
         public static void Copy(int sourceRank, int targetRank, CopyInfo copyInfo)
         {
             /* validate selections */
-            if (copyInfo.SourceSelection.ElementCount != copyInfo.TargetSelection.ElementCount)
+            if (copyInfo.SourceSelection.TotalElementCount != copyInfo.TargetSelection.TotalElementCount)
                 throw new ArgumentException("The length of the source selection and target selection are not equal.");
 
             /* validate rank of dims */
