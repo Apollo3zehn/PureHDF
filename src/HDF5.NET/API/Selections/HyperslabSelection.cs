@@ -52,7 +52,7 @@ namespace HDF5.NET
                 elementCount *= this.Counts[i] * this.Blocks[i];
             }
 
-            this.ElementCount = this.Rank > 0
+            this.TotalElementCount = this.Rank > 0
                 ? elementCount
                 : 0;
         }
@@ -67,7 +67,7 @@ namespace HDF5.NET
 
         public IReadOnlyList<ulong> Blocks => BlocksField;
 
-        public override ulong ElementCount { get; }
+        public override ulong TotalElementCount { get; }
 
         public override IEnumerable<Step> Walk(ulong[] limits)
         {
@@ -123,7 +123,7 @@ namespace HDF5.NET
                     step.Coordinates[i] = offsets[i];
                 }
 
-                step.Length = totalLength;
+                step.ElementCount = totalLength;
 
                 yield return step;
 
