@@ -43,6 +43,18 @@ namespace HDF5.NET
                 if (this.StridesField[i] < this.BlocksField[i])
                     throw new ArgumentException("Stride must be >= block.");
             }
+
+            /* count */
+            var elementCount = 1UL;
+
+            for (int i = 0; i < this.Rank; i++)
+            {
+                elementCount *= this.Counts[i] * this.Blocks[i];
+            }
+
+            this.ElementCount = this.Rank > 0
+                ? elementCount
+                : 0;
         }
 
         public int Rank { get; }
@@ -70,18 +82,15 @@ namespace HDF5.NET
             return new HyperslabSelection(0, 1);
         }
 
-        public override ulong GetTotalCount()
+        public override ulong ElementCount { get; }
+
+        #region IEnumerable
+
+        public override IEnumerator<Slice> GetEnumerator()
         {
-            var totalCount = 1UL;
-
-            for (int i = 0; i < this.Rank; i++)
-            {
-                totalCount *= this.Counts[i] * this.Blocks[i];
-            }
-
-            return this.Rank > 0 
-                ? totalCount 
-                : 0;
+            return this.Walk();
         }
+
+        #endregion
     }
 }

@@ -27,12 +27,12 @@ namespace HDF5.NET
         public ulong Length { get; init; }
     }
 
-    internal static class HyperslabUtils
+    internal static class SelectionUtils
     {
-        public static IEnumerable<Step> Walk(int rank, ulong[] dims, ulong[] chunkDims, HyperslabSelection selection)
+        public static IEnumerable<Step> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
         {
-            /* check if there is anything to do */
-            if (selection.GetTotalCount() == 0)
+            /* check if there is anythng to do */
+            if (selection.ElementCount == 0)
                 yield break;
 
             /* validate rank */
@@ -41,110 +41,38 @@ namespace HDF5.NET
 
             /* prepare some useful arrays */
             var lastDim = rank - 1;
-            var offsets = new ulong[rank];
-            var stops = new ulong[rank];
-            var strides = new ulong[rank];
-            var blocks = new ulong[rank];
-            var gaps = new ulong[rank];
             var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
 
-            for (int dimension = 0; dimension < rank; dimension++)
-            {
-                offsets[dimension] = selection.Starts[dimension];
-                stops[dimension] = selection.GetStop(dimension);
-                strides[dimension] = selection.Strides[dimension];
-                blocks[dimension] = selection.Blocks[dimension];
-                gaps[dimension] = strides[dimension] - blocks[dimension];
-            }
-
             /* prepare last dimension variables */
-            var lastDimStop = stops[lastDim];
-            var lastDimBlock = blocks[lastDim];
-            var lastDimGap = gaps[lastDim];
             var lastChunkDim = chunkDims[lastDim];
-            var supportsBulkCopy = lastDimGap == 0;
 
-            /* loop until all data have been processed */
-            while (true)
+            foreach (var slice in selection)
             {
-                /* compute number of consecutive points in current slice */
-                ulong totalLength;
+                var remaining = slice.Length;
 
-                if (supportsBulkCopy)
-                    totalLength = lastDimStop - offsets[lastDim];
-
-                else
-                    totalLength = lastDimBlock;
-
-                /* with the full length of consecutive points known, we continue with the chunk logic:
-                 * (there was an attempt to reduce the number of chunk calculations but that did not
-                 * result in significant performance improvements, so it has been reverted)
-                 */
+                while (remaining > 0)
                 {
-                    var remaining = totalLength;
+                    var scaledOffsets = new ulong[rank];
+                    var chunkOffsets = new ulong[rank];
 
-                    while (remaining > 0)
+                    for (int dimension = 0; dimension < rank; dimension++)
                     {
-                        var scaledOffsets = new ulong[rank];
-                        var chunkOffsets = new ulong[rank];
-
-                        for (int dimension = 0; dimension < rank; dimension++)
-                        {
-                            scaledOffsets[dimension] = offsets[dimension] / chunkDims[dimension];
-                            chunkOffsets[dimension] = offsets[dimension] % chunkDims[dimension];
-                        }
-
-                        var offset = chunkOffsets.ToLinearIndex(chunkDims);
-                        var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
-
-                        yield return new Step()
-                        {
-                            Chunk = scaledOffsets,
-                            Offset = offset,
-                            Length = currentLength
-                        };
-
-                        remaining -= currentLength;
-                        offsets[lastDim] += currentLength;
-                    }
-                }
-
-                /* add gap */
-                offsets[lastDim] += lastDimGap;
-
-                /* iterate backwards through all dimensions */
-                for (int dimension = lastDim; dimension >= 0; dimension--)
-                {
-                    if (dimension != lastDim)
-                    {
-                        /* go one step forward */
-                        offsets[dimension] += 1;
-
-                        /* if we have reached a gap, skip that gap */
-                        var consumedStride = (offsets[dimension] - selection.Starts[dimension]) % strides[dimension];
-
-                        if (consumedStride == blocks[dimension])
-                            offsets[dimension] += gaps[dimension];
+                        scaledOffsets[dimension] = slice.Coordinates[dimension] / chunkDims[dimension];
+                        chunkOffsets[dimension] = slice.Coordinates[dimension] % chunkDims[dimension];
                     }
 
-                    /* if the current slice is fully processed */
-                    if (offsets[dimension] >= stops[dimension])
-                    {
-                        /* if there is more to process, reset the offset and 
-                         * repeat the loop for the next higher dimension */
-                        if (dimension > 0)
-                            offsets[dimension] = selection.Starts[dimension];
+                    var offset = chunkOffsets.ToLinearIndex(chunkDims);
+                    var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
 
-                        /* else, we are done! */
-                        else
-                            yield break;
-                    }
-
-                    /* otherwise, break the loop */
-                    else
+                    yield return new Step()
                     {
-                        break;
-                    }
+                        Chunk = scaledOffsets,
+                        Offset = offset,
+                        Length = currentLength
+                    };
+
+                    remaining -= currentLength;
+                    slice.Coordinates[lastDim] += currentLength;
                 }
             }
         }
@@ -157,7 +85,7 @@ namespace HDF5.NET
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* validate selections */
-            if (copyInfo.SourceSelection.GetTotalCount() != copyInfo.TargetSelection.GetTotalCount())
+            if (copyInfo.SourceSelection.ElementCount != copyInfo.TargetSelection.ElementCount)
                 throw new ArgumentException("The length of the source selection and target selection are not equal.");
 
             for (int dimension = 0; dimension < sourceRank; dimension++)
@@ -180,20 +108,20 @@ namespace HDF5.NET
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* walkers */
-            var sourceWalker = HyperslabUtils
+            var sourceWalker = SelectionUtils
                 .Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
                 .GetEnumerator();
 
-            var targetWalker = HyperslabUtils
+            var targetWalker = SelectionUtils
                .Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
                .GetEnumerator();
 
             /* select method */
             if (copyInfo.GetSourceBuffer is not null)
-                HyperslabUtils.CopyMemory(sourceWalker, targetWalker, copyInfo);
+                SelectionUtils.CopyMemory(sourceWalker, targetWalker, copyInfo);
 
             else if (copyInfo.GetSourceStream is not null)
-                HyperslabUtils.CopyStream(sourceWalker, targetWalker, copyInfo);
+                SelectionUtils.CopyStream(sourceWalker, targetWalker, copyInfo);
 
             else
                 new Exception($"Either GetSourceBuffer() or GetSourceStream must be non-null.");

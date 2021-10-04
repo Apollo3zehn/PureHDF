@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Runtime.InteropServices;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{InternalDataType.Class}'")]
-    partial class H5Dataset
+    partial class H5Dataset : H5AttributableObject
     {
         #region Fields
 
@@ -200,7 +201,7 @@ namespace HDF5.NET
 
             /* result buffer */
             var result = default(T[]);
-            var totalCount = fileSelection.GetTotalCount();
+            var totalCount = fileSelection.ElementCount;
             var byteSize = totalCount * this.InternalDataType.Size;
 
             if (buffer.Equals(default))
@@ -241,7 +242,7 @@ namespace HDF5.NET
                 TypeSize: (int)this.InternalDataType.Size
             );
 
-            HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
+            SelectionUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
 
             /* ensure correct endianness */
             var byteOrderAware = this.InternalDataType.BitField as IByteOrderAware;
