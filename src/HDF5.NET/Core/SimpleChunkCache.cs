@@ -23,7 +23,7 @@ namespace HDF5.NET
 
         #endregion
 
-        #region Methdos
+        #region Methods
 
         private void Preempt()
         {
