@@ -216,7 +216,7 @@ namespace HDF5.NET
                         var targetStep = targetWalker.Current;
 
                         if (!success || targetStep.Length == 0)
-                            throw new UriFormatException("The target walker stopped early.");
+                            throw new FormatException("The target walker stopped early.");
 
                         if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
                             !targetStep.Chunk.SequenceEqual(lastTargetChunk) /* or the chunk has changed */)
