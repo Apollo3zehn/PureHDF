@@ -17,7 +17,7 @@ namespace HDF5.NET
             H5Filter.Register(H5FilterID.Shuffle, "shuffle", H5Filter.ShuffleFilterFunc);
             H5Filter.Register(H5FilterID.Fletcher32, "fletcher", H5Filter.Fletcher32FilterFunc);
             H5Filter.Register(H5FilterID.Nbit, "nbit", H5Filter.NbitFilterFunc);
-            H5Filter.Register(H5FilterID.ScaleOffset, "scaleoffset", H5Filter.NbitFilterFunc);
+            H5Filter.Register(H5FilterID.ScaleOffset, "scaleoffset", H5Filter.ScaleOffsetFilterFunc);
             H5Filter.Register(H5FilterID.Deflate, "deflate", H5Filter.DeflateFilterFunc);
         }
 
@@ -144,7 +144,19 @@ namespace HDF5.NET
 
         private static Memory<byte> ScaleOffsetFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
-            throw new Exception($"The filter '{FilterIdentifier.ScaleOffset}' is not yet supported by HDF5.NET.");
+            // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
+
+            // read (H5Z__scaleoffset_decompress)
+            if (flags.HasFlag(H5FilterFlags.Decompress))
+            {
+                return ScaleOffsetGeneric.ScaleOffset(buffer.Span, parameters);
+            }
+
+            // write
+            else
+            {
+                throw new Exception("Writing data chunks is not yet supported by HDF5.NET.");
+            }
         }
 
         private static Memory<byte> DeflateFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
@@ -173,7 +185,7 @@ namespace HDF5.NET
             else
             {
                 // https://github.com/dotnet/runtime/issues/2236
-                throw new Exception("The .NET Core deflate algorithm is not yet able to write ZLIB data.");
+                throw new Exception("The .NET deflate algorithm is not yet able to write ZLIB data.");
             }
         }
 
