@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29519.181
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HDF5.NET", "src\HDF5.NET\HDF5.NET.csproj", "{CDDD9838-6BB3-4842-BFC8-396ED82C798E}"
 EndProject
@@ -15,16 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.appveyor.yml = .appveyor.yml
 		.gitignore = .gitignore
-		Directory.Build.props = Directory.Build.props
-		Directory.Build.targets = Directory.Build.targets
 		LICENSE.md = LICENSE.md
 		README.md = README.md
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{9FB687C9-0A8D-4960-82A1-7CCB6ED13144}"
-	ProjectSection(SolutionItems) = preProject
-		build\build.props = build\build.props
-		build\build.targets = build\build.targets
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HDF5.NET.BlazorBrowser", "src\HDF5.NET.BlazorBrowser\HDF5.NET.BlazorBrowser.csproj", "{219FC23D-2C50-45AF-AA97-EAC4881D3812}"
@@ -62,7 +54,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{CDDD9838-6BB3-4842-BFC8-396ED82C798E} = {4C09E841-1023-48F7-B290-734C029B0E78}
 		{07AF7465-5088-4AD2-A88E-BA6582F54AFD} = {9C8A732F-BE85-4461-A789-B19CD4B70C90}
-		{9FB687C9-0A8D-4960-82A1-7CCB6ED13144} = {8B9AF370-616F-4E6F-961E-5DFEC1620A2F}
 		{219FC23D-2C50-45AF-AA97-EAC4881D3812} = {4C09E841-1023-48F7-B290-734C029B0E78}
 		{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8} = {57ADB402-16BE-4AD1-B628-A90B2B98110E}
 	EndGlobalSection

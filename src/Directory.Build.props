@@ -1,0 +1,37 @@
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <EmbedAllSources>true</EmbedAllSources>
+    <LangVersion>latest</LangVersion>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+    
+  <PropertyGroup>
+    <Authors>https://github.com/Apollo3zehn</Authors>
+    <Company>https://github.com/Apollo3zehn</Company>
+    <Copyright>Apollo3zehn</Copyright>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Major>1</Major>
+    <Minor>0</Minor>
+    <Revision>0</Revision>
+    <VersionSuffix>alpha.12</VersionSuffix>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://apollo3zehn.github.io/HDF5.NET/</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Apollo3zehn/HDF5.NET</RepositoryUrl>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <GetPackageVersionDependsOn>$(GetPackageVersionDependsOn);CreateMetadata</GetPackageVersionDependsOn>
+  </PropertyGroup>
+
+</Project>
