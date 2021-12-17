@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
+    // https://portal.hdfgroup.org/display/HDF5/HDF5+User's+Guide: 5.6.2. Using the Scale - offset Filter
     internal static class ScaleOffsetGeneric
     {
         #region Decompression
