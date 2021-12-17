@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
@@ -144,12 +145,10 @@ namespace HDF5.NET
 
         private static Memory<byte> ScaleOffsetFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
         {
-            // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
-
-            // read (H5Z__scaleoffset_decompress)
+            // read
             if (flags.HasFlag(H5FilterFlags.Decompress))
             {
-                return ScaleOffsetGeneric.ScaleOffset(buffer.Span, parameters);
+                return ScaleOffsetGeneric.Decompress(buffer, parameters);
             }
 
             // write

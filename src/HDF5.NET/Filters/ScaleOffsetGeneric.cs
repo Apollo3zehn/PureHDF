@@ -1,319 +1,197 @@
 ﻿using System;
+using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
     internal static class ScaleOffsetGeneric
     {
-        private enum H5Z_SO_scale_type
-        {
-            FLOAT_DSCALE = 0,
-            FLOAT_ESCALE = 1,
-            INT = 2
-        }
+        #region Decompression
 
-        private struct parms_atomic
-        {
-            public uint size;               /* datatype size */
-            public uint minbits;            /* minimum bits to compress one value of such datatype */
-            public bool is_little_endian;   /* current memory endianness order */
-        }
-
-        private enum H5Z_scaleoffset
-        {
-            t_bad = 0,
-            t_uchar = 1,
-            t_ushort,
-            t_uint,
-            t_ulong,
-            t_schar,
-            t_short,
-            t_int,
-            t_long,
-            t_long_long,
-            t_float,
-            t_double
-        };
-
-        private const int H5Z_SCALEOFFSET_TOTAL_NPARMS = 20;    /* Total number of parameters for filter */
-        private const int H5Z_SCALEOFFSET_PARM_SCALETYPE = 0;   /* "User" parameter for scale type */
-        private const int H5Z_SCALEOFFSET_PARM_SCALEFACTOR = 1; /* "User" parameter for scale factor */
-        private const int H5Z_SCALEOFFSET_PARM_NELMTS = 2;      /* "Local" parameter for number of elements in the chunk */
-        private const int H5Z_SCALEOFFSET_PARM_CLASS = 3;       /* "Local" parameter for datatype class */
-        private const int H5Z_SCALEOFFSET_PARM_SIZE = 4;        /* "Local" parameter for datatype size */
-        private const int H5Z_SCALEOFFSET_PARM_SIGN = 5 ;       /* "Local" parameter for integer datatype sign */
-        private const int H5Z_SCALEOFFSET_PARM_ORDER = 6;       /* "Local" parameter for datatype byte order */
-        private const int H5Z_SCALEOFFSET_PARM_FILAVAIL = 7;    /* "Local" parameter for dataset fill value existence */
-
-        private const int H5Z_SCALEOFFSET_CLS_INTEGER = 0;      /* Integer (datatype class) */
-        private const int H5Z_SCALEOFFSET_CLS_FLOAT = 1;        /* Floatig-point (datatype class) */
-
-        private const int H5Z_SCALEOFFSET_SGN_NONE = 0;         /* Unsigned integer type */
-        private const int H5Z_SCALEOFFSET_SGN_2 = 1;            /* Two's complement signed integer type */
-
-        private const int H5Z_SCALEOFFSET_ORDER_LE = 0;         /* Little endian (datatype byte order) */
-        private const int H5Z_SCALEOFFSET_ORDER_BE = 1;         /* Big endian (datatype byte order) */
-
-        private const int H5Z_SCALEOFFSET_FILL_UNDEFINED = 0;   /* Fill value is not defined */
-        private const int H5Z_SCALEOFFSET_FILL_DEFINED = 1;     /* Fill value is defined */
-
-        public static Memory<byte> ScaleOffset(uint[] parameters, Memory<byte> data) 
+        public static Memory<byte> Decompress(
+            Memory<byte> data, uint[] parametersBuffer)
         {
             // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
 
-            /* check arguments */
-            if (parameters.Length != H5Z_SCALEOFFSET_TOTAL_NPARMS)
-                throw new Exception("Invalid scaleoffset number of parameters.");
+            const int payloadOffset = 21;
 
-            /* Check if memory byte order matches dataset datatype byte order */
-            bool need_convert = false;
-
-            if (BitConverter.IsLittleEndian)
-            {
-                if (parameters[H5Z_SCALEOFFSET_PARM_ORDER] == H5Z_SCALEOFFSET_ORDER_BE)
-                    need_convert = true;
-            }
-            else
-            {
-                if (parameters[H5Z_SCALEOFFSET_PARM_ORDER] == H5Z_SCALEOFFSET_ORDER_LE)
-                    need_convert = true;
-            }
-
-            /* copy filter parameters to local variables */
-            uint d_nelmts = parameters[H5Z_SCALEOFFSET_PARM_NELMTS];
-            uint dtype_class = parameters[H5Z_SCALEOFFSET_PARM_CLASS];
-            uint dtype_sign = parameters[H5Z_SCALEOFFSET_PARM_SIGN];
-            bool filavail = parameters[H5Z_SCALEOFFSET_PARM_FILAVAIL] == H5Z_SCALEOFFSET_FILL_DEFINED;
-            int scale_factor = (int)parameters[H5Z_SCALEOFFSET_PARM_SCALEFACTOR];
-            H5Z_SO_scale_type scale_type = (H5Z_SO_scale_type)parameters[H5Z_SCALEOFFSET_PARM_SCALETYPE];
-
-            /* check and assign proper values set by user to related parameters
-             * scale type can be H5Z_SO_FLOAT_DSCALE (0), H5Z_SO_FLOAT_ESCALE (1) or H5Z_SO_INT (other)
-             * H5Z_SO_FLOAT_DSCALE : floating-point type, variable-minimum-bits method,
-             *                      scale factor is decimal scale factor
-             * H5Z_SO_FLOAT_ESCALE : floating-point type, fixed-minimum-bits method,
-             *                      scale factor is the fixed minimum number of bits
-             * H5Z_SO_INT          : integer type, scale_factor is minimum number of bits
-             */
-
-            if (dtype_class == H5Z_SCALEOFFSET_CLS_FLOAT) /* floating-point type */
-            {
-                if (scale_type != H5Z_SO_scale_type.FLOAT_DSCALE && scale_type != H5Z_SO_scale_type.FLOAT_ESCALE)
-                    throw new Exception("invalid scale type");
-            }
-
-            if (dtype_class == H5Z_SCALEOFFSET_CLS_INTEGER) /* integer type */
-            {
-                if (scale_type != H5Z_SO_scale_type.INT)
-                    throw new Exception("invalid scale type");
-
-                /* if scale_factor is less than 0 for integer, library will reset it to 0
-                 * in this case, library will calculate the minimum-bits
-                 */
-                if (scale_factor < 0)
-                    scale_factor = 0;
-            }
-
-            /* fixed-minimum-bits method is not implemented and is forbidden */
-            if (scale_type == H5Z_SO_scale_type.FLOAT_ESCALE)
-                throw new Exception("E-scaling method not supported.");
-
-            double D_val;
-            uint minbits;
-
-            if (scale_type == H5Z_SO_scale_type.FLOAT_DSCALE) /* floating-point type, variable-minimum-bits */
-            {
-                D_val = scale_factor;
-            }
-            else /* integer type, or floating-point type with fixed-minimum-bits method */
-            {
-                if (scale_factor > (int)(parameters[H5Z_SCALEOFFSET_PARM_SIZE] * 8))
-                    throw new Exception("Minimum number of bits exceeds maximum.");
-        
-                /* no need to process data */
-                if (scale_factor == (int)(parameters[H5Z_SCALEOFFSET_PARM_SIZE] * 8))
-                    return data;
-
-                minbits = (uint)scale_factor;
-            }
-
-            /* prepare parameters to pass to compress/decompress functions */
-            parms_atomic p = default;
-            p.size = parameters[H5Z_SCALEOFFSET_PARM_SIZE];
-            p.is_little_endian = BitConverter.IsLittleEndian;
-
-            /* input; decompress */
-
-            /* retrieve values of minbits and minval from input compressed buffer
-             * retrieve them corresponding to how they are stored during compression
-             */
-
-            minbits = 0;
-
+            var parameters = ScaleOffsetGeneric.ValidateAndPrepareParameters(parametersBuffer);
             var spanData = data.Span;
 
-            for (int i = 0; i < 4; i++) {
+            /* minbits */
+            uint minbits = 0;
+
+            for (int i = 0; i < 4; i++)
+            {
                 uint minbits_mask = spanData[i];
                 minbits_mask <<= i * 8;
                 minbits |= minbits_mask;
             }
 
-            /* retrieval of minval takes into consideration situation where sizeof
-             * unsigned long long (datatype of minval) may change from compression
-             * to decompression, only smaller size is used
-             */
-            uint minval_size = spanData[4]; /* simplified */
+            /* minval */
+            var minval_size = spanData[4];
+            var minval = new byte[minval_size];
 
-            ulong minval = 0;
-
-            for (int i = 0; i < minval_size; i++) {
-                ulong minval_mask = spanData[5 + i];
-                minval_mask <<= i * 8;
-                minval |= minval_mask;
+            for (int i = 0; i < minval_size; i++)
+            {
+                minval[i] = spanData[5 + i];
             }
 
-            if (minbits > p.size * 8)
+            if (minbits > parameters.Size * 8)
                 throw new Exception("minbits > p.size * 8");
 
-            /* calculate size of output buffer after decompression */
-            int size_out = (int)(d_nelmts * p.size);
-
             /* allocate memory space for decompressed buffer */
-            var outbuf = new byte[size_out];
+            int defilteredBufferSize = (int)(parameters.ElementCount * parameters.Size);
+            var output = new byte[defilteredBufferSize];
 
             /* special case: minbits equal to full precision */
-            var buf_offset = 21; /* buffer offset because of parameters stored in file */
-
-            if (minbits == p.size * 8)
+            if (minbits == parameters.Size * 8)
             {
                 spanData
-                    .Slice(buf_offset, size_out)
-                    .CopyTo(outbuf);
-                
-                /* convert to dataset datatype endianness order if needed */
-                if (need_convert)
-                    H5Z__scaleoffset_convert(outbuf, d_nelmts, p.size);
-
-                return outbuf;
+                    .Slice(payloadOffset)
+                    .CopyTo(output);
             }
 
-            /* decompress the buffer if minbits not equal to zero */
-            if (minbits != 0)
-                H5Z__scaleoffset_decompress(outbuf, spanData.Slice(buf_offset), p);
-
-            else /* fill value is not defined and all data elements have the same value */
-                outbuf.AsSpan().Fill(0);
-
-            /* before postprocess, get memory type */
-            var type = H5Z__scaleoffset_get_type(dtype_class, p.size, dtype_sign);
-
-            /* postprocess after decompression */
-            if (dtype_class == H5Z_SCALEOFFSET_CLS_INTEGER)
-                H5Z__scaleoffset_postdecompress_i(outbuf, type, filavail, parameters, minbits, minval);
-
-            if (dtype_class == H5Z_SCALEOFFSET_CLS_FLOAT)
+            /* normal case */
+            else
             {
-                if (scale_type == 0) /* variable-minimum-bits method */
+                /* decompress the buffer if minbits not equal to zero */
+                if (minbits != 0)
+                    ScaleOffsetGeneric.DecompressAll(output, spanData.Slice(payloadOffset), parameters, minbits);
+
+                /* postprocess after decompression */
+                if (parameters.Class == Class.Integer)
                 {
-                    if (H5Z__scaleoffset_postdecompress_fd(outbuf, type, filavail, parameters, minbits,
-                                                           minval, D_val) == FAIL)
-                        throw new Exception("Post-decompression failed.");
+                    if (parameters.Sign == Sign.Unsigned)
+                    {
+                        if (parameters.Size == 1)
+                            PostdecompressByte(MemoryMarshal.Cast<byte, byte>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 2)
+                            PostdecompressInteger(MemoryMarshal.Cast<byte, ushort>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 4)
+                            PostdecompressInteger(MemoryMarshal.Cast<byte, uint>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 8)
+                            PostdecompressInteger(MemoryMarshal.Cast<byte, ulong>(output), parameters, minbits, minval);
+
+                        else
+                            throw new Exception("Unsupported data type.");
+                    }
+
+                    else
+                    {
+                        if (parameters.Size == 1)
+                            PostdecompressSByte(MemoryMarshal.Cast<byte, sbyte>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 2)
+                            PostdecompressInteger(MemoryMarshal.Cast<byte, short>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 4)
+                            PostdecompressInteger(MemoryMarshal.Cast<byte, int>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 8)
+                            PostdecompressInteger(MemoryMarshal.Cast<byte, long>(output), parameters, minbits, minval);
+
+                        else
+                            throw new Exception("Unsupported data type.");
+                    }
                 }
+
+                else if (parameters.Class == Class.Float)
+                {
+                    if (parameters.ScaleType == ScaleType.FLOAT_DSCALE)
+                    {
+                        if (parameters.Size == 4)
+                            PostdecompressFloat32(MemoryMarshal.Cast<byte, float>(output), parameters, minbits, minval);
+
+                        else if (parameters.Size == 8)
+                            PostdecompressFloat64(MemoryMarshal.Cast<byte, double>(output), parameters, minbits, minval);
+
+                        else
+                            throw new Exception("Unsupported data type.");
+                    }
+                }
+
+                else
+                    throw new Exception("Unsupported data type.");
             }
 
             /* after postprocess, convert to dataset datatype endianness order if needed */
-            if (need_convert)
-                H5Z__scaleoffset_convert(outbuf, d_nelmts, p.size);
+            //if (need_convert)
+            //    ScaleoOffsetGeneric.Convert(output, parameters);
 
-            return outbuf;
+            return output;
         }
 
-        #region Algorithm
-
-        /* ============ Scaleoffset Algorithm ===============================================
-         * assume one byte has 8 bit
-         * assume padding bit is 0
-         * assume size of unsigned char is one byte
-         * assume one data item of certain datatype is stored continuously in bytes
-         * atomic datatype is treated on byte basis
-         */
-
-        /* change byte order of input buffer either from little-endian to big-endian
-         * or from big-endian to little-endian  2/21/2005
-         */
-        private static void H5Z__scaleoffset_convert(Span<byte> buffer, uint d_nelmts, uint dtype_size)
+        private static void DecompressAll(
+            Span<byte> output, Span<byte> input, Parameters parameters, uint minbits)
         {
-            var int_dtype_size = (int)dtype_size;
+            /* j: index of buffer,
+               buf_len: number of bits to be filled in current byte */
 
-            if (dtype_size > 1)
+            /* initialization before the loop */
+            int j = 0;
+            uint buf_len = sizeof(byte) * 8;
+
+            /* decompress */
+            for (int i = 0; i < parameters.ElementCount; i++)
             {
-                for (int i = 0; i < d_nelmts * dtype_size; i += int_dtype_size)
-                {
-                    for (int j = 0; j < dtype_size / 2; j++)
-                    {
-                        /* swap pair of bytes */
-                        var temp = buffer[i + j];
-                        buffer[i + j] = buffer[i + int_dtype_size - 1 - j];
-                        buffer[i + int_dtype_size - 1 - j] = temp;
-                    }
-                }
+                ScaleOffsetGeneric.DecompressOneAtomic(
+                    output.Slice(i * (int)parameters.Size), 
+                    input, 
+                    ref j, 
+                    ref buf_len,
+                    parameters.Size,
+                    minbits);
             }
         }
 
-        /* postdecompress for integer type */
-        static void
-        H5Z__scaleoffset_postdecompress_i(
-            Span<byte> data, H5Z_scaleoffset type,
-            bool filavail, uint[] parameters, uint minbits, ulong minval)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void DecompressOneAtomic(
+            Span<byte> data,
+            Span<byte> buffer,
+            ref int j, 
+            ref uint buf_len,
+            uint size,
+            uint minbits)
         {
-            long sminval = unchecked((long)minval); /* for signed integer types */
+            /* begin_i: the index of byte having first significant bit */
+            uint begin_i;
 
-            if (type == H5Z_scaleoffset.t_uchar)
-                H5Z_scaleoffset_postdecompress_1(data, filavail, parameters, minbits, minval);
+            if (minbits <= 0)
+                throw new Exception("p.minbits <= 0");
 
-            else if (type == H5Z_scaleoffset.t_ushort)
-                H5Z_scaleoffset_postdecompress_1(MemoryMarshal.Cast<byte, ushort>(data), filavail, parameters, minbits, minval);
+            uint dtype_len = size * 8;
 
-            else if (type == H5Z_scaleoffset.t_uint)
-                H5Z_scaleoffset_postdecompress_1(MemoryMarshal.Cast<byte, uint>(data), filavail, parameters, minbits, minval);
-
-            else if (type == H5Z_scaleoffset.t_ulong)
-                H5Z_scaleoffset_postdecompress_1(MemoryMarshal.Cast<byte, ulong>(data), filavail, parameters, minbits, minval);
-
-            else if (type == H5Z_scaleoffset.t_schar) 
+            if (BitConverter.IsLittleEndian)
             {
-                sbyte* buf = (sbyte*)data, filval = 0;
-                uint i;
+                begin_i = size - 1 - (dtype_len - minbits) / 8;
 
-                if (filavail) /* fill value defined */
-                {
-                    H5Z_scaleoffset_get_filval_1<sbyte>(parameters, filval);
-
-                    for (i = 0; i < data.Length; i++) 
-                        buf[i] = (sbyte)((buf[i] == (((byte)1 << minbits) - 1)) ? filval : (buf[i] + sminval));
-                }
-
-                else /* fill value undefined */
-                {
-                    for (i = 0; i < data.Length; i++)
-                        buf[i] = (sbyte)(buf[i] + sminval);
-                }
+                for (int k = (int)begin_i; k >= 0; k--)
+                    DecompressOneByte(data, k, begin_i, buffer, ref j, ref buf_len, dtype_len, minbits);
             }
+            else
+            {
+                begin_i = (dtype_len - minbits) / 8;
 
-            else if (type == H5Z_scaleoffset.t_short)
-                H5Z_scaleoffset_postdecompress_2(MemoryMarshal.Cast<byte, short>(data), filavail, parameters, minbits, sminval);
-
-            else if (type == H5Z_scaleoffset.t_int)
-                H5Z_scaleoffset_postdecompress_2(MemoryMarshal.Cast<byte, int>(data), filavail, parameters, minbits, sminval);
-
-            else if (type == H5Z_scaleoffset.t_long)
-                H5Z_scaleoffset_postdecompress_2(MemoryMarshal.Cast<byte, long>(data), filavail, parameters, minbits, sminval);
+                for (int k = (int)begin_i; k <= (int)(size - 1); k++)
+                    DecompressOneByte(data, k, begin_i, buffer, ref j, ref buf_len, dtype_len, minbits);
+            }
         }
 
-        private static void H5Z__scaleoffset_decompress_one_byte(
-            Span<byte> data, int k, uint begin_i,
-            Span<byte> buffer, ref int j, ref uint buf_len,
-            parms_atomic p, uint dtype_len)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void DecompressOneByte(
+            Span<byte> data,
+            int k, 
+            uint begin_i,
+            Span<byte> buffer, 
+            ref int j, 
+            ref uint buf_len,
+            uint dtype_len,
+            uint minbits)
         {
             uint dat_len; /* dat_len is the number of bits to be copied in each data byte */
             byte val;     /* value to be copied in each data byte */
@@ -322,18 +200,18 @@ namespace HDF5.NET
             val = buffer[j];
 
             if (k == begin_i)
-                dat_len = 8 - (dtype_len - p.minbits) % 8;
+                dat_len = 8 - (dtype_len - minbits) % 8;
 
             else
                 dat_len = 8;
 
-            if (buffer.Length > dat_len) 
+            if (buf_len > dat_len)
             {
                 data[k] = (byte)((uint)(val >> (int)(buf_len - dat_len)) & (~(uint.MaxValue << (int)dat_len)));
                 buf_len -= dat_len;
             }
 
-            else 
+            else
             {
                 data[k] = (byte)((val & ~(uint.MaxValue << (int)buf_len)) << (int)(dat_len - buf_len));
                 dat_len -= buf_len;
@@ -348,163 +226,317 @@ namespace HDF5.NET
                 val = buffer[j];
                 data[k] |= (byte)((uint)(val >> (int)(buf_len - dat_len)) & ~(uint.MaxValue << (int)dat_len));
                 buf_len -= dat_len;
-            } 
-        }
-
-        private static void H5Z__scaleoffset_decompress_one_atomic(
-            Span<byte> data, Span<byte> buffer, ref int j, ref uint buf_len, parms_atomic p)
-        {
-            /* begin_i: the index of byte having first significant bit */
-            uint begin_i;
-
-            if (p.minbits <= 0)
-                throw new Exception("p.minbits <= 0");
-
-            uint dtype_len = p.size * 8;
-
-            if (p.is_little_endian) /* little endian */
-            { 
-                begin_i = p.size - 1 - (dtype_len - p.minbits) / 8;
-
-                for (int k = (int)begin_i; k >= 0; k--)
-                    H5Z__scaleoffset_decompress_one_byte(data, k, begin_i, buffer, ref j, ref buf_len, p, dtype_len);
-            }
-            else /* big endian */
-            { 
-                if (!p.is_little_endian)
-                    throw new Exception("p.mem_order != H5Z_SCALEOFFSET_ORDER_BE");
-
-                begin_i = (dtype_len - p.minbits) / 8;
-
-                for (int k = (int)begin_i; k <= (int)(p.size - 1); k++)
-                    H5Z__scaleoffset_decompress_one_byte(data, k, begin_i, buffer, ref j, ref buf_len, p, dtype_len);
             }
         }
 
-        private static void H5Z__scaleoffset_decompress(Span<byte> data, Span<byte> buffer, parms_atomic p)
+        #endregion
+
+        #region Postdecompression
+
+        private static unsafe void PostdecompressByte(
+            Span<byte> output, Parameters parameters, uint minbits, byte[] minvalRaw)
         {
-            /* i: index of data, j: index of buffer,
-               buf_len: number of bits to be filled in current byte */
-            /* must initialize to zeros */
-            for (int i = 0; i < data.Length * p.size; i++)
-                data[i] = 0;
+            byte minval = minvalRaw[0];
+            byte maxval = BitConverter.GetBytes((1UL << (int)minbits) - 1UL)[0];
 
-            /* initialization before the loop */
-            uint buf_len = sizeof(byte) * 8;
+            if (parameters.FillValueDefined == FillValueDefined.Defined)
+            {
+                byte filval = unchecked((byte)parameters.FillValue[0]);
 
-            /* decompress */
-            int j = 0;
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = output[i].Equals(maxval)
+                        ? filval
+                        : (byte)(output[i] + minval);
+                }
+            }
 
-            for (int i = 0; i < data.Length; i++)
-                H5Z__scaleoffset_decompress_one_atomic(data.Slice(i * (int)p.size), buffer.Slice(0, 1), ref j, ref buf_len, p);
+            else
+            {
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = (byte)(output[i] + minval);
+                }
+            }
+        }
+
+        private static unsafe void PostdecompressSByte(
+            Span<sbyte> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        {
+            sbyte minval = (sbyte)minvalRaw[0];
+            sbyte maxval = (sbyte)BitConverter.GetBytes((1UL << (int)minbits) - 1UL)[0];
+
+            if (parameters.FillValueDefined == FillValueDefined.Defined)
+            {
+                sbyte filval = unchecked((sbyte)parameters.FillValue[0]);
+
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = output[i].Equals(maxval)
+                        ? filval
+                        : (sbyte)(output[i] + minval);
+                }
+            }
+
+            else
+            {
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = (sbyte)(output[i] + minval);
+                }
+            }
+        }
+
+        private static unsafe void PostdecompressInteger<T>(
+            Span<T> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+            where T : struct
+        {
+            T minval = MemoryMarshal.Cast<byte, T>(minvalRaw)[0];
+            T maxval = MemoryMarshal.Cast<byte, T>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
+
+            if (parameters.FillValueDefined == FillValueDefined.Defined)
+            {
+                T filval = GetFillValue<T>(new Span<uint>(parameters.FillValue, 12));
+
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = output[i].Equals(maxval)
+                        ? filval
+                        : GenericAdd<T>.Add(output[i], minval);
+                }
+            }
+
+            else
+            {
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = GenericAdd<T>.Add(output[i], minval);
+                }
+            }
+        }
+
+        private static unsafe void PostdecompressFloat32(
+            Span<float> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        {
+            var minval = MemoryMarshal.Cast<byte, float>(minvalRaw)[0];
+            var maxval = MemoryMarshal.Cast<byte, float>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
+            var scaleFactor = (float)Math.Pow(10, parameters.ScaleFactor);
+
+            Span<float> buffer = stackalloc float[1];
+            var bufferAsInt = MemoryMarshal.Cast<float, int>(buffer);
+
+            if (parameters.FillValueDefined == FillValueDefined.Defined)
+            {
+                var filval = GetFillValue<float>(new Span<uint>(parameters.FillValue, 12));
+
+                for (int i = 0; i < output.Length; i++)
+                {
+                    buffer[0] = output[i];
+
+                    output[i] = output[i].Equals(maxval)
+                        ? filval
+                        : (float)(bufferAsInt[0] / scaleFactor + minval);
+                }
+            }
+
+            else
+            {
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = (float)(bufferAsInt[0] / scaleFactor + minval);
+                }
+            }
+        }
+
+        private static unsafe void PostdecompressFloat64(
+            Span<double> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        {
+            var minval = MemoryMarshal.Cast<byte, double>(minvalRaw)[0];
+            var maxval = MemoryMarshal.Cast<byte, double>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
+            var scaleFactor = (double)Math.Pow(10, parameters.ScaleFactor);
+
+            Span<double> buffer = stackalloc double[1];
+            var bufferAsLong = MemoryMarshal.Cast<double, long>(buffer);
+
+            if (parameters.FillValueDefined == FillValueDefined.Defined)
+            {
+                var filval = GetFillValue<double>(new Span<uint>(parameters.FillValue, 12));
+
+                for (int i = 0; i < output.Length; i++)
+                {
+                    buffer[0] = output[i];
+
+                    output[i] = output[i].Equals(maxval)
+                        ? filval
+                        : (double)(bufferAsLong[0] / scaleFactor + minval);
+                }
+            }
+
+            else
+            {
+                for (int i = 0; i < output.Length; i++)
+                {
+                    output[i] = (double)(bufferAsLong[0] / scaleFactor + minval);
+                }
+            }
         }
 
         #endregion
 
         #region Helpers
 
-        private static void H5Z_scaleoffset_postdecompress_1<T>(Span<T> buf, bool filavail, uint[] parameters, uint minbits, ulong minval)
-            where T : struct
+        private static Parameters ValidateAndPrepareParameters(
+            uint[] parametersBuffer)
         {
-            do
+            // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
+
+            /* check arguments */
+            if (parametersBuffer.Length != 20)
+                throw new Exception("Invalid scaleoffset number of parameters.");
+
+            var parameters = MemoryMarshal.Cast<uint, Parameters>(parametersBuffer)[0];
+
+            /* Check if memory byte order matches dataset datatype byte order */
+            bool need_convert = false;
+
+            if (BitConverter.IsLittleEndian)
             {
-                T filval = 0;
-
-                if (filavail) /* fill value defined */
-                {
-                    H5Z_scaleoffset_get_filval_1(type, parameters, filval);
-
-                    for (int i = 0; i < buf.Length; i++)
-                    {
-                        buf[i] = (type)((buf[i] == (((type)1 << minbits) - 1)) 
-                            ? filval
-                            : (buf[i] + minval));
-                    }
-                }
-
-                else /* fill value undefined */
-                {
-                    for (int i = 0; i < buf.Length; i++)
-                    {
-                        buf[i] = (type)(buf[i] + (type)(minval));
-                    }
-                }
-
-            } while (true);
-        }   
-
-        /*-------------------------------------------------------------------------
-         * Function:    H5Z__scaleoffset_get_type
-         *
-         * Purpose:    Get the specific integer type based on datatype size and sign
-         *              or floating-point type based on size
-         *
-         * Return:    Success: id number of integer type
-         *        Failure: 0
-         *
-         * Programmer:    Xiaowen Wu
-         *              Wednesday, April 13, 2005
-         *
-         *-------------------------------------------------------------------------
-         */
-        private static H5Z_scaleoffset H5Z__scaleoffset_get_type(uint dtype_class, uint dtype_size, uint dtype_sign)
-        {
-            var type = H5Z_scaleoffset.t_bad; /* integer type */
-
-            if (dtype_class == H5Z_SCALEOFFSET_CLS_INTEGER) 
+                if (parameters.ByteOrder == ByteOrder.BigEndian)
+                    need_convert = true;
+            }
+            else
             {
-
-                if (dtype_sign == H5Z_SCALEOFFSET_SGN_NONE) /* unsigned integer */
-                { 
-                    if (dtype_size == 8)
-                        type = H5Z_scaleoffset.t_uchar;
-
-                    else if (dtype_size == 16)
-                        type = H5Z_scaleoffset.t_ushort;
-
-                    else if (dtype_size == 32)
-                        type = H5Z_scaleoffset.t_uint;
-
-                    else if (dtype_size == 64)
-                        type = H5Z_scaleoffset.t_ulong;
-
-                    else
-                        throw new Exception("Cannot find matched memory dataype.");
-                }
-
-                if (dtype_sign == H5Z_SCALEOFFSET_SGN_2) /* signed integer */
-                { 
-                    if (dtype_size == 8)
-                        type = H5Z_scaleoffset.t_schar;
-
-                    else if (dtype_size == 16)
-                        type = H5Z_scaleoffset.t_short;
-
-                    else if (dtype_size == 32)
-                        type = H5Z_scaleoffset.t_int;
-
-                    else if (dtype_size == 64)
-                        type = H5Z_scaleoffset.t_long;
-
-                    else
-                        throw new Exception("Cannot find matched memory dataype.");
-                }
+                if (parameters.ByteOrder == ByteOrder.LittleEndian)
+                    need_convert = true;
             }
 
-            if (dtype_class == H5Z_SCALEOFFSET_CLS_FLOAT)
+#warning This is not supported because after filtering, the data are native endianess and then HDF5 lib converts them later again.
+            if (need_convert)
+                throw new NotSupportedException("Scale-offset data conversion from big endian to little endian or vice versa is not supported.");
+
+            if (parameters.Class == Class.Float)
             {
-                if (dtype_size == sizeof(float))
-                    type = H5Z_scaleoffset.t_float;
-
-                else if (dtype_size == sizeof(double))
-                    type = H5Z_scaleoffset.t_double;
-
-                else
-                    throw new Exception("Cannot find matched memory dataype.");
+                if (parameters.ScaleType != ScaleType.FLOAT_DSCALE && parameters.ScaleType != ScaleType.FLOAT_ESCALE)
+                    throw new Exception("Invalid scale type.");
             }
 
-            /* Set return value */
-            return type;
+            else if (parameters.Class == Class.Integer)
+            {
+                if (parameters.ScaleType != ScaleType.INT)
+                    throw new Exception("Invalid scale type.");
+            }
+
+            return parameters;
+        }
+
+        private static T GetFillValue<T>(
+            Span<uint> parameters)
+             where T : struct
+        {
+            var i = 0;
+            var copySize = sizeof(uint);
+            var fillValue = new byte[Marshal.SizeOf<T>()];
+            var slicedFillValue = fillValue.AsSpan();
+
+            if (BitConverter.IsLittleEndian)
+            {
+                Span<uint> _cd_value = stackalloc uint[1];
+
+                /* Copy 4 bytes at a time to each cd value */
+                do
+                {
+                    if (slicedFillValue.Length < 4)
+                        copySize = slicedFillValue.Length;
+
+                    /* Copy the value */
+                    _cd_value[0] = parameters[i];
+
+                    MemoryMarshal
+                        .AsBytes(_cd_value)
+                        .Slice(0, copySize)
+                        .CopyTo(slicedFillValue);
+
+                    /* Next field */
+                    i++;
+                    slicedFillValue = slicedFillValue.Slice(copySize);
+
+                } while (!slicedFillValue.IsEmpty);
+            }
+            else
+            {
+                throw new NotSupportedException("The scale-offset decompression is not supported on big-endian systems.");
+            }
+
+            return MemoryMarshal.Cast<byte, T>(fillValue)[0];
+        }
+
+        #endregion
+
+        #region Types
+
+        internal static class GenericAdd<T>
+        {
+            private static Func<T, T, T> _add_function = GenericAdd<T>.EmitAddFunction();
+
+            private static Func<T, T, T> EmitAddFunction()
+            {
+                var _parameterA = Expression.Parameter(typeof(T), "a");
+                var _parameterB = Expression.Parameter(typeof(T), "b");
+
+                var _body = Expression.Add(_parameterA, _parameterB);
+
+                return Expression.Lambda<Func<T, T, T>>(_body, _parameterA, _parameterB).Compile();
+            }
+
+            public static T Add(T a, T b)
+            {
+                return _add_function(a, b);
+            }
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        private unsafe struct Parameters
+        {
+            public ScaleType ScaleType;
+            public uint ScaleFactor;
+            public uint ElementCount;
+            public Class Class;
+            public uint Size;
+            public Sign Sign;
+            public ByteOrder ByteOrder;
+            public FillValueDefined FillValueDefined;
+            public fixed uint FillValue[12];
+        }
+
+        private enum ScaleType : uint
+        {
+            FLOAT_DSCALE = 0,
+            FLOAT_ESCALE = 1,
+            INT = 2
+        }
+
+        private enum ByteOrder : uint
+        {
+            LittleEndian = 0,
+            BigEndian = 1,
+        }
+
+        private enum Class : uint
+        {
+            Integer = 0,
+            Float = 1,
+        }
+
+        private enum Sign : uint
+        {
+            Unsigned = 0,
+            TwosComplement = 1,
+        }
+
+        private enum FillValueDefined : uint
+        {
+            Undefined = 0,
+            Defined = 1,
         }
 
         #endregion

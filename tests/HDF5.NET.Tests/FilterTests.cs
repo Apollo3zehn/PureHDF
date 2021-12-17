@@ -24,6 +24,53 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
+
+        [InlineData("minbits_0", (byte)24, 24, 24, 24, 24, 24)]
+        [InlineData("minbits_full", (byte)1, 0, 255, 1, 0, 255)]
+
+        [InlineData("uint8_nofill", (byte)0, 24, 5, 12, 13, 0)]
+        [InlineData("uint16_nofill", (ushort)0, 6144, 1280, 3072, 3328, 0)]
+        [InlineData("uint32_nofill", (uint)0, 402653184, 83886080, 201326592, 218103808, 0)]
+        [InlineData("uint64_nofill", (ulong)0, 1729382256910270464, 360287970189639680, 864691128455135232, 936748722493063168, 0)]
+
+        [InlineData("uint8_fill", (byte)127, 24, 5, 12, 13, 127)]
+        [InlineData("uint16_fill", (ushort)32767, 6144, 1280, 3072, 3328, 32767)]
+        [InlineData("uint32_fill", (uint)2147483647, 402653184, 83886080, 201326592, 218103808, 2147483647)]
+        [InlineData("uint64_fill", (ulong)9223372036854775808, 1729382256910270464, 360287970189639680, 864691128455135232, 936748722493063168, 9223372036854775808)]
+
+        [InlineData("int8_nofill", (sbyte)0, 24, -5, 12, 13, 0)]
+        [InlineData("int16_nofill", (short)0, 6144, -1280, 3072, 3328, 0)]
+        [InlineData("int32_nofill", (int)0, 402653184, -83886080, 201326592, 218103808, 0)]
+        [InlineData("int64_nofill", (long)0, 1729382256910270464, -360287970189639680, 864691128455135232, 936748722493063168, 0)]
+
+        [InlineData("int8_fill", (sbyte)63, 24, -5, 12, 13, 63)]
+        [InlineData("int16_fill", (short)16383, 6144, -1280, 3072, 3328, 16383)]
+        [InlineData("int32_fill", (int)1073741823, 402653184, -83886080, 201326592, 218103808, 1073741823)]
+        [InlineData("int64_fill", (long)4611686018427387904, 1729382256910270464, -360287970189639680, 864691128455135232, 936748722493063168, 4611686018427387904)]
+
+        [InlineData("float32_nofill", (float)0, 24.7, -5.3, 12.2, 13.2, 0)]
+        [InlineData("float64_nofill", (double)0, 24.7, -5.3, 12.2, 13.2, 0)]
+
+        [InlineData("float32_fill", (float)99.9, 24.7, -5.3, 12.2, 13.2, 99.9)]
+        [InlineData("float64_fill", (double)99.9, 24.7, -5.3, 12.2, 13.2, 99.9)]
+        public void CanDefilterScaleOffset<T>(string datasetName, T e1, T e2, T e3, T e4, T e5, T e6)
+            where T : unmanaged
+        {
+            // Arrange
+            var expected = new T[] { e1, e2, e3, e4, e5, e6 };
+            var filePath = "./testfiles/scaleoffset.h5";
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var dataset = root.Dataset(datasetName);
+
+            var actual = dataset.Read<T>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Theory]
         [InlineData("blosclz", true)]
         [InlineData("lz4", true)]
         [InlineData("lz4hc", true)]
