@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-#if NET5_0
+#if NET5_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
 
@@ -19,7 +19,7 @@ namespace HDF5.NET
 
         public static unsafe void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
         {
-#if NET5_0
+#if NET5_0_OR_GREATER
             if (Avx2.IsSupported)
                 EndiannessConverterAvx2.Convert(bytesOfType, source, destination);
 

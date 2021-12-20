@@ -244,6 +244,7 @@ Additionally, there is an overload method that allows you to provide your own bu
 - Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)
 - Fletcher32
 - Deflate (zlib)
+- Scale-Offset
 
 <sup>1</sup> NET Standard 2.1 and above
 
