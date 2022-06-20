@@ -5,7 +5,7 @@
     <PackageTags>HDF HDF5 hierarchical data file H5 netstandard .NET Standard Windows Linux, MacOS</PackageTags>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFrameworks>netstandard20;netstandard21;net50</TargetFrameworks>
+    <TargetFrameworks>netstandard20;netstandard21;net60</TargetFrameworks>
     <Nullable>enable</Nullable>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
