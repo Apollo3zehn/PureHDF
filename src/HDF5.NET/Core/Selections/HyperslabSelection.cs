@@ -1,4 +1,4 @@
-﻿namespace HDF5.NET
+namespace HDF5.NET
 {
     partial class HyperslabSelection : Selection
     {
@@ -7,7 +7,7 @@
         internal ulong[] CountsField;
         internal ulong[] BlocksField;
 
-        internal ulong GetStop(int dimension)
+        private ulong GetStop(int dimension)
         {
             // prevent underflow of ulong
             if (this.Counts[dimension] == 0)

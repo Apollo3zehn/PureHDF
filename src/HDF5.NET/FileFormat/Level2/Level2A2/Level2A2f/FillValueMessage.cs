@@ -36,11 +36,11 @@ namespace HDF5.NET
 
                     var isDefined1 = reader.ReadByte() == 1;
 
-                    size = reader.ReadUInt32();
-                    var value = reader.ReadBytes((int)size);
-
                     if (isDefined1)
-                        this.Value = value;
+                    {
+                        size = reader.ReadUInt32();
+                        this.Value = reader.ReadBytes((int)size);
+                    }
 
                     break;
 

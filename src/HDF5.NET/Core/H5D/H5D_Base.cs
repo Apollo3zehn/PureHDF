@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace HDF5.NET
@@ -30,26 +30,6 @@ namespace HDF5.NET
         #endregion
 
         #region Methods
-
-        public ulong[] GetDatasetDims()
-        {
-            return this.Dataset.InternalDataspace.Type switch
-            {
-                DataspaceType.Scalar    => new ulong[] { 1 },
-                DataspaceType.Simple    => this.Dataset.InternalDataspace.DimensionSizes,
-                _                       => throw new Exception($"Unsupported data space type '{this.Dataset.InternalDataspace.Type}'.")
-            };
-        }
-
-        public HyperslabSelection GetSelection()
-        {
-            return this.Dataset.InternalDataspace.Type switch
-            {
-                DataspaceType.Scalar => HyperslabSelection.Scalar(),
-                DataspaceType.Simple => HyperslabSelection.All(this.GetDatasetDims()),
-                _ => throw new Exception($"Unsupported data space type '{this.Dataset.InternalDataspace.Type}'.")
-            };
-        }
 
         public virtual void Initialize()
         {

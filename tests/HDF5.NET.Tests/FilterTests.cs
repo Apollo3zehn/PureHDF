@@ -56,6 +56,74 @@ namespace HDF5.NET.Tests.Reading
         public void CanDefilterScaleOffset<T>(string datasetName, T e1, T e2, T e3, T e4, T e5, T e6)
             where T : unmanaged
         {
+            // import h5py
+
+            // with h5py.File("scaleoffset.h5", "w") as f:
+            
+            //     # minbits = 0
+            //     size = 8 << 0
+            //     data = [24, 24, 24, 24, 24, 24]
+            //     dataset = f.create_dataset(f"minbits_0", (6,), chunks=(3,), dtype=f"<u{size/8:.0f}", scaleoffset=True)
+            //     dataset[0:6] = data
+
+            //     # minbits = full
+            //     size = 8 << 0
+            //     data = [1, 0, 255, 1, 0, 255]
+            //     dataset = f.create_dataset(f"minbits_full", (6,), chunks=(3,), dtype=f"<u{size/8:.0f}", scaleoffset=True)
+            //     dataset[0:6] = data
+
+            //     # unsigned integer, no fill value
+            //     for shiftFactor in range(0, 4):
+            //         size = 8 << shiftFactor
+            //         data = [24 << (size - 8), 5 << (size - 8), 12 << (size - 8), 13 << (size - 8)]
+            //         dataset = f.create_dataset(f"uint{size}_nofill", (6,), chunks=(3,), dtype=f"<u{size/8:.0f}", scaleoffset=True)
+            //         dataset[1:5] = data
+
+            //     # unsigned integer, fill value
+            //     for shiftFactor in range(0, 4):
+            //         size = 8 << shiftFactor
+            //         max = pow(2, size) - 1
+            //         data = [24 << (size - 8), 5 << (size - 8), 12 << (size - 8), 13 << (size - 8)]
+            //         dataset = f.create_dataset(f"uint{size}_fill", (6,), chunks=(3,), dtype=f"<u{size/8:.0f}", scaleoffset=True, fillvalue=max/2)
+            //         dataset[1:5] = data
+
+            //     # signed integer, no fill value
+            //     for shiftFactor in range(0, 4):
+            //         size = 8 << shiftFactor
+            //         data = [24 << (size - 8), -5 << (size - 8), 12 << (size - 8), 13 << (size - 8)]
+            //         dataset = f.create_dataset(f"int{size}_nofill", (6,), chunks=(3,), dtype=f"<i{size/8:.0f}", scaleoffset=True)
+            //         dataset[1:5] = data
+
+            //     # signed integer, fill value
+            //     for shiftFactor in range(0, 4):
+            //         size = 8 << shiftFactor
+            //         max = pow(2, size - 1) - 1
+            //         data = [24 << (size - 8), -5 << (size - 8), 12 << (size - 8), 13 << (size - 8)]
+            //         dataset = f.create_dataset(f"int{size}_fill", (6,), chunks=(3,), dtype=f"<i{size/8:.0f}", scaleoffset=True, fillvalue=max/2)
+            //         dataset[1:5] = data
+
+            //     # float, no fill value
+            //     size = 32
+            //     data = [24.7, -5.3, 12.2, 13.2]
+            //     dataset = f.create_dataset(f"float{size}_nofill", (6,), chunks=(3,), dtype=f"<f{size/8:.0f}", scaleoffset=2)
+            //     dataset[1:5] = data
+
+            //     size = 64
+            //     data = [24.7, -5.3, 12.2, 13.2]
+            //     dataset = f.create_dataset(f"float{size}_nofill", (6,), chunks=(3,), dtype=f"<f{size/8:.0f}", scaleoffset=2)
+            //     dataset[1:5] = data
+
+            //     # float, fill value
+            //     size = 32
+            //     data = [24.7, -5.3, 12.2, 13.2]
+            //     dataset = f.create_dataset(f"float{size}_fill", (6,), chunks=(3,), dtype=f"<f{size/8:.0f}", scaleoffset=2, fillvalue=99.9)
+            //     dataset[1:5] = data
+
+            //     size = 64
+            //     data = [24.7, -5.3, 12.2, 13.2]
+            //     dataset = f.create_dataset(f"float{size}_fill", (6,), chunks=(3,), dtype=f"<f{size/8:.0f}", scaleoffset=2, fillvalue=99.9)
+            //     dataset[1:5] = data
+
             // Arrange
             var expected = new T[] { e1, e2, e3, e4, e5, e6 };
             var filePath = "./testfiles/scaleoffset.h5";

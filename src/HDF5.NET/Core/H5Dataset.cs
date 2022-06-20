@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{InternalDataType.Class}'")]
-    partial class H5Dataset
+    partial class H5Dataset : H5AttributableObject
     {
         #region Fields
 
@@ -189,18 +189,35 @@ namespace HDF5.NET
                 : null;
 
             /* dataset dims */
-            var datasetDims = bufferProvider.GetDatasetDims();
+            var datasetDims = this.GetDatasetDims();
 
             /* dataset chunk dims */
             var datasetChunkDims = bufferProvider.GetChunkDims();
 
             /* file selection */
             if (fileSelection is null)
-                fileSelection = bufferProvider.GetSelection();
+            {
+                switch (this.InternalDataspace.Type)
+                {
+                    case DataspaceType.Scalar:
+                    case DataspaceType.Simple:
+
+                        var starts = datasetDims.ToArray();
+                        starts.AsSpan().Fill(0);
+
+                        fileSelection = new HyperslabSelection(rank: datasetDims.Length, starts: starts, blocks: datasetDims);
+
+                        break;
+
+                    case DataspaceType.Null:
+                    default:
+                        throw new Exception($"Unsupported data space type '{this.InternalDataspace.Type}'.");
+                }
+            }
 
             /* result buffer */
             var result = default(T[]);
-            var totalCount = fileSelection.GetTotalCount();
+            var totalCount = fileSelection.TotalElementCount;
             var byteSize = totalCount * this.InternalDataType.Size;
 
             if (buffer.Equals(default))
@@ -212,13 +229,6 @@ namespace HDF5.NET
             /* memory selection */
             if (memorySelection is null)
                 memorySelection = new HyperslabSelection(start: 0, block: totalCount);
-
-            /* check both selections */
-            var fileHyperslabSelection = fileSelection as HyperslabSelection;
-            var memoryHyperslabSelection = memorySelection as HyperslabSelection;
-
-            if (fileHyperslabSelection is null || memoryHyperslabSelection is null)
-                throw new NotSupportedException("Only hyperslab selections are currently supported.");
 
             /* memory dims */
             if (memoryDims is null)
@@ -233,15 +243,15 @@ namespace HDF5.NET
                 datasetChunkDims,
                 memoryDims,
                 memoryDims,
-                fileHyperslabSelection,
-                memoryHyperslabSelection,
+                fileSelection,
+                memorySelection,
                 GetSourceBuffer: getSourceBuffer,
                 GetSourceStream: getSourceStream,
                 GetTargetBuffer: indices => buffer.Cast<T, byte>(),
                 TypeSize: (int)this.InternalDataType.Size
             );
 
-            HyperslabUtils.Copy(fileHyperslabSelection.Rank, memoryHyperslabSelection.Rank, copyInfo);
+            SelectionUtils.Copy(datasetChunkDims.Length, memoryDims.Length, copyInfo);
 
             /* ensure correct endianness */
             var byteOrderAware = this.InternalDataType.BitField as IByteOrderAware;
@@ -253,6 +263,16 @@ namespace HDF5.NET
 
             /* return */
             return result;
+        }
+
+        internal ulong[] GetDatasetDims()
+        {
+            return this.InternalDataspace.Type switch
+            {
+                DataspaceType.Scalar => new ulong[] { 1 },
+                DataspaceType.Simple => this.InternalDataspace.DimensionSizes,
+                _ => throw new Exception($"Unsupported data space type '{this.InternalDataspace.Type}'.")
+            };
         }
 
         private Memory<T> GetBuffer<T>(ulong byteSize, out T[] result)
