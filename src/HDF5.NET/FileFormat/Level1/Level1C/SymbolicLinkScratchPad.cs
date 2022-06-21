@@ -6,7 +6,7 @@
 
         public SymbolicLinkScratchPad(H5BinaryReader reader) : base(reader)
         {
-            this.LinkValueOffset = reader.ReadUInt32();
+            LinkValueOffset = reader.ReadUInt32();
         }
 
         #endregion

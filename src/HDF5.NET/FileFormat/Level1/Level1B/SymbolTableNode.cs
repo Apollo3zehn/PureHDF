@@ -21,20 +21,20 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, SymbolTableNode.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // reserved
             reader.ReadByte();
 
             // symbol count
-            this.SymbolCount = reader.ReadUInt16();
+            SymbolCount = reader.ReadUInt16();
 
             // group entries
-            this.GroupEntries = new List<SymbolTableEntry>();
+            GroupEntries = new List<SymbolTableEntry>();
 
-            for (int i = 0; i < this.SymbolCount; i++)
+            for (int i = 0; i < SymbolCount; i++)
             {
-                this.GroupEntries.Add(new SymbolTableEntry(reader, superblock));
+                GroupEntries.Add(new SymbolTableEntry(reader, superblock));
             }
         }
 

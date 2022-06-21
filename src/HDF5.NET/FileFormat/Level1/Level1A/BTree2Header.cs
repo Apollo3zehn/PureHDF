@@ -29,28 +29,28 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, BTree2Header<T>.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // type
-            this.Type = (BTree2Type)reader.ReadByte();
+            Type = (BTree2Type)reader.ReadByte();
 
             // node size
-            this.NodeSize = reader.ReadUInt32();
+            NodeSize = reader.ReadUInt32();
 
             // record size
-            this.RecordSize = reader.ReadUInt16();
+            RecordSize = reader.ReadUInt16();
 
             // depth
-            this.Depth = reader.ReadUInt16();
+            Depth = reader.ReadUInt16();
 
             // split percent
-            this.SplitPercent = reader.ReadByte();
+            SplitPercent = reader.ReadByte();
 
             // merge percent
-            this.MergePercent = reader.ReadByte();
+            MergePercent = reader.ReadByte();
 
             // root node address
-            this.RootNodePointer = new BTree2NodePointer()
+            RootNodePointer = new BTree2NodePointer()
             {
                 Address = superblock.ReadOffset(reader),
                 RecordCount = reader.ReadUInt16(),
@@ -58,39 +58,39 @@ namespace HDF5.NET
             };
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
 
             // from H5B2hdr.c
-            this.NodeInfos = new BTree2NodeInfo[this.Depth + 1];
+            NodeInfos = new BTree2NodeInfo[Depth + 1];
 
             /* Initialize leaf node info */
             var fixedSizeOverhead = 4U + 1U + 1U + 4U; // signature, version, type, checksum
-            var maxLeafRecordCount = (this.NodeSize - fixedSizeOverhead) / this.RecordSize;
-            this.NodeInfos[0].MaxRecordCount = maxLeafRecordCount;
-            this.NodeInfos[0].SplitRecordCount = (this.NodeInfos[0].MaxRecordCount * this.SplitPercent) / 100;
-            this.NodeInfos[0].MergeRecordCount = (this.NodeInfos[0].MaxRecordCount * this.MergePercent) / 100;
-            this.NodeInfos[0].CumulatedTotalRecordCount = this.NodeInfos[0].MaxRecordCount;
-            this.NodeInfos[0].CumulatedTotalRecordCountSize = 0;
+            var maxLeafRecordCount = (NodeSize - fixedSizeOverhead) / RecordSize;
+            NodeInfos[0].MaxRecordCount = maxLeafRecordCount;
+            NodeInfos[0].SplitRecordCount = (NodeInfos[0].MaxRecordCount * SplitPercent) / 100;
+            NodeInfos[0].MergeRecordCount = (NodeInfos[0].MaxRecordCount * MergePercent) / 100;
+            NodeInfos[0].CumulatedTotalRecordCount = NodeInfos[0].MaxRecordCount;
+            NodeInfos[0].CumulatedTotalRecordCountSize = 0;
 
             /* Compute size to store # of records in each node */
             /* (uses leaf # of records because its the largest) */
-            this.MaxRecordCountSize = (byte)H5Utils.FindMinByteCount(this.NodeInfos[0].MaxRecordCount); ;
+            MaxRecordCountSize = (byte)H5Utils.FindMinByteCount(NodeInfos[0].MaxRecordCount); ;
 
             /* Initialize internal node info */
-            if (this.Depth > 0)
+            if (Depth > 0)
             {
-                for (int i = 1; i < this.Depth + 1; i++)
+                for (int i = 1; i < Depth + 1; i++)
                 {
-                    var pointerSize = (uint)(superblock.OffsetsSize + this.MaxRecordCountSize + this.NodeInfos[i - 1].CumulatedTotalRecordCountSize);
-                    var maxInternalRecordCount = (this.NodeSize - (fixedSizeOverhead + pointerSize)) / this.RecordSize + pointerSize;
+                    var pointerSize = (uint)(superblock.OffsetsSize + MaxRecordCountSize + NodeInfos[i - 1].CumulatedTotalRecordCountSize);
+                    var maxInternalRecordCount = (NodeSize - (fixedSizeOverhead + pointerSize)) / RecordSize + pointerSize;
 
-                    this.NodeInfos[i].MaxRecordCount = maxInternalRecordCount;
-                    this.NodeInfos[i].SplitRecordCount = (this.NodeInfos[i].MaxRecordCount * this.SplitPercent) / 100;
-                    this.NodeInfos[i].MergeRecordCount = (this.NodeInfos[i].MaxRecordCount * this.MergePercent) / 100;
-                    this.NodeInfos[i].CumulatedTotalRecordCount = 
-                        (this.NodeInfos[i].MaxRecordCount + 1) * 
-                         this.NodeInfos[i - 1].MaxRecordCount + this.NodeInfos[i].MaxRecordCount;
-                    this.NodeInfos[i].CumulatedTotalRecordCountSize = (byte)H5Utils.FindMinByteCount(this.NodeInfos[i].CumulatedTotalRecordCount);
+                    NodeInfos[i].MaxRecordCount = maxInternalRecordCount;
+                    NodeInfos[i].SplitRecordCount = (NodeInfos[i].MaxRecordCount * SplitPercent) / 100;
+                    NodeInfos[i].MergeRecordCount = (NodeInfos[i].MaxRecordCount * MergePercent) / 100;
+                    NodeInfos[i].CumulatedTotalRecordCount = 
+                        (NodeInfos[i].MaxRecordCount + 1) * 
+                         NodeInfos[i - 1].MaxRecordCount + NodeInfos[i].MaxRecordCount;
+                    NodeInfos[i].CumulatedTotalRecordCountSize = (byte)H5Utils.FindMinByteCount(NodeInfos[i].CumulatedTotalRecordCount);
                 }
             }
         }
@@ -129,17 +129,17 @@ namespace HDF5.NET
         {
             get
             {
-                if (_superblock.IsUndefinedAddress(this.RootNodePointer.Address))
+                if (_superblock.IsUndefinedAddress(RootNodePointer.Address))
                 {
                     return null;
                 }
                 else
                 {
-                    this.Reader.Seek((long)this.RootNodePointer.Address, SeekOrigin.Begin);
+                    Reader.Seek((long)RootNodePointer.Address, SeekOrigin.Begin);
 
-                    return this.Depth != 0
-                        ? (BTree2Node<T>)new BTree2InternalNode<T>(this.Reader, _superblock, this, this.RootNodePointer.RecordCount, this.Depth, _decodeKey)
-                        : (BTree2Node<T>)new BTree2LeafNode<T>(this.Reader, this, this.RootNodePointer.RecordCount, _decodeKey);
+                    return Depth != 0
+                        ? (BTree2Node<T>)new BTree2InternalNode<T>(Reader, _superblock, this, RootNodePointer.RecordCount, Depth, _decodeKey)
+                        : (BTree2Node<T>)new BTree2LeafNode<T>(Reader, this, RootNodePointer.RecordCount, _decodeKey);
                 }
             }
         }
@@ -165,7 +165,7 @@ namespace HDF5.NET
             result = default;
 
             /* Make copy of the root node pointer to start search with */
-            var currentNodePointer = this.RootNodePointer;
+            var currentNodePointer = RootNodePointer;
 
             /* Check for empty tree */
             if (currentNodePointer.RecordCount == 0)
@@ -174,7 +174,7 @@ namespace HDF5.NET
 #warning Optimizations missing.
 
             /* Current depth of the tree */
-            var depth = this.Depth;
+            var depth = Depth;
 
             /* Walk down B-tree to find record or leaf node where record is located */
             cmp = -1;
@@ -182,14 +182,14 @@ namespace HDF5.NET
 
             while (depth > 0)
             {
-                this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-                var internalNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, currentNodePointer.RecordCount, depth, _decodeKey);
+                Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                var internalNode = new BTree2InternalNode<T>(Reader, _superblock, this, currentNodePointer.RecordCount, depth, _decodeKey);
 
                 if (internalNode is null)
                     throw new Exception("Unable to load B-tree internal node.");
 
                 /* Locate node pointer for child */
-                (index, cmp) = this.LocateRecord(internalNode.Records, compare);
+                (index, cmp) = LocateRecord(internalNode.Records, compare);
 
                 if (cmp > 0)
                     index++;
@@ -235,11 +235,11 @@ namespace HDF5.NET
             }
 
             {
-                this.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-                var leafNode = new BTree2LeafNode<T>(this.Reader, this, currentNodePointer.RecordCount, _decodeKey);
+                Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                var leafNode = new BTree2LeafNode<T>(Reader, this, currentNodePointer.RecordCount, _decodeKey);
 
                 /* Locate record */
-                (index, cmp) = this.LocateRecord(leafNode.Records, compare);
+                (index, cmp) = LocateRecord(leafNode.Records, compare);
 
                 if (cmp == 0)
                 {
@@ -255,10 +255,10 @@ namespace HDF5.NET
 
         public IEnumerable<T> EnumerateRecords()
         {
-            var rootNode = this.RootNode;
+            var rootNode = RootNode;
 
             if (rootNode is not null)
-                return this.EnumerateRecords(rootNode, this.Depth);
+                return EnumerateRecords(rootNode, Depth);
             else
                 return new List<T>();
         }
@@ -286,7 +286,7 @@ namespace HDF5.NET
                         yield return records[i];
 
                     var nodePointer = nodePointers[i];
-                    this.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+                    Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
                     var childNodeLevel = (ushort)(nodeLevel - 1);
 
                     IEnumerable<T> childRecords;
@@ -294,13 +294,13 @@ namespace HDF5.NET
                     // internal node
                     if (childNodeLevel > 0)
                     {
-                        var childNode = new BTree2InternalNode<T>(this.Reader, _superblock, this, nodePointer.RecordCount, childNodeLevel, _decodeKey);
-                        childRecords = this.EnumerateRecords(childNode, childNodeLevel);
+                        var childNode = new BTree2InternalNode<T>(Reader, _superblock, this, nodePointer.RecordCount, childNodeLevel, _decodeKey);
+                        childRecords = EnumerateRecords(childNode, childNodeLevel);
                     }
                     // leaf node
                     else
                     {
-                        var childNode = new BTree2LeafNode<T>(this.Reader, this, nodePointer.RecordCount, _decodeKey);
+                        var childNode = new BTree2LeafNode<T>(Reader, this, nodePointer.RecordCount, _decodeKey);
                         childRecords = childNode.Records;
                     }
 

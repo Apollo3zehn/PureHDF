@@ -31,7 +31,7 @@ namespace HDF5.NET
                 .OrderBy(current => current.Value.LastAccess)
                 .FirstOrDefault();
 
-            this.ConsumedBytes -= (ulong)entry.Value.Chunk.Length;
+            ConsumedBytes -= (ulong)entry.Value.Chunk.Length;
             _chunkInfoMap.Remove(entry.Key);
         }
 

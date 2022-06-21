@@ -9,10 +9,10 @@
             if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
             {
                 // filtered chunk size
-                this.FilteredChunkSize = superblock.ReadLength(reader);
+                FilteredChunkSize = superblock.ReadLength(reader);
 
                 // chunk filters
-                this.ChunkFilters = reader.ReadUInt32();
+                ChunkFilters = reader.ReadUInt32();
             }
         }
 

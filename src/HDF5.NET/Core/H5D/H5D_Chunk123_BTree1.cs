@@ -58,12 +58,12 @@ namespace HDF5.NET
             // load B-Tree 1
             if (_btree1 is null)
             {
-                this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
                 Func<BTree1RawDataChunksKey> decodeKey = 
-                    () => this.DecodeRawDataChunksKey(this.ChunkRank, this.RawChunkDims);
+                    () => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
-                _btree1 = new BTree1Node<BTree1RawDataChunksKey>(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, decodeKey);
+                _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context.Reader, Dataset.Context.Superblock, decodeKey);
             }
 
             // get key and child address
@@ -73,9 +73,9 @@ namespace HDF5.NET
 
             var success = _btree1
                         .TryFindUserData(out var userData,
-                                        (leftKey, rightKey) => this.NodeCompare3(this.ChunkRank, extendedChunkIndices, leftKey, rightKey),
+                                        (leftKey, rightKey) => NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey),
                                         (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
-                                            => this.NodeFound(this.ChunkRank, chunkIndices, address, leftKey, out userData));
+                                            => NodeFound(ChunkRank, chunkIndices, address, leftKey, out userData));
 
             return success
                 ? new ChunkInfo(userData.ChildAddress, userData.ChunkSize, userData.FilterMask)
@@ -89,7 +89,7 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
         {
-            return new BTree1RawDataChunksKey(this.Dataset.Context.Reader, rank, rawChunkDims);
+            return new BTree1RawDataChunksKey(Dataset.Context.Reader, rank, rawChunkDims);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

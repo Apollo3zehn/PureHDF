@@ -17,13 +17,13 @@ namespace HDF5.NET
             _superblock = superblock;
 
             // link name offset
-            this.LinkNameOffset = superblock.ReadOffset(reader);
+            LinkNameOffset = superblock.ReadOffset(reader);
             
             // object header address
-            this.HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(reader);
 
             // cache type
-            this.CacheType = (CacheType)reader.ReadUInt32();
+            CacheType = (CacheType)reader.ReadUInt32();
 
             // reserved
             reader.ReadUInt32();
@@ -31,7 +31,7 @@ namespace HDF5.NET
             // scratch pad
             var before = reader.BaseStream.Position;
 
-            this.ScratchPad = this.CacheType switch
+            ScratchPad = CacheType switch
             {
                 CacheType.NoCache => null,
                 CacheType.ObjectHeader => new ObjectHeaderScratchPad(reader, superblock),

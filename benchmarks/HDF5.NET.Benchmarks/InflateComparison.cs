@@ -27,7 +27,7 @@ namespace Benchmark
         public unsafe void GlobalSetup()
         {
             var random = new Random(Seed: 0);
-            var original = new byte[this.N];
+            var original = new byte[N];
 
             random.NextBytes(original);
             
@@ -46,7 +46,7 @@ namespace Benchmark
 
             _original = original;
             _deflated = Deflate(original);
-            _inflated = new byte[this.N];
+            _inflated = new byte[N];
 
             // create memory streams
             _deflatedStream = new MemoryStream(_deflated);

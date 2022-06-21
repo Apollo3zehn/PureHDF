@@ -17,7 +17,7 @@ namespace HDF5.NET
 #warning implement this correctly
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

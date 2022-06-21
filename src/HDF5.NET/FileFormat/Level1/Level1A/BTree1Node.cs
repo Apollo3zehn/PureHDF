@@ -29,23 +29,23 @@ namespace HDF5.NET
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
 
-            this.NodeType = (BTree1NodeType)reader.ReadByte();
-            this.NodeLevel = reader.ReadByte();
-            this.EntriesUsed = reader.ReadUInt16();
+            NodeType = (BTree1NodeType)reader.ReadByte();
+            NodeLevel = reader.ReadByte();
+            EntriesUsed = reader.ReadUInt16();
 
-            this.LeftSiblingAddress = superblock.ReadOffset(reader);
-            this.RightSiblingAddress = superblock.ReadOffset(reader);
+            LeftSiblingAddress = superblock.ReadOffset(reader);
+            RightSiblingAddress = superblock.ReadOffset(reader);
 
-            this.Keys = new T[this.EntriesUsed + 1];
-            this.ChildAddresses = new ulong[this.EntriesUsed];
+            Keys = new T[EntriesUsed + 1];
+            ChildAddresses = new ulong[EntriesUsed];
 
-            for (int i = 0; i < this.EntriesUsed; i++)
+            for (int i = 0; i < EntriesUsed; i++)
             {
-                this.Keys[i] = decodeKey();
-                this.ChildAddresses[i] = superblock.ReadOffset(reader);
+                Keys[i] = decodeKey();
+                ChildAddresses[i] = superblock.ReadOffset(reader);
             }
 
-            this.Keys[this.EntriesUsed] = decodeKey();
+            Keys[EntriesUsed] = decodeKey();
         }
 
         #endregion
@@ -66,7 +66,7 @@ namespace HDF5.NET
         {
             get
             {
-                _reader.Seek((long)this.LeftSiblingAddress, SeekOrigin.Begin);
+                _reader.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node<T>(_reader, _superblock, _decodeKey);
             }
         }
@@ -75,7 +75,7 @@ namespace HDF5.NET
         {
             get
             {
-                _reader.Seek((long)this.RightSiblingAddress, SeekOrigin.Begin);
+                _reader.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node<T>(_reader, _superblock, _decodeKey);
             }
         }
@@ -97,7 +97,7 @@ namespace HDF5.NET
              * Perform a binary search to locate the child which contains
              * the thing for which we're searching.
              */
-            (var index, var cmp) = this.LocateRecord(compare3);
+            (var index, var cmp) = LocateRecord(compare3);
 
             /* Check if not found */
             if (cmp != 0)
@@ -106,10 +106,10 @@ namespace HDF5.NET
             /*
              * Follow the link to the subtree or to the data node.
              */
-            var childAddress = this.ChildAddresses[(int)index];
-            var key = this.Keys[index];
+            var childAddress = ChildAddresses[(int)index];
+            var key = Keys[index];
 
-            if (this.NodeLevel > 0)
+            if (NodeLevel > 0)
             {
                 _reader.Seek((long)childAddress, SeekOrigin.Begin);
                 var subtree = new BTree1Node<T>(_reader, _superblock, _decodeKey);
@@ -128,7 +128,7 @@ namespace HDF5.NET
 
         public IEnumerable<BTree1Node<T>> EnumerateNodes()
         {
-            return this.EnumerateNodes(this);
+            return EnumerateNodes(this);
         }
 
         private IEnumerable<BTree1Node<T>> EnumerateNodes(BTree1Node<T> node)
@@ -145,7 +145,7 @@ namespace HDF5.NET
                     // internal node
                     if ((node.NodeLevel - 1) > 0)
                     {
-                        var internalNodes = this.EnumerateNodes(childNode);
+                        var internalNodes = EnumerateNodes(childNode);
 
                         foreach (var internalNode in internalNodes)
                         {
@@ -171,14 +171,14 @@ namespace HDF5.NET
             uint index = 0, low = 0, high;  /* Final, left & right key indices */
             int cmp = 1;                    /* Key comparison value */
 
-            high = this.EntriesUsed;
+            high = EntriesUsed;
 
             while (low < high && cmp != 0)
             {
                 index = (low + high) / 2;
 
                 /* compare */
-                cmp = compare3(this.Keys[(int)index], this.Keys[(int)index + 1]);
+                cmp = compare3(Keys[(int)index], Keys[(int)index + 1]);
 
                 if (cmp < 0)
                     high = index;

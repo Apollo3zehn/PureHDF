@@ -25,7 +25,7 @@ namespace HDF5.NET
 
         public override ulong[] GetChunkDims()
         {
-            return this.Dataset.GetDatasetDims();
+            return Dataset.GetDatasetDims();
         }
 
         public override Memory<byte> GetBuffer(ulong[] chunkIndices)
@@ -35,25 +35,25 @@ namespace HDF5.NET
 
         public override Stream? GetStream(ulong[] chunkIndices)
         {
-            var address = this.Dataset.InternalDataLayout.Address;
+            var address = Dataset.InternalDataLayout.Address;
 
             if (_stream is null)
             {
-                if (this.Dataset.Context.Superblock.IsUndefinedAddress(address))
+                if (Dataset.Context.Superblock.IsUndefinedAddress(address))
                 {
-                    if (this.Dataset.InternalExternalFileList is not null)
-                        _stream = new ExternalFileListStream(this.Dataset.InternalExternalFileList, this.DatasetAccess);
+                    if (Dataset.InternalExternalFileList is not null)
+                        _stream = new ExternalFileListStream(Dataset.InternalExternalFileList, DatasetAccess);
 
-                    else if (this.Dataset.InternalFillValue.Value is not null)
-                        _stream = new UnsafeFillValueStream(this.Dataset.InternalFillValue.Value);
+                    else if (Dataset.InternalFillValue.Value is not null)
+                        _stream = new UnsafeFillValueStream(Dataset.InternalFillValue.Value);
 
                     else
                         _stream = null;
                 }
                 else
                 {
-                    this.Dataset.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                    _stream = new OffsetStream(this.Dataset.Context.Reader.BaseStream, this.Dataset.Context.Reader.BaseStream.Position);
+                    Dataset.Context.Reader.Seek((long)address, SeekOrigin.Begin);
+                    _stream = new OffsetStream(Dataset.Context.Reader.BaseStream, Dataset.Context.Reader.BaseStream.Position);
                 }
             }
             

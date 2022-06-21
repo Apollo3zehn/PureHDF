@@ -16,14 +16,14 @@ namespace HDF5.NET
 
         internal H5Object(H5Context context, NamedReference reference)
         {
-            this.Context = context;
-            this.Reference = reference;
+            Context = context;
+            Reference = reference;
         }
 
         internal H5Object(H5Context context, NamedReference reference, ObjectHeader header)
         {
-            this.Context = context;
-            this.Reference = reference;
+            Context = context;
+            Reference = reference;
             _header = header;
         }
 
@@ -33,7 +33,7 @@ namespace HDF5.NET
 
         internal H5Context Context { get; }
 
-        internal uint ReferenceCount => this.GetReferenceCount();
+        internal uint ReferenceCount => GetReferenceCount();
 
         internal NamedReference Reference { get; set; }
 
@@ -43,7 +43,7 @@ namespace HDF5.NET
             {
                 if (_objectReferenceCount is null)
                 {
-                    _objectReferenceCount = this.Header
+                    _objectReferenceCount = Header
                         .GetMessages<ObjectReferenceCountMessage>()
                         .FirstOrDefault();
                 }
@@ -58,8 +58,8 @@ namespace HDF5.NET
             {
                 if (_header is null)
                 {
-                    this.Context.Reader.Seek((long)this.Reference.Value, SeekOrigin.Begin);
-                    _header = ObjectHeader.Construct(this.Context);
+                    Context.Reader.Seek((long)Reference.Value, SeekOrigin.Begin);
+                    _header = ObjectHeader.Construct(Context);
                 }
 
                 return _header;
@@ -72,15 +72,15 @@ namespace HDF5.NET
 
         private uint GetReferenceCount()
         {
-            var header1 = this.Header as ObjectHeader1;
+            var header1 = Header as ObjectHeader1;
 
             if (header1 is not null)
                 return header1.ObjectReferenceCount;
 
             else
-                return this.ObjectReferenceCount is null
+                return ObjectReferenceCount is null
                     ? 1
-                    : this.ObjectReferenceCount.ReferenceCount;
+                    : ObjectReferenceCount.ReferenceCount;
         }
 
         #endregion

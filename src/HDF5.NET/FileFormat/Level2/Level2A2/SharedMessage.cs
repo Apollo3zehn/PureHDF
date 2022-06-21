@@ -17,27 +17,27 @@ namespace HDF5.NET
             // H5Oshared.c (H5O__shared_decode)
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // type
-            if (this.Version == 3)
+            if (Version == 3)
             {
-                this.Type = (SharedMessageLocation)reader.ReadByte();
+                Type = (SharedMessageLocation)reader.ReadByte();
             }
             else
             {
                 reader.ReadByte();
-                this.Type = SharedMessageLocation.AnotherObjectsHeader;
+                Type = SharedMessageLocation.AnotherObjectsHeader;
             }
 
             // reserved
-            if (this.Version == 1)
+            if (Version == 1)
                 reader.ReadBytes(6);
 
             // address
-            if (this.Version == 1)
+            if (Version == 1)
             {
-                this.Address = superblock.ReadOffset(reader);
+                Address = superblock.ReadOffset(reader);
             }
             else
             {
@@ -45,14 +45,14 @@ namespace HDF5.NET
                  * Otherwise, it is a named datatype, so copy an H5O_loc_t.
                  */
 
-                if (this.Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
+                if (Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
                 {
 #warning implement this
                     throw new NotImplementedException("This code path is not yet implemented.");
                 }
                 else
                 {
-                    this.Address = superblock.ReadOffset(reader);
+                    Address = superblock.ReadOffset(reader);
                 }
             }
         }

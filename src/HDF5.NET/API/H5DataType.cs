@@ -53,7 +53,7 @@ namespace HDF5.NET
             {
                 if (_fixedPoint is null)
                 {
-                    if (this.Class == H5DataTypeClass.FixedPoint)
+                    if (Class == H5DataTypeClass.FixedPoint)
                         _fixedPoint = new FixedPointType(
                             (FixedPointBitFieldDescription)_dataType.BitField, 
                             (FixedPointPropertyDescription)_dataType.Properties.First());

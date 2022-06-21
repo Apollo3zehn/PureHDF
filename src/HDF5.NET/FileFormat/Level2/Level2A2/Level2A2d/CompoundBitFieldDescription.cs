@@ -17,12 +17,12 @@
         {
             get
             {
-                return (ushort)(this.Data[0] + (this.Data[1] << 8)); 
+                return (ushort)(Data[0] + (Data[1] << 8)); 
             }
             set 
             {
-                this.Data[0] = (byte)(value & 0x00FF);
-                this.Data[1] = (byte)((value & 0xFF00) >> 8);
+                Data[0] = (byte)(value & 0x00FF);
+                Data[1] = (byte)((value & 0xFF00) >> 8);
             }
         }
             

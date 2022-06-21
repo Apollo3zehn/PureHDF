@@ -20,35 +20,35 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, ExtensibleArrayHeader.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)reader.ReadByte();
 
             // byte fields
-            this.ElementSize = reader.ReadByte();
-            this.ExtensibleArrayMaximumNumberOfElementsBits = reader.ReadByte();
-            this.IndexBlockElementsCount = reader.ReadByte();
-            this.DataBlockMininumElementsCount = reader.ReadByte();
-            this.SecondaryBlockMinimumDataBlockPointerCount = reader.ReadByte();
-            this.DataBlockPageMaximumNumberOfElementsBits = reader.ReadByte();
+            ElementSize = reader.ReadByte();
+            ExtensibleArrayMaximumNumberOfElementsBits = reader.ReadByte();
+            IndexBlockElementsCount = reader.ReadByte();
+            DataBlockMininumElementsCount = reader.ReadByte();
+            SecondaryBlockMinimumDataBlockPointerCount = reader.ReadByte();
+            DataBlockPageMaximumNumberOfElementsBits = reader.ReadByte();
 
             // length fields
-            this.SecondaryBlocksCount = superblock.ReadLength(reader);
-            this.SecondaryBlocksSize = superblock.ReadLength(reader);
-            this.DataBlocksCount = superblock.ReadLength(reader);
-            this.DataBlocksSize = superblock.ReadLength(reader);
-            this.MaximumIndexSet = superblock.ReadLength(reader);
-            this.ElementsCount = superblock.ReadLength(reader);
+            SecondaryBlocksCount = superblock.ReadLength(reader);
+            SecondaryBlocksSize = superblock.ReadLength(reader);
+            DataBlocksCount = superblock.ReadLength(reader);
+            DataBlocksSize = superblock.ReadLength(reader);
+            MaximumIndexSet = superblock.ReadLength(reader);
+            ElementsCount = superblock.ReadLength(reader);
 
             // index block address
-            this.IndexBlockAddress = superblock.ReadOffset(reader);
+            IndexBlockAddress = superblock.ReadOffset(reader);
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
 
             // initialize
-            this.Initialize();
+            Initialize();
         }
 
         #endregion
@@ -119,10 +119,10 @@ namespace HDF5.NET
             // H5EAdblock.c (H5EA__dblock_sblk_idx)
 
             /* Adjust index for elements in index block */
-            index -= this.IndexBlockElementsCount;
+            index -= IndexBlockElementsCount;
 
             /* Determine the superblock information for the index */
-            var tmp = index / this.DataBlockMininumElementsCount;
+            var tmp = index / DataBlockMininumElementsCount;
             var secondaryBlockIndex = (uint)Math.Log(tmp + 1, 2);
 
             return secondaryBlockIndex;
@@ -133,30 +133,30 @@ namespace HDF5.NET
             // H5EA.hdr.c (H5EA__hdr_init)
 
             /* Compute general information */
-            this.SecondaryBlockCount = 1UL +
-                this.ExtensibleArrayMaximumNumberOfElementsBits -
+            SecondaryBlockCount = 1UL +
+                ExtensibleArrayMaximumNumberOfElementsBits -
                 (uint)Math.Log(DataBlockMininumElementsCount, 2);
 
-            this.DataBlockPageElementsCount = 1UL << this.DataBlockPageMaximumNumberOfElementsBits;
-            this.ArrayOffsetsSize = (byte)((this.ExtensibleArrayMaximumNumberOfElementsBits + 7) / 8);
+            DataBlockPageElementsCount = 1UL << DataBlockPageMaximumNumberOfElementsBits;
+            ArrayOffsetsSize = (byte)((ExtensibleArrayMaximumNumberOfElementsBits + 7) / 8);
 
             /* Allocate information for each super block */
-            this.SecondaryBlockInfos = new ExtensibleArraySecondaryBlockInformation[this.SecondaryBlockCount];
+            SecondaryBlockInfos = new ExtensibleArraySecondaryBlockInformation[SecondaryBlockCount];
 
             /* Compute information about each super block */
             var elementStartIndex = 0UL;
             var dataBlockStartIndex = 0UL;
 
-            for (ulong i = 0; i < this.SecondaryBlockCount; i++)
+            for (ulong i = 0; i < SecondaryBlockCount; i++)
             {
-                this.SecondaryBlockInfos[i].DataBlockCount = (ulong)(1 << ((int)i / 2));
-                this.SecondaryBlockInfos[i].ElementsCount = (ulong)(1 << (((int)i + 1) / 2)) * this.DataBlockMininumElementsCount;
-                this.SecondaryBlockInfos[i].ElementStartIndex = elementStartIndex;
-                this.SecondaryBlockInfos[i].DataBlockStartIndex = dataBlockStartIndex;
+                SecondaryBlockInfos[i].DataBlockCount = (ulong)(1 << ((int)i / 2));
+                SecondaryBlockInfos[i].ElementsCount = (ulong)(1 << (((int)i + 1) / 2)) * DataBlockMininumElementsCount;
+                SecondaryBlockInfos[i].ElementStartIndex = elementStartIndex;
+                SecondaryBlockInfos[i].DataBlockStartIndex = dataBlockStartIndex;
 
                 /* Advance starting indices for next super block */
-                elementStartIndex += this.SecondaryBlockInfos[i].DataBlockCount * this.SecondaryBlockInfos[i].ElementsCount;
-                dataBlockStartIndex += this.SecondaryBlockInfos[i].DataBlockCount;
+                elementStartIndex += SecondaryBlockInfos[i].DataBlockCount * SecondaryBlockInfos[i].ElementsCount;
+                dataBlockStartIndex += SecondaryBlockInfos[i].DataBlockCount;
             }
         }
 

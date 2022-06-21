@@ -8,16 +8,16 @@
         {
             // fractal heap indirect block offset
 #warning implement this correctly
-            //this.FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
+            //FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
 
             // block start row
-            this.BlockStartRow = reader.ReadUInt16();
+            BlockStartRow = reader.ReadUInt16();
 
             // block start column
-            this.BlockStartColumn = reader.ReadUInt16();
+            BlockStartColumn = reader.ReadUInt16();
 
             // block count
-            this.BlockCount = reader.ReadUInt16();
+            BlockCount = reader.ReadUInt16();
         }
 
         #endregion

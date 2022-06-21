@@ -7,13 +7,13 @@
         public FractalHeapSharedMessageRecord(H5BinaryReader reader) : base(reader)
         {
             // hash value
-            this.HashValue = reader.ReadUInt32();
+            HashValue = reader.ReadUInt32();
 
             // reference count
-            this.ReferenceCount = reader.ReadUInt32();
+            ReferenceCount = reader.ReadUInt32();
 
             // fractal heap ID
-            this.FractalHeapId = reader.ReadUInt64();
+            FractalHeapId = reader.ReadUInt64();
         }
 
         #endregion

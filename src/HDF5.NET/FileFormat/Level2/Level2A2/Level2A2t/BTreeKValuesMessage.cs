@@ -15,16 +15,16 @@ namespace HDF5.NET
         public BTreeKValuesMessage(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // indexed stroage internal node k
-            this.IndexedStorageInternalNodeK = reader.ReadUInt16();
+            IndexedStorageInternalNodeK = reader.ReadUInt16();
 
             // group internal node k
-            this.GroupInternalNodeK = reader.ReadUInt16();
+            GroupInternalNodeK = reader.ReadUInt16();
 
             // group leaf node k
-            this.GroupLeafNodeK = reader.ReadUInt16();
+            GroupLeafNodeK = reader.ReadUInt16();
         }
 
         #endregion

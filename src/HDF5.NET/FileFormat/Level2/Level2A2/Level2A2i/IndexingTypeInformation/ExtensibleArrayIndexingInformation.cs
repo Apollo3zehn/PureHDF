@@ -9,33 +9,33 @@ namespace HDF5.NET
         public ExtensibleArrayIndexingInformation(H5BinaryReader reader) : base(reader)
         {
             // max bit count
-            this.MaxBitCount = reader.ReadByte();
+            MaxBitCount = reader.ReadByte();
 
-            if (this.MaxBitCount == 0)
+            if (MaxBitCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // index element count
-            this.IndexElementsCount = reader.ReadByte();
+            IndexElementsCount = reader.ReadByte();
 
-            if (this.IndexElementsCount == 0)
+            if (IndexElementsCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // min pointer count
-            this.MinPointerCount = reader.ReadByte();
+            MinPointerCount = reader.ReadByte();
 
-            if (this.MinPointerCount == 0)
+            if (MinPointerCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // min element count
-            this.MinElementsCount = reader.ReadByte();
+            MinElementsCount = reader.ReadByte();
 
-            if (this.MinElementsCount == 0)
+            if (MinElementsCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // page bit count
-            this.PageBitCount = reader.ReadByte();
+            PageBitCount = reader.ReadByte();
 
-            if (this.PageBitCount == 0)
+            if (PageBitCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
         }
 

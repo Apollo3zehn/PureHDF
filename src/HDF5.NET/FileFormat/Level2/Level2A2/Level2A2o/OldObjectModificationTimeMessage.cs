@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System;
+
+namespace HDF5.NET
 {
     internal class OldObjectModificationTimeMessage : Message
     {
@@ -7,12 +9,12 @@
         public OldObjectModificationTimeMessage(H5BinaryReader reader) : base(reader)
         {
             // date / time
-            this.Year = H5Utils.ReadFixedLengthString(reader, 4);
-            this.Month = H5Utils.ReadFixedLengthString(reader, 2);
-            this.DayOfMonth = H5Utils.ReadFixedLengthString(reader, 2);
-            this.Hour = H5Utils.ReadFixedLengthString(reader, 2);
-            this.Minute = H5Utils.ReadFixedLengthString(reader, 2);
-            this.Second = H5Utils.ReadFixedLengthString(reader, 2);
+            Year = int.Parse(H5Utils.ReadFixedLengthString(reader, 4));
+            Month = int.Parse(H5Utils.ReadFixedLengthString(reader, 2));
+            DayOfMonth = int.Parse(H5Utils.ReadFixedLengthString(reader, 2));
+            Hour = int.Parse(H5Utils.ReadFixedLengthString(reader, 2));
+            Minute = int.Parse(H5Utils.ReadFixedLengthString(reader, 2));
+            Second = int.Parse(H5Utils.ReadFixedLengthString(reader, 2));
 
             // reserved
             reader.ReadBytes(2);
@@ -22,12 +24,24 @@
 
         #region Properties
 
-        public string Year { get; set; }
-        public string Month { get; set; }
-        public string DayOfMonth { get; set; }
-        public string Hour { get; set; }
-        public string Minute { get; set; }
-        public string Second { get; set; }
+        public int Year { get; set; }
+        public int Month { get; set; }
+        public int DayOfMonth { get; set; }
+        public int Hour { get; set; }
+        public int Minute { get; set; }
+        public int Second { get; set; }
+
+        #endregion
+
+        #region Methods
+
+        public ObjectModificationMessage ToObjectModificationMessage()
+        {
+            var dateTime = new DateTime(Year, Month, DayOfMonth, Hour, Minute, Second);
+            var secondsAfterUnixEpoch = (uint)((DateTimeOffset)dateTime).ToUnixTimeSeconds();
+
+            return new ObjectModificationMessage(secondsAfterUnixEpoch);
+        }
 
         #endregion
     }

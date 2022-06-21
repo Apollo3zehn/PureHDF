@@ -20,27 +20,27 @@ namespace HDF5.NET
             _superblock = superblock;
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
 
 #warning Its value must be at least as large as the value contained in the Used Slots field.
             // allocated slot count
-            this.AllocatedSlotCount = reader.ReadUInt16();
+            AllocatedSlotCount = reader.ReadUInt16();
 
             // used slot count
-            this.UsedSlotCount = reader.ReadUInt16();
+            UsedSlotCount = reader.ReadUInt16();
 
             // heap address
-            this.HeapAddress = superblock.ReadOffset(reader);
+            HeapAddress = superblock.ReadOffset(reader);
 
             // slot definitions
-            this.SlotDefinitions = new ExternalFileListSlot[this.UsedSlotCount];
+            SlotDefinitions = new ExternalFileListSlot[UsedSlotCount];
 
-            for (int i = 0; i < this.UsedSlotCount; i++)
+            for (int i = 0; i < UsedSlotCount; i++)
             {
-                this.SlotDefinitions[i] = new ExternalFileListSlot(reader, superblock);
+                SlotDefinitions[i] = new ExternalFileListSlot(reader, superblock);
             }
         }
 
@@ -72,8 +72,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.HeapAddress, SeekOrigin.Begin);
-                return new LocalHeap(this.Reader, _superblock);
+                Reader.Seek((long)HeapAddress, SeekOrigin.Begin);
+                return new LocalHeap(Reader, _superblock);
             }
         }
 

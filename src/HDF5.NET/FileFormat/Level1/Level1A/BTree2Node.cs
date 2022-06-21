@@ -18,20 +18,20 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(actualSignature, signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // type
-            this.Type = (BTree2Type)reader.ReadByte();
+            Type = (BTree2Type)reader.ReadByte();
 
-            if (this.Type != header.Type)
-                throw new FormatException($"The BTree2 internal node type ('{this.Type}') does not match the type defined in the header ('{header.Type}').");
+            if (Type != header.Type)
+                throw new FormatException($"The BTree2 internal node type ('{Type}') does not match the type defined in the header ('{header.Type}').");
 
             // records
-            this.Records = new T[recordCount];
+            Records = new T[recordCount];
 
             for (ulong i = 0; i < recordCount; i++)
             {
-                this.Records[i] = decodeKey();
+                Records[i] = decodeKey();
             }
         }
 

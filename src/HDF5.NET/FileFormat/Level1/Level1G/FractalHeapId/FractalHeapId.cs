@@ -50,7 +50,7 @@ namespace HDF5.NET
         {
 #warning Is there a better way?
             List<BTree2Record01>? cache = null;
-            return this.Read(func, ref cache);
+            return Read(func, ref cache);
         }
 
         public abstract T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache);

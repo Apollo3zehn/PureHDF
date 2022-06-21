@@ -48,14 +48,14 @@ namespace HDF5.NET
 
         public void Dispose()
         {
-            H5Cache.Clear(this.Context.Superblock);
-            this.Context.Reader.Dispose();
+            H5Cache.Clear(Context.Superblock);
+            Context.Reader.Dispose();
 
-            if (_deleteOnClose && System.IO.File.Exists(this.Path))
+            if (_deleteOnClose && System.IO.File.Exists(Path))
             {
                 try
                 {
-                    System.IO.File.Delete(this.Path);
+                    System.IO.File.Delete(Path);
                 }
                 catch
                 {

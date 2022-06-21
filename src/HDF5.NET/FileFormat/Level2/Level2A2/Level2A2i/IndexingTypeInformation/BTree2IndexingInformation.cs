@@ -7,13 +7,13 @@
         public BTree2IndexingInformation(H5BinaryReader reader) : base(reader)
         {
             // node size
-            this.NodeSize = reader.ReadUInt32();
+            NodeSize = reader.ReadUInt32();
 
             // split percent
-            this.SplitPercent = reader.ReadByte();
+            SplitPercent = reader.ReadByte();
 
             // merge percent
-            this.MergePercent = reader.ReadByte();
+            MergePercent = reader.ReadByte();
         }
 
         #endregion

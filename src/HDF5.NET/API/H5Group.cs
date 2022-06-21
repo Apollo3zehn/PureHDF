@@ -9,7 +9,7 @@ namespace HDF5.NET
         #region Properties
 
         public IEnumerable<H5Object> Children
-            => this.GetChildren(new H5LinkAccess());
+            => GetChildren(new H5LinkAccess());
 
         #endregion
 
@@ -17,7 +17,7 @@ namespace HDF5.NET
 
         public bool LinkExists(string path, H5LinkAccess linkAccess = default)
         {
-            return this.InternalLinkExists(path, linkAccess);
+            return InternalLinkExists(path, linkAccess);
         }
 
         public H5Object Get(string path, H5LinkAccess linkAccess = default)
@@ -29,7 +29,7 @@ namespace HDF5.NET
 
         public H5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default)
         {
-            if (this.Reference.Value == reference.Value)
+            if (Reference.Value == reference.Value)
                 return this;
 
             return this
@@ -39,7 +39,7 @@ namespace HDF5.NET
 
         public H5Group Group(string path, H5LinkAccess linkAccess = default)
         {
-            var link = this.Get(path, linkAccess);
+            var link = Get(path, linkAccess);
             var group = link as H5Group;
 
             if (group is null)
@@ -50,7 +50,7 @@ namespace HDF5.NET
 
         public H5Dataset Dataset(string path, H5LinkAccess linkAccess = default)
         {
-            var link = this.Get(path, linkAccess);
+            var link = Get(path, linkAccess);
             var castedLink = link as H5Dataset;
 
             if (castedLink is null)
@@ -61,7 +61,7 @@ namespace HDF5.NET
 
         public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccess linkAccess = default)
         {
-            var link = this.Get(path, linkAccess);
+            var link = Get(path, linkAccess);
             var castedLink = link as H5CommitedDatatype;
 
             if (castedLink is null)

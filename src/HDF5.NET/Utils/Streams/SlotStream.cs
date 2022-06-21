@@ -15,7 +15,7 @@ namespace HDF5.NET
         {
             _heap = heap;
             _slot = slot;
-            this.Offset = offset;
+            Offset = offset;
             _datasetAccess = datasetAccess;
         }
 
@@ -48,9 +48,9 @@ namespace HDF5.NET
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var length = (int)Math.Min(this.Length - this.Position, count);
+            var length = (int)Math.Min(Length - Position, count);
 
-            _stream = this.EnsureStream();
+            _stream = EnsureStream();
 
             var actualLength = _stream.Read(buffer, offset, length);
 
@@ -71,10 +71,10 @@ namespace HDF5.NET
             {
                 case SeekOrigin.Begin:
 
-                    if (offset > this.Length)
+                    if (offset > Length)
                         throw new Exception("The offset exceeds the stream length.");
 
-                    _stream = this.EnsureStream();
+                    _stream = EnsureStream();
                     _stream.Seek(offset + (long)_slot.Offset, origin);
                     _position = offset;
 

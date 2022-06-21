@@ -34,7 +34,7 @@ namespace HDF5.NET
             var chunkCacheFactory = datasetAccess.ChunkCacheFactory;
 
             if (chunkCacheFactory is null)
-                chunkCacheFactory = this.Dataset.File.ChunkCacheFactory;
+                chunkCacheFactory = Dataset.File.ChunkCacheFactory;
 
             if (chunkCacheFactory is null)
                 chunkCacheFactory = H5File.DefaultChunkCacheFactory;
@@ -113,50 +113,50 @@ namespace HDF5.NET
         {
             // H5Dchunk.c (H5D__chunk_set_info_real)
 
-            this.RawChunkDims = this.GetRawChunkDims();
-            this.ChunkDims = this.RawChunkDims[..^1].ToArray();
-            this.ChunkRank = (byte)this.ChunkDims.Length;
-            this.ChunkByteSize = H5Utils.CalculateSize(this.ChunkDims) * this.Dataset.InternalDataType.Size;
-            this.Dims = this.Dataset.InternalDataspace.DimensionSizes;
-            this.MaxDims = this.Dataset.InternalDataspace.DimensionMaxSizes;
-            this.TotalChunkCount = 1;
-            this.TotalMaxChunkCount = 1;
+            RawChunkDims = GetRawChunkDims();
+            ChunkDims = RawChunkDims[..^1].ToArray();
+            ChunkRank = (byte)ChunkDims.Length;
+            ChunkByteSize = H5Utils.CalculateSize(ChunkDims) * Dataset.InternalDataType.Size;
+            Dims = Dataset.InternalDataspace.DimensionSizes;
+            MaxDims = Dataset.InternalDataspace.DimensionMaxSizes;
+            TotalChunkCount = 1;
+            TotalMaxChunkCount = 1;
 
-            this.ScaledDims = new ulong[this.ChunkRank];
-            this.ScaledMaxDims = new ulong[this.ChunkRank];
+            ScaledDims = new ulong[ChunkRank];
+            ScaledMaxDims = new ulong[ChunkRank];
 
-            for (int i = 0; i < this.ChunkRank; i++)
+            for (int i = 0; i < ChunkRank; i++)
             {
-                this.ScaledDims[i] = H5Utils.CeilDiv(this.Dims[i], this.ChunkDims[i]);
+                ScaledDims[i] = H5Utils.CeilDiv(Dims[i], ChunkDims[i]);
 
-                if (this.MaxDims[i] == H5Constants.Unlimited)
-                    this.ScaledMaxDims[i] = H5Constants.Unlimited;
-
-                else
-                    this.ScaledMaxDims[i] = H5Utils.CeilDiv(this.MaxDims[i], this.ChunkDims[i]);
-
-                this.TotalChunkCount *= this.ScaledDims[i];
-
-                if (this.ScaledMaxDims[i] == H5Constants.Unlimited || this.TotalMaxChunkCount == H5Constants.Unlimited)
-                    this.TotalMaxChunkCount = H5Constants.Unlimited;
+                if (MaxDims[i] == H5Constants.Unlimited)
+                    ScaledMaxDims[i] = H5Constants.Unlimited;
 
                 else
-                    this.TotalMaxChunkCount *= this.ScaledMaxDims[i];
+                    ScaledMaxDims[i] = H5Utils.CeilDiv(MaxDims[i], ChunkDims[i]);
+
+                TotalChunkCount *= ScaledDims[i];
+
+                if (ScaledMaxDims[i] == H5Constants.Unlimited || TotalMaxChunkCount == H5Constants.Unlimited)
+                    TotalMaxChunkCount = H5Constants.Unlimited;
+
+                else
+                    TotalMaxChunkCount *= ScaledMaxDims[i];
             }
 
             /* Get the "down" sizes for each dimension */
-            this.DownChunkCounts = this.ScaledDims.AccumulateReverse();
-            this.DownMaxChunkCounts = this.ScaledMaxDims.AccumulateReverse();
+            DownChunkCounts = ScaledDims.AccumulateReverse();
+            DownMaxChunkCounts = ScaledMaxDims.AccumulateReverse();
         }
 
         public override ulong[] GetChunkDims()
         {
-            return this.ChunkDims;
+            return ChunkDims;
         }
 
         public override Memory<byte> GetBuffer(ulong[] chunkIndices)
         {
-            return _chunkCache.GetChunk(chunkIndices, () => this.ReadChunk(chunkIndices));
+            return _chunkCache.GetChunk(chunkIndices, () => ReadChunk(chunkIndices));
         }
 
         public override Stream? GetStream(ulong[] chunkIndices)
@@ -170,27 +170,27 @@ namespace HDF5.NET
 
         private byte[] ReadChunk(ulong[] chunkIndices)
         {
-            var buffer = new byte[this.ChunkByteSize];
+            var buffer = new byte[ChunkByteSize];
 
 #warning This way, fill values will become part of the cache
             if (_indexAddressIsUndefined)
             {
-                if (this.Dataset.InternalFillValue.Value is not null)
-                    buffer.AsSpan().Fill(this.Dataset.InternalFillValue.Value);
+                if (Dataset.InternalFillValue.Value is not null)
+                    buffer.AsSpan().Fill(Dataset.InternalFillValue.Value);
             }
             else
             {
-                var chunkInfo = this.GetChunkInfo(chunkIndices);
+                var chunkInfo = GetChunkInfo(chunkIndices);
 
-                if (this.Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
+                if (Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
                 {
-                    if (this.Dataset.InternalFillValue.Value is not null)
-                        buffer.AsSpan().Fill(this.Dataset.InternalFillValue.Value);
+                    if (Dataset.InternalFillValue.Value is not null)
+                        buffer.AsSpan().Fill(Dataset.InternalFillValue.Value);
                 }
                 else
                 {
-                    this.Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                    this.ReadChunk(buffer, chunkInfo.Size, chunkInfo.FilterMask);
+                    Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadChunk(buffer, chunkInfo.Size, chunkInfo.FilterMask);
                 }
             }
 
@@ -200,17 +200,17 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReadChunk(Memory<byte> buffer, ulong rawChunkSize, uint filterMask)
         {
-            if (this.Dataset.InternalFilterPipeline is null)
+            if (Dataset.InternalFilterPipeline is null)
             {
-                this.Dataset.Context.Reader.Read(buffer.Span);
+                Dataset.Context.Reader.Read(buffer.Span);
             }
             else
             {
                 using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-                this.Dataset.Context.Reader.Read(filterBuffer.Span);
+                Dataset.Context.Reader.Read(filterBuffer.Span);
 
-                H5Filter.ExecutePipeline(this.Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
+                H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }
         }
 

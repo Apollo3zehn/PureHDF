@@ -10,7 +10,7 @@ namespace HDF5.NET
         internal H5CommitedDatatype(H5Context context, ObjectHeader header, NamedReference reference) 
             : base(context, reference, header)
         {
-            this.Datatype = header.GetMessage<DatatypeMessage>();
+            Datatype = header.GetMessage<DatatypeMessage>();
         }
 
         #endregion

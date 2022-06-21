@@ -15,10 +15,10 @@ namespace HDF5.NET
         public H5S_SEL_HYPER(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadUInt32();
+            Version = reader.ReadUInt32();
 
             // hyperslab selection info
-            this.HyperslabSelectionInfo = this.Version switch
+            HyperslabSelectionInfo = Version switch
             {
                 1 => new HyperslabSelectionInfo1(reader),
                 2 => new HyperslabSelectionInfo2(reader),

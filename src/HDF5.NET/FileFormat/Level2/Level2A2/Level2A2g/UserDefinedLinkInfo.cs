@@ -7,10 +7,10 @@
         public UserDefinedLinkInfo(H5BinaryReader reader) : base(reader)
         {
             // data length
-            this.DataLength = reader.ReadUInt16();
+            DataLength = reader.ReadUInt16();
 
             // data
-            this.Data = reader.ReadBytes(this.DataLength);
+            Data = reader.ReadBytes(DataLength);
         }
 
         #endregion

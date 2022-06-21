@@ -19,17 +19,17 @@ namespace HDF5.NET
         {
             get
             {
-                return (ByteOrder)(this.Data[0] & 0x01);
+                return (ByteOrder)(Data[0] & 0x01);
             }
             set
             {
                 switch (value)
                 {
                     case ByteOrder.LittleEndian:
-                        this.Data[0] &= 0xFE; break;
+                        Data[0] &= 0xFE; break;
 
                     case ByteOrder.BigEndian:
-                        this.Data[0] |= 0x01; break;
+                        Data[0] |= 0x01; break;
 
                     default:
                         throw new Exception($"On a time bit field description the byte order value '{value}' is not supported.");

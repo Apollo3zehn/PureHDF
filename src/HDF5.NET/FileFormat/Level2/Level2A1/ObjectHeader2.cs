@@ -16,35 +16,35 @@ namespace HDF5.NET
         internal ObjectHeader2(H5Context context, byte version) : base(context)
         {
             // version
-            this.Version = version;
+            Version = version;
 
             // flags
-            this.Flags = (ObjectHeaderFlags)context.Reader.ReadByte();
+            Flags = (ObjectHeaderFlags)context.Reader.ReadByte();
 
             // access time, modification time, change time and birth time
-            if (this.Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
+            if (Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
             {
-                this.AccessTime = context.Reader.ReadUInt32();
-                this.ModificationTime = context.Reader.ReadUInt32();
-                this.ChangeTime = context.Reader.ReadUInt32();
-                this.BirthTime = context.Reader.ReadUInt32();
+                AccessTime = context.Reader.ReadUInt32();
+                ModificationTime = context.Reader.ReadUInt32();
+                ChangeTime = context.Reader.ReadUInt32();
+                BirthTime = context.Reader.ReadUInt32();
             }
 
             // maximum compact attributes count and minimum dense attributes count
-            if (this.Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
+            if (Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
             {
-                this.MaximumCompactAttributesCount = context.Reader.ReadUInt16();
-                this.MinimumDenseAttributesCount = context.Reader.ReadUInt16();
+                MaximumCompactAttributesCount = context.Reader.ReadUInt16();
+                MinimumDenseAttributesCount = context.Reader.ReadUInt16();
             }
 
             // size of chunk 0
-            var chunkFieldSize = (byte)(1 << ((byte)this.Flags & 0x03));
-            this.SizeOfChunk0 = H5Utils.ReadUlong(this.Reader, chunkFieldSize);
+            var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
+            SizeOfChunk0 = H5Utils.ReadUlong(Reader, chunkFieldSize);
 
             // header messages
-            var withCreationOrder = this.Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
-            var messages = this.ReadHeaderMessages(context, this.SizeOfChunk0, version: 2, withCreationOrder);
-            this.HeaderMessages.AddRange(messages);
+            var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
+            var messages = ReadHeaderMessages(context, SizeOfChunk0, version: 2, withCreationOrder);
+            HeaderMessages.AddRange(messages);
 
 #warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
 #warning read gap and checksum

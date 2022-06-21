@@ -7,7 +7,7 @@ namespace HDF5.NET
     {
         public DelegateSelection(ulong totalElementCount, Func<ulong[], IEnumerable<Step>> walker)
         {
-            this.TotalElementCount = totalElementCount;
+            TotalElementCount = totalElementCount;
             _walker = walker;
         }
 

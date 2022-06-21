@@ -6,7 +6,7 @@
 
         public FamilyDriverInfo(H5BinaryReader reader) : base(reader)
         {
-            this.MemberFileSize = reader.ReadUInt64();
+            MemberFileSize = reader.ReadUInt64();
         }
 
         #endregion

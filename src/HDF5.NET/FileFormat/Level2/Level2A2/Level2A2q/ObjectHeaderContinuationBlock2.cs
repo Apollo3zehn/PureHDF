@@ -14,8 +14,8 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
 
             // header messages
-            var messages = this.ReadHeaderMessages(context, objectHeaderSize - 8, version, withCreationOrder);
-            this.HeaderMessages.AddRange(messages);
+            var messages = ReadHeaderMessages(context, objectHeaderSize - 8, version, withCreationOrder);
+            HeaderMessages.AddRange(messages);
 
 #warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
 #warning read gap and checksum

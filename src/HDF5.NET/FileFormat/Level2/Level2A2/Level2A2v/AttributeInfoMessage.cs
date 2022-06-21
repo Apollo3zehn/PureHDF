@@ -20,24 +20,24 @@ namespace HDF5.NET
             _superblock = superblock;
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // flags
-            this.Flags = (CreationOrderFlags)reader.ReadByte();
+            Flags = (CreationOrderFlags)reader.ReadByte();
 
             // maximum creation index
-            if (this.Flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
-                this.MaximumCreationIndex = reader.ReadUInt16();
+            if (Flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
+                MaximumCreationIndex = reader.ReadUInt16();
 
             // fractal heap address
-            this.FractalHeapAddress = superblock.ReadOffset(reader);
+            FractalHeapAddress = superblock.ReadOffset(reader);
 
             // b-tree 2 name index address
-            this.BTree2NameIndexAddress = superblock.ReadOffset(reader);
+            BTree2NameIndexAddress = superblock.ReadOffset(reader);
 
             // b-tree 2 creation order index address
-            if (this.Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-                this.BTree2CreationOrderIndexAddress = superblock.ReadOffset(reader);
+            if (Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
+                BTree2CreationOrderIndexAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -69,8 +69,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.FractalHeapAddress, SeekOrigin.Begin);
-                return new FractalHeapHeader(this.Reader, _superblock);
+                Reader.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
+                return new FractalHeapHeader(Reader, _superblock);
             }
         }
 
@@ -78,8 +78,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
-                return new BTree2Header<BTree2Record08>(this.Reader, _superblock, this.DecodeRecord08);
+                Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record08>(Reader, _superblock, DecodeRecord08);
             }
         }
 
@@ -87,8 +87,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.BTree2NameIndexAddress, SeekOrigin.Begin);
-                return new BTree2Header<BTree2Record09>(this.Reader, _superblock, this.DecodeRecord09);
+                Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record09>(Reader, _superblock, DecodeRecord09);
             }
         }
 
@@ -97,10 +97,10 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record08 DecodeRecord08() => new BTree2Record08(this.Reader);
+        private BTree2Record08 DecodeRecord08() => new BTree2Record08(Reader);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record09 DecodeRecord09() => new BTree2Record09(this.Reader);
+        private BTree2Record09 DecodeRecord09() => new BTree2Record09(Reader);
 
         #endregion
     }

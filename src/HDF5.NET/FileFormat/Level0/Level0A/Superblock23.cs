@@ -6,15 +6,15 @@
 
         public Superblock23(H5BinaryReader reader, byte version) : base(reader)
         {
-            this.SuperBlockVersion = version;
-            this.OffsetsSize = reader.ReadByte();
-            this.LengthsSize = reader.ReadByte();
-            this.FileConsistencyFlags = (FileConsistencyFlags)reader.ReadByte();
-            this.BaseAddress = this.ReadOffset(reader);
-            this.SuperblockExtensionAddress = this.ReadOffset(reader);
-            this.EndOfFileAddress = this.ReadOffset(reader);
-            this.RootGroupObjectHeaderAddress = this.ReadOffset(reader);
-            this.SuperblockChecksum = reader.ReadUInt32();
+            SuperBlockVersion = version;
+            OffsetsSize = reader.ReadByte();
+            LengthsSize = reader.ReadByte();
+            FileConsistencyFlags = (FileConsistencyFlags)reader.ReadByte();
+            BaseAddress = ReadOffset(reader);
+            SuperblockExtensionAddress = ReadOffset(reader);
+            EndOfFileAddress = ReadOffset(reader);
+            RootGroupObjectHeaderAddress = ReadOffset(reader);
+            SuperblockChecksum = reader.ReadUInt32();
         }
 
         #endregion

@@ -9,13 +9,13 @@ namespace HDF5.NET
         public GlobalHeapObject(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // heap object index
-            this.HeapObjectIndex = reader.ReadUInt16();
+            HeapObjectIndex = reader.ReadUInt16();
 
-            if (this.HeapObjectIndex == 0)
+            if (HeapObjectIndex == 0)
                 return;
 
             // reference count
-            this.ReferenceCount = reader.ReadUInt16();
+            ReferenceCount = reader.ReadUInt16();
 
             // reserved
             reader.ReadBytes(4);
@@ -24,7 +24,7 @@ namespace HDF5.NET
             var objectSize = superblock.ReadLength(reader);
 
             // object data
-            this.ObjectData = reader.ReadBytes((int)objectSize);
+            ObjectData = reader.ReadBytes((int)objectSize);
 
             var paddedSize = (int)(Math.Ceiling(objectSize / 8.0) * 8);
             var remainingSize = paddedSize - (int)objectSize;

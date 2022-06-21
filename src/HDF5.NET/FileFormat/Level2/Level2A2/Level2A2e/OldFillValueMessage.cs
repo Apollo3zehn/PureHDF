@@ -6,8 +6,8 @@
 
         public OldFillValueMessage(H5BinaryReader reader) : base(reader)
         {
-            this.Size = reader.ReadUInt32();
-            this.FillValue = reader.ReadBytes((int)this.Size);
+            Size = reader.ReadUInt32();
+            FillValue = reader.ReadBytes((int)Size);
         }
 
         #endregion

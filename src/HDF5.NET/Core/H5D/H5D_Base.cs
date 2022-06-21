@@ -9,10 +9,10 @@ namespace HDF5.NET
 
         public H5D_Base(H5Dataset dataset, bool supportsBuffer, bool supportsStream, H5DatasetAccess datasetAccess)
         {
-            this.Dataset = dataset;
-            this.SupportsBuffer = supportsBuffer;
-            this.SupportsStream = supportsStream;
-            this.DatasetAccess = datasetAccess;
+            Dataset = dataset;
+            SupportsBuffer = supportsBuffer;
+            SupportsStream = supportsStream;
+            DatasetAccess = datasetAccess;
         }
 
         #endregion
@@ -53,7 +53,7 @@ namespace HDF5.NET
 
         public void Dispose()
         {
-            this.Dispose(disposing: true);
+            Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
 

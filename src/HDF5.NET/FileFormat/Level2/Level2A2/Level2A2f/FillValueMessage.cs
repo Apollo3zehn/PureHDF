@@ -23,37 +23,37 @@ namespace HDF5.NET
             // if size = -1 then fill value is explicitly undefined
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             uint size;
 
-            switch (this.Version)
+            switch (Version)
             {
                 case 1:
 
-                    this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
-                    this.FillTime = (FillValueWriteTime)reader.ReadByte();
+                    AllocationTime = (SpaceAllocationTime)reader.ReadByte();
+                    FillTime = (FillValueWriteTime)reader.ReadByte();
 
                     var isDefined1 = reader.ReadByte() == 1;
 
                     if (isDefined1)
                     {
                         size = reader.ReadUInt32();
-                        this.Value = reader.ReadBytes((int)size);
+                        Value = reader.ReadBytes((int)size);
                     }
 
                     break;
 
                 case 2:
 
-                    this.AllocationTime = (SpaceAllocationTime)reader.ReadByte();
-                    this.FillTime = (FillValueWriteTime)reader.ReadByte();
+                    AllocationTime = (SpaceAllocationTime)reader.ReadByte();
+                    FillTime = (FillValueWriteTime)reader.ReadByte();
                     var isDefined2 = reader.ReadByte() == 1;
 
                     if (isDefined2)
                     {
                         size = reader.ReadUInt32();
-                        this.Value = reader.ReadBytes((int)size);
+                        Value = reader.ReadBytes((int)size);
                     }
 
                     break;
@@ -61,26 +61,26 @@ namespace HDF5.NET
                 case 3:
 
                     var flags = reader.ReadByte();
-                    this.AllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);   // take only bits 0 and 1
-                    this.FillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);          // take only bits 2 and 3
+                    AllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);   // take only bits 0 and 1
+                    FillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);          // take only bits 2 and 3
                     var isUndefined = (flags & (1 << 4)) > 0;                           // take only bit 4
                     var isDefined3 = (flags & (1 << 5)) > 0;                            // take only bit 5
 
                     // undefined
                     if (isUndefined)
                     {
-                        this.Value = null;
+                        Value = null;
                     }
                     // defined
                     else if (isDefined3)
                     {
                         size = reader.ReadUInt32();
-                        this.Value = reader.ReadBytes((int)size);
+                        Value = reader.ReadBytes((int)size);
                     }
                     // default
                     else
                     {
-                        this.Value = new byte[0];
+                        Value = new byte[0];
                     }
 
                     break;
@@ -88,6 +88,14 @@ namespace HDF5.NET
                 default:
                     break;
             }
+        }
+
+        // Create a default fill value message (required for old fill value messages which are optional)
+        public FillValueMessage(SpaceAllocationTime allocationTime) : base(default!)
+        {
+            Version = 3;
+            AllocationTime = allocationTime;
+            FillTime = FillValueWriteTime.IfSetByUser;
         }
 
         #endregion

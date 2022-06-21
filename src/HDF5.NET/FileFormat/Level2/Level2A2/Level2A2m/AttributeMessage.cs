@@ -20,12 +20,12 @@ namespace HDF5.NET
             _context = context;
 
             // version
-            this.Version = context.Reader.ReadByte();
+            Version = context.Reader.ReadByte();
 
-            if (this.Version == 1)
+            if (Version == 1)
                 context.Reader.ReadByte();
             else
-                this.Flags = (AttributeMessageFlags)context.Reader.ReadByte();
+                Flags = (AttributeMessageFlags)context.Reader.ReadByte();
 
             // name size
             var nameSize = context.Reader.ReadUInt16();
@@ -37,24 +37,24 @@ namespace HDF5.NET
             var dataspaceSize = context.Reader.ReadUInt16();
 
             // name character set encoding
-            if (this.Version == 3)
+            if (Version == 3)
                 _nameEncoding = (CharacterSetEncoding)context.Reader.ReadByte();
             
             // name
-            if (this.Version == 1)
-                this.Name = H5Utils.ReadNullTerminatedString(context.Reader, pad: true, encoding: _nameEncoding);
+            if (Version == 1)
+                Name = H5Utils.ReadNullTerminatedString(context.Reader, pad: true, encoding: _nameEncoding);
             else
-                this.Name = H5Utils.ReadNullTerminatedString(context.Reader, pad: false, encoding: _nameEncoding);
+                Name = H5Utils.ReadNullTerminatedString(context.Reader, pad: false, encoding: _nameEncoding);
 
             // datatype
-            var flags1 = this.Flags.HasFlag(AttributeMessageFlags.SharedDatatype)
+            var flags1 = Flags.HasFlag(AttributeMessageFlags.SharedDatatype)
                 ? MessageFlags.Shared
                 : MessageFlags.NoFlags;
 
-            this.Datatype = objectHeader.DecodeMessage(flags1, 
+            Datatype = objectHeader.DecodeMessage(flags1, 
                 () => new DatatypeMessage(context.Reader));
 
-            if (this.Version == 1)
+            if (Version == 1)
             {
                 var paddedSize = (int)(Math.Ceiling(datatypeSize / 8.0) * 8);
                 var remainingSize = paddedSize - datatypeSize;
@@ -62,23 +62,23 @@ namespace HDF5.NET
             }
 
             // dataspace 
-            var flags2 = this.Flags.HasFlag(AttributeMessageFlags.SharedDataspace)
+            var flags2 = Flags.HasFlag(AttributeMessageFlags.SharedDataspace)
                 ? MessageFlags.Shared
                 : MessageFlags.NoFlags;
 
-            this.Dataspace = objectHeader.DecodeMessage(flags2,
+            Dataspace = objectHeader.DecodeMessage(flags2,
                 () => new DataspaceMessage(context.Reader, context.Superblock));
 
-            if (this.Version == 1)
+            if (Version == 1)
             {
                 var paddedSize = (int)(Math.Ceiling(dataspaceSize / 8.0) * 8);
                 var remainingSize = paddedSize - dataspaceSize;
-                this.Reader.Seek(remainingSize, SeekOrigin.Current);
+                Reader.Seek(remainingSize, SeekOrigin.Current);
             }
 
             // data
-            var byteSize = H5Utils.CalculateSize(this.Dataspace.DimensionSizes, this.Dataspace.Type) * this.Datatype.Size;
-            this.Data = context.Reader.ReadBytes((int)byteSize);
+            var byteSize = H5Utils.CalculateSize(Dataspace.DimensionSizes, Dataspace.Type) * Datatype.Size;
+            Data = context.Reader.ReadBytes((int)byteSize);
         }
 
         private DatatypeMessage? ReadSharedMessage(ObjectHeader objectHeader, SharedMessage sharedMessage)

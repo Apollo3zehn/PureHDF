@@ -18,8 +18,8 @@ namespace HDF5.NET
         {
             _superblock = superblock;
 
-            this.BTree1Address = superblock.ReadOffset(reader);
-            this.LocalHeapAddress = superblock.ReadOffset(reader);
+            BTree1Address = superblock.ReadOffset(reader);
+            LocalHeapAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -33,8 +33,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.LocalHeapAddress, SeekOrigin.Begin);
-                return new LocalHeap(this.Reader, _superblock);
+                Reader.Seek((long)LocalHeapAddress, SeekOrigin.Begin);
+                return new LocalHeap(Reader, _superblock);
             }
         }
 
@@ -44,8 +44,8 @@ namespace HDF5.NET
 
         public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
         {
-            this.Reader.Seek((long)this.BTree1Address, SeekOrigin.Begin);
-            return new BTree1Node<BTree1GroupKey>(this.Reader, _superblock, decodeKey);
+            Reader.Seek((long)BTree1Address, SeekOrigin.Begin);
+            return new BTree1Node<BTree1GroupKey>(Reader, _superblock, decodeKey);
         }
 
         #endregion

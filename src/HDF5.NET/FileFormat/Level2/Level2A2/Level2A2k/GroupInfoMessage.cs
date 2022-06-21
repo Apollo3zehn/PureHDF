@@ -15,23 +15,23 @@ namespace HDF5.NET
         public GroupInfoMessage(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // flags
-            this.Flags = (GroupInfoMessageFlags)reader.ReadByte();
+            Flags = (GroupInfoMessageFlags)reader.ReadByte();
 
             // maximum compact value and minimum dense value
-            if (this.Flags.HasFlag(GroupInfoMessageFlags.StoreLinkPhaseChangeValues))
+            if (Flags.HasFlag(GroupInfoMessageFlags.StoreLinkPhaseChangeValues))
             {
-                this.MaximumCompactValue = reader.ReadUInt16();
-                this.MinimumDenseValue = reader.ReadUInt16();
+                MaximumCompactValue = reader.ReadUInt16();
+                MinimumDenseValue = reader.ReadUInt16();
             }
 
             // estimated entry count and estimated entry link name length
-            if (this.Flags.HasFlag(GroupInfoMessageFlags.StoreNonDefaultEntryInformation))
+            if (Flags.HasFlag(GroupInfoMessageFlags.StoreNonDefaultEntryInformation))
             {
-                this.EstimatedEntryCount = reader.ReadUInt16();
-                this.EstimatedEntryLinkNameLength = reader.ReadUInt16();
+                EstimatedEntryCount = reader.ReadUInt16();
+                EstimatedEntryLinkNameLength = reader.ReadUInt16();
             }
         }
 

@@ -66,7 +66,7 @@ namespace HDF5.NET
 
             var isRooted = path.StartsWith("/");
             var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-            var current = isRooted ? this.File.Reference : this.Reference;
+            var current = isRooted ? File.Reference : Reference;
 
             for (int i = 0; i < segments.Length; i++)
             {
@@ -87,11 +87,11 @@ namespace HDF5.NET
         internal NamedReference InternalGet(string path, H5LinkAccess linkAccess)
         {
             if (path == "/")
-                return this.File.Reference;
+                return File.Reference;
 
             var isRooted = path.StartsWith("/");
             var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-            var current = isRooted ? this.File.Reference : this.Reference;
+            var current = isRooted ? File.Reference : Reference;
 
             for (int i = 0; i < segments.Length; i++)
             {
@@ -113,7 +113,7 @@ namespace HDF5.NET
         {
             var alreadyVisted = new HashSet<ulong>();
 
-            if (this.TryGetReference(reference, alreadyVisted, linkAccess, recursionLevel: 0, out var namedReference))
+            if (TryGetReference(reference, alreadyVisted, linkAccess, recursionLevel: 0, out var namedReference))
                 return namedReference;
             else
                 throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
@@ -128,31 +128,31 @@ namespace HDF5.NET
             {
                 var localHeap = _scratchPad.LocalHeap;
 
-                this.Context.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
-                var tree = new BTree1Node<BTree1GroupKey>(this.Context.Reader, this.Context.Superblock, this.DecodeGroupKey);
+                Context.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
+                var tree = new BTree1Node<BTree1GroupKey>(Context.Reader, Context.Superblock, DecodeGroupKey);
                 var b = tree.EnumerateNodes().ToList();
 
-                this.Context.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
-                var heap = new LocalHeap(this.Context.Reader, this.Context.Superblock);
+                Context.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
+                var heap = new LocalHeap(Context.Reader, Context.Superblock);
                 var c = heap.GetObjectName(0);
 
 
                 var success = _scratchPad
-                    .GetBTree1(this.DecodeGroupKey)
+                    .GetBTree1(DecodeGroupKey)
                     .TryFindUserData(out var userData,
-                                    (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
+                                    (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
                                     (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
-                                        => this.NodeFound(localHeap, name, address, out userData));
+                                        => NodeFound(localHeap, name, address, out userData));
 
                 if (success)
                 {
-                    namedReference = this.GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess);
+                    namedReference = GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess);
                     return true;
                 }
             }
             else
             {
-                var symbolTableHeaderMessages = this.Header.GetMessages<SymbolTableMessage>();
+                var symbolTableHeaderMessages = Header.GetMessages<SymbolTableMessage>();
 
                 if (symbolTableHeaderMessages.Any())
                 {
@@ -167,21 +167,21 @@ namespace HDF5.NET
                     var localHeap = smessage.LocalHeap;
 
                     var success = smessage
-                        .GetBTree1(this.DecodeGroupKey)
+                        .GetBTree1(DecodeGroupKey)
                         .TryFindUserData(out var userData,
-                                        (leftKey, rightKey) => this.NodeCompare3(localHeap, name, leftKey, rightKey),
+                                        (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
                                         (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
-                                            => this.NodeFound(localHeap, name, address, out userData));
+                                            => NodeFound(localHeap, name, address, out userData));
 
                     if (success)
                     {
-                        namedReference = this.GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess);
+                        namedReference = GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess);
                         return true;
                     }
                 }
                 else
                 {
-                    var linkInfoMessages = this.Header.GetMessages<LinkInfoMessage>();
+                    var linkInfoMessages = Header.GetMessages<LinkInfoMessage>();
 
                     if (linkInfoMessages.Any())
                     {
@@ -193,11 +193,11 @@ namespace HDF5.NET
                         /* New (1.8) indexed format (in combination with Group Info Message) 
                          * IV.A.2.c. The Link Info Message 
                          * Optional; may not be repeated. */
-                        if (!this.Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                        if (!Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
                         {
-                            if (this.TryGetLinkMessageFromLinkInfoMessage(lmessage, name, out var linkMessage))
+                            if (TryGetLinkMessageFromLinkInfoMessage(lmessage, name, out var linkMessage))
                             {
-                                namedReference = this.GetObjectReference(linkMessage, linkAccess);
+                                namedReference = GetObjectReference(linkMessage, linkAccess);
                                 return true;
                             }
                         }
@@ -207,13 +207,13 @@ namespace HDF5.NET
                          * in the Link Info Message is set to the "undefined address" value. */
                         else
                         {
-                            var linkMessage = this.Header
+                            var linkMessage = Header
                                 .GetMessages<LinkMessage>()
                                 .FirstOrDefault(message => message.LinkName == name);
 
                             if (linkMessage is not null)
                             {
-                                namedReference = this.GetObjectReference(linkMessage, linkAccess);
+                                namedReference = GetObjectReference(linkMessage, linkAccess);
                                 return true;
                             }
                         }
@@ -239,12 +239,12 @@ namespace HDF5.NET
 
             /* If its ref count is > 1, we add it to the list of visited objects
              * (because it could come up again during traversal) */
-            if (this.ReferenceCount > 1)
+            if (ReferenceCount > 1)
             {
-                if (alreadyVisited.Contains(this.Reference.Value))
+                if (alreadyVisited.Contains(Reference.Value))
                     skip = true;
                 else
-                    alreadyVisited.Add(this.Reference.Value);
+                    alreadyVisited.Add(Reference.Value);
             }
 
             if (!skip) 
@@ -289,9 +289,9 @@ namespace HDF5.NET
             {
                 var localHeap = _scratchPad.LocalHeap;
                 var references = this
-                    .EnumerateSymbolTableNodes(_scratchPad.GetBTree1(this.DecodeGroupKey))
+                    .EnumerateSymbolTableNodes(_scratchPad.GetBTree1(DecodeGroupKey))
                     .SelectMany(node => node.GroupEntries
-                    .Select(entry => this.GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess)));
+                    .Select(entry => GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess)));
 
                 foreach (var reference in references)
                 {
@@ -300,7 +300,7 @@ namespace HDF5.NET
             }
             else
             {
-                var symbolTableHeaderMessages = this.Header.GetMessages<SymbolTableMessage>();
+                var symbolTableHeaderMessages = Header.GetMessages<SymbolTableMessage>();
 
                 if (symbolTableHeaderMessages.Any())
                 {
@@ -314,9 +314,9 @@ namespace HDF5.NET
                     var smessage = symbolTableHeaderMessages.First();
                     var localHeap = smessage.LocalHeap;
                     var references = this
-                        .EnumerateSymbolTableNodes(smessage.GetBTree1(this.DecodeGroupKey))
+                        .EnumerateSymbolTableNodes(smessage.GetBTree1(DecodeGroupKey))
                         .SelectMany(node => node.GroupEntries
-                        .Select(entry => this.GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess)));
+                        .Select(entry => GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess)));
 
                     foreach (var reference in references)
                     {
@@ -325,7 +325,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-                    var linkInfoMessages = this.Header.GetMessages<LinkInfoMessage>();
+                    var linkInfoMessages = Header.GetMessages<LinkInfoMessage>();
 
                     if (linkInfoMessages.Any())
                     {
@@ -339,20 +339,20 @@ namespace HDF5.NET
                         /* New (1.8) indexed format (in combination with Group Info Message) 
                          * IV.A.2.c. The Link Info Message 
                          * Optional; may not be repeated. */
-                        if (!this.Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
-                            linkMessages = this.EnumerateLinkMessagesFromLinkInfoMessage(lmessage);
+                        if (!Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                            linkMessages = EnumerateLinkMessagesFromLinkInfoMessage(lmessage);
 
                         /* New (1.8) compact format
                          * IV.A.2.g. The Link Message 
                          * A group is storing its links compactly when the fractal heap address 
                          * in the Link Info Message is set to the "undefined address" value. */
                         else
-                            linkMessages = this.Header.GetMessages<LinkMessage>();
+                            linkMessages = Header.GetMessages<LinkMessage>();
 
                         // build links
                         foreach (var linkMessage in linkMessages)
                         {
-                            yield return this.GetObjectReference(linkMessage, linkAccess);
+                            yield return GetObjectReference(linkMessage, linkAccess);
                         }
                     }
                     else
@@ -381,11 +381,11 @@ namespace HDF5.NET
             foreach (var record in records)
             {
                 using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
-                var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
+                var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
 
                 yield return heapId.Read(reader =>
                 {
-                    var message = new LinkMessage(reader, this.Context.Superblock);
+                    var message = new LinkMessage(reader, Context.Superblock);
                     return message;
                 }, ref record01Cache);
             }
@@ -418,8 +418,8 @@ namespace HDF5.NET
                 {
 #warning duplicate
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
-                    var heapId = FractalHeapId.Construct(this.Context, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new LinkMessage(reader, this.Context.Superblock));
+                    var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
+                    candidate = heapId.Read(reader => new LinkMessage(reader, Context.Superblock));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
@@ -444,7 +444,7 @@ namespace HDF5.NET
         {
             return linkMessage.LinkInfo switch
             {
-                HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, this.File),
+                HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
                 SoftLinkInfo soft => new SymbolicLink(linkMessage, this).GetTarget(linkAccess),
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess),
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
@@ -459,13 +459,13 @@ namespace HDF5.NET
         private NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
         {
             var name = heap.GetObjectName(entry.LinkNameOffset);
-            var reference = new NamedReference(name, entry.HeaderAddress, this.File);
+            var reference = new NamedReference(name, entry.HeaderAddress, File);
 
             return entry.ScratchPad switch
             {
-                ObjectHeaderScratchPad objectScratch => this.AddScratchPad(reference, objectScratch),
+                ObjectHeaderScratchPad objectScratch => AddScratchPad(reference, objectScratch),
                 SymbolicLinkScratchPad linkScratch => new SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess),
-                _ when !this.Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
+                _ when !Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
                 _ => throw new Exception("Unknown object type.")
             };
         }
@@ -483,8 +483,8 @@ namespace HDF5.NET
             {
                 return node.ChildAddresses.Select(address =>
                 {
-                    this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                    return new SymbolTableNode(this.Context.Reader, this.Context.Superblock);
+                    Context.Reader.Seek((long)address, SeekOrigin.Begin);
+                    return new SymbolTableNode(Context.Reader, Context.Superblock);
                 });
             });
         }
@@ -531,8 +531,8 @@ namespace HDF5.NET
             /*
              * Load the symbol table node for exclusive access.
              */
-            this.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-            var symbolTableNode = new SymbolTableNode(this.Context.Reader, this.Context.Superblock);
+            Context.Reader.Seek((long)address, SeekOrigin.Begin);
+            var symbolTableNode = new SymbolTableNode(Context.Reader, Context.Superblock);
 
             /*
              * Binary search.
@@ -563,7 +563,7 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1GroupKey DecodeGroupKey()
         {
-            return new BTree1GroupKey(this.Context.Reader, this.Context.Superblock);
+            return new BTree1GroupKey(Context.Reader, Context.Superblock);
         }
 
         #endregion

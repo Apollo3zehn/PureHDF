@@ -6,7 +6,7 @@
 
         public BTree1GroupKey(H5BinaryReader reader, Superblock superblock)
         {
-            this.LocalHeapByteOffset = superblock.ReadLength(reader);
+            LocalHeapByteOffset = superblock.ReadLength(reader);
         }
 
         #endregion

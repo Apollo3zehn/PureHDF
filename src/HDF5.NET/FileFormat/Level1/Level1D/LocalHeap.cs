@@ -22,19 +22,19 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, LocalHeap.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
 
             // data segment size
-            this.DataSegmentSize = superblock.ReadLength(reader);
+            DataSegmentSize = superblock.ReadLength(reader);
 
             // free list head offset
-            this.FreeListHeadOffset = superblock.ReadLength(reader);
+            FreeListHeadOffset = superblock.ReadLength(reader);
 
             // data segment address
-            this.DataSegmentAddress = superblock.ReadOffset(reader);
+            DataSegmentAddress = superblock.ReadOffset(reader);
         }
 
         #endregion
@@ -68,8 +68,8 @@ namespace HDF5.NET
             {
                 if (_data is null)
                 {
-                    this.Reader.Seek((long)this.DataSegmentAddress, SeekOrigin.Begin);
-                    _data = this.Reader.ReadBytes((int)this.DataSegmentSize);
+                    Reader.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
+                    _data = Reader.ReadBytes((int)DataSegmentSize);
                 }
 
                 return _data;
@@ -82,8 +82,8 @@ namespace HDF5.NET
 
         public string GetObjectName(ulong offset)
         {
-            var end = Array.IndexOf(this.Data, (byte)0, (int)offset);
-            var bytes = this.Data[(int)offset..end];
+            var end = Array.IndexOf(Data, (byte)0, (int)offset);
+            var bytes = Data[(int)offset..end];
 
             return Encoding.ASCII.GetString(bytes);           
         }

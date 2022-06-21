@@ -17,12 +17,12 @@
         {
             get
             {
-                return (VariableLengthType)(this.Data[0] & 0x0F);
+                return (VariableLengthType)(Data[0] & 0x0F);
             }
             set
             {
-                this.Data[0] &= 0xF0;           // clear bits 0-3
-                this.Data[0] |= (byte)value;    // set bits 0-3, depending on the value
+                Data[0] &= 0xF0;           // clear bits 0-3
+                Data[0] |= (byte)value;    // set bits 0-3, depending on the value
             }
         }
 
@@ -30,12 +30,12 @@
         {
             get
             {
-                return (PaddingType)((this.Data[0] & 0xF0) >> 4);
+                return (PaddingType)((Data[0] & 0xF0) >> 4);
             }
             set
             {
-                this.Data[0] &= 0x0F;                       // clear bits 4-7
-                this.Data[0] |= (byte)((byte)value << 4);   // set bits 4-7, depending on the value
+                Data[0] &= 0x0F;                       // clear bits 4-7
+                Data[0] |= (byte)((byte)value << 4);   // set bits 4-7, depending on the value
             }
         }
 
@@ -43,12 +43,12 @@
         {
             get
             {
-                return (CharacterSetEncoding)(this.Data[1] & 0x0F);
+                return (CharacterSetEncoding)(Data[1] & 0x0F);
             }
             set
             {
-                this.Data[1] &= 0xF0;           // clear bits 0-3
-                this.Data[1] |= (byte)value;    // set bits 0-3, depending on the value
+                Data[1] &= 0xF0;           // clear bits 0-3
+                Data[1] |= (byte)value;    // set bits 0-3, depending on the value
             }
         }
 

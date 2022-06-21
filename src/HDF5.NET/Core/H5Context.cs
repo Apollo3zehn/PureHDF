@@ -6,8 +6,8 @@
 
         public H5Context(H5BinaryReader reader, Superblock superblock)           
         {
-            this.Reader = reader;
-            this.Superblock = superblock;
+            Reader = reader;
+            Superblock = superblock;
         }
 
         #endregion

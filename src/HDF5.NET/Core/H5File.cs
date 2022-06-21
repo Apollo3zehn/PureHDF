@@ -23,7 +23,7 @@ namespace HDF5.NET
                        bool deleteOnClose)
             : base(context, reference, header)
         {
-            this.Path = absoluteFilePath;
+            Path = absoluteFilePath;
             _deleteOnClose = deleteOnClose;
         }
 

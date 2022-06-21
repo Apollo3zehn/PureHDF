@@ -10,7 +10,7 @@ namespace HDF5.NET
         internal H5UnresolvedLink(NamedReference reference) 
             : base(default, reference)
         {
-            this.Reason = reference.Exception;
+            Reason = reference.Exception;
         }
 
         #endregion

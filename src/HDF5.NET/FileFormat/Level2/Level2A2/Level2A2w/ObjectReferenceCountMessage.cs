@@ -15,10 +15,10 @@ namespace HDF5.NET
         public ObjectReferenceCountMessage(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // reference count
-            this.ReferenceCount = reader.ReadUInt32();
+            ReferenceCount = reader.ReadUInt32();
         }
 
         #endregion

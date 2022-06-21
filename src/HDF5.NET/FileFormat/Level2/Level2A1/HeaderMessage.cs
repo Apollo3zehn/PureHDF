@@ -17,50 +17,50 @@ namespace HDF5.NET
 
         internal HeaderMessage(H5Context context, byte version, ObjectHeader objectHeader, bool withCreationOrder = false) : base(context.Reader)
         {
-            this.Version = version;
-            this.WithCreationOrder = withCreationOrder;
+            Version = version;
+            WithCreationOrder = withCreationOrder;
 
             // version
             if (version == 1)
-                this.Type = (MessageType)context.Reader.ReadUInt16();
+                Type = (MessageType)context.Reader.ReadUInt16();
             else if (version == 2)
-                this.Type = (MessageType)context.Reader.ReadByte();
+                Type = (MessageType)context.Reader.ReadByte();
 
             // data size
-            this.DataSize = context.Reader.ReadUInt16();
+            DataSize = context.Reader.ReadUInt16();
 
             // flags
-            this.Flags = (MessageFlags)context.Reader.ReadByte();
+            Flags = (MessageFlags)context.Reader.ReadByte();
 
             // reserved / creation order
             if (version == 1)
                 context.Reader.ReadBytes(3);
 
             else if (version == 2 && withCreationOrder)
-                this.CreationOrder = context.Reader.ReadUInt16();
+                CreationOrder = context.Reader.ReadUInt16();
 
             // data
             var readerPosition1 = context.Reader.BaseStream.Position;
 
             /* Search for "H5O_SHARED_DECODE_REAL" in C-code to find all shareable messages */
 
-            this.Data = this.Type switch
+            Data = Type switch
             {
                 MessageType.NIL                         => new NilMessage(context.Reader),
-                MessageType.Dataspace                   => objectHeader.DecodeMessage(this.Flags, () => new DataspaceMessage(context.Reader, context.Superblock)),
+                MessageType.Dataspace                   => objectHeader.DecodeMessage(Flags, () => new DataspaceMessage(context.Reader, context.Superblock)),
                 MessageType.LinkInfo                    => new LinkInfoMessage(context.Reader, context.Superblock),
-                MessageType.Datatype                    => objectHeader.DecodeMessage(this.Flags, () => new DatatypeMessage(context.Reader)),
-                MessageType.OldFillValue                => objectHeader.DecodeMessage(this.Flags, () => new OldFillValueMessage(context.Reader)),
-                MessageType.FillValue                   => objectHeader.DecodeMessage(this.Flags, () => new FillValueMessage(context.Reader)),
+                MessageType.Datatype                    => objectHeader.DecodeMessage(Flags, () => new DatatypeMessage(context.Reader)),
+                MessageType.OldFillValue                => objectHeader.DecodeMessage(Flags, () => new OldFillValueMessage(context.Reader)),
+                MessageType.FillValue                   => objectHeader.DecodeMessage(Flags, () => new FillValueMessage(context.Reader)),
                 MessageType.Link                        => new LinkMessage(context.Reader, context.Superblock),
                 MessageType.ExternalDataFiles           => new ExternalFileListMessage(context.Reader, context.Superblock),
                 MessageType.DataLayout                  => DataLayoutMessage.Construct(context.Reader, context.Superblock),
                 MessageType.Bogus                       => new BogusMessage(context.Reader),
                 MessageType.GroupInfo                   => new GroupInfoMessage(context.Reader),
-                MessageType.FilterPipeline              => objectHeader.DecodeMessage(this.Flags, () => new FilterPipelineMessage(context.Reader)),
-                MessageType.Attribute                   => objectHeader.DecodeMessage(this.Flags, () => new AttributeMessage(context, objectHeader)),
+                MessageType.FilterPipeline              => objectHeader.DecodeMessage(Flags, () => new FilterPipelineMessage(context.Reader)),
+                MessageType.Attribute                   => objectHeader.DecodeMessage(Flags, () => new AttributeMessage(context, objectHeader)),
                 MessageType.ObjectComment               => new ObjectCommentMessage(context.Reader),
-                MessageType.OldObjectModificationTime   => new OldObjectModificationTimeMessage(context.Reader),
+                MessageType.OldObjectModificationTime   => new OldObjectModificationTimeMessage(context.Reader).ToObjectModificationMessage(),
                 MessageType.SharedMessageTable          => new SharedMessageTableMessage(context.Reader, context.Superblock),
                 MessageType.ObjectHeaderContinuation    => new ObjectHeaderContinuationMessage(context.Reader, context.Superblock),
                 MessageType.SymbolTable                 => new SymbolTableMessage(context.Reader, context.Superblock),
@@ -69,11 +69,11 @@ namespace HDF5.NET
                 MessageType.DriverInfo                  => new DriverInfoMessage(context.Reader),
                 MessageType.AttributeInfo               => new AttributeInfoMessage(context.Reader, context.Superblock),
                 MessageType.ObjectReferenceCount        => new ObjectReferenceCountMessage(context.Reader),
-                _ => throw new NotSupportedException($"The message type '{this.Type}' is not supported.")
+                _ => throw new NotSupportedException($"The message type '{Type}' is not supported.")
             };
 
             var readerPosition2 = context.Reader.BaseStream.Position;
-            var paddingBytes = this.DataSize - (readerPosition2 - readerPosition1);
+            var paddingBytes = DataSize - (readerPosition2 - readerPosition1);
 
             context.Reader.ReadBytes((int)paddingBytes);
         }
@@ -105,7 +105,7 @@ namespace HDF5.NET
             }
             set
             {
-                if (this.Version == 1 && value)
+                if (Version == 1 && value)
                     throw new FormatException("Only version 2 header messages are allowed to have 'WithCreationOrder' set to true.");
 
                 _withCreationOrder = value;

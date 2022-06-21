@@ -15,7 +15,7 @@ namespace HDF5.NET
         public H5S_SEL_POINTS(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadUInt32();
+            Version = reader.ReadUInt32();
 
             // reserved
             reader.ReadBytes(4);
@@ -24,17 +24,17 @@ namespace HDF5.NET
             var length = reader.ReadUInt32();
 
             // rank
-            this.Rank = reader.ReadUInt32();
+            Rank = reader.ReadUInt32();
 
             // point count
-            this.PointCount = reader.ReadUInt32();
+            PointCount = reader.ReadUInt32();
 
             // point data
-            this.PointData = new uint[this.Rank * this.PointCount];
+            PointData = new uint[Rank * PointCount];
 
             for (int i = 0; i < (length - 8) / 4; i++)
             {
-                this.PointData[i] = reader.ReadUInt32();
+                PointData[i] = reader.ReadUInt32();
             }
         }
 

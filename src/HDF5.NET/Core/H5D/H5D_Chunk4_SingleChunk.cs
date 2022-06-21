@@ -10,7 +10,7 @@
 
         protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
-            return new ChunkInfo(this.Dataset.InternalDataLayout.Address, this.ChunkByteSize, 0);
+            return new ChunkInfo(Dataset.InternalDataLayout.Address, ChunkByteSize, 0);
         }
     }
 }

@@ -10,20 +10,20 @@ namespace HDF5.NET
 
         public NamedReference(string name, ulong value, H5File file)
         {
-            this.Name = name;
-            this.Value = value;
-            this.File = file;
-            this.ScratchPad = null;
-            this.Exception = null;
+            Name = name;
+            Value = value;
+            File = file;
+            ScratchPad = null;
+            Exception = null;
         }
 
         public NamedReference(string name, ulong value)
         {
-            this.Name = name;
-            this.Value = value;
-            this.File = null;
-            this.ScratchPad = null;
-            this.Exception = null;
+            Name = name;
+            Value = value;
+            File = null;
+            ScratchPad = null;
+            Exception = null;
         }
 
         #endregion
@@ -47,24 +47,24 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public H5Object Dereference()
         {
-            if (this.File is null)
+            if (File is null)
             {
                 return new H5UnresolvedLink(this);
             }
-            else if (this.ScratchPad is not null)
+            else if (ScratchPad is not null)
             {
-                return new H5Group(this.File, this.File.Context, this);
+                return new H5Group(File, File.Context, this);
             }
             else
             {
-                var context = this.File.Context;
-                context.Reader.Seek((long)this.Value, SeekOrigin.Begin);
+                var context = File.Context;
+                context.Reader.Seek((long)Value, SeekOrigin.Begin);
                 var objectHeader = ObjectHeader.Construct(context);
 
                 return objectHeader.ObjectType switch
                 {
-                    ObjectType.Group => new H5Group(this.File, context, this, objectHeader),
-                    ObjectType.Dataset => new H5Dataset(this.File, context, this, objectHeader),
+                    ObjectType.Group => new H5Group(File, context, this, objectHeader),
+                    ObjectType.Dataset => new H5Dataset(File, context, this, objectHeader),
                     ObjectType.CommitedDatatype => new H5CommitedDatatype(context, objectHeader, this),
                     _ => throw new Exception("Unknown object type.")
                 };

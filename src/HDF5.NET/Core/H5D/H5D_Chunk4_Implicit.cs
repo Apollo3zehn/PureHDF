@@ -10,10 +10,10 @@
 
         protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
-            var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(this.DownMaxChunkCounts);
-            var chunkOffset = chunkIndex * this.ChunkByteSize;
+            var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
+            var chunkOffset = chunkIndex * ChunkByteSize;
 
-            return new ChunkInfo(this.Dataset.InternalDataLayout.Address + chunkOffset, this.ChunkByteSize, 0);
+            return new ChunkInfo(Dataset.InternalDataLayout.Address + chunkOffset, ChunkByteSize, 0);
         }
     }
 }

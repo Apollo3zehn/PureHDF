@@ -4,9 +4,9 @@
     {
         public H5FilterRegistration(FilterIdentifier identifier, string name, FilterFunc filterFunc)
         {
-            this.Identifier = identifier;
-            this.Name = name;
-            this.FilterFunc = filterFunc;
+            Identifier = identifier;
+            Name = name;
+            FilterFunc = filterFunc;
         }
 
         public FilterIdentifier Identifier { get; set; }

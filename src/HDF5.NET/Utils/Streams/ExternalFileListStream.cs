@@ -27,7 +27,7 @@ namespace HDF5.NET
 
             if (_slotStreams.Any())
             {
-                this.Length =
+                Length =
                     _slotStreams.Last().Offset +
                     _slotStreams.Last().Length;
             }
@@ -102,7 +102,7 @@ namespace HDF5.NET
             {
                 case SeekOrigin.Begin:
 
-                    if (offset > this.Length)
+                    if (offset > Length)
                         throw new Exception("The offset exceeds the stream length.");
 
                     if (_slotStream is null)

@@ -20,10 +20,10 @@ namespace HDF5.NET
             _reader = reader;
 
             // address
-            this.Address = superblock.ReadOffset(localReader);
+            Address = superblock.ReadOffset(localReader);
 
             // length
-            this.Length = superblock.ReadLength(localReader);
+            Length = superblock.ReadLength(localReader);
         }
 
         #endregion
@@ -39,7 +39,7 @@ namespace HDF5.NET
 
         public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
-            _reader.Seek((long)this.Address, SeekOrigin.Begin);
+            _reader.Seek((long)Address, SeekOrigin.Begin);
             return func(_reader);
         }
 

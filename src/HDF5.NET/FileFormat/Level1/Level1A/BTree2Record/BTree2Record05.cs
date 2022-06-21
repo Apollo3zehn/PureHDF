@@ -6,8 +6,8 @@
 
         public BTree2Record05(H5BinaryReader reader)
         {
-            this.NameHash = reader.ReadUInt32();
-            this.HeapId = reader.ReadBytes(7);
+            NameHash = reader.ReadUInt32();
+            HeapId = reader.ReadBytes(7);
         }
 
         #endregion

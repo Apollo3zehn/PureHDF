@@ -15,7 +15,7 @@ namespace HDF5.NET
         public H5S_SEL_NONE(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadUInt32();
+            Version = reader.ReadUInt32();
 
             // reserved
             reader.ReadBytes(8);

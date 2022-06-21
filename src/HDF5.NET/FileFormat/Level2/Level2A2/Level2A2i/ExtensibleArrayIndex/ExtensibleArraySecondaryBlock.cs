@@ -19,25 +19,25 @@ namespace HDF5.NET
 
             /* Compute/cache information */
             var dataBlocksCount = header.SecondaryBlockInfos[index].DataBlockCount;
-            this.ElementCount = header.SecondaryBlockInfos[index].ElementsCount;
-            this.DataBlockPageCount = 0UL;
+            ElementCount = header.SecondaryBlockInfos[index].ElementsCount;
+            DataBlockPageCount = 0UL;
             var dataBlockPageInitBitMaskSize = 0UL;
 
             /* Check if # of elements in data blocks requires paging */
-            if (this.ElementCount > header.DataBlockPageElementsCount)
+            if (ElementCount > header.DataBlockPageElementsCount)
             {
                 /* Compute # of pages in each data block from this super block */
-                this.DataBlockPageCount = this.ElementCount / header.DataBlockPageElementsCount;
+                DataBlockPageCount = ElementCount / header.DataBlockPageElementsCount;
 
                 /* Sanity check that we have at least 2 pages in data block */
-                if (this.DataBlockPageCount < 2)
+                if (DataBlockPageCount < 2)
                     throw new Exception("There must be at least two pages in the data block.");
 
                 /* Compute size of buffer for each data block's 'page init' bitmask */
-                dataBlockPageInitBitMaskSize = this.DataBlockPageCount + 7 / 8;
+                dataBlockPageInitBitMaskSize = DataBlockPageCount + 7 / 8;
 
                 /* Compute data block page size */
-                this.DataBlockPageSize = header.DataBlockPageElementsCount * header.ElementSize + 4;
+                DataBlockPageSize = header.DataBlockPageElementsCount * header.ElementSize + 4;
             }
 
             // signature
@@ -45,44 +45,44 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, ExtensibleArraySecondaryBlock.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)reader.ReadByte();
 
             // header address
-            this.HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(reader);
 
             // block offset
-            this.BlockOffset = H5Utils.ReadUlong(reader, header.ArrayOffsetsSize);
+            BlockOffset = H5Utils.ReadUlong(reader, header.ArrayOffsetsSize);
 
             // page bitmap
             // H5EAcache.c (H5EA__cache_sblock_deserialize)
 
             /* Check for 'page init' bitmasks for this super block */
-            if (this.DataBlockPageCount > 0)
+            if (DataBlockPageCount > 0)
             {
                 /* Compute total size of 'page init' buffer */
                 var totalPageInitSize = dataBlocksCount * dataBlockPageInitBitMaskSize;
 
                 /* Retrieve the 'page init' bitmasks */
-                this.PageBitmap = reader.ReadBytes((int)totalPageInitSize);
+                PageBitmap = reader.ReadBytes((int)totalPageInitSize);
             }
             else
             {
-                this.PageBitmap = new byte[0];
+                PageBitmap = new byte[0];
             }
 
             // data block addresses
-            this.DataBlockAddresses = new ulong[dataBlocksCount];
+            DataBlockAddresses = new ulong[dataBlocksCount];
 
             for (ulong i = 0; i < dataBlocksCount; i++)
             {
-                this.DataBlockAddresses[i] = superblock.ReadOffset(reader);
+                DataBlockAddresses[i] = superblock.ReadOffset(reader);
             }
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

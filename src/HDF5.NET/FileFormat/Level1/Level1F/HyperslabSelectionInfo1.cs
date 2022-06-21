@@ -13,18 +13,18 @@
             var length = reader.ReadUInt32();
 
             // rank
-            this.Rank = reader.ReadUInt32();
+            Rank = reader.ReadUInt32();
 
             // block count
-            this.BlockCount = reader.ReadUInt32();
+            BlockCount = reader.ReadUInt32();
 
             // block offsets
-            var totalOffsets = this.BlockCount * 2 * this.Rank;
-            this.BlockOffsets = new uint[totalOffsets];
+            var totalOffsets = BlockCount * 2 * Rank;
+            BlockOffsets = new uint[totalOffsets];
 
             for (uint i = 0; i < totalOffsets; i++)
             {
-                this.BlockOffsets[i] = reader.ReadUInt32();
+                BlockOffsets[i] = reader.ReadUInt32();
             }
         }
 

@@ -15,13 +15,22 @@ namespace HDF5.NET
         public ObjectModificationMessage(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
 
             // seconds after unix epoch
-            this.SecondsAfterUnixEpoch = reader.ReadUInt32();
+            SecondsAfterUnixEpoch = reader.ReadUInt32();
+        }
+
+        public ObjectModificationMessage(uint secondsAfterUnixEpoch) : base(default!)
+        {
+            // version
+            Version = 1;
+
+            // seconds after unix epoch
+            SecondsAfterUnixEpoch = secondsAfterUnixEpoch;
         }
 
         #endregion

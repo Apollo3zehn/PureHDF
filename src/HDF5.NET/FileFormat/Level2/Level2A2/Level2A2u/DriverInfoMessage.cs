@@ -15,20 +15,20 @@ namespace HDF5.NET
         public DriverInfoMessage(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // driver id
-            this.DriverId = H5Utils.ReadFixedLengthString(reader, 8);
+            DriverId = H5Utils.ReadFixedLengthString(reader, 8);
 
             // driver info size
-            this.DriverInfoSize = reader.ReadUInt16();
+            DriverInfoSize = reader.ReadUInt16();
 
             // driver info
-            this.DriverInfo = this.DriverId switch
+            DriverInfo = DriverId switch
             {
                 "NCSAmulti" => new MultiDriverInfo(reader),
                 "NCSAfami"  => new FamilyDriverInfo(reader),
-                _ => throw new NotSupportedException($"The driver ID '{this.DriverId}' is not supported.")
+                _ => throw new NotSupportedException($"The driver ID '{DriverId}' is not supported.")
             };
         }
 

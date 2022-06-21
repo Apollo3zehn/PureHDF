@@ -6,8 +6,8 @@
 
         public ObjectHeaderContinuationMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.Offset = superblock.ReadOffset(reader);
-            this.Length = superblock.ReadLength(reader);
+            Offset = superblock.ReadOffset(reader);
+            Length = superblock.ReadLength(reader);
         }
 
         #endregion

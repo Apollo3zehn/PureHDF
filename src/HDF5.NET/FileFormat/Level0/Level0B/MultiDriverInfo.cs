@@ -10,36 +10,36 @@ namespace HDF5.NET
         public MultiDriverInfo(H5BinaryReader reader) : base(reader)
         {
             // member mapping
-            this.MemberMapping1 = (MemberMapping)reader.ReadByte();
-            this.MemberMapping2 = (MemberMapping)reader.ReadByte();
-            this.MemberMapping3 = (MemberMapping)reader.ReadByte();
-            this.MemberMapping4 = (MemberMapping)reader.ReadByte();
-            this.MemberMapping5 = (MemberMapping)reader.ReadByte();
-            this.MemberMapping6 = (MemberMapping)reader.ReadByte();
+            MemberMapping1 = (MemberMapping)reader.ReadByte();
+            MemberMapping2 = (MemberMapping)reader.ReadByte();
+            MemberMapping3 = (MemberMapping)reader.ReadByte();
+            MemberMapping4 = (MemberMapping)reader.ReadByte();
+            MemberMapping5 = (MemberMapping)reader.ReadByte();
+            MemberMapping6 = (MemberMapping)reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
 
             // member count
-            var memberCount = new MemberMapping[] { this.MemberMapping1, this.MemberMapping2, this.MemberMapping3,
-                                                    this.MemberMapping4, this.MemberMapping5, this.MemberMapping6 }.Distinct().Count();
+            var memberCount = new MemberMapping[] { MemberMapping1, MemberMapping2, MemberMapping3,
+                                                    MemberMapping4, MemberMapping5, MemberMapping6 }.Distinct().Count();
 
             // member start and end addresses
-            this.MemberFileStartAddresses = new List<ulong>(memberCount);
-            this.MemberFileEndAddresses = new List<ulong>(memberCount);
+            MemberFileStartAddresses = new List<ulong>(memberCount);
+            MemberFileEndAddresses = new List<ulong>(memberCount);
 
             for (int i = 0; i < memberCount; i++)
             {
-                this.MemberFileStartAddresses[i] = reader.ReadUInt64();
-                this.MemberFileEndAddresses[i] = reader.ReadUInt64();
+                MemberFileStartAddresses[i] = reader.ReadUInt64();
+                MemberFileEndAddresses[i] = reader.ReadUInt64();
             }
 
             // member names
-            this.MemberNames = new List<string>(memberCount);
+            MemberNames = new List<string>(memberCount);
 
             for (int i = 0; i < memberCount; i++)
             {
-                this.MemberNames[i] = H5Utils.ReadNullTerminatedString(reader, pad: true);
+                MemberNames[i] = H5Utils.ReadNullTerminatedString(reader, pad: true);
             }
         }
 

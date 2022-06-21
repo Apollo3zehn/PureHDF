@@ -7,13 +7,13 @@
         public ExternalFileListSlot(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // name heap offset
-            this.NameHeapOffset = superblock.ReadLength(reader);
+            NameHeapOffset = superblock.ReadLength(reader);
 
             // offset
-            this.Offset = superblock.ReadLength(reader);
+            Offset = superblock.ReadLength(reader);
 
             // size
-            this.Size = superblock.ReadLength(reader);
+            Size = superblock.ReadLength(reader);
         }
 
         #endregion

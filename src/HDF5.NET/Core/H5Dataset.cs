@@ -24,59 +24,70 @@ namespace HDF5.NET
         internal H5Dataset(H5File file, H5Context context, NamedReference reference, ObjectHeader header)
             : base(context, reference, header)
         {
-            this.File = file;
+            File = file;
 
-            foreach (var message in this.Header.HeaderMessages)
+            foreach (var message in Header.HeaderMessages)
             {
                 var type = message.Data.GetType();
 
                 if (typeof(DataLayoutMessage).IsAssignableFrom(type))
-                    this.InternalDataLayout = (DataLayoutMessage)message.Data;
+                    InternalDataLayout = (DataLayoutMessage)message.Data;
 
                 else if (type == typeof(DataspaceMessage))
-                    this.InternalDataspace = (DataspaceMessage)message.Data;
+                    InternalDataspace = (DataspaceMessage)message.Data;
 
                 else if (type == typeof(DatatypeMessage))
-                    this.InternalDataType = (DatatypeMessage)message.Data;
+                    InternalDataType = (DatatypeMessage)message.Data;
 
                 else if (type == typeof(FillValueMessage))
-                    this.InternalFillValue = (FillValueMessage)message.Data;
+                    InternalFillValue = (FillValueMessage)message.Data;
 
                 else if (type == typeof(FilterPipelineMessage))
-                    this.InternalFilterPipeline = (FilterPipelineMessage)message.Data;
+                    InternalFilterPipeline = (FilterPipelineMessage)message.Data;
 
                 else if (type == typeof(ObjectModificationMessage))
-                    this.InternalObjectModification = (ObjectModificationMessage)message.Data;
+                    InternalObjectModification = (ObjectModificationMessage)message.Data;
 
                 else if (type == typeof(ExternalFileListMessage))
-                    this.InternalExternalFileList = (ExternalFileListMessage)message.Data;
+                    InternalExternalFileList = (ExternalFileListMessage)message.Data;
             }
 
             // check that required fields are set
-            if (this.InternalDataLayout is null)
+            if (InternalDataLayout is null)
                 throw new Exception("The data layout message is missing.");
 
-            if (this.InternalDataspace is null)
+            if (InternalDataspace is null)
                 throw new Exception("The dataspace message is missing.");
 
-            if (this.InternalDataType is null)
+            if (InternalDataType is null)
                 throw new Exception("The data type message is missing.");
 
-            if (this.InternalFillValue is null)
-                throw new Exception("The fill value message is missing.");
+            if (InternalFillValue is null)
+            {
+                // The OldFillValueMessage is optional and so there might be not fill value
+                // message at all although the newer message is being marked as required. The
+                // workaround is to instantiate a new FillValueMessage with sensible defaults.
+                // It is not 100% clear if these defaults are fine.
+
+                var allocationTime = InternalDataLayout.LayoutClass == LayoutClass.Chunked
+                    ? SpaceAllocationTime.Incremental
+                    : SpaceAllocationTime.Late;
+
+                InternalFillValue = new FillValueMessage(allocationTime);
+            }
         }
 
         #endregion
 
         #region Properties
 
-        internal DataLayoutMessage InternalDataLayout { get; } = null!;
+        internal DataLayoutMessage InternalDataLayout { get; } = default!;
 
-        internal DataspaceMessage InternalDataspace { get; } = null!;
+        internal DataspaceMessage InternalDataspace { get; } = default!;
 
-        internal DatatypeMessage InternalDataType { get; } = null!;
+        internal DatatypeMessage InternalDataType { get; } = default!;
 
-        internal FillValueMessage InternalFillValue { get; } = null!;
+        internal FillValueMessage InternalFillValue { get; } = default!;
 
         internal FilterPipelineMessage? InternalFilterPipeline { get; }
 
@@ -100,13 +111,13 @@ namespace HDF5.NET
             bool skipShuffle = false) where T : unmanaged
         {
             // short path for null dataspace
-            if (this.InternalDataspace.Type == DataspaceType.Null)
+            if (InternalDataspace.Type == DataspaceType.Null)
                 return new T[0];
 
             // 
             if (!skipTypeCheck)
             {
-                switch (this.InternalDataType.Class)
+                switch (InternalDataType.Class)
                 {
                     case DatatypeMessageClass.FixedPoint:
                     case DatatypeMessageClass.FloatingPoint:
@@ -124,7 +135,7 @@ namespace HDF5.NET
             }
 
             // for testing only
-            if (skipShuffle && this.InternalFilterPipeline is not null)
+            if (skipShuffle && InternalFilterPipeline is not null)
             {
                 var filtersToRemove = this
                     .InternalFilterPipeline
@@ -134,12 +145,12 @@ namespace HDF5.NET
 
                 foreach (var filter in filtersToRemove)
                 {
-                    this.InternalFilterPipeline.FilterDescriptions.Remove(filter);
+                    InternalFilterPipeline.FilterDescriptions.Remove(filter);
                 }
             }
 
             /* buffer provider */
-            using H5D_Base bufferProvider = this.InternalDataLayout.LayoutClass switch
+            using H5D_Base bufferProvider = InternalDataLayout.LayoutClass switch
             {
                 /* Compact: The array is stored in one contiguous block as part of
                  * this object header message. 
@@ -175,7 +186,7 @@ namespace HDF5.NET
                 LayoutClass.VirtualStorage => new H5D_Virtual(this, datasetAccess),
 
                 /* default */
-                _ => throw new Exception($"The data layout class '{this.InternalDataLayout.LayoutClass}' is not supported.")
+                _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
             };
 
             bufferProvider.Initialize();
@@ -185,11 +196,11 @@ namespace HDF5.NET
                : null;
 
             Func<ulong[], Stream>? getSourceStream = bufferProvider.SupportsStream
-                ? chunkIndices => bufferProvider.GetStream(chunkIndices)
+                ? chunkIndices => bufferProvider.GetStream(chunkIndices)!
                 : null;
 
             /* dataset dims */
-            var datasetDims = this.GetDatasetDims();
+            var datasetDims = GetDatasetDims();
 
             /* dataset chunk dims */
             var datasetChunkDims = bufferProvider.GetChunkDims();
@@ -197,7 +208,7 @@ namespace HDF5.NET
             /* file selection */
             if (fileSelection is null)
             {
-                switch (this.InternalDataspace.Type)
+                switch (InternalDataspace.Type)
                 {
                     case DataspaceType.Scalar:
                     case DataspaceType.Simple:
@@ -211,17 +222,17 @@ namespace HDF5.NET
 
                     case DataspaceType.Null:
                     default:
-                        throw new Exception($"Unsupported data space type '{this.InternalDataspace.Type}'.");
+                        throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.");
                 }
             }
 
             /* result buffer */
             var result = default(T[]);
             var totalCount = fileSelection.TotalElementCount;
-            var byteSize = totalCount * this.InternalDataType.Size;
+            var byteSize = totalCount * InternalDataType.Size;
 
             if (buffer.Equals(default))
-                buffer = this.GetBuffer(byteSize, out result);
+                buffer = GetBuffer(byteSize, out result);
 
             else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length < byteSize)
                 throw new Exception("The provided target buffer is too small.");
@@ -235,7 +246,7 @@ namespace HDF5.NET
                 memoryDims = new ulong[] { totalCount };
 
             if (getSourceBuffer is null && getSourceStream is null)
-                new Exception($"The data layout class '{this.InternalDataLayout.LayoutClass}' is not supported.");
+                new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
 
             /* copy info */
             var copyInfo = new CopyInfo(
@@ -248,18 +259,18 @@ namespace HDF5.NET
                 GetSourceBuffer: getSourceBuffer,
                 GetSourceStream: getSourceStream,
                 GetTargetBuffer: indices => buffer.Cast<T, byte>(),
-                TypeSize: (int)this.InternalDataType.Size
+                TypeSize: (int)InternalDataType.Size
             );
 
             SelectionUtils.Copy(datasetChunkDims.Length, memoryDims.Length, copyInfo);
 
             /* ensure correct endianness */
-            var byteOrderAware = this.InternalDataType.BitField as IByteOrderAware;
+            var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
             var destination = MemoryMarshal.AsBytes(buffer.Span);
             var source = destination.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, this.InternalDataType.Size);
+                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, InternalDataType.Size);
 
             /* return */
             return result;
@@ -267,11 +278,11 @@ namespace HDF5.NET
 
         internal ulong[] GetDatasetDims()
         {
-            return this.InternalDataspace.Type switch
+            return InternalDataspace.Type switch
             {
                 DataspaceType.Scalar => new ulong[] { 1 },
-                DataspaceType.Simple => this.InternalDataspace.DimensionSizes,
-                _ => throw new Exception($"Unsupported data space type '{this.InternalDataspace.Type}'.")
+                DataspaceType.Simple => InternalDataspace.DimensionSizes,
+                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
             };
         }
 

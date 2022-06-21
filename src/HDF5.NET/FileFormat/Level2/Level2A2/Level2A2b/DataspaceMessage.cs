@@ -15,55 +15,55 @@ namespace HDF5.NET
 
         public DataspaceMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.Version = reader.ReadByte();
-            this.Rank = reader.ReadByte();
+            Version = reader.ReadByte();
+            Rank = reader.ReadByte();
             var flags = (DataspaceMessageFlags)reader.ReadByte();
 
-            if (this.Version == 1)
+            if (Version == 1)
             {
-                if (this.Rank > 0)
-                    this.Type = DataspaceType.Simple;
+                if (Rank > 0)
+                    Type = DataspaceType.Simple;
                 else
-                    this.Type = DataspaceType.Scalar;
+                    Type = DataspaceType.Scalar;
 
                 reader.ReadBytes(5);
             }
             else
             {
-                this.Type = (DataspaceType)reader.ReadByte();
+                Type = (DataspaceType)reader.ReadByte();
             }
 
-            this.DimensionSizes = new ulong[this.Rank];
+            DimensionSizes = new ulong[Rank];
 
             var dimensionMaxSizesArePresent = flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes);
             var permutationIndicesArePresent = flags.HasFlag(DataspaceMessageFlags.PermuationIndices);
 
-            for (int i = 0; i < this.Rank; i++)
+            for (int i = 0; i < Rank; i++)
             {
-                this.DimensionSizes[i] = superblock.ReadLength(reader);
+                DimensionSizes[i] = superblock.ReadLength(reader);
             }
 
             if (dimensionMaxSizesArePresent)
             {
-                this.DimensionMaxSizes = new ulong[this.Rank];
+                DimensionMaxSizes = new ulong[Rank];
                 
-                for (int i = 0; i < this.Rank; i++)
+                for (int i = 0; i < Rank; i++)
                 {
-                    this.DimensionMaxSizes[i] = superblock.ReadLength(reader);
+                    DimensionMaxSizes[i] = superblock.ReadLength(reader);
                 }
             }
             else
             {
-                this.DimensionMaxSizes = this.DimensionSizes.ToArray();
+                DimensionMaxSizes = DimensionSizes.ToArray();
             }
 
             if (permutationIndicesArePresent)
             {
-                this.PermutationIndices = new ulong[this.Rank];
+                PermutationIndices = new ulong[Rank];
 
-                for (int i = 0; i < this.Rank; i++)
+                for (int i = 0; i < Rank; i++)
                 {
-                    this.PermutationIndices[i] = superblock.ReadLength(reader);
+                    PermutationIndices[i] = superblock.ReadLength(reader);
                 }
             }
         }

@@ -26,26 +26,26 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, FractalHeapDirectBlock.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
             headerSize += 1;
 
             // heap header address
-            this.HeapHeaderAddress = superblock.ReadOffset(reader);
+            HeapHeaderAddress = superblock.ReadOffset(reader);
             headerSize += superblock.OffsetsSize;
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            this.BlockOffset = H5Utils.ReadUlong(this.Reader, (ulong)blockOffsetFieldSize);
+            BlockOffset = H5Utils.ReadUlong(Reader, (ulong)blockOffsetFieldSize);
             headerSize += (ulong)blockOffsetFieldSize;
 
             // checksum
             if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
             {
-                this.Checksum = reader.ReadUInt32();
+                Checksum = reader.ReadUInt32();
                 headerSize += 4;
             }
 
-            this.HeaderSize = headerSize;
+            HeaderSize = headerSize;
         }
 
         #endregion
@@ -78,8 +78,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.HeapHeaderAddress, SeekOrigin.Begin);
-                return new FractalHeapHeader(this.Reader, _superblock);
+                Reader.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                return new FractalHeapHeader(Reader, _superblock);
             }
         }
 

@@ -1,11 +1,11 @@
-﻿@if (this.Group is not null)
+﻿@if (Group is not null)
 {
     <MatNavSubMenu Expanded="true">
         <MatNavSubMenuHeader>
-            <MatNavItem AllowSelection="false"><MatIcon Icon="@MatIconNames.Insert_drive_file"></MatIcon>&nbsp; @this.Group.Name</MatNavItem>
+            <MatNavItem AllowSelection="false"><MatIcon Icon="@MatIconNames.Insert_drive_file"></MatIcon>&nbsp; @Group.Name</MatNavItem>
         </MatNavSubMenuHeader>
         <MatNavSubMenuList>
-            <Virtualize Items="@this.Group.Children.ToList()" Context="h5Object">
+            <Virtualize Items="@Group.Children.ToList()" Context="h5Object">
                 @if (h5Object.GetType() == typeof(H5Group))
                 {
                     <H5GroupView Group="(H5Group)h5Object"></H5GroupView>

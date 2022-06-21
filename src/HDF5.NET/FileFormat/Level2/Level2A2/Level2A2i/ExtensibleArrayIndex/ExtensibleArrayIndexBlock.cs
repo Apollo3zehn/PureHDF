@@ -21,47 +21,47 @@ namespace HDF5.NET
             Func<H5BinaryReader, T> decode)
         {
             // H5EAiblock.c (H5EA__iblock_alloc)
-            this.SecondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
+            SecondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
             ulong dataBlockPointerCount = (ulong)(2 * (header.SecondaryBlockMinimumDataBlockPointerCount - 1));
-            ulong secondaryBlockPointerCount = header.SecondaryBlockCount - this.SecondaryBlockDataBlockAddressCount;
+            ulong secondaryBlockPointerCount = header.SecondaryBlockCount - SecondaryBlockDataBlockAddressCount;
 
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)reader.ReadByte();
 
             // header address
-            this.HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(reader);
 
             // elements
-            this.Elements = Enumerable
+            Elements = Enumerable
                 .Range(0, header.IndexBlockElementsCount)
                 .Select(i => decode(reader))
                 .ToArray();
 
             // data block addresses
-            this.DataBlockAddresses = new ulong[dataBlockPointerCount];
+            DataBlockAddresses = new ulong[dataBlockPointerCount];
 
             for (ulong i = 0; i < dataBlockPointerCount; i++)
             {
-                this.DataBlockAddresses[i] = superblock.ReadOffset(reader);
+                DataBlockAddresses[i] = superblock.ReadOffset(reader);
             }
 
             // secondary block addresses
-            this.SecondaryBlockAddresses = new ulong[secondaryBlockPointerCount];
+            SecondaryBlockAddresses = new ulong[secondaryBlockPointerCount];
 
             for (ulong i = 0; i < secondaryBlockPointerCount; i++)
             {
-                this.SecondaryBlockAddresses[i] = superblock.ReadOffset(reader);
+                SecondaryBlockAddresses[i] = superblock.ReadOffset(reader);
             }
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

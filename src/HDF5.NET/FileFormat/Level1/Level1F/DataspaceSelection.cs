@@ -8,15 +8,15 @@ namespace HDF5.NET
 
         public DataspaceSelection(H5BinaryReader reader) : base(reader)
         {
-            this.SelectionType = (SelectionType)reader.ReadUInt32();
+            SelectionType = (SelectionType)reader.ReadUInt32();
 
-            this.SelectionInfo = this.SelectionType switch
+            SelectionInfo = SelectionType switch
             {
                 SelectionType.H5S_SEL_NONE      => new H5S_SEL_NONE(reader),
                 SelectionType.H5S_SEL_POINTS    => new H5S_SEL_POINTS(reader),
                 SelectionType.H5S_SEL_HYPER     => new H5S_SEL_HYPER(reader),
                 SelectionType.H5S_SEL_ALL       => new H5S_SEL_ALL(reader),
-                _ => throw new NotSupportedException($"The dataspace selection type '{this.SelectionType}' is not supported.")
+                _ => throw new NotSupportedException($"The dataspace selection type '{SelectionType}' is not supported.")
             };
         }
 
