@@ -6,32 +6,32 @@
 
         public Superblock01(H5BinaryReader reader, byte version) : base(reader)
         {
-            this.SuperBlockVersion = version;
-            this.FreeSpaceStorageVersion = reader.ReadByte();
-            this.RootGroupSymbolTableEntryVersion = reader.ReadByte();
+            SuperBlockVersion = version;
+            FreeSpaceStorageVersion = reader.ReadByte();
+            RootGroupSymbolTableEntryVersion = reader.ReadByte();
             reader.ReadByte();
 
-            this.SharedHeaderMessageFormatVersion = reader.ReadByte();
-            this.OffsetsSize = reader.ReadByte();
-            this.LengthsSize = reader.ReadByte();
+            SharedHeaderMessageFormatVersion = reader.ReadByte();
+            OffsetsSize = reader.ReadByte();
+            LengthsSize = reader.ReadByte();
             reader.ReadByte();
 
-            this.GroupLeafNodeK = reader.ReadUInt16();
-            this.GroupInternalNodeK = reader.ReadUInt16();
+            GroupLeafNodeK = reader.ReadUInt16();
+            GroupInternalNodeK = reader.ReadUInt16();
 
-            this.FileConsistencyFlags = (FileConsistencyFlags)reader.ReadUInt32();
+            FileConsistencyFlags = (FileConsistencyFlags)reader.ReadUInt32();
 
-            if (this.SuperBlockVersion == 1)
+            if (SuperBlockVersion == 1)
             {
-                this.IndexedStorageInternalNodeK = reader.ReadUInt16();
+                IndexedStorageInternalNodeK = reader.ReadUInt16();
                 reader.ReadUInt16();
             }
 
-            this.BaseAddress = this.ReadOffset(reader);
-            this.FreeSpaceInfoAddress = this.ReadOffset(reader);
-            this.EndOfFileAddress = this.ReadOffset(reader);
-            this.DriverInfoBlockAddress = this.ReadOffset(reader);
-            this.RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
+            BaseAddress = ReadOffset(reader);
+            FreeSpaceInfoAddress = ReadOffset(reader);
+            EndOfFileAddress = ReadOffset(reader);
+            DriverInfoBlockAddress = ReadOffset(reader);
+            RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
         }
 
         #endregion
@@ -52,10 +52,10 @@
         {
             get
             {
-                if (this.IsUndefinedAddress(this.DriverInfoBlockAddress))
+                if (IsUndefinedAddress(DriverInfoBlockAddress))
                     return null;
                 else
-                    return new DriverInfoBlock(this.Reader);
+                    return new DriverInfoBlock(Reader);
             }
         }
 

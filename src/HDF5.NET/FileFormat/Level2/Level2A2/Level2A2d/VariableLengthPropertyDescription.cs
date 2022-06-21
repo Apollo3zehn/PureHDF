@@ -6,7 +6,7 @@
 
         public VariableLengthPropertyDescription(H5BinaryReader reader) : base(reader)
         {
-            this.BaseType = new DatatypeMessage(reader);
+            BaseType = new DatatypeMessage(reader);
         }
 
         #endregion

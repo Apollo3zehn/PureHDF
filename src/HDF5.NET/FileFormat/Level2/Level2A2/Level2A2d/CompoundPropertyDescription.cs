@@ -13,10 +13,10 @@ namespace HDF5.NET
                 case 1:
 
                     // name
-                    this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true);
+                    Name = H5Utils.ReadNullTerminatedString(reader, pad: true);
 
                     // member byte offset
-                    this.MemberByteOffset = reader.ReadUInt32();
+                    MemberByteOffset = reader.ReadUInt32();
 
                     // rank
                     var rank = reader.ReadByte();
@@ -39,27 +39,27 @@ namespace HDF5.NET
                     }
 
                     // member type message
-                    this.MemberTypeMessage = new DatatypeMessage(reader);
+                    MemberTypeMessage = new DatatypeMessage(reader);
 
                     break;
 
                 case 2:
 
                     // name
-                    this.Name = H5Utils.ReadNullTerminatedString(reader, pad: true);
+                    Name = H5Utils.ReadNullTerminatedString(reader, pad: true);
 
                     // member byte offset
-                    this.MemberByteOffset = reader.ReadUInt32();
+                    MemberByteOffset = reader.ReadUInt32();
 
                     // member type message
-                    this.MemberTypeMessage = new DatatypeMessage(reader);
+                    MemberTypeMessage = new DatatypeMessage(reader);
 
                     break;
 
                 case 3:
 
                     // name
-                    this.Name = H5Utils.ReadNullTerminatedString(reader, pad: false);
+                    Name = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
                     // member byte offset
                     var byteCount = H5Utils.FindMinByteCount(valueSize);
@@ -74,10 +74,10 @@ namespace HDF5.NET
                         buffer[i] = reader.ReadByte();
                     }
 
-                    this.MemberByteOffset = BitConverter.ToUInt64(buffer, 0);
+                    MemberByteOffset = BitConverter.ToUInt64(buffer, 0);
 
                     // member type message
-                    this.MemberTypeMessage = new DatatypeMessage(reader);
+                    MemberTypeMessage = new DatatypeMessage(reader);
 
                     break;
 

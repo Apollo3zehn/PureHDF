@@ -15,28 +15,28 @@ namespace HDF5.NET
         internal ObjectHeader1(H5Context context, byte version) : base(context)
         {
             // version
-            this.Version = version;
+            Version = version;
 
             // reserved
             context.Reader.ReadByte();
 
             // header messages count
-            this.HeaderMessagesCount = context.Reader.ReadUInt16();
+            HeaderMessagesCount = context.Reader.ReadUInt16();
 
             // object reference count
-            this.ObjectReferenceCount = context.Reader.ReadUInt32();
+            ObjectReferenceCount = context.Reader.ReadUInt32();
 
             // object header size
-            this.ObjectHeaderSize = context.Reader.ReadUInt32();
+            ObjectHeaderSize = context.Reader.ReadUInt32();
 
             // header messages
 
             // read padding bytes that align the following message to an 8 byte boundary
-            if (this.ObjectHeaderSize > 0)
+            if (ObjectHeaderSize > 0)
                 context.Reader.ReadBytes(4);
 
-            var messages = this.ReadHeaderMessages(context, this.ObjectHeaderSize, 1);
-            this.HeaderMessages.AddRange(messages);
+            var messages = ReadHeaderMessages(context, ObjectHeaderSize, 1);
+            HeaderMessages.AddRange(messages);
         }
 
         #endregion

@@ -6,8 +6,8 @@
 
         public FixedPointPropertyDescription(H5BinaryReader reader) : base(reader)
         {
-            this.BitOffset = reader.ReadUInt16();
-            this.BitPrecision = reader.ReadUInt16();
+            BitOffset = reader.ReadUInt16();
+            BitPrecision = reader.ReadUInt16();
         }
 
         #endregion

@@ -7,16 +7,16 @@
         public VdsDatasetEntry(H5BinaryReader reader) : base(reader)
         {
             // source file name
-            this.SourceFileName = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            SourceFileName = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
             // source dataset
-            this.SourceDataset = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            SourceDataset = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
             // source selection
-            this.SourceSelection = new DataspaceSelection(reader);
+            SourceSelection = new DataspaceSelection(reader);
 
             // virtual selection
-            this.VirtualSelection = new DataspaceSelection(reader);
+            VirtualSelection = new DataspaceSelection(reader);
         }
 
         #endregion

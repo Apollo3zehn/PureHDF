@@ -32,7 +32,7 @@ namespace HDF5.NET
 
         public override ulong[] GetChunkDims()
         {
-            return this.Dataset.InternalDataspace.DimensionSizes;
+            return Dataset.InternalDataspace.DimensionSizes;
         }
 
         public override Memory<byte> GetBuffer(ulong[] chunkIndices)

@@ -6,13 +6,13 @@
 
         public FloatingPointPropertyDescription(H5BinaryReader reader) : base(reader)
         {
-            this.BitOffset = reader.ReadUInt16();
-            this.BitPrecision = reader.ReadUInt16();
-            this.ExponentLocation = reader.ReadByte();
-            this.ExponentSize = reader.ReadByte();
-            this.MantissaLocation = reader.ReadByte();
-            this.MantissaSize = reader.ReadByte();
-            this.ExponentBias = reader.ReadUInt32();
+            BitOffset = reader.ReadUInt16();
+            BitPrecision = reader.ReadUInt16();
+            ExponentLocation = reader.ReadByte();
+            ExponentSize = reader.ReadByte();
+            MantissaLocation = reader.ReadByte();
+            MantissaSize = reader.ReadByte();
+            ExponentBias = reader.ReadUInt32();
         }
 
         #endregion

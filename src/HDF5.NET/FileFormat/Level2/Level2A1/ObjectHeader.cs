@@ -19,8 +19,8 @@ namespace HDF5.NET
         {
             _context = context;
 
-            this.Address = (ulong)context.Reader.BaseStream.Position;
-            this.HeaderMessages = new List<HeaderMessage>();
+            Address = (ulong)context.Reader.BaseStream.Position;
+            HeaderMessages = new List<HeaderMessage>();
         }
 
         #endregion
@@ -37,7 +37,7 @@ namespace HDF5.NET
 
         #region Methods
 
-#warning This method could als be static or moved to another type. Is does not strictly belong to object header. Only "this.Address" is required from object header.
+#warning This method could als be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
         public T DecodeMessage<T>(MessageFlags messageFlags, Func<T> decode) where T : Message
         {
             // H5OShared.h (H5O_SHARED_DECODE)
@@ -45,7 +45,7 @@ namespace HDF5.NET
             if (messageFlags.HasFlag(MessageFlags.Shared))
             {
                 var sharedMessage = new SharedMessage(_context.Reader, _context.Superblock);
-                return this.DecodeSharedMessage<T>(sharedMessage);
+                return DecodeSharedMessage<T>(sharedMessage);
             }
             else
             {
@@ -55,14 +55,14 @@ namespace HDF5.NET
 
         public T GetMessage<T>() where T : Message
         {
-            return (T)this.HeaderMessages
+            return (T)HeaderMessages
                 .First(message => message.Data.GetType() == typeof(T))
                 .Data;
         }
 
         public IEnumerable<T> GetMessages<T>() where T : Message
         {
-            return this.HeaderMessages
+            return HeaderMessages
                 .Where(message => message.Data.GetType() == typeof(T))
                 .Select(message => message.Data)
                 .Cast<T>();
@@ -134,7 +134,7 @@ namespace HDF5.NET
 
                 if (version == 1)
                 {
-                    var messages = this.ReadHeaderMessages(context, continuationMessage.Length, version);
+                    var messages = ReadHeaderMessages(context, continuationMessage.Length, version);
                     headerMessages.AddRange(messages);
                 }
                 else if (version == 2)
@@ -145,7 +145,7 @@ namespace HDF5.NET
                 }
             }
 
-            this.ObjectType = this.DetermineObjectType(headerMessages);
+            ObjectType = DetermineObjectType(headerMessages);
 
             return headerMessages;
         }
@@ -189,18 +189,18 @@ namespace HDF5.NET
             /* Check for implicit shared object header message*/
             if (message.Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
             {
-#warning Implement this.
+#warning Implement 
                 throw new NotImplementedException("This code path is not yet implemented.");
             }
             else
             {
-                if (message.Address == this.Address)
+                if (message.Address == Address)
                 {
                     /* The shared message is in the already opened object header.  This
                      * is possible, for example, if an attribute's datatype is shared in
                      * the same object header the attribute is in.  Read the message
                      * directly. */
-#warning Implement this.
+#warning Implement 
                     throw new NotImplementedException("This code path is not yet implemented.");
                 }
                 else

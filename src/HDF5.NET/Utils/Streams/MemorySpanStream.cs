@@ -31,7 +31,7 @@ namespace HDF5.NET
             }
             set
             {
-                this.Seek(value, SeekOrigin.Begin);
+                Seek(value, SeekOrigin.Begin);
             }
         }
 
@@ -48,7 +48,7 @@ namespace HDF5.NET
                 .Slice(0, length)
                 .CopyTo(buffer.AsMemory().Slice(offset));
 
-            this.Position += length;
+            Position += length;
 
             return length;
         }
@@ -91,7 +91,7 @@ namespace HDF5.NET
                     throw new NotSupportedException("Unknown seek origin.");
             }
 
-            return this.Position;
+            return Position;
         }
 
         public override void SetLength(long value)

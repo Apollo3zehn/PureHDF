@@ -7,10 +7,10 @@
         public VirtualStoragePropertyDescription(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // address
-            this.Address = superblock.ReadOffset(reader);
+            Address = superblock.ReadOffset(reader);
 
             // index
-            this.Index = reader.ReadUInt32();
+            Index = reader.ReadUInt32();
         }
 
         #endregion

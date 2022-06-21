@@ -10,16 +10,16 @@ namespace HDF5.NET
         private ulong GetStop(int dimension)
         {
             // prevent underflow of ulong
-            if (this.Counts[dimension] == 0)
+            if (Counts[dimension] == 0)
             {
                 return 0;
             }
             else
             {
                 return
-                    this.Starts[dimension] +
-                    this.Counts[dimension] * this.Strides[dimension] -
-                    (this.Strides[dimension] - this.Blocks[dimension]);
+                    Starts[dimension] +
+                    Counts[dimension] * Strides[dimension] -
+                    (Strides[dimension] - Blocks[dimension]);
             }
         }
     }

@@ -21,8 +21,8 @@ namespace HDF5.NET
             _reader = reader;
             _header = header;
 
-            this.Offset = H5Utils.ReadUlong(localReader, offsetByteCount);
-            this.Length = H5Utils.ReadUlong(localReader, lengthByteCount);
+            Offset = H5Utils.ReadUlong(localReader, offsetByteCount);
+            Length = H5Utils.ReadUlong(localReader, lengthByteCount);
         }
 
         #endregion

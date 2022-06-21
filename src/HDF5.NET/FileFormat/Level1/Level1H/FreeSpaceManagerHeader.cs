@@ -20,49 +20,49 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, FreeSpaceManagerHeader.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientId = (ClientId)reader.ReadByte();
+            ClientId = (ClientId)reader.ReadByte();
 
             // total space tracked
-            this.TotalSpaceTracked = superblock.ReadLength(reader);
+            TotalSpaceTracked = superblock.ReadLength(reader);
 
             // total sections count
-            this.TotalSectionsCount = superblock.ReadLength(reader);
+            TotalSectionsCount = superblock.ReadLength(reader);
 
             // serialized sections count
-            this.SerializedSectionsCount = superblock.ReadLength(reader);
+            SerializedSectionsCount = superblock.ReadLength(reader);
 
             // un-serialized sections count
-            this.UnSerializedSectionsCount = superblock.ReadLength(reader);
+            UnSerializedSectionsCount = superblock.ReadLength(reader);
 
             // section classes count
-            this.SectionClassesCount = reader.ReadUInt16();
+            SectionClassesCount = reader.ReadUInt16();
 
             // shrink percent
-            this.ShrinkPercent = reader.ReadUInt16();
+            ShrinkPercent = reader.ReadUInt16();
 
             // expand percent
-            this.ExpandPercent = reader.ReadUInt16();
+            ExpandPercent = reader.ReadUInt16();
 
             // address space size
-            this.AddressSpaceSize = reader.ReadUInt16();
+            AddressSpaceSize = reader.ReadUInt16();
 
             // maximum section size
-            this.MaximumSectionSize = superblock.ReadLength(reader);
+            MaximumSectionSize = superblock.ReadLength(reader);
 
             // serialized section list address
-            this.SerializedSectionListAddress = superblock.ReadOffset(reader);
+            SerializedSectionListAddress = superblock.ReadOffset(reader);
 
             // serialized section list used
-            this.SerializedSectionListUsed = superblock.ReadLength(reader);
+            SerializedSectionListUsed = superblock.ReadLength(reader);
 
             // serialized section list allocated size
-            this.SerializedSectionListAllocatedSize = superblock.ReadLength(reader);
+            SerializedSectionListAllocatedSize = superblock.ReadLength(reader);
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

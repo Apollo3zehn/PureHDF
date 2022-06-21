@@ -9,9 +9,9 @@ namespace HDF5.NET
         public FixedArrayIndexingInformation(H5BinaryReader reader) : base(reader)
         {
             // page bits
-            this.PageBits = reader.ReadByte();
+            PageBits = reader.ReadByte();
 
-            if (this.PageBits == 0)
+            if (PageBits == 0)
                 throw new Exception("Invalid fixed array creation parameter.");
         }
 

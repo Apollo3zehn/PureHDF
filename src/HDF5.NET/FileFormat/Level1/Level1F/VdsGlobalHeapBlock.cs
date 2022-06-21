@@ -15,21 +15,21 @@ namespace HDF5.NET
         public VdsGlobalHeapBlock(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // entry count
-            this.EntryCount = superblock.ReadLength(reader);
+            EntryCount = superblock.ReadLength(reader);
 
             // vds dataset entries
-            this.VdsDatasetEntries = new VdsDatasetEntry[(int)this.EntryCount];
+            VdsDatasetEntries = new VdsDatasetEntry[(int)EntryCount];
 
-            for (ulong i = 0; i < this.EntryCount; i++)
+            for (ulong i = 0; i < EntryCount; i++)
             {
-                this.VdsDatasetEntries[i] = new VdsDatasetEntry(reader);
+                VdsDatasetEntries[i] = new VdsDatasetEntry(reader);
             }
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

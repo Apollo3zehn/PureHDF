@@ -6,8 +6,8 @@
 
         public ContiguousStoragePropertyDescription(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            this.Address = superblock.ReadOffset(reader);
-            this.Size = superblock.ReadLength(reader);
+            Address = superblock.ReadOffset(reader);
+            Size = superblock.ReadLength(reader);
         }
 
         #endregion

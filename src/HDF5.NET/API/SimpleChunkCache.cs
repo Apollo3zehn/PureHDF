@@ -15,8 +15,8 @@ namespace HDF5.NET
             //if (!(0 <= w0 && w0 <= 1))
             //    throw new ArgumentException("The parameter w0 must be in the range of 0..1 (inclusive).");
 
-            this.ChunkSlotCount = chunkSlotCount;
-            this.ByteCount = byteCount;
+            ChunkSlotCount = chunkSlotCount;
+            ByteCount = byteCount;
 
             _chunkInfoMap = new Dictionary<ulong[], ChunkInfo>(new ArrayEqualityComparer());
         }
@@ -49,14 +49,14 @@ namespace HDF5.NET
                 chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, buffer);
                 var chunk = chunkInfo.Chunk;
 
-                if ((ulong)chunk.Length <= this.ByteCount)
+                if ((ulong)chunk.Length <= ByteCount)
                 {
-                    while (_chunkInfoMap.Count >= this.ChunkSlotCount || this.ByteCount - this.ConsumedBytes < (ulong)chunk.Length)
+                    while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
                     {
-                        this.Preempt();
+                        Preempt();
                     }
 
-                    this.ConsumedBytes += (ulong)chunk.Length;
+                    ConsumedBytes += (ulong)chunk.Length;
                     _chunkInfoMap[indices] = chunkInfo;
                 }
             }

@@ -17,19 +17,19 @@
 //            : base(messageLocation)
 //        {
 //            // hash
-//            this.Hash = reader.ReadBytes(4);
+//            Hash = reader.ReadBytes(4);
 
 //            // reserved
 //            reader.ReadByte();
 
 //            // message type
-//            this.MessageType = (HeaderMessageType)reader.ReadByte();
+//            MessageType = (HeaderMessageType)reader.ReadByte();
 
 //            // object header index
-//            this.HeaderIndex = reader.ReadUInt16();
+//            HeaderIndex = reader.ReadUInt16();
 
 //            // object header address
-//            this.HeaderAddress = superblock.ReadOffset(reader);
+//            HeaderAddress = superblock.ReadOffset(reader);
 //        }
 
 //        #endregion

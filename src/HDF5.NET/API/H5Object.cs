@@ -4,7 +4,7 @@
     {
         #region Properties
 
-        public string Name => this.Reference.Name;
+        public string Name => Reference.Name;
 
         #endregion
     }

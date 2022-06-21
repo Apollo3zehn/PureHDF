@@ -14,7 +14,7 @@ namespace HDF5.NET
             get
             {
                 if (_space is null)
-                    _space = new H5Dataspace(this.InternalDataspace);
+                    _space = new H5Dataspace(InternalDataspace);
 
                 return _space;
             }
@@ -25,7 +25,7 @@ namespace HDF5.NET
             get
             {
                 if (_type is null)
-                    _type = new H5DataType(this.InternalDataType);
+                    _type = new H5DataType(InternalDataType);
 
                 return _type;
             }
@@ -36,7 +36,7 @@ namespace HDF5.NET
             get
             {
                 if (_layout is null)
-                    _layout = new H5DataLayout(this.InternalDataLayout);
+                    _layout = new H5DataLayout(InternalDataLayout);
 
                 return _layout;
             }
@@ -47,7 +47,7 @@ namespace HDF5.NET
             get
             {
                 if (_fillValue is null)
-                    _fillValue = new H5FillValue(this.InternalFillValue);
+                    _fillValue = new H5FillValue(InternalFillValue);
 
                 return _fillValue;
             }
@@ -63,7 +63,7 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = this.Read<byte>(
+            var result = Read<byte>(
                 null,
                 fileSelection,
                 memorySelection,
@@ -83,7 +83,7 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = this.Read<T>(
+            var result = Read<T>(
                 null,
                 fileSelection,
                 memorySelection,
@@ -104,7 +104,7 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            this.Read(
+            Read(
                 buffer,
                 fileSelection,
                 memorySelection,
@@ -120,7 +120,7 @@ namespace HDF5.NET
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = this.Read<byte>(
+            var data = Read<byte>(
                 null,
                 fileSelection,
                 memorySelection,
@@ -134,7 +134,7 @@ namespace HDF5.NET
             if (getName is null)
                 getName = fieldInfo => fieldInfo.Name;
 
-            return H5Utils.ReadCompound<T>(this.InternalDataType, this.InternalDataspace, this.Context.Superblock, data, getName);
+            return H5Utils.ReadCompound<T>(InternalDataType, InternalDataspace, Context.Superblock, data, getName);
         }
 
         public string[] ReadString(
@@ -143,7 +143,7 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = this.Read<byte>(
+            var data = Read<byte>(
                 null,
                 fileSelection,
                 memorySelection,
@@ -155,7 +155,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5Utils.ReadString(this.InternalDataType, data, this.Context.Superblock);
+            return H5Utils.ReadString(InternalDataType, data, Context.Superblock);
         }
 
         #endregion

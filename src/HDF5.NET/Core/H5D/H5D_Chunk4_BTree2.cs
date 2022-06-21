@@ -27,47 +27,47 @@ namespace HDF5.NET
 
         protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
-            if (this.Dataset.InternalFilterPipeline is null)
+            if (Dataset.InternalFilterPipeline is null)
             {
                 if (_btree2_no_filter is null)
                 {
-                    this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                    Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
                     Func<BTree2Record10> decodeKey 
-                        = () => this.DecodeRecord10(this.ChunkRank);
+                        = () => DecodeRecord10(ChunkRank);
 
-                    _btree2_no_filter = new BTree2Header<BTree2Record10>(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, decodeKey);
+                    _btree2_no_filter = new BTree2Header<BTree2Record10>(Dataset.Context.Reader, Dataset.Context.Superblock, decodeKey);
                 }
 
                 // get record
                 var success = _btree2_no_filter.TryFindRecord(out var record, record =>
                 {
                     // H5Dbtree2.c (H5D__bt2_compare)
-                    return H5Utils.VectorCompare(this.ChunkRank, chunkIndices, record.ScaledOffsets);
+                    return H5Utils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
                 });
 
                 return success
-                    ? new ChunkInfo(record.Address, this.ChunkByteSize, 0)
+                    ? new ChunkInfo(record.Address, ChunkByteSize, 0)
                     : ChunkInfo.None;
             }
             else
             {
                 if (_btree2_filter is null)
                 {
-                    this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
-                    var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
+                    Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                    var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
 
                     Func<BTree2Record11> decodeKey = 
-                        () => this.DecodeRecord11(this.ChunkRank, chunkSizeLength);
+                        () => DecodeRecord11(ChunkRank, chunkSizeLength);
 
-                    _btree2_filter = new BTree2Header<BTree2Record11>(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, decodeKey);
+                    _btree2_filter = new BTree2Header<BTree2Record11>(Dataset.Context.Reader, Dataset.Context.Superblock, decodeKey);
                 }
 
                 // get record
                 var success = _btree2_filter.TryFindRecord(out var record, record =>
                 {
                     // H5Dbtree2.c (H5D__bt2_compare)
-                    return H5Utils.VectorCompare(this.ChunkRank, chunkIndices, record.ScaledOffsets);
+                    return H5Utils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
                 });
 
                 return success
@@ -83,13 +83,13 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree2Record10 DecodeRecord10(byte rank)
         {
-            return new BTree2Record10(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, rank);
+            return new BTree2Record10(Dataset.Context.Reader, Dataset.Context.Superblock, rank);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree2Record11 DecodeRecord11(byte rank, uint chunkSizeLength)
         {
-            return new BTree2Record11(this.Dataset.Context.Reader, this.Dataset.Context.Superblock, rank, chunkSizeLength);
+            return new BTree2Record11(Dataset.Context.Reader, Dataset.Context.Superblock, rank, chunkSizeLength);
         }
 
         #endregion

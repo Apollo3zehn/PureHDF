@@ -9,14 +9,14 @@ namespace HDF5.NET
     {
         #region Properties
 
-        public string Name => this.Message.Name;
+        public string Name => Message.Name;
 
         public H5Dataspace Space
         {
             get
             {
                 if (_space is null)
-                    _space = new H5Dataspace(this.Message.Dataspace);
+                    _space = new H5Dataspace(Message.Dataspace);
 
                 return _space;
             }
@@ -27,7 +27,7 @@ namespace HDF5.NET
             get
             {
                 if (_type is null)
-                    _type = new H5DataType(this.Message.Datatype);
+                    _type = new H5DataType(Message.Datatype);
 
                 return _type;
             }
@@ -40,7 +40,7 @@ namespace HDF5.NET
         public T[] Read<T>()
             where T : unmanaged
         {
-            switch (this.Message.Datatype.Class)
+            switch (Message.Datatype.Class)
             {
                 case DatatypeMessageClass.FixedPoint:
                 case DatatypeMessageClass.FloatingPoint:
@@ -56,34 +56,34 @@ namespace HDF5.NET
                     throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Reference}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
             }
 
-            var buffer = this.Message.Data;
-            var byteOrderAware = this.Message.Datatype.BitField as IByteOrderAware;
+            var buffer = Message.Data;
+            var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
             var destination = buffer;
             var source = destination.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, this.Message.Datatype.Size);
+                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
             return MemoryMarshal
-                .Cast<byte, T>(this.Message.Data)
+                .Cast<byte, T>(Message.Data)
                 .ToArray();
         }
 
         public T[] ReadCompound<T>() 
             where T : struct
         {
-            return this.ReadCompound<T>(fieldInfo => fieldInfo.Name);
+            return ReadCompound<T>(fieldInfo => fieldInfo.Name);
         }
 
         public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) 
             where T : struct
         {
-            return H5Utils.ReadCompound<T>(this.Message.Datatype, this.Message.Dataspace, _superblock, this.Message.Data, getName);
+            return H5Utils.ReadCompound<T>(Message.Datatype, Message.Dataspace, _superblock, Message.Data, getName);
         }
 
         public string[] ReadString()
         {
-            return H5Utils.ReadString(this.Message.Datatype, this.Message.Data, _superblock);
+            return H5Utils.ReadString(Message.Datatype, Message.Data, _superblock);
         }
 
         #endregion

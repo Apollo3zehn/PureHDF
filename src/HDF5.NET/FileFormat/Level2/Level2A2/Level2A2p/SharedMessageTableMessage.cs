@@ -16,13 +16,13 @@ namespace HDF5.NET
         public SharedMessageTableMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // shared object header message table address
-            this.SharedObjectHeaderMessageTableAddress = superblock.ReadOffset(reader);
+            SharedObjectHeaderMessageTableAddress = superblock.ReadOffset(reader);
 
             // index count
-            this.IndexCount = reader.ReadByte();
+            IndexCount = reader.ReadByte();
         }
 
         #endregion
@@ -51,8 +51,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
-                return new SharedObjectHeaderMessageTable(this.Reader);
+                Reader.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
+                return new SharedObjectHeaderMessageTable(Reader);
             }
         }
 

@@ -14,11 +14,11 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, SharedMessageRecordList.Signature);
 
             // share message records
-            this.SharedMessageRecords = new List<SharedMessageRecord>();
+            SharedMessageRecords = new List<SharedMessageRecord>();
 #warning how to know how many?
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

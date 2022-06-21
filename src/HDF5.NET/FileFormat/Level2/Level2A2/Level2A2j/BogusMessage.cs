@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         public BogusMessage(H5BinaryReader reader) : base(reader)
         {
-            this.BogusValue = reader.ReadUInt32();
+            BogusValue = reader.ReadUInt32();
         }
 
         #endregion

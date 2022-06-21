@@ -20,7 +20,7 @@
             _extendedLength = localReader.ReadByte();
 
             // data
-            this.Data = localReader.ReadBytes(this.Length);
+            Data = localReader.ReadBytes(Length);
         }
 
         #endregion

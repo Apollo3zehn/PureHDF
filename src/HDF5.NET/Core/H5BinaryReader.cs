@@ -27,11 +27,11 @@ namespace HDF5.NET
             switch (seekOrigin)
             {
                 case SeekOrigin.Begin:
-                    this.BaseStream.Seek((long)this.BaseAddress + offset, seekOrigin); break;
+                    BaseStream.Seek((long)BaseAddress + offset, seekOrigin); break;
 
                 case SeekOrigin.Current:
                 case SeekOrigin.End:
-                    this.BaseStream.Seek(offset, seekOrigin); break;
+                    BaseStream.Seek(offset, seekOrigin); break;
 
                 default:
                     throw new Exception($"Seek origin '{seekOrigin}' is not supported.");

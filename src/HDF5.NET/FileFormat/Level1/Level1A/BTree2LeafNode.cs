@@ -11,7 +11,7 @@ namespace HDF5.NET
             : base(reader, header, recordCount, BTree2LeafNode<T>.Signature, decodeKey)
         {
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

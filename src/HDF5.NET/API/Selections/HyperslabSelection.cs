@@ -29,30 +29,30 @@ namespace HDF5.NET
             if (starts.Length != rank || strides.Length != rank || counts.Length != rank || blocks.Length != rank)
                 throw new RankException($"The start, stride, count, and block arrays must be the same size as the rank '{rank}'.");
 
-            this.Rank = rank;
-            this.StartsField = starts.ToArray();
-            this.StridesField = strides.ToArray();
-            this.CountsField = counts.ToArray();
-            this.BlocksField = blocks.ToArray();
+            Rank = rank;
+            StartsField = starts.ToArray();
+            StridesField = strides.ToArray();
+            CountsField = counts.ToArray();
+            BlocksField = blocks.ToArray();
 
-            for (int i = 0; i < this.Rank; i++)
+            for (int i = 0; i < Rank; i++)
             {
-                if (this.StridesField[i] == 0)
+                if (StridesField[i] == 0)
                     throw new ArgumentException("Stride must be > 0.");
 
-                if (this.StridesField[i] < this.BlocksField[i])
+                if (StridesField[i] < BlocksField[i])
                     throw new ArgumentException("Stride must be >= block.");
             }
 
             /* count */
             var elementCount = 1UL;
 
-            for (int i = 0; i < this.Rank; i++)
+            for (int i = 0; i < Rank; i++)
             {
-                elementCount *= this.Counts[i] * this.Blocks[i];
+                elementCount *= Counts[i] * Blocks[i];
             }
 
-            this.TotalElementCount = this.Rank > 0
+            TotalElementCount = Rank > 0
                 ? elementCount
                 : 0;
         }
@@ -72,29 +72,29 @@ namespace HDF5.NET
         public override IEnumerable<Step> Walk(ulong[] limits)
         {
             /* Validate arrays */
-            if (limits.Length != this.Rank)
+            if (limits.Length != Rank)
                 throw new RankException("The length of the limits parameter must match this hyperslab's rank.");
 
-            for (int dimension = 0; dimension < this.Rank; dimension++)
+            for (int dimension = 0; dimension < Rank; dimension++)
             {
-                if (this.GetStop(dimension) > limits[dimension])
+                if (GetStop(dimension) > limits[dimension])
                     throw new ArgumentException("The selection exceeds the limits.");
             }
 
             /* prepare some useful arrays */
-            var lastDim = this.Rank - 1;
-            var offsets = new ulong[this.Rank];
-            var stops = new ulong[this.Rank];
-            var strides = new ulong[this.Rank];
-            var blocks = new ulong[this.Rank];
-            var gaps = new ulong[this.Rank];
+            var lastDim = Rank - 1;
+            var offsets = new ulong[Rank];
+            var stops = new ulong[Rank];
+            var strides = new ulong[Rank];
+            var blocks = new ulong[Rank];
+            var gaps = new ulong[Rank];
 
-            for (int dimension = 0; dimension < this.Rank; dimension++)
+            for (int dimension = 0; dimension < Rank; dimension++)
             {
-                offsets[dimension] = this.Starts[dimension];
-                stops[dimension] = this.GetStop(dimension);
-                strides[dimension] = this.Strides[dimension];
-                blocks[dimension] = this.Blocks[dimension];
+                offsets[dimension] = Starts[dimension];
+                stops[dimension] = GetStop(dimension);
+                strides[dimension] = Strides[dimension];
+                blocks[dimension] = Blocks[dimension];
                 gaps[dimension] = strides[dimension] - blocks[dimension];
             }
 
@@ -139,7 +139,7 @@ namespace HDF5.NET
                         offsets[dimension] += 1;
 
                         /* if we have reached a gap, skip that gap */
-                        var consumedStride = (offsets[dimension] - this.Starts[dimension]) % strides[dimension];
+                        var consumedStride = (offsets[dimension] - Starts[dimension]) % strides[dimension];
 
                         if (consumedStride == blocks[dimension])
                             offsets[dimension] += gaps[dimension];
@@ -151,7 +151,7 @@ namespace HDF5.NET
                         /* if there is more to process, reset the offset and 
                          * repeat the loop for the next higher dimension */
                         if (dimension > 0)
-                            offsets[dimension] = this.Starts[dimension];
+                            offsets[dimension] = Starts[dimension];
 
                         /* else, we are done! */
                         else

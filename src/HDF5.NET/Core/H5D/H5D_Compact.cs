@@ -25,26 +25,26 @@ namespace HDF5.NET
 
         public override ulong[] GetChunkDims()
         {
-            return this.Dataset.InternalDataspace.DimensionSizes;
+            return Dataset.InternalDataspace.DimensionSizes;
         }
 
         public override Memory<byte> GetBuffer(ulong[] chunkIndices)
         {
             byte[] buffer;
 
-            if (this.Dataset.InternalDataLayout is DataLayoutMessage12 layout12)
+            if (Dataset.InternalDataLayout is DataLayoutMessage12 layout12)
             {
 #warning untested
                 buffer = layout12.CompactData;
             }
-            else if (this.Dataset.InternalDataLayout is DataLayoutMessage3 layout34)
+            else if (Dataset.InternalDataLayout is DataLayoutMessage3 layout34)
             {
                 var compact = (CompactStoragePropertyDescription)layout34.Properties;
                 buffer = compact.RawData;
             }
             else
             {
-                throw new Exception($"Data layout message type '{this.Dataset.InternalDataLayout.GetType().Name}' is not supported.");
+                throw new Exception($"Data layout message type '{Dataset.InternalDataLayout.GetType().Name}' is not supported.");
             }
 
             return buffer;
@@ -68,7 +68,7 @@ namespace HDF5.NET
             // Größe zu erzeugen. Dieser Buffer wird dann gefüllt und kann von der 
             // jeweiligen Methode mit dem korrekten Typ zurückgegeben werden
 
-            //var a = this.ReadCompactMultiDim<T[,,]>();
+            //var a = ReadCompactMultiDim<T[,,]>();
             var type = typeof(T);
 
             var lengths = new int[] { 100, 200, 10 };

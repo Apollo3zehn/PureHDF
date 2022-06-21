@@ -6,11 +6,11 @@
 
         public BTree2Record02(H5BinaryReader reader, Superblock superblock)
         {
-            this.FilteredHugeObjectAddress = superblock.ReadOffset(reader);
-            this.FilteredHugeObjectLength = superblock.ReadLength(reader);
-            this.FilterMask = reader.ReadUInt32();
-            this.FilteredHugeObjectMemorySize = superblock.ReadLength(reader);
-            this.HugeObjectId = superblock.ReadLength(reader);
+            FilteredHugeObjectAddress = superblock.ReadOffset(reader);
+            FilteredHugeObjectLength = superblock.ReadLength(reader);
+            FilterMask = reader.ReadUInt32();
+            FilteredHugeObjectMemorySize = superblock.ReadLength(reader);
+            HugeObjectId = superblock.ReadLength(reader);
         }
 
         #endregion

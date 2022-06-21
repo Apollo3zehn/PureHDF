@@ -7,9 +7,9 @@
 //        internal BTree2Record07_0(H5BinaryReader reader, MessageLocation messageLocation)
 //            : base(messageLocation)
 //        {
-//            this.Hash = reader.ReadBytes(4);
-//            this.ReferenceCount = reader.ReadUInt32();
-//            this.HeapId = reader.ReadBytes(8);
+//            Hash = reader.ReadBytes(4);
+//            ReferenceCount = reader.ReadUInt32();
+//            HeapId = reader.ReadBytes(8);
 //        }
 
 //        #endregion

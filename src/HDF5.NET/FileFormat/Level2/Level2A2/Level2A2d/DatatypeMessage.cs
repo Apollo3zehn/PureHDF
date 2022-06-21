@@ -9,9 +9,9 @@ namespace HDF5.NET
 
         public DatatypeMessage(H5BinaryReader reader) : base(reader)
         {
-            this.ClassVersion = reader.ReadByte();
+            ClassVersion = reader.ReadByte();
 
-            this.BitField = this.Class switch
+            BitField = Class switch
             {
                 DatatypeMessageClass.FixedPoint     => new FixedPointBitFieldDescription(reader),
                 DatatypeMessageClass.FloatingPoint  => new FloatingPointBitFieldDescription(reader),
@@ -24,38 +24,38 @@ namespace HDF5.NET
                 DatatypeMessageClass.Enumerated     => new EnumerationBitFieldDescription(reader),
                 DatatypeMessageClass.VariableLength => new VariableLengthBitFieldDescription(reader),
                 DatatypeMessageClass.Array          => new ArrayBitFieldDescription(reader),
-                _ => throw new NotSupportedException($"The data type message class '{this.Class}' is not supported.")
+                _ => throw new NotSupportedException($"The data type message class '{Class}' is not supported.")
             };
 
-            this.Size = reader.ReadUInt32();
+            Size = reader.ReadUInt32();
 
             var memberCount = 1;
 
-            if (this.Class == DatatypeMessageClass.Compound)
-                memberCount = ((CompoundBitFieldDescription)this.BitField).MemberCount;
+            if (Class == DatatypeMessageClass.Compound)
+                memberCount = ((CompoundBitFieldDescription)BitField).MemberCount;
 
-            this.Properties = new List<DatatypePropertyDescription>(memberCount);
+            Properties = new List<DatatypePropertyDescription>(memberCount);
 
             for (int i = 0; i < memberCount; i++)
             {
-                DatatypePropertyDescription? properties = this.Class switch
+                DatatypePropertyDescription? properties = Class switch
                 {
                     DatatypeMessageClass.FixedPoint => new FixedPointPropertyDescription(reader),
                     DatatypeMessageClass.FloatingPoint => new FloatingPointPropertyDescription(reader),
                     DatatypeMessageClass.Time => new TimePropertyDescription(reader),
                     DatatypeMessageClass.String => null,
                     DatatypeMessageClass.BitField => new BitFieldPropertyDescription(reader),
-                    DatatypeMessageClass.Opaque => new OpaquePropertyDescription(reader, this.GetOpaqueTagByteLength()),
-                    DatatypeMessageClass.Compound => new CompoundPropertyDescription(reader, this.Version, this.Size),
+                    DatatypeMessageClass.Opaque => new OpaquePropertyDescription(reader, GetOpaqueTagByteLength()),
+                    DatatypeMessageClass.Compound => new CompoundPropertyDescription(reader, Version, Size),
                     DatatypeMessageClass.Reference => null,
-                    DatatypeMessageClass.Enumerated => new EnumerationPropertyDescription(reader, this.Version, this.Size, this.GetEnumMemberCount()),
+                    DatatypeMessageClass.Enumerated => new EnumerationPropertyDescription(reader, Version, Size, GetEnumMemberCount()),
                     DatatypeMessageClass.VariableLength => new VariableLengthPropertyDescription(reader),
-                    DatatypeMessageClass.Array => new ArrayPropertyDescription(reader, this.Version),
-                    _ => throw new NotSupportedException($"The class '{this.Class}' is not supported on data type messages of version {this.Version}.")
+                    DatatypeMessageClass.Array => new ArrayPropertyDescription(reader, Version),
+                    _ => throw new NotSupportedException($"The class '{Class}' is not supported on data type messages of version {Version}.")
                 };
 
                 if (properties is not null)
-                    this.Properties.Add(properties);
+                    Properties.Add(properties);
             }
         }
 
@@ -71,15 +71,15 @@ namespace HDF5.NET
         {
             get
             {
-                return (byte)(this.ClassVersion >> 4);
+                return (byte)(ClassVersion >> 4);
             }
             set
             {
                 if (!(1 <= value && value <= 3))
                     throw new Exception("The version number must be in the range of 1..3.");
 
-                this.ClassVersion &= 0x0F;                  // clear bits 4-7
-                this.ClassVersion |= (byte)(value << 4);    // set bits 4-7, depending on value
+                ClassVersion &= 0x0F;                  // clear bits 4-7
+                ClassVersion |= (byte)(value << 4);    // set bits 4-7, depending on value
             }
         }
 
@@ -87,15 +87,15 @@ namespace HDF5.NET
         {
             get
             {
-                return (DatatypeMessageClass)(this.ClassVersion & 0x0F);
+                return (DatatypeMessageClass)(ClassVersion & 0x0F);
             }
             set
             {
                 if (!(0 <= (byte)value && (byte)value <= 10))
                     throw new Exception("The version number must be in the range of 0..10.");
 
-                this.ClassVersion &= 0xF0;          // clear bits 0-3
-                this.ClassVersion |= (byte)value;   // set bits 0-3, depending on value
+                ClassVersion &= 0xF0;          // clear bits 0-3
+                ClassVersion |= (byte)value;   // set bits 0-3, depending on value
             }
         }
 
@@ -107,7 +107,7 @@ namespace HDF5.NET
 
         private byte GetOpaqueTagByteLength()
         {
-            var opaqueDescription = this.BitField as OpaqueBitFieldDescription;
+            var opaqueDescription = BitField as OpaqueBitFieldDescription;
 
             if (opaqueDescription is not null)
                 return opaqueDescription.AsciiTagByteLength;
@@ -117,7 +117,7 @@ namespace HDF5.NET
 
         private ushort GetEnumMemberCount()
         {
-            var enumerationDescription = this.BitField as EnumerationBitFieldDescription;
+            var enumerationDescription = BitField as EnumerationBitFieldDescription;
 
             if (enumerationDescription is not null)
                 return enumerationDescription.MemberCount;

@@ -7,10 +7,10 @@
         public SoftLinkInfo(H5BinaryReader reader) : base(reader)
         {
             // value length
-            this.ValueLength = reader.ReadUInt16();
+            ValueLength = reader.ReadUInt16();
 
             // value
-            this.Value = H5Utils.ReadFixedLengthString(reader, this.ValueLength);
+            Value = H5Utils.ReadFixedLengthString(reader, ValueLength);
         }
 
         #endregion

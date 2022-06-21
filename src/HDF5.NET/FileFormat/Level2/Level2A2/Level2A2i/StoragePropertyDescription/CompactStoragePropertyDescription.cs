@@ -7,10 +7,10 @@
         public CompactStoragePropertyDescription(H5BinaryReader reader) : base(reader)
         {
             // size
-            this.Size = reader.ReadUInt16();
+            Size = reader.ReadUInt16();
 
             // raw data
-            this.RawData = reader.ReadBytes(this.Size);
+            RawData = reader.ReadBytes(Size);
         }
 
         #endregion

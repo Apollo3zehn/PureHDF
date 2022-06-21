@@ -8,7 +8,7 @@ namespace HDF5.NET
 
         public DatatypeBitFieldDescription(H5BinaryReader reader) : base(reader)
         {
-            this.Data = reader.ReadBytes(3);
+            Data = reader.ReadBytes(3);
         }
 
         #endregion

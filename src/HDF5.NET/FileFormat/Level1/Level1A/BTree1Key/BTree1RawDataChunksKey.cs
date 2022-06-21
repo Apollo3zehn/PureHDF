@@ -8,14 +8,14 @@
         {
             // H5Dbtree.c (H5D__btree_decode_key)
 
-            this.ChunkSize = reader.ReadUInt32();
-            this.FilterMask = reader.ReadUInt32();
+            ChunkSize = reader.ReadUInt32();
+            FilterMask = reader.ReadUInt32();
 
-            this.ScaledChunkOffsets = new ulong[rank + 1];
+            ScaledChunkOffsets = new ulong[rank + 1];
 
             for (byte i = 0; i < rank + 1; i++) // Do not change this! We MUST read rank + 1 values!
             {
-                this.ScaledChunkOffsets[i] = reader.ReadUInt64() / rawChunkDims[i];
+                ScaledChunkOffsets[i] = reader.ReadUInt64() / rawChunkDims[i];
             }
         }
 

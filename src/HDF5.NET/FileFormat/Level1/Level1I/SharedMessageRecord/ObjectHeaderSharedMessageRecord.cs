@@ -16,19 +16,19 @@
             _superblock = superblock;
 
             // hash value
-            this.HashValue = reader.ReadUInt32();
+            HashValue = reader.ReadUInt32();
 
             // reserved
             reader.ReadByte();
 
             // message type
-            this.MessageType = (MessageType)reader.ReadByte();
+            MessageType = (MessageType)reader.ReadByte();
 
             // creation index
-            this.CreationIndex = reader.ReadUInt16();
+            CreationIndex = reader.ReadUInt16();
 
             // object header address
-            this.ObjectHeaderAddress = superblock.ReadOffset(reader);
+            ObjectHeaderAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

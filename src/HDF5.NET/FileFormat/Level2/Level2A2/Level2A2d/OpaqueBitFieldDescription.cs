@@ -15,8 +15,8 @@
 
         public byte AsciiTagByteLength
         {
-            get { return this.Data[0]; }
-            set { this.Data[0] = value; }
+            get { return Data[0]; }
+            set { Data[0] = value; }
         }
 
         #endregion

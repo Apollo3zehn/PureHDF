@@ -17,12 +17,12 @@
         {
             get
             {
-                return (ReferenceType)(this.Data[0] & 0x0F);
+                return (ReferenceType)(Data[0] & 0x0F);
             }
             set
             {
-                this.Data[0] &= 0xF0;           // clear bits 0-3
-                this.Data[0] |= (byte)value;    // set bits 0-3, depending on the value
+                Data[0] &= 0xF0;           // clear bits 0-3
+                Data[0] |= (byte)value;    // set bits 0-3, depending on the value
             }
         }
 

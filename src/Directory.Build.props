@@ -21,11 +21,11 @@
     <Major>1</Major>
     <Minor>0</Minor>
     <Revision>0</Revision>
-    <VersionSuffix>alpha.13</VersionSuffix>
+    <VersionSuffix>alpha.14</VersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageLicenseExpression>LGPL-3.0-only</PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://apollo3zehn.github.io/HDF5.NET/</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Apollo3zehn/HDF5.NET</RepositoryUrl>
   </PropertyGroup>

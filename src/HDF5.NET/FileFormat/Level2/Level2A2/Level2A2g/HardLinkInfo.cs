@@ -16,7 +16,7 @@
             _superblock = superblock;
 
             // object header address
-            this.HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(reader);
         }
 
         #endregion

@@ -16,18 +16,18 @@ namespace HDF5.NET
         public ExternalLinkInfo(H5BinaryReader reader) : base(reader)
         {
             // value length
-            this.ValueLength = reader.ReadUInt16();
+            ValueLength = reader.ReadUInt16();
 
             // version and flags
             var data = reader.ReadByte();
-            this.Version = (byte)((data & 0xF0) >> 4); // take only upper 4 bits
-            this.Flags = (byte)((data & 0x0F) >> 0); // take only lower 4 bits
+            Version = (byte)((data & 0xF0) >> 4); // take only upper 4 bits
+            Flags = (byte)((data & 0x0F) >> 0); // take only lower 4 bits
 
             // file name
-            this.FilePath = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            FilePath = H5Utils.ReadNullTerminatedString(reader, pad: false);
 
             // full object path
-            this.FullObjectPath = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            FullObjectPath = H5Utils.ReadNullTerminatedString(reader, pad: false);
         }
 
         #endregion

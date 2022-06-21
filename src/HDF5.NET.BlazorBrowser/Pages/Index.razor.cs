@@ -30,7 +30,7 @@ namespace HDF5.NET.BlazorBrowser.Pages
                 H5File = H5File.Open(stream)
             };
 
-            this.AppState.Files.Add(fileContainer);
+            AppState.Files.Add(fileContainer);
         }
 
         #endregion

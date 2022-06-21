@@ -23,25 +23,25 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, FixedArrayHeader.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)reader.ReadByte();
 
             // entry size
-            this.EntrySize = reader.ReadByte();
+            EntrySize = reader.ReadByte();
 
             // page bits
-            this.PageBits = reader.ReadByte();
+            PageBits = reader.ReadByte();
 
             // entries count
-            this.EntriesCount = superblock.ReadLength(reader);
+            EntriesCount = superblock.ReadLength(reader);
 
             // data block address
-            this.DataBlockAddress = superblock.ReadOffset(reader);
+            DataBlockAddress = superblock.ReadOffset(reader);
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

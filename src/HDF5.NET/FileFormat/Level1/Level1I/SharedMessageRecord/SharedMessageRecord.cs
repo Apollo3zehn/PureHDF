@@ -7,7 +7,7 @@
         public SharedMessageRecord(H5BinaryReader reader) : base(reader)
         {
             // message location
-            this.MessageLocation = (MessageLocation)reader.ReadByte();
+            MessageLocation = (MessageLocation)reader.ReadByte();
         }
 
         #endregion

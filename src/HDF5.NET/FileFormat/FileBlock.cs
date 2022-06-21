@@ -8,7 +8,7 @@ namespace HDF5.NET
 
         public FileBlock(H5BinaryReader reader)
         {
-            this.Reader = reader;
+            Reader = reader;
         }
 
         #endregion

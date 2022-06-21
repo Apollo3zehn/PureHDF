@@ -7,29 +7,29 @@
         public HyperslabSelectionInfo2(H5BinaryReader reader) : base(reader)
         {
             // flags
-            this.Flags = reader.ReadByte();
+            Flags = reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
 
             // length
-            this.Length = reader.ReadUInt32();
+            Length = reader.ReadUInt32();
 
             // rank
-            this.Rank = reader.ReadUInt32();
+            Rank = reader.ReadUInt32();
 
             // start, stride, count, block
-            this.Starts = new ulong[this.Rank];
-            this.Strides = new ulong[this.Rank];
-            this.Counts = new ulong[this.Rank];
-            this.Blocks = new ulong[this.Rank];
+            Starts = new ulong[Rank];
+            Strides = new ulong[Rank];
+            Counts = new ulong[Rank];
+            Blocks = new ulong[Rank];
 
-            for (int i = 0; i < this.Rank; i++)
+            for (int i = 0; i < Rank; i++)
             {
-                this.Starts[i] = reader.ReadUInt64();
-                this.Strides[i] = reader.ReadUInt64();
-                this.Counts[i] = reader.ReadUInt64();
-                this.Blocks[i] = reader.ReadUInt64();
+                Starts[i] = reader.ReadUInt64();
+                Strides[i] = reader.ReadUInt64();
+                Counts[i] = reader.ReadUInt64();
+                Blocks[i] = reader.ReadUInt64();
             }
         }
 

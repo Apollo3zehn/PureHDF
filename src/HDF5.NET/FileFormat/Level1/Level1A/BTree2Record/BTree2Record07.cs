@@ -8,7 +8,7 @@
 
 //        public BTree2Record07(MessageLocation messageLocation)
 //        {
-//            this.MessageLocation = messageLocation;
+//            MessageLocation = messageLocation;
 //        }
 
 //        #endregion

@@ -7,20 +7,20 @@
         public BTree2Record11(H5BinaryReader reader, Superblock superblock, byte rank, uint chunkSizeLength)
         {
             // address
-            this.Address = superblock.ReadOffset(reader);
+            Address = superblock.ReadOffset(reader);
 
             // chunk size
-            this.ChunkSize = H5Utils.ReadUlong(reader, chunkSizeLength);
+            ChunkSize = H5Utils.ReadUlong(reader, chunkSizeLength);
 
             // filter mask
-            this.FilterMask = reader.ReadUInt32();
+            FilterMask = reader.ReadUInt32();
 
             // scaled offsets
-            this.ScaledOffsets = new ulong[rank];
+            ScaledOffsets = new ulong[rank];
 
             for (int i = 0; i < rank; i++)
             {
-                this.ScaledOffsets[i] = reader.ReadUInt64();
+                ScaledOffsets[i] = reader.ReadUInt64();
             }
         }
 

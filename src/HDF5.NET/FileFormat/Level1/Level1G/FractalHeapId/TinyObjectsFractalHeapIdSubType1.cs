@@ -20,7 +20,7 @@ namespace HDF5.NET
             _firstByte = firstByte;
 
             // data
-            this.Data = localReader.ReadBytes(this.Length);
+            Data = localReader.ReadBytes(Length);
         }
 
         #endregion
@@ -43,7 +43,7 @@ namespace HDF5.NET
 
         public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
-            using var reader = new H5BinaryReader(new MemoryStream(this.Data));
+            using var reader = new H5BinaryReader(new MemoryStream(Data));
             return func.Invoke(reader);
         }
 

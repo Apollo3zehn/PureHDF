@@ -17,7 +17,7 @@ namespace HDF5.NET
 
         internal H5Attribute(AttributeMessage message, Superblock superblock)
         {
-            this.Message = message;
+            Message = message;
             _superblock = superblock;
         }
 

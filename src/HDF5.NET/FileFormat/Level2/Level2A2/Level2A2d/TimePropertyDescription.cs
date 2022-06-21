@@ -6,7 +6,7 @@
 
         public TimePropertyDescription(H5BinaryReader reader) : base(reader)
         {
-            this.BitPrecision = reader.ReadUInt16();
+            BitPrecision = reader.ReadUInt16();
         }
 
         #endregion

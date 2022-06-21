@@ -19,12 +19,12 @@ namespace HDF5.NET
         {
             get 
             {
-                return (PaddingType)(this.Data[0] & 0x0F);
+                return (PaddingType)(Data[0] & 0x0F);
             }
             set 
             {
-                this.Data[0] &= 0xF0;           // clear bits 0-3
-                this.Data[0] |= (byte)value;    // set bits 0-3, depending on the value
+                Data[0] &= 0xF0;           // clear bits 0-3
+                Data[0] |= (byte)value;    // set bits 0-3, depending on the value
             }
         }
 
@@ -32,17 +32,17 @@ namespace HDF5.NET
         {
             get 
             {
-                return (CharacterSetEncoding)((this.Data[0] >> 4) & 0x01); 
+                return (CharacterSetEncoding)((Data[0] >> 4) & 0x01); 
             }
             set 
             {
                 switch (value)
                 {
                     case CharacterSetEncoding.ASCII:
-                        this.Data[0] &= 0xEF; break; // clear bit 4
+                        Data[0] &= 0xEF; break; // clear bit 4
 
                     case CharacterSetEncoding.UTF8:
-                        this.Data[0] |= 0x10; break; // set bit 4
+                        Data[0] |= 0x10; break; // set bit 4
 
                     default:
                         throw new Exception($"On a string bit field description the value '{value}' is not supported.");

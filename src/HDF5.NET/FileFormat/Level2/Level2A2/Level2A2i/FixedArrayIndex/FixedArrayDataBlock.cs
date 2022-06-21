@@ -17,18 +17,18 @@ namespace HDF5.NET
         public FixedArrayDataBlock(H5BinaryReader reader, Superblock superblock, FixedArrayHeader header, Func<H5BinaryReader, T> decode)
         {
             // H5FAdblock.c (H5FA__dblock_alloc)
-            this.ElementsPerPage = 1UL << header.PageBits;
-            this.PageCount = 0UL;
+            ElementsPerPage = 1UL << header.PageBits;
+            PageCount = 0UL;
 
             var pageBitmapSize = 0UL;
 
-            if (header.EntriesCount > this.ElementsPerPage)
+            if (header.EntriesCount > ElementsPerPage)
             {
                 /* Compute number of pages */
-                this.PageCount = (header.EntriesCount + this.ElementsPerPage - 1) / this.ElementsPerPage;
+                PageCount = (header.EntriesCount + ElementsPerPage - 1) / ElementsPerPage;
 
                 /* Compute size of 'page init' flag array, in bytes */
-                pageBitmapSize = (this.PageCount + 7) / 8;
+                pageBitmapSize = (PageCount + 7) / 8;
             }
 
             // signature
@@ -36,40 +36,40 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, FixedArrayDataBlock<T>.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)reader.ReadByte();
 
             // header address
-            this.HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(reader);
 
             // page bitmap
-            if (this.PageCount > 0)
+            if (PageCount > 0)
             {
-                this.PageBitmap = reader.ReadBytes((int)pageBitmapSize);
-                this.Elements = new T[0];
+                PageBitmap = reader.ReadBytes((int)pageBitmapSize);
+                Elements = new T[0];
             }
             // elements
             else
             {
-                this.PageBitmap = new byte[0];
+                PageBitmap = new byte[0];
 
-                this.Elements = Enumerable
+                Elements = Enumerable
                     .Range(0, (int)header.EntriesCount)
                     .Select(i => decode(reader))
                     .ToArray();
             }
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
 
             // last page element count
-            if (header.EntriesCount % this.ElementsPerPage == 0)
-                this.LastPageElementCount = this.ElementsPerPage;
+            if (header.EntriesCount % ElementsPerPage == 0)
+                LastPageElementCount = ElementsPerPage;
 
             else
-                this.LastPageElementCount = header.EntriesCount % this.ElementsPerPage;
+                LastPageElementCount = header.EntriesCount % ElementsPerPage;
         }
 
         #endregion

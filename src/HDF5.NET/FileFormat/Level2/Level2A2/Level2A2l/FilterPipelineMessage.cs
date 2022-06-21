@@ -17,21 +17,21 @@ namespace HDF5.NET
         public FilterPipelineMessage(H5BinaryReader reader) : base(reader)
         {
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // filter count
-            this.FilterCount = reader.ReadByte();
+            FilterCount = reader.ReadByte();
 
             // reserved
-            if (this.Version == 1)
+            if (Version == 1)
                 reader.ReadBytes(6);
 
             // filter descriptions
-            this.FilterDescriptions = new List<FilterDescription>(this.FilterCount);
+            FilterDescriptions = new List<FilterDescription>(FilterCount);
 
-            for (int i = 0; i < this.FilterCount; i++)
+            for (int i = 0; i < FilterCount; i++)
             {
-                this.FilterDescriptions.Add(new FilterDescription(reader, this.Version));
+                FilterDescriptions.Add(new FilterDescription(reader, Version));
             }
         }
 

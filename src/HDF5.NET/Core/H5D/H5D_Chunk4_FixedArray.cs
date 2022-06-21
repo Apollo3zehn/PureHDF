@@ -18,18 +18,18 @@ namespace HDF5.NET
             // H5Dfarray.c (H5D__farray_idx_get_addr)
 
             /* Calculate the index of this chunk */
-            var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(this.DownMaxChunkCounts);
+            var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
 
             /* Check for filters on chunks */
-            if (this.Dataset.InternalFilterPipeline is not null)
+            if (Dataset.InternalFilterPipeline is not null)
             {
-                var chunkSizeLength = H5Utils.ComputeChunkSizeLength(this.ChunkByteSize);
+                var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
 
-                var element = this.GetElement(chunkIndex, reader =>
+                var element = GetElement(chunkIndex, reader =>
                 {
                     return new FilteredDataBlockElement()
                     {
-                        Address = this.Dataset.Context.Superblock.ReadOffset(reader),
+                        Address = Dataset.Context.Superblock.ReadOffset(reader),
                         ChunkSize = (uint)H5Utils.ReadUlong(reader, chunkSizeLength),
                         FilterMask = reader.ReadUInt32()
                     };
@@ -41,16 +41,16 @@ namespace HDF5.NET
             }
             else
             {
-                var element = this.GetElement(chunkIndex, reader =>
+                var element = GetElement(chunkIndex, reader =>
                 {
                     return new DataBlockElement()
                     {
-                        Address = this.Dataset.Context.Superblock.ReadOffset(reader)
+                        Address = Dataset.Context.Superblock.ReadOffset(reader)
                     };
                 });
 
                 return element is not null
-                    ? new ChunkInfo(element.Address, this.ChunkByteSize, 0)
+                    ? new ChunkInfo(element.Address, ChunkByteSize, 0)
                     : ChunkInfo.None;
             }
         }
@@ -59,21 +59,21 @@ namespace HDF5.NET
         {
             if (_header == null)
             {
-                this.Dataset.Context.Reader.Seek((long)this.Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
-                _header = new FixedArrayHeader(this.Dataset.Context.Reader, this.Dataset.Context.Superblock);
+                Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                _header = new FixedArrayHeader(Dataset.Context.Reader, Dataset.Context.Superblock);
             }
 
             // H5FA.c (H5FA_get)
 
             /* Check if the fixed array data block has been allocated on disk yet */
-            if (this.Dataset.Context.Superblock.IsUndefinedAddress(_header.DataBlockAddress))
+            if (Dataset.Context.Superblock.IsUndefinedAddress(_header.DataBlockAddress))
             {
                 /* Call the class's 'fill' callback */
                 return null;
             }
             else
             {
-                return this.LookupElement(index, decode);
+                return LookupElement(index, decode);
             }
         }
 
@@ -82,11 +82,11 @@ namespace HDF5.NET
             // H5FA.c (H5FA_get)
 
             /* Get the data block */
-            this.Dataset.Context.Reader.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
+            Dataset.Context.Reader.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
 
             var dataBlock = new FixedArrayDataBlock<T>(
-                this.Dataset.Context.Reader,
-                this.Dataset.Context.Superblock,
+                Dataset.Context.Reader,
+                Dataset.Context.Superblock,
                 _header,
                 decode);
 
@@ -106,7 +106,7 @@ namespace HDF5.NET
 
                     /* Compute the address of the data block */
                     var pageSize = dataBlock.ElementsPerPage * _header.EntrySize + 4;
-                    var pageAddress = this.Dataset.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
+                    var pageAddress = Dataset.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
 
                     /* Check for using last page, to set the number of elements on the page */
                     ulong elementCount;
@@ -118,10 +118,10 @@ namespace HDF5.NET
                         elementCount = dataBlock.ElementsPerPage;
 
                     /* Protect the data block page */
-                    this.Dataset.Context.Reader.Seek(pageAddress, SeekOrigin.Begin);
+                    Dataset.Context.Reader.Seek(pageAddress, SeekOrigin.Begin);
 
                     var page = new DataBlockPage<T>(
-                        this.Dataset.Context.Reader,
+                        Dataset.Context.Reader,
                         elementCount,
                         decode);
 

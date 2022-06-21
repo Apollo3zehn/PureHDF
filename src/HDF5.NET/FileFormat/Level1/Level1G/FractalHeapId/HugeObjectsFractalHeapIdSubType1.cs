@@ -26,7 +26,7 @@ namespace HDF5.NET
             _heapHeader = header;
 
             // BTree2 key
-            this.BTree2Key = H5Utils.ReadUlong(localReader, header.HugeIdsSize);
+            BTree2Key = H5Utils.ReadUlong(localReader, header.HugeIdsSize);
         }
 
         #endregion
@@ -45,11 +45,11 @@ namespace HDF5.NET
             if (record01Cache is null)
             {
                 _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
-                var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock, this.DecodeRecord01);
+                var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock, DecodeRecord01);
                 record01Cache = hugeBtree2.EnumerateRecords().ToList();
             }
 
-            var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == this.BTree2Key);
+            var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
             _reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
             
             return func(_reader);

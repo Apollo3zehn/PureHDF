@@ -17,12 +17,12 @@ namespace HDF5.NET
         public ExtensibleArrayDataBlock(H5BinaryReader reader, Superblock superblock, ExtensibleArrayHeader header, ulong elementCount, Func<H5BinaryReader, T> decode)
         {
             // H5EAdblock.c (H5EA__dblock_alloc)
-            this.PageCount = 0UL;
+            PageCount = 0UL;
 
             if (elementCount > header.DataBlockPageElementsCount)
             {
                 /* Set the # of pages in the data block */
-                this.PageCount = elementCount / header.DataBlockPageElementsCount;
+                PageCount = elementCount / header.DataBlockPageElementsCount;
             }
 
             // H5EAcache.c (H5EA__cache_dblock_deserialize)
@@ -32,32 +32,32 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, ExtensibleArrayDataBlock<T>.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // client ID
-            this.ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)reader.ReadByte();
 
             // header address
-            this.HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(reader);
 
             // block offset
-            this.BlockOffset = H5Utils.ReadUlong(reader, header.ArrayOffsetsSize);
+            BlockOffset = H5Utils.ReadUlong(reader, header.ArrayOffsetsSize);
 
             // elements
-            if (this.PageCount == 0)
+            if (PageCount == 0)
             {
-                this.Elements = Enumerable
+                Elements = Enumerable
                     .Range(0, (int)elementCount)
                     .Select(i => decode(reader))
                     .ToArray();
             }
             else
             {
-                this.Elements = new T[0];
+                Elements = new T[0];
             }
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion

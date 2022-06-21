@@ -26,15 +26,15 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, FreeSpaceSectionList.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // free space manager header address
-            this.FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
+            FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
 
 #warning implement everything
 
             // checksum
-            this.Checksum = reader.ReadUInt32();
+            Checksum = reader.ReadUInt32();
         }
 
         #endregion
@@ -71,8 +71,8 @@ namespace HDF5.NET
         {
             get
             {
-                this.Reader.Seek((long)this.FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
-                return new FreeSpaceManagerHeader(this.Reader, _superblock);
+                Reader.Seek((long)FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
+                return new FreeSpaceManagerHeader(Reader, _superblock);
             }
         }
 

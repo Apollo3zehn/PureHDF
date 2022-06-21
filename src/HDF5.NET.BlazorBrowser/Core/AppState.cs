@@ -6,7 +6,7 @@ namespace HDF5.NET.BlazorBrowser.Core
     {
         public AppState()
         {
-            this.Files = new List<FileContainer>();
+            Files = new List<FileContainer>();
         }
 
         #region Properties

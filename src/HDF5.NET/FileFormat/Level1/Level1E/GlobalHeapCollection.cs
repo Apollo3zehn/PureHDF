@@ -22,19 +22,19 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, GlobalHeapCollection.Signature);
 
             // version
-            this.Version = reader.ReadByte();
+            Version = reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
 
             // collection size
-            this.CollectionSize = superblock.ReadLength(reader);
+            CollectionSize = superblock.ReadLength(reader);
 
             // global heap objects
-            this.GlobalHeapObjects = new List<GlobalHeapObject>();
+            GlobalHeapObjects = new List<GlobalHeapObject>();
 
             var headerSize = 8UL + superblock.LengthsSize;
-            var remaining = this.CollectionSize;
+            var remaining = CollectionSize;
 
             while (remaining > headerSize)
             {
@@ -45,7 +45,7 @@ namespace HDF5.NET
                 if (globalHeapObject.HeapObjectIndex == 0)
                     break;
 
-                this.GlobalHeapObjects.Add(globalHeapObject);
+                GlobalHeapObjects.Add(globalHeapObject);
                 var after = reader.BaseStream.Position;
                 var consumed = (ulong)(after - before);
                 

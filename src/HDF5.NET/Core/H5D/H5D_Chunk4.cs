@@ -9,8 +9,8 @@ namespace HDF5.NET
         public H5D_Chunk4(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) : 
             base(dataset, datasetAccess)
         {
-            this.Layout = layout;
-            this.Chunked4 = (ChunkedStoragePropertyDescription4)layout.Properties;
+            Layout = layout;
+            Chunked4 = (ChunkedStoragePropertyDescription4)layout.Properties;
         }
 
         #endregion
@@ -27,7 +27,7 @@ namespace HDF5.NET
 
         protected override ulong[] GetRawChunkDims()
         {
-            return this.Chunked4
+            return Chunked4
                 .DimensionSizes
                 .ToArray();
         }

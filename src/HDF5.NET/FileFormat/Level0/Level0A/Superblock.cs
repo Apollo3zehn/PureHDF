@@ -68,7 +68,7 @@ namespace HDF5.NET
 
         public bool IsUndefinedAddress(ulong address)
         {
-            return this.OffsetsSize switch
+            return OffsetsSize switch
             {
                 1 => (address & 0x00000000000000FF) == 0x00000000000000FF,
                 2 => (address & 0x000000000000FFFF) == 0x000000000000FFFF,
@@ -84,12 +84,12 @@ namespace HDF5.NET
 
         public ulong ReadOffset(H5BinaryReader reader)
         {
-            return H5Utils.ReadUlong(reader, this.OffsetsSize);
+            return H5Utils.ReadUlong(reader, OffsetsSize);
         }
 
         public ulong ReadLength(H5BinaryReader reader)
         {
-            return H5Utils.ReadUlong(reader, this.LengthsSize);
+            return H5Utils.ReadUlong(reader, LengthsSize);
         }
 
         #endregion

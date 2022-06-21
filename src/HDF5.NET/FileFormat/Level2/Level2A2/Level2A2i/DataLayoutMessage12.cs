@@ -15,47 +15,47 @@ namespace HDF5.NET
         internal DataLayoutMessage12(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
         {
             // version
-            this.Version = version;
+            Version = version;
 
             // rank
-            this.Rank = reader.ReadByte();
+            Rank = reader.ReadByte();
 
             // layout class
-            this.LayoutClass = (LayoutClass)reader.ReadByte();
+            LayoutClass = (LayoutClass)reader.ReadByte();
 
             // reserved
             reader.ReadBytes(5);
 
             // data address
-            this.Address = this.LayoutClass switch
+            Address = LayoutClass switch
             {
                 LayoutClass.Compact     => ulong.MaxValue, // invalid address
                 LayoutClass.Contiguous  => superblock.ReadOffset(reader),
                 LayoutClass.Chunked     => superblock.ReadOffset(reader),
-                _ => throw new NotSupportedException($"The layout class '{this.LayoutClass}' is not supported.")
+                _ => throw new NotSupportedException($"The layout class '{LayoutClass}' is not supported.")
             };
 
             // dimension sizes
-            this.DimensionSizes = new uint[this.Rank];
+            DimensionSizes = new uint[Rank];
 
-            for (int i = 0; i < this.Rank; i++)
+            for (int i = 0; i < Rank; i++)
             {
-                this.DimensionSizes[i] = reader.ReadUInt32();
+                DimensionSizes[i] = reader.ReadUInt32();
             }
 
             // dataset element size
-            if (this.LayoutClass == LayoutClass.Chunked)
-                this.DatasetElementSize = reader.ReadUInt32();
+            if (LayoutClass == LayoutClass.Chunked)
+                DatasetElementSize = reader.ReadUInt32();
 
             // compact data size
-            if (this.LayoutClass == LayoutClass.Compact)
+            if (LayoutClass == LayoutClass.Compact)
             {
                 var compactDataSize = reader.ReadUInt32();
-                this.CompactData = reader.ReadBytes((int)compactDataSize);
+                CompactData = reader.ReadBytes((int)compactDataSize);
             }
             else
             {
-                this.CompactData = new byte[0];
+                CompactData = new byte[0];
             }
         }
 
