@@ -62,6 +62,7 @@ namespace HDF5.NET
             if (InternalDataType is null)
                 throw new Exception("The data type message is missing.");
 
+            // https://github.com/Apollo3zehn/HDF5.NET/issues/25
             if (InternalFillValue is null)
             {
                 // The OldFillValueMessage is optional and so there might be not fill value

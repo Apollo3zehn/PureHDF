@@ -126,16 +126,17 @@ namespace HDF5.NET
             /* cached data */
             if (_scratchPad is not null)
             {
+                /* According to the source code, scratch pad and symbol table message 
+                 * are either both present or both absent and both point to the same
+                 * addresses.
+                 * 
+                 * https://github.com/HDFGroup/hdf5/blob/55f4cc0caa69d65c505e926fb7b2568ab1a76c58/src/H5Gtest.c#L644-L649
+                 * https://github.com/HDFGroup/hdf5/blob/55f4cc0caa69d65c505e926fb7b2568ab1a76c58/src/H5Gtest.c#L698-L703
+                 * 
+                 * This suggests that the image in HDF5.NET/issues/25 is missing due to
+                 * an invalid file.
+                 */
                 var localHeap = _scratchPad.LocalHeap;
-
-                Context.Reader.Seek((long)_scratchPad.BTree1Address, SeekOrigin.Begin);
-                var tree = new BTree1Node<BTree1GroupKey>(Context.Reader, Context.Superblock, DecodeGroupKey);
-                var b = tree.EnumerateNodes().ToList();
-
-                Context.Reader.Seek((long)_scratchPad.NameHeapAddress, SeekOrigin.Begin);
-                var heap = new LocalHeap(Context.Reader, Context.Superblock);
-                var c = heap.GetObjectName(0);
-
 
                 var success = _scratchPad
                     .GetBTree1(DecodeGroupKey)
@@ -287,6 +288,16 @@ namespace HDF5.NET
             /* cached data */
             if (_scratchPad is not null)
             {
+                /* According to the source code, scratch pad and symbol table message 
+                 * are either both present or both absent and both point to the same
+                 * addresses.
+                 * 
+                 * https://github.com/HDFGroup/hdf5/blob/55f4cc0caa69d65c505e926fb7b2568ab1a76c58/src/H5Gtest.c#L644-L649
+                 * https://github.com/HDFGroup/hdf5/blob/55f4cc0caa69d65c505e926fb7b2568ab1a76c58/src/H5Gtest.c#L698-L703
+                 * 
+                 * This suggests that the image in HDF5.NET/issues/25 is missing due to
+                 * an invalid file.
+                 */
                 var localHeap = _scratchPad.LocalHeap;
                 var references = this
                     .EnumerateSymbolTableNodes(_scratchPad.GetBTree1(DecodeGroupKey))

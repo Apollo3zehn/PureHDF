@@ -65,7 +65,7 @@ namespace HDF5.NET
                 {
                     ObjectType.Group => new H5Group(File, context, this, objectHeader),
                     ObjectType.Dataset => new H5Dataset(File, context, this, objectHeader),
-                    ObjectType.CommitedDatatype => new H5CommitedDatatype(context, objectHeader, this),
+                    ObjectType.CommitedDatatype => new H5CommitedDatatype(context, this, objectHeader),
                     _ => throw new Exception("Unknown object type.")
                 };
             }
