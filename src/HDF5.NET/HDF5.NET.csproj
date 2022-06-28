@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>A pure .NET library that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy. </Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 netstandard .NET Standard Windows Linux, MacOS</PackageTags>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFrameworks>netstandard20;netstandard21;net60</TargetFrameworks>
     <Nullable>enable</Nullable>
