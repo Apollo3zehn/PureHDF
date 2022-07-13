@@ -3,11 +3,11 @@
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
-    partial class H5CommitedDatatype : H5Object
+    partial class H5CommitedDatatype : H5AttributableObject
     {
         #region Constructors
 
-        internal H5CommitedDatatype(H5Context context, ObjectHeader header, NamedReference reference) 
+        internal H5CommitedDatatype(H5Context context, NamedReference reference, ObjectHeader header) 
             : base(context, reference, header)
         {
             Datatype = header.GetMessage<DatatypeMessage>();

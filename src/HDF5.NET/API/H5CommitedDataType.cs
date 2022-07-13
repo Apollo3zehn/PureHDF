@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    public partial class H5CommitedDatatype : H5Object
+    public partial class H5CommitedDatatype : H5AttributableObject
     {
         //
     }
