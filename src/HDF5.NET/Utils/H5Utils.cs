@@ -270,7 +270,7 @@ namespace HDF5.NET
                 var bitField = datatype.BitField as StringBitFieldDescription;
 
                 if (bitField is null)
-                    throw new Exception("String bit field desciption must not be null.");
+                    throw new Exception("String bit field description must not be null.");
 
                 var position = 0;
 
