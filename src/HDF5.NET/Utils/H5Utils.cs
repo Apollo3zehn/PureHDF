@@ -310,10 +310,10 @@ namespace HDF5.NET
                 {
                     Func<string, string> trim = bitField.PaddingType switch
                     {
-                        PaddingType.NullTerminate => value => value,
-                        PaddingType.NullPad => value => value,
-                        PaddingType.SpacePad => value => value.TrimEnd(' '),
-                        _ => throw new Exception("Unsupported padding type.")
+                        PaddingType.NullTerminate   => value => value,
+                        PaddingType.NullPad         => value => value,
+                        PaddingType.SpacePad        => value => value.TrimEnd(' '),
+                        _                           => throw new Exception("Unsupported padding type.")
                     };
 
                     for (int i = 0; i < count; i++)
