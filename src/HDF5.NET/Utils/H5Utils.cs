@@ -276,7 +276,7 @@ namespace HDF5.NET
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
-                    PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
+                    PaddingType.NullTerminate   => value => value.Split(new char[] { '\0' }, 2)[0],
                     PaddingType.NullPad         => value => value.TrimEnd('\0'),
                     PaddingType.SpacePad        => value => value.TrimEnd(' '),
                     _                           => throw new Exception("Unsupported padding type.")
