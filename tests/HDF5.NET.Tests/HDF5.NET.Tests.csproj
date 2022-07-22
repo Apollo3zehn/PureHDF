@@ -2,14 +2,17 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net60</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworkVersion)</TargetFrameworks>
 
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>
+
+    <!-- default lang version is 7.3: https://docs.microsoft.com/de-de/dotnet/csharp/language-reference/configure-language-version -->
+    <LangVersion>10.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'True'">
-     <TargetFrameworks>net472;$(TargetFrameworks)</TargetFrameworks>
+     <TargetFrameworks>net48;$(TargetFrameworks)</TargetFrameworks>
   </PropertyGroup>
   
   <ItemGroup>
