@@ -13,7 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HDF5.NET.Tests", "tests\HDF
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8B9AF370-616F-4E6F-961E-5DFEC1620A2F}"
 	ProjectSection(SolutionItems) = preProject
-		.appveyor.yml = .appveyor.yml
 		.gitignore = .gitignore
 		LICENSE.md = LICENSE.md
 		README.md = README.md

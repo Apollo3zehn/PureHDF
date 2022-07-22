@@ -2,7 +2,7 @@
 
 # HDF5.NET
 
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/apollo3zehn/hdf5.net?svg=true)](https://ci.appveyor.com/project/Apollo3zehn/hdf5-net) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
+[![GitHub Actions](https://github.com/Apollo3zehn/HDF5.NET/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/HDF5.NET/actions) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
 
 A pure C# library without native dependencies that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy.
 
