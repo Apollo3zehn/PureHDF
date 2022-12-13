@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 
 namespace HDF5.NET.Tests.Reading
 {

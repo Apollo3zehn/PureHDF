@@ -2,8 +2,6 @@ using BenchmarkDotNet.Attributes;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using ISA_L.PInvoke;
-using System;
-using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

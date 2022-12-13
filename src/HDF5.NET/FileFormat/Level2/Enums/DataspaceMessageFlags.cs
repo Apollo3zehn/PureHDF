@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     [Flags]
     internal enum DataspaceMessageFlags : byte

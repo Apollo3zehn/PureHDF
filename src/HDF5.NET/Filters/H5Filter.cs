@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Concurrent;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {

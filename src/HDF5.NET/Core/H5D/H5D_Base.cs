@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace HDF5.NET
 {
     internal abstract class H5D_Base : IDisposable

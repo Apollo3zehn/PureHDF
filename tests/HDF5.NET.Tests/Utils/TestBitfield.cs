@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HDF5.NET.Tests
+﻿namespace HDF5.NET.Tests
 {
     [Flags]
     public enum TestBitfield : ushort

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public delegate Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer);
 

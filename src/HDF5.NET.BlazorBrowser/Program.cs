@@ -1,9 +1,5 @@
 using HDF5.NET.BlazorBrowser.Core;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 
 namespace HDF5.NET.BlazorBrowser
 {

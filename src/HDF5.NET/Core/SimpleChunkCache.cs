@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     // https://support.hdfgroup.org/HDF5/doc/H5.user/Caching.html
     // https://support.hdfgroup.org/HDF5/faq/perfissues.html

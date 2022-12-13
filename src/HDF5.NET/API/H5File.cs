@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public partial class H5File : H5Group, IDisposable
     {

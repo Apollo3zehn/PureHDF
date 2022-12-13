@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     internal abstract class BTree2Node<T> : FileBlock where T : struct, IBTree2Record
     {

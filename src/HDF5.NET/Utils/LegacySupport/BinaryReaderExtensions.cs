@@ -1,7 +1,5 @@
 ﻿#if NETSTANDARD2_0
 
-using System;
-using System.IO;
 
 namespace HDF5.NET
 {

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public abstract class Selection
     {
