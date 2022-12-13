@@ -159,12 +159,23 @@ namespace HDF5.NET
             var type = typeof(T);
             var fieldInfoMap = new Dictionary<string, FieldProperties>();
 
+            bool IsFixedSizeArray(FieldInfo fieldInfo)
+            {
+                var attribute = fieldInfo.GetCustomAttribute<MarshalAsAttribute>();
+
+                if (attribute is not null && attribute.Value == UnmanagedType.ByValArray)
+                    return true;
+
+                return false;
+            }
+
             foreach (var fieldInfo in type.GetFields())
             {
                 var name = getName(fieldInfo);
 
-                var isNotSupported = H5Utils.IsReferenceOrContainsReferences(fieldInfo.FieldType)
-                                  && fieldInfo.FieldType != typeof(string);
+                var isNotSupported = H5Utils.IsReferenceOrContainsReferences(fieldInfo.FieldType) &&
+                    fieldInfo.FieldType != typeof(string) &&
+                    !IsFixedSizeArray(fieldInfo);
 
                 if (isNotSupported)
                     throw new Exception("Nested nullable fields are not supported.");

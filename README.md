@@ -439,4 +439,7 @@ Func<FieldInfo, string> converter = fieldInfo =>
 
 // Use that name translator.
 var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(converter);
+
+##### Structs with nested arrays of fixed length
+This feature is not yet fully documented. See #27 for more details.
 ```
