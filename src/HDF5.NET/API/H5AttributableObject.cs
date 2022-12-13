@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public abstract partial class H5AttributableObject : H5Object
     {

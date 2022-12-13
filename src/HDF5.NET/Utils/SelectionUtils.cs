@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-
 namespace HDF5.NET
 {
     internal record CopyInfo(
@@ -31,7 +26,7 @@ namespace HDF5.NET
     {
         public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
         {
-            /* check if there is anythng to do */
+            /* check if there is anything to do */
             if (selection.TotalElementCount == 0)
                 yield break;
 

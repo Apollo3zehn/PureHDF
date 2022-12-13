@@ -1,8 +1,6 @@
 ﻿using ISA_L.PInvoke;
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace HDF5.NET.Tests
 {

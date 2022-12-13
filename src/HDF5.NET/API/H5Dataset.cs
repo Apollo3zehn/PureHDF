@@ -1,4 +1,3 @@
-using System;
 using System.Reflection;
 
 namespace HDF5.NET

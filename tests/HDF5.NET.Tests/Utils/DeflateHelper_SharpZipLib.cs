@@ -1,7 +1,5 @@
 ﻿using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
-using System;
-using System.IO;
 
 namespace HDF5.NET.Tests
 {

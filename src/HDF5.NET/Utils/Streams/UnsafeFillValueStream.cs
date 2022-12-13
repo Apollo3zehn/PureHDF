@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     internal class UnsafeFillValueStream : Stream
     {

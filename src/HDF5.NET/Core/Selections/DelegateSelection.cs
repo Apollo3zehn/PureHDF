@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     partial class DelegateSelection : Selection
     {

@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Linq;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     abstract partial class H5Object
     {

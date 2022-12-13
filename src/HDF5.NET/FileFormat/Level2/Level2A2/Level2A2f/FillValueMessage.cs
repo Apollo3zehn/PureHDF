@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     // https://support.hdfgroup.org/HDF5/doc_resource/H5Fill_Behavior.html
     internal class FillValueMessage : Message

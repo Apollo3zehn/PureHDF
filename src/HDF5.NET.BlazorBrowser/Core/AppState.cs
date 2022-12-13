@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace HDF5.NET.BlazorBrowser.Core
+﻿namespace HDF5.NET.BlazorBrowser.Core
 {
     public class AppState
     {

@@ -1,6 +1,4 @@
 ﻿using ICSharpCode.SharpZipLib.BZip2;
-using System;
-using System.IO;
 
 namespace HDF5.NET.Tests
 {

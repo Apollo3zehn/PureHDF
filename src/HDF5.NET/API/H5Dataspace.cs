@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     public partial class H5Dataspace
     {

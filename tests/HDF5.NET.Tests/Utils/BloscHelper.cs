@@ -1,5 +1,4 @@
 ﻿using Blosc2.PInvoke;
-using System;
 using System.Runtime.InteropServices;
 
 namespace HDF5.NET.Tests

@@ -1,6 +1,4 @@
-﻿using System;
-
-#if NET5_0
+﻿#if NET5_0
 using System.Runtime.Intrinsics.X86;
 #endif
 

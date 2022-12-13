@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     internal abstract class H5D_Chunk4 : H5D_Chunk
     {

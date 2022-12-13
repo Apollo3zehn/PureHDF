@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace HDF5.NET.Tests
+﻿namespace HDF5.NET.Tests
 {
     public class TestData
     {

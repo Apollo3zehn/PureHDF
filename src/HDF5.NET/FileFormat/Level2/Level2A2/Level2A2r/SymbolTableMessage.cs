@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     internal class SymbolTableMessage : Message
     {
