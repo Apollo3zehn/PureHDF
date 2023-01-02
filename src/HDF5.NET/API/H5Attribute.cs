@@ -67,21 +67,23 @@ namespace HDF5.NET
                 .ToArray();
         }
 
-        public T[] ReadCompound<T>() 
+        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string>? getName = default) 
             where T : struct
         {
-            return ReadCompound<T>(fieldInfo => fieldInfo.Name);
+            if (getName is null)
+                getName = fieldInfo => fieldInfo.Name;
+
+            return H5ReadUtils.ReadCompound<T>(Message.Datatype, Message.Data, _superblock, getName);
         }
 
-        public unsafe T[] ReadCompound<T>(Func<FieldInfo, string> getName) 
-            where T : struct
+        public unsafe Dictionary<string, object?>[] ReadCompound()
         {
-            return H5Utils.ReadCompound<T>(Message.Datatype, Message.Dataspace, _superblock, Message.Data, getName);
+            return H5ReadUtils.ReadCompound(Message.Datatype, Message.Data, _superblock);
         }
 
         public string[] ReadString()
         {
-            return H5Utils.ReadString(Message.Datatype, Message.Data, _superblock);
+            return H5ReadUtils.ReadString(Message.Datatype, Message.Data, _superblock);
         }
 
         #endregion

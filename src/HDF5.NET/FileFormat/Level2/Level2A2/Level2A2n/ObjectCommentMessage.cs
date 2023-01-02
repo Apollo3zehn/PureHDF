@@ -7,7 +7,7 @@
         public ObjectCommentMessage(H5BinaryReader reader) : base(reader)
         {
             // comment
-            Comment = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            Comment = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
         }
 
         #endregion

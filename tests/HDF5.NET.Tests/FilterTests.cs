@@ -352,8 +352,8 @@ namespace HDF5.NET.Tests.Reading
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-
             var bytesOfType = Unsafe.SizeOf<T>();
+
             var expected = Enumerable.Range(0, length * bytesOfType)
                 .Select(value => unchecked((byte)value)).ToArray();
 

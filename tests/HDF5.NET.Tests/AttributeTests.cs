@@ -1,19 +1,13 @@
 ﻿using System.Buffers;
 using System.Reflection;
+using System.Text.Json;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace HDF5.NET.Tests.Reading
 {
     public class AttributeTests
     {
-        private readonly ITestOutputHelper _logger;
-
-        public AttributeTests(ITestOutputHelper logger)
-        {
-            _logger = logger;
-        }
-
+        private JsonSerializerOptions _options = new JsonSerializerOptions() { IncludeFields = true };
         public static IList<object[]> AttributeNumericalTestData = TestData.NumericalData;
 
         [Fact]
@@ -108,10 +102,30 @@ namespace HDF5.NET.Tests.Reading
                     return attribute is not null ? attribute.Name : fieldInfo.Name;
                 };
 
-                var actual = attribute.ReadCompound<TestStructString>(converter);
+                var actual = attribute.ReadCompound<TestStructStringAndArray>(converter);
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.StringStructData));
+                Assert.Equal(JsonSerializer.Serialize(TestData.StringStructData, _options), JsonSerializer.Serialize(actual, _options));
+            });
+        }
+
+         [Fact]
+        public void CanReadAttribute_Unknown()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute)));
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var attribute = root.Group("struct").Attribute("nullable");
+                var actual = attribute.ReadCompound();
+
+                // Assert
+                Assert.Equal(
+                    JsonSerializer.Serialize(TestData.StringStructData, _options).Replace("ShortValueWithCustomName", "ShortValue"),
+                    JsonSerializer.Serialize(actual, _options));
             });
         }
 
@@ -264,7 +278,7 @@ namespace HDF5.NET.Tests.Reading
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nullable");
-                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringL1>());
+                var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringAndArrayL1>());
 
                 // Assert
                 Assert.Contains("Nested nullable fields are not supported.", exception.Message);

@@ -133,7 +133,27 @@ namespace HDF5.NET
             if (getName is null)
                 getName = fieldInfo => fieldInfo.Name;
 
-            return H5Utils.ReadCompound<T>(InternalDataType, InternalDataspace, Context.Superblock, data, getName);
+            return H5ReadUtils.ReadCompound<T>(InternalDataType, data, Context.Superblock, getName);
+        }
+
+        public Dictionary<string, object?>[] ReadCompound(
+           Selection? fileSelection = default,
+           Selection? memorySelection = default,
+           ulong[]? memoryDims = default,
+           H5DatasetAccess datasetAccess = default)
+        {
+            var data = Read<byte>(
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+
+            if (data is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return H5ReadUtils.ReadCompound(InternalDataType, data, Context.Superblock);
         }
 
         public string[] ReadString(
@@ -154,7 +174,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5Utils.ReadString(InternalDataType, data, Context.Superblock);
+            return H5ReadUtils.ReadString(InternalDataType, data, Context.Superblock);
         }
 
         #endregion

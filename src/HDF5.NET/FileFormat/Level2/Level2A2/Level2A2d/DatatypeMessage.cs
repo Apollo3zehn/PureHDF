@@ -26,10 +26,11 @@
 
             Size = reader.ReadUInt32();
 
-            var memberCount = 1;
+            var description = BitField as CompoundBitFieldDescription;
 
-            if (Class == DatatypeMessageClass.Compound)
-                memberCount = ((CompoundBitFieldDescription)BitField).MemberCount;
+            var memberCount = description is null
+                ? 1
+                : description.MemberCount;
 
             Properties = new List<DatatypePropertyDescription>(memberCount);
 

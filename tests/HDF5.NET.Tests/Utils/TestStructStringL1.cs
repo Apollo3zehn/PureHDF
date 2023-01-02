@@ -2,7 +2,7 @@
 
 namespace HDF5.NET.Tests
 {
-    public struct TestStructStringL1
+    public struct TestStructStringAndArrayL1
     {
         public float FloatValue;
 
@@ -12,6 +12,6 @@ namespace HDF5.NET.Tests
         [MarshalAs(UnmanagedType.LPStr)]
         public string StringValue2;
 
-        public TestStructStringL2 L2Struct;
+        public TestStructStringAndArrayL2 L2Struct;
     }
 }

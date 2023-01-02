@@ -16,7 +16,7 @@
             Version = reader.ReadByte();
 
             // driver id
-            DriverId = H5Utils.ReadFixedLengthString(reader, 8);
+            DriverId = H5ReadUtils.ReadFixedLengthString(reader, 8);
 
             // driver info size
             DriverInfoSize = reader.ReadUInt16();

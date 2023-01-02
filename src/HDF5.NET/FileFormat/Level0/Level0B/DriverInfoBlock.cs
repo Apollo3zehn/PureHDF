@@ -22,7 +22,7 @@
             DriverInfoSize = reader.ReadUInt32();
 
             // driver id
-            DriverId = H5Utils.ReadFixedLengthString(reader, 8);
+            DriverId = H5ReadUtils.ReadFixedLengthString(reader, 8);
 
             // driver info
             DriverInfo = DriverId switch

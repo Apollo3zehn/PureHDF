@@ -25,7 +25,7 @@
             var clientDataValueCount = reader.ReadUInt16();
 
             // name
-            Name = nameLength > 0 ? H5Utils.ReadNullTerminatedString(reader, pad: true) : string.Empty;
+            Name = nameLength > 0 ? H5ReadUtils.ReadNullTerminatedString(reader, pad: true) : string.Empty;
 
             // client data
             ClientData = new uint[clientDataValueCount];

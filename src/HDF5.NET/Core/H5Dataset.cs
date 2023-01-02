@@ -229,10 +229,18 @@ namespace HDF5.NET
             var totalCount = fileSelection.TotalElementCount;
             var byteSize = totalCount * InternalDataType.Size;
 
-            if (buffer.Equals(default))
-                buffer = GetBuffer(byteSize, out result);
+            Memory<byte> byteBuffer;
 
-            else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length < byteSize)
+            // user did not provide buffer
+            if (buffer.Equals(default))
+                (result, byteBuffer) = GetBuffer<T>(byteSize);
+
+            // user provided buffer is large enough
+            else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length >= byteSize)
+                byteBuffer = buffer.Cast<T, byte>();
+
+            // user provided buffer is too small
+            else
                 throw new Exception("The provided target buffer is too small.");
 
             /* memory selection */
@@ -256,7 +264,7 @@ namespace HDF5.NET
                 memorySelection,
                 GetSourceBuffer: getSourceBuffer,
                 GetSourceStream: getSourceStream,
-                GetTargetBuffer: indices => buffer.Cast<T, byte>(),
+                GetTargetBuffer: indices => byteBuffer,
                 TypeSize: (int)InternalDataType.Size
             );
 
@@ -264,7 +272,7 @@ namespace HDF5.NET
 
             /* ensure correct endianness */
             var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
-            var destination = MemoryMarshal.AsBytes(buffer.Span);
+            var destination = byteBuffer.Span;
             var source = destination.ToArray();
 
             if (byteOrderAware is not null)
@@ -274,17 +282,7 @@ namespace HDF5.NET
             return result;
         }
 
-        internal ulong[] GetDatasetDims()
-        {
-            return InternalDataspace.Type switch
-            {
-                DataspaceType.Scalar => new ulong[] { 1 },
-                DataspaceType.Simple => InternalDataspace.DimensionSizes,
-                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
-            };
-        }
-
-        private Memory<T> GetBuffer<T>(ulong byteSize, out T[] result)
+        private (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)
             where T : unmanaged
         {
             // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)
@@ -296,10 +294,23 @@ namespace HDF5.NET
             var arraySize = byteSize / sizeOfT;
 
             // create the buffer
-            result = new T[arraySize];
+            var TBuffer = new T[arraySize];
 
-            return result
-                .AsMemory();
+            var byteBuffer = TBuffer
+                .AsMemory()
+                .Cast<T, byte>();
+
+            return (TBuffer, byteBuffer);
+        }
+
+        internal ulong[] GetDatasetDims()
+        {
+            return InternalDataspace.Type switch
+            {
+                DataspaceType.Scalar => new ulong[] { 1 },
+                DataspaceType.Simple => InternalDataspace.DimensionSizes,
+                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
+            };
         }
 
         #endregion
