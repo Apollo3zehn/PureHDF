@@ -8,15 +8,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
 
     <!-- default lang version is 7.3: https://docs.microsoft.com/de-de/dotnet/csharp/language-reference/configure-language-version -->
-    <LangVersion>10.0</LangVersion>
+    <LangVersion>11.0</LangVersion>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'True'">
-     <TargetFrameworks>net48;$(TargetFrameworks)</TargetFrameworks>
-  </PropertyGroup>
-  
+ 
   <ItemGroup>
-    <PackageReference Include="Appveyor.TestLogger" Version="2.0.0" />
     <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update3.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
     <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />

@@ -41,7 +41,7 @@
             var linkNameLength = H5Utils.ReadUlong(Reader, linkLengthFieldLength);
 
             // link name
-            LinkName = H5Utils.ReadFixedLengthString(reader, (int)linkNameLength, LinkNameEncoding);
+            LinkName = H5ReadUtils.ReadFixedLengthString(reader, (int)linkNameLength, LinkNameEncoding);
 
             // link info
             LinkInfo = LinkType switch

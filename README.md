@@ -240,7 +240,7 @@ Additionally, there is an overload method that allows you to provide your own bu
 
 ## 5. Filters
 
-### Built-in Filters
+### 5.1 Built-in Filters
 - Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)
 - Fletcher32
 - Deflate (zlib)
@@ -248,7 +248,7 @@ Additionally, there is an overload method that allows you to provide your own bu
 
 <sup>1</sup> NET Standard 2.1 and above
 
-### External Filters
+### 5.2 External Filters
 Before you can use external filters, you need to register them using ```H5Filter.Register(...)```. This method accepts a filter identifier, a filter name and the actual filter function.
 
 This function could look like the following and should be adapted to your specific filter library:
@@ -275,12 +275,12 @@ public static Memory<byte> FilterFunc(
 
 ```
 
-### Tested External Filters
+### 5.3 Tested External Filters
 - deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/HDF5.NET/wiki/Deflate-Benchmark))
 - c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
 - bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
-### How to use Deflate (hardware accelerated)
+### 5.4 How to use Deflate (hardware accelerated)
 (1) Install the P/Invoke package:
 
 `dotnet package add Intrinsics.ISA-L.PInvoke`
@@ -303,7 +303,7 @@ public static Memory<byte> FilterFunc(
 </PropertyGroup>
 ```
 
-### How to use Blosc / Blosc2 (hardware accelerated)
+### 5.5 How to use Blosc / Blosc2 (hardware accelerated)
 (1) Install the P/Invoke package:
 
 `dotnet package add Blosc2.PInvoke`
@@ -319,7 +319,7 @@ public static Memory<byte> FilterFunc(
      filterFunc: BloscHelper.FilterFunc);
 ```
 
-### How to use BZip2
+### 5.6 How to use BZip2
 (1) Install the SharpZipLib package:
 
 `dotnet package add SharpZipLib`
@@ -335,9 +335,140 @@ public static Memory<byte> FilterFunc(
      filterFunc: BZip2Helper.FilterFunc);
 ```
 
-## 6. Advanced Scenarios
+## 6. Reading Compound Data
 
-### Memory-Mapped File
+There are three ways to read structs which are explained in the following sections. Here is an overview:
+
+| method                | return value                 | speed | restrictions |
+|-----------------------|------------------------------|-------|--------------|
+| `Read<T>()`           | `T`                          | fast  | predefined type with correct field offsets required; nullable fields are not allowed |
+| `ReadCompound<T>()`   | `T`                          | slow  | predefined type with matching names required |
+| `ReadCompound()`      | `Dictionary<string, object>` | slow  | - |
+
+### 6.1 Structs without nullable fields
+
+Structs without any nullable fields (i.e. no strings and other reference types) can be read like any other dataset using a high performance copy operation:
+
+```cs
+[StructLayout(LayoutKind.Explicit, Size = 5)]
+struct SimpleStruct
+{
+    [FieldOffset(0)]
+    public byte ByteValue;
+
+    [FieldOffset(1)]
+    public ushort UShortValue;
+
+    [FieldOffset(3)]
+    public TestEnum EnumValue;
+}
+
+var compoundData = dataset.Read<SimpleStruct>();
+```
+
+Just make sure the field offset attributes matches the field offsets defined in the HDF5 file when the dataset was created.
+
+*This method does not require that the structs field names match since they are simply mapped by their offset.*
+
+If your struct contains an array of fixed size (here: `3`), you would need to add the `unsafe` modifier to the struct definition and define the struct as follows:
+
+
+```cs
+[StructLayout(LayoutKind.Explicit, Size = 8)]
+unsafe struct SimpleStructWithArray
+{
+    // ... all the fields from the struct above, plus:
+
+    [FieldOffset(5)]
+    public fixed float FloatArray[3];
+}
+
+var compoundData = dataset.Read<SimpleStruct>();
+```
+
+### 6.2 Structs with nullable fields (strings, arrays)
+
+If you have a struct with `string` or normal `array` fields, you need to use the slower `ReadCompound` method:
+
+```cs
+struct NullableStruct
+{
+    public float FloatValue;
+    public string StringValue1;
+    public string StringValue2;
+    public byte ByteValue;
+    public short ShortValue;
+
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+    public float[] FloatArray;
+}
+
+var compoundData = dataset.ReadCompound<NullableStruct>();
+var compoundData = attribute.ReadCompound<NullableStruct>();
+```
+
+- Please note the use of the `MarshalAs` attribute on the array property. This attribute tells the runtime that this array is of fixed size (here: `3`) and that it should be treated as value which is embedded into the struct instead of being a separate object.
+
+- Nested structs **with nullable fields** are not supported with this method.
+
+- Arrays **with nullable element type** are not supported with this method.
+
+- It is mandatory that the field names match exactly those in the HDF5 file. If you would like to use custom field names, consider the following approach:
+
+```cs
+
+// Apply the H5NameAttribute to the field with custom name.
+struct NullableStructWithCustomFieldName
+{
+    [H5Name("FloatValue")]
+    public float FloatValueWithCustomName;
+
+    // ... more fields
+}
+
+// Create a name translator.
+Func<FieldInfo, string> converter = fieldInfo =>
+{
+    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+    return attribute is not null ? attribute.Name : fieldInfo.Name;
+};
+
+// Use that name translator.
+var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(converter);
+```
+
+### 6.3 Unknown structs
+
+You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `H5ObjectReference`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
+
+The type mapping is as follows:
+
+| H5 type                        | .NET type                    |
+|--------------------------------|------------------------------|
+| fixed point, 1 byte,  unsigned | `byte`                       |
+| fixed point, 1 byte,    signed | `sbyte`                      |
+| fixed point, 2 bytes, unsigned | `ushort`                     |
+| fixed point, 2 bytes,   signed | `short`                      |
+| fixed point, 4 bytes, unsigned | `uint`                       |
+| fixed point, 4 bytes,   signed | `int`                        |
+| fixed point, 8 bytes, unsigned | `ulong`                      |
+| fixed point, 8 bytes,   signed | `long`                       |
+| floating point, 4 bytes        | `float `                     |
+| floating point, 8 bytes,       | `double`                     |
+| string                         | `string`                     |
+| bitfield                       | `byte[]`                     |
+| opaque                         | `byte[]`                     |
+| compound                       | `Dictionary<string, object?>` |
+| reference                      | `H5ObjectReference`          |
+| enumerated                     | `<base type>`                |
+| variable length, type = string | `string`                     |
+| array                          | `<base type>[]`              |
+
+Not supported data types like `time` and `variable length type = sequence` will be represented as `null`.
+
+## 7. Advanced Scenarios
+
+### 7.1 Memory-Mapped File
 
 In some cases, it might be useful to read data from a memory-mapped file instead of a regular `FileStream` to reduce the number of (costly) system calls. Depending on the file structure this may heavily increase random access performance. Here is an example:
 
@@ -359,7 +490,7 @@ using var root = H5File.Open(mmfStream);
 ...
 ```
 
-### Reading Multidimensional Data
+### 7.2 Reading Multidimensional Data
 
 Sometimes you want to read the data as multidimensional arrays. In that case use one of the `byte[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
 
@@ -371,75 +502,3 @@ var data3D = dataset
 
 The methods accepts a `long[]` with the new array dimensions. This feature works similar to Matlab's [reshape](https://de.mathworks.com/help/matlab/ref/reshape.html) function. A slightly adapted citation explains the behavior:
 > When you use `-1` to automatically calculate a dimension size, the dimensions that you *do* explicitly specify must divide evenly into the number of elements in the input array.
-
-### Reading Compound Data
-
-##### Structs without nullable fields
-
-Structs without any nullable fields (i.e. no strings and other reference types) can be read like any other dataset using a high performance copy operation:
-
-```cs
-[StructLayout(LayoutKind.Explicit, Size = 5)]
-internal struct SimpleStruct
-{
-    [FieldOffset(0)]
-    public byte ByteValue;
-
-    [FieldOffset(1)]
-    public ushort UShortValue;
-
-    [FieldOffset(3)]
-    public TestEnum EnumValue;
-}
-
-var compoundData = dataset.Read<SimpleStruct>();
-```
-
-Just make sure the field offset attributes matches the field offsets defined in the HDF5 file when the dataset was created.
-
-*This method does not require that the structs field names match since they are simply mapped by their offset.*
-
-##### Structs with nullable fields
-
-If you have a struct with string fields, you need to use the slower `ReadCompound` method:
-
-```cs
-internal struct NullableStruct
-{
-    public float FloatValue;
-    public string StringValue1;
-    public string StringValue2;
-    public byte ByteValue;
-    public short ShortValue;
-}
-
-var compoundData = dataset.ReadCompound<NullableStruct>();
-var compoundData = attribute.ReadCompound<NullableStruct>();
-```
-
-*This method requires no special attributes but it is mandatory that the field names match exactly to those in the HDF5 file. If you would like to use custom field names, consider the following solution:*
-
-```cs
-
-// Apply the H5NameAttribute to the field with custom name.
-internal struct NullableStructWithCustomFieldName
-{
-    [H5Name("FloatValue")]
-    public float FloatValueWithCustomName;
-
-    // ... more fields
-}
-
-// Create a name translator.
-Func<FieldInfo, string> converter = fieldInfo =>
-{
-    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-    return attribute is not null ? attribute.Name : fieldInfo.Name;
-};
-
-// Use that name translator.
-var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(converter);
-```
-
-##### Structs with nested arrays of fixed length
-This feature is not yet fully documented. See #27 for more details.

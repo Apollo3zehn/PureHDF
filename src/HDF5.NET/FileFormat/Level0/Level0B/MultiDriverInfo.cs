@@ -36,7 +36,7 @@
 
             for (int i = 0; i < memberCount; i++)
             {
-                MemberNames[i] = H5Utils.ReadNullTerminatedString(reader, pad: true);
+                MemberNames[i] = H5ReadUtils.ReadNullTerminatedString(reader, pad: true);
             }
         }
 

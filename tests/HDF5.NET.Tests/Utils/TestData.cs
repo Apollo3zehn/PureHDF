@@ -49,13 +49,14 @@
             }
         };
 
-        private static TestStructString _string_a = new TestStructString()
+        private static TestStructStringAndArray _string_a = new TestStructStringAndArray()
         {
             FloatValue = (float)1.299e9,
             StringValue1 = "Hello",
             StringValue2 = "World",
             ByteValue = 123,
             ShortValueWithCustomName = -15521,
+            FloatArray = new float[] { 1.1f, 2.2f, 3.3f },
             L2Struct = new TestStructL2()
             {
                 ByteValue = 15,
@@ -64,13 +65,14 @@
             }
         };
 
-        private static TestStructString _string_b = new TestStructString()
+        private static TestStructStringAndArray _string_b = new TestStructStringAndArray()
         {
             FloatValue = (float)2.299e-9,
             StringValue1 = "Hello!",
             StringValue2 = "World!",
             ByteValue = 0,
             ShortValueWithCustomName = 15521,
+            FloatArray = new float[] { 2.2f, 3.3f, 4.4f },
             L2Struct = new TestStructL2()
             {
                 ByteValue = 18,
@@ -119,7 +121,26 @@
             };
 
             TestData.NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
-            TestData.StringStructData = new TestStructString[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+
+            unsafe
+            {
+                var struct1 = TestData.NonNullableStructData[0].L2Struct1;
+                struct1.FloatArray[0] = 1.1f;
+                struct1.FloatArray[1] = 2.2f;
+                struct1.FloatArray[2] = 3.3f;
+                TestData.NonNullableStructData[0].L2Struct1 = struct1;
+
+                var struct2 = TestData.NonNullableStructData[0].L2Struct2;
+                struct2.FloatArray[0] = 2.1f;
+                struct2.FloatArray[1] = 3.2f;
+                struct2.FloatArray[2] = 4.3f;
+                TestData.NonNullableStructData[0].L2Struct2 = struct2;
+
+                TestData.NonNullableStructData[1].L2Struct1 = struct1;
+                TestData.NonNullableStructData[1].L2Struct2 = struct2;
+            }
+
+            TestData.StringStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
             TestData.TinyData = new byte[] { 99 };
             TestData.SmallData = Enumerable.Range(0, 100).ToArray();
             TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
@@ -137,7 +158,7 @@
 
         public static TestStructL1[] NonNullableStructData { get; }
 
-        public static TestStructString[] StringStructData { get; }
+        public static TestStructStringAndArray[] StringStructData { get; }
 
         public static byte[] TinyData { get; }
 

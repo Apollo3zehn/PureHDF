@@ -184,7 +184,7 @@ namespace HDF5.NET
                     case 1:     a += k[0];                  break;
                     case 0:                                 return c;
                     default:
-                        throw new Exception("This Should never be executed!");
+                        throw new Exception("This should never be executed!");
                 }
 
                 ChecksumUtils.JenkinsLookup3Final(ref a, ref b, ref c);

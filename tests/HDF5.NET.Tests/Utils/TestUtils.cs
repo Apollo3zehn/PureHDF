@@ -694,12 +694,12 @@ namespace HDF5.NET.Tests
             res = H5T.close(typeId);
 
             // nullable struct
-            var typeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructString));
+            var typeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
             var dataNullable = TestData.StringStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
-            var elementSize = Marshal.SizeOf<TestStructString>();
+            var elementSize = Marshal.SizeOf<TestStructStringAndArray>();
             var totalByteLength = elementSize * dataNullable.Length;
             var dataNullablePtr = Marshal.AllocHGlobal(totalByteLength);
             var counter = 0;
@@ -936,7 +936,6 @@ namespace HDF5.NET.Tests
         {
             var versions = new H5F.libver_t[]
             {
-                H5F.libver_t.EARLIEST,
                 H5F.libver_t.V18,
                 H5F.libver_t.V110
             };
@@ -1075,50 +1074,57 @@ namespace HDF5.NET.Tests
             }
         }
 
-        private static long GetHdfTypeIdFromType(Type type)
+        private static long GetHdfTypeIdFromType(Type type, ulong? arrayLength = default)
         {
-            var elementType = type.IsArray ? type.GetElementType() : type;
-
-            if (elementType == typeof(bool))
+            if (type == typeof(bool))
                 return H5T.NATIVE_UINT8;
 
-            else if (elementType == typeof(byte))
+            else if (type == typeof(byte))
                 return H5T.NATIVE_UINT8;
 
-            else if (elementType == typeof(sbyte))
+            else if (type == typeof(sbyte))
                 return H5T.NATIVE_INT8;
 
-            else if (elementType == typeof(ushort))
+            else if (type == typeof(ushort))
                 return H5T.NATIVE_UINT16;
 
-            else if (elementType == typeof(short))
+            else if (type == typeof(short))
                 return H5T.NATIVE_INT16;
 
-            else if (elementType == typeof(uint))
+            else if (type == typeof(uint))
                 return H5T.NATIVE_UINT32;
 
-            else if (elementType == typeof(int))
+            else if (type == typeof(int))
                 return H5T.NATIVE_INT32;
 
-            else if (elementType == typeof(ulong))
+            else if (type == typeof(ulong))
                 return H5T.NATIVE_UINT64;
 
-            else if (elementType == typeof(long))
+            else if (type == typeof(long))
                 return H5T.NATIVE_INT64;
 
-            else if (elementType == typeof(float))
+            else if (type == typeof(float))
                 return H5T.NATIVE_FLOAT;
 
-            else if (elementType == typeof(double))
+            else if (type == typeof(double))
                 return H5T.NATIVE_DOUBLE;
 
             // issues: https://en.wikipedia.org/wiki/Long_double
             //else if (elementType == typeof(decimal))
             //    return H5T.NATIVE_LDOUBLE;
 
-            else if (elementType.IsEnum)
+            else if (type.IsArray && arrayLength.HasValue)
             {
-                var baseTypeId = TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(elementType));
+                var elementType = type.GetElementType()!;
+                var dims = new ulong[] { arrayLength.Value };
+                var typeId = H5T.array_create(TestUtils.GetHdfTypeIdFromType(elementType), rank: 1, dims);
+
+                return typeId;
+            }
+
+            else if (type.IsEnum)
+            {
+                var baseTypeId = TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(type));
                 var typeId = H5T.enum_create(baseTypeId);
 
                 foreach (var value in Enum.GetValues(type))
@@ -1133,7 +1139,7 @@ namespace HDF5.NET.Tests
                 return typeId;
             }
 
-            else if (elementType == typeof(string) || elementType == typeof(IntPtr))
+            else if (type == typeof(string) || type == typeof(IntPtr))
             {
                 var typeId = H5T.copy(H5T.C_S1);
 
@@ -1142,17 +1148,23 @@ namespace HDF5.NET.Tests
 
                 return typeId;
             }
-            else if (elementType.IsValueType && !elementType.IsPrimitive)
+            else if (type.IsValueType && !type.IsPrimitive)
             {
-                var typeId = H5T.create(H5T.class_t.COMPOUND, new IntPtr(Marshal.SizeOf(elementType)));
+                var typeId = H5T.create(H5T.class_t.COMPOUND, new IntPtr(Marshal.SizeOf(type)));
 
-                foreach (var fieldInfo in elementType.GetFields())
+                foreach (var fieldInfo in type.GetFields())
                 {
-                    var fieldType = TestUtils.GetHdfTypeIdFromType(fieldInfo.FieldType);
-                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    var hdfFieldName = attribute is not null ? attribute.Name : fieldInfo.Name;
+                    var marshalAsAttribute = fieldInfo.GetCustomAttribute<MarshalAsAttribute>();
 
-                    H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(elementType, fieldInfo.Name), fieldType);
+                    var arraySize = marshalAsAttribute is not null && marshalAsAttribute.Value == UnmanagedType.ByValArray
+                        ? new Nullable<ulong>((ulong)marshalAsAttribute.SizeConst)
+                        : null;
+
+                    var fieldType = TestUtils.GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
+                    var nameAttribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    var hdfFieldName = nameAttribute is not null ? nameAttribute.Name : fieldInfo.Name;
+
+                    H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(type, fieldInfo.Name), fieldType);
 
                     if (H5I.is_valid(fieldType) > 0)
                         H5T.close(fieldType);

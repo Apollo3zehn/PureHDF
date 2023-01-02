@@ -7,10 +7,10 @@
         public VdsDatasetEntry(H5BinaryReader reader) : base(reader)
         {
             // source file name
-            SourceFileName = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            SourceFileName = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
 
             // source dataset
-            SourceDataset = H5Utils.ReadNullTerminatedString(reader, pad: false);
+            SourceDataset = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
 
             // source selection
             SourceSelection = new DataspaceSelection(reader);

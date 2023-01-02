@@ -2,7 +2,7 @@
 
 namespace HDF5.NET.Tests
 {
-    public struct TestStructString
+    public struct TestStructStringAndArray
     {
         public float FloatValue;
 
@@ -16,6 +16,9 @@ namespace HDF5.NET.Tests
 
         [H5Name("ShortValue")]
         public short ShortValueWithCustomName;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+        public float[] FloatArray;
 
         public TestStructL2 L2Struct;
     }
