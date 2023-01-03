@@ -96,6 +96,23 @@ namespace HDF5.NET
             return result;
         }
 
+        public IQueryable<T> AsQueryable<T>(
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default) where T : unmanaged
+        {
+            if (Space.Rank != 1)
+                throw new Exception("Querying data only works for 1-dimensional datasets.");
+
+            var provider = new QueryProvider<T>(
+                datasetLength: Space.Dimensions[0],
+                executor: fileSelection => Read<T>(fileSelection, memorySelection, memoryDims, datasetAccess));
+
+            var queryable = new Queryable<T>(provider);
+
+            return queryable;
+        }
+
         public void Read<T>(
             Memory<T> buffer,
             Selection? fileSelection = default,
