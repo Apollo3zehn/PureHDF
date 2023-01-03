@@ -64,7 +64,7 @@ With an external link pointing to a relative file path it might be necessary to 
 You can either set an environment variable:
 
 ```cs
- Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
+Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
 ```
 
 Or you can pass the prefix as an overload parameter:
@@ -203,6 +203,8 @@ For more information on compound data, see section [Reading compound data](#6-re
 
 ## 4. Partial I/O and Hyperslabs
 
+### 4.1 Overview
+
 Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With HDF5.NET, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
 
 ```cs
@@ -237,6 +239,31 @@ var result = dataset
 All shown parameters are optional. For example, when the `fileSelection` parameter is unspecified, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
 
 Additionally, there is an overload method that allows you to provide your own buffer.
+
+### 4.2 Experimental: IQueryable (1-dimensional data only)
+
+Another way to build the file selection is to invoke the `AsQueryable` method which can then be used as follows:
+
+```cs
+var result = dataset.AsQueryable<int>()
+    .Skip(5)    // start
+    .Stride(5)  // stride
+    .Repeat(2)  // count
+    .Take(3)    // block
+    .ToArray();
+```
+
+All methods are optional, i.e. the code
+
+```cs
+var result = dataset.AsQueryable<int>()
+    .Skip(5)
+    .ToArray();
+```
+
+will simply skip the first 5 elements and return the rest of the dataset.
+
+This way of building a hyperslab / selection has been implemented in an efford to provide a more .NET-like experience when working with data.
 
 ## 5. Filters
 

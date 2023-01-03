@@ -15,7 +15,12 @@ namespace HDF5.NET
         }
 
         public HyperslabSelection(int rank, ulong[] starts, ulong[] blocks)
-            : this(rank, starts, blocks, Enumerable.Repeat(1UL, rank).ToArray(), blocks)
+            : this(
+                rank, 
+                starts, 
+                blocks.Select(block => block > 0 ? block : 1).ToArray(), 
+                Enumerable.Repeat(1UL, rank).ToArray(), 
+                blocks)
         {
             //
         }
