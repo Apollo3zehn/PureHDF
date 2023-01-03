@@ -199,7 +199,7 @@ The following code samples work for datasets as well as attributes.
 // -> not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
 ```
 
-For more information on compound data, see section [Reading compound data](#Reading-compound-data).
+For more information on compound data, see section [Reading compound data](#6-reading-compound-data).
 
 ## 4. Partial I/O and Hyperslabs
 

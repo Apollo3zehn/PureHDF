@@ -6,10 +6,10 @@
           "files": [
             "**/*.csproj"
           ],
-          "src": "./../src/HDF5.NET"
+          "src": "../src/HDF5.NET"
         }
       ],
-      "dest": "./api",
+      "dest": "api",
       "filter": "filterConfig.yml",
       "properties": {
         "TargetFramework": "net50"
@@ -41,7 +41,7 @@
     "dest": "_site",
     "globalMetadata": {
       "_appTitle": "HDF5.NET",
-      "_appFooter": "Copyright © 2021 Vincent Wilms",
+      "_appFooter": "Copyright © 2023 Vincent Wilms",
       "_appFaviconPath": "images/icon.ico",
       "_appLogoPath": "images/logo.svg"
     },
