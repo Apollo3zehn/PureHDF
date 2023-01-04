@@ -37,6 +37,8 @@
             throw new NotImplementedException();
         }
 
+        // ReadAsync: https://devblogs.microsoft.com/pfxteam/overriding-stream-asynchrony/
+        // see "If you don’t override ..."
         public override unsafe int Read(byte[] buffer, int offset, int count)
         {
             unsafe

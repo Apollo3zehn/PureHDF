@@ -536,10 +536,10 @@ The methods accepts a `long[]` with the new array dimensions. This feature works
 
 ### 7.2.2 High-Performance Method (2D only)
 
-The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the Microsoft Community Toolkit. To make use of it, run `dotnet add package Microsoft.Toolkit.HighPerformance` and then use it like this:
+The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run `dotnet add package CommunityToolkit.HighPerformance` and then use it like this:
 
 ```cs
-using Microsoft.Toolkit.HighPerformance;
+using CommunityToolkit.HighPerformance;
 
 data2D = dataset
     .Read<int>()

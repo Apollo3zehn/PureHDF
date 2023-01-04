@@ -34,7 +34,7 @@
 
         #region Methods
 
-        public Memory<byte> GetChunk(ulong[] indices, Func<Memory<byte>> chunkLoader)
+        public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkLoader)
         {
             if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
             {
@@ -42,7 +42,7 @@
             }
             else
             {
-                var buffer = chunkLoader.Invoke();
+                var buffer = await chunkLoader();
                 chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, buffer);
                 var chunk = chunkInfo.Chunk;
 

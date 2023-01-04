@@ -32,7 +32,7 @@
             return Dataset.InternalDataspace.DimensionSizes;
         }
 
-        public override Memory<byte> GetBuffer(ulong[] chunkIndices)
+        public override Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

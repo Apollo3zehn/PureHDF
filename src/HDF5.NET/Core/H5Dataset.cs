@@ -99,16 +99,19 @@ namespace HDF5.NET
 
 #warning use implicit cast operator for multi dim arrays? http://dontcodetired.com/blog/post/Writing-Implicit-and-Explicit-C-Conversion-Operators
 
-        internal T[]? Read<T>(
+        internal async Task<T[]?> ReadAsync<T, TReader>(
+            TReader reader,
             Memory<T> buffer,
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
             bool skipTypeCheck = false,
-            bool skipShuffle = false) where T : unmanaged
+            bool skipShuffle = false) 
+                where T : unmanaged 
+                where TReader : IReader
         {
-            // short path for null dataspace
+            // fast path for null dataspace
             if (InternalDataspace.Type == DataspaceType.Null)
                 return new T[0];
 
@@ -189,8 +192,8 @@ namespace HDF5.NET
 
             bufferProvider.Initialize();
 
-            Func<ulong[], Memory<byte>>? getSourceBuffer = bufferProvider.SupportsBuffer
-               ? chunkIndices => bufferProvider.GetBuffer(chunkIndices)
+            Func<ulong[], Task<Memory<byte>>>? getSourceBufferAsync = bufferProvider.SupportsBuffer
+               ? chunkIndices => bufferProvider.GetBufferAsync(reader, chunkIndices)
                : null;
 
             Func<ulong[], Stream>? getSourceStream = bufferProvider.SupportsStream
@@ -251,7 +254,7 @@ namespace HDF5.NET
             if (memoryDims is null)
                 memoryDims = new ulong[] { totalCount };
 
-            if (getSourceBuffer is null && getSourceStream is null)
+            if (getSourceBufferAsync is null && getSourceStream is null)
                 new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
 
             /* copy info */
@@ -262,21 +265,20 @@ namespace HDF5.NET
                 memoryDims,
                 fileSelection,
                 memorySelection,
-                GetSourceBuffer: getSourceBuffer,
+                GetSourceBufferAsync: getSourceBufferAsync,
                 GetSourceStream: getSourceStream,
                 GetTargetBuffer: indices => byteBuffer,
                 TypeSize: (int)InternalDataType.Size
             );
 
-            SelectionUtils.Copy(datasetChunkDims.Length, memoryDims.Length, copyInfo);
+            await SelectionUtils.CopyAsync<TReader>(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo);
 
             /* ensure correct endianness */
             var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
-            var destination = byteBuffer.Span;
-            var source = destination.ToArray();
+            var source = byteBuffer.Span.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, InternalDataType.Size);
+                H5Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
 
             /* return */
             return result;

@@ -39,6 +39,8 @@
             _baseStream.Flush();
         }
 
+        // ReadAsync: https://devblogs.microsoft.com/pfxteam/overriding-stream-asynchrony/
+        // see "If you don’t override ..."
         public override int Read(byte[] buffer, int offset, int count)
         {
             return _baseStream.Read(buffer, offset, count);

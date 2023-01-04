@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Runtime.CompilerServices;
 
 namespace HDF5.NET
 {
@@ -151,9 +150,9 @@ namespace HDF5.NET
             return ChunkDims;
         }
 
-        public override Memory<byte> GetBuffer(ulong[] chunkIndices)
+        public override Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
-            return _chunkCache.GetChunk(chunkIndices, () => ReadChunk(chunkIndices));
+            return _chunkCache.GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices));
         }
 
         public override Stream? GetStream(ulong[] chunkIndices)
@@ -165,7 +164,7 @@ namespace HDF5.NET
 
         protected abstract ChunkInfo GetChunkInfo(ulong[] chunkIndices);
 
-        private byte[] ReadChunk(ulong[] chunkIndices)
+        private async Task<Memory<byte>> ReadChunkAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader
         {
             var buffer = new byte[ChunkByteSize];
 
@@ -187,25 +186,24 @@ namespace HDF5.NET
                 else
                 {
                     Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                    ReadChunk(buffer, chunkInfo.Size, chunkInfo.FilterMask);
+                    await ReadChunkAsync(reader, buffer, chunkInfo.Size, chunkInfo.FilterMask);
                 }
             }
 
             return buffer;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReadChunk(Memory<byte> buffer, ulong rawChunkSize, uint filterMask)
+        private async Task ReadChunkAsync<TReader>(TReader reader, Memory<byte> buffer, ulong rawChunkSize, uint filterMask) where TReader : IReader
         {
             if (Dataset.InternalFilterPipeline is null)
             {
-                Dataset.Context.Reader.Read(buffer.Span);
+                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, buffer);
             }
             else
             {
                 using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-                Dataset.Context.Reader.Read(filterBuffer.Span);
+                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, filterBuffer);
 
                 H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }

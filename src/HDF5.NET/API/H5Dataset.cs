@@ -62,13 +62,14 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = Read<byte>(
+            var result = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -82,7 +83,29 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = Read<T>(
+            var result = ReadAsync<T, SyncReader>(
+                default(SyncReader),
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false).GetAwaiter().GetResult();
+
+            if (result is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return result;
+        }
+
+        public async Task<T[]> ReadAsync<T>(
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default) where T : unmanaged
+        {
+            var result = await ReadAsync<T, AsyncReader>(
+                default(AsyncReader),
                 null,
                 fileSelection,
                 memorySelection,
@@ -120,13 +143,14 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            Read(
+            ReadAsync<T, SyncReader>(
+                default(SyncReader),
                 buffer,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
         }
 
         public T[] ReadCompound<T>(
@@ -136,13 +160,14 @@ namespace HDF5.NET
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = Read<byte>(
+            var data = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -159,13 +184,14 @@ namespace HDF5.NET
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = Read<byte>(
+            var data = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -179,14 +205,15 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = Read<byte>(
+            var data = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
                 skipShuffle: false,
-                skipTypeCheck: true);
+                skipTypeCheck: true).GetAwaiter().GetResult();
 
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
