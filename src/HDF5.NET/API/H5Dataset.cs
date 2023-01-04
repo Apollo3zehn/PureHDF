@@ -111,7 +111,7 @@ namespace HDF5.NET
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).ConfigureAwait(false);
 
             if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");

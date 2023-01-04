@@ -186,7 +186,7 @@ namespace HDF5.NET
                 else
                 {
                     Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                    await ReadChunkAsync(reader, buffer, chunkInfo.Size, chunkInfo.FilterMask);
+                    await ReadChunkAsync(reader, buffer, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
                 }
             }
 
@@ -197,13 +197,13 @@ namespace HDF5.NET
         {
             if (Dataset.InternalFilterPipeline is null)
             {
-                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, buffer);
+                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, buffer).ConfigureAwait(false);
             }
             else
             {
                 using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, filterBuffer);
+                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, filterBuffer).ConfigureAwait(false);
 
                 H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }

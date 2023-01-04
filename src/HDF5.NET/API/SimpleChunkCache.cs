@@ -42,7 +42,7 @@
             }
             else
             {
-                var buffer = await chunkLoader();
+                var buffer = await chunkLoader().ConfigureAwait(false);
                 chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, buffer);
                 var chunk = chunkInfo.Chunk;
 

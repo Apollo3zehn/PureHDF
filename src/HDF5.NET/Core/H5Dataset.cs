@@ -271,7 +271,7 @@ namespace HDF5.NET
                 TypeSize: (int)InternalDataType.Size
             );
 
-            await SelectionUtils.CopyAsync<TReader>(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo);
+            await SelectionUtils.CopyAsync<TReader>(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo).ConfigureAwait(false);
 
             /* ensure correct endianness */
             var byteOrderAware = InternalDataType.BitField as IByteOrderAware;

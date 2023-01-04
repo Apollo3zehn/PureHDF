@@ -549,7 +549,67 @@ data2D = dataset
 
 No data are being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
 
-# 8 Comparison Table
+# 8 Asynchronous Data Access
+
+HDF5.NET supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
+
+**Sample 1: Load data of two datasets**
+
+```cs
+async Task LoadDataAsynchronously()
+{
+    var data1Task = dataset1.ReadAsync<int>();
+    var data2Task = dataset2.ReadAsync<int>();
+
+    await Task.WhenAll(data1Task, data2Task);
+}
+```
+
+**Sample 2: Load data of two datasets and process it**
+
+```cs
+async Task LoadAndProcessDataAsynchronously()
+{
+    var processedData1Task = Task.Run(async () => 
+    {
+        var data1 = await dataset1.ReadAsync<int>();
+        ProcessData(data1);
+    });
+
+    var processedData2Task = Task.Run(async () => 
+    {
+        var data2 = await dataset2.ReadAsync<int>();
+        ProcessData(data2);
+    });
+
+    await Task.WhenAll(processedData1Task, processedData2Task);
+}
+```
+
+**Sample 3: Load data of a single dataset and process it**
+
+```cs
+async Task LoadAndProcessDataAsynchronously()
+{
+    var processedData1Task = Task.Run(async () => 
+    {
+        var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
+        var data1 = await dataset1.ReadAsync<int>(fileSelection1);
+        ProcessData(data1);
+    });
+
+    var processedData2Task = Task.Run(async () => 
+    {
+        var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
+        var data2 = await dataset2.ReadAsync<int>(fileSelection2);
+        ProcessData(data2);
+    });
+
+    await Task.WhenAll(processedData1Task, processedData2Task);
+}
+```
+
+# 9 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 

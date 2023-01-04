@@ -139,7 +139,7 @@ namespace HDF5.NET
                 if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ ||
                     !sourceStep.Chunk.SequenceEqual(lastSourceChunk) /* or the chunk has changed */)
                 {
-                    sourceBuffer = await copyInfo.GetSourceBufferAsync!(sourceStep.Chunk);
+                    sourceBuffer = await copyInfo.GetSourceBufferAsync!(sourceStep.Chunk).ConfigureAwait(false);
                     lastSourceChunk = sourceStep.Chunk;
                 }
 
@@ -239,10 +239,10 @@ namespace HDF5.NET
 
                     /* copy */
                     var length = Math.Min(currentLength, currentTarget.Length);
-                    await reader.ReadAsync(sourceStream, currentTarget.Slice(0, length));         // corresponds to span.CopyTo
+                    await reader.ReadAsync(sourceStream, currentTarget.Slice(0, length)).ConfigureAwait(false); // corresponds to span.CopyTo
 
-                    sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);    // corresponds to 
-                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;                        // sourceBuffer.Slice()
+                    sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);            // corresponds to 
+                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;                                // sourceBuffer.Slice()
 
                     currentTarget = currentTarget.Slice(length);
                 }

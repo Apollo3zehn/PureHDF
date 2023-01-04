@@ -114,7 +114,7 @@
                 var streamRemaining = _slotStream.Length - _slotStream.Position;
                 var length = (int)Math.Min(remaining, streamRemaining);
 
-                await _slotStream.ReadAsync(buffer, offset, length);
+                await _slotStream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
                 _position += length;
                 offset += length;
                 remaining -= length;

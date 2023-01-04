@@ -68,7 +68,7 @@
 
             _stream = EnsureStream();
 
-            var actualLength = await _stream.ReadAsync(buffer, offset, length);
+            var actualLength = await _stream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
             buffer
