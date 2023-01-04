@@ -8,7 +8,7 @@ namespace HDF5.NET
         Selection SourceSelection,
         Selection TargetSelection,
         Func<ulong[], Task<Memory<byte>>>? GetSourceBufferAsync,
-        Func<ulong[], Stream>? GetSourceStream,
+        Func<ulong[], H5Stream>? GetSourceStream,
         Func<ulong[], Memory<byte>> GetTargetBuffer,
         int TypeSize
     );
@@ -190,7 +190,7 @@ namespace HDF5.NET
             CopyInfo copyInfo) where TReader : IReader
         {
             /* initialize source walker */
-            var sourceStream = default(Stream)!;
+            var sourceStream = default(H5Stream)!;
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
@@ -211,7 +211,7 @@ namespace HDF5.NET
                     lastSourceChunk = sourceStep.Chunk;
                 }
 
-                sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);        // corresponds to 
+                var offset = (int)sourceStep.Offset * copyInfo.TypeSize;                                // corresponds to 
                 var currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
 
                 while (currentLength > 0)
@@ -239,10 +239,14 @@ namespace HDF5.NET
 
                     /* copy */
                     var length = Math.Min(currentLength, currentTarget.Length);
-                    await reader.ReadAsync(sourceStream, currentTarget.Slice(0, length)).ConfigureAwait(false); // corresponds to span.CopyTo
 
-                    sourceStream.Seek((int)sourceStep.Offset * copyInfo.TypeSize, SeekOrigin.Begin);            // corresponds to 
-                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;                                // sourceBuffer.Slice()
+                    await reader.ReadAsync(                                             // corresponds to span.CopyTo
+                        sourceStream,
+                        currentTarget.Slice(0, length), 
+                        offset).ConfigureAwait(false);
+
+                    offset = (int)sourceStep.Offset * copyInfo.TypeSize;                // corresponds to 
+                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;        // sourceBuffer.Slice()
 
                     currentTarget = currentTarget.Slice(length);
                 }

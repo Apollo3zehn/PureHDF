@@ -37,7 +37,7 @@
             throw new NotImplementedException();
         }
 
-        public override Stream? GetStream(ulong[] chunkIndices)
+        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

@@ -1,12 +1,12 @@
 ﻿namespace HDF5.NET
 {
-    internal class UnsafeFillValueStream : Stream
+    internal class UnsafeFillValueStream : H5Stream
     {
         private byte[] _fillValue;
         private int _length;
         private long _position;
 
-        public UnsafeFillValueStream(byte[] fillValue)
+        public UnsafeFillValueStream(bool isStackOnly, byte[] fillValue) : base(isStackOnly, default)
         {
             _fillValue = fillValue.ToArray();
             _length = _fillValue.Length;

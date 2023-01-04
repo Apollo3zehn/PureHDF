@@ -1,4 +1,6 @@
-﻿using HDF.PInvoke;
+﻿#if NET6_0_OR_GREATER
+
+using HDF.PInvoke;
 using Xunit;
 
 namespace HDF5.NET.Tests.Reading
@@ -27,3 +29,5 @@ namespace HDF5.NET.Tests.Reading
         }
     }
 }
+
+#endif

@@ -46,10 +46,35 @@
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
-            var reader = new H5BinaryReader(stream);
+            /* NOTES on async IO
+             *
+             * - Overview (1)
+             * - It seems that (2) is not an issue anymore. I was unable to reproduce his findings with .NET 7.
+             * - RandomAccess.ReadAsync(SafeFileHandle) also works when FileOptions.Asynchronous is not specified. 
+             *   But then it runs on a different thread instead of being really asynchronous (3)
+             *
+             * 1) https://devblogs.microsoft.com/dotnet/file-io-improvements-in-dotnet-6/#scatter-gather-io
+             * 2) https://sergeyteplyakov.github.io/Blog/concurrency/2019/05/29/Shooting-Yourself-in-the-Foot-with-Concurrent-Use-of-FileStream-Position.html
+             * 3) https://www.tabsoverspaces.com/233639-open-filestream-properly-for-asynchronous-reading-writing
+             */
+
+
+            var safeFileHandle = (stream as FileStream)?.SafeFileHandle;
+            var reader = new H5BinaryReader(stream, safeFileHandle);
+
+            #error Continue here ... in the test below everything is fine. So is it a different stream where the bug occurs?
+
+#if NET6_0_OR_GREATER
+                var buffer = new byte[10];
+                
+                RandomAccess.Read(safeFileHandle, buffer.AsSpan(), 0);
+
+                stream.Seek(0, SeekOrigin.Begin);
+                stream.Read(buffer.AsSpan());
+#endif
 
             // superblock
-            int stepSize = 512;
+            var stepSize = 512;
             var signature = reader.ReadBytes(8);
 
             while (!H5File.ValidateSignature(signature, Superblock.FormatSignature))

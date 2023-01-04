@@ -47,7 +47,7 @@ namespace HDF5.NET
             return Task.FromResult(buffer.AsMemory());
         }
 
-        public override Stream? GetStream(ulong[] chunkIndices)
+        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

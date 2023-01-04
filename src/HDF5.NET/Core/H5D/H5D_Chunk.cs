@@ -155,7 +155,7 @@ namespace HDF5.NET
             return _chunkCache.GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices));
         }
 
-        public override Stream? GetStream(ulong[] chunkIndices)
+        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }
@@ -183,27 +183,32 @@ namespace HDF5.NET
                     if (Dataset.InternalFillValue.Value is not null)
                         buffer.AsSpan().Fill(Dataset.InternalFillValue.Value);
                 }
+                
                 else
                 {
-                    Dataset.Context.Reader.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                    await ReadChunkAsync(reader, buffer, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
+                    await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
                 }
             }
 
             return buffer;
         }
 
-        private async Task ReadChunkAsync<TReader>(TReader reader, Memory<byte> buffer, ulong rawChunkSize, uint filterMask) where TReader : IReader
+        private async Task ReadChunkAsync<TReader>(
+            TReader reader, 
+            Memory<byte> buffer,
+            long offset,
+            ulong rawChunkSize,
+            uint filterMask) where TReader : IReader
         {
             if (Dataset.InternalFilterPipeline is null)
             {
-                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, buffer).ConfigureAwait(false);
+                await reader.ReadAsync(Dataset.Context.Reader, buffer, offset).ConfigureAwait(false);
             }
             else
             {
                 using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-                await reader.ReadAsync(Dataset.Context.Reader.BaseStream, filterBuffer).ConfigureAwait(false);
+                await reader.ReadAsync(Dataset.Context.Reader, filterBuffer, offset).ConfigureAwait(false);
 
                 H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }

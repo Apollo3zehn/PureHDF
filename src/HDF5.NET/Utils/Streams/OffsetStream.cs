@@ -1,11 +1,16 @@
-﻿namespace HDF5.NET
+﻿using Microsoft.Win32.SafeHandles;
+
+namespace HDF5.NET
 {
-    internal class OffsetStream : Stream
+    internal class OffsetStream : H5Stream
     {
         private Stream _baseStream;
         private long _offset;
 
-        public OffsetStream(Stream baseStream, long offset)
+        public OffsetStream(
+            Stream baseStream, 
+            long offset, 
+            SafeFileHandle? safeFileHandle) : base(isStackOnly: false, safeFileHandle)
         {
             if (offset >= baseStream.Length)
                 throw new Exception("The offset exceeds the length of the base stream.");

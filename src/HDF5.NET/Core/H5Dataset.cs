@@ -196,8 +196,8 @@ namespace HDF5.NET
                ? chunkIndices => bufferProvider.GetBufferAsync(reader, chunkIndices)
                : null;
 
-            Func<ulong[], Stream>? getSourceStream = bufferProvider.SupportsStream
-                ? chunkIndices => bufferProvider.GetStream(chunkIndices)!
+            Func<ulong[], H5Stream>? getSourceStream = bufferProvider.SupportsStream
+                ? chunkIndices => bufferProvider.GetH5Stream(chunkIndices)!
                 : null;
 
             /* dataset dims */
