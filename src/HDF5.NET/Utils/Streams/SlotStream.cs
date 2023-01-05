@@ -62,6 +62,25 @@
             return length;
         }
 
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            var length = (int)Math.Min(Length - Position, count);
+
+            _stream = EnsureStream();
+
+            var actualLength = await _stream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
+
+            // If file is shorter than slot: fill remaining buffer with zeros.
+            buffer
+                .AsSpan()
+                .Slice(offset + actualLength, length - actualLength)
+                .Fill(0);
+
+            _position += length;
+
+            return length;
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)

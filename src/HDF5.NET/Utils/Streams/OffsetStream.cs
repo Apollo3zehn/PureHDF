@@ -1,11 +1,16 @@
-﻿namespace HDF5.NET
+﻿using Microsoft.Win32.SafeHandles;
+
+namespace HDF5.NET
 {
-    internal class OffsetStream : Stream
+    internal class OffsetStream : H5Stream
     {
         private Stream _baseStream;
         private long _offset;
 
-        public OffsetStream(Stream baseStream, long offset)
+        public OffsetStream(
+            Stream baseStream, 
+            long offset, 
+            SafeFileHandle? safeFileHandle) : base(isStackOnly: false, safeFileHandle, offset)
         {
             if (offset >= baseStream.Length)
                 throw new Exception("The offset exceeds the length of the base stream.");
@@ -39,6 +44,8 @@
             _baseStream.Flush();
         }
 
+        // ReadAsync: https://devblogs.microsoft.com/pfxteam/overriding-stream-asynchrony/
+        // see "If you don’t override ..."
         public override int Read(byte[] buffer, int offset, int count)
         {
             return _baseStream.Read(buffer, offset, count);

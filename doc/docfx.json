@@ -9,10 +9,55 @@
           "src": "../src/HDF5.NET"
         }
       ],
-      "dest": "api",
+      "dest": "api/netstandard2.0",
+      "filter": "filterConfig.yml",
+      "properties": {
+        "TargetFramework": "netstandard2.0"
+      }
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "**/*.csproj"
+          ],
+          "src": "../src/HDF5.NET"
+        }
+      ],
+      "dest": "api/netstandard2.1",
+      "filter": "filterConfig.yml",
+      "properties": {
+        "TargetFramework": "netstandard2.1"
+      }
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "**/*.csproj"
+          ],
+          "src": "../src/HDF5.NET"
+        }
+      ],
+      "dest": "api/net50",
       "filter": "filterConfig.yml",
       "properties": {
         "TargetFramework": "net50"
+      }
+    },
+    {
+      "src": [
+        {
+          "files": [
+            "**/*.csproj"
+          ],
+          "src": "../src/HDF5.NET"
+        }
+      ],
+      "dest": "api/net60",
+      "filter": "filterConfig.yml",
+      "properties": {
+        "TargetFramework": "net60"
       }
     }
   ],
@@ -20,15 +65,32 @@
     "content": [
       {
         "files": [
-          "*.md",
-          "toc.yml"
+          "*.md"
         ]
       },
       {
-        "files": [
-          "api/**.yml",
-          "api/index.md"
-        ]
+        "files": "*.yml",
+        "src": "api/netstandard2.0",
+        "dest": "api/netstandard2.0",
+        "version": ".NET Standard 2.0"
+      },
+      {
+        "files": "*.yml",
+        "src": "api/netstandard2.1",
+        "dest": "api/netstandard2.1",
+        "version": ".NET Standard 2.1"
+      },
+      {
+        "files": "*.yml",
+        "src": "api/net50",
+        "dest": "api/net50",
+        "version": ".NET 5"
+      },
+      {
+        "files": "*.yml",
+        "src": "api/net60",
+        "dest": "api/net60",
+        "version": ".NET 6"
       }
     ],
     "resource": [

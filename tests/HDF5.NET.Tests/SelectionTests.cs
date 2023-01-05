@@ -385,20 +385,23 @@ namespace HDF5.NET.Tests.Reading
             var targetSelection = new HyperslabSelection(rank: 2, targetStarts, targetStrides, targetCounts, targetBlocks);
 
             var copyInfo = new CopyInfo(
-                null,
-                null,
-                null,
-                null,
+                default!,
+                default!,
+                default!,
+                default!,
                 sourceSelection,
                 targetSelection,
-                null,
-                null,
-                null,
+                default,
+                default,
+                default!,
                 0
             );
 
             // Act
-            Action action = () => SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            Action action = () => SelectionUtils
+                .CopyAsync(default(SyncReader), sourceRank: 2, targetRank: 2, copyInfo)
+                .GetAwaiter()
+                .GetResult();
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -407,7 +410,7 @@ namespace HDF5.NET.Tests.Reading
         [Theory]
         [InlineData(new ulong[] { 0, 2 }, new ulong[] { 3, 2 })]
         [InlineData(new ulong[] { 2, 2 }, new ulong[] { 0, 2 })]
-        public void CanCopySmall2D_Count0_Or_Block0(ulong[] counts, ulong[] blocks)
+        public async Task CanCopySmall2D_Count0_Or_Block0(ulong[] counts, ulong[] blocks)
         {
             // Arrange
             var datasetDims = new ulong[] { 10, 10 };
@@ -437,14 +440,14 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => null,
-                indices => null,
-                indices => null,
+                indices => default!,
+                indices => default!,
+                indices => default,
                 TypeSize: 4
             );
 
             // Act
-            SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            await SelectionUtils.CopyAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert
         }
@@ -452,7 +455,7 @@ namespace HDF5.NET.Tests.Reading
         [Theory]
         [InlineData(new ulong[] { 10, 0 }, new ulong[] { 10, 10 })]
         [InlineData(new ulong[] { 10, 10 }, new ulong[] { 10, 0 })]
-        public void CanCopySmall2D_Dims0(ulong[] datasetDims, ulong[] memoryDims)
+        public async Task CanCopySmall2D_Dims0(ulong[] datasetDims, ulong[] memoryDims)
         {
             // Arrange
             var chunkDims = new ulong[] { 6, 6 };
@@ -480,14 +483,14 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => null,
-                indices => null,
-                indices => null,
+                indices => default!,
+                indices => default!,
+                indices => default,
                 TypeSize: 4
             );
 
             // Act
-            SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            await SelectionUtils.CopyAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, copyInfo);
 
             // Assert        
         }
@@ -595,14 +598,17 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)],
-                indices => null,
+                indices => Task.FromResult(chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)]),
+                indices => default!,
                 indices => actualBuffer,
                 TypeSize: 4
             );
 
             // Act
-            SelectionUtils.Copy(sourceRank: 2, targetRank: 2, copyInfo);
+            SelectionUtils
+                .CopyAsync(default(SyncReader), sourceRank: 2, targetRank: 2, copyInfo)
+                .GetAwaiter()
+                .GetResult();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -713,14 +719,17 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 sourceSelection,
                 targetSelection,
-                indices => chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)],
-                indices => null,
+                indices => Task.FromResult(chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)]),
+                indices => default!,
                 indices => actualBuffer,
                 TypeSize: 4
             );
 
             // Act
-            SelectionUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
+            SelectionUtils
+                .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 3, copyInfo)
+                .GetAwaiter()
+                .GetResult();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -812,8 +821,8 @@ namespace HDF5.NET.Tests.Reading
 
             var chunksBuffers = new Memory<byte>[]
             {
-                sourceBuffer0, null, sourceBuffer2, null, sourceBuffer4, null, sourceBuffer6, null,
-                sourceBuffer8, null, sourceBuffer10, null, sourceBuffer12, null, sourceBuffer14, null
+                sourceBuffer0, default, sourceBuffer2, default, sourceBuffer4, default, sourceBuffer6, default,
+                sourceBuffer8, default, sourceBuffer10, default, sourceBuffer12, default, sourceBuffer14, default
             };
 
             var expectedBuffer = new byte[11 * 11 * 12 * sizeof(int)];
@@ -843,14 +852,17 @@ namespace HDF5.NET.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)],
-                indices => null,
+                indices => Task.FromResult(chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)]),
+                indices => default!,
                 indices => actualBuffer,
                 TypeSize: 4
             );
 
             // Act
-            SelectionUtils.Copy(sourceRank: 3, targetRank: 3, copyInfo);
+            SelectionUtils
+                .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 3, copyInfo)
+                .GetAwaiter()
+                .GetResult();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -934,13 +946,16 @@ namespace HDF5.NET.Tests.Reading
                     datasetDims,
                     datasetSelection,
                     datasetSelection,
-                    indices => chunkProviderIntermediate.GetBuffer(indices),
-                    indices => null,
+                    indices => chunkProviderIntermediate.GetBufferAsync(default(AsyncReader), indices),
+                    indices => default!,
                     indices => intermediateBuffer,
                     TypeSize: 4
                 );
 
-                SelectionUtils.Copy(sourceRank: 3, targetRank: 3, copyInfoInterMediate);
+                SelectionUtils
+                    .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 3, copyInfoInterMediate)
+                    .GetAwaiter()
+                    .GetResult();
 
                 /* get actual data */
                 var actualBuffer = new byte[memoryDims[0] * memoryDims[1] * 4];
@@ -956,14 +971,17 @@ namespace HDF5.NET.Tests.Reading
                     memoryDims,
                     datasetSelection,
                     memorySelection,
-                    indices => chunkProvider.GetBuffer(indices),
-                    indices => null,
+                    indices => chunkProvider.GetBufferAsync(default(AsyncReader), indices),
+                    indices => default!,
                     indices => actualBuffer,
                     TypeSize: 4
                 );
 
                 // Act
-                SelectionUtils.Copy(sourceRank: 3, targetRank: 2, copyInfo);
+                SelectionUtils
+                    .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 2, copyInfo)
+                    .GetAwaiter()
+                    .GetResult();
 
                 //var intermediateForMatlab = string.Join(',', intermediate.ToArray().Select(value => value.ToString()));
                 //var actualForMatlab = string.Join(',', actual.ToArray().Select(value => value.ToString()));

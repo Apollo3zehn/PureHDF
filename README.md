@@ -1,5 +1,12 @@
 **See https://github.com/Apollo3zehn/HDF5.NET/issues/9 for not yet implemented features.**
 
+| .API Documentation |
+| ------------------ |
+| [.NET Standard 2.0](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.0/HDF5.NET.html) |
+| [.NET Standard 2.1](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.1/HDF5.NET.html) |
+| [.NET 5](https://apollo3zehn.github.io/HDF5.NET/api/net50/HDF5.NET.html) |
+| [.NET 6](https://apollo3zehn.github.io/HDF5.NET/api/net60/HDF5.NET.html) |
+
 # HDF5.NET
 
 [![GitHub Actions](https://github.com/Apollo3zehn/HDF5.NET/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/HDF5.NET/actions) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
@@ -15,7 +22,7 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html).
 
-> Overwhelmed by the number of different HDF 5 libraries? [Here](#8-comparison-table) is a comparison table.
+> Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
 
 # 1. Objects
 
@@ -536,10 +543,10 @@ The methods accepts a `long[]` with the new array dimensions. This feature works
 
 ### 7.2.2 High-Performance Method (2D only)
 
-The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the Microsoft Community Toolkit. To make use of it, run `dotnet add package Microsoft.Toolkit.HighPerformance` and then use it like this:
+The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run `dotnet add package CommunityToolkit.HighPerformance` and then use it like this:
 
 ```cs
-using Microsoft.Toolkit.HighPerformance;
+using CommunityToolkit.HighPerformance;
 
 data2D = dataset
     .Read<int>()
