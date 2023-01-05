@@ -10,7 +10,7 @@
         public ExternalFileListStream(
             bool isStackOnly,
             ExternalFileListMessage externalFileList, 
-            H5DatasetAccess datasetAccess) : base(isStackOnly, default)
+            H5DatasetAccess datasetAccess) : base(isStackOnly, default, default)
         {
             var offset = 0L;
 

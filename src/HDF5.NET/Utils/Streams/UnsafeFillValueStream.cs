@@ -6,7 +6,7 @@
         private int _length;
         private long _position;
 
-        public UnsafeFillValueStream(bool isStackOnly, byte[] fillValue) : base(isStackOnly, default)
+        public UnsafeFillValueStream(bool isStackOnly, byte[] fillValue) : base(isStackOnly, default, default)
         {
             _fillValue = fillValue.ToArray();
             _length = _fillValue.Length;

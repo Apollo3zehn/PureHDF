@@ -10,7 +10,7 @@ namespace HDF5.NET
         public OffsetStream(
             Stream baseStream, 
             long offset, 
-            SafeFileHandle? safeFileHandle) : base(isStackOnly: false, safeFileHandle)
+            SafeFileHandle? safeFileHandle) : base(isStackOnly: false, safeFileHandle, offset)
         {
             if (offset >= baseStream.Length)
                 throw new Exception("The offset exceeds the length of the base stream.");

@@ -48,7 +48,7 @@ namespace HDF5.NET
             else
             {
 #if NET6_0_OR_GREATER
-                return new ValueTask<int>(RandomAccess.Read(stream.SafeFileHandle, buffer.Span, offset));
+                return new ValueTask<int>(RandomAccess.Read(stream.SafeFileHandle, buffer.Span, stream.SafeFileHandleOffset + offset));
 #else
                 stream.Seek(offset, SeekOrigin.Begin);
                 return new ValueTask<int>(stream.Read(buffer.Span));
@@ -97,7 +97,7 @@ namespace HDF5.NET
             else
             {
 #if NET6_0_OR_GREATER
-                return RandomAccess.ReadAsync(stream.SafeFileHandle, buffer, offset);
+                return RandomAccess.ReadAsync(stream.SafeFileHandle, buffer, stream.SafeFileHandleOffset + offset);
 #else
                 throw new Exception("Asynchronous read operations are only supported on .NET 6+.");
 #endif
