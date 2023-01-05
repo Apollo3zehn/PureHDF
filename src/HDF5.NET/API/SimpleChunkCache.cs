@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public SimpleChunkCache(int chunkSlotCount = 521, ulong byteCount = 1024 * 1024/*, double w0 = 0.75*/)
+        public SimpleChunkCache(int chunkSlotCount = 521, ulong byteCount = 1 * 1024 * 1024/*, double w0 = 0.75*/)
         {
             if (chunkSlotCount < 0)
                 throw new Exception("The chunk slot count parameter must be >= 0.");

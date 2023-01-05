@@ -561,6 +561,7 @@ No data are being copied and you can work with the array similar to a normal `Sp
 HDF5.NET supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
 
 **Sample 1: Load data of two datasets**
+
 ```cs
 async Task LoadDataAsynchronously()
 {
@@ -569,7 +570,9 @@ async Task LoadDataAsynchronously()
     await Task.WhenAll(data1Task, data2Task);
 }
 ```
+
 **Sample 2: Load data of two datasets and process it**
+
 ```cs
 async Task LoadAndProcessDataAsynchronously()
 {
@@ -586,8 +589,11 @@ async Task LoadAndProcessDataAsynchronously()
     await Task.WhenAll(processedData1Task, processedData2Task);
 }
 ```
+
 **Sample 3: Load data of a single dataset and process it**
+
 ```cs
+
 async Task LoadAndProcessDataAsynchronously()
 {
     var processedData1Task = Task.Run(async () => 
@@ -605,6 +611,7 @@ async Task LoadAndProcessDataAsynchronously()
     await Task.WhenAll(processedData1Task, processedData2Task);
 }
 ```
+
 # 9 Comparison Table
 
 The following table considers only projects listed on Nuget.org.

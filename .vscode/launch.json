@@ -6,6 +6,17 @@
             "type": "blazorwasm",
             "request": "launch",
             "cwd": "${workspaceFolder}/src/HDF5.NET.BlazorBrowser"
+        },
+        {
+            "name": "Run Benchmark",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-benchmark",
+            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.Benchmarks/Release/net7.0/HDF5.NET.Benchmarks.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
         }
     ]
 }
