@@ -1,5 +1,12 @@
 **See https://github.com/Apollo3zehn/HDF5.NET/issues/9 for not yet implemented features.**
 
+| .API Documentation |
+| ------------------ |
+| [.NET Standard 2.0](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.0/HDF5.NET.html) |
+| [.NET Standard 2.1](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.1/HDF5.NET.html) |
+| [.NET 5](https://apollo3zehn.github.io/HDF5.NET/api/net50/HDF5.NET.html) |
+| [.NET 6](https://apollo3zehn.github.io/HDF5.NET/api/net60/HDF5.NET.html) |
+
 # HDF5.NET
 
 [![GitHub Actions](https://github.com/Apollo3zehn/HDF5.NET/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/HDF5.NET/actions) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
@@ -15,7 +22,7 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html).
 
-> Overwhelmed by the number of different HDF 5 libraries? [Here](#8-comparison-table) is a comparison table.
+> Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
 
 # 1. Objects
 

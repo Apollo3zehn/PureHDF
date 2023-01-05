@@ -1,5 +1,12 @@
 **See https://github.com/Apollo3zehn/HDF5.NET/issues/9 for not yet implemented features.**
 
+| API Documentation |
+| ------------------ |
+| [.NET Standard 2.0](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.0/HDF5.NET.html) |
+| [.NET Standard 2.1](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.1/HDF5.NET.html) |
+| [.NET 5](https://apollo3zehn.github.io/HDF5.NET/api/net50/HDF5.NET.html) |
+| [.NET 6](https://apollo3zehn.github.io/HDF5.NET/api/net60/HDF5.NET.html) |
+
 # HDF5.NET
 
 [![GitHub Actions](https://github.com/Apollo3zehn/HDF5.NET/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/HDF5.NET/actions) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
@@ -15,7 +22,7 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html).
 
-> Overwhelmed by the number of different HDF 5 libraries? [Here](#8-comparison-table) is a comparison table.
+> Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
 
 # 1. Objects
 
@@ -549,67 +556,7 @@ data2D = dataset
 
 No data are being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
 
-# 8 Asynchronous Data Access
-
-HDF5.NET supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
-
-**Sample 1: Load data of two datasets**
-
-```cs
-async Task LoadDataAsynchronously()
-{
-    var data1Task = dataset1.ReadAsync<int>();
-    var data2Task = dataset2.ReadAsync<int>();
-
-    await Task.WhenAll(data1Task, data2Task);
-}
-```
-
-**Sample 2: Load data of two datasets and process it**
-
-```cs
-async Task LoadAndProcessDataAsynchronously()
-{
-    var processedData1Task = Task.Run(async () => 
-    {
-        var data1 = await dataset1.ReadAsync<int>();
-        ProcessData(data1);
-    });
-
-    var processedData2Task = Task.Run(async () => 
-    {
-        var data2 = await dataset2.ReadAsync<int>();
-        ProcessData(data2);
-    });
-
-    await Task.WhenAll(processedData1Task, processedData2Task);
-}
-```
-
-**Sample 3: Load data of a single dataset and process it**
-
-```cs
-async Task LoadAndProcessDataAsynchronously()
-{
-    var processedData1Task = Task.Run(async () => 
-    {
-        var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
-        var data1 = await dataset1.ReadAsync<int>(fileSelection1);
-        ProcessData(data1);
-    });
-
-    var processedData2Task = Task.Run(async () => 
-    {
-        var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
-        var data2 = await dataset2.ReadAsync<int>(fileSelection2);
-        ProcessData(data2);
-    });
-
-    await Task.WhenAll(processedData1Task, processedData2Task);
-}
-```
-
-# 9 Comparison Table
+# 8 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 

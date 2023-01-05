@@ -58,20 +58,8 @@
              * 3) https://www.tabsoverspaces.com/233639-open-filestream-properly-for-asynchronous-reading-writing
              */
 
-
             var safeFileHandle = (stream as FileStream)?.SafeFileHandle;
             var reader = new H5BinaryReader(stream, safeFileHandle);
-
-            #error Continue here ... in the test below everything is fine. So is it a different stream where the bug occurs?
-
-#if NET6_0_OR_GREATER
-                var buffer = new byte[10];
-                
-                RandomAccess.Read(safeFileHandle, buffer.AsSpan(), 0);
-
-                stream.Seek(0, SeekOrigin.Begin);
-                stream.Read(buffer.AsSpan());
-#endif
 
             // superblock
             var stepSize = 512;
