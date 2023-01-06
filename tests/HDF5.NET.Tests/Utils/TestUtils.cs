@@ -408,6 +408,21 @@ namespace HDF5.NET.Tests
             res = H5P.close(dcpl_id);
         }
 
+        public static unsafe void AddChunkedDataset_Huge(long fileId)
+        {
+            long res;
+
+            var length = (ulong)TestData.HugeData.Length;
+            var dims = new ulong[] { length };
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1_000_000 });
+            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
+
+            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_huge", H5T.NATIVE_INT32, TestData.HugeData.AsSpan(), dims, cpl: dcpl_id);
+            res = H5P.close(dcpl_id);
+        }
+
         public static unsafe void AddVirtualDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
         {
             // see VirtualMapping.xlsx for a visualization

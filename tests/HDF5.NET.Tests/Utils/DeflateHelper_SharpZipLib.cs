@@ -11,7 +11,7 @@ namespace HDF5.NET.Tests
             if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 using var sourceStream = new MemorySpanStream(buffer);
-                using var targetStream = new MemoryStream(buffer.Length /* minimum size to expect */);
+                using var tar = new MemoryStream(buffer.Length /* minimum size to expect */);
 
                 // skip ZLIB header to get only the DEFLATE stream
                 sourceStream.Position = 2;
@@ -21,11 +21,11 @@ namespace HDF5.NET.Tests
                     IsStreamOwner = false
                 };
 
-                decompressionStream.CopyTo(targetStream);
+                decompressionStream.CopyTo(tar);
 
-                return targetStream
+                return tar
                     .GetBuffer()
-                    .AsMemory(0, (int)targetStream.Length);
+                    .AsMemory(0, (int)tar.Length);
             }
 
             /* We're compressing */

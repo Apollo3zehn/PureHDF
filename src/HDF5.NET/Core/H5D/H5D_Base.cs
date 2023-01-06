@@ -35,9 +35,9 @@ namespace HDF5.NET
 
         public abstract ulong[] GetChunkDims();
 
-        public abstract Memory<byte> GetBuffer(ulong[] chunkIndices);
+        public abstract Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
 
-        public abstract Stream? GetStream(ulong[] chunkIndices);
+        public abstract H5Stream? GetH5Stream(ulong[] chunkIndices);
 
         #endregion
 

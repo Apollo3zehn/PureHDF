@@ -30,13 +30,32 @@
 
         internal static H5File OpenReadCore(string filePath, bool deleteOnClose = false)
         {
-            return H5File.OpenCore(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, deleteOnClose);
+            return H5File.OpenCore(
+                filePath,
+                FileMode.Open, 
+                FileAccess.Read, 
+                FileShare.Read, 
+                useAsync: false, 
+                deleteOnClose: deleteOnClose);
         }
 
-        internal static H5File OpenCore(string filePath, FileMode fileMode, FileAccess fileAccess, FileShare fileShare, bool deleteOnClose = false)
+        internal static H5File OpenCore(
+            string filePath, 
+            FileMode fileMode, 
+            FileAccess fileAccess, 
+            FileShare fileShare, 
+            bool useAsync = false, 
+            bool deleteOnClose = false)
         {
             var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
-            var stream = System.IO.File.Open(absoluteFilePath, fileMode, fileAccess, fileShare);
+
+            var stream = new System.IO.FileStream(
+                absoluteFilePath, 
+                fileMode, 
+                fileAccess,
+                fileShare,
+                4096,
+                useAsync);
 
             return H5File.OpenCore(stream, absoluteFilePath, deleteOnClose);
         }
@@ -46,10 +65,11 @@
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
-            var reader = new H5BinaryReader(stream);
+            var safeFileHandle = (stream as FileStream)?.SafeFileHandle;
+            var reader = new H5BinaryReader(stream, safeFileHandle);
 
             // superblock
-            int stepSize = 512;
+            var stepSize = 512;
             var signature = reader.ReadBytes(8);
 
             while (!H5File.ValidateSignature(signature, Superblock.FormatSignature))

@@ -10,13 +10,13 @@ namespace HDF5.NET.Tests
             if (flags.HasFlag(H5FilterFlags.Decompress))
             {
                 using var sourceStream = new MemorySpanStream(buffer);
-                using var targetStream = new MemoryStream();
+                using var tar = new MemoryStream();
 
-                BZip2.Decompress(sourceStream, targetStream, isStreamOwner: false);
+                BZip2.Decompress(sourceStream, tar, isStreamOwner: false);
 
-                return targetStream
+                return tar
                     .GetBuffer()
-                    .AsMemory(0, (int)targetStream.Length);
+                    .AsMemory(0, (int)tar.Length);
             }
 
             /* We're compressing */

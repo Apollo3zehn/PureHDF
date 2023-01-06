@@ -304,7 +304,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleGeneric<T>(T dummy, int length)
+        public async Task CanUnshuffleGeneric<T>(T dummy, int length)
             where T : unmanaged
         {
             // Arrange
@@ -320,7 +320,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -347,7 +347,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleAvx2<T>(T dummy, int length) 
+        public async Task CanUnshuffleAvx2<T>(T dummy, int length) 
             where T : unmanaged
         {
             // Arrange
@@ -363,7 +363,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -389,7 +389,7 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 437)]
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
-        public void CanUnshuffleSse2<T>(T dummy, int length) 
+        public async Task CanUnshuffleSse2<T>(T dummy, int length) 
             where T : unmanaged
         {
             // Arrange
@@ -405,7 +405,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled.Length];
@@ -417,7 +417,7 @@ namespace HDF5.NET.Tests.Reading
 #endif
 
         [Fact]
-        public void ShufflePerformanceTest()
+        public async Task ShufflePerformanceTest()
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
@@ -433,7 +433,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = dataset.Read<byte>(default, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
 
             // Act
 

@@ -1,5 +1,12 @@
 **See https://github.com/Apollo3zehn/HDF5.NET/issues/9 for not yet implemented features.**
 
+| API Documentation |
+| ------------------ |
+| [.NET Standard 2.0](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.0/HDF5.NET.html) |
+| [.NET Standard 2.1](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.1/HDF5.NET.html) |
+| [.NET 5](https://apollo3zehn.github.io/HDF5.NET/api/net50/HDF5.NET.html) |
+| [.NET 6](https://apollo3zehn.github.io/HDF5.NET/api/net60/HDF5.NET.html) |
+
 # HDF5.NET
 
 [![GitHub Actions](https://github.com/Apollo3zehn/HDF5.NET/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/HDF5.NET/actions) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
@@ -15,24 +22,24 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html).
 
-> Overwhelmed by the number of different HDF 5 libraries? [Here](#8-comparison-table) is a comparison table.
+> Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
 
-## 1. Objects
+# 1. Objects
 
 ```cs
 // open HDF5 file, the returned H5File instance represents the root group ('/')
 using var root = H5File.OpenRead(filePath);
 ```
 
-### 1.1 Get Object
-#### Group
+## 1.1 Get Object
+### Group
 
 ```cs
 // get nested group
 var group = root.Group("/my/nested/group");
 ```
 
-#### Dataset
+### Dataset
 
 ```cs
 
@@ -43,14 +50,14 @@ var dataset = group.Dataset("myDataset");
 var dataset = group.Dataset("/my/nested/group/myDataset");
 ```
 
-#### Commited Data Type
+### Commited Data Type
 
 ```cs
 // get commited data type in group
 var commitedDatatype = group.CommitedDatatype("myCommitedDatatype");
 ```
 
-#### Any Object Type
+### Any Object Type
 When you do not know what kind of link to expect at a given path, use the following code:
 
 ```cs
@@ -58,8 +65,8 @@ When you do not know what kind of link to expect at a given path, use the follow
 var myH5Object = group.Get("/path/to/unknown/object");
 ```
 
-### 1.2 Additional Info
-#### External File Link
+## 1.2 Additional Info
+### External File Link
 
 With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
 
@@ -80,7 +87,7 @@ var linkAccess = new H5LinkAccess()
 var dataset = group.Dataset(path, linkAccess);
 ```
 
-#### Iteration
+### Iteration
 
 Iterate through all links in a group:
 
@@ -102,7 +109,7 @@ foreach (var link in group.Children)
 
 An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
 
-## 2. Attributes
+# 2. Attributes
 
 ```cs
 // get attribute of group
@@ -112,7 +119,7 @@ var attribute = group.Attribute("myAttributeOnAGroup");
 var attribute = dataset.Attribute("myAttributeOnADataset");
 ```
 
-## 3. Data
+# 3. Data
 
 The following code samples work for datasets as well as attributes.
 
@@ -203,9 +210,9 @@ The following code samples work for datasets as well as attributes.
 
 For more information on compound data, see section [Reading compound data](#6-reading-compound-data).
 
-## 4. Partial I/O and Hyperslabs
+# 4. Partial I/O and Hyperslabs
 
-### 4.1 Overview
+## 4.1 Overview
 
 Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With HDF5.NET, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
 
@@ -242,7 +249,7 @@ All shown parameters are optional. For example, when the `fileSelection` paramet
 
 Additionally, there is an overload method that allows you to provide your own buffer.
 
-### 4.2 Experimental: IQueryable (1-dimensional data only)
+## 4.2 Experimental: IQueryable (1-dimensional data only)
 
 Another way to build the file selection is to invoke the `AsQueryable` method which can then be used as follows:
 
@@ -267,9 +274,9 @@ will simply skip the first 5 elements and return the rest of the dataset.
 
 This way of building a hyperslab / selection has been implemented in an efford to provide a more .NET-like experience when working with data.
 
-## 5. Filters
+# 5. Filters
 
-### 5.1 Built-in Filters
+## 5.1 Built-in Filters
 - Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)
 - Fletcher32
 - Deflate (zlib)
@@ -277,7 +284,7 @@ This way of building a hyperslab / selection has been implemented in an efford t
 
 <sup>1</sup> NET Standard 2.1 and above
 
-### 5.2 External Filters
+## 5.2 External Filters
 Before you can use external filters, you need to register them using ```H5Filter.Register(...)```. This method accepts a filter identifier, a filter name and the actual filter function.
 
 This function could look like the following and should be adapted to your specific filter library:
@@ -304,12 +311,12 @@ public static Memory<byte> FilterFunc(
 
 ```
 
-### 5.3 Tested External Filters
+## 5.3 Tested External Filters
 - deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/HDF5.NET/wiki/Deflate-Benchmark))
 - c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
 - bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
-### 5.4 How to use Deflate (hardware accelerated)
+## 5.4 How to use Deflate (hardware accelerated)
 (1) Install the P/Invoke package:
 
 `dotnet package add Intrinsics.ISA-L.PInvoke`
@@ -332,7 +339,7 @@ public static Memory<byte> FilterFunc(
 </PropertyGroup>
 ```
 
-### 5.5 How to use Blosc / Blosc2 (hardware accelerated)
+## 5.5 How to use Blosc / Blosc2 (hardware accelerated)
 (1) Install the P/Invoke package:
 
 `dotnet package add Blosc2.PInvoke`
@@ -348,7 +355,7 @@ public static Memory<byte> FilterFunc(
      filterFunc: BloscHelper.FilterFunc);
 ```
 
-### 5.6 How to use BZip2
+## 5.6 How to use BZip2
 (1) Install the SharpZipLib package:
 
 `dotnet package add SharpZipLib`
@@ -364,7 +371,7 @@ public static Memory<byte> FilterFunc(
      filterFunc: BZip2Helper.FilterFunc);
 ```
 
-## 6. Reading Compound Data
+# 6. Reading Compound Data
 
 There are three ways to read structs which are explained in the following sections. Here is an overview:
 
@@ -374,7 +381,7 @@ There are three ways to read structs which are explained in the following sectio
 | `ReadCompound<T>()`   | `T`                          | slow  | predefined type with matching names required |
 | `ReadCompound()`      | `Dictionary<string, object>` | slow  | - |
 
-### 6.1 Structs without nullable fields
+## 6.1 Structs without nullable fields
 
 Structs without any nullable fields (i.e. no strings and other reference types) can be read like any other dataset using a high performance copy operation:
 
@@ -415,7 +422,7 @@ unsafe struct SimpleStructWithArray
 var compoundData = dataset.Read<SimpleStruct>();
 ```
 
-### 6.2 Structs with nullable fields (strings, arrays)
+## 6.2 Structs with nullable fields (strings, arrays)
 
 If you have a struct with `string` or normal `array` fields, you need to use the slower `ReadCompound` method:
 
@@ -466,7 +473,7 @@ Func<FieldInfo, string> converter = fieldInfo =>
 var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(converter);
 ```
 
-### 6.3 Unknown structs
+## 6.3 Unknown structs
 
 You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `H5ObjectReference`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
 
@@ -495,9 +502,9 @@ The type mapping is as follows:
 
 Not supported data types like `time` and `variable length type = sequence` will be represented as `null`.
 
-## 7. Advanced Scenarios
+# 7. Advanced Scenarios
 
-### 7.1 Memory-Mapped File
+## 7.1 Memory-Mapped File
 
 In some cases, it might be useful to read data from a memory-mapped file instead of a regular `FileStream` to reduce the number of (costly) system calls. Depending on the file structure this may heavily increase random access performance. Here is an example:
 
@@ -519,7 +526,9 @@ using var root = H5File.Open(mmfStream);
 ...
 ```
 
-### 7.2 Reading Multidimensional Data
+## 7.2 Reading Multidimensional Data
+
+### 7.2.1 Generic Method
 
 Sometimes you want to read the data as multidimensional arrays. In that case use one of the `byte[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
 
@@ -532,7 +541,100 @@ var data3D = dataset
 The methods accepts a `long[]` with the new array dimensions. This feature works similar to Matlab's [reshape](https://de.mathworks.com/help/matlab/ref/reshape.html) function. A slightly adapted citation explains the behavior:
 > When you use `-1` to automatically calculate a dimension size, the dimensions that you *do* explicitly specify must divide evenly into the number of elements in the input array.
 
-## 8 Comparison Table
+### 7.2.2 High-Performance Method (2D only)
+
+The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run `dotnet add package CommunityToolkit.HighPerformance` and then use it like this:
+
+```cs
+using CommunityToolkit.HighPerformance;
+
+data2D = dataset
+    .Read<int>()
+    .AsSpan()
+    .AsSpan2D(height: 20, width: 10);
+```
+
+No data are being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
+
+# 8 Asynchronous Data Access (.NET 6+)
+
+HDF5.NET supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
+
+>Note: All `async` methods shown below are only truly asynchronous if the [FileStream](https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.-ctor?view=net-7.0#system-io-filestream-ctor(system-string-system-io-filemode-system-io-fileaccess-system-io-fileshare-system-int32-system-boolean)) is opened with the `useAsync` parameter set to `true`:
+
+```cs
+var h5File = H5File.Open(
+    filePath,
+    FileMode.Open, 
+    FileAccess.Read, 
+    FileShare.Read, 
+    useAsync: true);
+
+// alternative
+var stream = new FileStream(..., useAsync: true);
+var h5File = H5File.Open(stream);
+```
+
+**Sample 1: Load data of two datasets**
+
+```cs
+async Task LoadDataAsynchronously()
+{
+    var data1Task = dataset1.ReadAsync<int>();
+    var data2Task = dataset2.ReadAsync<int>();
+
+    await Task.WhenAll(data1Task, data2Task);
+}
+```
+
+**Sample 2: Load data of two datasets and process it**
+
+```cs
+async Task LoadAndProcessDataAsynchronously()
+{
+    var processedData1Task = Task.Run(async () => 
+    {
+        var data1 = await dataset1.ReadAsync<int>();
+        ProcessData(data1);
+    });
+
+    var processedData2Task = Task.Run(async () => 
+    {
+        var data2 = await dataset2.ReadAsync<int>();
+        ProcessData(data2);
+    });
+
+    await Task.WhenAll(processedData1Task, processedData2Task);
+}
+```
+
+**Sample 3: Load data of a single dataset and process it**
+
+```cs
+
+async Task LoadAndProcessDataAsynchronously()
+{
+    var processedData1Task = Task.Run(async () => 
+    {
+        var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
+        var data1 = await dataset1.ReadAsync<int>(fileSelection1);
+
+        ProcessData(data1);
+    });
+
+    var processedData2Task = Task.Run(async () => 
+    {
+        var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
+        var data2 = await dataset2.ReadAsync<int>(fileSelection2);
+
+        ProcessData(data2);
+    });
+
+    await Task.WhenAll(processedData1Task, processedData2Task);
+}
+```
+
+# 9 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 

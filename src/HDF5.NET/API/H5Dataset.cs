@@ -62,13 +62,14 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = Read<byte>(
+            var result = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -82,13 +83,14 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = Read<T>(
+            var result = ReadAsync<T, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -120,13 +122,14 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            Read(
+            ReadAsync<T, SyncReader>(
+                default(SyncReader),
                 buffer,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
         }
 
         public T[] ReadCompound<T>(
@@ -136,13 +139,14 @@ namespace HDF5.NET
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = Read<byte>(
+            var data = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -159,13 +163,14 @@ namespace HDF5.NET
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = Read<byte>(
+            var data = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
                 null,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false);
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -179,7 +184,139 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = Read<byte>(
+            var data = ReadAsync<byte, SyncReader>(
+                default(SyncReader),
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false,
+                skipTypeCheck: true).GetAwaiter().GetResult();
+
+            if (data is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return H5ReadUtils.ReadString(InternalDataType, data, Context.Superblock);
+        }
+
+        #endregion
+
+#if NET6_0_OR_GREATER
+
+        public async Task<byte[]> ReadAsync(
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default)
+        {
+            var result = await ReadAsync<byte, AsyncReader>(
+                default(AsyncReader),
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+
+            if (result is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return result;
+        }
+
+        public async Task<T[]> ReadAsync<T>(
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default) where T : unmanaged
+        {
+            var result = await ReadAsync<T, AsyncReader>(
+                default(AsyncReader),
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+
+            if (result is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return result;
+        }
+
+        public Task ReadAsync<T>(
+            Memory<T> buffer,
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default) where T : unmanaged
+        {
+            return ReadAsync<T, AsyncReader>(
+                default(AsyncReader),
+                buffer,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+        }
+
+        public async Task<T[]> ReadCompoundAsync<T>(
+           Func<FieldInfo, string>? getName = default,
+           Selection? fileSelection = default,
+           Selection? memorySelection = default,
+           ulong[]? memoryDims = default,
+           H5DatasetAccess datasetAccess = default) where T : struct
+        {
+            var data = await ReadAsync<byte, AsyncReader>(
+                default(AsyncReader),
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+
+            if (data is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            if (getName is null)
+                getName = fieldInfo => fieldInfo.Name;
+
+            return H5ReadUtils.ReadCompound<T>(InternalDataType, data, Context.Superblock, getName);
+        }
+
+        public async Task<Dictionary<string, object?>[]> ReadCompoundAsync(
+           Selection? fileSelection = default,
+           Selection? memorySelection = default,
+           ulong[]? memoryDims = default,
+           H5DatasetAccess datasetAccess = default)
+        {
+            var data = await ReadAsync<byte, AsyncReader>(
+                default(AsyncReader),
+                null,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipShuffle: false);
+
+            if (data is null)
+                throw new Exception("The buffer is null. This should never happen.");
+
+            return H5ReadUtils.ReadCompound(InternalDataType, data, Context.Superblock);
+        }
+
+        public async Task<string[]> ReadStringAsync(
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default)
+        {
+            var data = await ReadAsync<byte, AsyncReader>(
+                default(AsyncReader),
                 null,
                 fileSelection,
                 memorySelection,
@@ -194,6 +331,6 @@ namespace HDF5.NET
             return H5ReadUtils.ReadString(InternalDataType, data, Context.Superblock);
         }
 
-        #endregion
+#endif
     }
 }

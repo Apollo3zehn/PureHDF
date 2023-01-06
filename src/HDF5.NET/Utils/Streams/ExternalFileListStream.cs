@@ -1,13 +1,16 @@
 ﻿namespace HDF5.NET
 {
-    internal class ExternalFileListStream : Stream
+    internal class ExternalFileListStream : H5Stream
     {
         private long _position;
         private bool _loadSlot;
         private SlotStream? _slotStream;
         private SlotStream[] _slotStreams;
 
-        public ExternalFileListStream(ExternalFileListMessage externalFileList, H5DatasetAccess datasetAccess)
+        public ExternalFileListStream(
+            bool isStackOnly,
+            ExternalFileListMessage externalFileList, 
+            H5DatasetAccess datasetAccess) : base(isStackOnly, default, default)
         {
             var offset = 0L;
 
@@ -62,7 +65,7 @@
         {
             // WARNING: Original "buffer" is a Memory<byte> and to be compatible with stream,
             // the method Stream.Read uses an internal ArrayPool array which is not cleared
-            // after return. This means that the buffer could container data from previous tests.
+            // after return. This means that the buffer could contain data from previous tests.
             // Therefore, always read the returned number of bytes and do NOT SKIP any data, e.g.
             // when a file is smaller than the corresponding slot!
 
@@ -81,6 +84,40 @@
                 var length = (int)Math.Min(remaining, streamRemaining);
 
                 _slotStream.Read(buffer, offset, length);
+                _position += length;
+                offset += length;
+                remaining -= length;
+
+                if (length == streamRemaining)
+                    _loadSlot = true;
+            }
+
+            return count;
+        }
+
+        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            // WARNING: Original "buffer" is a Memory<byte> and to be compatible with stream,
+            // the method Stream.Read uses an internal ArrayPool array which is not cleared
+            // after return. This means that the buffer could contain data from previous tests.
+            // Therefore, always read the returned number of bytes and do NOT SKIP any data, e.g.
+            // when a file is smaller than the corresponding slot!
+
+            var remaining = count;
+
+            while (remaining > 0)
+            {
+                if (_slotStream is null || _loadSlot)
+                {
+                    _slotStream = _slotStreams.Last(stream => stream.Offset <= _position);
+                    _slotStream.Seek(_position - _slotStream.Offset, SeekOrigin.Begin);
+                    _loadSlot = false;
+                }
+
+                var streamRemaining = _slotStream.Length - _slotStream.Position;
+                var length = (int)Math.Min(remaining, streamRemaining);
+
+                await _slotStream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
                 _position += length;
                 offset += length;
                 remaining -= length;

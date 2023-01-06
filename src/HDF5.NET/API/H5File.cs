@@ -33,9 +33,9 @@
             return H5File.OpenReadCore(filePath);
         }
 
-        public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare)
+        public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool useAsync = false)
         {
-            return H5File.OpenCore(filePath, mode, fileAccess, fileShare);
+            return H5File.OpenCore(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
         }
 
         public static H5File Open(Stream stream)

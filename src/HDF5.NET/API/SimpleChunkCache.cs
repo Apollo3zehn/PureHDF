@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public SimpleChunkCache(int chunkSlotCount = 521, ulong byteCount = 1024 * 1024/*, double w0 = 0.75*/)
+        public SimpleChunkCache(int chunkSlotCount = 521, ulong byteCount = 1 * 1024 * 1024/*, double w0 = 0.75*/)
         {
             if (chunkSlotCount < 0)
                 throw new Exception("The chunk slot count parameter must be >= 0.");
@@ -34,7 +34,7 @@
 
         #region Methods
 
-        public Memory<byte> GetChunk(ulong[] indices, Func<Memory<byte>> chunkLoader)
+        public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkLoader)
         {
             if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
             {
@@ -42,7 +42,7 @@
             }
             else
             {
-                var buffer = chunkLoader.Invoke();
+                var buffer = await chunkLoader().ConfigureAwait(false);
                 chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, buffer);
                 var chunk = chunkInfo.Chunk;
 

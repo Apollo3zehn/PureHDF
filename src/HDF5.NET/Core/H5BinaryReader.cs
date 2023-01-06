@@ -1,17 +1,21 @@
-﻿namespace HDF5.NET
+﻿using Microsoft.Win32.SafeHandles;
+
+namespace HDF5.NET
 {
     internal class H5BinaryReader : BinaryReader
     {
         #region Constructors
 
-        public H5BinaryReader(Stream input) : base(input)
+        public H5BinaryReader(Stream input, SafeFileHandle? safeFileHandle = default) : base(input)
         {
-            //
+            SafeFileHandle = safeFileHandle;
         }
 
         #endregion
 
         #region Properties
+
+        public SafeFileHandle? SafeFileHandle { get; }
 
         public ulong BaseAddress { get; set; }
 

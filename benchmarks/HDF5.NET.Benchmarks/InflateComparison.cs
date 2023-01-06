@@ -11,12 +11,12 @@ namespace Benchmark
     [MemoryDiagnoser]
     public class InflateComparison
     {
-        private byte[] _original;
-        private byte[] _deflated;
-        private byte[] _inflated;
+        private byte[] _original = default!;
+        private byte[] _deflated = default!;
+        private byte[] _inflated = default!;
 
-        private MemoryStream _deflatedStream;
-        private MemoryStream _inflatedStream;
+        private MemoryStream _deflatedStream = default!;
+        private MemoryStream _inflatedStream = default!;
 
         private IntPtr _state_ptr;
         private int _state_length;

@@ -49,6 +49,19 @@ jobs:
             artifacts/packages/
             artifacts/tag_body.txt
 
+      - name: Prepare GitHub Pages
+        run: |
+          dotnet tool install -g docfx --version 2.60.0-preview.2
+          docfx doc/docfx.json 
+          touch doc/_site/.nojekyll
+        if: github.ref == 'refs/heads/master'
+
+      - name: Deploy GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: doc/_site
+        if: github.ref == 'refs/heads/master'
+
     outputs:
       is_release: ${{ env.IS_RELEASE }}
       version: ${{ env.VERSION }}
