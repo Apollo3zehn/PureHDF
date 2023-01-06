@@ -5,7 +5,8 @@ using HDF5.NET;
 
 namespace Benchmark
 {
-// TODO: This benchmark does not prove that Async is actually faster. There are many GC Gen 0 .. Gen 2 collections in this benchmark. Why?
+// TODO: This benchmark does not prove that Async is actually faster. Maybe create files with different chunk size to evaluate the influence of a the chunk reads. If reading all chunks is very fast, e.g. ~1 ms, the results (sync 9.8 ms, async 8.7 ms) could be explained. Solution: spend more time reading data and less calculating the sum.
+// TODO: There are many GC Gen 0 .. Gen 2 collections in this benchmark. Why?
 
     [SimpleJob(RuntimeMoniker.Net70)]
     [MemoryDiagnoser]
