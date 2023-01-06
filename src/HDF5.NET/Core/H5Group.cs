@@ -452,8 +452,13 @@ namespace HDF5.NET
             return linkMessage.LinkInfo switch
             {
                 HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
-                SoftLinkInfo soft => new SymbolicLink(linkMessage, this).GetTarget(linkAccess),
-                ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess),
+                SoftLinkInfo soft => new SymbolicLink(linkMessage, this).GetTarget(linkAccess, useAsync: default),
+#if NET6_0_OR_GREATER
+                ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess, useAsync: Context.Reader.SafeFileHandle.IsAsync),
+#else
+                ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess, useAsync: default),
+#endif
+                
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }
@@ -471,7 +476,7 @@ namespace HDF5.NET
             return entry.ScratchPad switch
             {
                 ObjectHeaderScratchPad objectScratch => AddScratchPad(reference, objectScratch),
-                SymbolicLinkScratchPad linkScratch => new SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess),
+                SymbolicLinkScratchPad linkScratch => new SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess, useAsync: default),
                 _ when !Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
                 _ => throw new Exception("Unknown object type.")
             };

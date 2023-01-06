@@ -72,13 +72,13 @@ namespace HDF5.NET
 
         private static ConcurrentDictionary<Superblock, Dictionary<string, H5File>> _fileMap;
 
-        public static H5File GetH5File(Superblock superblock, string absoluteFilePath)
+        public static H5File GetH5File(Superblock superblock, string absoluteFilePath, bool useAsync)
         {
             if (!Uri.TryCreate(absoluteFilePath, UriKind.Absolute, out var uri))
                 throw new Exception("The provided path is not absolute.");
 
             if (!uri.IsFile && !uri.IsUnc)
-                throw new Exception("The provided path is not a file path or aN UNC path.");
+                throw new Exception("The provided path is not a file path or a UNC path.");
 
             if (!_fileMap.TryGetValue(superblock, out var pathToH5FileMap))
             {
@@ -89,7 +89,7 @@ namespace HDF5.NET
             if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
             {
 #warning This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
-                h5File = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                h5File = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
                 pathToH5FileMap[uri.AbsoluteUri] = h5File;
             }
 
