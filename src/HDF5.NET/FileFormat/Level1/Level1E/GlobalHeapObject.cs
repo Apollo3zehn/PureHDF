@@ -1,10 +1,16 @@
 ﻿namespace HDF5.NET
 {
-    internal class GlobalHeapObject : FileBlock
+    internal class GlobalHeapObject
     {
+        #region Fields
+
+        private static byte[] _emptyByteArray = new byte[0];
+
+        #endregion
+
         #region Constructors
 
-        public GlobalHeapObject(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapObject(H5BinaryReader reader, Superblock superblock)
         {
             // heap object index
             HeapObjectIndex = reader.ReadUInt16();
@@ -33,9 +39,9 @@
 
         #region Properties
 
-        public ushort HeapObjectIndex { get; set; }
-        public ushort ReferenceCount { get; set; }
-        public byte[] ObjectData { get; set; }
+        public ushort HeapObjectIndex { get; }
+        public ushort ReferenceCount { get; }
+        public byte[] ObjectData { get; } = _emptyByteArray;
 
         #endregion
     }

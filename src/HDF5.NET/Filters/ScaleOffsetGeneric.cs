@@ -411,7 +411,7 @@ namespace HDF5.NET
                     need_convert = true;
             }
 
-#warning This is not supported because after filtering, the data are native endianess and then HDF5 lib converts them later again.
+// TODO: This is not supported because after filtering, the data are native endianess and then HDF5 lib converts them later again.
             if (need_convert)
                 throw new NotSupportedException("Scale-offset data conversion from big endian to little endian or vice versa is not supported.");
 

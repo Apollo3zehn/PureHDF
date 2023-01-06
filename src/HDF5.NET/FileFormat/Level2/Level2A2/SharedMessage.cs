@@ -45,7 +45,7 @@
 
                 if (Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
                 {
-#warning implement this
+// TODO: implement this
                     throw new NotImplementedException("This code path is not yet implemented.");
                 }
                 else
@@ -78,7 +78,8 @@
 
         public ulong Address { get; set; }
 
-        public FractalHeapId FractalHeapId { get; set; }
+// TODO: implement this
+        // public FractalHeapId FractalHeapId { get; set; }
 
         #endregion
     }

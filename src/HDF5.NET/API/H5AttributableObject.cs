@@ -14,8 +14,6 @@
 
         #endregion
 
-#warning Add File Property?
-
         #region Methods
 
         /// <summary>

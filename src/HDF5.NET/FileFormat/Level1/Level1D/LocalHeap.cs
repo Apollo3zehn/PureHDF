@@ -7,7 +7,7 @@ namespace HDF5.NET
         #region Fields
 
         private byte _version;
-        private byte[] _data;
+        private byte[]? _data;
 
         #endregion
 

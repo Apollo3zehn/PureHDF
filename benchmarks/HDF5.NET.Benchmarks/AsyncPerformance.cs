@@ -5,7 +5,7 @@ using HDF5.NET;
 
 namespace Benchmark
 {
-#warning There are many GC Gen 0 .. Gen 2 collections in this benchmark. Why? Create more benchmarks to find the reason.
+// TODO: There are many GC Gen 0 .. Gen 2 collections in this benchmark. Why? Create more benchmarks to find the reason.
 
     [SimpleJob(RuntimeMoniker.Net70)]
     [MemoryDiagnoser]

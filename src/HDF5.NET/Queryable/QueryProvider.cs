@@ -106,7 +106,7 @@ namespace HDF5.NET
 
         private static string? GetDebugView(Expression expression)
         {
-            if (expression == null)
+            if (expression is null)
                 return null;
 
             var propertyInfo = typeof(Expression)

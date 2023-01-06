@@ -107,7 +107,8 @@ namespace HDF5.NET
 
         public byte ArrayOffsetsSize { get; private set; }
 
-        public ExtensibleArraySecondaryBlockInformation[] SecondaryBlockInfos { get; private set; }
+        // Initialized in Initialize()
+        public ExtensibleArraySecondaryBlockInformation[] SecondaryBlockInfos { get; private set; } = default!;
 
         #endregion
 

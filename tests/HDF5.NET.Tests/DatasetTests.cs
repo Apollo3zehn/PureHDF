@@ -240,11 +240,11 @@ namespace HDF5.NET.Tests.Reading
                 {
                     var dataset = (H5Dataset)dereferenced[i];
                     var expected = (Array)TestData.NumericalData[i][1];
-                    var elementType = expected.GetType().GetElementType();
+                    var elementType = expected.GetType().GetElementType()!;
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
-                    var generic = method.MakeGenericMethod(elementType);
-                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected });
+                    var generic = method!.MakeGenericMethod(elementType);
+                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected })!;
 
                     Assert.True(result);
                 }
@@ -268,7 +268,7 @@ namespace HDF5.NET.Tests.Reading
                 root.Context.Reader.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
 
                 // H5Rint.c (H5R__get_region)
-#warning use more structs?
+// TODO: use more structs?
                 var globalHeapId = new GlobalHeapId(root.Context.Superblock)
                 {
                     CollectionAddress = reference.CollectionAddress,
@@ -671,9 +671,9 @@ namespace HDF5.NET.Tests.Reading
 //        [Fact]
 //        public void CanReadDataset_Virtual()
 //        {
-//#warning Check AddVirtualDataset, is extra path variable required?
-//#warning What about datasetAccess? Is it exactly equal to externalPrefix?
-//#warning reading Vds Global Heap is not yet fully working
+//// TODO: Check AddVirtualDataset, is extra path variable required?
+//// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?
+//// TODO: reading Vds Global Heap is not yet fully working
 
 //            TestUtils.RunForAllVersions(version =>
 //            {

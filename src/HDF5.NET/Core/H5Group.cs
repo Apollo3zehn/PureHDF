@@ -423,7 +423,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-#warning duplicate
+// TODO: duplicate3_of_3
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new LinkMessage(reader, Context.Superblock));
@@ -452,11 +452,14 @@ namespace HDF5.NET
             return linkMessage.LinkInfo switch
             {
                 HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
-                SoftLinkInfo soft => new SymbolicLink(linkMessage, this).GetTarget(linkAccess, useAsync: default),
+                SoftLinkInfo soft => new SymbolicLink(linkMessage, this)
+                    .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
-                ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess, useAsync: Context.Reader.SafeFileHandle.IsAsync),
+                ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
+                    .GetTarget(linkAccess, useAsync: Context.Reader.SafeFileHandle is null ? false : Context.Reader.SafeFileHandle.IsAsync),
 #else
-                ExternalLinkInfo external => new SymbolicLink(linkMessage, this).GetTarget(linkAccess, useAsync: default),
+                ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
+                    .GetTarget(linkAccess, useAsync: default),
 #endif
                 
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")

@@ -6,7 +6,7 @@
     {
         #region Records
 
-        private record ChunkInfo(DateTime LastAccess, Memory<byte> Chunk)
+        private record ChunkInfo(Memory<byte> Chunk)
         {
             public DateTime LastAccess { get; set; }
         }
@@ -34,12 +34,14 @@
         // https://stackoverflow.com/questions/14663168/an-integer-array-as-a-key-for-dictionary
         private class ArrayEqualityComparer : IEqualityComparer<ulong[]>
         {
-            public bool Equals(ulong[] x, ulong[] y)
+            public bool Equals(ulong[]? x, ulong[]? y)
             {
+                if (x is null || y is null)
+                    return x is null && y is null;
+
                 if (x.Length != y.Length)
-                {
                     return false;
-                }
+
                 for (int i = 0; i < x.Length; i++)
                 {
                     if (x[i] != y[i])
@@ -47,6 +49,7 @@
                         return false;
                     }
                 }
+
                 return true;
             }
 

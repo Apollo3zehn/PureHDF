@@ -32,9 +32,6 @@ namespace HDF5.NET
             if (chunkCacheFactory is null)
                 chunkCacheFactory = Dataset.File.ChunkCacheFactory;
 
-            if (chunkCacheFactory is null)
-                chunkCacheFactory = H5File.DefaultChunkCacheFactory;
-
             _chunkCache = chunkCacheFactory();
 
             _indexAddressIsUndefined = dataset.Context.Superblock.IsUndefinedAddress(dataset.InternalDataLayout.Address);
@@ -44,25 +41,27 @@ namespace HDF5.NET
 
         #region Properties
 
-        public ulong[] RawChunkDims { get; private set; }
+        // these properties will all be initialized in Initialize()
 
-        public ulong[] ChunkDims { get; private set; }
+        public ulong[] RawChunkDims { get; private set; } = default!;
+
+        public ulong[] ChunkDims { get; private set; } = default!;
 
         public byte ChunkRank { get; private set; }
 
         public ulong ChunkByteSize { get; private set; }
 
-        public ulong[] Dims { get; private set; }
+        public ulong[] Dims { get; private set; } = default!;
 
-        public ulong[] MaxDims { get; private set; }
+        public ulong[] MaxDims { get; private set; } = default!;
 
-        public ulong[] ScaledDims { get; private set; }
+        public ulong[] ScaledDims { get; private set; } = default!;
 
-        public ulong[] ScaledMaxDims { get; private set; }
+        public ulong[] ScaledMaxDims { get; private set; } = default!;
 
-        public ulong[] DownChunkCounts { get; private set; }
+        public ulong[] DownChunkCounts { get; private set; } = default!;
 
-        public ulong[] DownMaxChunkCounts { get; private set; }
+        public ulong[] DownMaxChunkCounts { get; private set; } = default!;
 
         public ulong TotalChunkCount { get; private set; }
 
@@ -168,7 +167,7 @@ namespace HDF5.NET
         {
             var buffer = new byte[ChunkByteSize];
 
-#warning This way, fill values will become part of the cache
+// TODO: This way, fill values will become part of the cache
             if (_indexAddressIsUndefined)
             {
                 if (Dataset.InternalFillValue.Value is not null)

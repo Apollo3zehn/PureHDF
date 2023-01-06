@@ -167,7 +167,7 @@ namespace HDF5.NET
             if (currentNodePointer.RecordCount == 0)
                 return false;
 
-#warning Optimizations missing.
+// TODO: Optimizations missing.
 
             /* Current depth of the tree */
             var depth = Depth;
@@ -242,7 +242,7 @@ namespace HDF5.NET
                     result = leafNode.Records[index];
                     return true;
 
-#warning Optimizations missing.
+// TODO: Optimizations missing.
                 }
             }
 

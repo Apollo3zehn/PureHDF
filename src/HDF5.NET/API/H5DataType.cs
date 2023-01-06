@@ -1,9 +1,15 @@
 ﻿namespace HDF5.NET
 {
+    /// <summary>
+    /// An HDF5 data type.
+    /// </summary>
     public partial class H5DataType
     {
         #region Types
 
+        /// <summary>
+        /// The fixed-point data type.
+        /// </summary>
         public class FixedPointType
         {
             private FixedPointBitFieldDescription _bitField;
@@ -19,9 +25,15 @@
                 IsSigned = _bitField.IsSigned;
             }
 
+            /// <summary>
+            /// Gets a boolean which indicates if the data type is signed.
+            /// </summary>
             public bool IsSigned { get; }
         }
 
+        /// <summary>
+        /// The floating-point data type.
+        /// </summary>
         public class FloatingPointType
         {
             private FloatingPointBitFieldDescription _bitField;
@@ -36,6 +48,9 @@
             }
         }
 
+        /// <summary>
+        /// The string data type.
+        /// </summary>
         public class StringType
         {
             private StringBitFieldDescription _bitField;
@@ -47,6 +62,9 @@
             }
         }
 
+        /// <summary>
+        /// The bitfield data type.
+        /// </summary>
         public class BitFieldType
         {
             private BitFieldBitFieldDescription _bitField;
@@ -61,6 +79,9 @@
             }
         }
 
+        /// <summary>
+        /// The opaque data type.
+        /// </summary>
         public class OpaqueType
         {
             private OpaqueBitFieldDescription _bitField;
@@ -75,8 +96,17 @@
             }
         }
 
+        /// <summary>
+        /// The compound data type.
+        /// </summary>
         public class CompoundType
         {
+            /// <summary>
+            /// A compound member.
+            /// </summary>
+            /// <param name="Name">The member name.</param>
+            /// <param name="Offset">The offset of the member in the parent compound data type.</param>
+            /// <param name="Type">The member data type.</param>
             public record CompoundMember(
                 string Name,
                 int Offset,
@@ -101,9 +131,15 @@
                     .ToArray();
             }
 
+            /// <summary>
+            /// Gets an array of members.
+            /// </summary>
             public CompoundMember[] Members { get; }
         }
 
+        /// <summary>
+        /// The reference data type.
+        /// </summary>
         public class ReferenceType
         {
             private ReferenceBitFieldDescription _bitField;
@@ -115,6 +151,9 @@
             }
         }
 
+        /// <summary>
+        /// The enumeration data type.
+        /// </summary>
         public class EnumerationType
         {
             private EnumerationBitFieldDescription _bitField;
@@ -129,6 +168,9 @@
             }
         }
 
+        /// <summary>
+        /// The variable-length data type.
+        /// </summary>
         public class VariableLengthType
         {
             private VariableLengthBitFieldDescription _bitField;
@@ -143,6 +185,9 @@
             }
         }
 
+        /// <summary>
+        /// The array data type.
+        /// </summary>
         public class ArrayType
         {
             private ArrayBitFieldDescription _bitField;
@@ -158,32 +203,29 @@
                 BaseType = new H5DataType(_property.BaseType);
             }
 
+            /// <summary>
+            /// Gets the base data type.
+            /// </summary>
             public H5DataType BaseType { get; }
         }
 
         #endregion
 
-        #region Fields
-
-        private FixedPointType _fixedPoint;
-        private FloatingPointType _floatingPoint;
-        private StringType _string;
-        private BitFieldType _bitField;
-        private OpaqueType _opaque;
-        private CompoundType _compound;
-        private ReferenceType _reference;
-        private EnumerationType _enumeration;
-        private VariableLengthType _variableLength;
-        private ArrayType _array;
-
-        #endregion
-
         #region Properties
 
+        /// <summary>
+        /// Gets the data type class.
+        /// </summary>
         public H5DataTypeClass Class => (H5DataTypeClass)_dataType.Class;
 
+        /// <summary>
+        /// Gets the size of the data type in bytes.
+        /// </summary>
         public int Size => (int)_dataType.Size;
 
+        /// <summary>
+        /// Gets the fixed-point data type.
+        /// </summary>
         public FixedPointType FixedPoint
         {
             get
@@ -203,6 +245,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the floating-point data type.
+        /// </summary>
         public FloatingPointType FloatingPoint
         {
             get
@@ -222,6 +267,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the string data type.
+        /// </summary>
         public StringType String
         {
             get
@@ -240,6 +288,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the bitfield data type.
+        /// </summary>
         public BitFieldType BitField
         {
             get
@@ -259,6 +310,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the opaque data type.
+        /// </summary>
         public OpaqueType Opaque
         {
             get
@@ -278,6 +332,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the compound data type.
+        /// </summary>
         public CompoundType Compound
         {
             get
@@ -297,6 +354,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the reference data type.
+        /// </summary>
         public ReferenceType Reference
         {
             get
@@ -314,6 +374,10 @@
                 return _reference;
             }
         }
+
+        /// <summary>
+        /// Gets the enumeration data type.
+        /// </summary>
 
         public EnumerationType Enumeration
         {
@@ -334,6 +398,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the variable-length data type.
+        /// </summary>
         public VariableLengthType VariableLength
         {
             get
@@ -353,6 +420,9 @@
             }
         }
 
+        /// <summary>
+        /// Gets the array data type.
+        /// </summary>
         public ArrayType Array
         {
             get

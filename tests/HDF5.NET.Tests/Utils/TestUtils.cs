@@ -593,9 +593,10 @@ namespace HDF5.NET.Tests
             foreach (var entry in TestData.NumericalData)
             {
                 var attributeData = (Array)entry[1];
+                
                 var type = attributeData
                     .GetType()
-                    .GetElementType();
+                    .GetElementType()!;
 
                 var typeId = TestUtils.GetHdfTypeIdFromType(type);
 
@@ -847,7 +848,7 @@ namespace HDF5.NET.Tests
                 }
             }
 
-            res = H5T.close(typeIdVar);
+            res = H5T.close(typeIdVar_spacepad);
 
             // variable length string attribute (UTF8)
             var typeIdVarUTF8 = H5T.copy(H5T.C_S1);
@@ -998,7 +999,7 @@ namespace HDF5.NET.Tests
             TestUtils.Add(container, fileId, groupName, elementName, typeId, data, dims0, dims0, cpl, apl);
         }
 
-        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong[] dims0, ulong[] dims1 = null, long cpl = 0, long apl = 0)
+        public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
             where T : unmanaged
         {
             fixed (void* dataPtr = data)
@@ -1013,7 +1014,7 @@ namespace HDF5.NET.Tests
             TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl, apl);
         }
 
-        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[] dims1 = null, long cpl = 0, long apl = 0)
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
         {
             long res;
 

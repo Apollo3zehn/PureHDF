@@ -1,9 +1,17 @@
 ﻿namespace HDF5.NET
 {
+    /// <summary>
+    /// A simple chunk cache.
+    /// </summary>
     public partial class SimpleChunkCache : IChunkCache
     {
         #region Constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SimpleChunkCache"/> instance.
+        /// </summary>
+        /// <param name="chunkSlotCount">The number of chunks that can be hold in the cache at the same time.</param>
+        /// <param name="byteCount">The maximum size of the chunk cache in bytes.</param>
         public SimpleChunkCache(int chunkSlotCount = 521, ulong byteCount = 1 * 1024 * 1024/*, double w0 = 0.75*/)
         {
             if (chunkSlotCount < 0)
@@ -22,18 +30,31 @@
 
         #region Properties
 
+        /// <summary>
+        /// Gets the number of chunks that can be hold in the cache at the same time.
+        /// </summary>
         public int ChunkSlotCount { get; init; }
 
+        /// <summary>
+        /// Gets the number of chunk slots that have already been consumed.
+        /// </summary>
         public int ConsumedSlots => _chunkInfoMap.Count;
 
+        /// <summary>
+        /// Gets the maximum size of the chunk cache in bytes.
+        /// </summary>
         public ulong ByteCount { get; init; }
 
+        /// <summary>
+        /// Gets the number of consumed bytes of the chunk cache.
+        /// </summary>
         public ulong ConsumedBytes { get; private set; }
 
         #endregion
 
         #region Methods
 
+        /// <inheritdoc />
         public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkLoader)
         {
             if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
@@ -43,7 +64,7 @@
             else
             {
                 var buffer = await chunkLoader().ConfigureAwait(false);
-                chunkInfo = new ChunkInfo(LastAccess: DateTime.Now, buffer);
+                chunkInfo = new ChunkInfo(buffer) { LastAccess = DateTime.Now };
                 var chunk = chunkInfo.Chunk;
 
                 if ((ulong)chunk.Length <= ByteCount)

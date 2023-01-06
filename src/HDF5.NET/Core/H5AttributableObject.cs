@@ -107,7 +107,7 @@ namespace HDF5.NET
 
             foreach (var record in records)
             {
-#warning duplicate1
+// TODO: duplicate1_of_3
                 using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                 var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                 var message = heapId.Read(reader => new AttributeMessage(Context, Header), ref record01Cache);
@@ -141,7 +141,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-#warning duplicate
+// TODO: duplicate2_of_3
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new AttributeMessage(Context, Header));

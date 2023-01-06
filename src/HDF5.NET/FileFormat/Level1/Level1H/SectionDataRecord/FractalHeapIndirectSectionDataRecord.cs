@@ -7,7 +7,7 @@
         public FractalHeapIndirectSectionDataRecord(H5BinaryReader reader) : base(reader)
         {
             // fractal heap indirect block offset
-#warning implement this correctly
+// TODO: implement this correctly
             //FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
 
             // block start row

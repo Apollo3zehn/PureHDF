@@ -239,7 +239,10 @@ namespace HDF5.NET
 
                 // relative to this file
                 var filePrefix = Path.GetDirectoryName(file.Path);
-                var fileResult = PathCombine(filePrefix, filePath);
+
+                var fileResult = filePrefix is null
+                    ? filePath
+                    : PathCombine(filePrefix, filePath);
 
                 if (File.Exists(fileResult))
                     return fileResult;
@@ -286,7 +289,10 @@ namespace HDF5.NET
                 if (!string.IsNullOrWhiteSpace(datasetAccess.ExternalFilePrefix))
                 {
                     var propPrefix = datasetAccess.ExternalFilePrefix;
-                    var propResult = PathCombine(propPrefix, filePath);
+                    
+                    var propResult = propPrefix is null
+                        ? filePath
+                        : PathCombine(propPrefix, filePath);
 
                     return propResult;
                 }

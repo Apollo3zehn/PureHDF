@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning OK like this?
+// TODO: OK like this?
         private Superblock _superblock;
         private byte _version;
 

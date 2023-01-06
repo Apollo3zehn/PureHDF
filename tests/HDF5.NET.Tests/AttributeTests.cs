@@ -236,11 +236,11 @@ namespace HDF5.NET.Tests.Reading
                 {
                     var dataset = (H5Dataset)dereferenced[i];
                     var expected = (Array)TestData.NumericalData[i][1];
-                    var elementType = expected.GetType().GetElementType();
+                    var elementType = expected.GetType().GetElementType()!;
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
-                    var generic = method.MakeGenericMethod(elementType);
-                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected });
+                    var generic = method!.MakeGenericMethod(elementType);
+                    var result = (bool)generic.Invoke(null, new object[] { dataset, expected })!;
 
                     Assert.True(result);
                 }

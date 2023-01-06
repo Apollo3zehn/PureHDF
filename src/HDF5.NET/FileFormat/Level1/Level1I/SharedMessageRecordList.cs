@@ -14,7 +14,7 @@ namespace HDF5.NET
 
             // share message records
             SharedMessageRecords = new List<SharedMessageRecord>();
-#warning how to know how many?
+// TODO: how to know how many?
 
             // checksum
             Checksum = reader.ReadUInt32();

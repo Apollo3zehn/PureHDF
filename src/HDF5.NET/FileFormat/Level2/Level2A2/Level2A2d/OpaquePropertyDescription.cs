@@ -10,7 +10,7 @@
                 .ReadFixedLengthString(reader, tagByteLength)
                 .TrimEnd('\0');
 
-#warning How to avoid the appended '\0'? Is this caused by C# string passed to HDF5 lib?
+// TODO: How to avoid the appended '\0'? Is this caused by C# string passed to HDF5 lib?
         }
 
         #endregion

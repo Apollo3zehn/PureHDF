@@ -52,7 +52,7 @@ namespace HDF5.NET
                 /* process slice */
                 while (remaining > 0)
                 {
-#warning Performance issue.
+// TODO: Performance issue.
                     var scaledOffsets = new ulong[rank];
                     var chunkOffsets = new ulong[rank];
 
@@ -137,7 +137,7 @@ namespace HDF5.NET
                 var sourceStep = sourceWalker.Current;
 
                 if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk) /* or the chunk has changed */)
+                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
                 {
                     sourceBuffer = await copyInfo.GetSourceBufferAsync!(sourceStep.Chunk).ConfigureAwait(false);
                     lastSourceChunk = sourceStep.Chunk;
@@ -159,7 +159,7 @@ namespace HDF5.NET
                             throw new FormatException("The target walker stopped early.");
 
                         if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                            !targetStep.Chunk.SequenceEqual(lastTargetChunk) /* or the chunk has changed */)
+                            !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
                         {
                             targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
                             lastTargetChunk = targetStep.Chunk;
@@ -205,7 +205,7 @@ namespace HDF5.NET
                 var sourceStep = sourceWalker.Current;
 
                 if (sourceStream is null /* if stream not assigned yet */ ||
-                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk) /* or the chunk has changed */)
+                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
                 {
                     sourceStream = copyInfo.GetSourceStream!(sourceStep.Chunk);
                     lastSourceChunk = sourceStep.Chunk;
@@ -226,7 +226,7 @@ namespace HDF5.NET
                             throw new FormatException("The target walker stopped early.");
 
                         if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                            !targetStep.Chunk.SequenceEqual(lastTargetChunk) /* or the chunk has changed */)
+                            !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
                         {
                             targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
                             lastTargetChunk = targetStep.Chunk;
