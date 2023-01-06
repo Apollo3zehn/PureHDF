@@ -1,11 +1,20 @@
 ﻿namespace HDF5.NET
 {
+    /// <summary>
+    /// An HDF5 data layout.
+    /// </summary>
     public partial class H5DataLayout
     {
         #region Properties
 
+        /// <summary>
+        /// Gets the data layout class.
+        /// </summary>
         public H5DataLayoutClass Class => (H5DataLayoutClass)_dataLayout.LayoutClass;
 
+        /// <summary>
+        /// Gets the chunk dimensions.
+        /// </summary>
         public ulong[] ChunkDimensions
         {
             get
