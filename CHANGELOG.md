@@ -1,3 +1,9 @@
+## v1.0.0-alpha.21 - 2023-01-06
+
+### Features
+- Async read methods added.
+- Doc strings added on all public members for better intellisense support.
+
 ## v1.0.0-alpha.20 - 2023-01-03
 
 ### Features

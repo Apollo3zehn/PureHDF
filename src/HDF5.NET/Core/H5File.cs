@@ -2,8 +2,7 @@
 {
     partial class H5File
     {
-
-#warning K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
+// TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
         #region Fields
 
         private bool _deleteOnClose;

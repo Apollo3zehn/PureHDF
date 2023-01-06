@@ -1,19 +1,40 @@
 namespace HDF5.NET
 {
+    /// <summary>
+    /// A hyperslab is a selection of elements from a hyper rectangle.
+    /// </summary>
     public partial class HyperslabSelection : Selection
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank 1. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+        /// </summary>
+        /// <param name="start">The start coordinate of the block.</param>
+        /// <param name="block">The block size.</param>
         public HyperslabSelection(ulong start, ulong block)
             : this(rank: 1, new ulong[] { start }, new ulong[] { block })
         {
             //
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank 1. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+        /// </summary>
+        /// <param name="start">The start coordinate of the block.</param>
+        /// <param name="stride">The number of elements to separate each block to be selected.</param>
+        /// <param name="count">The number of blocks to select.</param>
+        /// <param name="block">The block size.</param>
         public HyperslabSelection(ulong start, ulong stride, ulong count, ulong block)
             : this(rank: 1, new ulong[] { start }, new ulong[] { stride }, new ulong[] { count }, new ulong[] { block })
         {
             //
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+        /// </summary>
+        /// <param name="rank">The rank of the selection.</param>
+        /// <param name="starts">The start coordinate of the block along each dimension.</param>
+        /// <param name="blocks">The block size along each dimension.</param>
         public HyperslabSelection(int rank, ulong[] starts, ulong[] blocks)
             : this(
                 rank, 
@@ -25,6 +46,14 @@ namespace HDF5.NET
             //
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+        /// </summary>
+        /// <param name="rank"></param>
+        /// <param name="starts">The start coordinate of the block along each dimension.</param>
+        /// <param name="strides">The number of elements to separate each block to be selected along each dimension.</param>
+        /// <param name="counts">The number of blocks to select along each dimension.</param>
+        /// <param name="blocks">The block size along each dimension.</param>
         public HyperslabSelection(int rank, ulong[] starts, ulong[] strides, ulong[] counts, ulong[] blocks)
         {
             if (starts.Length != rank || strides.Length != rank || counts.Length != rank || blocks.Length != rank)
@@ -58,18 +87,23 @@ namespace HDF5.NET
                 : 0;
         }
 
+        /// <summary>
+        /// Gets the rank of the selection.
+        /// </summary>
         public int Rank { get; }
 
-        public IReadOnlyList<ulong> Starts => StartsField;
+        internal IReadOnlyList<ulong> Starts => StartsField;
 
-        public IReadOnlyList<ulong> Strides => StridesField;
+        internal IReadOnlyList<ulong> Strides => StridesField;
 
-        public IReadOnlyList<ulong> Counts => CountsField;
+        internal IReadOnlyList<ulong> Counts => CountsField;
 
-        public IReadOnlyList<ulong> Blocks => BlocksField;
+        internal IReadOnlyList<ulong> Blocks => BlocksField;
 
+        /// <inheritdoc />
         public override ulong TotalElementCount { get; }
 
+        /// <inheritdoc />
         public override IEnumerable<Step> Walk(ulong[] limits)
         {
             /* Validate arrays */

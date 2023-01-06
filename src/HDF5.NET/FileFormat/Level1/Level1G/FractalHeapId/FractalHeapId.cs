@@ -21,7 +21,7 @@ namespace HDF5.NET
 
             // offset and length Size (for managed objects fractal heap id)
             var offsetSize = (ulong)Math.Ceiling(header.MaximumHeapSize / 8.0);
-#warning Is -1 correct?
+// TODO: Is -1 correct?
             var lengthSize = H5Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
 
             // H5HF.c (H5HF_op)
@@ -46,7 +46,7 @@ namespace HDF5.NET
 
         public T Read<T>(Func<H5BinaryReader, T> func)
         {
-#warning Is there a better way?
+// TODO: Is there a better way?
             List<BTree2Record01>? cache = null;
             return Read(func, ref cache);
         }

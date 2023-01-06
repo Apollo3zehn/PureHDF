@@ -208,7 +208,7 @@ namespace HDF5.NET.Tests.Reading
 
             if (environment == "single")
             {
-                environment = Path.GetDirectoryName(externalFilePath);
+                environment = Path.GetDirectoryName(externalFilePath)!;
                 Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", environment);
             }
             else if (environment == "multiple")
@@ -219,7 +219,7 @@ namespace HDF5.NET.Tests.Reading
             }
 
             if (prefix == "yes")
-                prefix = Path.GetDirectoryName(externalFilePath);
+                prefix = Path.GetDirectoryName(externalFilePath)!;
 
             long res;
 
@@ -258,7 +258,7 @@ namespace HDF5.NET.Tests.Reading
 
             // Assert
             Assert.NotNull(link);
-            Assert.Equal("Unable to open external file 'not-existing.h5'.", link.Reason.Message);
+            Assert.Equal("Unable to open external file 'not-existing.h5'.", link!.Reason!.Message);
         }
 
         [Fact]

@@ -11,9 +11,7 @@ namespace HDF5.NET.Tests
             int status = 0;
             uint clevel = 5;
             uint doshuffle = 1;
-            byte[] resultBuffer = null;
-
-            CompressorCodes compcode;
+            byte[]? resultBuffer = default;
 
             /* Filter params that are always set */
             var typesize = parameters[2];                   /* The datatype size */
@@ -28,7 +26,7 @@ namespace HDF5.NET.Tests
 
             if (parameters.Length >= 7)
             {
-                compcode = (CompressorCodes)parameters[6];  /* The Blosc compressor used */
+                var compcode = (CompressorCodes)parameters[6];  /* The Blosc compressor used */
 
                 /* Check that we actually have support for the compressor code */
                 var namePtr = IntPtr.Zero;

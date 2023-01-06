@@ -6,13 +6,14 @@
 
         private int _unlimitedDim;
 
-        private ulong[] _swizzledChunkDims;
-        private ulong[] _swizzledDownChunkCounts;
-        private ulong[] _swizzledDownMaxChunkCounts;
+        // these fields will all be initialized in Initialize()
+        private ulong[] _swizzledChunkDims = default!;
+        private ulong[] _swizzledDownChunkCounts = default!;
+        private ulong[] _swizzledDownMaxChunkCounts = default!;
 
         private ExtensibleArrayHeader? _header;
 
-#warning This is necessary because generic version cannot be stored here without non-generic base class. Solution would be a generic thread safe per-dataset/file cache
+// TODO: This is necessary because generic version cannot be stored here without non-generic base class. Solution would be a generic thread safe per-dataset/file cache
         private object? _indexBlock;
 
         #endregion
@@ -148,53 +149,53 @@
             else
             {
                 /* Look up the array metadata containing the element we want to set */
-                return LookupElement(index, decode);
+                return LookupElement(_header, index, decode);
             }
         }
 
-        private T? LookupElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
             var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
 
             /* Check if we should create the index block */
-            if (Dataset.Context.Superblock.IsUndefinedAddress(_header.IndexBlockAddress))
+            if (Dataset.Context.Superblock.IsUndefinedAddress(header.IndexBlockAddress))
                 return null;
 
             /* Protect index block */
             if (_indexBlock is null)
             {
-                Dataset.Context.Reader.Seek((long)_header.IndexBlockAddress, SeekOrigin.Begin);
+                Dataset.Context.Reader.Seek((long)header.IndexBlockAddress, SeekOrigin.Begin);
 
                 _indexBlock = new ExtensibleArrayIndexBlock<T>(
                     Dataset.Context.Reader, 
                     Dataset.Context.Superblock,
-                    _header, 
+                    header, 
                     decode);
             }
 
             var indexBlock = (ExtensibleArrayIndexBlock<T>)_indexBlock;
 
             /* Check if element is in index block */
-            if (index < _header.IndexBlockElementsCount)
+            if (index < header.IndexBlockElementsCount)
             {
                 return indexBlock.Elements[index];
             }
             else
             {
                 /* Get super block index where element is located */
-                var secondaryBlockIndex = _header.ComputeSecondaryBlockIndex(index);
+                var secondaryBlockIndex = header.ComputeSecondaryBlockIndex(index);
 
                 /* Adjust index to offset in super block */
-                var elementIndex = index - (_header.IndexBlockElementsCount + _header.SecondaryBlockInfos[secondaryBlockIndex].ElementStartIndex);
+                var elementIndex = index - (header.IndexBlockElementsCount + header.SecondaryBlockInfos[secondaryBlockIndex].ElementStartIndex);
 
                 /* Check for data block containing element address in the index block */
                 if (secondaryBlockIndex < indexBlock.SecondaryBlockDataBlockAddressCount)
                 {
                     /* Compute the data block index in index block */
                     var dataBlockIndex =
-                        _header.SecondaryBlockInfos[secondaryBlockIndex].DataBlockStartIndex +
-                        elementIndex / _header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
+                        header.SecondaryBlockInfos[secondaryBlockIndex].DataBlockStartIndex +
+                        elementIndex / header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     /* Check if the data block has been allocated on disk yet */
                     if (Dataset.Context.Superblock.IsUndefinedAddress(indexBlock.DataBlockAddresses[dataBlockIndex]))
@@ -202,17 +203,17 @@
 
                     /* Protect data block */
                     Dataset.Context.Reader.Seek((long)indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
-                    var elementsCount = _header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
+                    var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     var dataBlock = new ExtensibleArrayDataBlock<T>(
                         Dataset.Context.Reader,
                         Dataset.Context.Superblock,
-                        _header,
+                        header,
                         elementsCount,
                         decode);
 
                     /* Adjust index to offset in data block */
-                    elementIndex %= _header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
+                    elementIndex %= header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     /* Set 'thing' info to refer to the data block */
                     return dataBlock.Elements[elementIndex];
@@ -232,7 +233,7 @@
                     var secondaryBlock = new ExtensibleArraySecondaryBlock(
                         Dataset.Context.Reader,
                         Dataset.Context.Superblock, 
-                        _header, 
+                        header, 
                         secondaryBlockIndex);
 
                     /* Compute the data block index in super block */
@@ -249,22 +250,22 @@
                     if (secondaryBlock.DataBlockPageCount > 0)
                     {
                         /* Compute page index */
-                        var pageIndex = elementIndex / _header.DataBlockPageElementsCount;
+                        var pageIndex = elementIndex / header.DataBlockPageElementsCount;
 
                         /* Compute 'page init' index */
                         var pageInitIndex = dataBlockIndex * secondaryBlock.DataBlockPageCount + pageIndex;
 
                         /* Adjust index to offset in data block page */
-                        elementIndex %= _header.DataBlockPageElementsCount;
+                        elementIndex %= header.DataBlockPageElementsCount;
 
                         /* Compute data block page address */
                         var dataBlockPrefixSize =
                             // H5EA_METADATA_PREFIX_SIZE
                             4UL + 1UL + 1UL + 4UL +
                             // H5EA_DBLOCK_PREFIX_SIZE
-                            Dataset.Context.Superblock.OffsetsSize + _header.ArrayOffsetsSize +
+                            Dataset.Context.Superblock.OffsetsSize + header.ArrayOffsetsSize +
                             // H5EA_DBLOCK_SIZE
-                            secondaryBlock.ElementCount * _header.ElementSize +    /* Elements in data block */
+                            secondaryBlock.ElementCount * header.ElementSize +      /* Elements in data block */
                             secondaryBlock.DataBlockPageCount * 4;                  /* Checksum for each page */
 
                         var dataBlockPageAddress = secondaryBlock.DataBlockAddresses[dataBlockIndex] + dataBlockPrefixSize +
@@ -282,7 +283,7 @@
 
                         var dataBlockPage = new DataBlockPage<T>(
                             Dataset.Context.Reader,
-                            _header.DataBlockPageElementsCount, 
+                            header.DataBlockPageElementsCount, 
                             decode);
 
                         /* Set 'thing' info to refer to the data block page */
@@ -296,7 +297,7 @@
                         var dataBlock = new ExtensibleArrayDataBlock<T>(
                             Dataset.Context.Reader,
                             Dataset.Context.Superblock,
-                            _header,
+                            header,
                             secondaryBlock.ElementCount,
                             decode);
 

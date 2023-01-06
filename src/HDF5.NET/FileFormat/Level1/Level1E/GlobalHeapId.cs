@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal class GlobalHeapId : FileBlock
+    internal class GlobalHeapId
     {
         #region Fields
 
@@ -11,12 +11,11 @@
         #region Constructors
 
         public GlobalHeapId(Superblock superblock)
-            : base(null)
         {
             _superblock = superblock;
         }
 
-        public GlobalHeapId(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapId(H5BinaryReader reader, Superblock superblock)
         {
             _superblock = superblock;
 
@@ -35,7 +34,7 @@
         {
             get
             {
-#warning Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
+// TODO: Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
                 var reader = _superblock.Reader;
                 return H5Cache.GetGlobalHeapObject(reader, _superblock, CollectionAddress);
             }

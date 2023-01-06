@@ -171,7 +171,7 @@ namespace HDF5.NET
                         (DatatypeMessageClass.String, _) 
                             => ReadString(memberType, slicedData, superblock, oneElementStringArray)[0],
                             
-#warning Bitfield padding type is not being applied here as well as in the normal Read<T> method.
+// TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.BitField, _) 
                             => slicedData.ToArray(),
 
@@ -181,13 +181,13 @@ namespace HDF5.NET
                         (DatatypeMessageClass.Compound, _) 
                             => ReadCompound(memberType, slicedData, superblock, oneElementCompountArray)[0],
 
-#warning Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
+// TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.Reference, _) 
                             => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData)[0],
 
                         /* It is difficult to avoid array allocation here */
                         (DatatypeMessageClass.Enumerated, _) 
-                            => ReadEnumerated(memberType, slicedData, superblock).GetValue(0),
+                            => (ReadEnumerated(memberType, slicedData, superblock) ?? new object[1]).GetValue(0),
 
                         (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String 
                             => ReadString(memberType, slicedData, superblock, oneElementStringArray)[0],
@@ -228,7 +228,7 @@ namespace HDF5.NET
                 (DatatypeMessageClass.String, _) 
                     => ReadString(baseType, slicedData, superblock),
 
-#warning Bitfield padding type is not being applied here as well as in the normal Read<T> method.
+// TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
                 (DatatypeMessageClass.BitField, _) 
                     => slicedData.ToArray(),
                 
@@ -238,7 +238,7 @@ namespace HDF5.NET
                 (DatatypeMessageClass.Compound, _) 
                     => ReadCompound(baseType, slicedData, superblock),
 
-#warning Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
+// TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                 (DatatypeMessageClass.Reference, _) 
                     => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData).ToArray(),
                 
@@ -434,10 +434,10 @@ namespace HDF5.NET
 #else
             var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
             var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
-            var method = typeof(RuntimeHelpers).GetMethod(name, flags);
+            var method = typeof(RuntimeHelpers).GetMethod(name, flags)!;
             var generic = method.MakeGenericMethod(type);
 
-            return (bool)generic.Invoke(null, null);
+            return (bool)generic.Invoke(null, null)!;
 #endif
         }
     }

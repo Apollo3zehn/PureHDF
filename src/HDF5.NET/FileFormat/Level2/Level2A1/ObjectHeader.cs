@@ -32,7 +32,7 @@ namespace HDF5.NET
 
         #region Methods
 
-#warning This method could als be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
+// TODO: This method could als be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
         public T DecodeMessage<T>(MessageFlags messageFlags, Func<T> decode) where T : Message
         {
             // H5OShared.h (H5O_SHARED_DECODE)
@@ -184,7 +184,7 @@ namespace HDF5.NET
             /* Check for implicit shared object header message*/
             if (message.Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
             {
-#warning Implement 
+// TODO: Implement 
                 throw new NotImplementedException("This code path is not yet implemented.");
             }
             else
@@ -195,14 +195,14 @@ namespace HDF5.NET
                      * is possible, for example, if an attribute's datatype is shared in
                      * the same object header the attribute is in.  Read the message
                      * directly. */
-#warning Implement 
+// TODO: Implement 
                     throw new NotImplementedException("This code path is not yet implemented.");
                 }
                 else
                 {
                     /* The shared message is in another object header */
 
-#warning This would greatly benefit from a caching mechanism!
+// TODO: This would greatly benefit from a caching mechanism!
                     var address = _context.Reader.BaseStream.Position;
                     _context.Reader.Seek((long)message.Address, SeekOrigin.Begin);
 

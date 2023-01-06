@@ -4,7 +4,7 @@
     {
         #region Fields
 
-#warning OK like this?
+// TODO: OK like this?
         private Superblock _superblock;
         private byte _version;
 
@@ -22,7 +22,7 @@
             // reserved
             reader.ReadBytes(3);
 
-#warning Its value must be at least as large as the value contained in the Used Slots field.
+// TODO: Its value must be at least as large as the value contained in the Used Slots field.
             // allocated slot count
             AllocatedSlotCount = reader.ReadUInt16();
 

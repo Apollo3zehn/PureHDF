@@ -37,7 +37,7 @@ namespace HDF5.NET
         private static unsafe void CopyData<T>(T[] source, void* target)
             where T : unmanaged
         {
-#warning Unsafe.CopyBlock
+// TODO: Unsafe.CopyBlock
 
             var sourceBytes = MemoryMarshal.AsBytes(source.AsSpan());
             var bytePtr = (byte*)target;

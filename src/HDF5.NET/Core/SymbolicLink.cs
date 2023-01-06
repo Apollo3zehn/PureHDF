@@ -44,7 +44,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public NamedReference GetTarget(H5LinkAccess linkAccess)
+        public NamedReference GetTarget(H5LinkAccess linkAccess, bool useAsync)
         {
             // this file
             if (string.IsNullOrWhiteSpace(ObjectPath))
@@ -63,16 +63,20 @@ namespace HDF5.NET
                     };
                 }
             }
+            
             // external file
             else
             {
                 try
                 {
                     var absoluteFilePath = H5Utils.ConstructExternalFilePath(Parent.File, Value, linkAccess);
-                    var objectPath = ObjectPath;
-                    var externalFile = H5Cache.GetH5File(Parent.Context.Superblock, absoluteFilePath);
+                    var externalFile = H5Cache.GetH5File(Parent.Context.Superblock, absoluteFilePath, useAsync: useAsync);
 
-                    return externalFile.InternalGet(objectPath, linkAccess);
+#if NETSTANDARD2_0
+                    return externalFile.InternalGet(ObjectPath!, linkAccess);
+#else
+                    return externalFile.InternalGet(ObjectPath, linkAccess);
+#endif
                 }
                 catch (Exception ex)
                 {

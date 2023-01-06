@@ -54,7 +54,7 @@
 
         private T? GetElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
         {
-            if (_header == null)
+            if (_header is null)
             {
                 Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                 _header = new FixedArrayHeader(Dataset.Context.Reader, Dataset.Context.Superblock);
@@ -62,7 +62,7 @@
 
             // H5FA.c (H5FA_get)
 
-            /* Check if the fixed array data block has been allocated on disk yet */
+            /* Check if the fixed array data block has been already allocated on disk */
             if (Dataset.Context.Superblock.IsUndefinedAddress(_header.DataBlockAddress))
             {
                 /* Call the class's 'fill' callback */
@@ -70,21 +70,21 @@
             }
             else
             {
-                return LookupElement(index, decode);
+                return LookupElement(_header, index, decode);
             }
         }
 
-        private T? LookupElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
         {
             // H5FA.c (H5FA_get)
 
             /* Get the data block */
-            Dataset.Context.Reader.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
+            Dataset.Context.Reader.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
 
             var dataBlock = new FixedArrayDataBlock<T>(
                 Dataset.Context.Reader,
                 Dataset.Context.Superblock,
-                _header,
+                header,
                 decode);
 
             /* Check for paged data block */
@@ -102,7 +102,7 @@
                     var elementIndex = index % dataBlock.ElementsPerPage;
 
                     /* Compute the address of the data block */
-                    var pageSize = dataBlock.ElementsPerPage * _header.EntrySize + 4;
+                    var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
                     var pageAddress = Dataset.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
 
                     /* Check for using last page, to set the number of elements on the page */

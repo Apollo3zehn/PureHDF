@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-#warning OK like this?
+// TODO: OK like this?
         private Superblock _superblock;
         private byte _version;
 
@@ -28,7 +28,7 @@ namespace HDF5.NET
             // free space manager header address
             FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
 
-#warning implement everything
+// TODO: implement everything
 
             // checksum
             Checksum = reader.ReadUInt32();
@@ -56,11 +56,13 @@ namespace HDF5.NET
         }
 
         public ulong FreeSpaceManagerHeaderAddress { get; set; }
-        public List<ulong> SectionRecordsCount { get; set; }
-        public List<ulong> FreeSpaceSectionSize { get; set; }
-        public List<ulong> SectionRecordOffset { get; set; } // actually it is a List<List<ulong>>
-        public List<ulong> SectionRecordType { get; set; } // actually it is a List<List<SectionType>>
-        public List<SectionDataRecord> SectionRecordData { get; set; } // actually it is a List<List<SectionDataRecord>>
+
+        // TODO: implement everything
+        // public List<ulong> SectionRecordsCount { get; set; }
+        // public List<ulong> FreeSpaceSectionSize { get; set; }
+        // public List<ulong> SectionRecordOffset { get; set; } // actually it is a List<List<ulong>>
+        // public List<ulong> SectionRecordType { get; set; } // actually it is a List<List<SectionType>>
+        // public List<SectionDataRecord> SectionRecordData { get; set; } // actually it is a List<List<SectionDataRecord>>
 
         public uint Checksum { get; set; }
 

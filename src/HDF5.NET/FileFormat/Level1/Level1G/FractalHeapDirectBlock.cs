@@ -70,7 +70,9 @@ namespace HDF5.NET
         public ulong HeapHeaderAddress { get; set; }
         public ulong BlockOffset { get; set; }
         public uint Checksum { get; set; }
-        public byte[] ObjectData { get; set; }
+
+        // TODO: Implement this.
+        // public byte[] ObjectData { get; set; }
 
         public FractalHeapHeader HeapHeader
         {

@@ -9,7 +9,7 @@ namespace HDF5.NET.BlazorBrowser.Pages
         #region Properties
 
         [Inject]
-        public AppState AppState { get; set; }
+        public AppState AppState { get; set; } = default!;
 
         #endregion
 
@@ -17,16 +17,15 @@ namespace HDF5.NET.BlazorBrowser.Pages
 
         private async Task OnInputFileChange(InputFileChangeEventArgs e)
         {
-#warning workaround, remove this
+// TODO: workaround, remove this
             var stream = new MemoryStream();
             await e.File.OpenReadStream().CopyToAsync(stream);
             stream.Seek(0, SeekOrigin.Begin);
 
-            var fileContainer = new FileContainer()
-            {
-                BrowserFile = e.File,
-                H5File = H5File.Open(stream)
-            };
+            var fileContainer = new FileContainer(
+                BrowserFile: e.File,
+                H5File: H5File.Open(stream)
+            );
 
             AppState.Files.Add(fileContainer);
         }

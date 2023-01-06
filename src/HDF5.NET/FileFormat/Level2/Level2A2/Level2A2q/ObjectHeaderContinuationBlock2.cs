@@ -17,8 +17,8 @@ namespace HDF5.NET
             var messages = ReadHeaderMessages(context, objectHeaderSize - 8, version, withCreationOrder);
             HeaderMessages.AddRange(messages);
 
-#warning H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
-#warning read gap and checksum
+// TODO: H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
+// TODO: read gap and checksum
         }
 
         #endregion

@@ -2,8 +2,17 @@
 
 namespace HDF5.NET
 {
+    /// <summary>
+    /// A helper class to convert the endianness of data using hardware acceleration if available.
+    /// </summary>
     public static class EndiannessConverterGeneric
     {
+        /// <summary>
+        /// Converts the endianness of the given source buffer into the destination buffer.
+        /// </summary>
+        /// <param name="bytesOfType">The number of bytes of the underlying data type.</param>
+        /// <param name="source">The source buffer.</param>
+        /// <param name="destination">The destination buffer.</param>
         public unsafe static void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
         {
             // Actually, only the generic algorithm requires a dedicated destination buffer.
@@ -13,7 +22,7 @@ namespace HDF5.NET
             // as simple return values would be possible, but requires a copy operation
             // from source to new destination in the hardware accelerated implementions
             // when they hand over control to the generic algorithm.
-            // Concluding, it is easier to work with independet source and destination buffers.
+            // Concluding, it is easier to work with independent source and destination buffers.
             fixed (byte* src = source, dest = destination)
             {
                 EndiannessConverterGeneric.Convert(bytesOfType, 0, source.Length, src, dest);

@@ -9,10 +9,10 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5Dataspace _space;
-        private H5DataType _type;
-        private H5DataLayout _layout;
-        private H5FillValue _fillValue;
+        private H5Dataspace? _space;
+        private H5DataType? _type;
+        private H5DataLayout? _layout;
+        private H5FillValue? _fillValue;
 
         #endregion
 
@@ -96,8 +96,6 @@ namespace HDF5.NET
         #endregion
 
         #region Private
-
-#warning use implicit cast operator for multi dim arrays? http://dontcodetired.com/blog/post/Writing-Implicit-and-Explicit-C-Conversion-Operators
 
         internal async Task<T[]?> ReadAsync<T, TReader>(
             TReader reader,

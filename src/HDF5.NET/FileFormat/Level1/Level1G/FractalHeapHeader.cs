@@ -169,8 +169,9 @@ namespace HDF5.NET
         public FilterPipelineMessage? IOFilterInfo { get; set; }
         public uint Checksum { get; set; }
 
-        public ulong[] RowBlockSizes { get; private set; }
-        public ulong[] RowBlockOffsets { get; private set; }
+        // initialized in CalculateBlockSizeTables
+        public ulong[] RowBlockSizes { get; private set; } = default!;
+        public ulong[] RowBlockOffsets { get; private set; } = default!;
 
         public uint StartingBits { get; private set; }
         public uint FirstRowBits { get; private set; }
@@ -338,7 +339,7 @@ namespace HDF5.NET
                     HugeIdsAreDirect = true;
 
                     /* Set the size of 'huge' object IDs */
-#warning Correct? Why is here not "+4"?
+// TODO: Correct? Why is here not "+4"?
                     HugeIdsSize = (byte)(_superblock.OffsetsSize + _superblock.LengthsSize + _superblock.LengthsSize);
                 }
                 else

@@ -13,7 +13,7 @@ namespace HDF5.NET
             H5Utils.ValidateSignature(signature, SharedObjectHeaderMessageTable.Signature);
 
             //
-#warning implement this correctly
+// TODO: implement this correctly
 
             // checksum
             Checksum = reader.ReadUInt32();
@@ -25,14 +25,15 @@ namespace HDF5.NET
 
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("SMTB");
 
-        public List<byte> Versions { get; set; }
-        public List<MessageTypeFlags> MessageTypeFlags { get; set; }
-        public List<uint> MinimumMessageSize { get; set; }
-        public List<ushort> ListCutoff { get; set; }
-        public List<ushort> BTree2Cutoff { get; set; }
-        public List<ushort> MessageCount { get; set; }
-        public List<ulong> IndexAddress { get; set; }
-        public List<ulong> FractalHeapAddress { get; set; }
+// TODO: implement this correctly
+        // public List<byte> Versions { get; set; }
+        // public List<MessageTypeFlags> MessageTypeFlags { get; set; }
+        // public List<uint> MinimumMessageSize { get; set; }
+        // public List<ushort> ListCutoff { get; set; }
+        // public List<ushort> BTree2Cutoff { get; set; }
+        // public List<ushort> MessageCount { get; set; }
+        // public List<ulong> IndexAddress { get; set; }
+        // public List<ulong> FractalHeapAddress { get; set; }
         public uint Checksum { get; set; }
 
         #endregion

@@ -2,13 +2,12 @@
 
 namespace HDF5.NET
 {
-    internal class H5D_Chunk4_BTree2 : 
-        H5D_Chunk4
+    internal class H5D_Chunk4_BTree2 : H5D_Chunk4
     {
         #region Fields
 
-        private BTree2Header<BTree2Record10> _btree2_no_filter;
-        private BTree2Header<BTree2Record11> _btree2_filter;
+        private BTree2Header<BTree2Record10>? _btree2_no_filter;
+        private BTree2Header<BTree2Record11>? _btree2_filter;
 
         #endregion
 
