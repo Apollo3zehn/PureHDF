@@ -5,7 +5,7 @@ using HDF5.NET;
 
 namespace Benchmark
 {
-// TODO: There are many GC Gen 0 .. Gen 2 collections in this benchmark. Why? Create more benchmarks to find the reason.
+// TODO: This benchmark does not prove that Async is actually faster. There are many GC Gen 0 .. Gen 2 collections in this benchmark. Why?
 
     [SimpleJob(RuntimeMoniker.Net70)]
     [MemoryDiagnoser]
@@ -15,8 +15,9 @@ namespace Benchmark
         private H5Dataset _dataset = default!;
         private LimitedConcurrencyLevelTaskScheduler _scheduler = default!;
 
-        private const ulong ONE_MEGABYTE = 1 * 1024 * 256; // 4 bytes per value
+        private const ulong CHUNK_SIZE = 1 * 1024 * 256; // 4 bytes per value
         private const ulong CHUNK_COUNT = 10;
+        private float[] _buffer = new float[CHUNK_SIZE];
 
         [GlobalSetup]
         public unsafe void GlobalSetup()
@@ -29,15 +30,15 @@ namespace Benchmark
                 import h5py
 
                 h5File = h5py.File('large_and_chunked.h5','w')
-                one_megabyte = 1 * 1024 * 256 # 4 bytes per value; equal to the SimpleChunkCache default size
+                chunk_size = 1 * 1024 * 256 # 4 bytes per value; equal to the SimpleChunkCache default size
                 chunk_count = 10
 
                 dataset = h5File.create_dataset(
                     name="chunked",
-                    shape=(chunk_count * one_megabyte,),
-                    chunks=(one_megabyte,))
+                    shape=(chunk_count * chunk_size,),
+                    chunks=(chunk_size,))
 
-                dataset[...] = range(0, chunk_count * one_megabyte)
+                dataset[...] = range(0, chunk_count * chunk_size)
 
             */
 
@@ -71,12 +72,12 @@ namespace Benchmark
             for (uint i = 0; i < CHUNK_COUNT; i++)
             {
                 var fileSelection = new HyperslabSelection(
-                    start: i * ONE_MEGABYTE,
-                    block: ONE_MEGABYTE
+                    start: i * CHUNK_SIZE,
+                    block: CHUNK_SIZE
                 );
 
-                var data = _dataset.Read<float>(fileSelection);
-                result += SumData(data);
+                _dataset.Read<float>(_buffer, fileSelection);
+                result += SumData(_buffer);
             }
 
             return result;
@@ -91,14 +92,14 @@ namespace Benchmark
             for (uint i = 0; i < CHUNK_COUNT; i++)
             {
                 var fileSelection = new HyperslabSelection(
-                    start: i * ONE_MEGABYTE,
-                    block: ONE_MEGABYTE
+                    start: i * CHUNK_SIZE,
+                    block: CHUNK_SIZE
                 );
 
                 var task = Task.Factory.StartNew(async () =>
                 {
-                    var data = await _dataset.ReadAsync<float>(fileSelection);
-                    var localResult = SumData(data);
+                    await _dataset.ReadAsync<float>(_buffer, fileSelection);
+                    var localResult = SumData(_buffer);
 
                     return localResult;
                 }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, _scheduler).Unwrap();
