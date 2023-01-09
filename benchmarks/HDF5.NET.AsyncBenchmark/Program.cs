@@ -1,4 +1,3 @@
-using System;
 using System.Buffers;
 using System.Diagnostics;
 using System.IO.Pipelines;
@@ -6,13 +5,12 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks.Schedulers;
 using HDF5.NET;
 
-const ulong CHUNK_SIZE = 1 * 1024 * 256; // 4 bytes per value
-const ulong CHUNK_COUNT = 1000;
+const ulong CHUNK_SIZE = 1 * 1024 * 1024 * 100 / 4; // = 256 kb 4 bytes per value
+const ulong CHUNK_COUNT = 10;
 
-const ulong SEGMENT_COUNT = 10;
-const ulong BUFFER_SIZE = CHUNK_SIZE * SEGMENT_COUNT;
+const ulong BUFFER_SIZE = CHUNK_SIZE;
 const ulong BUFFER_BYTE_SIZE = BUFFER_SIZE * sizeof(float);
-const ulong COUNT = CHUNK_COUNT / SEGMENT_COUNT;
+const ulong SEGMENT_COUNT = CHUNK_COUNT;
 
 var syncFilePath = "/tmp/HDF5.NET/sync.h5";
 var asyncFilePath = "/tmp/HDF5.NET/async.h5";
@@ -72,7 +70,7 @@ try
     var syncBuffer = Enumerable.Range(0, (int)BUFFER_SIZE).Select(value => (float)value).ToArray();
     var stopwatch_sync = Stopwatch.StartNew();
 
-    for (uint i = 0; i < COUNT; i++)
+    for (uint i = 0; i < SEGMENT_COUNT; i++)
     {
         var fileSelection = new HyperslabSelection(
             start: i * BUFFER_SIZE,
@@ -86,6 +84,12 @@ try
 
     var elapsed_sync = stopwatch_sync.Elapsed;
     Console.WriteLine($"The sync test took {elapsed_sync.TotalMilliseconds:F1} ms. The result is {syncResult}.");
+
+    Console.WriteLine("############################################################");
+    Console.WriteLine("############################################################");
+    Console.WriteLine("############################################################");
+    Console.WriteLine("############################################################");
+    Console.WriteLine("############################################################");
 
     // 4. async test
     var asyncResult = 0.0f;
@@ -106,7 +110,10 @@ try
 
     var stopwatch_async = Stopwatch.StartNew();
 
+    Console.WriteLine(PipeOptions.Default.PauseWriterThreshold);
+
     var options = new PipeOptions(
+        pauseWriterThreshold: 0,
         useSynchronizationContext: false);
 
     var pipe = new Pipe(options);
@@ -115,7 +122,7 @@ try
 
     var reading = Task.Factory.StartNew(async () =>
     {
-        for (uint i = 0; i < COUNT; i++)
+        for (uint i = 0; i < SEGMENT_COUNT; i++)
         {
             var asyncBuffer = new CastMemoryManager<byte, float>(writer.GetMemory((int)BUFFER_BYTE_SIZE)).Memory;
 
@@ -124,10 +131,15 @@ try
                 block: BUFFER_SIZE
             );
 
+            Console.WriteLine("> reading data");
             await dataset_async.ReadAsync<float>(asyncBuffer, fileSelection);
 
+            Console.WriteLine("> advance");
             writer.Advance((int)BUFFER_BYTE_SIZE);
+
+            Console.WriteLine("> flush async");
             await writer.FlushAsync();
+            Console.WriteLine("> done loop");
         }
 
         await writer.CompleteAsync();
@@ -181,6 +193,9 @@ finally
 
 float ProcessData(ReadOnlySpan<float> data)
 {
+    var sw = Stopwatch.StartNew();
+    Console.WriteLine("Start processing");
+
     var sum = 0.0f;
 
     for (int i = 0; i < data.Length; i++)
@@ -197,6 +212,8 @@ float ProcessData(ReadOnlySpan<float> data)
     {
         sum += data[i];
     }
+
+    Console.WriteLine($"Done processing after {sw.ElapsedMilliseconds:F2} ms.");
 
     return sum;
 }

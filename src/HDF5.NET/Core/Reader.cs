@@ -18,7 +18,7 @@ namespace HDF5.NET
 
     struct SyncReader : IReader
     {
-        // See notes/async.md for a thread-safety analsis.
+        // See notes/async.md for a thread-safety analysis.
         public ValueTask<int> ReadAsync(H5BinaryReader reader, Memory<byte> buffer, long offset)
         {
             if (reader.SafeFileHandle is null)
@@ -37,7 +37,7 @@ namespace HDF5.NET
             }
         }
 
-        // See notes/async.md for a thread-safety analsis.
+        // See notes/async.md for a thread-safety analysis.
         public ValueTask<int> ReadAsync(H5Stream stream, Memory<byte> buffer, long offset)
         {
             if (stream.SafeFileHandle is null)
@@ -59,7 +59,7 @@ namespace HDF5.NET
 
     struct AsyncReader : IReader
     {
-        // See notes/async.md for a thread-safety analsis.
+        // See notes/async.md for a thread-safety analysis.
         public ValueTask<int> ReadAsync(H5BinaryReader reader, Memory<byte> buffer, long offset)
         {
             if (reader.SafeFileHandle is null)
@@ -78,7 +78,7 @@ namespace HDF5.NET
             
         }
 
-        // See notes/async.md for a thread-safety analsis.
+        // See notes/async.md for a thread-safety analysis.
         public ValueTask<int> ReadAsync(H5Stream stream, Memory<byte> buffer, long offset)
         {
             if (stream.SafeFileHandle is null)

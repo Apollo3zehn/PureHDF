@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace HDF5.NET
 {
     internal record CopyInfo(

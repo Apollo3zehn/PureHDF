@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Diagnostics;
 
 namespace HDF5.NET
 {
@@ -201,7 +202,10 @@ namespace HDF5.NET
         {
             if (Dataset.InternalFilterPipeline is null)
             {
+                Console.WriteLine($"Begin async read operation.");
+                var sw = Stopwatch.StartNew();
                 await reader.ReadAsync(Dataset.Context.Reader, buffer, offset).ConfigureAwait(false);
+                Console.WriteLine($"Done async after {sw.ElapsedMilliseconds:F1} ms.");
             }
             else
             {
