@@ -6,7 +6,7 @@ namespace Benchmark
     {
         static void Main(string[] args)
         {
-            var summary = BenchmarkRunner.Run<AsyncPerformance>();
+            var summary = BenchmarkRunner.Run<InflateComparison>();
         }
     }
 }

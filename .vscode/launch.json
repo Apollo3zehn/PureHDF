@@ -17,6 +17,17 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
+        },
+        {
+            "name": "Run Async Benchmark",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-async-benchmark",
+            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.AsyncBenchmark/Release/net7.0/HDF5.NET.AsyncBenchmark.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "externalTerminal"
         }
     ]
 }

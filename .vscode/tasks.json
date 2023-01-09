@@ -16,6 +16,20 @@
             "problemMatcher": "$msCompile"
         },
         {
+            "label": "build-async-benchmark",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "-c",
+                "Release",
+                "${workspaceFolder}/benchmarks/HDF5.NET.AsyncBenchmark/HDF5.NET.AsyncBenchmark.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build",
             "command": "dotnet",
             "type": "process",
