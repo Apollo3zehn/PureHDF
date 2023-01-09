@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks.Schedulers;
 using HDF5.NET;
 
-const ulong CHUNK_SIZE = 1 * 1024 * 1024 * 100 / 4; // = 256 kb 4 bytes per value
+const ulong CHUNK_SIZE = 1 * 1024 * 1024 * 10 / 4; // = 256 kb 4 bytes per value
 const ulong CHUNK_COUNT = 10;
 
 const ulong BUFFER_SIZE = CHUNK_SIZE;
@@ -53,7 +53,7 @@ try
     Console.ReadKey(intercept: true);
 
     // 3. sync test
-    var syncResult = 0.0f;
+    var syncResult = 0.0;
 
     using var file_sync = H5File.Open(
         syncFilePath,
@@ -83,7 +83,7 @@ try
     }
 
     var elapsed_sync = stopwatch_sync.Elapsed;
-    Console.WriteLine($"The sync test took {elapsed_sync.TotalMilliseconds:F1} ms. The result is {syncResult}.");
+    Console.WriteLine($"The sync test took {elapsed_sync.TotalMilliseconds:F1} ms. The result is {syncResult:E3}.");
 
     Console.WriteLine("############################################################");
     Console.WriteLine("############################################################");
@@ -92,7 +92,7 @@ try
     Console.WriteLine("############################################################");
 
     // 4. async test
-    var asyncResult = 0.0f;
+    var asyncResult = 0.0;
 
     using var file_async = H5File.Open(
         asyncFilePath,
@@ -170,11 +170,11 @@ try
     await Task.WhenAll(reading, processing);
 
     var elapsed_async = stopwatch_async.Elapsed;
-    Console.WriteLine($"The async test took {elapsed_async.TotalMilliseconds:F1} ms. The result is {asyncResult}.");
+    Console.WriteLine($"The async test took {elapsed_async.TotalMilliseconds:F1} ms. The result is {asyncResult:E3}.");
     Console.WriteLine($"The pure processing time was {processingTime.TotalMilliseconds:F1} ms.");
 
     //
-    Console.WriteLine($"The different sync - async is {(elapsed_sync - elapsed_async).TotalMilliseconds:F1} ms.");
+    Console.WriteLine($"The ratio async / sync is {(elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
 }
 finally
 {
@@ -191,26 +191,26 @@ finally
     // }
 }
 
-float ProcessData(ReadOnlySpan<float> data)
+double ProcessData(ReadOnlySpan<float> data)
 {
     var sw = Stopwatch.StartNew();
     Console.WriteLine("Start processing");
 
-    var sum = 0.0f;
+    var sum = 0.0;
 
     for (int i = 0; i < data.Length; i++)
     {
-        sum += data[i];
+        sum += Math.Sqrt(data[i]);
     }
 
     for (int i = 0; i < data.Length; i++)
     {
-        sum += data[i];
+        sum += Math.Sqrt(data[i]);
     }
 
     for (int i = 0; i < data.Length; i++)
     {
-        sum += data[i];
+        sum += Math.Sqrt(data[i]) + 2;
     }
 
     Console.WriteLine($"Done processing after {sw.ElapsedMilliseconds:F2} ms.");
