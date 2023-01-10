@@ -1,5 +1,4 @@
 ﻿using System.Buffers;
-using System.Diagnostics;
 
 namespace HDF5.NET
 {

@@ -1,3 +1,7 @@
+// NOTE: The multi-threaded benchmark is not yet working because the chunk searching
+// algorithm is not yet thread-safe! E.g. FixedArrayHeader is instantiated during
+// a read operation. Solutions: locks, thread-local file handle, RandomAccess.
+
 /*
  * This benchmark was created on a system with the following specs:
  * - 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
@@ -5,35 +9,39 @@
  * - Kubuntu 22.10
  *
  * The aim of this benchmark is to proove that async programming is more efficient 
- * than sync programming (under certain conditions) in the context of HDF5.NET.
+ * than sync programming (under certain conditions) in the context of HDF5.NET. The
+ * performance is also compared to a multi-threaded approach.
  *
  * To make that proof, this program first runs a python script to create test data
- * (the package h5py is required). Two files are created so that both tests - sync
- * and async - read from unique files to avoid that the file is already cached for
- * the second test.
+ * (the package h5py is required). A single file is created which means that the
+ * linux file cache needs to be cleared before each benchmark runs.
  *
- * After that the user is asked to clear the linux file cache using the provided
- * command. When that is done, the tests run:
+ * The following benchmarks are executed:
  *
- * Sync test: This test slices the whole file data into several blocks for reading. 
+ * Sync: This benchmark slices the whole file data into several blocks for reading. 
  * When a block is done reading, it gets processed and after that the next block is
  * read, etc.
  * 
- * Async test: This test also slices the whole file data into blocks. However, it 
+ * Async: This benchmark also slices the whole file data into blocks. However, it 
  * utilizes the System.IO.Pipelines package to asynchronously process data. The data
  * of the just read block are pushed into the pipeline where another task processes
  * it. The big advantage here is that while the thread asynchronously waits for the
  * next data block to become available, it can start processing the prevously read
  * data. 
  *
- * In the end the async test should be faster when only a single thread is involved.
+ * Task-based: Works the same as the async benchmarks but with the default scheduler
+ * which uses the thread-pool to run the tasks.
+ * 
+ * Multithreaded: Uses Parallel.For to load and process the data.
+ * 
+ * In the end the async benchmarks should be faster when only a single thread is involved.
  * Of course, with two or more threads, there would be no big difference between the
  * sync test and the async test. However, the purpose of async programming is to 
  * explicitly improve efficiency of a thread that waits for an I/O operation to complete.
  *
  * Important notes:
  *
- * 1) To ensure that only a single thread is created, the class 
+ * 1) To ensure that only a single thread is created for the async benchmark, the class 
  * System.Threading.Tasks.Schedulers.LimitedConcurrencyLevelTaskScheduler of the 
  * ParallelExtensionsExtras.NetFxStandard package is utilized.
  *
@@ -43,31 +51,22 @@
  * matches roughly the time needed the current I/O operation. The optimal CPU load 
  * depends highly on your system setup.
  *
- * To run the test, make sure that you do not attach the debugger and that you build 
+ * To run the benchmarks, make sure that you do not attach the debugger and that you build 
  * the project in Release mode. If you use VSCode, select the "Run Async Benchmark"
  * configuration and start it using Ctrl + F5 (to no attach the debugger).
  *
- * Results (2023-01-09)
+ * Results (2023-01-10)
  * ====================
- * Create test file /tmp/HDF5.NET/sync.h5.
- * Create test file /tmp/HDF5.NET/async.h5.
- * Please run the following command to clear the file cache and monitor the cache usage:
- * free -wh && sync && echo 1 | sudo sysctl vm.drop_caches=1 && free -wh
+ * The sync benchmark took 1941,4 ms.
+ * The async benchmark took 1486,0 ms.
+ * The task-based benchmark took 1383,9 ms.
  * 
- * Press any key to continue ...
- * Run sync test.
- * The sync test took 227,1 ms. The result is 2,830E+010.
+ *          The ratio async / sync is 0,77.
+ *     The ratio task-based / sync is 0,71.
  * 
- * Run async test.
- * The async test took 170,5 ms. The result is 2,830E+010.
- * The pure processing time was 135,6 ms.
- * 
- * The ratio async / sync is 0,75.
- * 
- * Clean up test files.
+ * Clean up test file.
  * ====================
  */
-
 
 using System.Buffers;
 using System.Diagnostics;
@@ -76,70 +75,115 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks.Schedulers;
 using HDF5.NET;
 
-const ulong CHUNK_SIZE = 1 * 1024 * 1024 * 10 / 4; // = 256 kb 4 bytes per value
+const ulong CHUNK_SIZE = 1 * 1024 * 1024 * 100 / 4; // 4 bytes per value
 const ulong CHUNK_COUNT = 10;
 
 const ulong BUFFER_SIZE = CHUNK_SIZE;
 const ulong BUFFER_BYTE_SIZE = BUFFER_SIZE * sizeof(float);
 const ulong SEGMENT_COUNT = CHUNK_COUNT;
 
-var syncFilePath = "/tmp/HDF5.NET/sync.h5";
-var asyncFilePath = "/tmp/HDF5.NET/async.h5";
+var filePath = "/tmp/HDF5.NET/sync.h5";
 
 try
 {
-    // 1. create files
-    foreach (var filePath in new string[] { syncFilePath, asyncFilePath })
+    if (!File.Exists(filePath))
     {
-        if (!File.Exists(filePath))
-        {
-            Console.WriteLine($"Create test file {filePath}.");
+        Console.WriteLine($"Create test file {filePath}.");
 
-            var process = new Process();
-            process.StartInfo.FileName = "python";
-            process.StartInfo.Arguments = $"benchmarks/HDF5.NET.AsyncBenchmark/create_test_file.py {filePath}";
-            process.Start();
-            process.WaitForExit();
+        var process = new Process();
+        process.StartInfo.FileName = "python";
+        process.StartInfo.Arguments = $"benchmarks/HDF5.NET.AsyncBenchmark/create_test_file.py {filePath}";
+        process.Start();
+        process.WaitForExit();
 
-            var exitCode = process.ExitCode;
+        var exitCode = process.ExitCode;
 
-            if (exitCode != 0)
-                throw new Exception("Unable to create test files.");
-        }
-
-        else
-        {
-            Console.WriteLine($"No need to create test file {filePath} as it is already there.");
-        }
+        if (exitCode != 0)
+            throw new Exception("Unable to create test files.");
     }
 
-    // 2. ask user to clear cache
+    else
+    {
+        Console.WriteLine($"No need to create test file {filePath} as it is already there.");
+    }
+
+    // 2 ask user to clear cache
     // https://medium.com/marionete/linux-disk-cache-was-always-there-741bef097e7f
     // https://unix.stackexchange.com/a/82164
-    Console.WriteLine("Please run the following command to clear the file cache and monitor the cache usage:");
+    Console.WriteLine("Please run the following command before each benchmark to clear the file cache and monitor the cache usage:");
     Console.WriteLine("free -wh && sync && echo 1 | sudo sysctl vm.drop_caches=1 && free -wh");
     Console.WriteLine();
-    Console.WriteLine("Press any key to continue ...");
+    Console.WriteLine("Press any key to continue.");
 
+    // 3 sync benchmark
     Console.ReadKey(intercept: true);
 
-    // 3. sync test
-    var syncResult = 0.0;
+    (var syncResult, var elapsed_sync) = SyncBenchmark();
 
-    using var file_sync = H5File.Open(
-        syncFilePath,
+    // 4 async benchmark
+    Console.ReadKey(intercept: true);
+
+    var scheduler = new LimitedConcurrencyLevelTaskScheduler(maxDegreeOfParallelism: 1);
+
+    Func<Func<Task>, Task> startTask = (task) 
+        => Task.Factory
+            .StartNew(task, CancellationToken.None, TaskCreationOptions.DenyChildAttach, scheduler)
+            .Unwrap();
+
+    (var asyncResult, var elapsed_async) = await TaskBasedBenchmark("async", startTask);
+
+    // 5 task based benchmark
+    Console.ReadKey(intercept: true);
+
+    (var taskBasedResult, var elapsed_task_based) = await TaskBasedBenchmark("task-based", Task.Run);
+
+    // 6 multi-threaded benchmark
+    Console.ReadKey(intercept: true);
+
+    // (var multiThreadedResult, var elapsed_multi_threaded) = MultiThreadedBenchmark();
+
+    //
+    if (syncResult != asyncResult)
+        throw new Exception($"The sync result ({syncResult}) and async result ({asyncResult}) are not equal.");
+
+    if (syncResult != taskBasedResult)
+        throw new Exception($"The sync result ({syncResult}) and task-based result ({taskBasedResult}) are not equal.");
+
+    // if (syncResult != taskBasedResult)
+    //     throw new Exception($"The sync result ({syncResult}) and multi-threaded result ({multiThreadedResult}) are not equal.");
+
+    Console.WriteLine();
+    Console.WriteLine($"         The ratio async / sync is {(elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
+    Console.WriteLine($"    The ratio task-based / sync is {(elapsed_task_based.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
+    // Console.WriteLine($"The ratio multi-threaded / sync is {(elapsed_multi_threaded.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
+}
+finally
+{
+    Console.WriteLine();
+    Console.WriteLine($"Clean up test file.");
+
+    if (File.Exists(filePath))
+    {
+        try { File.Delete(filePath); }
+        catch { }
+    }
+}
+
+(double, TimeSpan) SyncBenchmark()
+{
+    var result = 0.0;
+
+    using var file = H5File.Open(
+        filePath,
         FileMode.Open,
         FileAccess.Read,
         FileShare.Read,
         useAsync: false
     );
 
-    var dataset_sync = file_sync.Dataset("chunked");
-
-    Console.WriteLine($"Run sync test.");
-
-    var syncBuffer = Enumerable.Range(0, (int)BUFFER_SIZE).Select(value => (float)value).ToArray();
-    var stopwatch_sync = Stopwatch.StartNew();
+    var dataset = file.Dataset("chunked");
+    var buffer = new float[BUFFER_SIZE];
+    var stopwatch = Stopwatch.StartNew();
 
     for (uint i = 0; i < SEGMENT_COUNT; i++)
     {
@@ -148,33 +192,31 @@ try
             block: BUFFER_SIZE
         );
 
-        dataset_sync.Read<float>(syncBuffer, fileSelection);
+        dataset.Read<float>(buffer, fileSelection);
 
-        syncResult += ProcessData(syncBuffer);
+        result += ProcessData(buffer);
     }
 
-    var elapsed_sync = stopwatch_sync.Elapsed;
-    Console.WriteLine($"The sync test took {elapsed_sync.TotalMilliseconds:F1} ms. The result is {syncResult:E3}.");
+    var elapsed_sync = stopwatch.Elapsed;
+    Console.WriteLine($"The sync benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
 
-    // 4. async test
-    var asyncResult = 0.0;
+    return (result, elapsed_sync);
+}
 
-    using var file_async = H5File.Open(
-        asyncFilePath,
+async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, Task> startTask)
+{
+    var result = 0.0;
+
+    using var file = H5File.Open(
+        filePath,
         FileMode.Open,
         FileAccess.Read,
         FileShare.Read,
         useAsync: true
     );
 
-    var dataset_async = file_async.Dataset("chunked");
-    var scheduler = new LimitedConcurrencyLevelTaskScheduler(maxDegreeOfParallelism: 1);
-    var threadId = Thread.CurrentThread.ManagedThreadId;
-
-    Console.WriteLine();
-    Console.WriteLine($"Run async test.");
-
-    var stopwatch_async = Stopwatch.StartNew();
+    var dataset = file.Dataset("chunked");
+    var stopwatch = Stopwatch.StartNew();
 
     var options = new PipeOptions(
         // avoid blocking!
@@ -186,7 +228,7 @@ try
     var reader = pipe.Reader;
     var writer = pipe.Writer;
 
-    var reading = Task.Factory.StartNew(async () =>
+    var readingAction = async () =>
     {
         for (uint i = 0; i < SEGMENT_COUNT; i++)
         {
@@ -197,71 +239,94 @@ try
                 block: BUFFER_SIZE
             );
 
-            await dataset_async.ReadAsync<float>(asyncBuffer, fileSelection);
+            await dataset.ReadAsync<float>(asyncBuffer, fileSelection);
 
             writer.Advance((int)BUFFER_BYTE_SIZE);
             await writer.FlushAsync();
         }
 
         await writer.CompleteAsync();
-    }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, scheduler).Unwrap();
+    };
 
+    var reading = startTask(readingAction);
     var processingTime = TimeSpan.Zero;
 
-    var processing = Task.Factory.StartNew(async () =>
+    var procssingAction = async () =>
     {
         while (true)
         {
-            var result = await reader.ReadAsync();
-            var asyncBuffer = result.Buffer;
+            var readResult = await reader.ReadAsync();
+            var buffer = readResult.Buffer;
+
+            if (buffer.Length == 0)
+                break;
+
             var processingTimeSw = Stopwatch.StartNew();
 
-            asyncResult += ProcessData(MemoryMarshal.Cast<byte, float>(asyncBuffer.First.Span));    
-            
+            result += ProcessData(MemoryMarshal.Cast<byte, float>(buffer.First.Span));
             processingTime += processingTimeSw.Elapsed;
 
-            if (result.Buffer.Length == 0)
-                reader.AdvanceTo(
-                    consumed: asyncBuffer.Start,
-                    examined: asyncBuffer.End);
-            else
-                reader.AdvanceTo(
-                    consumed: asyncBuffer.GetPosition((long)BUFFER_BYTE_SIZE), 
-                    examined: asyncBuffer.End);
-
-            if (result.Buffer.Length == 0)
-                break;
+            reader.AdvanceTo(
+                consumed: buffer.GetPosition((long)BUFFER_BYTE_SIZE),
+                examined: buffer.End);
         }
 
         await reader.CompleteAsync();
-    }, CancellationToken.None, TaskCreationOptions.DenyChildAttach, scheduler).Unwrap();
+    };
+
+    var processing = startTask(procssingAction);
 
     await Task.WhenAll(reading, processing);
 
-    var elapsed_async = stopwatch_async.Elapsed;
-    Console.WriteLine($"The async test took {elapsed_async.TotalMilliseconds:F1} ms. The result is {asyncResult:E3}.");
-    Console.WriteLine($"The pure processing time was {processingTime.TotalMilliseconds:F1} ms.");
+    var elapsed = stopwatch.Elapsed;
+    Console.WriteLine($"The {name} benchmark took {elapsed.TotalMilliseconds:F1} ms.");
+    // Console.WriteLine($"The pure processing time was {processingTime.TotalMilliseconds:F1} ms.");
 
-    //
-    Console.WriteLine();
-    Console.WriteLine($"The ratio async / sync is {(elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
+    return (result, elapsed);
 }
-finally
+
+(double, TimeSpan) MultiThreadedBenchmark()
 {
-    Console.WriteLine();
-    Console.WriteLine($"Clean up test files.");
+    var result = 0.0;
+    var syncObject = new object();
 
-    if (File.Exists(syncFilePath))
-    {
-        try { File.Delete(syncFilePath); }
-        catch { }
-    }
+    using var file = H5File.Open(
+        filePath,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read,
+        useAsync: false
+    );
 
-    if (File.Exists(asyncFilePath))
+    var dataset = file.Dataset("chunked");
+    var buffer = new float[BUFFER_SIZE * SEGMENT_COUNT];
+    var stopwatch = Stopwatch.StartNew();
+
+    Parallel.For(0, (int)SEGMENT_COUNT, i =>
     {
-        try { File.Delete(asyncFilePath); }
-        catch { }
-    }
+        var fileSelection = new HyperslabSelection(
+            start: (ulong)i * BUFFER_SIZE,
+            block: BUFFER_SIZE
+        );
+
+        var start = (int)(i * (int)BUFFER_SIZE);
+        var length = (int)BUFFER_SIZE;
+        var currentBuffer = buffer.AsMemory(start, length);
+
+        dataset.Read<float>(buffer, fileSelection);
+
+        var currentResult = ProcessData(buffer);
+
+        lock (syncObject)
+        {
+            result += currentResult;
+        }
+    });
+
+    var elapsed_sync = stopwatch.Elapsed;
+    Console.WriteLine($"The multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
+
+    return (result, elapsed_sync);
 }
 
 double ProcessData(ReadOnlySpan<float> data)
