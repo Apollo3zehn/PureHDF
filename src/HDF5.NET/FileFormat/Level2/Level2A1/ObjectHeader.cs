@@ -1,6 +1,6 @@
 namespace HDF5.NET
 {
-    internal abstract class ObjectHeader : FileReader
+    internal abstract class ObjectHeader
     {
         #region Fields
 
@@ -10,7 +10,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader(H5Context context) : base(context.Reader)
+        public ObjectHeader(H5Context context)
         {
             _context = context;
 

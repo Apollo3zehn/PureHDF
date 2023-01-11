@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class FractalHeapIndirectBlock : FileReader
+    internal class FractalHeapIndirectBlock
     {
         #region Fields
 
@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FractalHeapIndirectBlock(H5Context context, FractalHeapHeader header, uint rowCount) : base(context.Reader)
+        public FractalHeapIndirectBlock(H5Context context, FractalHeapHeader header, uint rowCount)
         {
             var (reader, superblock) = context;
             _context = context;
@@ -32,7 +32,7 @@ namespace HDF5.NET
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            BlockOffset = H5Utils.ReadUlong(Reader, (ulong)blockOffsetFieldSize);
+            BlockOffset = H5Utils.ReadUlong(reader, (ulong)blockOffsetFieldSize);
 
             // H5HFcache.c (H5HF__cache_iblock_deserialize)
             var length = rowCount * header.TableWidth;
@@ -99,7 +99,7 @@ namespace HDF5.NET
         {
             get
             {
-                Reader.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                _context.Reader.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(_context);
             }
         }

@@ -4,7 +4,6 @@
     {
         #region Fields
 
-// TODO: OK like this?
         private H5Context _context;
         private byte _version;
 

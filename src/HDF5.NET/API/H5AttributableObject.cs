@@ -36,7 +36,7 @@
             if (!TryGetAttributeMessage(name, out var attributeMessage))
                 throw new Exception($"Could not find attribute '{name}'.");
 
-            return new H5Attribute(attributeMessage, Context.Superblock);
+            return new H5Attribute(Context, attributeMessage);
         }
 
         #endregion

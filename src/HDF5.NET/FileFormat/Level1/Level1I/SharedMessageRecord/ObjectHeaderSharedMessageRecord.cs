@@ -2,19 +2,10 @@
 {
     internal class ObjectHeaderSharedMessageRecord : SharedMessageRecord
     {
-        #region Fields
-
-// TODO: OK like this?
-        private Superblock _superblock;
-
-        #endregion
-
         #region Constructors
 
         public ObjectHeaderSharedMessageRecord(H5BinaryReader reader, Superblock superblock) : base(reader)
         {
-            _superblock = superblock;
-
             // hash value
             HashValue = reader.ReadUInt32();
 

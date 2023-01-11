@@ -1,20 +1,11 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class Superblock : FileReader
+    internal abstract class Superblock
     {
         #region Fields
 
         private byte _offsetsSize;
         private byte _lengthsSize;
-
-        #endregion
-
-        #region Constructors
-
-        public Superblock(H5BinaryReader reader) : base(reader)
-        {
-            //
-        }
 
         #endregion
 

@@ -43,8 +43,10 @@ namespace HDF5.NET
 
         private static ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
-        public static GlobalHeapCollection GetGlobalHeapObject(H5BinaryReader reader, Superblock superblock, ulong address)
+        public static GlobalHeapCollection GetGlobalHeapObject(H5Context context, ulong address)
         {
+            var (reader, superblock) = context;
+
             if (!_globalHeapMap.TryGetValue(superblock, out var addressToCollectionMap))
             {
                 addressToCollectionMap = new Dictionary<ulong, GlobalHeapCollection>();
@@ -53,17 +55,17 @@ namespace HDF5.NET
 
             if (!addressToCollectionMap.TryGetValue(address, out var collection))
             {
-                collection = H5Cache.ReadGlobalHeapCollection(reader, superblock, address);
+                collection = H5Cache.ReadGlobalHeapCollection(context, address);
                 addressToCollectionMap[address] = collection;
             }
 
             return collection;
         }
 
-        private static GlobalHeapCollection ReadGlobalHeapCollection(H5BinaryReader reader, Superblock superblock, ulong address)
+        private static GlobalHeapCollection ReadGlobalHeapCollection(H5Context context, ulong address)
         {
-            reader.Seek((long)address, SeekOrigin.Begin);
-            return new GlobalHeapCollection(reader, superblock);
+            context.Reader.Seek((long)address, SeekOrigin.Begin);
+            return new GlobalHeapCollection(context);
         }
 
         #endregion

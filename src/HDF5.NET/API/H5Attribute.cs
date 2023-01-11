@@ -96,7 +96,7 @@ namespace HDF5.NET
             if (getName is null)
                 getName = fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(Message.Datatype, Message.Data, _superblock, getName);
+            return H5ReadUtils.ReadCompound<T>(_context, Message.Datatype, Message.Data, getName);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ namespace HDF5.NET
         /// <returns>The read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</returns>
         public Dictionary<string, object?>[] ReadCompound()
         {
-            return H5ReadUtils.ReadCompound(Message.Datatype, Message.Data, _superblock);
+            return H5ReadUtils.ReadCompound(_context, Message.Datatype, Message.Data);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace HDF5.NET
         /// <returns>The read data as array of <see cref="string"/>.</returns>
         public string[] ReadString()
         {
-            return H5ReadUtils.ReadString(Message.Datatype, Message.Data, _superblock);
+            return H5ReadUtils.ReadString(_context, Message.Datatype, Message.Data);
         }
 
         #endregion

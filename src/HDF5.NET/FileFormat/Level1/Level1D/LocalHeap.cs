@@ -2,21 +2,23 @@
 
 namespace HDF5.NET
 {
-    internal class LocalHeap : FileReader
+    internal class LocalHeap
     {
         #region Fields
 
         private byte _version;
         private byte[]? _data;
+        private H5BinaryReader _reader;
 
         #endregion
 
         #region Constructors
 
-        public LocalHeap(H5Context context) : base(context.Reader)
+        public LocalHeap(H5Context context)
         {
             var (reader, superblock) = context;
-            
+            _reader = reader;
+
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, LocalHeap.Signature);
@@ -68,8 +70,8 @@ namespace HDF5.NET
             {
                 if (_data is null)
                 {
-                    Reader.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
-                    _data = Reader.ReadBytes((int)DataSegmentSize);
+                    _reader.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
+                    _data = _reader.ReadBytes((int)DataSegmentSize);
                 }
 
                 return _data;

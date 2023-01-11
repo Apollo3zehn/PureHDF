@@ -9,16 +9,16 @@ namespace HDF5.NET
 
         private H5Dataspace? _space;
         private H5DataType? _type;
-        private Superblock _superblock;
+        private H5Context _context;
 
         #endregion
 
         #region Constructors
 
-        internal H5Attribute(AttributeMessage message, Superblock superblock)
+        internal H5Attribute(H5Context context, AttributeMessage message)
         {
+            _context = context;
             Message = message;
-            _superblock = superblock;
         }
 
         #endregion

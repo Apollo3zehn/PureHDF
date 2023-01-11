@@ -14,31 +14,33 @@ namespace HDF5.NET
 
         internal ObjectHeader2(H5Context context, byte version) : base(context)
         {
+            var reader = context.Reader;
+
             // version
             Version = version;
 
             // flags
-            Flags = (ObjectHeaderFlags)context.Reader.ReadByte();
+            Flags = (ObjectHeaderFlags)reader.ReadByte();
 
             // access time, modification time, change time and birth time
             if (Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
             {
-                AccessTime = context.Reader.ReadUInt32();
-                ModificationTime = context.Reader.ReadUInt32();
-                ChangeTime = context.Reader.ReadUInt32();
-                BirthTime = context.Reader.ReadUInt32();
+                AccessTime = reader.ReadUInt32();
+                ModificationTime = reader.ReadUInt32();
+                ChangeTime = reader.ReadUInt32();
+                BirthTime = reader.ReadUInt32();
             }
 
             // maximum compact attributes count and minimum dense attributes count
             if (Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
             {
-                MaximumCompactAttributesCount = context.Reader.ReadUInt16();
-                MinimumDenseAttributesCount = context.Reader.ReadUInt16();
+                MaximumCompactAttributesCount = reader.ReadUInt16();
+                MinimumDenseAttributesCount = reader.ReadUInt16();
             }
 
             // size of chunk 0
             var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
-            SizeOfChunk0 = H5Utils.ReadUlong(Reader, chunkFieldSize);
+            SizeOfChunk0 = H5Utils.ReadUlong(reader, chunkFieldSize);
 
             // header messages
             var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);

@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Type}")]
-    internal class HeaderMessage : FileReader
+    internal class HeaderMessage
     {
         #region Fields
 
@@ -14,7 +14,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        internal HeaderMessage(H5Context context, byte version, ObjectHeader objectHeader, bool withCreationOrder = false) : base(context.Reader)
+        internal HeaderMessage(H5Context context, byte version, ObjectHeader objectHeader, bool withCreationOrder = false)
         {
             Version = version;
             WithCreationOrder = withCreationOrder;

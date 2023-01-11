@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public Superblock23(H5BinaryReader reader, byte version) : base(reader)
+        public Superblock23(H5BinaryReader reader, byte version)
         {
             SuperBlockVersion = version;
             OffsetsSize = reader.ReadByte();

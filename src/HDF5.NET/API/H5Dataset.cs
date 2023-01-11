@@ -216,7 +216,7 @@ namespace HDF5.NET
             if (getName is null)
                 getName = fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(InternalDataType, data, Context.Superblock, getName);
+            return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadCompound(InternalDataType, data, Context.Superblock);
+            return H5ReadUtils.ReadCompound(Context, InternalDataType, data);
         }
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadString(InternalDataType, data, Context.Superblock);
+            return H5ReadUtils.ReadString(Context, InternalDataType, data);
         }
 
         #endregion
@@ -399,7 +399,7 @@ namespace HDF5.NET
             if (getName is null)
                 getName = fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(InternalDataType, data, Context.Superblock, getName);
+            return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
 
         /// <summary>
@@ -428,7 +428,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadCompound(InternalDataType, data, Context.Superblock);
+            return H5ReadUtils.ReadCompound(Context, InternalDataType, data);
         }
 
         /// <summary>
@@ -458,7 +458,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadString(InternalDataType, data, Context.Superblock);
+            return H5ReadUtils.ReadString(Context, InternalDataType, data);
         }
 
 #endif
