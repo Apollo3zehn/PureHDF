@@ -13,8 +13,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public LocalHeap(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public LocalHeap(H5Context context) : base(context.Reader)
         {
+            var (reader, superblock) = context;
+            
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, LocalHeap.Signature);

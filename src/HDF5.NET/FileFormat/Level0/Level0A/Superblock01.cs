@@ -31,7 +31,9 @@
             FreeSpaceInfoAddress = ReadOffset(reader);
             EndOfFileAddress = ReadOffset(reader);
             DriverInfoBlockAddress = ReadOffset(reader);
-            RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
+
+            var context = new H5Context(reader, this);
+            RootGroupSymbolTableEntry = new SymbolTableEntry(context);
         }
 
         #endregion

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public SymbolicLinkScratchPad(H5BinaryReader reader) : base(reader)
+        public SymbolicLinkScratchPad(H5BinaryReader reader)
         {
             LinkValueOffset = reader.ReadUInt32();
         }

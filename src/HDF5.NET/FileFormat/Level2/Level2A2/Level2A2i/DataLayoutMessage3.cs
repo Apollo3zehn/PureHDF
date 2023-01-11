@@ -10,8 +10,10 @@
 
         #region Constructors
 
-        internal DataLayoutMessage3(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        internal DataLayoutMessage3(H5Context context, byte version) : base(context.Reader)
         {
+            var (reader, superblock) = context;
+            
             // version
             Version = version;
 

@@ -6,16 +6,18 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private Superblock _superblock;
+        private H5Context _context;
         private byte _version;
 
         #endregion
 
         #region Constructors
 
-        public FractalHeapDirectBlock(FractalHeapHeader header, H5BinaryReader reader, Superblock superblock) : base(reader)
-        {
-            _superblock = superblock;
+        public FractalHeapDirectBlock(H5Context context, FractalHeapHeader header) : base(context.Reader)
+        {            
+            var (reader, superblock) = context;
+            _context = context;
+
             var headerSize = 0UL;
 
             // signature
@@ -79,7 +81,7 @@ namespace HDF5.NET
             get
             {
                 Reader.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
-                return new FractalHeapHeader(Reader, _superblock);
+                return new FractalHeapHeader(_context);
             }
         }
 

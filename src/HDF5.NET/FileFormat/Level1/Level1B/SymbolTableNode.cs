@@ -12,8 +12,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public SymbolTableNode(H5BinaryReader reader, Superblock superblock)
+        public SymbolTableNode(H5Context context)
         {
+            var reader = context.Reader;
+            
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, SymbolTableNode.Signature);
@@ -32,7 +34,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < SymbolCount; i++)
             {
-                GroupEntries.Add(new SymbolTableEntry(reader, superblock));
+                GroupEntries.Add(new SymbolTableEntry(context));
             }
         }
 

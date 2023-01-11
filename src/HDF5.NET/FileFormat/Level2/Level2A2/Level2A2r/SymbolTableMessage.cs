@@ -4,16 +4,16 @@
     {
         #region Fields
 
-// TODO: Is this OK?
-        Superblock _superblock;
+        private H5Context _context;
 
         #endregion
 
         #region Constructors
 
-        public SymbolTableMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableMessage(H5Context context)
         {
-            _superblock = superblock;
+            var (reader, superblock) = context;
+            _context = context;
 
             BTree1Address = superblock.ReadOffset(reader);
             LocalHeapAddress = superblock.ReadOffset(reader);
@@ -30,8 +30,8 @@
         {
             get
             {
-                Reader.Seek((long)LocalHeapAddress, SeekOrigin.Begin);
-                return new LocalHeap(Reader, _superblock);
+                _context.Reader.Seek((long)LocalHeapAddress, SeekOrigin.Begin);
+                return new LocalHeap(_context);
             }
         }
 
@@ -41,8 +41,8 @@
 
         public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
         {
-            Reader.Seek((long)BTree1Address, SeekOrigin.Begin);
-            return new BTree1Node<BTree1GroupKey>(Reader, _superblock, decodeKey);
+            _context.Reader.Seek((long)BTree1Address, SeekOrigin.Begin);
+            return new BTree1Node<BTree1GroupKey>(_context, decodeKey);
         }
 
         #endregion

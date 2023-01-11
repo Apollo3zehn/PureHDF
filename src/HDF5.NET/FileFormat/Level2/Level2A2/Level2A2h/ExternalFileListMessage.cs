@@ -5,16 +5,17 @@
         #region Fields
 
 // TODO: OK like this?
-        private Superblock _superblock;
+        private H5Context _context;
         private byte _version;
 
         #endregion
 
         #region Constructors
 
-        public ExternalFileListMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public ExternalFileListMessage(H5Context context)
         {
-            _superblock = superblock;
+            var (reader, superblock) = context;
+            _context = context;
 
             // version
             Version = reader.ReadByte();
@@ -69,8 +70,8 @@
         {
             get
             {
-                Reader.Seek((long)HeapAddress, SeekOrigin.Begin);
-                return new LocalHeap(Reader, _superblock);
+                _context.Reader.Seek((long)HeapAddress, SeekOrigin.Begin);
+                return new LocalHeap(_context);
             }
         }
 

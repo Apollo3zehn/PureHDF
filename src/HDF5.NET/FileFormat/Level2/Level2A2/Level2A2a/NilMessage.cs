@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public NilMessage(H5BinaryReader reader) : base(reader)
+        public NilMessage(H5BinaryReader reader)
         {
             //
         }

@@ -15,8 +15,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public BTree2Header(H5BinaryReader reader, Superblock superblock, Func<T> decodeKey) : base(reader)
+        public BTree2Header(H5Context context, Func<T> decodeKey) : base(context.Reader)
         {
+            var (reader, superblock) = context;
+
             _superblock = superblock;
             _decodeKey = decodeKey;
 

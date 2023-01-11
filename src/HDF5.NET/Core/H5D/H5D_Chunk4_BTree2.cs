@@ -33,7 +33,7 @@ namespace HDF5.NET
                     Func<BTree2Record10> decodeKey 
                         = () => DecodeRecord10(ChunkRank);
 
-                    _btree2_no_filter = new BTree2Header<BTree2Record10>(Dataset.Context.Reader, Dataset.Context.Superblock, decodeKey);
+                    _btree2_no_filter = new BTree2Header<BTree2Record10>(Dataset.Context, decodeKey);
                 }
 
                 // get record
@@ -57,7 +57,7 @@ namespace HDF5.NET
                     Func<BTree2Record11> decodeKey = 
                         () => DecodeRecord11(ChunkRank, chunkSizeLength);
 
-                    _btree2_filter = new BTree2Header<BTree2Record11>(Dataset.Context.Reader, Dataset.Context.Superblock, decodeKey);
+                    _btree2_filter = new BTree2Header<BTree2Record11>(Dataset.Context, decodeKey);
                 }
 
                 // get record

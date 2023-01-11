@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public ObjectHeaderContinuationMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderContinuationMessage(H5Context context)
         {
+            var (reader, superblock) = context;
+
             Offset = superblock.ReadOffset(reader);
             Length = superblock.ReadLength(reader);
         }

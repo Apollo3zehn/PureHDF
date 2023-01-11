@@ -30,10 +30,10 @@ namespace HDF5.NET
                 (FractalHeapIdType.Managed, _, _, _)    => new ManagedObjectsFractalHeapId(context.Reader, localReader, header, offsetSize, lengthSize),
 
                 // H5HFhuge.c (H5HF__huge_op_real)
-                (FractalHeapIdType.Huge, false, 0, _)   => new HugeObjectsFractalHeapIdSubType1(context.Reader, context.Superblock, localReader, header),
-                (FractalHeapIdType.Huge, false, _, _)   => new HugeObjectsFractalHeapIdSubType2(context.Reader, context.Superblock, localReader, header),
-                (FractalHeapIdType.Huge, true, 0, _)    => new HugeObjectsFractalHeapIdSubType3(context.Reader, context.Superblock, localReader),
-                (FractalHeapIdType.Huge, true, _, _)    => new HugeObjectsFractalHeapIdSubType4(context.Reader, context.Superblock, localReader),
+                (FractalHeapIdType.Huge, false, 0, _)   => new HugeObjectsFractalHeapIdSubType1(context, localReader, header),
+                (FractalHeapIdType.Huge, false, _, _)   => new HugeObjectsFractalHeapIdSubType2(context, localReader, header),
+                (FractalHeapIdType.Huge, true, 0, _)    => new HugeObjectsFractalHeapIdSubType3(context, localReader),
+                (FractalHeapIdType.Huge, true, _, _)    => new HugeObjectsFractalHeapIdSubType4(context.Superblock, localReader),
 
                 // H5HFtiny.c (H5HF_tiny_op_real)
                 (FractalHeapIdType.Tiny, _, _, false)   => new TinyObjectsFractalHeapIdSubType1(localReader, firstByte),

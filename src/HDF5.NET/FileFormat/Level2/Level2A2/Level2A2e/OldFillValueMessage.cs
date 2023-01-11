@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public OldFillValueMessage(H5BinaryReader reader) : base(reader)
+        public OldFillValueMessage(H5BinaryReader reader)
         {
             Size = reader.ReadUInt32();
             FillValue = reader.ReadBytes((int)Size);

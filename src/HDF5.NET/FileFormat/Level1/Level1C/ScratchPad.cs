@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class ScratchPad : FileReader
+    internal abstract class ScratchPad
     {
         #region Constructors
 
-        public ScratchPad(H5BinaryReader reader) : base(reader)
+        public ScratchPad()
         {
             //
         }

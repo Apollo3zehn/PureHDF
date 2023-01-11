@@ -392,7 +392,7 @@ namespace HDF5.NET
 
                 yield return heapId.Read(reader =>
                 {
-                    var message = new LinkMessage(reader, Context.Superblock);
+                    var message = new LinkMessage(Context);
                     return message;
                 }, ref record01Cache);
             }
@@ -426,7 +426,7 @@ namespace HDF5.NET
 // TODO: duplicate3_of_3
                     using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new LinkMessage(reader, Context.Superblock));
+                    candidate = heapId.Read(reader => new LinkMessage(Context));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
@@ -499,7 +499,7 @@ namespace HDF5.NET
                 return node.ChildAddresses.Select(address =>
                 {
                     Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                    return new SymbolTableNode(Context.Reader, Context.Superblock);
+                    return new SymbolTableNode(Context);
                 });
             });
         }
@@ -547,7 +547,7 @@ namespace HDF5.NET
              * Load the symbol table node for exclusive access.
              */
             Context.Reader.Seek((long)address, SeekOrigin.Begin);
-            var symbolTableNode = new SymbolTableNode(Context.Reader, Context.Superblock);
+            var symbolTableNode = new SymbolTableNode(Context);
 
             /*
              * Binary search.

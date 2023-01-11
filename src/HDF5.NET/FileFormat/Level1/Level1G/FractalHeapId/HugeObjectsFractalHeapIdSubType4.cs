@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType4(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader)
+        public HugeObjectsFractalHeapIdSubType4(Superblock superblock, H5BinaryReader localReader)
         {
             // address
             Address = superblock.ReadOffset(localReader);

@@ -14,7 +14,7 @@
 
         #region Constructors
 
-        public FillValueMessage(H5BinaryReader reader) : base(reader)
+        public FillValueMessage(H5BinaryReader reader)
         {
             // see also H5dcpl.c (H5P_is_fill_value_defined) and H5Dint.c (H5D__update_oh_info):
             // if size = 0 then default value should be applied
@@ -89,7 +89,7 @@
         }
 
         // Create a default fill value message (required for old fill value messages which are optional)
-        public FillValueMessage(SpaceAllocationTime allocationTime) : base(default!)
+        public FillValueMessage(SpaceAllocationTime allocationTime)
         {
             Version = 3;
             AllocationTime = allocationTime;

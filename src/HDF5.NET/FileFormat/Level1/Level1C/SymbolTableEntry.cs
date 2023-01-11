@@ -10,8 +10,9 @@
 
         #region Constructors
 
-        public SymbolTableEntry(H5BinaryReader reader, Superblock superblock)
+        public SymbolTableEntry(H5Context context)
         {
+            var (reader, superblock) = context;
             _superblock = superblock;
 
             // link name offset
@@ -32,7 +33,7 @@
             ScratchPad = CacheType switch
             {
                 CacheType.NoCache => null,
-                CacheType.ObjectHeader => new ObjectHeaderScratchPad(reader, superblock),
+                CacheType.ObjectHeader => new ObjectHeaderScratchPad(context),
                 CacheType.SymbolicLink => new SymbolicLinkScratchPad(reader),
                 _ => throw new NotSupportedException()
             };

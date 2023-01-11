@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public ObjectReferenceCountMessage(H5BinaryReader reader) : base(reader)
+        public ObjectReferenceCountMessage(H5BinaryReader reader)
         {
             // version
             Version = reader.ReadByte();

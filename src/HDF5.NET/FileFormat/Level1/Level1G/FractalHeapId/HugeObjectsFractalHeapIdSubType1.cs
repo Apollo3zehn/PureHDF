@@ -7,18 +7,16 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5BinaryReader _reader;
-        private Superblock _superblock;
+        private H5Context _context;
         private FractalHeapHeader _heapHeader;
 
         #endregion
 
         #region Constructors
 
-        internal HugeObjectsFractalHeapIdSubType1(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader, FractalHeapHeader header)
+        internal HugeObjectsFractalHeapIdSubType1(H5Context context, H5BinaryReader localReader, FractalHeapHeader header)
         {
-            _reader = reader;
-            _superblock = superblock;
+            _context = context;
             _heapHeader = header;
 
             // BTree2 key
@@ -37,18 +35,20 @@ namespace HDF5.NET
 
         public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache)
         {
+            var reader = _context.Reader;
+
             // huge objects b-tree v2
             if (record01Cache is null)
             {
-                _reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
-                var hugeBtree2 = new BTree2Header<BTree2Record01>(_reader, _superblock, DecodeRecord01);
+                reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
+                var hugeBtree2 = new BTree2Header<BTree2Record01>(_context, DecodeRecord01);
                 record01Cache = hugeBtree2.EnumerateRecords().ToList();
             }
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
-            _reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
+            reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
             
-            return func(_reader);
+            return func(reader);
         }
 
         #endregion
@@ -56,7 +56,7 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record01 DecodeRecord01() => new BTree2Record01(_reader, _superblock);
+        private BTree2Record01 DecodeRecord01() => new BTree2Record01(_context);
 
         #endregion
     }

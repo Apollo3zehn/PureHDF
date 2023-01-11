@@ -10,8 +10,10 @@
 
         #region Constructors
 
-        public LinkMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public LinkMessage(H5Context context)
         {
+            var (reader, superblock) = context;
+
             // version
             Version = reader.ReadByte();
 
@@ -38,7 +40,7 @@
 
             // link length
             var linkLengthFieldLength = (ulong)(1 << (Flags & 0x03));
-            var linkNameLength = H5Utils.ReadUlong(Reader, linkLengthFieldLength);
+            var linkNameLength = H5Utils.ReadUlong(reader, linkLengthFieldLength);
 
             // link name
             LinkName = H5ReadUtils.ReadFixedLengthString(reader, (int)linkNameLength, LinkNameEncoding);

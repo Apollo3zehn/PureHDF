@@ -5,13 +5,17 @@
         #region Fields
 
         private byte _version;
+        private H5BinaryReader _reader;
 
         #endregion
 
         #region Constructors
 
-        public SharedMessageTableMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public SharedMessageTableMessage(H5Context context)
         {
+            var (reader, superblock) = context;
+            _reader = context.Reader;
+
             // version
             Version = reader.ReadByte();
 
@@ -48,8 +52,8 @@
         {
             get
             {
-                Reader.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
-                return new SharedObjectHeaderMessageTable(Reader);
+                _reader.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
+                return new SharedObjectHeaderMessageTable(_reader);
             }
         }
 
