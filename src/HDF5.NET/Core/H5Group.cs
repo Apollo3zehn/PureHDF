@@ -578,7 +578,7 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1GroupKey DecodeGroupKey()
         {
-            return new BTree1GroupKey(Context.Reader, Context.Superblock);
+            return new BTree1GroupKey(Context);
         }
 
         #endregion

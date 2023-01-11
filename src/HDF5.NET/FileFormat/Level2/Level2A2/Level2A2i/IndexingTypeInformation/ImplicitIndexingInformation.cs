@@ -2,13 +2,6 @@
 {
     internal class ImplicitIndexingInformation : IndexingInformation
     {
-        #region Constructors
-
-        public ImplicitIndexingInformation()
-        {
-            //
-        }
-
-        #endregion
+        //
     }
 }

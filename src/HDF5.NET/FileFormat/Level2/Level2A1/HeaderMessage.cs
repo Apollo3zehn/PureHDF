@@ -45,7 +45,7 @@ namespace HDF5.NET
 
             Data = Type switch
             {
-                MessageType.NIL                         => new NilMessage(context.Reader),
+                MessageType.NIL                         => new NilMessage(),
                 MessageType.Dataspace                   => objectHeader.DecodeMessage(Flags, () => new DataspaceMessage(context)),
                 MessageType.LinkInfo                    => new LinkInfoMessage(context),
                 MessageType.Datatype                    => objectHeader.DecodeMessage(Flags, () => new DatatypeMessage(context.Reader)),

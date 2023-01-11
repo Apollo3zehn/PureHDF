@@ -48,7 +48,7 @@
             // link info
             LinkInfo = LinkType switch
             {
-                LinkType.Hard       => new HardLinkInfo(reader, superblock),
+                LinkType.Hard       => new HardLinkInfo(context),
                 LinkType.Soft       => new SoftLinkInfo(reader),
                 LinkType.External   => new ExternalLinkInfo(reader),
                 _ when (65 <= (byte)LinkType && (byte)LinkType <= 255) => new UserDefinedLinkInfo(reader),

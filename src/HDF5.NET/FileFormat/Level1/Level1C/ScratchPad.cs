@@ -2,13 +2,6 @@
 {
     internal abstract class ScratchPad
     {
-        #region Constructors
-
-        public ScratchPad()
-        {
-            //
-        }
-
-        #endregion
+        //
     }
 }

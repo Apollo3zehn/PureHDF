@@ -12,8 +12,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ExtensibleArrayDataBlock(H5BinaryReader reader, Superblock superblock, ExtensibleArrayHeader header, ulong elementCount, Func<H5BinaryReader, T> decode)
+        public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5BinaryReader, T> decode)
         {
+            var (reader, superblock) = context;
+            
             // H5EAdblock.c (H5EA__dblock_alloc)
             PageCount = 0UL;
 

@@ -39,7 +39,7 @@ namespace HDF5.NET
 
             if (messageFlags.HasFlag(MessageFlags.Shared))
             {
-                var sharedMessage = new SharedMessage(_context.Reader, _context.Superblock);
+                var sharedMessage = new SharedMessage(_context);
                 return DecodeSharedMessage<T>(sharedMessage);
             }
             else

@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public ChunkedStoragePropertyDescription4(H5BinaryReader reader, Superblock superblock)
+        public ChunkedStoragePropertyDescription4(H5Context context)
         {
+            var (reader, superblock) = context;
+
             // flags
             Flags = (ChunkedStoragePropertyFlags)reader.ReadByte();
 
@@ -29,7 +31,7 @@
             // indexing type information
             IndexingTypeInformation = ChunkIndexingType switch
             {
-                ChunkIndexingType.SingleChunk       => new SingleChunkIndexingInformation(reader, superblock, Flags),
+                ChunkIndexingType.SingleChunk       => new SingleChunkIndexingInformation(context, Flags),
                 ChunkIndexingType.Implicit          => new ImplicitIndexingInformation(),
                 ChunkIndexingType.FixedArray        => new FixedArrayIndexingInformation(reader),
                 ChunkIndexingType.ExtensibleArray   => new ExtensibleArrayIndexingInformation(reader),

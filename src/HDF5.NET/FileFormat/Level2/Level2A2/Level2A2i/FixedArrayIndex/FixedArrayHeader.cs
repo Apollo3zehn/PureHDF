@@ -13,8 +13,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayHeader(H5BinaryReader reader, Superblock superblock)
+        public FixedArrayHeader(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             _superblock = superblock;
 
             // signature

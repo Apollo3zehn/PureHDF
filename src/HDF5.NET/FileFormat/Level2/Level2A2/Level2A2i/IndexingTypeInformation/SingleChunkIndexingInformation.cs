@@ -4,10 +4,12 @@
     {
         #region Constructors
 
-        public SingleChunkIndexingInformation(H5BinaryReader reader, Superblock superblock, ChunkedStoragePropertyFlags flags)
+        public SingleChunkIndexingInformation(H5Context context, ChunkedStoragePropertyFlags flags)
         {
             if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
             {
+                var (reader, superblock) = context;
+
                 // filtered chunk size
                 FilteredChunkSize = superblock.ReadLength(reader);
 

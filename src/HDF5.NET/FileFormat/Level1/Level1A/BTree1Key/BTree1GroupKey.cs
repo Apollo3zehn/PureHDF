@@ -4,8 +4,9 @@
     {
         #region Constructors
 
-        public BTree1GroupKey(H5BinaryReader reader, Superblock superblock)
+        public BTree1GroupKey(H5Context context)
         {
+            var (reader, superblock) = context;
             LocalHeapByteOffset = superblock.ReadLength(reader);
         }
 

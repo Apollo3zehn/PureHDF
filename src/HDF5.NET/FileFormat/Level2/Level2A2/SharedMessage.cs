@@ -10,8 +10,10 @@
 
         #region Constructors
 
-        public SharedMessage(H5BinaryReader reader, Superblock superblock)
+        public SharedMessage(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             // H5Oshared.c (H5O__shared_decode)
 
             // version

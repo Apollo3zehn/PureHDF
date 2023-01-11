@@ -10,24 +10,24 @@
 
         #region Constructors
 
-        public VdsGlobalHeapBlock(H5BinaryReader reader, Superblock superblock)
+        public VdsGlobalHeapBlock(H5BinaryReader localReader, Superblock superblock)
         {
             // version
-            Version = reader.ReadByte();
+            Version = localReader.ReadByte();
 
             // entry count
-            EntryCount = superblock.ReadLength(reader);
+            EntryCount = superblock.ReadLength(localReader);
 
             // vds dataset entries
             VdsDatasetEntries = new VdsDatasetEntry[(int)EntryCount];
 
             for (ulong i = 0; i < EntryCount; i++)
             {
-                VdsDatasetEntries[i] = new VdsDatasetEntry(reader);
+                VdsDatasetEntries[i] = new VdsDatasetEntry(localReader);
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = localReader.ReadUInt32();
         }
 
         #endregion

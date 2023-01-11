@@ -2,13 +2,6 @@
 {
     internal abstract class Message
     {
-        #region Constructors
-
-        public Message()
-        {
-            //
-        }
-
-        #endregion
+        //
     }
 }

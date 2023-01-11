@@ -2,13 +2,6 @@
 {
     internal abstract class SectionDataRecord
     {
-        #region Constructors
-
-        public SectionDataRecord()
-        {
-            //
-        }
-
-        #endregion
+        //
     }
 }

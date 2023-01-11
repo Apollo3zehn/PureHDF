@@ -2,13 +2,6 @@
 {
     internal class FractalHeapFirstRowSectionDataRecord : SectionDataRecord
     {
-        #region Constructors
-
-        public FractalHeapFirstRowSectionDataRecord()
-        {
-            //
-        }
-
-        #endregion
+        //
     }
 }

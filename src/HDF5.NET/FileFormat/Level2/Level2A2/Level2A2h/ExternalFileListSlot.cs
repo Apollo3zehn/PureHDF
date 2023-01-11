@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public ExternalFileListSlot(H5BinaryReader reader, Superblock superblock)
+        public ExternalFileListSlot(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             // name heap offset
             NameHeapOffset = superblock.ReadLength(reader);
 

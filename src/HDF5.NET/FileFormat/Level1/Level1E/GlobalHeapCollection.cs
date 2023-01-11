@@ -39,7 +39,7 @@ namespace HDF5.NET
             while (remaining > headerSize)
             {
                 var before = reader.BaseStream.Position;
-                var globalHeapObject = new GlobalHeapObject(reader, superblock);
+                var globalHeapObject = new GlobalHeapObject(context);
 
                 // Global Heap Object 0 (free space) can appear at the end of the collection.
                 if (globalHeapObject.HeapObjectIndex == 0)

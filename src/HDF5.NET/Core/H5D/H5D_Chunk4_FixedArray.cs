@@ -57,7 +57,7 @@
             if (_header is null)
             {
                 Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
-                _header = new FixedArrayHeader(Dataset.Context.Reader, Dataset.Context.Superblock);
+                _header = new FixedArrayHeader(Dataset.Context);
             }
 
             // H5FA.c (H5FA_get)
@@ -82,8 +82,7 @@
             Dataset.Context.Reader.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
 
             var dataBlock = new FixedArrayDataBlock<T>(
-                Dataset.Context.Reader,
-                Dataset.Context.Superblock,
+                Dataset.Context,
                 header,
                 decode);
 

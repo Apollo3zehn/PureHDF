@@ -37,7 +37,7 @@
 
             for (int i = 0; i < UsedSlotCount; i++)
             {
-                SlotDefinitions[i] = new ExternalFileListSlot(reader, superblock);
+                SlotDefinitions[i] = new ExternalFileListSlot(context);
             }
         }
 

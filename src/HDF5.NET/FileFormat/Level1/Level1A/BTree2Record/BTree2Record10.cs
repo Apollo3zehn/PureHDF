@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public BTree2Record10(H5BinaryReader reader, Superblock superblock, byte rank)
+        public BTree2Record10(H5Context context, byte rank)
         {
+            var (reader, superblock) = context;
+            
             // address
             Address = superblock.ReadOffset(reader);
 

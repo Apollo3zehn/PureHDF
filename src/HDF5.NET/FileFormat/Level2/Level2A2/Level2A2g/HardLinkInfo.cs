@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public HardLinkInfo(H5BinaryReader reader, Superblock superblock)
+        public HardLinkInfo(H5Context context)
         {
+            var (reader, superblock) = context;
+
             // object header address
             HeaderAddress = superblock.ReadOffset(reader);
         }

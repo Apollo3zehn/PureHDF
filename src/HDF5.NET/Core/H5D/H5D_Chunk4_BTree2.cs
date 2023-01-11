@@ -80,13 +80,13 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree2Record10 DecodeRecord10(byte rank)
         {
-            return new BTree2Record10(Dataset.Context.Reader, Dataset.Context.Superblock, rank);
+            return new BTree2Record10(Dataset.Context, rank);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree2Record11 DecodeRecord11(byte rank, uint chunkSizeLength)
         {
-            return new BTree2Record11(Dataset.Context.Reader, Dataset.Context.Superblock, rank, chunkSizeLength);
+            return new BTree2Record11(Dataset.Context, rank, chunkSizeLength);
         }
 
         #endregion

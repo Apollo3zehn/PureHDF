@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public ObjectHeaderSharedMessageRecord(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderSharedMessageRecord(H5Context context) : base(context.Reader)
         {
+            var (reader, superblock) = context;
+            
             // hash value
             HashValue = reader.ReadUInt32();
 
