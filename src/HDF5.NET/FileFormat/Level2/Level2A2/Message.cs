@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class Message : FileBlock
+    internal abstract class Message : FileReader
     {
         #region Constructors
 

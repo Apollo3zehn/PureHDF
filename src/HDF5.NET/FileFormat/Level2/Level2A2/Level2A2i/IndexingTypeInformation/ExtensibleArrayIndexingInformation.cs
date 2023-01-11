@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ExtensibleArrayIndexingInformation(H5BinaryReader reader) : base(reader)
+        public ExtensibleArrayIndexingInformation(H5BinaryReader reader)
         {
             // max bit count
             MaxBitCount = reader.ReadByte();

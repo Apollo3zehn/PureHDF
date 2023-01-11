@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public SoftLinkInfo(H5BinaryReader reader) : base(reader)
+        public SoftLinkInfo(H5BinaryReader reader)
         {
             // value length
             ValueLength = reader.ReadUInt16();

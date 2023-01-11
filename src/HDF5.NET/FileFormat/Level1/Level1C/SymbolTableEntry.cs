@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal class SymbolTableEntry : FileBlock
+    internal class SymbolTableEntry
     {
         #region Fields
 
@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public SymbolTableEntry(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableEntry(H5BinaryReader reader, Superblock superblock)
         {
             _superblock = superblock;
 

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal class VdsGlobalHeapBlock : FileBlock
+    internal class VdsGlobalHeapBlock
     {
         #region Fields
 
@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public VdsGlobalHeapBlock(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public VdsGlobalHeapBlock(H5BinaryReader reader, Superblock superblock)
         {
             // version
             Version = reader.ReadByte();

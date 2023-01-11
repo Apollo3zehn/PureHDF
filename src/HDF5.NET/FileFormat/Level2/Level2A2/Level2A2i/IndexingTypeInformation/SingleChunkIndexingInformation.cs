@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public SingleChunkIndexingInformation(H5BinaryReader reader, Superblock superblock, ChunkedStoragePropertyFlags flags) : base(reader)
+        public SingleChunkIndexingInformation(H5BinaryReader reader, Superblock superblock, ChunkedStoragePropertyFlags flags)
         {
             if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
             {

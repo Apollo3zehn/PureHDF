@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class GlobalHeapCollection : FileBlock
+    internal class GlobalHeapCollection
     {
         #region Fields
 
@@ -13,7 +13,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public GlobalHeapCollection(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapCollection(H5BinaryReader reader, Superblock superblock)
         {
             // signature
             var signature = reader.ReadBytes(4);

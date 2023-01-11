@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class SymbolTableNode : FileBlock
+    internal class SymbolTableNode
     {
         #region Fields
 
@@ -12,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public SymbolTableNode(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public SymbolTableNode(H5BinaryReader reader, Superblock superblock)
         {
             // signature
             var signature = reader.ReadBytes(4);

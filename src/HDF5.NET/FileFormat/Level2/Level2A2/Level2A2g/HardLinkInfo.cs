@@ -11,7 +11,7 @@
 
         #region Constructors
 
-        public HardLinkInfo(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public HardLinkInfo(H5BinaryReader reader, Superblock superblock)
         {
             _superblock = superblock;
 

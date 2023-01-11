@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public OpaquePropertyDescription(H5BinaryReader reader, byte tagByteLength) : base(reader)
+        public OpaquePropertyDescription(H5BinaryReader reader, byte tagByteLength)
         {
             Tag = H5ReadUtils
                 .ReadFixedLengthString(reader, tagByteLength)

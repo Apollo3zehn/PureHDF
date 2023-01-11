@@ -1,8 +1,8 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class IndexingInformation : FileBlock
+    internal abstract class IndexingInformation
     {
-        public IndexingInformation(H5BinaryReader reader) : base(reader)
+        public IndexingInformation()
         {
             //
         }

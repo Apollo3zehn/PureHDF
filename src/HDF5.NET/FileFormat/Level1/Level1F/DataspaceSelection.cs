@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    internal class DataspaceSelection : FileBlock
+    internal class DataspaceSelection
     {
         #region Constructors
 
-        public DataspaceSelection(H5BinaryReader reader) : base(reader)
+        public DataspaceSelection(H5BinaryReader reader)
         {
             SelectionType = (SelectionType)reader.ReadUInt32();
 

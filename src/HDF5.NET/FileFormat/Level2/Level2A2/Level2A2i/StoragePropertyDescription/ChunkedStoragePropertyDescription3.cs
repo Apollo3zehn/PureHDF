@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ChunkedStoragePropertyDescription3(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public ChunkedStoragePropertyDescription3(H5BinaryReader reader, Superblock superblock)
         {
             // rank
             Rank = reader.ReadByte();

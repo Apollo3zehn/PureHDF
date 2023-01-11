@@ -1,8 +1,8 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class HyperslabSelectionInfo : FileBlock
+    internal abstract class HyperslabSelectionInfo
     {
-        public HyperslabSelectionInfo(H5BinaryReader reader) : base(reader)
+        public HyperslabSelectionInfo()
         {
             //
         }

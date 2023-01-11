@@ -3,7 +3,7 @@
 namespace HDF5.NET
 {
     [DebuggerDisplay("{Type}")]
-    internal class HeaderMessage : FileBlock
+    internal class HeaderMessage : FileReader
     {
         #region Fields
 

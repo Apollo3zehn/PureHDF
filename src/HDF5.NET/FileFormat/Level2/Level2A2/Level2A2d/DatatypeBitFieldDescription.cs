@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    internal abstract class DatatypeBitFieldDescription : FileBlock
+    internal abstract class DatatypeBitFieldDescription
     {
         #region Constructors
 
-        public DatatypeBitFieldDescription(H5BinaryReader reader) : base(reader)
+        public DatatypeBitFieldDescription(H5BinaryReader reader)
         {
             Data = reader.ReadBytes(3);
         }

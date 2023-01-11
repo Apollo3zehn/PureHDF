@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class SharedMessageRecord : FileBlock
+    internal abstract class SharedMessageRecord
     {
         #region Constructors
 
-        public SharedMessageRecord(H5BinaryReader reader) : base(reader)
+        public SharedMessageRecord(H5BinaryReader reader)
         {
             // message location
             MessageLocation = (MessageLocation)reader.ReadByte();

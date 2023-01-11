@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class LocalHeap : FileBlock
+    internal class LocalHeap : FileReader
     {
         #region Fields
 

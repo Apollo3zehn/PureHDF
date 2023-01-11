@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    internal class FilterDescription : FileBlock
+    internal class FilterDescription
     {
         #region Constructors
 
-        public FilterDescription(H5BinaryReader reader, byte version) : base(reader)
+        public FilterDescription(H5BinaryReader reader, byte version)
         {
             // filter identifier
             Identifier = (FilterIdentifier)reader.ReadInt16();

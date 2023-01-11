@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class LinkInfo : FileBlock
+    internal abstract class LinkInfo
     {
         #region Constructors
 
-        public LinkInfo(H5BinaryReader reader) : base(reader)
+        public LinkInfo()
         {
             //
         }

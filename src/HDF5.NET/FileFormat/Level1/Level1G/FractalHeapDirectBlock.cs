@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class FractalHeapDirectBlock : FileBlock
+    internal class FractalHeapDirectBlock : FileReader
     {
         #region Fields
 

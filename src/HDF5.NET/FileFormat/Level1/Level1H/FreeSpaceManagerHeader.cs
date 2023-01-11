@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class FreeSpaceManagerHeader : FileBlock
+    internal class FreeSpaceManagerHeader : FileReader
     {
         #region Fields
 

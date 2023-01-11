@@ -1,10 +1,10 @@
 ﻿namespace HDF5.NET
 {
-    internal class VdsDatasetEntry : FileBlock
+    internal class VdsDatasetEntry
     {
         #region Constructors
 
-        public VdsDatasetEntry(H5BinaryReader reader) : base(reader)
+        public VdsDatasetEntry(H5BinaryReader reader)
         {
             // source file name
             SourceFileName = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal class SharedMessage : FileBlock
+    internal class SharedMessage
     {
         #region Fields
 
@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public SharedMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public SharedMessage(H5BinaryReader reader, Superblock superblock)
         {
             // H5Oshared.c (H5O__shared_decode)
 

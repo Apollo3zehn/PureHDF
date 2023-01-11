@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ImplicitIndexingInformation(H5BinaryReader reader) : base(reader)
+        public ImplicitIndexingInformation()
         {
             //
         }

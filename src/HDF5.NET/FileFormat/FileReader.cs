@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    internal abstract class FileBlock
+    internal abstract class FileReader
     {
         #region Constructors
 
-        public FileBlock(H5BinaryReader reader)
+        public FileReader(H5BinaryReader reader)
         {
             Reader = reader;
         }

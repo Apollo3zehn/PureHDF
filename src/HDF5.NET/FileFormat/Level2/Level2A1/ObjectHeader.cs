@@ -1,6 +1,6 @@
 namespace HDF5.NET
 {
-    internal abstract class ObjectHeader : FileBlock
+    internal abstract class ObjectHeader : FileReader
     {
         #region Fields
 

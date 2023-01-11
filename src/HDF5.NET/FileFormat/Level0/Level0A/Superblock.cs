@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class Superblock : FileBlock
+    internal abstract class Superblock : FileReader
     {
         #region Fields
 

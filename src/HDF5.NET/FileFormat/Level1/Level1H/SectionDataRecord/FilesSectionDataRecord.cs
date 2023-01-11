@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FilesSectionDataRecord(H5BinaryReader reader) : base(reader)
+        public FilesSectionDataRecord()
         {
             //
         }

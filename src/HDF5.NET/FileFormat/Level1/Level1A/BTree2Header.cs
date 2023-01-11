@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class BTree2Header<T> : FileBlock where T : struct, IBTree2Record
+    internal class BTree2Header<T> : FileReader where T : struct, IBTree2Record
     {
         #region Fields
 
