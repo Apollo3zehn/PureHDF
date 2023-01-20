@@ -6,7 +6,7 @@ using System.Text;
 
 namespace HDF5.NET.SourceGenerator;
 
-// TODO: Docs
+// TODO: Docs (note also that attribute alias is not supported)
 // TODO: Replace sample file by own or publicly available one
 // TODO: Generated bindings need constructor and properties need to be instantiated (or use structs?) 
 // and final property needs to actually return the requested H5Dataset.
