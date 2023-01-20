@@ -1,4 +1,4 @@
-## v1.0.0-alpha.21 - 2023-01-20
+## v1.0.0-alpha.22 - 2023-01-20
 
 ### Bugs Fixed
 - Fixed a bug which caused chunked .mat files to not be readable.
