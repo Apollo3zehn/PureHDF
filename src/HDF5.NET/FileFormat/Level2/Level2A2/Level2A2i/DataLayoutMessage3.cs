@@ -10,8 +10,10 @@
 
         #region Constructors
 
-        internal DataLayoutMessage3(H5BinaryReader reader, Superblock superblock, byte version) : base(reader)
+        internal DataLayoutMessage3(H5Context context, byte version) : base(context.Reader)
         {
+            var (reader, superblock) = context;
+            
             // version
             Version = version;
 
@@ -22,10 +24,10 @@
             Properties = (Version, LayoutClass) switch
             {
                 (_, LayoutClass.Compact)        => new CompactStoragePropertyDescription(reader),
-                (_, LayoutClass.Contiguous)     => new ContiguousStoragePropertyDescription(reader, superblock),
-                (3, LayoutClass.Chunked)        => new ChunkedStoragePropertyDescription3(reader, superblock),
-                (4, LayoutClass.Chunked)        => new ChunkedStoragePropertyDescription4(reader, superblock),
-                (4, LayoutClass.VirtualStorage) => new VirtualStoragePropertyDescription(reader, superblock),
+                (_, LayoutClass.Contiguous)     => new ContiguousStoragePropertyDescription(context),
+                (3, LayoutClass.Chunked)        => new ChunkedStoragePropertyDescription3(context),
+                (4, LayoutClass.Chunked)        => new ChunkedStoragePropertyDescription4(context),
+                (4, LayoutClass.VirtualStorage) => new VirtualStoragePropertyDescription(context),
                 _ => throw new NotSupportedException($"The layout class '{LayoutClass}' is not supported for the data layout message version '{Version}'.")
             };
 

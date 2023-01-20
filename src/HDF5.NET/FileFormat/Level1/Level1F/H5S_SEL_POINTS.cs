@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public H5S_SEL_POINTS(H5BinaryReader reader) : base(reader)
+        public H5S_SEL_POINTS(H5BinaryReader reader)
         {
             // version
             Version = reader.ReadUInt32();

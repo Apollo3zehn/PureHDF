@@ -269,7 +269,7 @@ namespace HDF5.NET.Tests.Reading
 
                 // H5Rint.c (H5R__get_region)
 // TODO: use more structs?
-                var globalHeapId = new GlobalHeapId(root.Context.Superblock)
+                var globalHeapId = new GlobalHeapId(root.Context)
                 {
                     CollectionAddress = reference.CollectionAddress,
                     ObjectIndex = reference.ObjectIndex

@@ -6,8 +6,8 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType2(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader, FractalHeapHeader header) 
-            : base(reader, superblock, localReader, header)
+        public HugeObjectsFractalHeapIdSubType2(H5Context context, H5BinaryReader localReader, FractalHeapHeader header) 
+            : base(context, localReader, header)
         {
             //
         }

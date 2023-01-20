@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public CompactStoragePropertyDescription(H5BinaryReader reader) : base(reader)
+        public CompactStoragePropertyDescription(H5BinaryReader reader)
         {
             // size
             Size = reader.ReadUInt16();

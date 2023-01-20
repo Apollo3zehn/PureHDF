@@ -1,8 +1,8 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class StoragePropertyDescription : FileBlock
+    internal abstract class StoragePropertyDescription
     {
-        public StoragePropertyDescription(H5BinaryReader reader) : base(reader)
+        public StoragePropertyDescription()
         {
             //
         }

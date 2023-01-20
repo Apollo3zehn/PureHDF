@@ -1,8 +1,8 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class H5S_SEL : FileBlock
+    internal abstract class H5S_SEL
     {
-        public H5S_SEL(H5BinaryReader reader) : base(reader)
+        public H5S_SEL()
         {
             //
         }

@@ -9,18 +9,18 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5BinaryReader _reader;
-        private Superblock _superblock;
+        private H5Context _context;
         private Func<T> _decodeKey;
 
         #endregion
 
         #region Constructors
 
-        public BTree1Node(H5BinaryReader reader, Superblock superblock, Func<T> decodeKey)
+        public BTree1Node(H5Context context, Func<T> decodeKey)
         {
-            _reader = reader;
-            _superblock = superblock;
+            var (reader, superblock) = context;
+            _context = context;
+
             _decodeKey = decodeKey;
 
             var signature = reader.ReadBytes(4);
@@ -63,8 +63,8 @@ namespace HDF5.NET
         {
             get
             {
-                _reader.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
-                return new BTree1Node<T>(_reader, _superblock, _decodeKey);
+                _context.Reader.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
+                return new BTree1Node<T>(_context, _decodeKey);
             }
         }
 
@@ -72,8 +72,8 @@ namespace HDF5.NET
         {
             get
             {
-                _reader.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
-                return new BTree1Node<T>(_reader, _superblock, _decodeKey);
+                _context.Reader.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
+                return new BTree1Node<T>(_context, _decodeKey);
             }
         }
 
@@ -108,8 +108,8 @@ namespace HDF5.NET
 
             if (NodeLevel > 0)
             {
-                _reader.Seek((long)childAddress, SeekOrigin.Begin);
-                var subtree = new BTree1Node<T>(_reader, _superblock, _decodeKey);
+                _context.Reader.Seek((long)childAddress, SeekOrigin.Begin);
+                var subtree = new BTree1Node<T>(_context, _decodeKey);
 
                 if (subtree.TryFindUserData(out userData, compare3, found))
                     return true;
@@ -135,9 +135,9 @@ namespace HDF5.NET
             {
                 foreach (var address in node.ChildAddresses)
                 {
-                    _reader.Seek((long)address, SeekOrigin.Begin);
+                    _context.Reader.Seek((long)address, SeekOrigin.Begin);
 
-                    var childNode = new BTree1Node<T>(_reader, _superblock, _decodeKey);
+                    var childNode = new BTree1Node<T>(_context, _decodeKey);
 
                     // internal node
                     if ((node.NodeLevel - 1) > 0)

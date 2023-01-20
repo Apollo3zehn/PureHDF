@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class GlobalHeapCollection : FileBlock
+    internal class GlobalHeapCollection
     {
         #region Fields
 
@@ -13,8 +13,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public GlobalHeapCollection(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public GlobalHeapCollection(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, GlobalHeapCollection.Signature);
@@ -37,7 +39,7 @@ namespace HDF5.NET
             while (remaining > headerSize)
             {
                 var before = reader.BaseStream.Position;
-                var globalHeapObject = new GlobalHeapObject(reader, superblock);
+                var globalHeapObject = new GlobalHeapObject(context);
 
                 // Global Heap Object 0 (free space) can appear at the end of the collection.
                 if (globalHeapObject.HeapObjectIndex == 0)

@@ -2,20 +2,21 @@
 
 namespace HDF5.NET
 {
-    internal class FractalHeapHeader : FileBlock
+    internal class FractalHeapHeader
     {
         #region Fields
 
         private byte _version;
-        private Superblock _superblock;
+        private H5Context _context;
 
         #endregion
 
         #region Constructors
 
-        public FractalHeapHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public FractalHeapHeader(H5Context context)
         {
-            _superblock = superblock;
+            var (reader, superblock) = context;
+            _context = context;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -212,8 +213,8 @@ namespace HDF5.NET
                 directBlockAddress = indirectBlock.Entries[entry].Address;
             }
 
-            Reader.Seek((long)directBlockAddress, SeekOrigin.Begin);
-            directBlock = new FractalHeapDirectBlock(this, Reader, _superblock);
+            _context.Reader.Seek((long)directBlockAddress, SeekOrigin.Begin);
+            directBlock = new FractalHeapDirectBlock(_context, this);
 
             /* Compute offset of object within block */
             if (heapId.Offset >= directBlock.BlockOffset + directBlockSize)
@@ -237,8 +238,8 @@ namespace HDF5.NET
         {
             var (row, column) = Lookup(offset);
 
-            Reader.Seek((long)RootBlockAddress, SeekOrigin.Begin);
-            var indirectBlock = new FractalHeapIndirectBlock(this, Reader, _superblock, RootIndirectBlockRowsCount);
+            _context.Reader.Seek((long)RootBlockAddress, SeekOrigin.Begin);
+            var indirectBlock = new FractalHeapIndirectBlock(_context, this, RootIndirectBlockRowsCount);
 
             uint entry;
 
@@ -257,8 +258,8 @@ namespace HDF5.NET
                 var indirectBlockEntry = indirectBlock.Entries[entry];
  
                 /* Use new indirect block */
-                Reader.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
-                indirectBlock = new FractalHeapIndirectBlock(this, Reader, _superblock, nrows);
+                _context.Reader.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
+                indirectBlock = new FractalHeapIndirectBlock(_context, this, nrows);
 
                 /* Look up row & column in new indirect block for object */
                 (row, column) = Lookup(offset - indirectBlock.BlockOffset);
@@ -327,11 +328,13 @@ namespace HDF5.NET
         {
             // H5HFhuge.c (H5HF_huge_init)
 
+            var superblock = _context.Superblock;
+
             // with filter
             if (IOFilterEncodedLength > 0)
             {
                 // length of fractal heap id for huge objects (sub-type 4)
-                var actualLength = _superblock.OffsetsSize + _superblock.LengthsSize + 4 + _superblock.LengthsSize;
+                var actualLength = superblock.OffsetsSize + superblock.LengthsSize + 4 + superblock.LengthsSize;
 
                 if ((HeapIdLength - 1) >= actualLength)
                 {
@@ -340,7 +343,7 @@ namespace HDF5.NET
 
                     /* Set the size of 'huge' object IDs */
 // TODO: Correct? Why is here not "+4"?
-                    HugeIdsSize = (byte)(_superblock.OffsetsSize + _superblock.LengthsSize + _superblock.LengthsSize);
+                    HugeIdsSize = (byte)(superblock.OffsetsSize + superblock.LengthsSize + superblock.LengthsSize);
                 }
                 else
                 {
@@ -352,7 +355,7 @@ namespace HDF5.NET
             else
             {
                 // length of fractal heap id for huge objects (sub-type 3)
-                var actualLength = _superblock.OffsetsSize + _superblock.LengthsSize;
+                var actualLength = superblock.OffsetsSize + superblock.LengthsSize;
 
                 if ((HeapIdLength - 1) >= actualLength)
                 {

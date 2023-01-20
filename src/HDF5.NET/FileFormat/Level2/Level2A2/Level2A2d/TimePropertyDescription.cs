@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public TimePropertyDescription(H5BinaryReader reader) : base(reader)
+        public TimePropertyDescription(H5BinaryReader reader)
         {
             BitPrecision = reader.ReadUInt16();
         }

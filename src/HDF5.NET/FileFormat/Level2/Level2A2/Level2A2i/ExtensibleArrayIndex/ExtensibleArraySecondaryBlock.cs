@@ -12,8 +12,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ExtensibleArraySecondaryBlock(H5BinaryReader reader, Superblock superblock, ExtensibleArrayHeader header, uint index)
+        public ExtensibleArraySecondaryBlock(H5Context context, ExtensibleArrayHeader header, uint index)
         {
+            var (reader, superblock) = context;
+            
             // H5EAsblock.c (H5EA__sblock_alloc)
 
             /* Compute/cache information */

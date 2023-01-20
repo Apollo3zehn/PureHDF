@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ChunkedStoragePropertyDescription(H5BinaryReader reader) : base(reader)
+        public ChunkedStoragePropertyDescription()
         {
             //
         }

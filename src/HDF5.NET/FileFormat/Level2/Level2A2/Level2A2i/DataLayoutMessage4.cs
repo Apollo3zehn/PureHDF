@@ -4,8 +4,8 @@
     {
         #region Constructors
 
-        internal DataLayoutMessage4(H5BinaryReader reader, Superblock superblock, byte version)
-            : base(reader, superblock, version)
+        internal DataLayoutMessage4(H5Context context, byte version)
+            : base(context, version)
         {
             //
         }

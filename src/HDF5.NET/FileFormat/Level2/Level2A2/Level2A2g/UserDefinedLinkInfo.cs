@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public UserDefinedLinkInfo(H5BinaryReader reader) : base(reader)
+        public UserDefinedLinkInfo(H5BinaryReader reader)
         {
             // data length
             DataLength = reader.ReadUInt16();

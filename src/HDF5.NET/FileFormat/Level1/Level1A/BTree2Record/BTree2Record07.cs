@@ -21,7 +21,7 @@
 
 //        #region Properties
 
-//        public static BTree2Record07 Construct(H5BinaryReader reader, Superblock superblock)
+//        public static BTree2Record07 Construct(H5Context context)
 //        {
 //            var messageLocation = (MessageLocation)reader.ReadByte();
 

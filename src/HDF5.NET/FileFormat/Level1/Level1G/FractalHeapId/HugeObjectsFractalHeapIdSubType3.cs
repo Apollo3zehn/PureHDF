@@ -12,8 +12,9 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType3(H5BinaryReader reader, Superblock superblock, H5BinaryReader localReader)
+        public HugeObjectsFractalHeapIdSubType3(H5Context context, H5BinaryReader localReader)
         {
+            var (reader, superblock) = context;
             _reader = reader;
 
             // address

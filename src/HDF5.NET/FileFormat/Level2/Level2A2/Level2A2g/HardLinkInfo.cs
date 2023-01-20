@@ -2,18 +2,11 @@
 {
     internal class HardLinkInfo : LinkInfo
     {
-        #region Fields
-
-// TODO: OK like this?
-        private Superblock _superblock;
-
-        #endregion
-
         #region Constructors
 
-        public HardLinkInfo(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public HardLinkInfo(H5Context context)
         {
-            _superblock = superblock;
+            var (reader, superblock) = context;
 
             // object header address
             HeaderAddress = superblock.ReadOffset(reader);

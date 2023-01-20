@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        internal EnumerationPropertyDescription(H5BinaryReader reader, byte version, uint valueSize, ushort memberCount) : base(reader)
+        internal EnumerationPropertyDescription(H5BinaryReader reader, byte version, uint valueSize, ushort memberCount)
         {
             // base type
             BaseType = new DatatypeMessage(reader);

@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    internal class SharedObjectHeaderMessageTable : FileBlock
+    internal class SharedObjectHeaderMessageTable
     {
         #region Constructors
 
-        public SharedObjectHeaderMessageTable(H5BinaryReader reader) : base(reader)
+        public SharedObjectHeaderMessageTable(H5BinaryReader reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

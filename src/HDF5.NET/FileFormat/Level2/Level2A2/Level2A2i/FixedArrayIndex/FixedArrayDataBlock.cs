@@ -12,8 +12,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayDataBlock(H5BinaryReader reader, Superblock superblock, FixedArrayHeader header, Func<H5BinaryReader, T> decode)
+        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BinaryReader, T> decode)
         {
+            var (reader, superblock) = context;
+            
             // H5FAdblock.c (H5FA__dblock_alloc)
             ElementsPerPage = 1UL << header.PageBits;
             PageCount = 0UL;

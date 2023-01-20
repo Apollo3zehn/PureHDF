@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public BogusMessage(H5BinaryReader reader) : base(reader)
+        public BogusMessage(H5BinaryReader reader)
         {
             BogusValue = reader.ReadUInt32();
         }

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class FreeSpaceManagerHeader : FileBlock
+    internal class FreeSpaceManagerHeader
     {
         #region Fields
 
@@ -12,8 +12,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FreeSpaceManagerHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public FreeSpaceManagerHeader(H5Context context)
         {
+            var (reader, superblock) = context;
+
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, FreeSpaceManagerHeader.Signature);

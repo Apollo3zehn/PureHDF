@@ -10,8 +10,10 @@
 
         #region Constructors
 
-        public DataspaceMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public DataspaceMessage(H5Context context)
         {
+            var (reader, superblock) = context;
+
             Version = reader.ReadByte();
             Rank = reader.ReadByte();
             var flags = (DataspaceMessageFlags)reader.ReadByte();

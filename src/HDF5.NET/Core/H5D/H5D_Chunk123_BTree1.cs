@@ -60,7 +60,7 @@ namespace HDF5.NET
                 Func<BTree1RawDataChunksKey> decodeKey = 
                     () => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
-                _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context.Reader, Dataset.Context.Superblock, decodeKey);
+                _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context, decodeKey);
             }
 
             // get key and child address

@@ -2,7 +2,7 @@
 
 namespace HDF5.NET
 {
-    internal class FixedArrayHeader : FileBlock
+    internal class FixedArrayHeader
     {
         #region Fields
 
@@ -13,8 +13,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayHeader(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public FixedArrayHeader(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             _superblock = superblock;
 
             // signature

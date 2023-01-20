@@ -4,15 +4,16 @@
     {
         #region Fields
 
-        private Superblock _superblock;
+        private H5Context _context;
 
         #endregion
 
         #region Constructors
 
-        public ObjectHeaderScratchPad(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public ObjectHeaderScratchPad(H5Context context)
         {
-            _superblock = superblock;
+            var (reader, superblock) = context;
+            _context = context;
 
             BTree1Address = superblock.ReadLength(reader);
             NameHeapAddress = superblock.ReadLength(reader);
@@ -29,8 +30,8 @@
         {
             get
             {
-                Reader.Seek((long)NameHeapAddress, SeekOrigin.Begin);
-                return new LocalHeap(Reader, _superblock);
+                _context.Reader.Seek((long)NameHeapAddress, SeekOrigin.Begin);
+                return new LocalHeap(_context);
             }
         }
 
@@ -40,8 +41,8 @@
 
         public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
         {
-            Reader.Seek((long)BTree1Address, SeekOrigin.Begin);
-            return new BTree1Node<BTree1GroupKey>(Reader, _superblock, decodeKey);
+            _context.Reader.Seek((long)BTree1Address, SeekOrigin.Begin);
+            return new BTree1Node<BTree1GroupKey>(_context, decodeKey);
         }
 
         #endregion

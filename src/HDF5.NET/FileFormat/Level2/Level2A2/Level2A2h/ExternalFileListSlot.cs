@@ -1,11 +1,13 @@
 ﻿namespace HDF5.NET
 {
-    internal class ExternalFileListSlot : FileBlock
+    internal class ExternalFileListSlot
     {
         #region Constructors
 
-        public ExternalFileListSlot(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public ExternalFileListSlot(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             // name heap offset
             NameHeapOffset = superblock.ReadLength(reader);
 

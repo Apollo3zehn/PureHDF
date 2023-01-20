@@ -2,11 +2,11 @@
 
 namespace HDF5.NET
 {
-    internal class SharedMessageRecordList : FileBlock
+    internal class SharedMessageRecordList
     {
         #region Constructors
 
-        public SharedMessageRecordList(H5BinaryReader reader) : base(reader)
+        public SharedMessageRecordList(H5BinaryReader reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

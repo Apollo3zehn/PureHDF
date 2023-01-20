@@ -12,7 +12,7 @@
 
         #region Constructors
 
-        public AttributeMessage(H5Context context, ObjectHeader objectHeader) : base(context.Reader)
+        public AttributeMessage(H5Context context, ObjectHeader objectHeader)
         {
             _context = context;
 
@@ -64,13 +64,13 @@
                 : MessageFlags.NoFlags;
 
             Dataspace = objectHeader.DecodeMessage(flags2,
-                () => new DataspaceMessage(context.Reader, context.Superblock));
+                () => new DataspaceMessage(context));
 
             if (Version == 1)
             {
                 var paddedSize = (int)(Math.Ceiling(dataspaceSize / 8.0) * 8);
                 var remainingSize = paddedSize - dataspaceSize;
-                Reader.Seek(remainingSize, SeekOrigin.Current);
+                _context.Reader.Seek(remainingSize, SeekOrigin.Current);
             }
 
             // data

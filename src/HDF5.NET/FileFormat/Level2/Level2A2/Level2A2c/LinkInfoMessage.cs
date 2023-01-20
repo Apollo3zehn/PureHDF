@@ -6,16 +6,18 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private Superblock _superblock;
+        private H5Context _context;
         private byte _version;
 
         #endregion
 
         #region Constructors
 
-        public LinkInfoMessage(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public LinkInfoMessage(H5Context context)
         {
-            _superblock = superblock;
+            _context = context;
+
+            var (reader, superblock) = context;
 
             // version
             Version = reader.ReadByte();
@@ -67,8 +69,8 @@ namespace HDF5.NET
         {
             get
             {
-                Reader.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
-                return new FractalHeapHeader(Reader, _superblock);
+                _context.Reader.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
+                return new FractalHeapHeader(_context);
             }
         }
 
@@ -76,8 +78,8 @@ namespace HDF5.NET
         {
             get
             {
-                Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
-                return new BTree2Header<BTree2Record05>(Reader, _superblock, DecodeRecord05);
+                _context.Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record05>(_context, DecodeRecord05);
             }
         }
 
@@ -85,8 +87,8 @@ namespace HDF5.NET
         {
             get
             {
-                Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
-                return new BTree2Header<BTree2Record06>(Reader, _superblock, DecodeRecord06);
+                _context.Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                return new BTree2Header<BTree2Record06>(_context, DecodeRecord06);
             }
         }
 
@@ -95,10 +97,10 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record05 DecodeRecord05() => new BTree2Record05(Reader);
+        private BTree2Record05 DecodeRecord05() => new BTree2Record05(_context.Reader);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record06 DecodeRecord06() => new BTree2Record06(Reader);
+        private BTree2Record06 DecodeRecord06() => new BTree2Record06(_context.Reader);
 
         #endregion
     }

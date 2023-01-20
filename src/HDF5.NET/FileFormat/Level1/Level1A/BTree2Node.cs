@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class BTree2Node<T> : FileBlock where T : struct, IBTree2Record
+    internal abstract class BTree2Node<T> where T : struct, IBTree2Record
     {
         #region Fields
 
@@ -9,7 +9,6 @@
         #endregion
 
         public BTree2Node(H5BinaryReader reader, BTree2Header<T> header, ushort recordCount, byte[] signature, Func<T> decodeKey) 
-            : base(reader)
         {
             // signature
             var actualSignature = reader.ReadBytes(4);

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FixedPointPropertyDescription(H5BinaryReader reader) : base(reader)
+        public FixedPointPropertyDescription(H5BinaryReader reader)
         {
             BitOffset = reader.ReadUInt16();
             BitPrecision = reader.ReadUInt16();

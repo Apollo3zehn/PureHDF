@@ -2,21 +2,21 @@
 
 namespace HDF5.NET
 {
-    internal class FreeSpaceSectionList : FileBlock
+    internal class FreeSpaceSectionList
     {
         #region Fields
 
-// TODO: OK like this?
-        private Superblock _superblock;
+        private H5Context _context;
         private byte _version;
 
         #endregion
 
         #region Constructors
 
-        public FreeSpaceSectionList(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public FreeSpaceSectionList(H5Context context)
         {
-            _superblock = superblock;
+            var (reader, superblock) = context;
+            _context = context;
 
             // signature
             var signature = reader.ReadBytes(4);
@@ -70,8 +70,8 @@ namespace HDF5.NET
         {
             get
             {
-                Reader.Seek((long)FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
-                return new FreeSpaceManagerHeader(Reader, _superblock);
+                _context.Reader.Seek((long)FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
+                return new FreeSpaceManagerHeader(_context);
             }
         }
 

@@ -1,14 +1,7 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class Message : FileBlock
+    internal abstract class Message
     {
-        #region Constructors
-
-        public Message(H5BinaryReader reader) : base(reader)
-        {
-            //
-        }
-
-        #endregion
+        //
     }
 }

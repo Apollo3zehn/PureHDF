@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public MultiDriverInfo(H5BinaryReader reader) : base(reader)
+        public MultiDriverInfo(H5BinaryReader reader)
         {
             // member mapping
             MemberMapping1 = (MemberMapping)reader.ReadByte();

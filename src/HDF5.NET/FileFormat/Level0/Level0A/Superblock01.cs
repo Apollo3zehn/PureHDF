@@ -2,10 +2,18 @@
 {
     internal class Superblock01 : Superblock
     {
+        #region Fields
+
+        H5BinaryReader _reader;
+
+        #endregion
+
         #region Constructors
 
-        public Superblock01(H5BinaryReader reader, byte version) : base(reader)
+        public Superblock01(H5BinaryReader reader, byte version)
         {
+            _reader = reader;
+
             SuperBlockVersion = version;
             FreeSpaceStorageVersion = reader.ReadByte();
             RootGroupSymbolTableEntryVersion = reader.ReadByte();
@@ -31,7 +39,9 @@
             FreeSpaceInfoAddress = ReadOffset(reader);
             EndOfFileAddress = ReadOffset(reader);
             DriverInfoBlockAddress = ReadOffset(reader);
-            RootGroupSymbolTableEntry = new SymbolTableEntry(reader, this);
+
+            var context = new H5Context(reader, this);
+            RootGroupSymbolTableEntry = new SymbolTableEntry(context);
         }
 
         #endregion
@@ -54,8 +64,9 @@
             {
                 if (IsUndefinedAddress(DriverInfoBlockAddress))
                     return null;
+
                 else
-                    return new DriverInfoBlock(Reader);
+                    return new DriverInfoBlock(_reader);
             }
         }
 

@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public VirtualStoragePropertyDescription(H5BinaryReader reader, Superblock superblock) : base(reader)
+        public VirtualStoragePropertyDescription(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             // address
             Address = superblock.ReadOffset(reader);
 

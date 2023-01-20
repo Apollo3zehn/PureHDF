@@ -68,7 +68,7 @@ namespace HDF5.NET
 
             foreach (var attributeMessage in attributeMessages1)
             {
-                yield return new H5Attribute(attributeMessage, Context.Superblock);
+                yield return new H5Attribute(Context, attributeMessage);
             }
 
             // attributes are stored densely
@@ -87,7 +87,7 @@ namespace HDF5.NET
 
                     foreach (var attributeMessage in attributeMessages2)
                     {
-                        yield return new H5Attribute(attributeMessage, Context.Superblock);
+                        yield return new H5Attribute(Context, attributeMessage);
                     }
                 }
             }

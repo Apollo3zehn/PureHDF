@@ -4,8 +4,10 @@
     {
         #region Constructors
 
-        public BTree2Record01(H5BinaryReader reader, Superblock superblock)
+        public BTree2Record01(H5Context context)
         {
+            var (reader, superblock) = context;
+            
             HugeObjectAddress = superblock.ReadOffset(reader);
             HugeObjectLength = superblock.ReadLength(reader);
             HugeObjectId = superblock.ReadLength(reader);

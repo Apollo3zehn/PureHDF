@@ -9,14 +9,12 @@
         {
             //
             var layoutMessage = (DataLayoutMessage4)dataset.InternalDataLayout;
-            var collection = H5Cache.GetGlobalHeapObject(dataset.Context.Reader, dataset.Context.Superblock, layoutMessage.Address);
+            var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
             var objectData = collection.GlobalHeapObjects[(int)index - 1].ObjectData;
             using var localReader = new H5BinaryReader(new MemoryStream(objectData));
 
-            var vdsGlobalHeapBlock = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);
-
-           
+            var vdsGlobalHeapBlock = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);           
         }
 
         #endregion

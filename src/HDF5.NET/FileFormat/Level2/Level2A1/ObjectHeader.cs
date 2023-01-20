@@ -1,6 +1,6 @@
 namespace HDF5.NET
 {
-    internal abstract class ObjectHeader : FileBlock
+    internal abstract class ObjectHeader
     {
         #region Fields
 
@@ -10,7 +10,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ObjectHeader(H5Context context) : base(context.Reader)
+        public ObjectHeader(H5Context context)
         {
             _context = context;
 
@@ -39,7 +39,7 @@ namespace HDF5.NET
 
             if (messageFlags.HasFlag(MessageFlags.Shared))
             {
-                var sharedMessage = new SharedMessage(_context.Reader, _context.Superblock);
+                var sharedMessage = new SharedMessage(_context);
                 return DecodeSharedMessage<T>(sharedMessage);
             }
             else

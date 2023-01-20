@@ -1,8 +1,8 @@
 ﻿namespace HDF5.NET
 {
-    internal abstract class DriverInfo : FileBlock
+    internal abstract class DriverInfo
     {
-        public DriverInfo(H5BinaryReader reader) : base(reader)
+        public DriverInfo()
         {
             //
         }

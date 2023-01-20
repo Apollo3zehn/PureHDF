@@ -8,9 +8,9 @@ namespace HDF5.NET
     internal static class H5ReadUtils
     {
         public static unsafe T[] ReadCompound<T>(
+            H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
-            Superblock superblock,
             Func<FieldInfo, string> getName) where T : struct
         {
             if (datatype.Class != DatatypeMessageClass.Compound)
@@ -77,7 +77,7 @@ namespace HDF5.NET
                         var sourceIndex = (int)(sourceOffset + member.MemberByteOffset);
                         var sourceIndexEnd = sourceIndex + fieldSize;
                         var targetIndex = fieldInfo.Offset.ToInt64();
-                        var value = ReadString(member.MemberTypeMessage, sourceRawBytes[sourceIndex..sourceIndexEnd], superblock);
+                        var value = ReadString(context, member.MemberTypeMessage, sourceRawBytes[sourceIndex..sourceIndexEnd]);
 
                         stringMap[fieldInfo] = value[0];
                     }
@@ -119,9 +119,9 @@ namespace HDF5.NET
         private static Dictionary<string, object?>[] oneElementCompountArray = new Dictionary<string, object?>[1];
 
         public static unsafe Dictionary<string, object?>[] ReadCompound(
+            H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
-            Superblock superblock,
             Dictionary<string, object?>[]? result = default)
         {
             if (datatype.Class != DatatypeMessageClass.Compound)
@@ -169,7 +169,7 @@ namespace HDF5.NET
                         (DatatypeMessageClass.FloatingPoint, 8) => MemoryMarshal.Cast<byte, double>(slicedData)[0],
 
                         (DatatypeMessageClass.String, _) 
-                            => ReadString(memberType, slicedData, superblock, oneElementStringArray)[0],
+                            => ReadString(context, memberType, slicedData, oneElementStringArray)[0],
                             
 // TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.BitField, _) 
@@ -179,7 +179,7 @@ namespace HDF5.NET
                             => slicedData.ToArray(),
 
                         (DatatypeMessageClass.Compound, _) 
-                            => ReadCompound(memberType, slicedData, superblock, oneElementCompountArray)[0],
+                            => ReadCompound(context, memberType, slicedData, oneElementCompountArray)[0],
 
 // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.Reference, _) 
@@ -187,13 +187,13 @@ namespace HDF5.NET
 
                         /* It is difficult to avoid array allocation here */
                         (DatatypeMessageClass.Enumerated, _) 
-                            => (ReadEnumerated(memberType, slicedData, superblock) ?? new object[1]).GetValue(0),
+                            => (ReadEnumerated(context, memberType, slicedData) ?? new object[1]).GetValue(0),
 
                         (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String 
-                            => ReadString(memberType, slicedData, superblock, oneElementStringArray)[0],
+                            => ReadString(context, memberType, slicedData, oneElementStringArray)[0],
 
                         (DatatypeMessageClass.Array, _) 
-                            => ReadArray(memberType, slicedData, superblock),
+                            => ReadArray(context, memberType, slicedData),
 
                         _ => default
                     };
@@ -206,8 +206,10 @@ namespace HDF5.NET
             return result;
         }
 
-        private static Array? ReadRawArray(DatatypeMessage baseType, Span<byte> slicedData, Superblock superblock)
+        private static Array? ReadRawArray(H5Context context, DatatypeMessage baseType, Span<byte> slicedData)
         {
+            var superblock = context.Superblock;
+
             var fixedPointBitfield = baseType.BitField as FixedPointBitFieldDescription;
             var variableLengthBitfield = baseType.BitField as VariableLengthBitFieldDescription;
 
@@ -226,7 +228,7 @@ namespace HDF5.NET
                 (DatatypeMessageClass.FloatingPoint, 8) => MemoryMarshal.Cast<byte, double>(slicedData).ToArray(),
 
                 (DatatypeMessageClass.String, _) 
-                    => ReadString(baseType, slicedData, superblock),
+                    => ReadString(context, baseType, slicedData),
 
 // TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
                 (DatatypeMessageClass.BitField, _) 
@@ -236,26 +238,26 @@ namespace HDF5.NET
                     => slicedData.ToArray(),
                 
                 (DatatypeMessageClass.Compound, _) 
-                    => ReadCompound(baseType, slicedData, superblock),
+                    => ReadCompound(context, baseType, slicedData),
 
 // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                 (DatatypeMessageClass.Reference, _) 
                     => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData).ToArray(),
                 
                 (DatatypeMessageClass.Enumerated, _) 
-                    => ReadEnumerated(baseType, slicedData, superblock),
+                    => ReadEnumerated(context, baseType, slicedData),
                 
                 (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String 
-                    => ReadString(baseType, slicedData, superblock),
+                    => ReadString(context, baseType, slicedData),
                 
                 (DatatypeMessageClass.Array, _) 
-                    => ReadArray(baseType, slicedData, superblock),
+                    => ReadArray(context, baseType, slicedData),
 
                 _ => default
             };
         }
 
-        private static Array? ReadArray(DatatypeMessage type, Span<byte> slicedData, Superblock superblock)
+        private static Array? ReadArray(H5Context context, DatatypeMessage type, Span<byte> slicedData)
         {
             if (type.Class != DatatypeMessageClass.Array)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Array}'.");
@@ -263,10 +265,10 @@ namespace HDF5.NET
             var properties = (ArrayPropertyDescription)type.Properties[0];
             var baseType = properties.BaseType;
 
-            return ReadRawArray(baseType, slicedData, superblock);
+            return ReadRawArray(context, baseType, slicedData);
         }
 
-        private static Array? ReadEnumerated(DatatypeMessage type, Span<byte> slicedData, Superblock superblock)
+        private static Array? ReadEnumerated(H5Context context, DatatypeMessage type, Span<byte> slicedData)
         {
             if (type.Class != DatatypeMessageClass.Enumerated)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Enumerated}'.");
@@ -274,13 +276,13 @@ namespace HDF5.NET
             var properties = (EnumerationPropertyDescription)type.Properties[0];
             var baseType = properties.BaseType;
 
-            return ReadRawArray(baseType, slicedData, superblock);
+            return ReadRawArray(context, baseType, slicedData);
         }
 
         public static string[] ReadString(
+            H5Context context,
             DatatypeMessage datatype, 
             Span<byte> data, 
-            Superblock superblock, 
             string[]? result = default)
         {
             /* Padding
@@ -342,7 +344,7 @@ namespace HDF5.NET
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
-                using var dataReader = new H5BinaryReader(new MemoryStream(data.ToArray()));
+                using var localReader = new H5BinaryReader(new MemoryStream(data.ToArray()));
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
@@ -354,8 +356,8 @@ namespace HDF5.NET
 
                 for (int i = 0; i < result.Length; i++)
                 {
-                    var dataSize = dataReader.ReadUInt32(); // for what do we need this?
-                    var globalHeapId = new GlobalHeapId(dataReader, superblock);
+                    var dataSize = localReader.ReadUInt32(); // for what do we need this?
+                    var globalHeapId = new GlobalHeapId(context, localReader);
                     var globalHeapCollection = globalHeapId.Collection;
                     var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
                     var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);

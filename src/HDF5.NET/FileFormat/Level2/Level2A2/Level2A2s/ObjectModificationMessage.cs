@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public ObjectModificationMessage(H5BinaryReader reader) : base(reader)
+        public ObjectModificationMessage(H5BinaryReader reader)
         {
             // version
             Version = reader.ReadByte();
@@ -22,7 +22,7 @@
             SecondsAfterUnixEpoch = reader.ReadUInt32();
         }
 
-        public ObjectModificationMessage(uint secondsAfterUnixEpoch) : base(default!)
+        public ObjectModificationMessage(uint secondsAfterUnixEpoch)
         {
             // version
             Version = 1;

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal class DriverInfoBlock : FileBlock
+    internal class DriverInfoBlock
     {
         #region Fields
 
@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public DriverInfoBlock(H5BinaryReader reader) : base(reader)
+        public DriverInfoBlock(H5BinaryReader reader)
         {
             // version
             Version = reader.ReadByte(); 

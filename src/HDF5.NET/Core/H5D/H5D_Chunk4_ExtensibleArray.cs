@@ -135,7 +135,7 @@
             if (_header is null)
             {
                 Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
-                _header = new ExtensibleArrayHeader(Dataset.Context.Reader, Dataset.Context.Superblock);
+                _header = new ExtensibleArrayHeader(Dataset.Context);
             }
 
             // H5EA.c (H5EA_get)
@@ -206,8 +206,7 @@
                     var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     var dataBlock = new ExtensibleArrayDataBlock<T>(
-                        Dataset.Context.Reader,
-                        Dataset.Context.Superblock,
+                        Dataset.Context,
                         header,
                         elementsCount,
                         decode);
@@ -231,8 +230,7 @@
                     Dataset.Context.Reader.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
 
                     var secondaryBlock = new ExtensibleArraySecondaryBlock(
-                        Dataset.Context.Reader,
-                        Dataset.Context.Superblock, 
+                        Dataset.Context, 
                         header, 
                         secondaryBlockIndex);
 
@@ -295,8 +293,7 @@
                         Dataset.Context.Reader.Seek((long)secondaryBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
 
                         var dataBlock = new ExtensibleArrayDataBlock<T>(
-                            Dataset.Context.Reader,
-                            Dataset.Context.Superblock,
+                            Dataset.Context,
                             header,
                             secondaryBlock.ElementCount,
                             decode);
