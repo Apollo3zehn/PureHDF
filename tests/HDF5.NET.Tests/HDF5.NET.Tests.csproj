@@ -6,9 +6,6 @@
 
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>
-
-    <!-- default lang version is 7.3: https://docs.microsoft.com/de-de/dotnet/csharp/language-reference/configure-language-version -->
-    <LangVersion>11.0</LangVersion>
   </PropertyGroup>
  
   <ItemGroup>
@@ -29,20 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="testfiles\blosc.h5">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="testfiles\bzip2.h5">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="testfiles\h5ex_d_compact.h5">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="testfiles\scaleoffset.h5">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="testfiles\secret.mat">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <None Update="testfiles/*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
