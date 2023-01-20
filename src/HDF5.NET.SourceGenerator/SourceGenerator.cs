@@ -1,52 +1,95 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Diagnostics;
+using System.Text;
 
 namespace HDF5.NET.SourceGenerator;
+
+// TODO: Docs
+// TODO: Replace sample file by own or publicly available one
+// TODO: Generated bindings need constructor and properties need to be instantiated (or use structs?) 
+// and final property needs to actually return the requested H5Dataset.
+// TODO: Add support for H5CommitedDatatype
+// TODO: Add support for link?
+// TODO: create Nuget package
+// TODO: Nuget package: when referencing to other project, add version property, otherwise it references >=1.0.0
 
 [Generator]
 public class SourceGenerator : ISourceGenerator
 {
-    private record SourceGeneratorItem(string FullQualifiedClassName, string FilePath);
-
     public void Execute(GeneratorExecutionContext context)
     {
-        // find attribute
+        // while (!System.Diagnostics.Debugger.IsAttached)
+        //     Thread.Sleep(1000);
+
+        var attributeFullName = typeof(H5SourceGeneratorAttribute).FullName;
+
         foreach (var syntaxTree in context.Compilation.SyntaxTrees)
         {
-            var allClasses = syntaxTree
-                .GetRoot()
-                .DescendantNodes()
-                .OfType<ClassDeclarationSyntax>();
+            var model = context.Compilation.GetSemanticModel(syntaxTree);
+            var root = syntaxTree.GetRoot();
 
-            var items = new List<SourceGeneratorItem>();
+            // find attribute syntax
+            var collector = new H5SourceGeneratorAttributeCollector();
+            collector.Visit(root);
 
-            foreach (var currentClass in allClasses)
+            foreach (var attributeSyntax in collector.Attributes)
             {
-                var name = currentClass.Identifier.ToFullString();
-                var fullQualifiedClassName = name;
+                try
+                {
+                    var classDeclarationSyntax = (ClassDeclarationSyntax)attributeSyntax.Parent!.Parent!;
+                    var sourceFilePath = classDeclarationSyntax.SyntaxTree.FilePath;
+                    var sourceFolderPath = Path.GetDirectoryName(sourceFilePath);
 
-                var attributeSyntax = currentClass.AttributeLists
-                    .SelectMany(attributeList => attributeList.Attributes)
-                    .Where(attribute => attribute.Name.NormalizeWhitespace().ToFullString() == nameof(H5SourceGeneratorAttribute))
-                    .FirstOrDefault();
+                    var isPartial = classDeclarationSyntax.Modifiers
+                        .Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword));
 
-                if (name != "SourceGeneratorTests")
-                    throw new Exception(name);
+                    // TODO Create diagnostic here to notify user that the partial keyword is missing.
+                    if (!isPartial)
+                        continue;
 
-                if (attributeSyntax is null)
-                    continue;
+                    var classSymbol = (INamedTypeSymbol)model.GetDeclaredSymbol(classDeclarationSyntax)!;
+                    var accessibility = classSymbol.DeclaredAccessibility;
 
-                var firstArgument = attributeSyntax.ArgumentList!.Arguments.First();
-                var argumentFullString = firstArgument.NormalizeWhitespace().ToFullString();
-                var argumentExpression = firstArgument.Expression.NormalizeWhitespace().ToFullString();
-                var filePath = argumentExpression;
+                    var isPublic = accessibility == Accessibility.Public;
+                    var isInternal = accessibility == Accessibility.Internal;
 
-                throw new Exception(fullQualifiedClassName);
+                    // TODO Create diagnostic here to notify user about the accessibility problem.
+                    var accessibilityString = isPublic 
+                        ? "public" 
+                        : isInternal 
+                            ? "internal" 
+                            : throw new Exception("Class accessibility must be public or internal.");
 
-                items.Add(new SourceGeneratorItem(fullQualifiedClassName, filePath));
+                    var className = classSymbol.Name;
+                    var classNamespace = classSymbol.ContainingNamespace.ToDisplayString();
+                    var attributes = classSymbol.GetAttributes();
+
+                    var attribute = attributes
+                        .Where(attribute => 
+                            attribute.AttributeClass is not null && 
+                            attribute.AttributeClass.ToDisplayString() == attributeFullName)
+                        .FirstOrDefault();
+
+                    if (attribute is null)
+                        continue;
+
+                    var h5FilePath = attribute.ConstructorArguments[0].Value!.ToString();
+
+                    if (!Path.IsPathRooted(h5FilePath))
+                        h5FilePath = Path.Combine(sourceFolderPath, h5FilePath);
+
+                    using var h5File = H5File.OpenRead(h5FilePath);
+                    var source = GenerateSource(className, classNamespace, accessibilityString, h5File);
+
+                    context.AddSource($"{classSymbol.ToDisplayString()}.g.cs", source);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.ToString());
+                }
             }
-
-            throw new Exception("nothing");
         }
     }
 
@@ -55,34 +98,75 @@ public class SourceGenerator : ISourceGenerator
         // No initialization required for this one
     }
 
-    // https://andrewlock.net/creating-a-source-generator-part-5-finding-a-type-declarations-namespace-and-type-hierarchy/
-    private static string GetNamespace(BaseTypeDeclarationSyntax syntax)
+    public static string NormalizeName(string input)
     {
-        string namespaceString = string.Empty;
+        return input.Replace(" ", "_");
+    }
 
-        var potentialNamespaceParent = syntax.Parent;
-        
-        while (potentialNamespaceParent != null &&
-            potentialNamespaceParent is not NamespaceDeclarationSyntax
-            && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
+    private static string GenerateSource(string className, string classNamespace, string accessibilityString, H5File root)
+    {
+        var classDefinitions = new List<string>();
+
+        ProcessGroup(className, root, accessibilityString, classDefinitions);
+
+        var source =
+        $$"""
+        // <auto-generated/>
+        using HDF5.NET;
+        using {{classNamespace}}.Generated;
+
+        namespace {{classNamespace}}
         {
-            potentialNamespaceParent = potentialNamespaceParent.Parent;
+        {{classDefinitions.Last()}}
         }
 
-        if (potentialNamespaceParent is BaseNamespaceDeclarationSyntax namespaceParent)
+        namespace {{classNamespace}}.Generated
         {
-            namespaceString = namespaceParent.Name.ToString();
-            
-            while (true)
+        {{string.Join("\n\n", classDefinitions.Take(classDefinitions.Count - 1))}}
+        }
+        """;
+
+        return source;
+    }
+
+    private static string ProcessGroup(
+        string className, 
+        H5Group group, 
+        string accessibilityString,
+        List<string> classDefinitions)
+    {
+        var propertyBuilder = new StringBuilder();
+
+        foreach (var link in group.Children)
+        {
+            var linkSource = link switch
             {
-                if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
-                    break;
+                H5Group subGroup => ProcessGroup(
+                    className: group.Name == "/" ? subGroup.Name : $"{className}_{subGroup.Name}",
+                    subGroup,
+                    accessibilityString,
+                    classDefinitions),
 
-                namespaceString = $"{namespaceParent.Name}.{namespaceString}";
-                namespaceParent = parent;
-            }
+                H5Dataset dataset => $$"""        public H5Dataset {{NormalizeName(dataset.Name)}} { get; }""",
+                // H5CommitedDatatype datatype => $"I am the data type '{datatype.Name}'.",
+                // H5UnresolvedLink lostLink   => $"I cannot find my link target =( shame on '{lostLink.Name}'."
+                // _ => throw new Exception("Unknown link type")
+            };
+
+            propertyBuilder.AppendLine(linkSource);
         }
 
-        return namespaceString;
+        var partialString = group.Name == "/" ? "partial " : "";
+
+        var classSource =
+        $$"""
+            {{accessibilityString}} {{partialString}}class {{className}}
+            {
+        {{propertyBuilder.ToString()}}    }
+        """;
+
+        classDefinitions.Add(classSource);
+
+        return $$"""        public {{className}} {{NormalizeName(group.Name)}} { get; }""";
     }
 }

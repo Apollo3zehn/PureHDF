@@ -100,8 +100,8 @@ foreach (var link in group.Children)
         H5Dataset dataset           => $"I am a dataset, call me '{dataset.Name}'.",
         H5CommitedDatatype datatype => $"I am the data type '{datatype.Name}'.",
         H5UnresolvedLink lostLink   => $"I cannot find my link target =( shame on '{lostLink.Name}'."
-        _                           => throw new Exception("Unknown link type");
-    }
+        _                           => throw new Exception("Unknown link type")
+    };
 
     Console.WriteLine(message)
 }

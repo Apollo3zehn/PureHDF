@@ -28,6 +28,12 @@
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "externalTerminal"
+        },
+        {
+            "name": "Debug Source Generator",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickRemoteProcess}"
         }
     ]
 }

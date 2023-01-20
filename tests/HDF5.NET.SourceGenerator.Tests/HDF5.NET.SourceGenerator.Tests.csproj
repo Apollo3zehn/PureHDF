@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\HDF5.NET\HDF5.NET.csproj" />
+    <ProjectReference Include="..\..\src\HDF5.NET\HDF5.NET.csproj" OutputItemType="Analyzer" />
 
     <ProjectReference 
       Include="..\..\src\HDF5.NET.SourceGenerator\HDF5.NET.SourceGenerator.csproj" 
@@ -25,6 +25,9 @@
 
   <ItemGroup>
     <None Update="testfiles\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="$(OutputPath)\HDF5.NET.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
