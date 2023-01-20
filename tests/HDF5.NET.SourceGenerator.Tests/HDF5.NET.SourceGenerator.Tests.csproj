@@ -15,7 +15,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\HDF5.NET.SourceGenerator\HDF5.NET.SourceGenerator.csproj" />
+    <ProjectReference Include="..\..\src\HDF5.NET\HDF5.NET.csproj" />
+
+    <ProjectReference 
+      Include="..\..\src\HDF5.NET.SourceGenerator\HDF5.NET.SourceGenerator.csproj" 
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
