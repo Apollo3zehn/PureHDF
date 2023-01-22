@@ -41,6 +41,18 @@
         }
 
         /// <summary>
+        /// Gets the object that is at the given <paramref name="path"/>.
+        /// </summary>
+        /// <typeparam name="T">The return type of the object.</typeparam>
+        /// <param name="path">The path of the object.</param>
+        /// <param name="linkAccess">The link access properties.</param>
+        /// <returns>The requested object.</returns>
+        public T Get<T>(string path, H5LinkAccess linkAccess = default) where T : H5Object
+        {
+            return (T)Get(path, linkAccess);
+        }
+
+        /// <summary>
         /// Gets the object that is at the given <paramref name="reference"/>.
         /// </summary>
         /// <param name="reference">The reference of the object.</param>
@@ -53,6 +65,19 @@
 
             return InternalGet(reference, linkAccess)
                 .Dereference();
+        }
+
+        /// <summary>
+        /// Gets the object that is at the given <paramref name="reference"/>.
+        /// </summary>
+        /// <typeparam name="T">The return type of the object.</typeparam>
+        /// <param name="reference">The reference of the object.</param>
+        /// <param name="linkAccess">The link access properties.</param>
+        /// <returns>The requested object.</returns>
+        public T Get<T>(H5ObjectReference reference, H5LinkAccess linkAccess = default)
+            where T : H5Object
+        {
+            return (T)Get(reference, linkAccess);
         }
 
         /// <summary>
