@@ -7,7 +7,7 @@
     public class H5NameAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="H5NameAttribute"/> instance.
+        /// Initializes a new instance of the <see cref="H5NameAttribute"/> class.
         /// </summary>
         /// <param name="name">The name of the member.</param>
         public H5NameAttribute(string name)
