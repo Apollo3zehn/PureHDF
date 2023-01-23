@@ -9,19 +9,16 @@ namespace HDF5.NET
     internal class H5SafeFileHandleReader : H5BinaryReader
     {
         private readonly ThreadLocal<long> _position = new();
-        private readonly SafeFileHandle _handle;
         private long _length;
 
         public H5SafeFileHandleReader(SafeFileHandle handle, long length)
         {
-            _handle = handle;
+            Handle = handle;
             _length = length;
         }
 
-        public override long Position 
-        { 
-            get => _position.Value;
-        }
+        public SafeFileHandle Handle { get; }
+        public override long Position => _position.Value;
 
         public override long Length => _length;
 
@@ -40,6 +37,22 @@ namespace HDF5.NET
             }
         }
 
+        public override int Read(Span<byte> buffer)
+        {
+            var count = RandomAccess.Read(Handle, buffer, Position);
+            _position.Value += buffer.Length;
+
+            return count;
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer)
+        {
+            var count = RandomAccess.ReadAsync(Handle, buffer, Position);
+            _position.Value += buffer.Length;
+
+            return count;
+        }
+
         public override byte ReadByte()
         {
             return Read<byte>();
@@ -48,8 +61,7 @@ namespace HDF5.NET
         public override byte[] ReadBytes(int count)
         {
             var buffer = new byte[count];
-            RandomAccess.Read(_handle, buffer, Position);
-            _position.Value += count;
+            Read(buffer);
             
             return buffer;
         }
@@ -79,7 +91,7 @@ namespace HDF5.NET
         {
             var size = Unsafe.SizeOf<T>();
             Span<byte> buffer = stackalloc byte[size];
-            RandomAccess.Read(_handle, buffer, Position);
+            RandomAccess.Read(Handle, buffer, Position);
             _position.Value += size;
             
             return MemoryMarshal.Cast<byte, T>(buffer)[0];
@@ -87,7 +99,7 @@ namespace HDF5.NET
 
         public override void Dispose()
         {
-            _handle.Dispose();
+            Handle.Dispose();
         }
     }
 }

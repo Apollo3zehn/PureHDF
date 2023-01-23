@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System.Threading.Tasks.Sources;
+
+namespace HDF5.NET
 {
     internal abstract class H5BinaryReader : IDisposable
     {
@@ -7,6 +9,8 @@
         public ulong BaseAddress { get; set; }
 
         public abstract void Seek(long offset, SeekOrigin seekOrigin);
+        public abstract int Read(Span<byte> buffer);
+        public abstract ValueTask<int> ReadAsync(Memory<byte> buffer);
         public abstract byte ReadByte();
         public abstract byte[] ReadBytes(int count);
         public abstract ushort ReadUInt16();

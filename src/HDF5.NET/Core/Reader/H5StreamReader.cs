@@ -5,9 +5,9 @@ namespace HDF5.NET
 {
     internal class H5StreamReader : H5BinaryReader
     {
-        private readonly Stream _stream;
+        private readonly H5Stream _stream;
 
-        public H5StreamReader(Stream stream)
+        public H5StreamReader(H5Stream stream)
         {
             _stream = stream;
         }
@@ -27,6 +27,23 @@ namespace HDF5.NET
 
                 default:
                     throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
+            }
+        }
+
+        public override int Read(Span<byte> buffer)
+        {
+            return _stream.Read(buffer);
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer)
+        {
+            if (_stream.IsStackOnly)
+            {
+                return _stream.ReadAsync(buffer);
+            }
+            else
+            {
+                throw new Exception($"The stream of type {_stream.GetType().FullName} is not thread-safe.");
             }
         }
 

@@ -21,21 +21,8 @@ namespace HDF5.NET
         // See notes/async.md for a thread-safety analysis.
         public ValueTask<int> ReadAsync(H5BinaryReader reader, Memory<byte> buffer, long offset)
         {
-            throw new NotImplementedException();
-//             if (reader.SafeFileHandle is null)
-//             {
-//                 reader.Seek(offset, SeekOrigin.Begin);
-//                 return new ValueTask<int>(reader.BaseStream.Read(buffer.Span));
-//             }
-//             else
-//             {
-// #if NET6_0_OR_GREATER
-//                 return new ValueTask<int>(RandomAccess.Read(reader.SafeFileHandle, buffer.Span, (long)reader.BaseAddress + offset));
-// #else
-//                 reader.Seek(offset, SeekOrigin.Begin);
-//                 return new ValueTask<int>(reader.BaseStream.Read(buffer.Span));
-// #endif
-//             }
+            reader.Seek(offset, SeekOrigin.Begin);
+            return new ValueTask<int>(reader.Read(buffer.Span));
         }
 
         // See notes/async.md for a thread-safety analysis.
@@ -63,21 +50,8 @@ namespace HDF5.NET
         // See notes/async.md for a thread-safety analysis.
         public ValueTask<int> ReadAsync(H5BinaryReader reader, Memory<byte> buffer, long offset)
         {
-            throw new NotImplementedException();
-//             if (reader.SafeFileHandle is null)
-//             {
-//                 throw new Exception("Asynchronous read operations are only supported for file streams.");
-//             }
-
-//             else
-//             {
-// #if NET6_0_OR_GREATER
-//                 return RandomAccess.ReadAsync(reader.SafeFileHandle, buffer, (long)reader.BaseAddress + offset);
-// #else
-//                 throw new Exception("Asynchronous read operations are only supported on .NET 6+.");
-// #endif
-//             }
-            
+            reader.Seek(offset, SeekOrigin.Begin);
+            return reader.ReadAsync(buffer);         
         }
 
         // See notes/async.md for a thread-safety analysis.
