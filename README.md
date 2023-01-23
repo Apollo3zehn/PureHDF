@@ -651,13 +651,13 @@ If you would like to access `sub_dataset2` you would normally do
 
 When you have files with a large number of groups or a deep hierarchy and you often need to work on different paths within the file, it could very useful to get intellisense support from your favourite IDE which helps you navigating through the file.
 
-HDF5.NET utilizes the source generator feature introduced with .NET 5 which allows to generate additional code during compilation. The generator, which comes with the `HDF5.NET.SourceGenerator` package, allows you to interact with the H5 file like this:
+HDF5.NET utilizes the source generator feature introduced with .NET 5 which allows to generate additional code during compilation. The generator, which comes with the `HDF5.NET.SourceGenerator` package, enables you to interact with the H5 file like this:
 
 ```cs
 var dataset = bindings.group1.sub_dataset2;
 ```
 
-## 9.1 Getting Started
+## 9.2 Getting Started
 
 Run the following command:
 
