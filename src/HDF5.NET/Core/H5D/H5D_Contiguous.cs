@@ -50,11 +50,11 @@
                 else
                 {
                     Dataset.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                    
-                    _stream = new OffsetStream(
-                        Dataset.Context.Reader.BaseStream, 
-                        Dataset.Context.Reader.BaseStream.Position,
-                        Dataset.Context.Reader.SafeFileHandle);
+                    throw new NotImplementedException();
+                    // _stream = new OffsetStream(
+                    //     Dataset.Context.Reader.BaseStream, 
+                    //     Dataset.Context.Reader.Position,
+                    //     Dataset.Context.Reader.SafeFileHandle);
                 }
             }
             

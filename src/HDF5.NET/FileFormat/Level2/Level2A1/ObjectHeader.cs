@@ -14,7 +14,7 @@ namespace HDF5.NET
         {
             _context = context;
 
-            Address = (ulong)context.Reader.BaseStream.Position;
+            Address = (ulong)context.Reader.Position;
             HeaderMessages = new List<HeaderMessage>();
         }
 
@@ -203,7 +203,7 @@ namespace HDF5.NET
                     /* The shared message is in another object header */
 
 // TODO: This would greatly benefit from a caching mechanism!
-                    var address = _context.Reader.BaseStream.Position;
+                    var address = _context.Reader.Position;
                     _context.Reader.Seek((long)message.Address, SeekOrigin.Begin);
 
                     var header = ObjectHeader.Construct(_context);

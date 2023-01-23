@@ -102,7 +102,7 @@
 
                     /* Compute the address of the data block */
                     var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                    var pageAddress = Dataset.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
+                    var pageAddress = Dataset.Context.Reader.Position + (long)(pageIndex * pageSize);
 
                     /* Check for using last page, to set the number of elements on the page */
                     ulong elementCount;

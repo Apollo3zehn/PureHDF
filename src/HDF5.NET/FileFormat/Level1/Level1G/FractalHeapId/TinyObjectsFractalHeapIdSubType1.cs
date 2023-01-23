@@ -40,7 +40,7 @@ namespace HDF5.NET
 
         public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
-            using var reader = new H5BinaryReader(new MemoryStream(Data));
+            using var reader = new H5StreamReader(new MemoryStream(Data));
             return func.Invoke(reader);
         }
 

@@ -344,7 +344,7 @@ namespace HDF5.NET
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
-                using var localReader = new H5BinaryReader(new MemoryStream(data.ToArray()));
+                using var localReader = new H5StreamReader(new MemoryStream(data.ToArray()));
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
@@ -423,7 +423,7 @@ namespace HDF5.NET
             {
                 // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
                 var paddingCount = (padSize - (result.Length + 1) % padSize) % padSize;
-                reader.BaseStream.Seek(paddingCount, SeekOrigin.Current);
+                reader.Seek(paddingCount, SeekOrigin.Current);
             }
 
             return result;

@@ -64,18 +64,23 @@
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
 
-            var safeFileHandle = (stream as FileStream)?.SafeFileHandle;
-            var reader = new H5BinaryReader(stream, safeFileHandle);
+#if NET6_0_OR_GREATER
+            H5BinaryReader reader = stream is not FileStream fileStream
+                ? new H5StreamReader(stream)
+                : new H5SafeFileHandleReader(fileStream.SafeFileHandle, fileStream.Length);
+#else
+            var reader = new H5StreamReader(stream);
+#endif
 
             // superblock
             var stepSize = 512;
             var signature = reader.ReadBytes(8);
 
-            while (!H5File.ValidateSignature(signature, Superblock.FormatSignature))
+            while (!ValidateSignature(signature, Superblock.FormatSignature))
             {
                 reader.Seek(stepSize - 8, SeekOrigin.Current);
 
-                if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                if (reader.Position >= reader.Length)
                     throw new Exception("The file is not a valid HDF 5 file.");
 
                 signature = reader.ReadBytes(8);

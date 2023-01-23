@@ -39,7 +39,7 @@ namespace HDF5.NET
                 CreationOrder = context.Reader.ReadUInt16();
 
             // data
-            var readerPosition1 = context.Reader.BaseStream.Position;
+            var readerPosition1 = context.Reader.Position;
 
             /* Search for "H5O_SHARED_DECODE_REAL" in C-code to find all shareable messages */
 
@@ -71,7 +71,7 @@ namespace HDF5.NET
                 _ => throw new NotSupportedException($"The message type '{Type}' is not supported.")
             };
 
-            var readerPosition2 = context.Reader.BaseStream.Position;
+            var readerPosition2 = context.Reader.Position;
             var paddingBytes = DataSize - (readerPosition2 - readerPosition1);
 
             context.Reader.ReadBytes((int)paddingBytes);

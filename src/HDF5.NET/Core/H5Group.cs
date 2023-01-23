@@ -387,7 +387,7 @@ namespace HDF5.NET
 
             foreach (var record in records)
             {
-                using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                using var localReader = new H5StreamReader(new MemoryStream(record.HeapId));
                 var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
 
                 yield return heapId.Read(reader =>
@@ -424,7 +424,7 @@ namespace HDF5.NET
                 else
                 {
 // TODO: duplicate3_of_3
-                    using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                    using var localReader = new H5StreamReader(new MemoryStream(record.HeapId));
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new LinkMessage(Context));
 
@@ -449,18 +449,19 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
         {
+            throw new NotImplementedException();
             return linkMessage.LinkInfo switch
             {
                 HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
                 SoftLinkInfo soft => new SymbolicLink(linkMessage, this)
                     .GetTarget(linkAccess, useAsync: default),
-#if NET6_0_OR_GREATER
-                ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                    .GetTarget(linkAccess, useAsync: Context.Reader.SafeFileHandle is null ? false : Context.Reader.SafeFileHandle.IsAsync),
-#else
-                ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                    .GetTarget(linkAccess, useAsync: default),
-#endif
+// #if NET6_0_OR_GREATER
+//                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
+//                     .GetTarget(linkAccess, useAsync: Context.Reader.SafeFileHandle is null ? false : Context.Reader.SafeFileHandle.IsAsync),
+// #else
+//                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
+//                     .GetTarget(linkAccess, useAsync: default),
+// #endif
                 
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };

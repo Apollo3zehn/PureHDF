@@ -38,7 +38,7 @@ namespace HDF5.NET
 
             while (remaining > headerSize)
             {
-                var before = reader.BaseStream.Position;
+                var before = reader.Position;
                 var globalHeapObject = new GlobalHeapObject(context);
 
                 // Global Heap Object 0 (free space) can appear at the end of the collection.
@@ -46,7 +46,7 @@ namespace HDF5.NET
                     break;
 
                 GlobalHeapObjects.Add(globalHeapObject);
-                var after = reader.BaseStream.Position;
+                var after = reader.Position;
                 var consumed = (ulong)(after - before);
                 
                 remaining -= consumed;
