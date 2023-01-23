@@ -9,7 +9,7 @@ using System;
 public class H5SourceGeneratorAttribute : Attribute
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="H5SourceGeneratorAttribute"/> instance.
+    /// Initializes a new instance of the <see cref="H5SourceGeneratorAttribute"/> class.
     /// </summary>
     /// <param name="filePath">The path of the file to generate the bindings for.</param>
     public H5SourceGeneratorAttribute(string filePath)

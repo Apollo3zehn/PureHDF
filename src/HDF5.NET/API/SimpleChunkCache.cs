@@ -8,7 +8,7 @@
         #region Constructors
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SimpleChunkCache"/> instance.
+        /// Initializes a new instance of the <see cref="SimpleChunkCache"/> class.
         /// </summary>
         /// <param name="chunkSlotCount">The number of chunks that can be hold in the cache at the same time.</param>
         /// <param name="byteCount">The maximum size of the chunk cache in bytes.</param>

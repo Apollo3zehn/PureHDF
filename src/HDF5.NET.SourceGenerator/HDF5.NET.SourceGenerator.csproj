@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+   <!-- dotnet build /p:EmitCompilerGeneratedFiles=true -->
   <PropertyGroup>
     <Description>Generates strongly-typed bindings for your specific HDF5 file.</Description>
-    <PackageTags>HDF HDF5 hierarchical data file H5 netstandard .NET Standard Windows Linux MacOS</PackageTags>
+    <PackageTags>HDF HDF5 hierarchical data file H5 source generator</PackageTags>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -12,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HDF5.NET\HDF5.NET.csproj" />
+    <ProjectReference Include="..\HDF5.NET\HDF5.NET.csproj" Version="$(Version)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +23,7 @@
 
   <ItemGroup>
     <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\HDF5.NET.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,10 +32,10 @@
   </ItemGroup>
 
   <!-- https://github.com/dotnet/roslyn/discussions/47517 -->
-  <!-- <Target Name="AddGenerationTimeReferences" AfterTargets="ResolvePackageDependenciesForBuild">
+  <Target Name="AddGenerationTimeReferences" AfterTargets="ResolvePackageDependenciesForBuild">
     <ItemGroup>
       <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" CopyToOutputDirectory="Always" />
     </ItemGroup>
-  </Target> -->
+  </Target>
 
 </Project>

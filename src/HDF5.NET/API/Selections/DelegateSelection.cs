@@ -6,7 +6,7 @@
     public partial class DelegateSelection : Selection
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DelegateSelection"/> instance.
+        /// Initializes a new instance of the <see cref="DelegateSelection"/> class.
         /// </summary>
         /// <param name="totalElementCount">The total number of elements which is used to preallocate the returned buffer.</param>
         /// <param name="walker">The user-defined walker delegate.</param>

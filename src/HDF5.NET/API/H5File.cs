@@ -46,7 +46,7 @@
         /// <param name="filePath">The file to open.</param>
         public static H5File OpenRead(string filePath)
         {
-            return H5File.OpenReadCore(filePath);
+            return OpenReadCore(filePath);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@
         /// <param name="useAsync">A boolean which indicates if the file be opened with the <see cref="FileOptions.Asynchronous"/> flag.</param>
         public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool useAsync = false)
         {
-            return H5File.OpenCore(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
+            return OpenCore(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
         }
 
         /// <summary>
@@ -69,7 +69,7 @@
         /// <returns></returns>
         public static H5File Open(Stream stream)
         {
-            return H5File.OpenCore(stream, string.Empty);
+            return OpenCore(stream, string.Empty);
         }
 
         /// <inheritdoc />
