@@ -456,7 +456,7 @@ namespace HDF5.NET
                     .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                    .GetTarget(linkAccess, useAsync: Context.Reader is H5SafeFileHandleReader reader && reader.Handle.IsAsync),
+                    .GetTarget(linkAccess, useAsync: Context.Reader is H5FileStreamReader reader && reader.IsAsync),
 #else
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
                     .GetTarget(linkAccess, useAsync: default),

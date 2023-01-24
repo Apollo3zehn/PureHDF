@@ -29,7 +29,7 @@
 
         internal static H5File OpenReadCore(string filePath, bool deleteOnClose = false)
         {
-            return H5File.OpenCore(
+            return OpenCore(
                 filePath,
                 FileMode.Open, 
                 FileAccess.Read, 
@@ -48,7 +48,7 @@
         {
             var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
 
-            var stream = new System.IO.FileStream(
+            var stream = new FileStream(
                 absoluteFilePath, 
                 fileMode, 
                 fileAccess,
@@ -56,7 +56,7 @@
                 4096,
                 useAsync);
 
-            return H5File.OpenCore(stream, absoluteFilePath, deleteOnClose);
+            return OpenCore(stream, absoluteFilePath, deleteOnClose);
         }
 
         private static H5File OpenCore(Stream stream, string absoluteFilePath, bool deleteOnClose = false)
@@ -65,9 +65,9 @@
                 throw new Exception("This library only works on little endian systems.");
 
 #if NET6_0_OR_GREATER
-            H5BaseReader reader = stream is not FileStream fileStream
-                ? new H5StreamReader(stream)
-                : new H5SafeFileHandleReader(fileStream.SafeFileHandle, fileStream.Length);
+            H5BaseReader reader = stream is FileStream fileStream
+                ? new H5FileStreamReader(fileStream, fileStream.Length)
+                : new H5StreamReader(stream);
 #else
             var reader = new H5StreamReader(stream);
 #endif

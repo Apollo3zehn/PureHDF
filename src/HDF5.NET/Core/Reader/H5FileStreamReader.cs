@@ -6,16 +6,21 @@ using Microsoft.Win32.SafeHandles;
 
 namespace HDF5.NET
 {
-    internal class H5SafeFileHandleReader : H5BaseReader
+    internal class H5FileStreamReader : H5BaseReader
     {
         private readonly ThreadLocal<long> _position = new();
+        private readonly FileStream _stream; // it is important to keep a reference, otherwise the SafeFileHandle gets closed during the next GC
+        private SafeFileHandle _handle;
 
-        public H5SafeFileHandleReader(SafeFileHandle handle, long length) : base(length)
+        public H5FileStreamReader(FileStream stream, long length) : base(length)
         {
-            Handle = handle;
+            _stream = stream;
+            _handle = _stream.SafeFileHandle;
+
+            IsAsync = _handle.IsAsync;
         }
 
-        public SafeFileHandle Handle { get; }
+        public bool IsAsync { get; }
 
         public override long Position
         {
@@ -42,7 +47,7 @@ namespace HDF5.NET
 
         public override int Read(Span<byte> buffer)
         {
-            var count = RandomAccess.Read(Handle, buffer, Position);
+            var count = RandomAccess.Read(_handle, buffer, Position);
             _position.Value += buffer.Length;
 
             return count;
@@ -50,7 +55,7 @@ namespace HDF5.NET
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer)
         {
-            var count = RandomAccess.ReadAsync(Handle, buffer, Position);
+            var count = RandomAccess.ReadAsync(_handle, buffer, Position);
             _position.Value += buffer.Length;
 
             return count;
@@ -94,7 +99,7 @@ namespace HDF5.NET
         {
             var size = Unsafe.SizeOf<T>();
             Span<byte> buffer = stackalloc byte[size];
-            RandomAccess.Read(Handle, buffer, Position);
+            RandomAccess.Read(_handle, buffer, Position);
             _position.Value += size;
             
             return MemoryMarshal.Cast<byte, T>(buffer)[0];
@@ -110,7 +115,7 @@ namespace HDF5.NET
             {
                 if (disposing)
                 {
-                    Handle.Dispose();
+                    _stream.Dispose();
                 }
 
                 _disposedValue = true;

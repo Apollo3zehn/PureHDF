@@ -51,7 +51,7 @@
                 {
                     Dataset.Context.Reader.Seek((long)address, SeekOrigin.Begin);
 
-                    _stream = new DoNotDisposeStream(Dataset.Context.Reader);
+                    _stream = new OffsetStream(Dataset.Context.Reader);
                 }
             }
             
