@@ -57,14 +57,14 @@
  *
  * Results (2023-01-10)
  * ====================
- * The sync benchmark took 1941,4 ms.
- * The async benchmark took 1486,0 ms.
- * The task-based benchmark took 1383,9 ms.
+ * The sync benchmark took 2269,1 ms.
+ * The async benchmark took 1459,1 ms.
+ * The task-based benchmark took 1394,7 ms.
+ * The multi-threaded benchmark took 644,2 ms.
  * 
- *          The ratio async / sync is 0,77.
- *     The ratio task-based / sync is 0,71.
- * 
- * Clean up test file.
+ *          The ratio async / sync is 0,64.
+ *     The ratio task-based / sync is 0,61.
+ * The ratio multi-threaded / sync is 0,28.
  * ====================
  */
 
@@ -110,7 +110,7 @@ try
     // 2 ask user to clear cache
     // https://medium.com/marionete/linux-disk-cache-was-always-there-741bef097e7f
     // https://unix.stackexchange.com/a/82164
-    Console.WriteLine("Please run the following command before each benchmark to clear the file cache and monitor the cache usage:");
+    Console.WriteLine("Please run the following command before every benchmark step to clear the file cache:");
     Console.WriteLine("free -wh && sync && echo 1 | sudo sysctl vm.drop_caches=1 && free -wh");
     Console.WriteLine();
     Console.WriteLine("Press any key to continue.");
@@ -140,7 +140,7 @@ try
     // 6 multi-threaded benchmark
     Console.ReadKey(intercept: true);
 
-    // (var multiThreadedResult, var elapsed_multi_threaded) = MultiThreadedBenchmark();
+    (var multiThreadedResult, var elapsed_multi_threaded) = MultiThreadedBenchmark();
 
     //
     if (syncResult != asyncResult)
@@ -149,13 +149,17 @@ try
     if (syncResult != taskBasedResult)
         throw new Exception($"The sync result ({syncResult}) and task-based result ({taskBasedResult}) are not equal.");
 
-    // if (syncResult != taskBasedResult)
-    //     throw new Exception($"The sync result ({syncResult}) and multi-threaded result ({multiThreadedResult}) are not equal.");
+    if (syncResult != multiThreadedResult)
+        throw new Exception($"The sync result ({syncResult}) and multi-threaded result ({multiThreadedResult}) are not equal.");
 
     Console.WriteLine();
-    Console.WriteLine($"         The ratio async / sync is {(elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
-    Console.WriteLine($"    The ratio task-based / sync is {(elapsed_task_based.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
-    // Console.WriteLine($"The ratio multi-threaded / sync is {(elapsed_multi_threaded.TotalMilliseconds / elapsed_sync.TotalMilliseconds):F2}.");
+    Console.WriteLine($"         The ratio async / sync is {elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+    Console.WriteLine($"    The ratio task-based / sync is {elapsed_task_based.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+    Console.WriteLine($"The ratio multi-threaded / sync is {elapsed_multi_threaded.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+}
+catch (Exception ex)
+{
+    var v = 1;
 }
 finally
 {
@@ -239,7 +243,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
                 block: BUFFER_SIZE
             );
 
-            await dataset.ReadAsync<float>(asyncBuffer, fileSelection);
+            await dataset.ReadAsync(asyncBuffer, fileSelection);
 
             writer.Advance((int)BUFFER_BYTE_SIZE);
             await writer.FlushAsync();
@@ -299,8 +303,22 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
     );
 
     var dataset = file.Dataset("chunked");
-    var buffer = new float[BUFFER_SIZE * SEGMENT_COUNT];
+
+    /* The buffer has the size of a single chunk. The reason is
+     * that creating a very large buffer slows down the test
+     * dramatically (factor ~10). The test file is very large (1GB),
+     * and maybe this confuses the garbage collector. A definite
+     * cause could not be found. A real world application should
+     * rely on the MemoryPool to get an array and maybe limit the
+     * number of concurrent threads.
+     */
+    var buffer = new float[BUFFER_SIZE];
     var stopwatch = Stopwatch.StartNew();
+
+    var options = new ParallelOptions()
+    {
+        MaxDegreeOfParallelism = 1
+    };
 
     Parallel.For(0, (int)SEGMENT_COUNT, i =>
     {
@@ -308,10 +326,6 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
             start: (ulong)i * BUFFER_SIZE,
             block: BUFFER_SIZE
         );
-
-        var start = (int)(i * (int)BUFFER_SIZE);
-        var length = (int)BUFFER_SIZE;
-        var currentBuffer = buffer.AsMemory(start, length);
 
         dataset.Read<float>(buffer, fileSelection);
 

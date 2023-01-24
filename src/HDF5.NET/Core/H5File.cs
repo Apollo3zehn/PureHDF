@@ -56,21 +56,19 @@
                 4096,
                 useAsync);
 
-            return OpenCore(stream, absoluteFilePath, deleteOnClose);
-        }
-
-        private static H5File OpenCore(Stream stream, string absoluteFilePath, bool deleteOnClose = false)
-        {
-            if (!BitConverter.IsLittleEndian)
-                throw new Exception("This library only works on little endian systems.");
-
 #if NET6_0_OR_GREATER
-            H5BaseReader reader = stream is FileStream fileStream
-                ? new H5FileStreamReader(fileStream, fileStream.Length)
-                : new H5StreamReader(stream);
+            var reader = new H5FileStreamReader(stream);
 #else
             var reader = new H5StreamReader(stream);
 #endif
+
+            return OpenCore(reader, absoluteFilePath, deleteOnClose);
+        }
+
+        private static H5File OpenCore(H5BaseReader reader, string absoluteFilePath, bool deleteOnClose = false)
+        {
+            if (!BitConverter.IsLittleEndian)
+                throw new Exception("This library only works on little endian systems.");
 
             // superblock
             var stepSize = 512;

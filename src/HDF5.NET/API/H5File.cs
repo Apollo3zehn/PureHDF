@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System.IO.MemoryMappedFiles;
+
+namespace HDF5.NET
 {
     /// <summary>
     /// An HDF5 file object. This is the entry-point to work with HDF5 files.
@@ -65,11 +67,23 @@
         /// <summary>
         /// Opens an HDF5 stream.
         /// </summary>
-        /// <param name="stream">The stream to open.</param>
+        /// <param name="stream">The stream to use.</param>
         /// <returns></returns>
         public static H5File Open(Stream stream)
         {
-            return OpenCore(stream, string.Empty);
+            var reader = new H5StreamReader(stream);
+            return OpenCore(reader, string.Empty);
+        }
+
+        /// <summary>
+        /// Opens an HDF5 memory-mapped file.
+        /// </summary>
+        /// <param name="accessor">The memory-mapped accessor to use.</param>
+        /// <returns></returns>
+        public static H5File Open(MemoryMappedViewAccessor accessor)
+        {
+            var reader = new H5MemoryMappedFileReader(accessor);
+            return OpenCore(reader, string.Empty);
         }
 
         /// <inheritdoc />

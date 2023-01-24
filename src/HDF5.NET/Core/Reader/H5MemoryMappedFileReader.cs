@@ -1,26 +1,16 @@
-﻿#if NET6_0_OR_GREATER
-
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Microsoft.Win32.SafeHandles;
+﻿using System.IO.MemoryMappedFiles;
 
 namespace HDF5.NET
 {
-    internal class H5FileStreamReader : H5BaseReader
+    internal class H5MemoryMappedFileReader : H5BaseReader
     {
         private readonly ThreadLocal<long> _position = new();
-        private readonly FileStream _stream; // it is important to keep a reference, otherwise the SafeFileHandle gets closed during the next GC
-        private readonly SafeFileHandle _handle;
+        private MemoryMappedViewAccessor _accessor;
 
-        public H5FileStreamReader(FileStream stream) : base(stream.Length)
+        public H5MemoryMappedFileReader(MemoryMappedViewAccessor accessor) : base(accessor.Capacity)
         {
-            _stream = stream;
-            _handle = _stream.SafeFileHandle;
-
-            IsAsync = _handle.IsAsync;
+            _accessor = accessor;
         }
-
-        public bool IsAsync { get; }
 
         public override long Position
         {
@@ -47,23 +37,37 @@ namespace HDF5.NET
 
         public override int Read(Span<byte> buffer)
         {
-            var count = RandomAccess.Read(_handle, buffer, Position);
+            // https://github.com/dotnet/runtime/issues/42736
+
+            unsafe {
+                byte* ptr = null;
+
+                _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+                
+                try
+                {
+                    var length = _accessor.SafeMemoryMappedViewHandle.ByteLength;
+                    ... // use ptr and length here
+                }
+                finally
+                {
+                    _accessor.SafeMemoryMappedViewHandle.ReleasePointer();
+                }
+            }
+
             _position.Value += buffer.Length;
 
-            return count;
+            return buffer.Length;
         }
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer)
         {
-            var count = RandomAccess.ReadAsync(_handle, buffer, Position);
-            _position.Value += buffer.Length;
-
-            return count;
+            throw new Exception($"Memory-mapped files cannot be access asynchronously.");
         }
 
         public override byte ReadByte()
         {
-            return Read<byte>();
+            return _accessor.ReadByte(_position.Value);
         }
 
         public override byte[] ReadBytes(int count)
@@ -76,33 +80,22 @@ namespace HDF5.NET
 
         public override ushort ReadUInt16()
         {
-            return Read<ushort>();
+            return _accessor.ReadUInt16(_position.Value);
         }
 
         public override short ReadInt16()
         {
-            return Read<short>();
+            return _accessor.ReadInt16(_position.Value);
         }
 
         public override uint ReadUInt32()
         {
-            return Read<uint>();
+            return _accessor.ReadUInt32(_position.Value);
         }
 
         public override ulong ReadUInt64()
         {
-            return Read<ulong>();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private T Read<T>() where T : unmanaged
-        {
-            var size = Unsafe.SizeOf<T>();
-            Span<byte> buffer = stackalloc byte[size];
-            RandomAccess.Read(_handle, buffer, Position);
-            _position.Value += size;
-            
-            return MemoryMarshal.Cast<byte, T>(buffer)[0];
+            return _accessor.ReadUInt64(_position.Value);
         }
 
         private bool _disposedValue;
@@ -115,7 +108,7 @@ namespace HDF5.NET
             {
                 if (disposing)
                 {
-                    _stream.Dispose();
+                    _accessor.Dispose();
                 }
 
                 _disposedValue = true;
@@ -123,5 +116,3 @@ namespace HDF5.NET
         }
     }
 }
-
-#endif
