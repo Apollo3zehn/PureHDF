@@ -130,7 +130,7 @@
             }
         }
 
-        private T? GetElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? GetElement<T>(ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             if (_header is null)
             {
@@ -153,7 +153,7 @@
             }
         }
 
-        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
             var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);

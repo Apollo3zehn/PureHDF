@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FamilyDriverInfo(H5BinaryReader reader)
+        public FamilyDriverInfo(H5BaseReader reader)
         {
             MemberFileSize = reader.ReadUInt64();
         }

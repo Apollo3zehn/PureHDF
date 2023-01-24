@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public DatatypeMessage(H5BinaryReader reader)
+        public DatatypeMessage(H5BaseReader reader)
         {
             ClassVersion = reader.ReadByte();
 

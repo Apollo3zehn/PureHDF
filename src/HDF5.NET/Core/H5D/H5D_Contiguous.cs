@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private H5Stream? _stream;
+        private Stream? _stream;
 
         #endregion
 
@@ -30,7 +30,7 @@
             throw new NotImplementedException();
         }
 
-        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream? GetH5Stream(ulong[] chunkIndices)
         {
             var address = Dataset.InternalDataLayout.Address;
 
@@ -39,10 +39,10 @@
                 if (Dataset.Context.Superblock.IsUndefinedAddress(address))
                 {
                     if (Dataset.InternalExternalFileList is not null)
-                        _stream = new ExternalFileListStream(isStackOnly: true, Dataset.InternalExternalFileList, DatasetAccess);
+                        _stream = new ExternalFileListStream(Dataset.InternalExternalFileList, DatasetAccess);
 
                     else if (Dataset.InternalFillValue.Value is not null)
-                        _stream = new UnsafeFillValueStream(isStackOnly: true, Dataset.InternalFillValue.Value);
+                        _stream = new UnsafeFillValueStream(Dataset.InternalFillValue.Value);
 
                     else
                         _stream = null;
@@ -50,11 +50,8 @@
                 else
                 {
                     Dataset.Context.Reader.Seek((long)address, SeekOrigin.Begin);
-                    throw new NotImplementedException();
-                    // _stream = new OffsetStream(
-                    //     Dataset.Context.Reader.BaseStream, 
-                    //     Dataset.Context.Reader.Position,
-                    //     Dataset.Context.Reader.SafeFileHandle);
+
+                    _stream = new DoNotDisposeStream(Dataset.Context.Reader);
                 }
             }
             

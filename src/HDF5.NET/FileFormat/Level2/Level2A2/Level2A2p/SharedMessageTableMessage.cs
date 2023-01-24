@@ -5,7 +5,7 @@
         #region Fields
 
         private byte _version;
-        private H5BinaryReader _reader;
+        private H5BaseReader _reader;
 
         #endregion
 

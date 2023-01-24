@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public BTree2Record08(H5BinaryReader reader)
+        public BTree2Record08(H5BaseReader reader)
         {
             HeapId = reader.ReadBytes(8);
             MessageFlags = (MessageFlags)reader.ReadByte();

@@ -117,6 +117,7 @@
             base.Dispose(disposing);
         }
 
+// TODO File should be opened asynchronously if root file is also opened asynchronously. Then implement ReadAsync here.
         private Stream EnsureStream()
         {
             if (_stream is null)

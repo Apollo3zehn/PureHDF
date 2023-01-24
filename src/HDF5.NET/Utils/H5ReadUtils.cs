@@ -389,7 +389,7 @@ namespace HDF5.NET
 #endif
         }
 
-        public static string ReadFixedLengthString(H5BinaryReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        public static string ReadFixedLengthString(H5BaseReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = reader.ReadBytes(length);
 
@@ -401,7 +401,7 @@ namespace HDF5.NET
             };
         }
 
-        public static string ReadNullTerminatedString(H5BinaryReader reader, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        public static string ReadNullTerminatedString(H5BaseReader reader, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = new List<byte>();
             var byteValue = reader.ReadByte();

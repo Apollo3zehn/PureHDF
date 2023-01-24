@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FloatingPointPropertyDescription(H5BinaryReader reader)
+        public FloatingPointPropertyDescription(H5BaseReader reader)
         {
             BitOffset = reader.ReadUInt16();
             BitPrecision = reader.ReadUInt16();

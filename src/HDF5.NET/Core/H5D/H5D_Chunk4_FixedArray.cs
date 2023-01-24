@@ -52,7 +52,7 @@
             }
         }
 
-        private T? GetElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? GetElement<T>(ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             if (_header is null)
             {
@@ -74,7 +74,7 @@
             }
         }
 
-        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             // H5FA.c (H5FA_get)
 

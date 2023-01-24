@@ -71,12 +71,12 @@
             };
         }
 
-        public ulong ReadOffset(H5BinaryReader reader)
+        public ulong ReadOffset(H5BaseReader reader)
         {
             return H5Utils.ReadUlong(reader, OffsetsSize);
         }
 
-        public ulong ReadLength(H5BinaryReader reader)
+        public ulong ReadLength(H5BaseReader reader)
         {
             return H5Utils.ReadUlong(reader, LengthsSize);
         }

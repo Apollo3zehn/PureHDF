@@ -11,7 +11,7 @@
 
         #region Constructors
 
-        public FilterPipelineMessage(H5BinaryReader reader)
+        public FilterPipelineMessage(H5BaseReader reader)
         {
             // version
             Version = reader.ReadByte();

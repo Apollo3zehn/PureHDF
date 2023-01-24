@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public HyperslabSelectionInfo2(H5BinaryReader reader)
+        public HyperslabSelectionInfo2(H5BaseReader reader)
         {
             // flags
             Flags = reader.ReadByte();

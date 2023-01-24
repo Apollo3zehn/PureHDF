@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public SharedMessageRecord(H5BinaryReader reader)
+        public SharedMessageRecord(H5BaseReader reader)
         {
             // message location
             MessageLocation = (MessageLocation)reader.ReadByte();

@@ -10,7 +10,7 @@ namespace HDF5.NET
         Selection SourceSelection,
         Selection TargetSelection,
         Func<ulong[], Task<Memory<byte>>>? GetSourceBufferAsync,
-        Func<ulong[], H5Stream>? GetSourceStream,
+        Func<ulong[], Stream>? GetSourceStream,
         Func<ulong[], Memory<byte>> GetTargetBuffer,
         int TypeSize
     );
@@ -192,7 +192,7 @@ namespace HDF5.NET
             CopyInfo copyInfo) where TReader : IReader
         {
             /* initialize source walker */
-            var sourceStream = default(H5Stream)!;
+            var sourceStream = default(Stream)!;
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */

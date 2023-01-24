@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public HyperslabSelectionInfo1(H5BinaryReader reader)
+        public HyperslabSelectionInfo1(H5BaseReader reader)
         {
             // reserved
             reader.ReadBytes(4);

@@ -1,6 +1,6 @@
 ﻿namespace HDF5.NET
 {
-    internal class ExternalFileListStream : H5Stream
+    internal class ExternalFileListStream : Stream
     {
         private long _position;
         private bool _loadSlot;
@@ -8,9 +8,8 @@
         private SlotStream[] _slotStreams;
 
         public ExternalFileListStream(
-            bool isStackOnly,
             ExternalFileListMessage externalFileList, 
-            H5DatasetAccess datasetAccess) : base(isStackOnly, default, default)
+            H5DatasetAccess datasetAccess)
         {
             var offset = 0L;
 

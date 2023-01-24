@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public VariableLengthPropertyDescription(H5BinaryReader reader)
+        public VariableLengthPropertyDescription(H5BaseReader reader)
         {
             BaseType = new DatatypeMessage(reader);
         }

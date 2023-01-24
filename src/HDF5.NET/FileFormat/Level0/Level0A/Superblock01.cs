@@ -4,13 +4,13 @@
     {
         #region Fields
 
-        H5BinaryReader _reader;
+        H5BaseReader _reader;
 
         #endregion
 
         #region Constructors
 
-        public Superblock01(H5BinaryReader reader, byte version)
+        public Superblock01(H5BaseReader reader, byte version)
         {
             _reader = reader;
 

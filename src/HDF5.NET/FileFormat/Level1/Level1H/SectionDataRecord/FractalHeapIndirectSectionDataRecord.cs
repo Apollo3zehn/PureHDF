@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FractalHeapIndirectSectionDataRecord(H5BinaryReader reader)
+        public FractalHeapIndirectSectionDataRecord(H5BaseReader reader)
         {
             // fractal heap indirect block offset
 // TODO: implement this correctly

@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public DriverInfoBlock(H5BinaryReader reader)
+        public DriverInfoBlock(H5BaseReader reader)
         {
             // version
             Version = reader.ReadByte(); 

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public CompoundPropertyDescription(H5BinaryReader reader, byte version, uint valueSize)
+        public CompoundPropertyDescription(H5BaseReader reader, byte version, uint valueSize)
         {
             switch (version)
             {

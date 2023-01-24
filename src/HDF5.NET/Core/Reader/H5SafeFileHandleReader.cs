@@ -6,23 +6,24 @@ using Microsoft.Win32.SafeHandles;
 
 namespace HDF5.NET
 {
-    internal class H5SafeFileHandleReader : H5BinaryReader
+    internal class H5SafeFileHandleReader : H5BaseReader
     {
         private readonly ThreadLocal<long> _position = new();
-        private long _length;
 
-        public H5SafeFileHandleReader(SafeFileHandle handle, long length)
+        public H5SafeFileHandleReader(SafeFileHandle handle, long length) : base(length)
         {
             Handle = handle;
-            _length = length;
         }
 
         public SafeFileHandle Handle { get; }
-        public override long Position => _position.Value;
 
-        public override long Length => _length;
+        public override long Position
+        {
+            get => _position.Value;
+            set => throw new NotImplementedException();
+        }
 
-        public override void Seek(long offset, SeekOrigin seekOrigin)
+        public override long Seek(long offset, SeekOrigin seekOrigin)
         {
             switch (seekOrigin)
             {
@@ -35,6 +36,8 @@ namespace HDF5.NET
                 default:
                     throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
             }
+
+            return offset;
         }
 
         public override int Read(Span<byte> buffer)
@@ -97,9 +100,21 @@ namespace HDF5.NET
             return MemoryMarshal.Cast<byte, T>(buffer)[0];
         }
 
-        public override void Dispose()
+        private bool _disposedValue;
+
+        protected override void Dispose(bool disposing)
         {
-            Handle.Dispose();
+            base.Dispose(disposing);
+
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    Handle.Dispose();
+                }
+
+                _disposedValue = true;
+            }
         }
     }
 }

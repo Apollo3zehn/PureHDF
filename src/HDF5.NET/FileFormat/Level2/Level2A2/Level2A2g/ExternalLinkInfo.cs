@@ -11,7 +11,7 @@
 
         #region Constructors
 
-        public ExternalLinkInfo(H5BinaryReader reader)
+        public ExternalLinkInfo(H5BaseReader reader)
         {
             // value length
             ValueLength = reader.ReadUInt16();

@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public SharedMessageRecordList(H5BinaryReader reader)
+        public SharedMessageRecordList(H5BaseReader reader)
         {
             // signature
             var signature = reader.ReadBytes(4);

@@ -12,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5BinaryReader, T> decode)
+        public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5BaseReader, T> decode)
         {
             var (reader, superblock) = context;
             

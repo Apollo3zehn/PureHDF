@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public GroupInfoMessage(H5BinaryReader reader)
+        public GroupInfoMessage(H5BaseReader reader)
         {
             // version
             Version = reader.ReadByte();

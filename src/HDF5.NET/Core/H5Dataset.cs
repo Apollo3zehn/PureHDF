@@ -194,7 +194,7 @@ namespace HDF5.NET
                ? chunkIndices => bufferProvider.GetBufferAsync(reader, chunkIndices)
                : null;
 
-            Func<ulong[], H5Stream>? getSourceStream = bufferProvider.SupportsStream
+            Func<ulong[], Stream>? getSourceStream = bufferProvider.SupportsStream
                 ? chunkIndices => bufferProvider.GetH5Stream(chunkIndices)!
                 : null;
 
@@ -253,7 +253,7 @@ namespace HDF5.NET
                 memoryDims = new ulong[] { totalCount };
 
             if (getSourceBufferAsync is null && getSourceStream is null)
-                new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
+                throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
 
             /* copy info */
             var copyInfo = new CopyInfo(

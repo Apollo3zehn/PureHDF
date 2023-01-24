@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public BTree2IndexingInformation(H5BinaryReader reader)
+        public BTree2IndexingInformation(H5BaseReader reader)
         {
             // node size
             NodeSize = reader.ReadUInt32();

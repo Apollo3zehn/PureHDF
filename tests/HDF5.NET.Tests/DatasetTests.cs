@@ -8,9 +8,9 @@ namespace HDF5.NET.Tests.Reading
 {
     public class DatasetTests
     {
-        private JsonSerializerOptions _options = new JsonSerializerOptions() { IncludeFields = true };
+        private JsonSerializerOptions _options = new() { IncludeFields = true };
 
-        public static IList<object[]> DatasetNumericalTestData = TestData.NumericalData;
+        public static IList<object[]> _datasetNumericalTestData = TestData.NumericalData;
 
         [Fact]
         public void CanReadDataset_Dataspace_Scalar()
@@ -49,7 +49,7 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
+        [MemberData(nameof(DatasetTests._datasetNumericalTestData))]
         public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
@@ -144,7 +144,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddString(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddString(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -162,7 +162,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddBitField(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitField(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -180,7 +180,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -198,7 +198,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddArray(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);

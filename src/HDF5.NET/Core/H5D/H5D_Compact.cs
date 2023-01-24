@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     internal class H5D_Compact : H5D_Base
     {
@@ -47,7 +45,7 @@ namespace HDF5.NET
             return Task.FromResult(buffer.AsMemory());
         }
 
-        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream? GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FixedArrayIndexingInformation(H5BinaryReader reader)
+        public FixedArrayIndexingInformation(H5BaseReader reader)
         {
             // page bits
             PageBits = reader.ReadByte();

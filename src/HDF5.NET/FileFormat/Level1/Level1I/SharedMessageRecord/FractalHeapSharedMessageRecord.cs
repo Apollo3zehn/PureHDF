@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FractalHeapSharedMessageRecord(H5BinaryReader reader) : base(reader)
+        public FractalHeapSharedMessageRecord(H5BaseReader reader) : base(reader)
         {
             // hash value
             HashValue = reader.ReadUInt32();

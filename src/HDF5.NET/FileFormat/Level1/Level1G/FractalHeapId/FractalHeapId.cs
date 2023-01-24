@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Methods
 
-        internal static FractalHeapId Construct(H5Context context, H5BinaryReader localReader, FractalHeapHeader header)
+        internal static FractalHeapId Construct(H5Context context, H5BaseReader localReader, FractalHeapHeader header)
         {
             var firstByte = localReader.ReadByte();
 
@@ -44,14 +44,14 @@ namespace HDF5.NET
             });
         }
 
-        public T Read<T>(Func<H5BinaryReader, T> func)
+        public T Read<T>(Func<H5BaseReader, T> func)
         {
 // TODO: Is there a better way?
             List<BTree2Record01>? cache = null;
             return Read(func, ref cache);
         }
 
-        public abstract T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache);
+        public abstract T Read<T>(Func<H5BaseReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache);
 
         #endregion
     }

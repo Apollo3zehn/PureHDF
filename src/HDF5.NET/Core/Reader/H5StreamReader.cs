@@ -3,31 +3,35 @@ using System.Runtime.InteropServices;
 
 namespace HDF5.NET
 {
-    internal class H5StreamReader : H5BinaryReader
+    internal class H5StreamReader : H5BaseReader
     {
-        private readonly H5Stream _stream;
+        private readonly Stream _stream;
 
-        public H5StreamReader(H5Stream stream)
+        public H5StreamReader(Stream stream) : base(stream.Length)
         {
+            if (!stream.CanRead)
+                throw new Exception("The stream must be readable.");
+
+            if (!stream.CanSeek)
+                throw new Exception("The stream must be seekable.");
+
             _stream = stream;
         }
 
-        public override long Position => _stream.Position - (long)BaseAddress;
-        public override long Length => _stream.Length;
-
-        public override void Seek(long offset, SeekOrigin seekOrigin)
+        public override long Position
         {
-            switch (seekOrigin)
+            get => _stream.Position - (long)BaseAddress;
+            set => throw new NotImplementedException();
+        }
+
+        public override long Seek(long offset, SeekOrigin seekOrigin)
+        {
+            return seekOrigin switch
             {
-                case SeekOrigin.Begin:
-                    _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin); break;
-
-                case SeekOrigin.Current:
-                    _stream.Seek(offset, SeekOrigin.Current); break;
-
-                default:
-                    throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
-            }
+                SeekOrigin.Begin    => _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin),
+                SeekOrigin.Current  => _stream.Seek(offset, SeekOrigin.Current),
+                _                   => throw new Exception($"Seek origin '{seekOrigin}' is not supported."),
+            };
         }
 
         public override int Read(Span<byte> buffer)
@@ -37,14 +41,7 @@ namespace HDF5.NET
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer)
         {
-            if (_stream.IsStackOnly)
-            {
-                return _stream.ReadAsync(buffer);
-            }
-            else
-            {
-                throw new Exception($"The stream of type {_stream.GetType().FullName} is not thread-safe.");
-            }
+            throw new Exception($"The stream of type {_stream.GetType().FullName} is not thread-safe.");
         }
 
         public override byte ReadByte()
@@ -90,9 +87,21 @@ namespace HDF5.NET
             return MemoryMarshal.Cast<byte, T>(buffer)[0];
         }
 
-        public override void Dispose()
+        private bool _disposedValue;
+
+        protected override void Dispose(bool disposing)
         {
-            _stream.Dispose();
+            base.Dispose(disposing);
+
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _stream.Dispose();
+                }
+
+                _disposedValue = true;
+            }
         }
     }
 }

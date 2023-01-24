@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public DataspaceSelection(H5BinaryReader reader)
+        public DataspaceSelection(H5BaseReader reader)
         {
             SelectionType = (SelectionType)reader.ReadUInt32();
 

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public OldObjectModificationTimeMessage(H5BinaryReader reader)
+        public OldObjectModificationTimeMessage(H5BaseReader reader)
         {
             // date / time
             Year = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 4));

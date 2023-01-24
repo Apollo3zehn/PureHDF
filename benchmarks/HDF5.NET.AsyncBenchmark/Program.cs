@@ -82,17 +82,17 @@ const ulong BUFFER_SIZE = CHUNK_SIZE;
 const ulong BUFFER_BYTE_SIZE = BUFFER_SIZE * sizeof(float);
 const ulong SEGMENT_COUNT = CHUNK_COUNT;
 
-var filePath = "/tmp/HDF5.NET/sync.h5";
+const string FILE_PATH = "/tmp/HDF5.NET/sync.h5";
 
 try
 {
-    if (!File.Exists(filePath))
+    if (!File.Exists(FILE_PATH))
     {
-        Console.WriteLine($"Create test file {filePath}.");
+        Console.WriteLine($"Create test file {FILE_PATH}.");
 
         var process = new Process();
         process.StartInfo.FileName = "python";
-        process.StartInfo.Arguments = $"benchmarks/HDF5.NET.AsyncBenchmark/create_test_file.py {filePath}";
+        process.StartInfo.Arguments = $"benchmarks/HDF5.NET.AsyncBenchmark/create_test_file.py {FILE_PATH}";
         process.Start();
         process.WaitForExit();
 
@@ -104,7 +104,7 @@ try
 
     else
     {
-        Console.WriteLine($"No need to create test file {filePath} as it is already there.");
+        Console.WriteLine($"No need to create test file {FILE_PATH} as it is already there.");
     }
 
     // 2 ask user to clear cache
@@ -162,9 +162,9 @@ finally
     Console.WriteLine();
     Console.WriteLine($"Clean up test file.");
 
-    if (File.Exists(filePath))
+    if (File.Exists(FILE_PATH))
     {
-        try { File.Delete(filePath); }
+        try { File.Delete(FILE_PATH); }
         catch { }
     }
 }
@@ -174,7 +174,7 @@ finally
     var result = 0.0;
 
     using var file = H5File.Open(
-        filePath,
+        FILE_PATH,
         FileMode.Open,
         FileAccess.Read,
         FileShare.Read,
@@ -208,7 +208,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
     var result = 0.0;
 
     using var file = H5File.Open(
-        filePath,
+        FILE_PATH,
         FileMode.Open,
         FileAccess.Read,
         FileShare.Read,
@@ -291,7 +291,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
     var syncObject = new object();
 
     using var file = H5File.Open(
-        filePath,
+        FILE_PATH,
         FileMode.Open,
         FileAccess.Read,
         FileShare.Read,

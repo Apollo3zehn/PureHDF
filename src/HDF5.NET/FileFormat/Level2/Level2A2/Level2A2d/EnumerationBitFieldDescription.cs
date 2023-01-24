@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        internal EnumerationBitFieldDescription(H5BinaryReader reader) : base(reader)
+        internal EnumerationBitFieldDescription(H5BaseReader reader) : base(reader)
         {
             //
         }

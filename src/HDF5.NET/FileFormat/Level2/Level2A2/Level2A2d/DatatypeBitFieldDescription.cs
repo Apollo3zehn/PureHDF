@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public DatatypeBitFieldDescription(H5BinaryReader reader)
+        public DatatypeBitFieldDescription(H5BaseReader reader)
         {
             Data = reader.ReadBytes(3);
         }

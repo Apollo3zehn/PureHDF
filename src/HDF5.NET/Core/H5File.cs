@@ -65,7 +65,7 @@
                 throw new Exception("This library only works on little endian systems.");
 
 #if NET6_0_OR_GREATER
-            H5BinaryReader reader = stream is not FileStream fileStream
+            H5BaseReader reader = stream is not FileStream fileStream
                 ? new H5StreamReader(stream)
                 : new H5SafeFileHandleReader(fileStream.SafeFileHandle, fileStream.Length);
 #else
@@ -116,7 +116,6 @@
                 else
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
             }
-
 
             reader.Seek((long)address, SeekOrigin.Begin);
             var context = new H5Context(reader, superblock);

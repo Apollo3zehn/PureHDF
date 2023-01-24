@@ -15,7 +15,7 @@
             _context = context;
         }
 
-        public GlobalHeapId(H5Context context, H5BinaryReader localReader)
+        public GlobalHeapId(H5Context context, H5BaseReader localReader)
         {
             var (reader, superblock) = context;
             _context = context;

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FilterDescription(H5BinaryReader reader, byte version)
+        public FilterDescription(H5BaseReader reader, byte version)
         {
             // filter identifier
             Identifier = (FilterIdentifier)reader.ReadInt16();

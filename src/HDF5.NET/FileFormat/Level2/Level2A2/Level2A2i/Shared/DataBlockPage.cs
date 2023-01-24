@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public DataBlockPage(H5BinaryReader reader, ulong elementCount, Func<H5BinaryReader, T> decode)
+        public DataBlockPage(H5BaseReader reader, ulong elementCount, Func<H5BaseReader, T> decode)
         {
             // elements
             Elements = Enumerable

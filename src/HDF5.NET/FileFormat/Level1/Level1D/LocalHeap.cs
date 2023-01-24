@@ -8,7 +8,7 @@ namespace HDF5.NET
 
         private byte _version;
         private byte[]? _data;
-        private H5BinaryReader _reader;
+        private H5BaseReader _reader;
 
         #endregion
 

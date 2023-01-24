@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public BTree2Record05(H5BinaryReader reader)
+        public BTree2Record05(H5BaseReader reader)
         {
             NameHash = reader.ReadUInt32();
             HeapId = reader.ReadBytes(7);

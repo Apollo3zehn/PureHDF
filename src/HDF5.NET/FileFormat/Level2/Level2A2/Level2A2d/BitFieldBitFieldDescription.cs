@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public BitFieldBitFieldDescription(H5BinaryReader reader) : base(reader)
+        public BitFieldBitFieldDescription(H5BaseReader reader) : base(reader)
         {
             //
         }

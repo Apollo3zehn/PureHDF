@@ -314,7 +314,7 @@ namespace HDF5.NET
             }
         }
 
-        public static ulong ReadUlong(H5BinaryReader reader, ulong size)
+        public static ulong ReadUlong(H5BaseReader reader, ulong size)
         {
             return size switch
             {
@@ -322,11 +322,11 @@ namespace HDF5.NET
                 2 => reader.ReadUInt16(),
                 4 => reader.ReadUInt32(),
                 8 => reader.ReadUInt64(),
-                _ => H5Utils.ReadUlongArbitrary(reader, size)
+                _ => ReadUlongArbitrary(reader, size)
             };
         }
 
-        private static ulong ReadUlongArbitrary(H5BinaryReader reader, ulong size)
+        private static ulong ReadUlongArbitrary(H5BaseReader reader, ulong size)
         {
             var result = 0UL;
             var shift = 0;

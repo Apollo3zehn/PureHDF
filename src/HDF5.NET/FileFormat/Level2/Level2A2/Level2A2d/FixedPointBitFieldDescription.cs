@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FixedPointBitFieldDescription(H5BinaryReader reader) : base(reader)
+        public FixedPointBitFieldDescription(H5BaseReader reader) : base(reader)
         {
             //
         }

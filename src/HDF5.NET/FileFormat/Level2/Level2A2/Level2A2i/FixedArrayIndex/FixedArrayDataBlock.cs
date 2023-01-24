@@ -12,7 +12,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BinaryReader, T> decode)
+        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BaseReader, T> decode)
         {
             var (reader, superblock) = context;
             
