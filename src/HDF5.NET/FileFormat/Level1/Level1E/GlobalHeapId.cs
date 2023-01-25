@@ -17,7 +17,7 @@
 
         public GlobalHeapId(H5Context context, H5BaseReader localReader)
         {
-            var (reader, superblock) = context;
+            var (_, superblock) = context;
             _context = context;
 
             CollectionAddress = superblock.ReadOffset(localReader);

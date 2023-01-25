@@ -12,7 +12,7 @@
 
         internal DataLayoutMessage3(H5Context context, byte version) : base(context.Reader)
         {
-            var (reader, superblock) = context;
+            var (reader, _) = context;
 
             // version
             Version = version;

@@ -12,7 +12,7 @@
 
         public LinkMessage(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (reader, _) = context;
 
             // version
             Version = reader.ReadByte();

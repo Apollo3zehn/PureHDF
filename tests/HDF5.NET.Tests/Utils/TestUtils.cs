@@ -48,66 +48,58 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddMassLinks(long fileId)
         {
-            long res;
-
             var groupId = H5G.create(fileId, "mass_links");
 
             for (int i = 0; i < 1000; i++)
             {
                 var linkId = H5G.create(groupId, $"mass_{i.ToString("D4")}");
-                res = H5G.close(linkId);
+                _ = H5G.close(linkId);
             }
 
-            res = H5G.close(groupId);
+            _ = H5G.close(groupId);
         }
 
         public static unsafe void AddLinks(long fileId)
         {
-            long res;
-
             var groupId = H5G.create(fileId, "links");
 
             var hardLinkId1 = H5G.create(groupId, "hard_link_1");
-            res = H5L.create_hard(groupId, "hard_link_1", groupId, "hard_link_2");
-            res = H5L.create_soft("hard_link_2", groupId, "soft_link_1");
-            res = H5L.create_soft("/links/soft_link_1", groupId, "soft_link_2");
+            _ = H5L.create_hard(groupId, "hard_link_1", groupId, "hard_link_2");
+            _ = H5L.create_soft("hard_link_2", groupId, "soft_link_1");
+            _ = H5L.create_soft("/links/soft_link_1", groupId, "soft_link_2");
 
             var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
             var datasetId = H5D.create(hardLinkId1, "dataset", H5T.NATIVE_INT, spaceId);
 
-            res = H5L.create_soft("/links/soft_link_2/dataset", groupId, "dataset");
+            _ = H5L.create_soft("/links/soft_link_2/dataset", groupId, "dataset");
 
-            res = H5S.close(spaceId);
-            res = H5D.close(datasetId);
+            _ = H5S.close(spaceId);
+            _ = H5D.close(datasetId);
 
-            res = H5G.close(groupId);
-            res = H5G.close(hardLinkId1);
+            _ = H5G.close(groupId);
+            _ = H5G.close(hardLinkId1);
         }
 
         public static unsafe void AddExternalFileLink(long fileId, string filePath)
         {
-            long res;
-
             var groupId = H5G.create(fileId, "links");
-            res = H5L.create_external(filePath, "/external/group", groupId, "external_link");
-            res = H5G.close(groupId);
+            _ = H5L.create_external(filePath, "/external/group", groupId, "external_link");
+            _ = H5G.close(groupId);
         }
 
         public static unsafe void AddCircularReference(long fileId)
         {
-            long res;
-
             var groupId_parent = H5G.create(fileId, "circular");
 
-            res = H5L.create_soft("/circular", groupId_parent, "soft");
-            res = H5L.create_hard(fileId, "circular", groupId_parent, "hard");
+            _ = H5L.create_soft("/circular", groupId_parent, "soft");
+            _ = H5L.create_hard(fileId, "circular", groupId_parent, "hard");
 
             var groupId_child1 = H5G.create(groupId_parent, "child");
             var groupId_child2 = H5G.create(groupId_child1, "rainbow's end");
 
-            res = H5G.close(groupId_child2);
-            res = H5G.close(groupId_child1);
-            res = H5G.close(groupId_parent);
+            _ = H5G.close(groupId_child2);
+            _ = H5G.close(groupId_child1);
+            _ = H5G.close(groupId_parent);
         }
 
         #endregion
@@ -136,13 +128,11 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddExternalDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
         {
-            long res;
-
             var bytesoftype = 4;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             var dapl_id = H5P.create(H5P.DATASET_ACCESS);
 
-            res = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
+            _ = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             // a (more than one chunk in file)
             var pathA = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_a.raw"), datasetAccess);
@@ -150,9 +140,9 @@ namespace HDF5.NET.Tests
             if (File.Exists(pathA))
                 File.Delete(pathA);
 
-            res = H5P.set_external(dcpl_id, pathA, new IntPtr(120), (ulong)(10 * bytesoftype));
-            res = H5P.set_external(dcpl_id, pathA, new IntPtr(80), (ulong)(10 * bytesoftype));
-            res = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
+            _ = H5P.set_external(dcpl_id, pathA, new IntPtr(120), (ulong)(10 * bytesoftype));
+            _ = H5P.set_external(dcpl_id, pathA, new IntPtr(80), (ulong)(10 * bytesoftype));
+            _ = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // b (file size smaller than set size)
             var pathB = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.raw"), datasetAccess);
@@ -160,7 +150,7 @@ namespace HDF5.NET.Tests
             if (File.Exists(pathB))
                 File.Delete(pathB);
 
-            res = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
+            _ = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // c (normal file)
             var pathC = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_c.raw"), datasetAccess);
@@ -168,7 +158,7 @@ namespace HDF5.NET.Tests
             if (File.Exists(pathC))
                 File.Delete(pathC);
 
-            res = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
+            _ = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
 
             // write data
             if (datasetAccess.ExternalFilePrefix is not null)
@@ -182,19 +172,17 @@ namespace HDF5.NET.Tests
                 fileStream2.SetLength(10);
             };
 
-            res = H5P.close(dapl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dapl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddCompactDataset(long fileId)
         {
-            long res;
-
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
+            _ = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
             TestUtils.Add(ContainerType.Dataset, fileId, "compact", "compact", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddContiguousDataset(long fileId)
@@ -204,230 +192,203 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddContiguousDatasetWithFillValueAndAllocationLate(long fileId, int fillValue)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
-            res = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
+            _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
+            _ = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
             H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
             handle.Free();
 
             TestUtils.Add(ContainerType.Dataset, fileId, "fillvalue", $"{LayoutClass.Contiguous}", H5T.NATIVE_INT32, (void*)0, length, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDatasetForHyperslab(long fileId)
         {
-            long res;
-
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             var dims = new ulong[] { 25, 25, 4 };
             var chunkDims = new ulong[] { 7, 20, 3 };
 
-            res = H5P.set_chunk(dcpl_id, 3, chunkDims);
+            _ = H5P.set_chunk(dcpl_id, 3, chunkDims);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "hyperslab", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Legacy(long fileId, bool withShuffle)
         {
-            long res;
-
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDatasetWithFillValueAndAllocationLate(long fileId, int fillValue)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
-            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
+            _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
+            _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
 
             var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
             H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
             handle.Free();
 
             TestUtils.Add(ContainerType.Dataset, fileId, "fillvalue", $"{LayoutClass.Chunked}", H5T.NATIVE_INT32, (void*)0, length, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Single_Chunk(long fileId, bool withShuffle)
         {
-            long res;
-
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_single_chunk", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Implicit(long fileId)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
-            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+            _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_implicit", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Fixed_Array(long fileId, bool withShuffle)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Fixed_Array_Paged(long fileId, bool withShuffle)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array_paged", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Extensible_Array_Elements(long fileId, bool withShuffle)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims0 = new ulong[] { length, 4 };
             var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_elements", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Extensible_Array_Data_Blocks(long fileId, bool withShuffle)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims0 = new ulong[] { length, 4 };
             var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_data_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Extensible_Array_Secondary_Blocks(long fileId, bool withShuffle)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims0 = new ulong[] { length, 4 };
             var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_BTree2(long fileId, bool withShuffle)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims0 = new ulong[] { length, 4 };
             var dims1 = new ulong[] { H5S.UNLIMITED, H5S.UNLIMITED };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
 
             if (withShuffle)
-                res = H5P.set_shuffle(dcpl_id);
+                _ = H5P.set_shuffle(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_btree2", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
 
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddChunkedDataset_Huge(long fileId)
         {
-            long res;
-
             var length = (ulong)TestData.HugeData.Length;
             var dims = new ulong[] { length };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1_000_000 });
-            res = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
+            _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1_000_000 });
+            _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_huge", H5T.NATIVE_INT32, TestData.HugeData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddVirtualDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
         {
             // see VirtualMapping.xlsx for a visualization
 
-            long res;
 
             var vspaceId = H5S.create_simple(1, new ulong[] { 20 }, new ulong[] { 20 });
             var dapl_id = H5P.create(H5P.DATASET_ACCESS);
@@ -436,7 +397,7 @@ namespace HDF5.NET.Tests
             unsafe
             {
                 var value = -1;
-                res = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT32, new IntPtr(&value));
+                _ = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT32, new IntPtr(&value));
             }
 
             // file 1
@@ -452,9 +413,9 @@ namespace HDF5.NET.Tests
 
             var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)dataA.Length }, new ulong[] { (ulong)dataA.Length });
 
-            res = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 3 });
-            res = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 2 }, new ulong[] { 5 }, new ulong[] { 3 }, new ulong[] { 2 });
-            res = H5P.set_virtual(dcpl_id, vspaceId, fileName1, "/vds/source_a", sourceSpaceId1);
+            _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 3 });
+            _ = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 2 }, new ulong[] { 5 }, new ulong[] { 3 }, new ulong[] { 2 });
+            _ = H5P.set_virtual(dcpl_id, vspaceId, fileName1, "/vds/source_a", sourceSpaceId1);
 
             // file 2
             var fileName2 = $"{datasetName}_b.h5";
@@ -469,24 +430,24 @@ namespace HDF5.NET.Tests
 
             var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)dataB.Length }, new ulong[] { (ulong)dataB.Length });
 
-            res = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 6 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 2 });
-            res = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 1 });
-            res = H5P.set_virtual(dcpl_id, vspaceId, fileName2, "/vds/source_b", sourceSpaceId2);
+            _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 6 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 2 });
+            _ = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 1 });
+            _ = H5P.set_virtual(dcpl_id, vspaceId, fileName2, "/vds/source_b", sourceSpaceId2);
 
             // create virtual dataset
             var datasetId = H5D.create(fileId, "vds", H5T.NATIVE_INT32, vspaceId, dcpl_id: dcpl_id, dapl_id: dapl_id);
 
-            H5S.close(sourceSpaceId1);
-            H5F.close(fileId1);
+            _ = H5S.close(sourceSpaceId1);
+            _ = H5F.close(fileId1);
 
-            H5S.close(sourceSpaceId2);
-            H5F.close(fileId2);
+            _ = H5S.close(sourceSpaceId2);
+            _ = H5F.close(fileId2);
 
-            H5S.close(vspaceId);
-            H5D.close(datasetId);
+            _ = H5S.close(vspaceId);
+            _ = H5D.close(datasetId);
 
-            res = H5P.close(dapl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dapl_id);
+            _ = H5P.close(dcpl_id);
         }
 
 
@@ -496,12 +457,10 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddFilteredDataset_Shuffle(long fileId, int bytesOfType, int length, Span<byte> dataset)
         {
-            long res;
-
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 1, new ulong[] { (ulong)length });
-            res = H5P.set_shuffle(dcpl_id);
+            _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { (ulong)length });
+            _ = H5P.set_shuffle(dcpl_id);
 
             var typeId = bytesOfType switch
             {
@@ -513,51 +472,45 @@ namespace HDF5.NET.Tests
             };
 
             TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"shuffle_{bytesOfType}", typeId, dataset, (ulong)length, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddFilteredDataset_ZLib(long fileId)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            res = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), new uint[] { 5 } /* compression level */);
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            _ = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), new uint[] { 5 } /* compression level */);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"deflate", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddFilteredDataset_Fletcher(long fileId)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            res = H5P.set_fletcher32(dcpl_id);
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            _ = H5P.set_fletcher32(dcpl_id);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"fletcher", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
-            res = H5P.close(dcpl_id);
+            _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddFilteredDataset_Multi(long fileId)
         {
-            long res;
-
             var length = (ulong)TestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-            res = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-            res = H5P.set_fletcher32(dcpl_id);
-            res = H5P.set_shuffle(dcpl_id);
-            res = H5P.set_deflate(dcpl_id, level: 5);
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+            _ = H5P.set_fletcher32(dcpl_id);
+            _ = H5P.set_shuffle(dcpl_id);
+            _ = H5P.set_deflate(dcpl_id, level: 5);
 
             TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"multi", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
         }
@@ -624,15 +577,13 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddOpaque(long fileId, ContainerType container)
         {
-            long res;
-
             var length = (ulong)TestData.SmallData.Length * 2;
             var typeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
-            res = H5T.set_tag(typeId, "Opaque Test Tag");
+            _ = H5T.set_tag(typeId, "Opaque Test Tag");
 
             TestUtils.Add(container, fileId, "opaque", "opaque", typeId, TestData.SmallData.AsSpan(), length);
 
-            res = H5T.close(typeId);
+            _ = H5T.close(typeId);
         }
 
         public static unsafe void AddArray(long fileId, ContainerType container)
@@ -881,8 +832,6 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddMass(long fileId, ContainerType container)
         {
-            long res;
-
             var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
 
             for (int i = 0; i < 1000; i++)
@@ -892,7 +841,7 @@ namespace HDF5.NET.Tests
                 if (i == 450)
                 {
                     var acpl_id = H5P.create(H5P.ATTRIBUTE_CREATE);
-                    res = H5P.set_char_encoding(acpl_id, H5T.cset_t.UTF8);
+                    _ = H5P.set_char_encoding(acpl_id, H5T.cset_t.UTF8);
                     var name = "字形碼 / 字形码, Zìxíngmǎ";
                     TestUtils.Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
                 }
@@ -903,7 +852,7 @@ namespace HDF5.NET.Tests
                 }
             }
 
-            res = H5T.close(typeId);
+            _ = H5T.close(typeId);
         }
 
         public static unsafe void AddSmall(long fileId, ContainerType container)
@@ -980,7 +929,7 @@ namespace HDF5.NET.Tests
             res = H5P.set_libver_bounds(faplId, version, version);
             var fileId = H5F.create(filePath, H5F.ACC_TRUNC, 0, faplId);
             action?.Invoke(fileId);
-            res = H5F.close(fileId);
+            _ = H5F.close(fileId);
 
             return filePath;
         }
@@ -1016,19 +965,16 @@ namespace HDF5.NET.Tests
 
         public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
         {
-            long res;
-
             if (dims1 is null)
                 dims1 = dims0;
 
             var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
             TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl, apl);
-            res = H5S.close(spaceId);
+            _ = H5S.close(spaceId);
         }
 
         public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, long spaceId, long cpl = 0, long apl = 0)
         {
-            long res;
             long groupId;
 
             if (H5L.exists(fileId, groupName) > 0)
@@ -1046,9 +992,9 @@ namespace HDF5.NET.Tests
                     throw new Exception("Could not create dataset.");
 
                 if ((int)dataPtr != 0)
-                    res = H5D.write(id, typeId, spaceId, H5S.ALL, 0, new IntPtr(dataPtr));
+                    _ = H5D.write(id, typeId, spaceId, H5S.ALL, 0, new IntPtr(dataPtr));
 
-                res = H5D.close(id);
+                _ = H5D.close(id);
             }
             else
             {
@@ -1058,12 +1004,12 @@ namespace HDF5.NET.Tests
                     throw new Exception("Could not create attribute.");
 
                 if ((int)dataPtr != 0)
-                    res = H5A.write(id, typeId, new IntPtr(dataPtr));
+                    _ = H5A.write(id, typeId, new IntPtr(dataPtr));
 
-                res = H5A.close(id);
+                _ = H5A.close(id);
             }
 
-            res = H5G.close(groupId);
+            _ = H5G.close(groupId);
         }
 
         public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected)

@@ -10,7 +10,7 @@
             reader.ReadBytes(4);
 
             // length
-            var length = reader.ReadUInt32();
+            _ = reader.ReadUInt32();
 
             // rank
             Rank = reader.ReadUInt32();

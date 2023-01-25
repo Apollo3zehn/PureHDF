@@ -67,29 +67,8 @@
         /// </summary>
         public class BitFieldType
         {
-
-/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
-Vor:
-            private BitFieldBitFieldDescription _bitField;
-Nach:
             private readonly BitFieldBitFieldDescription _bitField;
-*/
-
-/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard21)"
-Vor:
-            private BitFieldBitFieldDescription _bitField;
-Nach:
-            private readonly BitFieldBitFieldDescription _bitField;
-*/
-
-/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard20)"
-Vor:
-            private BitFieldBitFieldDescription _bitField;
-Nach:
-            private readonly BitFieldBitFieldDescription _bitField;
-*/
-            private readonly BitFieldBitFieldDescription _bitField;
-            private readonly readonly BitFieldPropertyDescription _property;
+            private readonly BitFieldPropertyDescription _property;
 
             internal BitFieldType(
                 BitFieldBitFieldDescription bitField,
@@ -134,29 +113,8 @@ Nach:
                 H5DataType Type
             );
 
-
-/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
-Vor:
-            private CompoundBitFieldDescription _bitField;
-Nach:
             private readonly CompoundBitFieldDescription _bitField;
-*/
-
-/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard21)"
-Vor:
-            private CompoundBitFieldDescription _bitField;
-Nach:
-            private readonly CompoundBitFieldDescription _bitField;
-*/
-
-/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard20)"
-Vor:
-            private CompoundBitFieldDescription _bitField;
-Nach:
-            private readonly CompoundBitFieldDescription _bitField;
-*/
-            private readonly CompoundBitFieldDescription _bitField;
-            private readonly readonly CompoundPropertyDescription[] _properties;
+            private readonly CompoundPropertyDescription[] _properties;
 
             internal CompoundType(
                 CompoundBitFieldDescription bitField,
