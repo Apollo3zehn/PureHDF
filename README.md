@@ -1,4 +1,4 @@
-**See https://github.com/Apollo3zehn/PureHDF/issues/9 for not yet implemented features.**
+**See https://github.com/Apollo3zehn/PureHDF/issues/4 for not yet implemented features.**
 
 | API Documentation |
 | ------------------ |
