@@ -1,0 +1,940 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>PureHDF | PureHDF </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="PureHDF | PureHDF ">
+    <meta name="generator" content="docfx ">
+  
+    <link rel="shortcut icon" href="images/icon.ico">
+    <link rel="stylesheet" href="styles/docfx.vendor.css">
+    <link rel="stylesheet" href="styles/docfx.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+    <meta property="docfx:navrel" content="">
+    <meta property="docfx:tocrel" content="">
+  
+  
+  
+  </head>  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="index.html">
+                <img id="logo" class="svg" src="images/logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+
+<p><strong>See <a href="https://github.com/Apollo3zehn/PureHDF/issues/9">https://github.com/Apollo3zehn/PureHDF/issues/9</a> for not yet implemented features.</strong></p>
+<table>
+<thead>
+<tr>
+<th>API Documentation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://apollo3zehn.github.io/PureHDF/api/netstandard2.0/PureHDF.html">.NET Standard 2.0</a></td>
+</tr>
+<tr>
+<td><a href="https://apollo3zehn.github.io/PureHDF/api/netstandard2.1/PureHDF.html">.NET Standard 2.1</a></td>
+</tr>
+<tr>
+<td><a href="https://apollo3zehn.github.io/PureHDF/api/net50/PureHDF.html">.NET 5</a></td>
+</tr>
+<tr>
+<td><a href="https://apollo3zehn.github.io/PureHDF/api/net60/PureHDF.html">.NET 6</a></td>
+</tr>
+</tbody>
+</table>
+<h1 id="purehdf">PureHDF</h1>
+<p><a href="https://github.com/Apollo3zehn/PureHDF/actions"><img src="https://github.com/Apollo3zehn/PureHDF/actions/workflows/build-and-publish.yml/badge.svg" alt="GitHub Actions"></a> <a href="https://www.nuget.org/packages/PureHDF"><img src="https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget" alt="NuGet"></a></p>
+<p>A pure C# library without native dependencies that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy.</p>
+<p>The minimum supported target framework is .NET Standard 2.0 which includes</p>
+<ul>
+<li>.NET Framework 4.6.1+</li>
+<li>.NET Core (all versions)</li>
+<li>.NET 5+</li>
+</ul>
+<p>This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.</p>
+<p>The implemention follows the <a href="https://support.hdfgroup.org/HDF5/doc/H5.format.html">HDF5 File Format Specification</a>.</p>
+<blockquote>
+<p>Overwhelmed by the number of different HDF 5 libraries? <a href="#9-comparison-table">Here</a> is a comparison table.</p>
+</blockquote>
+<h1 id="1-objects">1. Objects</h1>
+<pre><code class="lang-cs">// open HDF5 file, the returned H5File instance represents the root group ('/')
+using var root = H5File.OpenRead(filePath);
+</code></pre>
+<h2 id="11-get-object">1.1 Get Object</h2>
+<h3 id="group">Group</h3>
+<pre><code class="lang-cs">// get nested group
+var group = root.Group(&quot;/my/nested/group&quot;);
+</code></pre>
+<h3 id="dataset">Dataset</h3>
+<pre><code class="lang-cs">
+// get dataset in group
+var dataset = group.Dataset(&quot;myDataset&quot;);
+
+// alternatively, use the full path
+var dataset = group.Dataset(&quot;/my/nested/group/myDataset&quot;);
+</code></pre>
+<h3 id="commited-data-type">Commited Data Type</h3>
+<pre><code class="lang-cs">// get commited data type in group
+var commitedDatatype = group.CommitedDatatype(&quot;myCommitedDatatype&quot;);
+</code></pre>
+<h3 id="any-object-type">Any Object Type</h3>
+<p>When you do not know what kind of link to expect at a given path, use the following code:</p>
+<pre><code class="lang-cs">// get H5Object (base class of all HDF5 object types)
+var myH5Object = group.Get(&quot;/path/to/unknown/object&quot;);
+</code></pre>
+<h2 id="12-additional-info">1.2 Additional Info</h2>
+<h3 id="external-file-link">External File Link</h3>
+<p>With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this <a href="https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm">overview</a>).</p>
+<p>You can either set an environment variable:</p>
+<pre><code class="lang-cs">Environment.SetEnvironmentVariable(&quot;HDF5_EXT_PREFIX&quot;, &quot;/my/prefix/path&quot;);
+</code></pre>
+<p>Or you can pass the prefix as an overload parameter:</p>
+<pre><code class="lang-cs">var linkAccess = new H5LinkAccess() 
+{
+    ExternalLinkPrefix = prefix 
+}
+
+var dataset = group.Dataset(path, linkAccess);
+</code></pre>
+<h3 id="iteration">Iteration</h3>
+<p>Iterate through all links in a group:</p>
+<pre><code class="lang-cs">foreach (var link in group.Children)
+{
+    var message = link switch
+    {
+        H5Group group               =&gt; $&quot;I am a group and my name is '{group.Name}'.&quot;,
+        H5Dataset dataset           =&gt; $&quot;I am a dataset, call me '{dataset.Name}'.&quot;,
+        H5CommitedDatatype datatype =&gt; $&quot;I am the data type '{datatype.Name}'.&quot;,
+        H5UnresolvedLink lostLink   =&gt; $&quot;I cannot find my link target =( shame on '{lostLink.Name}'.&quot;
+        _                           =&gt; throw new Exception(&quot;Unknown link type&quot;);
+    }
+
+    Console.WriteLine(message)
+}
+</code></pre>
+<p>An <code>H5UnresolvedLink</code> becomes part of the <code>Children</code> collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.</p>
+<h1 id="2-attributes">2. Attributes</h1>
+<pre><code class="lang-cs">// get attribute of group
+var attribute = group.Attribute(&quot;myAttributeOnAGroup&quot;);
+
+// get attribute of dataset
+var attribute = dataset.Attribute(&quot;myAttributeOnADataset&quot;);
+</code></pre>
+<h1 id="3-data">3. Data</h1>
+<p>The following code samples work for datasets as well as attributes.</p>
+<pre><code class="lang-cs">// class: fixed-point
+
+    var data = dataset.Read&lt;int&gt;();
+
+// class: floating-point
+
+    var data = dataset.Read&lt;double&gt;();
+
+// class: string
+
+    var data = dataset.ReadString();
+
+// class: bitfield
+
+    [Flags]
+    enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
+    {
+        MainValve_Open          = 0x0001
+        AuxValve_1_Open         = 0x0002
+        AuxValve_2_Open         = 0x0004
+        MainEngine_Ready        = 0x0008
+        FallbackEngine_Ready    = 0x0010
+        // ...
+    }
+
+    var data = dataset.Read&lt;SystemStatus&gt;();
+    var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.MainEngine_Ready);
+
+// class: opaque
+
+    var data = dataset.Read&lt;byte&gt;();
+    var data = dataset.Read&lt;MyOpaqueStruct&gt;();
+
+// class: compound
+
+    /* option 1 (faster) */
+    var data = dataset.Read&lt;MyNonNullableStruct&gt;();
+    /* option 2 (slower, for more info see the link below after this code block) */
+    var data = dataset.ReadCompound&lt;MyNullableStruct&gt;();
+
+// class: reference
+
+    var data = dataset.Read&lt;H5ObjectReference&gt;();
+    var firstRef = data.First();
+
+    /* NOTE: Dereferencing would be quite fast if the object's name
+     * was known. Instead, the library searches recursively for the  
+     * object. Do not dereference using a parent (group) that contains
+     * any circular soft links. Hard links are no problem.
+     */
+
+    /* option 1 (faster) */
+    var firstObject = directParent.Get(firstRef);
+
+    /* option 1 (slower, use if you don't know the objects parent) */
+    var firstObject = root.Get(firstRef);
+
+// class: enumerated
+
+    enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
+    {
+        MyValue1 = 1,
+        MyValue2 = 2,
+        // ...
+    }
+
+    var data = dataset.Read&lt;MyEnum&gt;();
+
+// class: variable length
+
+    var data = dataset.ReadString();
+
+// class: array
+
+    var data = dataset
+        .Read&lt;int&gt;()
+        /* dataset dims = int[2, 3] */
+        /*   array dims = int[4, 5] */
+        .ToArray4D(2, 3, 4, 5);
+
+// class: time
+// -&gt; not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
+</code></pre>
+<p>For more information on compound data, see section <a href="#6-reading-compound-data">Reading compound data</a>.</p>
+<h1 id="4-partial-io-and-hyperslabs">4. Partial I/O and Hyperslabs</h1>
+<h2 id="41-overview">4.1 Overview</h2>
+<p>Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to <code>dataset.Read()</code>. However, if you want to read only parts of the dataset, <a href="https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html">hyperslab selections</a> are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):</p>
+<pre><code class="lang-cs">var dataset = root.Dataset(&quot;myDataset&quot;);
+var memoryDims = new ulong[] { 75, 25 };
+
+var datasetSelection = new HyperslabSelection(
+    rank: 3,
+    starts: new ulong[] { 2, 2, 0 },
+    strides: new ulong[] { 5, 8, 2 },
+    counts: new ulong[] { 5, 3, 2 },
+    blocks: new ulong[] { 3, 5, 2 }
+);
+
+var memorySelection = new HyperslabSelection(
+    rank: 2,
+    starts: new ulong[] { 2, 1 },
+    strides: new ulong[] { 35, 17 },
+    counts: new ulong[] { 2, 1 },
+    blocks: new ulong[] { 30, 15 }
+);
+
+var result = dataset
+    .Read&lt;int&gt;(
+        fileSelection: datasetSelection,
+        memorySelection: memorySelection,
+        memoryDims: memoryDims
+    )
+    .ToArray2D(75, 25);
+</code></pre>
+<p>All shown parameters are optional. For example, when the <code>fileSelection</code> parameter is unspecified, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.</p>
+<p>Additionally, there is an overload method that allows you to provide your own buffer.</p>
+<h2 id="42-experimental-iqueryable-1-dimensional-data-only">4.2 Experimental: IQueryable (1-dimensional data only)</h2>
+<p>Another way to build the file selection is to invoke the <code>AsQueryable</code> method which can then be used as follows:</p>
+<pre><code class="lang-cs">var result = dataset.AsQueryable&lt;int&gt;()
+    .Skip(5)    // start
+    .Stride(5)  // stride
+    .Repeat(2)  // count
+    .Take(3)    // block
+    .ToArray();
+</code></pre>
+<p>All methods are optional, i.e. the code</p>
+<pre><code class="lang-cs">var result = dataset.AsQueryable&lt;int&gt;()
+    .Skip(5)
+    .ToArray();
+</code></pre>
+<p>will simply skip the first 5 elements and return the rest of the dataset.</p>
+<p>This way of building a hyperslab / selection has been implemented in an efford to provide a more .NET-like experience when working with data.</p>
+<h1 id="5-filters">5. Filters</h1>
+<h2 id="51-built-in-filters">5.1 Built-in Filters</h2>
+<ul>
+<li>Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)</li>
+<li>Fletcher32</li>
+<li>Deflate (zlib)</li>
+<li>Scale-Offset</li>
+</ul>
+<p><sup>1</sup> NET Standard 2.1 and above</p>
+<h2 id="52-external-filters">5.2 External Filters</h2>
+<p>Before you can use external filters, you need to register them using <code>H5Filter.Register(...)</code>. This method accepts a filter identifier, a filter name and the actual filter function.</p>
+<p>This function could look like the following and should be adapted to your specific filter library:</p>
+<pre><code class="lang-cs">public static Memory&lt;byte&gt; FilterFunc(
+    H5FilterFlags flags, 
+    uint[] parameters, 
+    Memory&lt;byte&gt; buffer)
+{
+    // Decompressing
+    if (flags.HasFlag(H5FilterFlags.Decompress))
+    {
+        // pseudo code
+        byte[] decompressedData = MyFilter.Decompress(parameters, buffer.Span);
+        return decompressedData;
+    }
+    // Compressing
+    else
+    {
+        throw new Exception(&quot;Writing data chunks is not yet supported by PureHDF.&quot;);
+    }
+}
+
+</code></pre>
+<h2 id="53-tested-external-filters">5.3 Tested External Filters</h2>
+<ul>
+<li>deflate (based on <a href="https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/">Intrinsics.ISA-L.PInvoke</a>, SSE2 / AVX2 / AVX512, <a href="https://github.com/Apollo3zehn/PureHDF/wiki/Deflate-Benchmark">benchmark results</a>)</li>
+<li>c-blosc2 (based on <a href="https://www.nuget.org/packages/Blosc2.PInvoke">Blosc2.PInvoke</a>, SSE2 / AVX2)</li>
+<li>bzip2 (based on <a href="https://www.nuget.org/packages/SharpZipLib">SharpZipLib</a>)</li>
+</ul>
+<h2 id="54-how-to-use-deflate-hardware-accelerated">5.4 How to use Deflate (hardware accelerated)</h2>
+<p>(1) Install the P/Invoke package:</p>
+<p><code>dotnet package add Intrinsics.ISA-L.PInvoke</code></p>
+<p>(2) Add the Deflate filter registration <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/DeflateHelper_Intel_ISA_L.cs">helper function</a> to your code.</p>
+<p>(3) Register Deflate:</p>
+<pre><code class="lang-cs"> H5Filter.Register(
+     identifier: H5FilterID.Deflate, 
+     name: &quot;deflate&quot;, 
+     filterFunc: DeflateHelper_Intel_ISA_L.FilterFunc);
+</code></pre>
+<p>(4) Enable unsafe code blocks in <code>.csproj</code>:</p>
+<pre><code class="lang-xml">&lt;PropertyGroup&gt;
+    &lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;
+&lt;/PropertyGroup&gt;
+</code></pre>
+<h2 id="55-how-to-use-blosc--blosc2-hardware-accelerated">5.5 How to use Blosc / Blosc2 (hardware accelerated)</h2>
+<p>(1) Install the P/Invoke package:</p>
+<p><code>dotnet package add Blosc2.PInvoke</code></p>
+<p>(2) Add the Blosc filter registration <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BloscHelper.cs">helper function</a> to your code.</p>
+<p>(3) Register Blosc:</p>
+<pre><code class="lang-cs"> H5Filter.Register(
+     identifier: (H5FilterID)32001, 
+     name: &quot;blosc2&quot;, 
+     filterFunc: BloscHelper.FilterFunc);
+</code></pre>
+<h2 id="56-how-to-use-bzip2">5.6 How to use BZip2</h2>
+<p>(1) Install the SharpZipLib package:</p>
+<p><code>dotnet package add SharpZipLib</code></p>
+<p>(2) Add the BZip2 filter registration <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BZip2Helper.cs">helper function</a> and the <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Utils/Streams/MemorySpanStream.cs">MemorySpanStream</a> implementation to your code.</p>
+<p>(3) Register BZip2:</p>
+<pre><code class="lang-cs"> H5Filter.Register(
+     identifier: (H5FilterID)307, 
+     name: &quot;bzip2&quot;, 
+     filterFunc: BZip2Helper.FilterFunc);
+</code></pre>
+<h1 id="6-reading-compound-data">6. Reading Compound Data</h1>
+<p>There are three ways to read structs which are explained in the following sections. Here is an overview:</p>
+<table>
+<thead>
+<tr>
+<th>method</th>
+<th>return value</th>
+<th>speed</th>
+<th>restrictions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Read&lt;T&gt;()</code></td>
+<td><code>T</code></td>
+<td>fast</td>
+<td>predefined type with correct field offsets required; nullable fields are not allowed</td>
+</tr>
+<tr>
+<td><code>ReadCompound&lt;T&gt;()</code></td>
+<td><code>T</code></td>
+<td>slow</td>
+<td>predefined type with matching names required</td>
+</tr>
+<tr>
+<td><code>ReadCompound()</code></td>
+<td><code>Dictionary&lt;string, object&gt;</code></td>
+<td>slow</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h2 id="61-structs-without-nullable-fields">6.1 Structs without nullable fields</h2>
+<p>Structs without any nullable fields (i.e. no strings and other reference types) can be read like any other dataset using a high performance copy operation:</p>
+<pre><code class="lang-cs">[StructLayout(LayoutKind.Explicit, Size = 5)]
+struct SimpleStruct
+{
+    [FieldOffset(0)]
+    public byte ByteValue;
+
+    [FieldOffset(1)]
+    public ushort UShortValue;
+
+    [FieldOffset(3)]
+    public TestEnum EnumValue;
+}
+
+var compoundData = dataset.Read&lt;SimpleStruct&gt;();
+</code></pre>
+<p>Just make sure the field offset attributes matches the field offsets defined in the HDF5 file when the dataset was created.</p>
+<p><em>This method does not require that the structs field names match since they are simply mapped by their offset.</em></p>
+<p>If your struct contains an array of fixed size (here: <code>3</code>), you would need to add the <code>unsafe</code> modifier to the struct definition and define the struct as follows:</p>
+<pre><code class="lang-cs">[StructLayout(LayoutKind.Explicit, Size = 8)]
+unsafe struct SimpleStructWithArray
+{
+    // ... all the fields from the struct above, plus:
+
+    [FieldOffset(5)]
+    public fixed float FloatArray[3];
+}
+
+var compoundData = dataset.Read&lt;SimpleStruct&gt;();
+</code></pre>
+<h2 id="62-structs-with-nullable-fields-strings-arrays">6.2 Structs with nullable fields (strings, arrays)</h2>
+<p>If you have a struct with <code>string</code> or normal <code>array</code> fields, you need to use the slower <code>ReadCompound</code> method:</p>
+<pre><code class="lang-cs">struct NullableStruct
+{
+    public float FloatValue;
+    public string StringValue1;
+    public string StringValue2;
+    public byte ByteValue;
+    public short ShortValue;
+
+    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
+    public float[] FloatArray;
+}
+
+var compoundData = dataset.ReadCompound&lt;NullableStruct&gt;();
+var compoundData = attribute.ReadCompound&lt;NullableStruct&gt;();
+</code></pre>
+<ul>
+<li><p>Please note the use of the <code>MarshalAs</code> attribute on the array property. This attribute tells the runtime that this array is of fixed size (here: <code>3</code>) and that it should be treated as value which is embedded into the struct instead of being a separate object.</p>
+</li>
+<li><p>Nested structs <strong>with nullable fields</strong> are not supported with this method.</p>
+</li>
+<li><p>Arrays <strong>with nullable element type</strong> are not supported with this method.</p>
+</li>
+<li><p>It is mandatory that the field names match exactly those in the HDF5 file. If you would like to use custom field names, consider the following approach:</p>
+</li>
+</ul>
+<pre><code class="lang-cs">
+// Apply the H5NameAttribute to the field with custom name.
+struct NullableStructWithCustomFieldName
+{
+    [H5Name(&quot;FloatValue&quot;)]
+    public float FloatValueWithCustomName;
+
+    // ... more fields
+}
+
+// Create a name translator.
+Func&lt;FieldInfo, string&gt; converter = fieldInfo =&gt;
+{
+    var attribute = fieldInfo.GetCustomAttribute&lt;H5NameAttribute&gt;(true);
+    return attribute is not null ? attribute.Name : fieldInfo.Name;
+};
+
+// Use that name translator.
+var compoundData = dataset.ReadCompound&lt;NullableStructWithCustomFieldName&gt;(converter);
+</code></pre>
+<h2 id="63-unknown-structs">6.3 Unknown structs</h2>
+<p>You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic <code>dataset.ReadCompound()</code> which returns a <code>Dictionary&lt;string, object?&gt;[]</code> where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even <code>H5ObjectReference</code>), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.</p>
+<p>The type mapping is as follows:</p>
+<table>
+<thead>
+<tr>
+<th>H5 type</th>
+<th>.NET type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fixed point, 1 byte,  unsigned</td>
+<td><code>byte</code></td>
+</tr>
+<tr>
+<td>fixed point, 1 byte,    signed</td>
+<td><code>sbyte</code></td>
+</tr>
+<tr>
+<td>fixed point, 2 bytes, unsigned</td>
+<td><code>ushort</code></td>
+</tr>
+<tr>
+<td>fixed point, 2 bytes,   signed</td>
+<td><code>short</code></td>
+</tr>
+<tr>
+<td>fixed point, 4 bytes, unsigned</td>
+<td><code>uint</code></td>
+</tr>
+<tr>
+<td>fixed point, 4 bytes,   signed</td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td>fixed point, 8 bytes, unsigned</td>
+<td><code>ulong</code></td>
+</tr>
+<tr>
+<td>fixed point, 8 bytes,   signed</td>
+<td><code>long</code></td>
+</tr>
+<tr>
+<td>floating point, 4 bytes</td>
+<td><code>float </code></td>
+</tr>
+<tr>
+<td>floating point, 8 bytes,</td>
+<td><code>double</code></td>
+</tr>
+<tr>
+<td>string</td>
+<td><code>string</code></td>
+</tr>
+<tr>
+<td>bitfield</td>
+<td><code>byte[]</code></td>
+</tr>
+<tr>
+<td>opaque</td>
+<td><code>byte[]</code></td>
+</tr>
+<tr>
+<td>compound</td>
+<td><code>Dictionary&lt;string, object?&gt;</code></td>
+</tr>
+<tr>
+<td>reference</td>
+<td><code>H5ObjectReference</code></td>
+</tr>
+<tr>
+<td>enumerated</td>
+<td><code>&lt;base type&gt;</code></td>
+</tr>
+<tr>
+<td>variable length, type = string</td>
+<td><code>string</code></td>
+</tr>
+<tr>
+<td>array</td>
+<td><code>&lt;base type&gt;[]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Not supported data types like <code>time</code> and <code>variable length type = sequence</code> will be represented as <code>null</code>.</p>
+<h1 id="7-advanced-scenarios">7. Advanced Scenarios</h1>
+<h2 id="71-memory-mapped-file">7.1 Memory-Mapped File</h2>
+<p>In some cases, it might be useful to read data from a memory-mapped file instead of a regular <code>FileStream</code> to reduce the number of (costly) system calls. Depending on the file structure this may heavily increase random access performance. Here is an example:</p>
+<pre><code class="lang-cs">using var mmf = MemoryMappedFile.CreateFromFile(
+    fileStream, 
+    mapName: default, 
+    capacity: 0, 
+    MemoryMappedFileAccess.Read,
+    HandleInheritability.None);
+
+using var mmfStream = mmf.CreateViewStream(
+    offset: 0, 
+    size: 0,
+    MemoryMappedFileAccess.Read);
+
+using var root = H5File.Open(mmfStream);
+
+...
+</code></pre>
+<h2 id="72-reading-multidimensional-data">7.2 Reading Multidimensional Data</h2>
+<h3 id="721-generic-method">7.2.1 Generic Method</h3>
+<p>Sometimes you want to read the data as multidimensional arrays. In that case use one of the <code>byte[]</code> overloads like <code>ToArray3D</code> (there are overloads up to 6D). Here is an example:</p>
+<pre><code class="lang-cs">var data3D = dataset
+    .Read&lt;int&gt;()
+    .ToArray3D(new long[] { -1, 7, 2 });
+</code></pre>
+<p>The methods accepts a <code>long[]</code> with the new array dimensions. This feature works similar to Matlab's <a href="https://de.mathworks.com/help/matlab/ref/reshape.html">reshape</a> function. A slightly adapted citation explains the behavior:</p>
+<blockquote>
+<p>When you use <code>-1</code> to automatically calculate a dimension size, the dimensions that you <em>do</em> explicitly specify must divide evenly into the number of elements in the input array.</p>
+</blockquote>
+<h3 id="722-high-performance-method-2d-only">7.2.2 High-Performance Method (2D only)</h3>
+<p>The previously shown method (<code>ToArrayXD</code>) performs a copy operation. If you would like to avoid this, you might find the <code>Span2D</code> type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run <code>dotnet add package CommunityToolkit.HighPerformance</code> and then use it like this:</p>
+<pre><code class="lang-cs">using CommunityToolkit.HighPerformance;
+
+data2D = dataset
+    .Read&lt;int&gt;()
+    .AsSpan()
+    .AsSpan2D(height: 20, width: 10);
+</code></pre>
+<p>No data are being copied and you can work with the array similar to a normal <code>Span&lt;T&gt;</code>, i.e. you may want to <a href="https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d">slice</a> through it.</p>
+<h1 id="8-asynchronous-data-access">8 Asynchronous Data Access</h1>
+<p>PureHDF supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.</p>
+<p><strong>Sample 1: Load data of two datasets</strong></p>
+<pre><code class="lang-cs">async Task LoadDataAsynchronously()
+{
+    var data1Task = dataset1.ReadAsync&lt;int&gt;();
+    var data2Task = dataset2.ReadAsync&lt;int&gt;();
+    await Task.WhenAll(data1Task, data2Task);
+}
+</code></pre>
+<p><strong>Sample 2: Load data of two datasets and process it</strong></p>
+<pre><code class="lang-cs">async Task LoadAndProcessDataAsynchronously()
+{
+    var processedData1Task = Task.Run(async () =&gt; 
+    {
+        var data1 = await dataset1.ReadAsync&lt;int&gt;();
+        ProcessData(data1);
+    });
+    var processedData2Task = Task.Run(async () =&gt; 
+    {
+        var data2 = await dataset2.ReadAsync&lt;int&gt;();
+        ProcessData(data2);
+    });
+    await Task.WhenAll(processedData1Task, processedData2Task);
+}
+</code></pre>
+<p><strong>Sample 3: Load data of a single dataset and process it</strong></p>
+<pre><code class="lang-cs">
+async Task LoadAndProcessDataAsynchronously()
+{
+    var processedData1Task = Task.Run(async () =&gt; 
+    {
+        var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
+        var data1 = await dataset1.ReadAsync&lt;int&gt;(fileSelection1);
+        ProcessData(data1);
+    });
+    var processedData2Task = Task.Run(async () =&gt; 
+    {
+        var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
+        var data2 = await dataset2.ReadAsync&lt;int&gt;(fileSelection2);
+        ProcessData(data2);
+    });
+    await Task.WhenAll(processedData1Task, processedData2Task);
+}
+</code></pre>
+<h1 id="9-comparison-table">9 Comparison Table</h1>
+<p>The following table considers only projects listed on Nuget.org.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Arch</th>
+<th>Platform</th>
+<th>Kind</th>
+<th>Mode</th>
+<th>Version</th>
+<th>License</th>
+<th>Maintainer</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>v1.10</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF">PureHDF</a></td>
+<td>all</td>
+<td>all</td>
+<td>managed</td>
+<td>ro</td>
+<td>N/A</td>
+<td>MIT</td>
+<td>Apollo3zehn</td>
+<td>version does not apply, standalone implementation</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF5-CSharp">HDF5-CSharp</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.10.6</td>
+<td>MIT</td>
+<td>LiorBanai</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/SciSharp.Keras.HDF5">SciSharp.Keras.HDF5</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.10.5</td>
+<td>MIT</td>
+<td>SciSharp</td>
+<td>fork of HDF-CSharp</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/ILNumerics.IO.HDF5">ILNumerics.IO.HDF5</a></td>
+<td>x64</td>
+<td>Win,Lin</td>
+<td>HL</td>
+<td>rw</td>
+<td>?</td>
+<td>proprietary</td>
+<td>IL_Numerics_GmbH</td>
+<td>probably 1.10</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/LiteHDF">LiteHDF</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>ro</td>
+<td>1.10.5</td>
+<td>MIT</td>
+<td>silkfire</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/hdflib">hdflib</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>HL</td>
+<td>wo</td>
+<td>1.10.6</td>
+<td>MIT</td>
+<td>bdebree</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/Mbc.Hdf5Utils">Mbc.Hdf5Utils</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.10.6</td>
+<td>Apache-2.0</td>
+<td>bqstony</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke">HDF.PInvoke</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.8,1.10</td>
+<td>HDF5</td>
+<td>hdf,gheber</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke.1.10">HDF.PInvoke.1.10</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.10.6</td>
+<td>HDF5</td>
+<td>hdf,Apollo3zehn</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke.NETStandard">HDF.PInvoke.NETStandard</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.10.5</td>
+<td>HDF5</td>
+<td>surban</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>v1.8</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF5DotNet.x64">HDF5DotNet.x64</a></td>
+<td>x64</td>
+<td>Windows</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>thieum</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF5DotNet.x86">HDF5DotNet.x86</a></td>
+<td>x86</td>
+<td>Windows</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>thieum</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/sharpHDF">sharpHDF</a></td>
+<td>x64</td>
+<td>Windows</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.8</td>
+<td>MIT</td>
+<td>bengecko</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke">HDF.PInvoke</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.8,1.10</td>
+<td>HDF5</td>
+<td>hdf,gheber</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/hdf5-v120-complete">hdf5-v120-complete</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>native</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>daniel.gracia</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/hdf5-v120">hdf5-v120</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>native</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>keen</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Abbreviations:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>.NET API</th>
+<th>Native dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>managed</code></td>
+<td>high-level</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>HL</code></td>
+<td>high-level</td>
+<td>C-library</td>
+</tr>
+<tr>
+<td><code>bindings</code></td>
+<td>low-level</td>
+<td>C-library</td>
+</tr>
+<tr>
+<td><code>native</code></td>
+<td>none</td>
+<td>C-library</td>
+</tr>
+</tbody>
+</table>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/index.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright © 2023 Vincent Wilms
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="styles/docfx.js"></script>
+    <script type="text/javascript" src="styles/main.js"></script>
+  </body>
+</html>
