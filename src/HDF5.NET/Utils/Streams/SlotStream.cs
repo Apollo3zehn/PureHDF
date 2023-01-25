@@ -1,4 +1,6 @@
-﻿namespace HDF5.NET
+﻿using System;
+
+namespace HDF5.NET
 {
     internal class SlotStream : Stream
     {
@@ -68,7 +70,9 @@
 
             _stream = EnsureStream();
 
-            var actualLength = await _stream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
+            var actualLength = await _stream
+                .ReadAsync(buffer.AsMemory(offset, length), cancellationToken)
+                .ConfigureAwait(false);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
             buffer

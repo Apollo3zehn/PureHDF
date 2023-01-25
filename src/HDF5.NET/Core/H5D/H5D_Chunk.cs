@@ -29,8 +29,7 @@ namespace HDF5.NET
 
             var chunkCacheFactory = datasetAccess.ChunkCacheFactory;
 
-            if (chunkCacheFactory is null)
-                chunkCacheFactory = Dataset.File.ChunkCacheFactory;
+            chunkCacheFactory ??= Dataset.File.ChunkCacheFactory;
 
             _chunkCache = chunkCacheFactory();
 

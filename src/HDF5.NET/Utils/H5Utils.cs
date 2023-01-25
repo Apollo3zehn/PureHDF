@@ -257,7 +257,7 @@ namespace HDF5.NET
             throw new Exception($"Unable to open external file '{filePath}'.");
 
             // helper
-            string PathCombine(string prefix, string relativePath)
+            static string PathCombine(string prefix, string relativePath)
             {
                 try
                 {
@@ -301,7 +301,7 @@ namespace HDF5.NET
             }
 
             // helper
-            string PathCombine(string prefix, string relativePath)
+            static string PathCombine(string prefix, string relativePath)
             {
                 try
                 {

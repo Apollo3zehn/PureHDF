@@ -71,7 +71,7 @@ namespace HDF5.NET
             }
             else
             {
-                PageBitmap = new byte[0];
+                PageBitmap = Array.Empty<byte>();
             }
 
             // data block addresses

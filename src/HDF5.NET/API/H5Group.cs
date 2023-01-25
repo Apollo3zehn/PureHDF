@@ -89,9 +89,8 @@
         public H5Group Group(string path, H5LinkAccess linkAccess = default)
         {
             var link = Get(path, linkAccess);
-            var group = link as H5Group;
 
-            if (group is null)
+            if (link is not H5Group group)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Group)} because it is of type {link.GetType().Name}.");
 
             return group;
@@ -106,9 +105,8 @@
         public H5Dataset Dataset(string path, H5LinkAccess linkAccess = default)
         {
             var link = Get(path, linkAccess);
-            var castedLink = link as H5Dataset;
 
-            if (castedLink is null)
+            if (link is not H5Dataset castedLink)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5Dataset)} because it is of type {link.GetType().Name}.");
 
             return castedLink;
@@ -123,9 +121,8 @@
         public H5CommitedDatatype CommitedDatatype(string path, H5LinkAccess linkAccess = default)
         {
             var link = Get(path, linkAccess);
-            var castedLink = link as H5CommitedDatatype;
 
-            if (castedLink is null)
+            if (link is not H5CommitedDatatype castedLink)
                 throw new Exception($"The requested link exists but cannot be casted to {nameof(H5CommitedDatatype)} because it is of type {link.GetType().Name}.");
 
             return castedLink;

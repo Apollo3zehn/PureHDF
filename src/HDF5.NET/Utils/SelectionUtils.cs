@@ -15,7 +15,7 @@ namespace HDF5.NET
         int TypeSize
     );
 
-    internal struct RelativeStep
+    internal readonly struct RelativeStep
     {
         public ulong[] Chunk { get; init; }
 
@@ -176,11 +176,11 @@ namespace HDF5.NET
                     var length = Math.Min(currentSource.Length, currentTarget.Length);
 
                     currentSource
-                        .Slice(0, length)
+[..length]
                         .CopyTo(currentTarget);
 
-                    currentSource = currentSource.Slice(length);
-                    currentTarget = currentTarget.Slice(length);
+                    currentSource = currentSource[length..];
+                    currentTarget = currentTarget[length..];
                 }
             }
         }
@@ -244,13 +244,13 @@ namespace HDF5.NET
 
                     await reader.ReadAsync(                                             // corresponds to span.CopyTo
                         sourceStream,
-                        currentTarget.Slice(0, length),
+                        currentTarget[..length],
                         offset).ConfigureAwait(false);
 
                     offset = (int)sourceStep.Offset * copyInfo.TypeSize;                // corresponds to 
                     currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;        // sourceBuffer.Slice()
 
-                    currentTarget = currentTarget.Slice(length);
+                    currentTarget = currentTarget[length..];
                 }
             }
         }

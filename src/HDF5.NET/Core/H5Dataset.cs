@@ -111,7 +111,7 @@ namespace HDF5.NET
         {
             // fast path for null dataspace
             if (InternalDataspace.Type == DataspaceType.Null)
-                return new T[0];
+                return Array.Empty<T>();
 
             // 
             if (!skipTypeCheck)
@@ -245,12 +245,10 @@ namespace HDF5.NET
                 throw new Exception("The provided target buffer is too small.");
 
             /* memory selection */
-            if (memorySelection is null)
-                memorySelection = new HyperslabSelection(start: 0, block: totalCount);
+            memorySelection ??= new HyperslabSelection(start: 0, block: totalCount);
 
             /* memory dims */
-            if (memoryDims is null)
-                memoryDims = new ulong[] { totalCount };
+            memoryDims ??= new ulong[] { totalCount };
 
             if (getSourceBufferAsync is null && getSourceStream is null)
                 throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");

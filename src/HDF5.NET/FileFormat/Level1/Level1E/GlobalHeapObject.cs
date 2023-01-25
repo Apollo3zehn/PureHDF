@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private static readonly byte[] _emptyByteArray = new byte[0];
+        private static readonly byte[] _emptyByteArray = Array.Empty<byte>();
 
         #endregion
 

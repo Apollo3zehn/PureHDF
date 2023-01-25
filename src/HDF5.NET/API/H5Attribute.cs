@@ -22,8 +22,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_space is null)
-                    _space = new H5Dataspace(Message.Dataspace);
+                _space ??= new H5Dataspace(Message.Dataspace);
 
                 return _space;
             }
@@ -36,8 +35,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_type is null)
-                    _type = new H5DataType(Message.Datatype);
+                _type ??= new H5DataType(Message.Datatype);
 
                 return _type;
             }
@@ -93,8 +91,7 @@ namespace HDF5.NET
         public T[] ReadCompound<T>(Func<FieldInfo, string>? getName = default)
             where T : struct
         {
-            if (getName is null)
-                getName = fieldInfo => fieldInfo.Name;
+            getName ??= fieldInfo => fieldInfo.Name;
 
             return H5ReadUtils.ReadCompound<T>(_context, Message.Datatype, Message.Data, getName);
         }

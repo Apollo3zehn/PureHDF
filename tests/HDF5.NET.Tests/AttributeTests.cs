@@ -8,7 +8,7 @@ namespace HDF5.NET.Tests.Reading
     public class AttributeTests
     {
         private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
-        private static IList<object[]> _attributeNumericalTestData = TestData.NumericalData;
+        private static readonly IList<object[]> _attributeNumericalTestData = TestData.NumericalData;
 
         [Fact]
         public void CanReadAttribute_Dataspace_Scalar()
@@ -96,7 +96,7 @@ namespace HDF5.NET.Tests.Reading
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nullable");
 
-                string converter(FieldInfo fieldInfo)
+                static string converter(FieldInfo fieldInfo)
                 {
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     return attribute is not null ? attribute.Name : fieldInfo.Name;

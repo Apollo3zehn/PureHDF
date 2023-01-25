@@ -6,13 +6,6 @@ namespace HDF5.NET.Tests.Reading
 {
     public class LinkTests
     {
-        private readonly ITestOutputHelper _logger;
-
-        public LinkTests(ITestOutputHelper logger)
-        {
-            _logger = logger;
-        }
-
         [Theory]
         [InlineData("/", true, false)]
         [InlineData("/simple", true, false)]

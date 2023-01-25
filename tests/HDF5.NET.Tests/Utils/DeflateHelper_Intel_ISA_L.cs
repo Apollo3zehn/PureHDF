@@ -21,7 +21,7 @@ namespace HDF5.NET.Tests
 
                 ISAL.isal_inflate_reset(_state_ptr.Value);
 
-                buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
+                buffer = buffer[2..]; // skip ZLIB header to get only the DEFLATE stream
 
                 var length = 0;
                 var inflated = new byte[buffer.Length /* minimum size to expect */];

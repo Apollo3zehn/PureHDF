@@ -48,12 +48,12 @@ namespace HDF5.NET
             if (PageCount > 0)
             {
                 PageBitmap = reader.ReadBytes((int)pageBitmapSize);
-                Elements = new T[0];
+                Elements = Array.Empty<T>();
             }
             // elements
             else
             {
-                PageBitmap = new byte[0];
+                PageBitmap = Array.Empty<byte>();
 
                 Elements = Enumerable
                     .Range(0, (int)header.EntriesCount)

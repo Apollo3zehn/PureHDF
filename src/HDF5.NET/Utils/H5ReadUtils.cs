@@ -19,7 +19,7 @@ namespace HDF5.NET
             var type = typeof(T);
             var fieldInfoMap = new Dictionary<string, FieldProperties>();
 
-            bool IsFixedSizeArray(FieldInfo fieldInfo)
+            static bool IsFixedSizeArray(FieldInfo fieldInfo)
             {
                 var attribute = fieldInfo.GetCustomAttribute<MarshalAsAttribute>();
 
@@ -305,9 +305,7 @@ namespace HDF5.NET
 
             if (isFixed)
             {
-                var bitField = datatype.BitField as StringBitFieldDescription;
-
-                if (bitField is null)
+                if (datatype.BitField is not StringBitFieldDescription bitField)
                     throw new Exception("String bit field description must not be null.");
 
                 var position = 0;

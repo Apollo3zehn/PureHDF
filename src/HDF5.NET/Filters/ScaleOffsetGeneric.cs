@@ -50,7 +50,7 @@ namespace HDF5.NET
             if (minbits == parameters.Size * 8)
             {
                 spanData
-                    .Slice(payloadOffset)
+[payloadOffset..]
                     .CopyTo(output);
             }
 
@@ -59,7 +59,7 @@ namespace HDF5.NET
             {
                 /* decompress the buffer if minbits not equal to zero */
                 if (minbits != 0)
-                    ScaleOffsetGeneric.DecompressAll(output, spanData.Slice(payloadOffset), parameters, minbits);
+                    ScaleOffsetGeneric.DecompressAll(output, spanData[payloadOffset..], parameters, minbits);
 
                 /* postprocess after decompression */
                 if (parameters.Class == Class.Integer)
@@ -141,7 +141,7 @@ namespace HDF5.NET
             for (int i = 0; i < parameters.ElementCount; i++)
             {
                 ScaleOffsetGeneric.DecompressOneAtomic(
-                    output.Slice(i * (int)parameters.Size),
+                    output[(i * (int)parameters.Size)..],
                     input,
                     ref j,
                     ref buf_len,
@@ -454,12 +454,12 @@ namespace HDF5.NET
 
                     MemoryMarshal
                         .AsBytes(_cd_value)
-                        .Slice(0, copySize)
+[..copySize]
                         .CopyTo(slicedFillValue);
 
                     /* Next field */
                     i++;
-                    slicedFillValue = slicedFillValue.Slice(copySize);
+                    slicedFillValue = slicedFillValue[copySize..];
 
                 } while (!slicedFillValue.IsEmpty);
             }

@@ -66,9 +66,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < segments.Length; i++)
             {
-                var group = current.Dereference() as H5Group;
-
-                if (group is null)
+                if (current.Dereference() is not H5Group group)
                     return false;
 
                 if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -91,9 +89,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < segments.Length; i++)
             {
-                var group = current.Dereference() as H5Group;
-
-                if (group is null)
+                if (current.Dereference() is not H5Group group)
                     throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
 
                 if (!group.TryGetReference(segments[i], linkAccess, out var reference))

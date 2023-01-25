@@ -923,10 +923,10 @@ namespace HDF5.NET.Tests.Reading
                         }
                     }
 
-                    H5S.close(memorySpaceId);
-                    H5S.close(datasetSpaceId);
-                    H5D.close(datasetId);
-                    H5F.close(fileId);
+                    _ = H5S.close(memorySpaceId);
+                    _ = H5S.close(datasetSpaceId);
+                    _ = H5D.close(datasetId);
+                    _ = H5F.close(fileId);
                 }
 
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);

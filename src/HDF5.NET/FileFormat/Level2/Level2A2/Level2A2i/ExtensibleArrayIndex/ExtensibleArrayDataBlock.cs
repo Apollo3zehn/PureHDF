@@ -53,7 +53,7 @@ namespace HDF5.NET
             }
             else
             {
-                Elements = new T[0];
+                Elements = Array.Empty<T>();
             }
 
             // checksum

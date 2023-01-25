@@ -55,7 +55,7 @@
             }
             else
             {
-                CompactData = new byte[0];
+                CompactData = Array.Empty<byte>();
             }
         }
 

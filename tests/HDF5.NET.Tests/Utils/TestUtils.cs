@@ -114,12 +114,12 @@ namespace HDF5.NET.Tests
                 _ => (ulong)TestData.HugeData.Length,
             };
 
-            TestUtils.Add(container, fileId, "huge", "huge", H5T.NATIVE_INT32, TestData.HugeData.AsSpan(), length);
+            Add(container, fileId, "huge", "huge", H5T.NATIVE_INT32, TestData.HugeData.AsSpan(), length);
         }
 
         public static unsafe void AddTiny(long fileId, ContainerType container)
         {
-            TestUtils.Add(container, fileId, "tiny", "tiny", H5T.NATIVE_UINT8, TestData.TinyData.AsSpan());
+            Add(container, fileId, "tiny", "tiny", H5T.NATIVE_UINT8, TestData.TinyData.AsSpan());
         }
 
         #endregion
@@ -162,9 +162,9 @@ namespace HDF5.NET.Tests
 
             // write data
             if (datasetAccess.ExternalFilePrefix is not null)
-                H5P.set_efile_prefix(dapl_id, datasetAccess.ExternalFilePrefix);
+                _ = H5P.set_efile_prefix(dapl_id, datasetAccess.ExternalFilePrefix);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), apl: dapl_id, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), apl: dapl_id, cpl: dcpl_id);
 
             // truncate file b
             using (var fileStream2 = File.OpenWrite(pathB))
@@ -181,13 +181,13 @@ namespace HDF5.NET.Tests
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
             _ = H5P.set_layout(dcpl_id, H5D.layout_t.COMPACT);
-            TestUtils.Add(ContainerType.Dataset, fileId, "compact", "compact", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "compact", "compact", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddContiguousDataset(long fileId)
         {
-            TestUtils.Add(ContainerType.Dataset, fileId, "contiguous", "contiguous", H5T.NATIVE_INT32, TestData.HugeData.AsSpan());
+            Add(ContainerType.Dataset, fileId, "contiguous", "contiguous", H5T.NATIVE_INT32, TestData.HugeData.AsSpan());
         }
 
         public static unsafe void AddContiguousDatasetWithFillValueAndAllocationLate(long fileId, int fillValue)
@@ -199,10 +199,10 @@ namespace HDF5.NET.Tests
             _ = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
-            H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
+            _ = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
             handle.Free();
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "fillvalue", $"{LayoutClass.Contiguous}", H5T.NATIVE_INT32, (void*)0, length, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "fillvalue", $"{LayoutClass.Contiguous}", H5T.NATIVE_INT32, (void*)0, length, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -214,7 +214,7 @@ namespace HDF5.NET.Tests
 
             _ = H5P.set_chunk(dcpl_id, 3, chunkDims);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "hyperslab", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "hyperslab", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -229,7 +229,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -242,10 +242,10 @@ namespace HDF5.NET.Tests
             _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
 
             var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
-            H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
+            _ = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
             handle.Free();
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "fillvalue", $"{LayoutClass.Chunked}", H5T.NATIVE_INT32, (void*)0, length, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "fillvalue", $"{LayoutClass.Chunked}", H5T.NATIVE_INT32, (void*)0, length, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -260,7 +260,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_single_chunk", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_single_chunk", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -273,7 +273,7 @@ namespace HDF5.NET.Tests
             _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
             _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_implicit", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_implicit", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -288,7 +288,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -303,7 +303,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array_paged", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array_paged", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -319,7 +319,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_elements", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_elements", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -335,7 +335,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_data_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_data_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -351,7 +351,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_extensible_array_secondary_blocks", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -367,7 +367,7 @@ namespace HDF5.NET.Tests
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_btree2", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_btree2", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims0, dims1, cpl: dcpl_id);
 
             _ = H5P.close(dcpl_id);
         }
@@ -381,7 +381,7 @@ namespace HDF5.NET.Tests
             _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1_000_000 });
             _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_huge", H5T.NATIVE_INT32, TestData.HugeData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "chunked", "chunked_huge", H5T.NATIVE_INT32, TestData.HugeData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -409,7 +409,7 @@ namespace HDF5.NET.Tests
 
             var fileId1 = H5F.create(path1, H5F.ACC_TRUNC);
             var dataA = TestData.SmallData.Skip(0).Take(16).ToArray();
-            TestUtils.Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
+            Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
 
             var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)dataA.Length }, new ulong[] { (ulong)dataA.Length });
 
@@ -426,7 +426,7 @@ namespace HDF5.NET.Tests
 
             var fileId2 = H5F.create(path2, H5F.ACC_TRUNC);
             var dataB = TestData.SmallData.Skip(10).Take(16).ToArray();
-            TestUtils.Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
+            Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
 
             var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)dataB.Length }, new ulong[] { (ulong)dataB.Length });
 
@@ -471,7 +471,7 @@ namespace HDF5.NET.Tests
                 _ => throw new Exception($"The value '{bytesOfType}' of the 'bytesOfType' parameter is not within the valid range.")
             };
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"shuffle_{bytesOfType}", typeId, dataset, (ulong)length, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"shuffle_{bytesOfType}", typeId, dataset, (ulong)length, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -484,7 +484,7 @@ namespace HDF5.NET.Tests
             _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
             _ = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), new uint[] { 5 } /* compression level */);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"deflate", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"deflate", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -497,7 +497,7 @@ namespace HDF5.NET.Tests
             _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
             _ = H5P.set_fletcher32(dcpl_id);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"fletcher", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"fletcher", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -512,7 +512,7 @@ namespace HDF5.NET.Tests
             _ = H5P.set_shuffle(dcpl_id);
             _ = H5P.set_deflate(dcpl_id, level: 5);
 
-            TestUtils.Add(ContainerType.Dataset, fileId, "filtered", $"multi", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"multi", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
         }
 
         #endregion
@@ -526,17 +526,17 @@ namespace HDF5.NET.Tests
 
             fixed (void* dataPtr = data)
             {
-                TestUtils.Add(container, fileId, "dataspace", "scalar", H5T.NATIVE_DOUBLE, dataPtr, spaceId);
+                Add(container, fileId, "dataspace", "scalar", H5T.NATIVE_DOUBLE, dataPtr, spaceId);
             }
 
-            H5S.close(spaceId);
+            _ = H5S.close(spaceId);
         }
 
         public static unsafe void AddDataspaceNull(long fileId, ContainerType container)
         {
             var spaceId = H5S.create(H5S.class_t.NULL);
-            TestUtils.Add(container, fileId, "dataspace", "null", H5T.NATIVE_DOUBLE, null, spaceId);
-            H5S.close(spaceId);
+            Add(container, fileId, "dataspace", "null", H5T.NATIVE_DOUBLE, null, spaceId);
+            _ = H5S.close(spaceId);
         }
 
         public static unsafe void AddNumerical(long fileId, ContainerType container)
@@ -564,7 +564,7 @@ namespace HDF5.NET.Tests
                 var handle = GCHandle.Alloc(attributeData, GCHandleType.Pinned);
                 var ptr = handle.AddrOfPinnedObject().ToPointer();
 
-                TestUtils.Add(container, fileId, "numerical", (string)entry[0], typeId, ptr, dims);
+                Add(container, fileId, "numerical", (string)entry[0], typeId, ptr, dims);
 
                 handle.Free();
             }
@@ -572,7 +572,7 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddBitField(long fileId, ContainerType container)
         {
-            TestUtils.Add(container, fileId, "bitfield", "bitfield", H5T.STD_B16LE, TestData.BitfieldData.AsSpan());
+            Add(container, fileId, "bitfield", "bitfield", H5T.STD_B16LE, TestData.BitfieldData.AsSpan());
         }
 
         public static unsafe void AddOpaque(long fileId, ContainerType container)
@@ -581,7 +581,7 @@ namespace HDF5.NET.Tests
             var typeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
             _ = H5T.set_tag(typeId, "Opaque Test Tag");
 
-            TestUtils.Add(container, fileId, "opaque", "opaque", typeId, TestData.SmallData.AsSpan(), length);
+            Add(container, fileId, "opaque", "opaque", typeId, TestData.SmallData.AsSpan(), length);
 
             _ = H5T.close(typeId);
         }
@@ -595,7 +595,7 @@ namespace HDF5.NET.Tests
 
             fixed (void* dataPtr = TestData.ArrayData)
             {
-                TestUtils.Add(container, fileId, "array", "array", typeId, dataPtr, dims);
+                Add(container, fileId, "array", "array", typeId, dataPtr, dims);
             }
 
             res = H5T.close(typeId);
@@ -605,7 +605,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            TestUtils.AddNumerical(fileId, ContainerType.Dataset);
+            AddNumerical(fileId, ContainerType.Dataset);
 
             var length = (ulong)TestData.NumericalData.Count;
             var data = new ulong[length];
@@ -619,7 +619,7 @@ namespace HDF5.NET.Tests
                     res = H5R.create(new IntPtr(ptr + i), referenceGroupId, $"D{i + 1}", H5R.type_t.OBJECT, -1);
                 }
 
-                TestUtils.Add(container, fileId, "reference", "object_reference", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
+                Add(container, fileId, "reference", "object_reference", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
 
                 res = H5G.close(referenceGroupId);
             }
@@ -629,7 +629,7 @@ namespace HDF5.NET.Tests
         {
             long res;
 
-            TestUtils.AddSmall(fileId, ContainerType.Dataset);
+            AddSmall(fileId, ContainerType.Dataset);
 
             var length = 1UL;
             var data = new ulong[length];
@@ -642,7 +642,7 @@ namespace HDF5.NET.Tests
                 res = H5S.select_elements(spaceId, H5S.seloper_t.SET, new IntPtr(4), coordinates);
                 res = H5R.create(new IntPtr(ptr), referenceGroupId, "small", H5R.type_t.DATASET_REGION, spaceId);
 
-                TestUtils.Add(container, fileId, "reference", "region_reference", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), length);
+                Add(container, fileId, "reference", "region_reference", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), length);
 
                 res = H5S.close(spaceId);
                 res = H5G.close(referenceGroupId);
@@ -657,7 +657,7 @@ namespace HDF5.NET.Tests
 
             // non-nullable struct
             var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
-            TestUtils.Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
+            Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
             res = H5T.close(typeId);
 
             // nullable struct
@@ -684,7 +684,7 @@ namespace HDF5.NET.Tests
                 Marshal.FreeHGlobal(sourcePtr);
             });
 
-            TestUtils.Add(container, fileId, "struct", "nullable", typeIdNullable, dataNullablePtr.ToPointer(), dims);
+            Add(container, fileId, "struct", "nullable", typeIdNullable, dataNullablePtr.ToPointer(), dims);
 
             Marshal.FreeHGlobal(dataNullablePtr);
             res = H5T.close(typeIdNullable);
@@ -707,7 +707,7 @@ namespace HDF5.NET.Tests
                 .SelectMany(value => Encoding.ASCII.GetBytes(value))
                 .ToArray();
 
-            TestUtils.Add(container, fileId, "string", "fixed+nullterm", typeIdFixed_nullterm, dataFixedChar_nullterm.AsSpan(), dims);
+            Add(container, fileId, "string", "fixed+nullterm", typeIdFixed_nullterm, dataFixedChar_nullterm.AsSpan(), dims);
 
             res = H5T.close(typeIdFixed_nullterm);
 
@@ -722,7 +722,7 @@ namespace HDF5.NET.Tests
                 .SelectMany(value => Encoding.ASCII.GetBytes(value))
                 .ToArray();
 
-            TestUtils.Add(container, fileId, "string", "fixed+nullpad", typeIdFixed_nullpad, dataFixedChar_nullpad.AsSpan(), dims);
+            Add(container, fileId, "string", "fixed+nullpad", typeIdFixed_nullpad, dataFixedChar_nullpad.AsSpan(), dims);
 
             res = H5T.close(typeIdFixed_nullpad);
 
@@ -737,7 +737,7 @@ namespace HDF5.NET.Tests
                 .SelectMany(value => Encoding.ASCII.GetBytes(value))
                 .ToArray();
 
-            TestUtils.Add(container, fileId, "string", "fixed+spacepad", typeIdFixed_spacepad, dataFixedChar_spacepad.AsSpan(), dims);
+            Add(container, fileId, "string", "fixed+spacepad", typeIdFixed_spacepad, dataFixedChar_spacepad.AsSpan(), dims);
 
             res = H5T.close(typeIdFixed_spacepad);
 
@@ -765,7 +765,7 @@ namespace HDF5.NET.Tests
 
                 fixed (void* dataVarAddressesPtr = addresses)
                 {
-                    TestUtils.Add(container, fileId, "string", "variable", typeIdVar, dataVarAddressesPtr, dims);
+                    Add(container, fileId, "string", "variable", typeIdVar, dataVarAddressesPtr, dims);
                 }
             }
 
@@ -795,7 +795,7 @@ namespace HDF5.NET.Tests
 
                 fixed (void* addressesPtr = addresses)
                 {
-                    TestUtils.Add(container, fileId, "string", "variable+spacepad", typeIdVar_spacepad, addressesPtr, dims);
+                    Add(container, fileId, "string", "variable+spacepad", typeIdVar_spacepad, addressesPtr, dims);
                 }
             }
 
@@ -825,7 +825,7 @@ namespace HDF5.NET.Tests
 
                 fixed (void* addressesPtr = addresses)
                 {
-                    TestUtils.Add(container, fileId, "string", "variableUTF8", typeIdVarUTF8, addressesPtr, dims);
+                    Add(container, fileId, "string", "variableUTF8", typeIdVarUTF8, addressesPtr, dims);
                 }
             }
         }
@@ -843,12 +843,12 @@ namespace HDF5.NET.Tests
                     var acpl_id = H5P.create(H5P.ATTRIBUTE_CREATE);
                     _ = H5P.set_char_encoding(acpl_id, H5T.cset_t.UTF8);
                     var name = "字形碼 / 字形码, Zìxíngmǎ";
-                    TestUtils.Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
+                    Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
                 }
                 else
                 {
                     var name = $"mass_{i.ToString("D4")}";
-                    TestUtils.Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims);
+                    Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims);
                 }
             }
 
@@ -857,16 +857,16 @@ namespace HDF5.NET.Tests
 
         public static unsafe void AddSmall(long fileId, ContainerType container)
         {
-            TestUtils.Add(container, fileId, "small", "small", H5T.NATIVE_INT32, TestData.SmallData.AsSpan());
+            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, TestData.SmallData.AsSpan());
         }
 
         public static unsafe void AddDataWithSharedDataType(long fileId, ContainerType container)
         {
             long typeId = H5T.copy(H5T.C_S1);
 
-            H5T.set_size(typeId, H5T.VARIABLE);
-            H5T.set_cset(typeId, H5T.cset_t.UTF8);
-            H5T.commit(fileId, "string_t", typeId);
+            _ = H5T.set_size(typeId, H5T.VARIABLE);
+            _ = H5T.set_cset(typeId, H5T.cset_t.UTF8);
+            _ = H5T.commit(fileId, "string_t", typeId);
 
             var data = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
             var dataChar = data
@@ -886,11 +886,11 @@ namespace HDF5.NET.Tests
 
                 fixed (void* dataVarAddressesPtr = addresses)
                 {
-                    TestUtils.Add(container, fileId, "shared_data_type", "shared_data_type", typeId, dataVarAddressesPtr, length: 12);
+                    Add(container, fileId, "shared_data_type", "shared_data_type", typeId, dataVarAddressesPtr, length: 12);
                 }
             }
 
-            if (H5I.is_valid(typeId) > 0) { H5T.close(typeId); }
+            if (H5I.is_valid(typeId) > 0) { _ = H5T.close(typeId); }
         }
 
         #endregion
@@ -938,14 +938,14 @@ namespace HDF5.NET.Tests
             where T : unmanaged
         {
             var length = (ulong)data.Length;
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, data, length, cpl, apl);
+            Add(container, fileId, groupName, elementName, typeId, data, length, cpl, apl);
         }
 
         public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong length, long cpl = 0, long apl = 0)
             where T : unmanaged
         {
             var dims0 = new ulong[] { length };
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, data, dims0, dims0, cpl, apl);
+            Add(container, fileId, groupName, elementName, typeId, data, dims0, dims0, cpl, apl);
         }
 
         public static unsafe void Add<T>(ContainerType container, long fileId, string groupName, string elementName, long typeId, Span<T> data, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
@@ -953,23 +953,22 @@ namespace HDF5.NET.Tests
         {
             fixed (void* dataPtr = data)
             {
-                TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims1, cpl, apl);
+                Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims1, cpl, apl);
             }
         }
 
         public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong length, long cpl = 0, long apl = 0)
         {
             var dims0 = new ulong[] { length };
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl, apl);
+            Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl, apl);
         }
 
         public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
         {
-            if (dims1 is null)
-                dims1 = dims0;
+            dims1 ??= dims0;
 
             var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
-            TestUtils.Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl, apl);
+            Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl, apl);
             _ = H5S.close(spaceId);
         }
 
@@ -1021,11 +1020,11 @@ namespace HDF5.NET.Tests
 
         public static void CaptureHdfLibOutput(ITestOutputHelper logger)
         {
-            H5E.set_auto(H5E.DEFAULT, ErrorDelegateMethod, IntPtr.Zero);
+            _ = H5E.set_auto(H5E.DEFAULT, ErrorDelegateMethod, IntPtr.Zero);
 
             int ErrorDelegateMethod(long estack, IntPtr client_data)
             {
-                H5E.walk(estack, H5E.direction_t.H5E_WALK_DOWNWARD, WalkDelegateMethod, IntPtr.Zero);
+                _ = H5E.walk(estack, H5E.direction_t.H5E_WALK_DOWNWARD, WalkDelegateMethod, IntPtr.Zero);
                 return 0;
             }
 
@@ -1095,7 +1094,7 @@ namespace HDF5.NET.Tests
                     var name = Enum.GetName(type, value_converted);
 
                     var handle = GCHandle.Alloc(value_converted, GCHandleType.Pinned);
-                    H5T.enum_insert(typeId, name, handle.AddrOfPinnedObject());
+                    _ = H5T.enum_insert(typeId, name, handle.AddrOfPinnedObject());
                 }
 
                 return typeId;
@@ -1105,8 +1104,8 @@ namespace HDF5.NET.Tests
             {
                 var typeId = H5T.copy(H5T.C_S1);
 
-                H5T.set_size(typeId, H5T.VARIABLE);
-                H5T.set_cset(typeId, H5T.cset_t.UTF8);
+                _ = H5T.set_size(typeId, H5T.VARIABLE);
+                _ = H5T.set_cset(typeId, H5T.cset_t.UTF8);
 
                 return typeId;
             }
@@ -1126,10 +1125,10 @@ namespace HDF5.NET.Tests
                     var nameAttribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     var hdfFieldName = nameAttribute is not null ? nameAttribute.Name : fieldInfo.Name;
 
-                    H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(type, fieldInfo.Name), fieldType);
+                    _ = H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(type, fieldInfo.Name), fieldType);
 
                     if (H5I.is_valid(fieldType) > 0)
-                        H5T.close(fieldType);
+                        _ = H5T.close(fieldType);
                 }
 
                 return typeId;

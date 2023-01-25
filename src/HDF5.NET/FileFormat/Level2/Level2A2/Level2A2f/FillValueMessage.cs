@@ -78,7 +78,7 @@
                     // default
                     else
                     {
-                        Value = new byte[0];
+                        Value = Array.Empty<byte>();
                     }
 
                     break;
