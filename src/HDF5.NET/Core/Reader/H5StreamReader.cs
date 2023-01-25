@@ -5,10 +5,11 @@ namespace HDF5.NET
 {
     internal class H5StreamReader : H5BaseReader
     {
+        private bool _leaveOpen;
         private readonly Stream _stream;
 
-        public H5StreamReader(Stream stream) : base(stream.Length)
-        {
+        public H5StreamReader(Stream stream, bool leaveOpen) : base(stream.Length)
+        {           
             if (!stream.CanRead)
                 throw new Exception("The stream must be readable.");
 
@@ -16,6 +17,7 @@ namespace HDF5.NET
                 throw new Exception("The stream must be seekable.");
 
             _stream = stream;
+            _leaveOpen = leaveOpen;
         }
 
         public override long Position
@@ -97,7 +99,8 @@ namespace HDF5.NET
             {
                 if (disposing)
                 {
-                    _stream.Dispose();
+                    if (!_leaveOpen)
+                        _stream.Dispose();
                 }
 
                 _disposedValue = true;

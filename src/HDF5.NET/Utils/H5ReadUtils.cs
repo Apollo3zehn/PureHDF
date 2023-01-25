@@ -335,16 +335,14 @@ namespace HDF5.NET
                  * In other words, padding type only matters when reading data.
                  */
 
-                var bitField = datatype.BitField as VariableLengthBitFieldDescription;
-
-                if (bitField is null)
+                if (datatype.BitField is not VariableLengthBitFieldDescription bitField)
                     throw new Exception("Variable-length bit field desciption must not be null.");
 
                 if (bitField.Type != VariableLengthType.String)
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
-                using var localReader = new H5StreamReader(new MemoryStream(data.ToArray()));
+                using var localReader = new H5StreamReader(new MemoryStream(data.ToArray()), leaveOpen: false);
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {

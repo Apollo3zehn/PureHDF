@@ -59,7 +59,7 @@
 #if NET6_0_OR_GREATER
             var reader = new H5FileStreamReader(stream);
 #else
-            var reader = new H5StreamReader(stream);
+            var reader = new H5StreamReader(stream, leaveOpen: false);
 #endif
 
             return OpenCore(reader, absoluteFilePath, deleteOnClose);

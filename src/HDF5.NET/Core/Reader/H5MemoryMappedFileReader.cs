@@ -2,7 +2,13 @@
 
 namespace HDF5.NET
 {
-    internal class H5MemoryMappedFileReader : H5BaseReader
+    // AcquirePointer: https://github.com/dotnet/runtime/blob/9b76c28567640e4cbe0d20e18b765b8f1a47473f/src/libraries/System.Private.CoreLib/src/System/Runtime/InteropServices/SafeBuffer.cs#L120-L138
+    // Read single element: https://github.com/dotnet/runtime/blob/9b76c28567640e4cbe0d20e18b765b8f1a47473f/src/libraries/System.Private.CoreLib/src/System/IO/UnmanagedMemoryAccessor.cs#L148
+
+    // Does it make sense to acquire pointer only once instead of every read operation?
+    // https://stackoverflow.com/questions/49339804/memorymappedviewaccessor-performance-workaround
+    // -> I think the synchrnonization complaint is not valid anymore: https://github.com/dotnet/runtime/blob/9b76c28567640e4cbe0d20e18b765b8f1a47473f/src/libraries/System.Private.CoreLib/src/System/Runtime/InteropServices/SafeBuffer.cs#L27-L28
+    internal unsafe class H5MemoryMappedFileReader : H5BaseReader
     {
         private readonly ThreadLocal<long> _position = new();
         private MemoryMappedViewAccessor _accessor;
@@ -37,17 +43,19 @@ namespace HDF5.NET
 
         public override int Read(Span<byte> buffer)
         {
-            // https://github.com/dotnet/runtime/issues/42736
-
-            unsafe {
+            unsafe 
+            {
                 byte* ptr = null;
-
-                _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
-                
+              
                 try
                 {
-                    var length = _accessor.SafeMemoryMappedViewHandle.ByteLength;
-                    ... // use ptr and length here
+                    _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+                    var ptrSrc = _accessor.PointerOffset + ptr + _position.Value;
+
+                    fixed (byte* ptrDst = buffer)
+                    {
+                        Buffer.MemoryCopy(ptrSrc, ptrDst, buffer.Length, buffer.Length);
+                    }
                 }
                 finally
                 {
@@ -67,7 +75,10 @@ namespace HDF5.NET
 
         public override byte ReadByte()
         {
-            return _accessor.ReadByte(_position.Value);
+            var value = _accessor.ReadByte(_position.Value);
+            _position.Value += sizeof(byte);
+
+            return value;
         }
 
         public override byte[] ReadBytes(int count)
@@ -80,22 +91,34 @@ namespace HDF5.NET
 
         public override ushort ReadUInt16()
         {
-            return _accessor.ReadUInt16(_position.Value);
+            var value = _accessor.ReadUInt16(_position.Value);
+            _position.Value += sizeof(ushort);
+
+            return value;
         }
 
         public override short ReadInt16()
         {
-            return _accessor.ReadInt16(_position.Value);
+            var value = _accessor.ReadInt16(_position.Value);
+            _position.Value += sizeof(short);
+
+            return value;
         }
 
         public override uint ReadUInt32()
         {
-            return _accessor.ReadUInt32(_position.Value);
+            var value = _accessor.ReadUInt32(_position.Value);
+            _position.Value += sizeof(uint);
+
+            return value;
         }
 
         public override ulong ReadUInt64()
         {
-            return _accessor.ReadUInt64(_position.Value);
+            var value = _accessor.ReadUInt64(_position.Value);
+            _position.Value += sizeof(ulong);
+
+            return value;
         }
 
         private bool _disposedValue;

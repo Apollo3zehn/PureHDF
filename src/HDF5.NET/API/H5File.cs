@@ -5,7 +5,7 @@ namespace HDF5.NET
     /// <summary>
     /// An HDF5 file object. This is the entry-point to work with HDF5 files.
     /// </summary>
-    public partial class H5File : H5Group, IDisposable
+    public sealed partial class H5File : H5Group, IDisposable
     {
         #region Properties
 
@@ -25,7 +25,7 @@ namespace HDF5.NET
                     return _chunkCacheFactory;
 
                 else
-                    return H5File.DefaultChunkCacheFactory;
+                    return DefaultChunkCacheFactory;
             }
             set
             {
@@ -36,7 +36,7 @@ namespace HDF5.NET
         /// <summary>
         /// The default chunk cache factory.
         /// </summary>
-        public static Func<IChunkCache> DefaultChunkCacheFactory = () => new SimpleChunkCache();
+        public static Func<IChunkCache> DefaultChunkCacheFactory { get; } = () => new SimpleChunkCache();
 
         #endregion
 
@@ -68,10 +68,11 @@ namespace HDF5.NET
         /// Opens an HDF5 stream.
         /// </summary>
         /// <param name="stream">The stream to use.</param>
+        /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
         /// <returns></returns>
-        public static H5File Open(Stream stream)
+        public static H5File Open(Stream stream, bool leaveOpen = false)
         {
-            var reader = new H5StreamReader(stream);
+            var reader = new H5StreamReader(stream, leaveOpen: leaveOpen);
             return OpenCore(reader, string.Empty);
         }
 
