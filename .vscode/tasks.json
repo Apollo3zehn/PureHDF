@@ -9,7 +9,7 @@
                 "build",
                 "-c",
                 "Release",
-                "${workspaceFolder}/benchmarks/HDF5.NET.Benchmarks/HDF5.NET.Benchmarks.csproj",
+                "${workspaceFolder}/benchmarks/PureHDF.Benchmarks/PureHDF.Benchmarks.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -23,7 +23,7 @@
                 "build",
                 "-c",
                 "Release",
-                "${workspaceFolder}/benchmarks/HDF5.NET.AsyncBenchmark/HDF5.NET.AsyncBenchmark.csproj",
+                "${workspaceFolder}/benchmarks/PureHDF.AsyncBenchmark/PureHDF.AsyncBenchmark.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -35,7 +35,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/HDF5.NET.BlazorBrowser/HDF5.NET.BlazorBrowser.csproj",
+                "${workspaceFolder}/src/PureHDF.BlazorBrowser/PureHDF.BlazorBrowser.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -47,7 +47,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/src/HDF5.NET.BlazorBrowser/HDF5.NET.BlazorBrowser.csproj",
+                "${workspaceFolder}/src/PureHDF.BlazorBrowser/PureHDF.BlazorBrowser.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -61,7 +61,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/src/HDF5.NET.BlazorBrowser/HDF5.NET.BlazorBrowser.csproj"
+                "${workspaceFolder}/src/PureHDF.BlazorBrowser/PureHDF.BlazorBrowser.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

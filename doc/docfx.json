@@ -6,7 +6,7 @@
           "files": [
             "**/*.csproj"
           ],
-          "src": "../src/HDF5.NET"
+          "src": "../src/PureHDF"
         }
       ],
       "dest": "api/netstandard2.0",
@@ -21,7 +21,7 @@
           "files": [
             "**/*.csproj"
           ],
-          "src": "../src/HDF5.NET"
+          "src": "../src/PureHDF"
         }
       ],
       "dest": "api/netstandard2.1",
@@ -36,7 +36,7 @@
           "files": [
             "**/*.csproj"
           ],
-          "src": "../src/HDF5.NET"
+          "src": "../src/PureHDF"
         }
       ],
       "dest": "api/net50",
@@ -51,7 +51,7 @@
           "files": [
             "**/*.csproj"
           ],
-          "src": "../src/HDF5.NET"
+          "src": "../src/PureHDF"
         }
       ],
       "dest": "api/net60",
@@ -102,7 +102,7 @@
     ],
     "dest": "_site",
     "globalMetadata": {
-      "_appTitle": "HDF5.NET",
+      "_appTitle": "PureHDF",
       "_appFooter": "Copyright © 2023 Vincent Wilms",
       "_appFaviconPath": "images/icon.ico",
       "_appLogoPath": "images/logo.svg"

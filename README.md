@@ -1,15 +1,15 @@
-**See https://github.com/Apollo3zehn/HDF5.NET/issues/9 for not yet implemented features.**
+**See https://github.com/Apollo3zehn/PureHDF/issues/9 for not yet implemented features.**
 
 | API Documentation |
 | ------------------ |
-| [.NET Standard 2.0](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.0/HDF5.NET.html) |
-| [.NET Standard 2.1](https://apollo3zehn.github.io/HDF5.NET/api/netstandard2.1/HDF5.NET.html) |
-| [.NET 5](https://apollo3zehn.github.io/HDF5.NET/api/net50/HDF5.NET.html) |
-| [.NET 6](https://apollo3zehn.github.io/HDF5.NET/api/net60/HDF5.NET.html) |
+| [.NET Standard 2.0](https://apollo3zehn.github.io/PureHDF/api/netstandard2.0/PureHDF.html) |
+| [.NET Standard 2.1](https://apollo3zehn.github.io/PureHDF/api/netstandard2.1/PureHDF.html) |
+| [.NET 5](https://apollo3zehn.github.io/PureHDF/api/net50/PureHDF.html) |
+| [.NET 6](https://apollo3zehn.github.io/PureHDF/api/net60/PureHDF.html) |
 
-# HDF5.NET
+# PureHDF
 
-[![GitHub Actions](https://github.com/Apollo3zehn/HDF5.NET/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/HDF5.NET/actions) [![NuGet](https://img.shields.io/nuget/vpre/HDF5.NET.svg?label=Nuget)](https://www.nuget.org/packages/HDF5.NET)
+[![GitHub Actions](https://github.com/Apollo3zehn/PureHDF/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/PureHDF/actions) [![NuGet](https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget)](https://www.nuget.org/packages/PureHDF)
 
 A pure C# library without native dependencies that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy.
 
@@ -227,7 +227,7 @@ For more information on compound data, see section [Reading compound data](#6-re
 
 ## 4.1 Overview
 
-Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With HDF5.NET, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
+Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
 
 ```cs
 var dataset = root.Dataset("myDataset");
@@ -318,14 +318,14 @@ public static Memory<byte> FilterFunc(
     // Compressing
     else
     {
-        throw new Exception("Writing data chunks is not yet supported by HDF5.NET.");
+        throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
 }
 
 ```
 
 ## 5.3 Tested External Filters
-- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/HDF5.NET/wiki/Deflate-Benchmark))
+- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/wiki/Deflate-Benchmark))
 - c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
 - bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
@@ -334,7 +334,7 @@ public static Memory<byte> FilterFunc(
 
 `dotnet package add Intrinsics.ISA-L.PInvoke`
 
-(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/DeflateHelper_Intel_ISA_L.cs) to your code.
+(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/DeflateHelper_Intel_ISA_L.cs) to your code.
 
 (3) Register Deflate:
 
@@ -357,7 +357,7 @@ public static Memory<byte> FilterFunc(
 
 `dotnet package add Blosc2.PInvoke`
 
-(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/BloscHelper.cs) to your code.
+(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BloscHelper.cs) to your code.
 
 (3) Register Blosc:
 
@@ -373,7 +373,7 @@ public static Memory<byte> FilterFunc(
 
 `dotnet package add SharpZipLib`
 
-(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/HDF5.NET/blob/master/tests/HDF5.NET.Tests/Utils/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/HDF5.NET/blob/master/src/HDF5.NET/Utils/Streams/MemorySpanStream.cs) implementation to your code.
+(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Utils/Streams/MemorySpanStream.cs) implementation to your code.
 
 (3) Register BZip2:
 
@@ -587,7 +587,7 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 
 ## 8.2 Multi-Threading (FileStream) (.NET 6+)
 
-Starting with .NET 6, there is a new API to access files in a thread-safe way which HDF5.NET utilizes. The process to load data in parallel is similar to the memory-mapped file approach above:
+Starting with .NET 6, there is a new API to access files in a thread-safe way which PureHDF utilizes. The process to load data in parallel is similar to the memory-mapped file approach above:
 
 ```cs
 const ulong TOTAL_ELEMENT_COUNT = xxx;
@@ -612,7 +612,7 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 
 ## 8.3 Async (.NET 6+)
 
-HDF5.NET supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
+PureHDF supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
 
 >Note: All `async` methods shown below are only truly asynchronous if the [FileStream](https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.-ctor?view=net-7.0#system-io-filestream-ctor(system-string-system-io-filemode-system-io-fileaccess-system-io-fileshare-system-int32-system-boolean)) is opened with the `useAsync` parameter set to `true`:
 
@@ -705,7 +705,7 @@ If you would like to access `sub_dataset2` you would normally do
 
 When you have files with a large number of groups or a deep hierarchy and you often need to work on different paths within the file, it could very useful to get intellisense support from your favourite IDE which helps you navigating through the file.
 
-HDF5.NET utilizes the source generator feature introduced with .NET 5 which allows to generate additional code during compilation. The generator, which comes with the `HDF5.NET.SourceGenerator` package, enables you to interact with the H5 file like this:
+PureHDF utilizes the source generator feature introduced with .NET 5 which allows to generate additional code during compilation. The generator, which comes with the `PureHDF.SourceGenerator` package, enables you to interact with the H5 file like this:
 
 ```cs
 var dataset = bindings.group1.sub_dataset2;
@@ -716,7 +716,7 @@ var dataset = bindings.group1.sub_dataset2;
 Run the following command:
 
 ```bash
-dotnet add package HDF5.NET.SourceGenerator
+dotnet add package PureHDF.SourceGenerator
 ```
 
 > Note: Make sure that all project dependencies are restored before you continue.
@@ -754,7 +754,7 @@ The following table considers only projects listed on Nuget.org.
 |         Name                                                                      | Arch    | Platform    | Kind     | Mode | Version   | License     | Maintainer         | Comment              |  
 | --------------------------------------------------------------------------------- | ------- | ----------- | -------- | ---- | --------- | ----------- | ------------------ | -------------------- |  
 | **v1.10**                                                                         |         |             |          |      |           |             |                    |                      |  
-| [HDF5.NET](https://www.nuget.org/packages/HDF5.NET)                               | all     | all         | managed  | ro   | N/A       | MIT         | Apollo3zehn        | version does not apply, standalone implementation |  
+| [PureHDF](https://www.nuget.org/packages/PureHDF)                               | all     | all         | managed  | ro   | N/A       | MIT         | Apollo3zehn        | version does not apply, standalone implementation |  
 | [HDF5-CSharp](https://www.nuget.org/packages/HDF5-CSharp)                         | x86,x64 | Win,Lin,Mac | HL       | rw   | 1.10.6    | MIT         | LiorBanai          |                      |  
 | [SciSharp.Keras.HDF5](https://www.nuget.org/packages/SciSharp.Keras.HDF5)         | x86,x64 | Win,Lin,Mac | HL       | rw   | 1.10.5    | MIT         | SciSharp           | fork of HDF-CSharp   |  
 | [ILNumerics.IO.HDF5](https://www.nuget.org/packages/ILNumerics.IO.HDF5)           | x64     | Win,Lin     | HL       | rw   | ?         | proprietary | IL\_Numerics\_GmbH | probably 1.10        |  
