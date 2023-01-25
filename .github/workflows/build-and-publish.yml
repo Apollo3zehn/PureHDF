@@ -36,7 +36,9 @@ jobs:
         run: python build/create_tag_body.py
 
       - name: Build
-        run: dotnet build -c Release src/PureHDF/PureHDF.csproj
+        run: |
+          dotnet build -c Release src/PureHDF/PureHDF.csproj
+          dotnet build -c Release src/PureHDF.SourceGenerator/PureHDF.SourceGenerator.csproj
 
       - name: Test
         run: dotnet test -c Release /p:BuildProjectReferences=false
