@@ -717,6 +717,7 @@ Run the following command:
 
 ```bash
 dotnet add package PureHDF.SourceGenerator
+dotnet restore
 ```
 
 > Note: Make sure that all project dependencies are restored before you continue.
@@ -724,15 +725,22 @@ dotnet add package PureHDF.SourceGenerator
 Then define the path to your H5 file from which the bindings should be generated and use it in combination with the `H5SourceGenerator` attribute:
 
 ```cs
-const string FILE_PATH = "myFile.h5";
+using PureHDF;
 
 [H5SourceGenerator(filePath: Program.FILE_PATH)]
 internal partial class MyGeneratedH5Bindings {};
 
-// ...
-using var h5File = H5File.OpenRead(FILE_PATH);
-var bindings = new MyGeneratedH5Bindings(h5File);
-var myDataset = bindings.group1.sub_dataset2;
+static class Program
+{
+    public const string FILE_PATH = "myFile.h5";
+
+    static void Main()
+    {
+        using var h5File = H5File.OpenRead(FILE_PATH);
+        var bindings = new MyGeneratedH5Bindings(h5File);
+        var myDataset = bindings.group1.sub_dataset2;
+    }
+}
 ```
 
 Your IDE should now run the source generator behind the scenes and you should be able to get intellisense support:
