@@ -97,11 +97,11 @@ namespace HDF5.NET.Tests.Reading
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("/struct/nullable");
 
-                Func<FieldInfo, string> converter = fieldInfo =>
+                static string converter(FieldInfo fieldInfo)
                 {
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     return attribute is not null ? attribute.Name : fieldInfo.Name;
-                };
+                }
 
                 var actual = dataset.ReadCompound<TestStructStringAndArray>(converter);
 

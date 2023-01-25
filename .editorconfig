@@ -3,7 +3,7 @@
 # TODO: build real editorconfig file: https://github.com/dotnet/roslyn/blob/main/.editorconfig
 
 # Add readonly modifier
-dotnet_diagnostic.IDE0044.severity = error
+dotnet_diagnostic.IDE0039.severity = error
 
 # Enable naming rule violation errors on build (alternative: dotnet_analyzer_diagnostic.category-Style.severity = error)
 dotnet_diagnostic.IDE1006.severity = error

@@ -21,7 +21,7 @@ namespace HDF5.NET.Tests.Reading
                 await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => throw new Exception());
             }
 
-            Func<Task> action = () => cache.GetChunkAsync(new ulong[] { 1000 }, () => throw new Exception());
+            Task action() => cache.GetChunkAsync(new ulong[] { 1000 }, () => throw new Exception());
 
             // Assert
             await Assert.ThrowsAsync<Exception>(action);

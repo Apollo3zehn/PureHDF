@@ -58,8 +58,7 @@ namespace HDF5.NET
             {
                 Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
-                Func<BTree1RawDataChunksKey> decodeKey =
-                    () => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
+                BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
                 _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context, decodeKey);
             }

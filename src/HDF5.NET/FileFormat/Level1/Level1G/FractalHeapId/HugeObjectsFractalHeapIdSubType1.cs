@@ -56,7 +56,7 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record01 DecodeRecord01() => new BTree2Record01(_context);
+        private BTree2Record01 DecodeRecord01() => new(_context);
 
         #endregion
     }

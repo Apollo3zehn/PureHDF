@@ -8,7 +8,7 @@ namespace HDF5.NET.Tests
     {
         private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
 
-        private static readonly ThreadLocal<IntPtr> _state_ptr = new ThreadLocal<IntPtr>(
+        private static readonly ThreadLocal<IntPtr> _state_ptr = new(
             valueFactory: DeflateHelper_Intel_ISA_L.CreateState,
             trackAllValues: false);
 

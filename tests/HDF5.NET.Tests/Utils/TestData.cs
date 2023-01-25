@@ -2,7 +2,7 @@
 {
     public class TestData
     {
-        private static TestStructL1 _nn_a = new TestStructL1()
+        private static TestStructL1 _nn_a = new()
         {
             ByteValue = 1,
             UShortValue = 2,
@@ -25,7 +25,7 @@
             }
         };
 
-        private static TestStructL1 _nn_b = new TestStructL1()
+        private static TestStructL1 _nn_b = new()
         {
             ByteValue = 2,
             UShortValue = 4,
@@ -49,7 +49,7 @@
             }
         };
 
-        private static TestStructStringAndArray _string_a = new TestStructStringAndArray()
+        private static TestStructStringAndArray _string_a = new()
         {
             FloatValue = (float)1.299e9,
             StringValue1 = "Hello",
@@ -65,7 +65,7 @@
             }
         };
 
-        private static TestStructStringAndArray _string_b = new TestStructStringAndArray()
+        private static TestStructStringAndArray _string_b = new()
         {
             FloatValue = (float)2.299e-9,
             StringValue1 = "Hello!",

@@ -296,7 +296,7 @@ namespace HDF5.NET.Tests.Reading
             // Arrange
 
             // Act
-            Action action = () => new HyperslabSelection(rank: 3, start, stride, count, block);
+            void action() => new HyperslabSelection(rank: 3, start, stride, count, block);
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -310,7 +310,7 @@ namespace HDF5.NET.Tests.Reading
             // Arrange
 
             // Act
-            Action action = () => new HyperslabSelection(rank: 3, start, stride, count, block);
+            void action() => new HyperslabSelection(rank: 3, start, stride, count, block);
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -328,7 +328,7 @@ namespace HDF5.NET.Tests.Reading
                 blocks: new ulong[] { 2, 3 });
 
             // Act
-            Action action = () => selection.Walk(limits: new[] { 100UL, 100UL, 100UL }).ToList();
+            void action() => selection.Walk(limits: new[] { 100UL, 100UL, 100UL }).ToList();
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -348,7 +348,7 @@ namespace HDF5.NET.Tests.Reading
                 blocks: new ulong[] { 2, 3 });
 
             // Act
-            Action action = () => selection.Walk(limits: limits).ToList();
+            void action() => selection.Walk(limits: limits).ToList();
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -363,7 +363,7 @@ namespace HDF5.NET.Tests.Reading
             var selection = new HyperslabSelection(1, 4, 3, 3);
 
             // Act
-            Action action = () => SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
+            void action() => SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -398,7 +398,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            Action action = () => SelectionUtils
+            void action() => SelectionUtils
                 .CopyAsync(default(SyncReader), sourceRank: 2, targetRank: 2, copyInfo)
                 .GetAwaiter()
                 .GetResult();
