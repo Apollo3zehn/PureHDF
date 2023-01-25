@@ -115,8 +115,15 @@ namespace HDF5.NET
             return targetArray;
         }
 
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
+Vor:
         private static string[] oneElementStringArray = new string[1];
-        private static Dictionary<string, object?>[] oneElementCompountArray = new Dictionary<string, object?>[1];
+Nach:
+        private static readonly string[] oneElementStringArray = new string[1];
+*/
+        private static readonly string[] oneElementStringArray = new string[1];
+        private static readonly readonly Dictionary<string, object?>[] oneElementCompountArray = new Dictionary<string, object?>[1];
 
         public static unsafe Dictionary<string, object?>[] ReadCompound(
             H5Context context,

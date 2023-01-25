@@ -6,9 +6,9 @@ namespace HDF5.NET.Tests
 {
     public static class DeflateHelper_Intel_ISA_L
     {
-        private static int _state_length = Unsafe.SizeOf<inflate_state>();
+        private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
 
-        private static ThreadLocal<IntPtr> _state_ptr = new ThreadLocal<IntPtr>(
+        private static readonly ThreadLocal<IntPtr> _state_ptr = new ThreadLocal<IntPtr>(
             valueFactory: DeflateHelper_Intel_ISA_L.CreateState,
             trackAllValues: false);
 

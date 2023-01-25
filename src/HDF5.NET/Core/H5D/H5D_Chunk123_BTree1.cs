@@ -7,9 +7,39 @@ namespace HDF5.NET
         #region Fields
 
         private BTree1Node<BTree1RawDataChunksKey>? _btree1;
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
+Vor:
         private DataLayoutMessage12? _layout12;
         private DataLayoutMessage3? _layout3;
         private ChunkedStoragePropertyDescription3? _chunked3;
+Nach:
+        private readonly DataLayoutMessage12? _layout12;
+        private readonly DataLayoutMessage3? _layout3;
+        private readonly ChunkedStoragePropertyDescription3? _chunked3;
+*/
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard20)"
+Vor:
+        private DataLayoutMessage12? _layout12;
+        private DataLayoutMessage3? _layout3;
+        private ChunkedStoragePropertyDescription3? _chunked3;
+Nach:
+        private readonly DataLayoutMessage12? _layout12;
+        private readonly DataLayoutMessage3? _layout3;
+        private readonly ChunkedStoragePropertyDescription3? _chunked3;
+*/
+        private readonly DataLayoutMessage12? _layout12;
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard21)"
+Vor:
+        private ChunkedStoragePropertyDescription3? _chunked3;
+Nach:
+        private readonly DataLayoutMessage3? _layout3;
+        private readonly ChunkedStoragePropertyDescription3? _chunked3;
+*/
+        private readonly DataLayoutMessage3? _layout3;
+        private readonly ChunkedStoragePropertyDescription3? _chunked3;
 
         #endregion
 

@@ -15,7 +15,7 @@
 
         #region Fields
 
-        private Dictionary<ulong[], ChunkInfo> _chunkInfoMap;
+        private readonly Dictionary<ulong[], ChunkInfo> _chunkInfoMap;
 
         #endregion
 

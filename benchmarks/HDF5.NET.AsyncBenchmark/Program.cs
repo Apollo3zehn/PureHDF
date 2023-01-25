@@ -157,10 +157,6 @@ try
     Console.WriteLine($"    The ratio task-based / sync is {elapsed_task_based.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
     Console.WriteLine($"The ratio multi-threaded / sync is {elapsed_multi_threaded.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
 }
-catch (Exception ex)
-{
-    var v = 1;
-}
 finally
 {
     Console.WriteLine();

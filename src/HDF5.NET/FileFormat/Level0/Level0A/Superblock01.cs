@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        H5BaseReader _reader;
+        readonly H5BaseReader _reader;
 
         #endregion
 

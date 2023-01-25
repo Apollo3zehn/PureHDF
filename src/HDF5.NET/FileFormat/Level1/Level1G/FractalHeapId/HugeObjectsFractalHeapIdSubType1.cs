@@ -8,7 +8,7 @@ namespace HDF5.NET
         #region Fields
 
         private H5Context _context;
-        private FractalHeapHeader _heapHeader;
+        private readonly FractalHeapHeader _heapHeader;
 
         #endregion
 

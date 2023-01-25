@@ -477,7 +477,7 @@ namespace HDF5.NET
 
         internal static class GenericAdd<T>
         {
-            private static Func<T, T, T> _add_function = GenericAdd<T>.EmitAddFunction();
+            private static readonly Func<T, T, T> _add_function = GenericAdd<T>.EmitAddFunction();
 
             private static Func<T, T, T> EmitAddFunction()
             {

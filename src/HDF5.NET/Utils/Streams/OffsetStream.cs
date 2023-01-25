@@ -2,8 +2,8 @@
 {
     internal class OffsetStream : Stream
     {
-        private H5BaseReader _reader;
-        private long _baseAddress;
+        private readonly H5BaseReader _reader;
+        private readonly long _baseAddress;
 
         public OffsetStream(H5BaseReader reader)
         {

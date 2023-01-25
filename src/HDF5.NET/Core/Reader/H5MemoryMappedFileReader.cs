@@ -11,7 +11,7 @@ namespace HDF5.NET
     internal unsafe class H5MemoryMappedFileReader : H5BaseReader
     {
         private readonly ThreadLocal<long> _position = new();
-        private MemoryMappedViewAccessor _accessor;
+        private readonly MemoryMappedViewAccessor _accessor;
 
         public H5MemoryMappedFileReader(MemoryMappedViewAccessor accessor) : base(accessor.Capacity)
         {

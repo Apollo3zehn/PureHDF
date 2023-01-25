@@ -5,7 +5,7 @@
         private long _position;
         private bool _loadSlot;
         private SlotStream? _slotStream;
-        private SlotStream[] _slotStreams;
+        private readonly SlotStream[] _slotStreams;
 
         public ExternalFileListStream(
             ExternalFileListMessage externalFileList,

@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private Func<T> _decodeKey;
+        private readonly Func<T> _decodeKey;
 
         private H5Context _context;
         private byte _version;

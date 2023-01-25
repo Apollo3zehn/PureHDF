@@ -5,7 +5,7 @@ namespace HDF5.NET
 {
     internal class H5StreamReader : H5BaseReader
     {
-        private bool _leaveOpen;
+        private readonly bool _leaveOpen;
         private readonly Stream _stream;
 
         public H5StreamReader(Stream stream, bool leaveOpen) : base(stream.Length)

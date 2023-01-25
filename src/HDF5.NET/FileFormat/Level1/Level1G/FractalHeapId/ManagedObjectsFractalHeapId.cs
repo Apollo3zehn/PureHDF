@@ -6,8 +6,8 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5BaseReader _reader;
-        private FractalHeapHeader _header;
+        private readonly H5BaseReader _reader;
+        private readonly FractalHeapHeader _header;
 
         #endregion
 

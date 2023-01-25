@@ -9,8 +9,17 @@ namespace HDF5.NET
     {
         #region Fields
 
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
+Vor:
         private H5File? _file;
         private ObjectHeaderScratchPad? _scratchPad;
+Nach:
+        private readonly H5File? _file;
+        private readonly ObjectHeaderScratchPad? _scratchPad;
+*/
+        private readonly H5File? _file;
+        private readonly ObjectHeaderScratchPad? _scratchPad;
 
         #endregion
 

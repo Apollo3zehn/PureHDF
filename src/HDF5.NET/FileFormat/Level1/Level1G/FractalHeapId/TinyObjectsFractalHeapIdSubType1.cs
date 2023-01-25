@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private byte _firstByte;
+        private readonly byte _firstByte;
 
         #endregion
 

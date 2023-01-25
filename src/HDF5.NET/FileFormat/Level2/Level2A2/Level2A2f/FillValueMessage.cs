@@ -5,7 +5,7 @@
     {
         #region Fields
 
-        private static byte[] _defaultValue = new byte[] { 0 };
+        private static readonly byte[] _defaultValue = new byte[] { 0 };
 
         private byte[]? _value;
         private byte _version;

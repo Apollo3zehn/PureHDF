@@ -3,10 +3,10 @@
     internal class SlotStream : Stream
     {
         private long _position;
-        private LocalHeap _heap;
+        private readonly LocalHeap _heap;
         private Stream? _stream;
-        private ExternalFileListSlot _slot;
-        private H5DatasetAccess _datasetAccess;
+        private readonly ExternalFileListSlot _slot;
+        private readonly H5DatasetAccess _datasetAccess;
 
         public SlotStream(LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
         {

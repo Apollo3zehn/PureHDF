@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private DataLayoutMessage _dataLayout;
+        private readonly DataLayoutMessage _dataLayout;
 
         #endregion
 

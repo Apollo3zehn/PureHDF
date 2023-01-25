@@ -15,8 +15,8 @@ namespace HDF5.NET
 
         #region Fields
 
-        private IChunkCache _chunkCache;
-        private bool _indexAddressIsUndefined;
+        private readonly IChunkCache _chunkCache;
+        private readonly bool _indexAddressIsUndefined;
 
         #endregion
 

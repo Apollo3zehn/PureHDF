@@ -10,8 +10,8 @@ namespace HDF5.NET.SourceGenerator;
 [Generator]
 public class SourceGenerator : ISourceGenerator
 {
-    private static Regex _replacePossiblyInvalidCharacters = new Regex("[^a-zA-Z0-9]");
-    private static Regex _startsWithInvalidCharacter = new Regex("^[^a-zA-Z]");
+    private static readonly Regex _replacePossiblyInvalidCharacters = new Regex("[^a-zA-Z0-9]");
+    private static readonly Regex _startsWithInvalidCharacter = new Regex("^[^a-zA-Z]");
 
     public void Execute(GeneratorExecutionContext context)
     {

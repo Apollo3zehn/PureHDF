@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        Superblock _superblock;
+        readonly Superblock _superblock;
 
         #endregion
 

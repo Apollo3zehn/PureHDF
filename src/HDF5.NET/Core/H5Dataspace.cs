@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private DataspaceMessage _dataspace;
+        private readonly DataspaceMessage _dataspace;
 
         #endregion
 

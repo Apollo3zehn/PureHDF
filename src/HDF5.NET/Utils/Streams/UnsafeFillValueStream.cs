@@ -2,8 +2,8 @@
 {
     internal class UnsafeFillValueStream : Stream
     {
-        private byte[] _fillValue;
-        private int _length;
+        private readonly byte[] _fillValue;
+        private readonly int _length;
         private long _position;
 
         public UnsafeFillValueStream(byte[] fillValue)

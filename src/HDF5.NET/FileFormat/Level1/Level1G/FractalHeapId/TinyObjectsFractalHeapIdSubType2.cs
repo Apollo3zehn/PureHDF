@@ -4,8 +4,8 @@
     {
         #region Fields
 
-        private byte _firstByte;
-        private byte _extendedLength;
+        private readonly byte _firstByte;
+        private readonly byte _extendedLength;
 
         #endregion
 

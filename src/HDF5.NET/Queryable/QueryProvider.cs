@@ -5,8 +5,15 @@ namespace HDF5.NET
 {
     internal class QueryProvider<TFake> : IQueryProvider where TFake : unmanaged
     {
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
+Vor:
         private ulong _datasetLength;
-        private Func<HyperslabSelection, TFake[]> _executor;
+Nach:
+        private readonly ulong _datasetLength;
+*/
+        private readonly ulong _datasetLength;
+        private readonly readonly Func<HyperslabSelection, TFake[]> _executor;
 
         private ulong _start;
         private ulong _stride;

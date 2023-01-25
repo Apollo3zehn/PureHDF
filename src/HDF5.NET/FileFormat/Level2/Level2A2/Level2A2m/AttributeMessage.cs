@@ -5,7 +5,7 @@
         #region Fields
 
         private byte _version;
-        private CharacterSetEncoding _nameEncoding;
+        private readonly CharacterSetEncoding _nameEncoding;
         private H5Context _context;
 
         #endregion

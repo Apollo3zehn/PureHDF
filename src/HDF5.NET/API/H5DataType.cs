@@ -12,8 +12,8 @@
         /// </summary>
         public class FixedPointType
         {
-            private FixedPointBitFieldDescription _bitField;
-            private FixedPointPropertyDescription _property;
+            private readonly FixedPointBitFieldDescription _bitField;
+            private readonly FixedPointPropertyDescription _property;
 
             internal FixedPointType(
                 FixedPointBitFieldDescription bitField,
@@ -36,8 +36,8 @@
         /// </summary>
         public class FloatingPointType
         {
-            private FloatingPointBitFieldDescription _bitField;
-            private FloatingPointPropertyDescription _property;
+            private readonly FloatingPointBitFieldDescription _bitField;
+            private readonly FloatingPointPropertyDescription _property;
 
             internal FloatingPointType(
                 FloatingPointBitFieldDescription bitField,
@@ -53,7 +53,7 @@
         /// </summary>
         public class StringType
         {
-            private StringBitFieldDescription _bitField;
+            private readonly StringBitFieldDescription _bitField;
 
             internal StringType(
                 StringBitFieldDescription bitField)
@@ -67,8 +67,29 @@
         /// </summary>
         public class BitFieldType
         {
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
+Vor:
             private BitFieldBitFieldDescription _bitField;
-            private BitFieldPropertyDescription _property;
+Nach:
+            private readonly BitFieldBitFieldDescription _bitField;
+*/
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard21)"
+Vor:
+            private BitFieldBitFieldDescription _bitField;
+Nach:
+            private readonly BitFieldBitFieldDescription _bitField;
+*/
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard20)"
+Vor:
+            private BitFieldBitFieldDescription _bitField;
+Nach:
+            private readonly BitFieldBitFieldDescription _bitField;
+*/
+            private readonly BitFieldBitFieldDescription _bitField;
+            private readonly readonly BitFieldPropertyDescription _property;
 
             internal BitFieldType(
                 BitFieldBitFieldDescription bitField,
@@ -84,8 +105,8 @@
         /// </summary>
         public class OpaqueType
         {
-            private OpaqueBitFieldDescription _bitField;
-            private OpaquePropertyDescription _property;
+            private readonly OpaqueBitFieldDescription _bitField;
+            private readonly OpaquePropertyDescription _property;
 
             internal OpaqueType(
                 OpaqueBitFieldDescription bitField,
@@ -113,8 +134,29 @@
                 H5DataType Type
             );
 
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(net50)"
+Vor:
             private CompoundBitFieldDescription _bitField;
-            private CompoundPropertyDescription[] _properties;
+Nach:
+            private readonly CompoundBitFieldDescription _bitField;
+*/
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard21)"
+Vor:
+            private CompoundBitFieldDescription _bitField;
+Nach:
+            private readonly CompoundBitFieldDescription _bitField;
+*/
+
+/* Nicht gemergte Änderung aus Projekt "HDF5.NET(netstandard20)"
+Vor:
+            private CompoundBitFieldDescription _bitField;
+Nach:
+            private readonly CompoundBitFieldDescription _bitField;
+*/
+            private readonly CompoundBitFieldDescription _bitField;
+            private readonly readonly CompoundPropertyDescription[] _properties;
 
             internal CompoundType(
                 CompoundBitFieldDescription bitField,
@@ -142,7 +184,7 @@
         /// </summary>
         public class ReferenceType
         {
-            private ReferenceBitFieldDescription _bitField;
+            private readonly ReferenceBitFieldDescription _bitField;
 
             internal ReferenceType(
                 ReferenceBitFieldDescription bitField)
@@ -156,8 +198,8 @@
         /// </summary>
         public class EnumerationType
         {
-            private EnumerationBitFieldDescription _bitField;
-            private EnumerationPropertyDescription _property;
+            private readonly EnumerationBitFieldDescription _bitField;
+            private readonly EnumerationPropertyDescription _property;
 
             internal EnumerationType(
                 EnumerationBitFieldDescription bitField,
@@ -173,8 +215,8 @@
         /// </summary>
         public class VariableLengthType
         {
-            private VariableLengthBitFieldDescription _bitField;
-            private VariableLengthPropertyDescription _property;
+            private readonly VariableLengthBitFieldDescription _bitField;
+            private readonly VariableLengthPropertyDescription _property;
 
             internal VariableLengthType(
                 VariableLengthBitFieldDescription bitField,
@@ -190,8 +232,8 @@
         /// </summary>
         public class ArrayType
         {
-            private ArrayBitFieldDescription _bitField;
-            private ArrayPropertyDescription _property;
+            private readonly ArrayBitFieldDescription _bitField;
+            private readonly ArrayPropertyDescription _property;
 
             internal ArrayType(
                 ArrayBitFieldDescription bitField,

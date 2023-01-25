@@ -3,7 +3,7 @@
     internal class MemorySpanStream : Stream
     {
         private long _position;
-        private Memory<byte> _memory;
+        private readonly Memory<byte> _memory;
         private Memory<byte> _sliced;
 
         public MemorySpanStream(Memory<byte> memory)

@@ -41,7 +41,7 @@ namespace HDF5.NET
 
         #region Global Heap
 
-        private static ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+        private static readonly ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
         public static GlobalHeapCollection GetGlobalHeapObject(H5Context context, ulong address)
         {
@@ -72,7 +72,7 @@ namespace HDF5.NET
 
         #region File Handles
 
-        private static ConcurrentDictionary<Superblock, Dictionary<string, H5File>> _fileMap;
+        private static readonly ConcurrentDictionary<Superblock, Dictionary<string, H5File>> _fileMap;
 
         public static H5File GetH5File(Superblock superblock, string absoluteFilePath, bool useAsync)
         {

@@ -7,7 +7,7 @@ namespace HDF5.NET
         #region Fields
 
         private byte _version;
-        private Superblock _superblock;
+        private readonly Superblock _superblock;
 
         #endregion
 

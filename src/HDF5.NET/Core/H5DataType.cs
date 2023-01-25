@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private DatatypeMessage _dataType;
+        private readonly DatatypeMessage _dataType;
 
         private FixedPointType? _fixedPoint;
         private FloatingPointType? _floatingPoint;
