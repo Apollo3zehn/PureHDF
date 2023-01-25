@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        internal DataLayoutMessage12(H5Context context, byte version) : base(context.Reader)
+        internal DataLayoutMessage12(H5Context context, byte version)
         {
             var (reader, superblock) = context;
 

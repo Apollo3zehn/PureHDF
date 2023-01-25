@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public DataLayoutMessage(H5BaseReader reader)
+        public DataLayoutMessage()
         {
             //
         }

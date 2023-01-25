@@ -305,7 +305,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
+#pragma warning disable IDE0060
         public async Task CanUnshuffleGeneric<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {
@@ -350,7 +352,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
+#pragma warning disable IDE0060
         public async Task CanUnshuffleAvx2<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {
@@ -394,7 +398,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
+#pragma warning disable IDE0060
         public async Task CanUnshuffleSse2<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {
@@ -512,7 +518,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
+#pragma warning disable IDE0060
         public void CanConvertEndiannessAvx2<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {

@@ -280,7 +280,7 @@ namespace HDF5.NET
             return result;
         }
 
-        private (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)
+        private static (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)
             where T : unmanaged
         {
             // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)

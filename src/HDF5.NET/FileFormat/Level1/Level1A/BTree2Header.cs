@@ -187,7 +187,7 @@ namespace HDF5.NET
                     throw new Exception("Unable to load B-tree internal node.");
 
                 /* Locate node pointer for child */
-                (index, cmp) = LocateRecord(internalNode.Records, compare);
+                (index, cmp) = BTree2Header<T>.LocateRecord(internalNode.Records, compare);
 
                 if (cmp > 0)
                     index++;
@@ -237,7 +237,7 @@ namespace HDF5.NET
                 var leafNode = new BTree2LeafNode<T>(_context.Reader, this, currentNodePointer.RecordCount, _decodeKey);
 
                 /* Locate record */
-                (index, cmp) = LocateRecord(leafNode.Records, compare);
+                (index, cmp) = BTree2Header<T>.LocateRecord(leafNode.Records, compare);
 
                 if (cmp == 0)
                 {
@@ -318,8 +318,9 @@ namespace HDF5.NET
             }
         }
 
-        private (uint index, int cmp) LocateRecord(T[] records,
-                                                   Func<T, int> compare)
+        private static (uint index, int cmp) LocateRecord(
+            T[] records,
+            Func<T, int> compare)
         {
             // H5B2int.c (H5B2__locate_record)
             // Return: Comparison value for insertion location. Negative for record

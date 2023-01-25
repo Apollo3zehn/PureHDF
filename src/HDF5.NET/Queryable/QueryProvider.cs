@@ -104,15 +104,15 @@ namespace HDF5.NET
             throw new Exception($"Unable to extract integer from expression.");
         }
 
-        private static string? GetDebugView(Expression expression)
-        {
-            if (expression is null)
-                return null;
+        // private static string? GetDebugView(Expression expression)
+        // {
+        //     if (expression is null)
+        //         return null;
 
-            var propertyInfo = typeof(Expression)
-                .GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        //     var propertyInfo = typeof(Expression)
+        //         .GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic)!;
 
-            return propertyInfo.GetValue(expression) as string;
-        }
+        //     return propertyInfo.GetValue(expression) as string;
+        // }
     }
 }

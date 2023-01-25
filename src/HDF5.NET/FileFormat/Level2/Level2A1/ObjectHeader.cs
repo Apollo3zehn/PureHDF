@@ -145,7 +145,7 @@ namespace HDF5.NET
             return headerMessages;
         }
 
-        private ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
+        private static ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
         {
             foreach (var message in headerMessages)
             {

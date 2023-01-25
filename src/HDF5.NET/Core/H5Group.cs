@@ -482,7 +482,7 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private NamedReference AddScratchPad(NamedReference reference, ObjectHeaderScratchPad scratchPad)
+        private static NamedReference AddScratchPad(NamedReference reference, ObjectHeaderScratchPad scratchPad)
         {
             reference.ScratchPad = scratchPad;
             return reference;
@@ -505,7 +505,7 @@ namespace HDF5.NET
         #region Callbacks
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
+        private static int NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
         {
             // H5Gnode.c (H5G_node_cmp3)
 

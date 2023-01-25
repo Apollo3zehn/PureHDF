@@ -2,18 +2,11 @@
 {
     internal class SymbolTableEntry
     {
-        #region Fields
-
-        readonly Superblock _superblock;
-
-        #endregion
-
         #region Constructors
 
         public SymbolTableEntry(H5Context context)
         {
             var (reader, superblock) = context;
-            _superblock = superblock;
 
             // link name offset
             LinkNameOffset = superblock.ReadOffset(reader);

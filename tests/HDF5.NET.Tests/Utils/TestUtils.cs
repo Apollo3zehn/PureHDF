@@ -52,7 +52,7 @@ namespace HDF5.NET.Tests
 
             for (int i = 0; i < 1000; i++)
             {
-                var linkId = H5G.create(groupId, $"mass_{i.ToString("D4")}");
+                var linkId = H5G.create(groupId, $"mass_{i:D4}");
                 _ = H5G.close(linkId);
             }
 
@@ -847,7 +847,7 @@ namespace HDF5.NET.Tests
                 }
                 else
                 {
-                    var name = $"mass_{i.ToString("D4")}";
+                    var name = $"mass_{i:D4}";
                     Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims);
                 }
             }

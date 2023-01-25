@@ -98,30 +98,27 @@ namespace HDF5.NET
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* walkers */
-            var sourceWalker = SelectionUtils
-                .Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
+            var sourceWalker = Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
                 .GetEnumerator();
 
-            var targetWalker = SelectionUtils
-                .Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
+            var targetWalker = Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
                 .GetEnumerator();
 
             /* select method */
             if (copyInfo.GetSourceBufferAsync is not null)
-                return SelectionUtils.CopyMemoryAsync(reader, sourceWalker, targetWalker, copyInfo);
+                return CopyMemoryAsync(sourceWalker, targetWalker, copyInfo);
 
             else if (copyInfo.GetSourceStream is not null)
-                return SelectionUtils.CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
+                return CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
 
             else
                 throw new Exception($"Either GetSourceBuffer or GetSourceStream must be non-null.");
         }
 
-        private async static Task CopyMemoryAsync<TReader>(
-            TReader reader,
+        private async static Task CopyMemoryAsync(
             IEnumerator<RelativeStep> sourceWalker,
             IEnumerator<RelativeStep> targetWalker,
-            CopyInfo copyInfo) where TReader : IReader
+            CopyInfo copyInfo)
         {
             /* initialize source walker */
             var sourceBuffer = default(Memory<byte>);
@@ -175,8 +172,7 @@ namespace HDF5.NET
                     /* copy */
                     var length = Math.Min(currentSource.Length, currentTarget.Length);
 
-                    currentSource
-[..length]
+                    currentSource[..length]
                         .CopyTo(currentTarget);
 
                     currentSource = currentSource[length..];
