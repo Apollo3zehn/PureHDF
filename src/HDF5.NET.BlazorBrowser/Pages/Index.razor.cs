@@ -17,7 +17,7 @@ namespace HDF5.NET.BlazorBrowser.Pages
 
         private async Task OnInputFileChange(InputFileChangeEventArgs e)
         {
-// TODO: workaround, remove this
+            // TODO: workaround, remove this
             var stream = new MemoryStream();
             await e.File.OpenReadStream().CopyToAsync(stream);
             stream.Seek(0, SeekOrigin.Begin);

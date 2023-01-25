@@ -64,12 +64,12 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void JenkinsLookup3Mix(ref uint a, ref uint b, ref uint c)
         {
-            a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 4);    c += b;
-            b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 6);    a += c;
-            c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 8);    b += a;
-            a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 16);   c += b;
-            b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 19);   a += c;
-            c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 4);    b += a;
+            a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 4); c += b;
+            b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 6); a += c;
+            c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 8); b += a;
+            a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 16); c += b;
+            b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 19); a += c;
+            c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 4); b += a;
         }
 
         /*
@@ -170,19 +170,19 @@ namespace HDF5.NET
                 /*-------------------------------- last block: affect all 32 bits of (c) */
                 switch (length)                   /* all the case statements fall through */
                 {
-                    case 12:    c += ((uint)k[11]) << 24;   goto case 11;
-                    case 11:    c += ((uint)k[10]) << 16;   goto case 10;
-                    case 10:    c += ((uint)k[9]) << 8;     goto case 9;
-                    case 9:     c += k[8];                  goto case 8;
-                    case 8:     b += ((uint)k[7]) << 24;    goto case 7;
-                    case 7:     b += ((uint)k[6]) << 16;    goto case 6;
-                    case 6:     b += ((uint)k[5]) << 8;     goto case 5;
-                    case 5:     b += k[4];                  goto case 4;
-                    case 4:     a += ((uint)k[3]) << 24;    goto case 3;
-                    case 3:     a += ((uint)k[2]) << 16;    goto case 2;
-                    case 2:     a += ((uint)k[1]) << 8;     goto case 1;
-                    case 1:     a += k[0];                  break;
-                    case 0:                                 return c;
+                    case 12: c += ((uint)k[11]) << 24; goto case 11;
+                    case 11: c += ((uint)k[10]) << 16; goto case 10;
+                    case 10: c += ((uint)k[9]) << 8; goto case 9;
+                    case 9: c += k[8]; goto case 8;
+                    case 8: b += ((uint)k[7]) << 24; goto case 7;
+                    case 7: b += ((uint)k[6]) << 16; goto case 6;
+                    case 6: b += ((uint)k[5]) << 8; goto case 5;
+                    case 5: b += k[4]; goto case 4;
+                    case 4: a += ((uint)k[3]) << 24; goto case 3;
+                    case 3: a += ((uint)k[2]) << 16; goto case 2;
+                    case 2: a += ((uint)k[1]) << 8; goto case 1;
+                    case 1: a += k[0]; break;
+                    case 0: return c;
                     default:
                         throw new Exception("This should never be executed!");
                 }

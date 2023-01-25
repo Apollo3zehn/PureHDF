@@ -289,7 +289,7 @@ namespace HDF5.NET
                 if (!string.IsNullOrWhiteSpace(datasetAccess.ExternalFilePrefix))
                 {
                     var propPrefix = datasetAccess.ExternalFilePrefix;
-                    
+
                     var propResult = propPrefix is null
                         ? filePath
                         : PathCombine(propPrefix, filePath);

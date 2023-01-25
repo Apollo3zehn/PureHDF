@@ -83,7 +83,7 @@
 
         static TestData()
         {
-            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a, 
+            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
                                                  TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };
 
             TestData.BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
@@ -145,7 +145,7 @@
             TestData.SmallData = Enumerable.Range(0, 100).ToArray();
             TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
             TestData.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
-            TestData.HyperslabData = Enumerable.Range(0, 2*3*6).ToArray();
+            TestData.HyperslabData = Enumerable.Range(0, 2 * 3 * 6).ToArray();
         }
 
         public static TestEnum[] EnumData { get; }

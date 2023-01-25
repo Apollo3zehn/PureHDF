@@ -90,7 +90,7 @@ namespace HDF5.NET
         /// <typeparam name="T">The type of the data to read.</typeparam>
         /// <param name="getName">An optional function to map the field names of <typeparamref name="T"/> to the member names of the HDF5 compound type.</param>
         /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
-        public T[] ReadCompound<T>(Func<FieldInfo, string>? getName = default) 
+        public T[] ReadCompound<T>(Func<FieldInfo, string>? getName = default)
             where T : struct
         {
             if (getName is null)

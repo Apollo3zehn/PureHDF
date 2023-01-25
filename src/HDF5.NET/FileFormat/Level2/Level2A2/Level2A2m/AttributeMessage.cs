@@ -36,7 +36,7 @@
             // name character set encoding
             if (Version == 3)
                 _nameEncoding = (CharacterSetEncoding)context.Reader.ReadByte();
-            
+
             // name
             if (Version == 1)
                 Name = H5ReadUtils.ReadNullTerminatedString(context.Reader, pad: true, encoding: _nameEncoding);
@@ -48,7 +48,7 @@
                 ? MessageFlags.Shared
                 : MessageFlags.NoFlags;
 
-            Datatype = objectHeader.DecodeMessage(flags1, 
+            Datatype = objectHeader.DecodeMessage(flags1,
                 () => new DatatypeMessage(context.Reader));
 
             if (Version == 1)

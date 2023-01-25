@@ -19,9 +19,9 @@
         {
             get
             {
-// TODO: Logic for non-chunked datsets is missing. Check for code duplication here: 
-// TODO: https://github.com/Apollo3zehn/HDF5.NET/blob/b54eab46d3c063f8e3eb2abe5862f093b7a91c0d/src/HDF5.NET/Core/H5D/H5D_Chunk.cs#L167
-// TODO: https://github.com/Apollo3zehn/HDF5.NET/blob/b54eab46d3c063f8e3eb2abe5862f093b7a91c0d/src/HDF5.NET/Core/H5D/H5D_Chunk4.cs#L28
+                // TODO: Logic for non-chunked datsets is missing. Check for code duplication here: 
+                // TODO: https://github.com/Apollo3zehn/HDF5.NET/blob/b54eab46d3c063f8e3eb2abe5862f093b7a91c0d/src/HDF5.NET/Core/H5D/H5D_Chunk.cs#L167
+                // TODO: https://github.com/Apollo3zehn/HDF5.NET/blob/b54eab46d3c063f8e3eb2abe5862f093b7a91c0d/src/HDF5.NET/Core/H5D/H5D_Chunk4.cs#L28
 
                 var rawChunkDims = _dataLayout switch
                 {

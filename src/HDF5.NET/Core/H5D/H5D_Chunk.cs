@@ -75,32 +75,32 @@ namespace HDF5.NET
         {
             return dataset.InternalDataLayout switch
             {
-                DataLayoutMessage12 layout12        => new H5D_Chunk123_BTree1(dataset, layout12, datasetAccess),
+                DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(dataset, layout12, datasetAccess),
 
-                DataLayoutMessage4 layout4          => ((ChunkedStoragePropertyDescription4)layout4.Properties).ChunkIndexingType switch
+                DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).ChunkIndexingType switch
                 {
                     // the current, maximum, and chunk dimension sizes are all the same
-                    ChunkIndexingType.SingleChunk       => new H5Dataset_Chunk_Single_Chunk4(dataset, layout4, datasetAccess),
+                    ChunkIndexingType.SingleChunk => new H5Dataset_Chunk_Single_Chunk4(dataset, layout4, datasetAccess),
 
                     // fixed maximum dimension sizes
                     // no filter applied to the dataset
                     // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
-                    ChunkIndexingType.Implicit          => new H5D_Chunk4_Implicit(dataset, layout4, datasetAccess),
+                    ChunkIndexingType.Implicit => new H5D_Chunk4_Implicit(dataset, layout4, datasetAccess),
 
                     // fixed maximum dimension sizes
-                    ChunkIndexingType.FixedArray        => new H5D_Chunk4_FixedArray(dataset, layout4, datasetAccess),
+                    ChunkIndexingType.FixedArray => new H5D_Chunk4_FixedArray(dataset, layout4, datasetAccess),
 
                     // only one dimension of unlimited extent
-                    ChunkIndexingType.ExtensibleArray   => new H5D_Chunk4_ExtensibleArray(dataset, layout4, datasetAccess),
+                    ChunkIndexingType.ExtensibleArray => new H5D_Chunk4_ExtensibleArray(dataset, layout4, datasetAccess),
 
                     // more than one dimension of unlimited extent
-                    ChunkIndexingType.BTree2            => new H5D_Chunk4_BTree2(dataset, layout4, datasetAccess),
-                    _                                   => throw new Exception("Unknown chunk indexing type.")
+                    ChunkIndexingType.BTree2 => new H5D_Chunk4_BTree2(dataset, layout4, datasetAccess),
+                    _ => throw new Exception("Unknown chunk indexing type.")
                 },
 
-                DataLayoutMessage3 layout3          => new H5D_Chunk123_BTree1(dataset, layout3, datasetAccess),
+                DataLayoutMessage3 layout3 => new H5D_Chunk123_BTree1(dataset, layout3, datasetAccess),
 
-                _                                   => throw new Exception($"Data layout message type '{dataset.InternalDataLayout.GetType().Name}' is not supported.")
+                _ => throw new Exception($"Data layout message type '{dataset.InternalDataLayout.GetType().Name}' is not supported.")
             };
         }
 
@@ -167,7 +167,7 @@ namespace HDF5.NET
         {
             var buffer = new byte[ChunkByteSize];
 
-// TODO: This way, fill values will become part of the cache
+            // TODO: This way, fill values will become part of the cache
             if (_indexAddressIsUndefined)
             {
                 if (Dataset.InternalFillValue.Value is not null)
@@ -182,7 +182,7 @@ namespace HDF5.NET
                     if (Dataset.InternalFillValue.Value is not null)
                         buffer.AsSpan().Fill(Dataset.InternalFillValue.Value);
                 }
-                
+
                 else
                 {
                     await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
@@ -193,7 +193,7 @@ namespace HDF5.NET
         }
 
         private async Task ReadChunkAsync<TReader>(
-            TReader reader, 
+            TReader reader,
             Memory<byte> buffer,
             long offset,
             ulong rawChunkSize,

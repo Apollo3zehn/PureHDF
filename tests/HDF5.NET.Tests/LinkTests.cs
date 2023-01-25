@@ -239,7 +239,7 @@ namespace HDF5.NET.Tests.Reading
             // Act
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
-            var linkAccess = string.IsNullOrWhiteSpace(prefix) 
+            var linkAccess = string.IsNullOrWhiteSpace(prefix)
                 ? new H5LinkAccess()
                 : new H5LinkAccess() { ExternalLinkPrefix = prefix };
 

@@ -20,7 +20,7 @@
 
         public override long Length => _memory.Length;
 
-        public override long Position 
+        public override long Position
         {
             get
             {
@@ -55,7 +55,7 @@
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    
+
                     if (offset > _memory.Length)
                         throw new NotSupportedException("Cannot seek behind the end of the array.");
 

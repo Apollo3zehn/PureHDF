@@ -138,7 +138,7 @@ namespace HDF5.NET
                     .GetBTree1(DecodeGroupKey)
                     .TryFindUserData(out var userData,
                                     (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
-                                    (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
+                                    (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData)
                                         => NodeFound(localHeap, name, address, out userData));
 
                 if (success)
@@ -167,7 +167,7 @@ namespace HDF5.NET
                         .GetBTree1(DecodeGroupKey)
                         .TryFindUserData(out var userData,
                                         (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
-                                        (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
+                                        (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData)
                                             => NodeFound(localHeap, name, address, out userData));
 
                     if (success)
@@ -244,7 +244,7 @@ namespace HDF5.NET
                     alreadyVisited.Add(Reference.Value);
             }
 
-            if (!skip) 
+            if (!skip)
             {
                 var references = this
                     .EnumerateReferences(linkAccess)
@@ -423,7 +423,7 @@ namespace HDF5.NET
                 }
                 else
                 {
-// TODO: duplicate3_of_3
+                    // TODO: duplicate3_of_3
                     using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new LinkMessage(Context));
@@ -461,7 +461,7 @@ namespace HDF5.NET
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
                     .GetTarget(linkAccess, useAsync: default),
 #endif
-                
+
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }

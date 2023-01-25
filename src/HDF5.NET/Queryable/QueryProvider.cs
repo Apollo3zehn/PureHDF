@@ -111,7 +111,7 @@ namespace HDF5.NET
 
             var propertyInfo = typeof(Expression)
                 .GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic)!;
-                
+
             return propertyInfo.GetValue(expression) as string;
         }
     }

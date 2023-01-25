@@ -16,7 +16,7 @@ namespace HDF5.NET
         public FixedArrayHeader(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             _superblock = superblock;
 
             // signature

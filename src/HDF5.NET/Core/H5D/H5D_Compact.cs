@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public H5D_Compact(H5Dataset dataset, H5DatasetAccess datasetAccess) : 
+        public H5D_Compact(H5Dataset dataset, H5DatasetAccess datasetAccess) :
             base(dataset, supportsBuffer: true, supportsStream: false, datasetAccess)
         {
             //
@@ -29,7 +29,7 @@
 
             if (Dataset.InternalDataLayout is DataLayoutMessage12 layout12)
             {
-// TODO: untested
+                // TODO: untested
                 buffer = layout12.CompactData;
             }
             else if (Dataset.InternalDataLayout is DataLayoutMessage3 layout34)

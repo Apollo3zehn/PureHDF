@@ -85,8 +85,8 @@ namespace HDF5.NET
                     NodeInfos[i].MaxRecordCount = maxInternalRecordCount;
                     NodeInfos[i].SplitRecordCount = (NodeInfos[i].MaxRecordCount * SplitPercent) / 100;
                     NodeInfos[i].MergeRecordCount = (NodeInfos[i].MaxRecordCount * MergePercent) / 100;
-                    NodeInfos[i].CumulatedTotalRecordCount = 
-                        (NodeInfos[i].MaxRecordCount + 1) * 
+                    NodeInfos[i].CumulatedTotalRecordCount =
+                        (NodeInfos[i].MaxRecordCount + 1) *
                          NodeInfos[i - 1].MaxRecordCount + NodeInfos[i].MaxRecordCount;
                     NodeInfos[i].CumulatedTotalRecordCountSize = (byte)H5Utils.FindMinByteCount(NodeInfos[i].CumulatedTotalRecordCount);
                 }
@@ -169,7 +169,7 @@ namespace HDF5.NET
             if (currentNodePointer.RecordCount == 0)
                 return false;
 
-// TODO: Optimizations missing.
+            // TODO: Optimizations missing.
 
             /* Current depth of the tree */
             var depth = Depth;
@@ -244,7 +244,7 @@ namespace HDF5.NET
                     result = leafNode.Records[index];
                     return true;
 
-// TODO: Optimizations missing.
+                    // TODO: Optimizations missing.
                 }
             }
 

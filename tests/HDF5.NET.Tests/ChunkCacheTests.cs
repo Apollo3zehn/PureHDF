@@ -35,7 +35,7 @@ namespace HDF5.NET.Tests.Reading
 
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                await cache.GetChunkAsync(new ulong[]{ (ulong)index }, () => Task.FromResult(new byte[1].AsMemory()));
+                await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => Task.FromResult(new byte[1].AsMemory()));
             }
 
             // Act

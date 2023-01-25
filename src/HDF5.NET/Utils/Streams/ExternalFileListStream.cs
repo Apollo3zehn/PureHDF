@@ -8,7 +8,7 @@
         private SlotStream[] _slotStreams;
 
         public ExternalFileListStream(
-            ExternalFileListMessage externalFileList, 
+            ExternalFileListMessage externalFileList,
             H5DatasetAccess datasetAccess)
         {
             var offset = 0L;
@@ -43,15 +43,15 @@
 
         public override long Length { get; }
 
-        public override long Position 
+        public override long Position
         {
-            get 
-            { 
-                return _position; 
+            get
+            {
+                return _position;
             }
-            set 
-            { 
-                throw new NotImplementedException(); 
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 

@@ -125,7 +125,7 @@ try
 
     var scheduler = new LimitedConcurrencyLevelTaskScheduler(maxDegreeOfParallelism: 1);
 
-    Func<Func<Task>, Task> startTask = (task) 
+    Func<Func<Task>, Task> startTask = (task)
         => Task.Factory
             .StartNew(task, CancellationToken.None, TaskCreationOptions.DenyChildAttach, scheduler)
             .Unwrap();

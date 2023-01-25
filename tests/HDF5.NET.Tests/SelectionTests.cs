@@ -343,7 +343,7 @@ namespace HDF5.NET.Tests.Reading
             var selection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 25 },
-                strides: new ulong[] { 4, 4 }, 
+                strides: new ulong[] { 4, 4 },
                 counts: new ulong[] { 4, 4 },
                 blocks: new ulong[] { 2, 3 });
 
@@ -355,7 +355,7 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [InlineData(new ulong[] { 16, 30 }, new ulong[] { 16, 25, 30 } )]
+        [InlineData(new ulong[] { 16, 30 }, new ulong[] { 16, 25, 30 })]
         [InlineData(new ulong[] { 16, 25, 30 }, new ulong[] { 3, 3 })]
         public void WalkThrowsForInvalidRank(ulong[] dims, ulong[] chunkDims)
         {
@@ -574,7 +574,7 @@ namespace HDF5.NET.Tests.Reading
             var chunksBuffers = new Memory<byte>[]
             {
                 sourceBuffer0,
-                sourceBuffer1, 
+                sourceBuffer1,
                 sourceBuffer2,
                 sourceBuffer3
             };
@@ -901,9 +901,9 @@ namespace HDF5.NET.Tests.Reading
                 {
                     var fileId = H5F.open(filePath, H5F.ACC_RDONLY);
                     var datasetId = H5D.open(fileId, "/chunked/hyperslab");
-                    
+
                     var datasetSpaceId = H5S.create_simple(rank: 3, datasetDims, datasetDims);
-                    var res1 = H5S.select_hyperslab(datasetSpaceId, H5S.seloper_t.SET, 
+                    var res1 = H5S.select_hyperslab(datasetSpaceId, H5S.seloper_t.SET,
                         datasetSelection.Starts.ToArray(), datasetSelection.Strides.ToArray(),
                         datasetSelection.Counts.ToArray(), datasetSelection.Blocks.ToArray());
 

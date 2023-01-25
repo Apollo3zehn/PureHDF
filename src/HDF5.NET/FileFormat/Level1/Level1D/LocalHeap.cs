@@ -87,7 +87,7 @@ namespace HDF5.NET
             var end = Array.IndexOf(Data, (byte)0, (int)offset);
             var bytes = Data[(int)offset..end];
 
-            return Encoding.ASCII.GetString(bytes);           
+            return Encoding.ASCII.GetString(bytes);
         }
 
         #endregion

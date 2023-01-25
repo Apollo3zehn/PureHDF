@@ -313,7 +313,7 @@ namespace HDF5.NET.Tests
 
             if (withShuffle)
                 res = H5P.set_shuffle(dcpl_id);
-           
+
             TestUtils.Add(ContainerType.Dataset, fileId, "chunked", "chunked_fixed_array", H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             res = H5P.close(dcpl_id);
         }
@@ -593,7 +593,7 @@ namespace HDF5.NET.Tests
             foreach (var entry in TestData.NumericalData)
             {
                 var attributeData = (Array)entry[1];
-                
+
                 var type = attributeData
                     .GetType()
                     .GetElementType()!;
@@ -1066,7 +1066,7 @@ namespace HDF5.NET.Tests
             res = H5G.close(groupId);
         }
 
-        public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected) 
+        public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected)
             where T : unmanaged
         {
             var actual = dataset.Read<T>();

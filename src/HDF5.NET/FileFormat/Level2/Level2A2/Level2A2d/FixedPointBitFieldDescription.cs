@@ -15,11 +15,11 @@
 
         public ByteOrder ByteOrder
         {
-            get 
-            { 
+            get
+            {
                 return (ByteOrder)(Data[0] & 0x01);
             }
-            set 
+            set
             {
                 switch (value)
                 {
@@ -43,7 +43,7 @@
 
         public bool PaddingTypeHigh
         {
-            get { return (Data[0] >> 2) > 0; } 
+            get { return (Data[0] >> 2) > 0; }
             set { Data[0] |= (1 << 2); }
         }
 

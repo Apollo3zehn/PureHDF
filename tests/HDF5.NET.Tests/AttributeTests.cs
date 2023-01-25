@@ -27,7 +27,7 @@ namespace HDF5.NET.Tests.Reading
                 Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
             });
         }
-        
+
         [Fact]
         public void CanReadAttribute_Dataspace_Null()
         {
@@ -48,7 +48,7 @@ namespace HDF5.NET.Tests.Reading
 
         [Theory]
         [MemberData(nameof(AttributeTests._attributeNumericalTestData))]
-        public void CanReadAttribute_Numerical<T>(string name, T[] expected) 
+        public void CanReadAttribute_Numerical<T>(string name, T[] expected)
             where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
@@ -109,7 +109,7 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-         [Fact]
+        [Fact]
         public void CanReadAttribute_Unknown()
         {
             TestUtils.RunForAllVersions(version =>

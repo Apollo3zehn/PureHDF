@@ -10,7 +10,7 @@ namespace HDF5.NET
             : base(context.Reader, header, recordCount, BTree2InternalNode<T>.Signature, decodeKey)
         {
             var (reader, superblock) = context;
-            
+
             NodePointers = new BTree2NodePointer[recordCount + 1];
 
             // H5B2cache.c (H5B2__cache_int_deserialize)

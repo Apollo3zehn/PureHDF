@@ -9,7 +9,7 @@ namespace HDF5.NET
         private readonly Stream _stream;
 
         public H5StreamReader(Stream stream, bool leaveOpen) : base(stream.Length)
-        {           
+        {
             if (!stream.CanRead)
                 throw new Exception("The stream must be readable.");
 
@@ -30,9 +30,9 @@ namespace HDF5.NET
         {
             return seekOrigin switch
             {
-                SeekOrigin.Begin    => _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin),
-                SeekOrigin.Current  => _stream.Seek(offset, SeekOrigin.Current),
-                _                   => throw new Exception($"Seek origin '{seekOrigin}' is not supported."),
+                SeekOrigin.Begin => _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin),
+                SeekOrigin.Current => _stream.Seek(offset, SeekOrigin.Current),
+                _ => throw new Exception($"Seek origin '{seekOrigin}' is not supported."),
             };
         }
 
@@ -55,7 +55,7 @@ namespace HDF5.NET
         {
             var buffer = new byte[count];
             _stream.Read(buffer);
-            
+
             return buffer;
         }
 
@@ -85,7 +85,7 @@ namespace HDF5.NET
             var size = Unsafe.SizeOf<T>();
             Span<byte> buffer = stackalloc byte[size];
             _stream.Read(buffer);
-            
+
             return MemoryMarshal.Cast<byte, T>(buffer)[0];
         }
 

@@ -2,7 +2,7 @@
 {
     partial class H5File
     {
-// TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
+        // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
         #region Fields
 
         private bool _deleteOnClose;
@@ -31,26 +31,26 @@
         {
             return OpenCore(
                 filePath,
-                FileMode.Open, 
-                FileAccess.Read, 
-                FileShare.Read, 
-                useAsync: false, 
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                useAsync: false,
                 deleteOnClose: deleteOnClose);
         }
 
         internal static H5File OpenCore(
-            string filePath, 
-            FileMode fileMode, 
-            FileAccess fileAccess, 
-            FileShare fileShare, 
-            bool useAsync = false, 
+            string filePath,
+            FileMode fileMode,
+            FileAccess fileAccess,
+            FileShare fileShare,
+            bool useAsync = false,
             bool deleteOnClose = false)
         {
             var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
 
             var stream = new FileStream(
-                absoluteFilePath, 
-                fileMode, 
+                absoluteFilePath,
+                fileMode,
                 fileAccess,
                 fileShare,
                 4096,

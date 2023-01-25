@@ -26,15 +26,15 @@
 
         public override long Length => (long)_slot.Size;
 
-        public override long Position 
+        public override long Position
         {
-            get 
-            { 
-                return _position; 
+            get
+            {
+                return _position;
             }
-            set 
-            { 
-                throw new NotImplementedException(); 
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -117,7 +117,7 @@
             base.Dispose(disposing);
         }
 
-// TODO File should be opened asynchronously if root file is also opened asynchronously. Then implement ReadAsync here.
+        // TODO File should be opened asynchronously if root file is also opened asynchronously. Then implement ReadAsync here.
         private Stream EnsureStream()
         {
             if (_stream is null)

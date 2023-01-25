@@ -15,7 +15,7 @@ namespace HDF5.NET
         public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BaseReader, T> decode)
         {
             var (reader, superblock) = context;
-            
+
             // H5FAdblock.c (H5FA__dblock_alloc)
             ElementsPerPage = 1UL << header.PageBits;
             PageCount = 0UL;

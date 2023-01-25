@@ -25,7 +25,7 @@
             DriverInfo = DriverId switch
             {
                 "NCSAmulti" => new MultiDriverInfo(reader),
-                "NCSAfami"  => new FamilyDriverInfo(reader),
+                "NCSAfami" => new FamilyDriverInfo(reader),
                 _ => throw new NotSupportedException($"The driver ID '{DriverId}' is not supported.")
             };
         }

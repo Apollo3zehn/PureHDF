@@ -48,9 +48,9 @@
             // link info
             LinkInfo = LinkType switch
             {
-                LinkType.Hard       => new HardLinkInfo(context),
-                LinkType.Soft       => new SoftLinkInfo(reader),
-                LinkType.External   => new ExternalLinkInfo(reader),
+                LinkType.Hard => new HardLinkInfo(context),
+                LinkType.Soft => new SoftLinkInfo(reader),
+                LinkType.External => new ExternalLinkInfo(reader),
                 _ when (65 <= (byte)LinkType && (byte)LinkType <= 255) => new UserDefinedLinkInfo(reader),
                 _ => throw new NotSupportedException($"The link message link type '{LinkType}' is not supported.")
             };

@@ -17,7 +17,7 @@
 
             // link name offset
             LinkNameOffset = superblock.ReadOffset(reader);
-            
+
             // object header address
             HeaderAddress = superblock.ReadOffset(reader);
 

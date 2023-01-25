@@ -33,7 +33,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
             var reader = _context.Reader;
 
@@ -47,7 +47,7 @@ namespace HDF5.NET
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
             reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
-            
+
             return func(reader);
         }
 

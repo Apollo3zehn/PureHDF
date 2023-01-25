@@ -52,7 +52,7 @@ namespace HDF5.NET
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
         public BTree1NodeType NodeType { get; }
-        public byte NodeLevel { get;  }
+        public byte NodeLevel { get; }
         public ushort EntriesUsed { get; }
         public ulong LeftSiblingAddress { get; }
         public ulong RightSiblingAddress { get; }

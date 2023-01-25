@@ -20,7 +20,7 @@
 
         public override long Length => long.MaxValue;
 
-        public override long Position 
+        public override long Position
         {
             get
             {

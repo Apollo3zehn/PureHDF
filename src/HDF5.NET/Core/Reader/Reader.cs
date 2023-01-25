@@ -36,7 +36,7 @@ namespace HDF5.NET
         public ValueTask<int> ReadAsync(H5BaseReader reader, Memory<byte> buffer, long offset)
         {
             reader.Seek(offset, SeekOrigin.Begin);
-            return reader.ReadAsync(buffer);         
+            return reader.ReadAsync(buffer);
         }
 
         public ValueTask<int> ReadAsync(Stream stream, Memory<byte> buffer, long offset)

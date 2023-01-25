@@ -54,7 +54,7 @@ namespace HDF5.NET
                 /* process slice */
                 while (remaining > 0)
                 {
-// TODO: Performance issue.
+                    // TODO: Performance issue.
                     var scaledOffsets = new ulong[rank];
                     var chunkOffsets = new ulong[rank];
 
@@ -81,8 +81,8 @@ namespace HDF5.NET
         }
 
         public static Task CopyAsync<TReader>(
-            TReader reader, 
-            int sourceRank, 
+            TReader reader,
+            int sourceRank,
             int targetRank,
             CopyInfo copyInfo) where TReader : IReader
         {
@@ -119,8 +119,8 @@ namespace HDF5.NET
 
         private async static Task CopyMemoryAsync<TReader>(
             TReader reader,
-            IEnumerator<RelativeStep> sourceWalker, 
-            IEnumerator<RelativeStep> targetWalker, 
+            IEnumerator<RelativeStep> sourceWalker,
+            IEnumerator<RelativeStep> targetWalker,
             CopyInfo copyInfo) where TReader : IReader
         {
             /* initialize source walker */
@@ -187,8 +187,8 @@ namespace HDF5.NET
 
         private async static Task CopyStreamAsync<TReader>(
             TReader reader,
-            IEnumerator<RelativeStep> sourceWalker, 
-            IEnumerator<RelativeStep> targetWalker, 
+            IEnumerator<RelativeStep> sourceWalker,
+            IEnumerator<RelativeStep> targetWalker,
             CopyInfo copyInfo) where TReader : IReader
         {
             /* initialize source walker */
@@ -244,7 +244,7 @@ namespace HDF5.NET
 
                     await reader.ReadAsync(                                             // corresponds to span.CopyTo
                         sourceStream,
-                        currentTarget.Slice(0, length), 
+                        currentTarget.Slice(0, length),
                         offset).ConfigureAwait(false);
 
                     offset = (int)sourceStep.Offset * copyInfo.TypeSize;                // corresponds to 

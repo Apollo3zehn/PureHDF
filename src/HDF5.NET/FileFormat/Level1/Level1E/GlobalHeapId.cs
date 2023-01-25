@@ -35,7 +35,7 @@
         {
             get
             {
-// TODO: Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
+                // TODO: Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
                 return H5Cache.GetGlobalHeapObject(_context, CollectionAddress);
             }
         }

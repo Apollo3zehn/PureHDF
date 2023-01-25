@@ -11,7 +11,7 @@
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType2(H5BaseReader localReader, byte firstByte) 
+        public TinyObjectsFractalHeapIdSubType2(H5BaseReader localReader, byte firstByte)
             : base(localReader, firstByte)
         {
             _firstByte = firstByte;

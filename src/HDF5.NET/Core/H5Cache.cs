@@ -90,7 +90,7 @@ namespace HDF5.NET
 
             if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
             {
-// TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
+                // TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
                 h5File = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
                 pathToH5FileMap[uri.AbsoluteUri] = h5File;
             }

@@ -13,7 +13,7 @@
         public SharedMessage(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // H5Oshared.c (H5O__shared_decode)
 
             // version
@@ -47,7 +47,7 @@
 
                 if (Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
                 {
-// TODO: implement this
+                    // TODO: implement this
                     throw new NotImplementedException("This code path is not yet implemented.");
                 }
                 else
@@ -80,7 +80,7 @@
 
         public ulong Address { get; set; }
 
-// TODO: implement this
+        // TODO: implement this
         // public FractalHeapId FractalHeapId { get; set; }
 
         #endregion

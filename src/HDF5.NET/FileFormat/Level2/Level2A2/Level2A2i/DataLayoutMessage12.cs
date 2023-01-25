@@ -29,9 +29,9 @@
             // data address
             Address = LayoutClass switch
             {
-                LayoutClass.Compact     => ulong.MaxValue, // invalid address
-                LayoutClass.Contiguous  => superblock.ReadOffset(reader),
-                LayoutClass.Chunked     => superblock.ReadOffset(reader),
+                LayoutClass.Compact => ulong.MaxValue, // invalid address
+                LayoutClass.Contiguous => superblock.ReadOffset(reader),
+                LayoutClass.Chunked => superblock.ReadOffset(reader),
                 _ => throw new NotSupportedException($"The layout class '{LayoutClass}' is not supported.")
             };
 

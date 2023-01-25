@@ -15,7 +15,7 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public H5D_Chunk123_BTree1(H5Dataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) : 
+        public H5D_Chunk123_BTree1(H5Dataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             _layout12 = layout;
@@ -57,7 +57,7 @@ namespace HDF5.NET
             {
                 Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
-                Func<BTree1RawDataChunksKey> decodeKey = 
+                Func<BTree1RawDataChunksKey> decodeKey =
                     () => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
                 _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context, decodeKey);

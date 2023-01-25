@@ -37,7 +37,7 @@
         /// <param name="dim1">The size of dimension 1.</param>
         /// <param name="dim2">The size of dimension 2.</param>
         /// <returns>A 3-dimensional array.</returns>
-        public static unsafe T[,,] ToArray3D<T>(this T[] data, long dim0, long dim1, long dim2) 
+        public static unsafe T[,,] ToArray3D<T>(this T[] data, long dim0, long dim1, long dim2)
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2 };
@@ -62,7 +62,7 @@
         /// <param name="dim2">The size of dimension 2.</param>
         /// <param name="dim3">The size of dimension 3.</param>
         /// <returns>A 4-dimensional array.</returns>
-        public static unsafe T[,,,] ToArray4D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3) 
+        public static unsafe T[,,,] ToArray4D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3)
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3 };
@@ -88,7 +88,7 @@
         /// <param name="dim3">The size of dimension 3.</param>
         /// <param name="dim4">The size of dimension 4.</param>
         /// <returns>A 5-dimensional array.</returns>
-        public static unsafe T[,,,,] ToArray5D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4) 
+        public static unsafe T[,,,,] ToArray5D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4)
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3, dim4 };
@@ -115,7 +115,7 @@
         /// <param name="dim4">The size of dimension 4.</param>
         /// <param name="dim5">The size of dimension 5.</param>
         /// <returns>A 6-dimensional array.</returns>
-        public static unsafe T[,,,,,] ToArray6D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4, long dim5) 
+        public static unsafe T[,,,,,] ToArray6D<T>(this T[] data, long dim0, long dim1, long dim2, long dim3, long dim4, long dim5)
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3, dim4, dim5 };

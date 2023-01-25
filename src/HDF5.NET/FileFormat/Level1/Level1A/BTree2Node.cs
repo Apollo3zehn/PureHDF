@@ -8,7 +8,7 @@
 
         #endregion
 
-        public BTree2Node(H5BaseReader reader, BTree2Header<T> header, ushort recordCount, byte[] signature, Func<T> decodeKey) 
+        public BTree2Node(H5BaseReader reader, BTree2Header<T> header, ushort recordCount, byte[] signature, Func<T> decodeKey)
         {
             // signature
             var actualSignature = reader.ReadBytes(4);

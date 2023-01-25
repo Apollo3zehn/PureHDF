@@ -19,10 +19,10 @@ namespace HDF5.NET.Tests.Reading
             // Act
             using var root = H5File.OpenCore(
                 filePath,
-                FileMode.Open, 
-                FileAccess.Read, 
-                FileShare.Read, 
-                useAsync: true, 
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                useAsync: true,
                 deleteOnClose: true);
 
             var parent = root.Group("chunked");
@@ -64,10 +64,10 @@ namespace HDF5.NET.Tests.Reading
             // Act
             using var root = H5File.OpenCore(
                 filePath,
-                FileMode.Open, 
-                FileAccess.Read, 
-                FileShare.Read, 
-                useAsync: false, 
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                useAsync: false,
                 deleteOnClose: true);
 
             var parent = root.Group("chunked");

@@ -13,7 +13,7 @@
         public GlobalHeapObject(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // heap object index
             HeapObjectIndex = reader.ReadUInt16();
 

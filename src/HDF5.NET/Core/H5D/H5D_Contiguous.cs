@@ -54,7 +54,7 @@
                     _stream = new OffsetStream(Dataset.Context.Reader);
                 }
             }
-            
+
             return _stream;
         }
 

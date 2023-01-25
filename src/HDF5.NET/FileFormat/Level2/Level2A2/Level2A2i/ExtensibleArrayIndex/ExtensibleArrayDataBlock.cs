@@ -15,7 +15,7 @@ namespace HDF5.NET
         public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5BaseReader, T> decode)
         {
             var (reader, superblock) = context;
-            
+
             // H5EAdblock.c (H5EA__dblock_alloc)
             PageCount = 0UL;
 

@@ -103,7 +103,7 @@ namespace HDF5.NET
                 {
                     //
                 }
-            }    
+            }
         }
 
         #endregion

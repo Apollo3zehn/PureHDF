@@ -15,7 +15,7 @@ namespace HDF5.NET
         public ExtensibleArrayHeader(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, ExtensibleArrayHeader.Signature);

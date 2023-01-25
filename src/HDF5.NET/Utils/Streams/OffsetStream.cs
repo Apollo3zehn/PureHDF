@@ -19,10 +19,10 @@
 
         public override long Length => _reader.Length - _baseAddress;
 
-        public override long Position 
-        { 
-            get => _reader.Position - _baseAddress; 
-            set => _reader.Position = _baseAddress + value; 
+        public override long Position
+        {
+            get => _reader.Position - _baseAddress;
+            set => _reader.Position = _baseAddress + value;
         }
 
         public override void Flush()
@@ -39,9 +39,9 @@
         {
             return origin switch
             {
-                SeekOrigin.Begin    => _reader.Seek(_baseAddress + offset, SeekOrigin.Begin),
-                SeekOrigin.Current  => _reader.Seek(offset, SeekOrigin.Current),
-                _                   => throw new Exception($"Seek origin '{origin}' is not supported.")
+                SeekOrigin.Begin => _reader.Seek(_baseAddress + offset, SeekOrigin.Begin),
+                SeekOrigin.Current => _reader.Seek(offset, SeekOrigin.Current),
+                _ => throw new Exception($"Seek origin '{origin}' is not supported.")
             };
         }
 

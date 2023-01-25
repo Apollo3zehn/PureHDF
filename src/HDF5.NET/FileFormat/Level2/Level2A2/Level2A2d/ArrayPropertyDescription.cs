@@ -31,7 +31,7 @@
                     PermutationIndices[i] = reader.ReadUInt32();
                 }
             }
-                
+
             // base type
             BaseType = new DatatypeMessage(reader);
         }

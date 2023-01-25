@@ -15,7 +15,7 @@ namespace HDF5.NET
         public ExtensibleArraySecondaryBlock(H5Context context, ExtensibleArrayHeader header, uint index)
         {
             var (reader, superblock) = context;
-            
+
             // H5EAsblock.c (H5EA__sblock_alloc)
 
             /* Compute/cache information */

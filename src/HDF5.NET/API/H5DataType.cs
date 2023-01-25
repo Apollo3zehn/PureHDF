@@ -16,7 +16,7 @@
             private FixedPointPropertyDescription _property;
 
             internal FixedPointType(
-                FixedPointBitFieldDescription bitField, 
+                FixedPointBitFieldDescription bitField,
                 FixedPointPropertyDescription property)
             {
                 _bitField = bitField;
@@ -40,7 +40,7 @@
             private FloatingPointPropertyDescription _property;
 
             internal FloatingPointType(
-                FloatingPointBitFieldDescription bitField, 
+                FloatingPointBitFieldDescription bitField,
                 FloatingPointPropertyDescription property)
             {
                 _bitField = bitField;
@@ -71,7 +71,7 @@
             private BitFieldPropertyDescription _property;
 
             internal BitFieldType(
-                BitFieldBitFieldDescription bitField, 
+                BitFieldBitFieldDescription bitField,
                 BitFieldPropertyDescription property)
             {
                 _bitField = bitField;
@@ -88,7 +88,7 @@
             private OpaquePropertyDescription _property;
 
             internal OpaqueType(
-                OpaqueBitFieldDescription bitField, 
+                OpaqueBitFieldDescription bitField,
                 OpaquePropertyDescription property)
             {
                 _bitField = bitField;
@@ -117,7 +117,7 @@
             private CompoundPropertyDescription[] _properties;
 
             internal CompoundType(
-                CompoundBitFieldDescription bitField, 
+                CompoundBitFieldDescription bitField,
                 CompoundPropertyDescription[] properties)
             {
                 _bitField = bitField;
@@ -160,7 +160,7 @@
             private EnumerationPropertyDescription _property;
 
             internal EnumerationType(
-                EnumerationBitFieldDescription bitField, 
+                EnumerationBitFieldDescription bitField,
                 EnumerationPropertyDescription property)
             {
                 _bitField = bitField;
@@ -177,7 +177,7 @@
             private VariableLengthPropertyDescription _property;
 
             internal VariableLengthType(
-                VariableLengthBitFieldDescription bitField, 
+                VariableLengthBitFieldDescription bitField,
                 VariableLengthPropertyDescription property)
             {
                 _bitField = bitField;
@@ -194,7 +194,7 @@
             private ArrayPropertyDescription _property;
 
             internal ArrayType(
-                ArrayBitFieldDescription bitField, 
+                ArrayBitFieldDescription bitField,
                 ArrayPropertyDescription property)
             {
                 _bitField = bitField;
@@ -234,7 +234,7 @@
                 {
                     if (Class == H5DataTypeClass.FixedPoint)
                         _fixedPoint = new FixedPointType(
-                            (FixedPointBitFieldDescription)_dataType.BitField, 
+                            (FixedPointBitFieldDescription)_dataType.BitField,
                             (FixedPointPropertyDescription)_dataType.Properties[0]);
 
                     else
@@ -256,7 +256,7 @@
                 {
                     if (Class == H5DataTypeClass.FloatingPoint)
                         _floatingPoint = new FloatingPointType(
-                            (FloatingPointBitFieldDescription)_dataType.BitField, 
+                            (FloatingPointBitFieldDescription)_dataType.BitField,
                             (FloatingPointPropertyDescription)_dataType.Properties[0]);
 
                     else
@@ -299,7 +299,7 @@
                 {
                     if (Class == H5DataTypeClass.BitField)
                         _bitField = new BitFieldType(
-                            (BitFieldBitFieldDescription)_dataType.BitField, 
+                            (BitFieldBitFieldDescription)_dataType.BitField,
                             (BitFieldPropertyDescription)_dataType.Properties[0]);
 
                     else
@@ -321,7 +321,7 @@
                 {
                     if (Class == H5DataTypeClass.Opaque)
                         _opaque = new OpaqueType(
-                            (OpaqueBitFieldDescription)_dataType.BitField, 
+                            (OpaqueBitFieldDescription)_dataType.BitField,
                             (OpaquePropertyDescription)_dataType.Properties[0]);
 
                     else
@@ -343,7 +343,7 @@
                 {
                     if (Class == H5DataTypeClass.Compound)
                         _compound = new CompoundType(
-                            (CompoundBitFieldDescription)_dataType.BitField, 
+                            (CompoundBitFieldDescription)_dataType.BitField,
                             _dataType.Properties.Cast<CompoundPropertyDescription>().ToArray());
 
                     else

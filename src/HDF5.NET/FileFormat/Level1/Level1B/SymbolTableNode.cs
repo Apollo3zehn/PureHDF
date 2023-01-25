@@ -15,7 +15,7 @@ namespace HDF5.NET
         public SymbolTableNode(H5Context context)
         {
             var reader = context.Reader;
-            
+
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, SymbolTableNode.Signature);

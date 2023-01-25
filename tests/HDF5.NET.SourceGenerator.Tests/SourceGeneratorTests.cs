@@ -3,7 +3,7 @@
 namespace HDF5.NET.SourceGenerator.Tests;
 
 [H5SourceGenerator(filePath: SourceGeneratorTests.FILE_PATH)]
-internal partial class MyGeneratedH5Bindings {};
+internal partial class MyGeneratedH5Bindings { };
 
 public class SourceGeneratorTests
 {
@@ -13,7 +13,7 @@ public class SourceGeneratorTests
     public void CanGenerateSource()
     {
         using var h5File = H5File.OpenRead(FILE_PATH);
-        
+
         // Act
         var bindings = new MyGeneratedH5Bindings(h5File);
         var group = bindings.group1.Get();

@@ -89,7 +89,7 @@
             }
         }
 
-        public byte SignLocation 
+        public byte SignLocation
         {
             get { return Data[1]; }
             set { Data[1] = value; }

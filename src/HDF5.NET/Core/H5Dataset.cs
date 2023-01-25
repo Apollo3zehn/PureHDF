@@ -105,8 +105,8 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
             bool skipTypeCheck = false,
-            bool skipShuffle = false) 
-                where T : unmanaged 
+            bool skipShuffle = false)
+                where T : unmanaged
                 where TReader : IReader
         {
             // fast path for null dataspace

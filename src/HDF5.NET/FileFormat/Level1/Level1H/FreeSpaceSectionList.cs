@@ -28,7 +28,7 @@ namespace HDF5.NET
             // free space manager header address
             FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
 
-// TODO: implement everything
+            // TODO: implement everything
 
             // checksum
             Checksum = reader.ReadUInt32();

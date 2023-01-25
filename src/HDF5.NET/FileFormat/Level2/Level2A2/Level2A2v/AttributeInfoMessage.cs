@@ -58,7 +58,7 @@ namespace HDF5.NET
             }
         }
 
-        public CreationOrderFlags Flags { get; set; } 
+        public CreationOrderFlags Flags { get; set; }
         public ushort MaximumCreationIndex { get; set; }
         public ulong FractalHeapAddress { get; set; }
         public ulong BTree2NameIndexAddress { get; set; }

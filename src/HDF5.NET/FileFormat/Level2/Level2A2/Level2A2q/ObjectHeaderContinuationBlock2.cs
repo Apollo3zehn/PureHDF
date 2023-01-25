@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal ObjectHeaderContinuationBlock2(H5Context context, ulong objectHeaderSize, byte version, bool withCreationOrder) 
+        internal ObjectHeaderContinuationBlock2(H5Context context, ulong objectHeaderSize, byte version, bool withCreationOrder)
             : base(context)
         {
             // signature
@@ -17,8 +17,8 @@ namespace HDF5.NET
             var messages = ReadHeaderMessages(context, objectHeaderSize - 8, version, withCreationOrder);
             HeaderMessages.AddRange(messages);
 
-// TODO: H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
-// TODO: read gap and checksum
+            // TODO: H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
+            // TODO: read gap and checksum
         }
 
         #endregion

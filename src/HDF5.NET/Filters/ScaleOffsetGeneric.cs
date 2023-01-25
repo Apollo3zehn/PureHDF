@@ -141,9 +141,9 @@ namespace HDF5.NET
             for (int i = 0; i < parameters.ElementCount; i++)
             {
                 ScaleOffsetGeneric.DecompressOneAtomic(
-                    output.Slice(i * (int)parameters.Size), 
-                    input, 
-                    ref j, 
+                    output.Slice(i * (int)parameters.Size),
+                    input,
+                    ref j,
                     ref buf_len,
                     parameters.Size,
                     minbits);
@@ -154,7 +154,7 @@ namespace HDF5.NET
         private static void DecompressOneAtomic(
             Span<byte> data,
             Span<byte> buffer,
-            ref int j, 
+            ref int j,
             ref uint buf_len,
             uint size,
             uint minbits)
@@ -186,10 +186,10 @@ namespace HDF5.NET
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void DecompressOneByte(
             Span<byte> data,
-            int k, 
+            int k,
             uint begin_i,
-            Span<byte> buffer, 
-            ref int j, 
+            Span<byte> buffer,
+            ref int j,
             ref uint buf_len,
             uint dtype_len,
             uint minbits)
@@ -411,7 +411,7 @@ namespace HDF5.NET
                     need_convert = true;
             }
 
-// TODO: This is not supported because after filtering, the data are native endianess and then HDF5 lib converts them later again.
+            // TODO: This is not supported because after filtering, the data are native endianess and then HDF5 lib converts them later again.
             if (need_convert)
                 throw new NotSupportedException("Scale-offset data conversion from big endian to little endian or vice versa is not supported.");
 

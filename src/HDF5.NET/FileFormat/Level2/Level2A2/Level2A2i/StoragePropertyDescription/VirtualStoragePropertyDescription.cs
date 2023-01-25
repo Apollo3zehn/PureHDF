@@ -7,7 +7,7 @@
         public VirtualStoragePropertyDescription(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // address
             Address = superblock.ReadOffset(reader);
 

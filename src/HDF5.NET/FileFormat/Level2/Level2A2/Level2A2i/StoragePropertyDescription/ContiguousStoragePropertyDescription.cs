@@ -7,7 +7,7 @@
         public ContiguousStoragePropertyDescription(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             Address = superblock.ReadOffset(reader);
             Size = superblock.ReadLength(reader);
         }

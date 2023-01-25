@@ -45,29 +45,29 @@ namespace HDF5.NET
 
             Data = Type switch
             {
-                MessageType.NIL                         => new NilMessage(),
-                MessageType.Dataspace                   => objectHeader.DecodeMessage(Flags, () => new DataspaceMessage(context)),
-                MessageType.LinkInfo                    => new LinkInfoMessage(context),
-                MessageType.Datatype                    => objectHeader.DecodeMessage(Flags, () => new DatatypeMessage(context.Reader)),
-                MessageType.OldFillValue                => objectHeader.DecodeMessage(Flags, () => new OldFillValueMessage(context.Reader)),
-                MessageType.FillValue                   => objectHeader.DecodeMessage(Flags, () => new FillValueMessage(context.Reader)),
-                MessageType.Link                        => new LinkMessage(context),
-                MessageType.ExternalDataFiles           => new ExternalFileListMessage(context),
-                MessageType.DataLayout                  => DataLayoutMessage.Construct(context),
-                MessageType.Bogus                       => new BogusMessage(context.Reader),
-                MessageType.GroupInfo                   => new GroupInfoMessage(context.Reader),
-                MessageType.FilterPipeline              => objectHeader.DecodeMessage(Flags, () => new FilterPipelineMessage(context.Reader)),
-                MessageType.Attribute                   => objectHeader.DecodeMessage(Flags, () => new AttributeMessage(context, objectHeader)),
-                MessageType.ObjectComment               => new ObjectCommentMessage(context.Reader),
-                MessageType.OldObjectModificationTime   => new OldObjectModificationTimeMessage(context.Reader).ToObjectModificationMessage(),
-                MessageType.SharedMessageTable          => new SharedMessageTableMessage(context),
-                MessageType.ObjectHeaderContinuation    => new ObjectHeaderContinuationMessage(context),
-                MessageType.SymbolTable                 => new SymbolTableMessage(context),
-                MessageType.ObjectModification          => new ObjectModificationMessage(context.Reader),
-                MessageType.BTreeKValues                => new BTreeKValuesMessage(context.Reader),
-                MessageType.DriverInfo                  => new DriverInfoMessage(context.Reader),
-                MessageType.AttributeInfo               => new AttributeInfoMessage(context),
-                MessageType.ObjectReferenceCount        => new ObjectReferenceCountMessage(context.Reader),
+                MessageType.NIL => new NilMessage(),
+                MessageType.Dataspace => objectHeader.DecodeMessage(Flags, () => new DataspaceMessage(context)),
+                MessageType.LinkInfo => new LinkInfoMessage(context),
+                MessageType.Datatype => objectHeader.DecodeMessage(Flags, () => new DatatypeMessage(context.Reader)),
+                MessageType.OldFillValue => objectHeader.DecodeMessage(Flags, () => new OldFillValueMessage(context.Reader)),
+                MessageType.FillValue => objectHeader.DecodeMessage(Flags, () => new FillValueMessage(context.Reader)),
+                MessageType.Link => new LinkMessage(context),
+                MessageType.ExternalDataFiles => new ExternalFileListMessage(context),
+                MessageType.DataLayout => DataLayoutMessage.Construct(context),
+                MessageType.Bogus => new BogusMessage(context.Reader),
+                MessageType.GroupInfo => new GroupInfoMessage(context.Reader),
+                MessageType.FilterPipeline => objectHeader.DecodeMessage(Flags, () => new FilterPipelineMessage(context.Reader)),
+                MessageType.Attribute => objectHeader.DecodeMessage(Flags, () => new AttributeMessage(context, objectHeader)),
+                MessageType.ObjectComment => new ObjectCommentMessage(context.Reader),
+                MessageType.OldObjectModificationTime => new OldObjectModificationTimeMessage(context.Reader).ToObjectModificationMessage(),
+                MessageType.SharedMessageTable => new SharedMessageTableMessage(context),
+                MessageType.ObjectHeaderContinuation => new ObjectHeaderContinuationMessage(context),
+                MessageType.SymbolTable => new SymbolTableMessage(context),
+                MessageType.ObjectModification => new ObjectModificationMessage(context.Reader),
+                MessageType.BTreeKValues => new BTreeKValuesMessage(context.Reader),
+                MessageType.DriverInfo => new DriverInfoMessage(context.Reader),
+                MessageType.AttributeInfo => new AttributeInfoMessage(context),
+                MessageType.ObjectReferenceCount => new ObjectReferenceCountMessage(context.Reader),
                 _ => throw new NotSupportedException($"The message type '{Type}' is not supported.")
             };
 
@@ -96,8 +96,8 @@ namespace HDF5.NET
             }
         }
 
-        public bool WithCreationOrder 
-        { 
+        public bool WithCreationOrder
+        {
             get
             {
                 return _withCreationOrder;

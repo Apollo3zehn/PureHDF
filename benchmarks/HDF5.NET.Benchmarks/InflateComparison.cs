@@ -28,7 +28,7 @@ namespace Benchmark
             var original = new byte[N];
 
             random.NextBytes(original);
-            
+
             byte[] Deflate(byte[] original)
             {
                 using var originalStream = new MemoryStream(original);

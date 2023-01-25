@@ -43,10 +43,10 @@ namespace HDF5.NET
 
         public override int Read(Span<byte> buffer)
         {
-            unsafe 
+            unsafe
             {
                 byte* ptr = null;
-              
+
                 try
                 {
                     _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
@@ -85,7 +85,7 @@ namespace HDF5.NET
         {
             var buffer = new byte[count];
             Read(buffer);
-            
+
             return buffer;
         }
 

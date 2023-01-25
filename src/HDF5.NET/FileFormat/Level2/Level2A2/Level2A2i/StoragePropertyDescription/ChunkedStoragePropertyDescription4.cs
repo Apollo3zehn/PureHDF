@@ -31,11 +31,11 @@
             // indexing type information
             IndexingTypeInformation = ChunkIndexingType switch
             {
-                ChunkIndexingType.SingleChunk       => new SingleChunkIndexingInformation(context, Flags),
-                ChunkIndexingType.Implicit          => new ImplicitIndexingInformation(),
-                ChunkIndexingType.FixedArray        => new FixedArrayIndexingInformation(reader),
-                ChunkIndexingType.ExtensibleArray   => new ExtensibleArrayIndexingInformation(reader),
-                ChunkIndexingType.BTree2            => new BTree2IndexingInformation(reader),
+                ChunkIndexingType.SingleChunk => new SingleChunkIndexingInformation(context, Flags),
+                ChunkIndexingType.Implicit => new ImplicitIndexingInformation(),
+                ChunkIndexingType.FixedArray => new FixedArrayIndexingInformation(reader),
+                ChunkIndexingType.ExtensibleArray => new ExtensibleArrayIndexingInformation(reader),
+                ChunkIndexingType.BTree2 => new BTree2IndexingInformation(reader),
                 _ => throw new NotSupportedException($"The chunk indexing type '{ChunkIndexingType}' is not supported.")
             };
 

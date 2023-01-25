@@ -268,13 +268,13 @@ namespace HDF5.NET.Tests.Reading
                 root.Context.Reader.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
 
                 // H5Rint.c (H5R__get_region)
-// TODO: use more structs?
+                // TODO: use more structs?
                 var globalHeapId = new GlobalHeapId(root.Context)
                 {
                     CollectionAddress = reference.CollectionAddress,
                     ObjectIndex = reference.ObjectIndex
                 };
-                
+
                 var globalHeapCollection = globalHeapId.Collection;
                 var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
                 using var localReader = new H5StreamReader(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
@@ -332,12 +332,12 @@ namespace HDF5.NET.Tests.Reading
         {
             // INFO:
             // HDF lib says "external storage not supported with chunked layout". Same is true for compact layout.
-            
+
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var absolutePrefix = datasetName == "absolute" 
-                    ? Path.GetTempPath() 
+                var absolutePrefix = datasetName == "absolute"
+                    ? Path.GetTempPath()
                     : string.Empty;
 
                 var externalFilePrefix = datasetName == "prefix"
@@ -668,27 +668,27 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-//        [Fact]
-//        public void CanReadDataset_Virtual()
-//        {
-//// TODO: Check AddVirtualDataset, is extra path variable required?
-//// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?
-//// TODO: reading Vds Global Heap is not yet fully working
+        //        [Fact]
+        //        public void CanReadDataset_Virtual()
+        //        {
+        //// TODO: Check AddVirtualDataset, is extra path variable required?
+        //// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?
+        //// TODO: reading Vds Global Heap is not yet fully working
 
-//            TestUtils.RunForAllVersions(version =>
-//            {
-//                // Arrange
-//                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
-//                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
+        //            TestUtils.RunForAllVersions(version =>
+        //            {
+        //                // Arrange
+        //                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+        //                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
 
-//                // Act
-//                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
-//                var dataset = root.Dataset("vds");
-//                var actual = dataset.Read<int>();
+        //                // Act
+        //                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+        //                var dataset = root.Dataset("vds");
+        //                var actual = dataset.Read<int>();
 
-//                // Assert
-//                Assert.True(actual.SequenceEqual(TestData.SmallData));
-//            });
-//        }
+        //                // Assert
+        //                Assert.True(actual.SequenceEqual(TestData.SmallData));
+        //            });
+        //        }
     }
 }

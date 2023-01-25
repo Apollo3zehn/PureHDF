@@ -68,9 +68,9 @@ namespace HDF5.NET
 
             /* Copy any leftover bytes in the block without unshuffling them. */
             Buffer.MemoryCopy(
-                source + (blocksize - neblock_rem), 
-                destination + (blocksize - neblock_rem), 
-                neblock_rem, 
+                source + (blocksize - neblock_rem),
+                destination + (blocksize - neblock_rem),
+                neblock_rem,
                 neblock_rem);
         }
     }

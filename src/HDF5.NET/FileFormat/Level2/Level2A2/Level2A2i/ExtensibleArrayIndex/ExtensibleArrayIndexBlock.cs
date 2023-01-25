@@ -13,9 +13,9 @@ namespace HDF5.NET
         #region Constructors
 
         public ExtensibleArrayIndexBlock(
-            H5BaseReader reader, 
-            Superblock superblock, 
-            ExtensibleArrayHeader header, 
+            H5BaseReader reader,
+            Superblock superblock,
+            ExtensibleArrayHeader header,
             Func<H5BaseReader, T> decode)
         {
             // H5EAiblock.c (H5EA__iblock_alloc)

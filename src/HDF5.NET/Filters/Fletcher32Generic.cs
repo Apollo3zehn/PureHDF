@@ -2,7 +2,7 @@
 {
     internal static class Fletcher32Generic
     {
-        public static unsafe uint Fletcher32(Span<byte> data) 
+        public static unsafe uint Fletcher32(Span<byte> data)
         {
             // H5checksum.c (H5_checksum_fletcher32)
 

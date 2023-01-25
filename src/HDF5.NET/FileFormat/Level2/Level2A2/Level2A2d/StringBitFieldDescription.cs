@@ -13,13 +13,13 @@
 
         #region Properties
 
-        public PaddingType PaddingType 
+        public PaddingType PaddingType
         {
-            get 
+            get
             {
                 return (PaddingType)(Data[0] & 0x0F);
             }
-            set 
+            set
             {
                 Data[0] &= 0xF0;           // clear bits 0-3
                 Data[0] |= (byte)value;    // set bits 0-3, depending on the value
@@ -28,11 +28,11 @@
 
         public CharacterSetEncoding Encoding
         {
-            get 
+            get
             {
-                return (CharacterSetEncoding)((Data[0] >> 4) & 0x01); 
+                return (CharacterSetEncoding)((Data[0] >> 4) & 0x01);
             }
-            set 
+            set
             {
                 switch (value)
                 {

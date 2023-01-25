@@ -16,7 +16,7 @@ namespace HDF5.NET
         public GlobalHeapCollection(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // signature
             var signature = reader.ReadBytes(4);
             H5Utils.ValidateSignature(signature, GlobalHeapCollection.Signature);
@@ -48,7 +48,7 @@ namespace HDF5.NET
                 GlobalHeapObjects.Add(globalHeapObject);
                 var after = reader.Position;
                 var consumed = (ulong)(after - before);
-                
+
                 remaining -= consumed;
             }
         }

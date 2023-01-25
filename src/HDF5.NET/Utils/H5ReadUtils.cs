@@ -130,7 +130,7 @@ namespace HDF5.NET
             var members = datatype.Properties
                 .Cast<CompoundPropertyDescription>()
                 .ToList();
-            
+
             var sourceOffset = 0UL;
             var sourceElementSize = datatype.Size;
 
@@ -168,31 +168,31 @@ namespace HDF5.NET
                         (DatatypeMessageClass.FloatingPoint, 4) => MemoryMarshal.Cast<byte, float>(slicedData)[0],
                         (DatatypeMessageClass.FloatingPoint, 8) => MemoryMarshal.Cast<byte, double>(slicedData)[0],
 
-                        (DatatypeMessageClass.String, _) 
+                        (DatatypeMessageClass.String, _)
                             => ReadString(context, memberType, slicedData, oneElementStringArray)[0],
-                            
-// TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
-                        (DatatypeMessageClass.BitField, _) 
+
+                        // TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
+                        (DatatypeMessageClass.BitField, _)
                             => slicedData.ToArray(),
 
-                        (DatatypeMessageClass.Opaque, _) 
+                        (DatatypeMessageClass.Opaque, _)
                             => slicedData.ToArray(),
 
-                        (DatatypeMessageClass.Compound, _) 
+                        (DatatypeMessageClass.Compound, _)
                             => ReadCompound(context, memberType, slicedData, oneElementCompountArray)[0],
 
-// TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
-                        (DatatypeMessageClass.Reference, _) 
+                        // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
+                        (DatatypeMessageClass.Reference, _)
                             => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData)[0],
 
                         /* It is difficult to avoid array allocation here */
-                        (DatatypeMessageClass.Enumerated, _) 
+                        (DatatypeMessageClass.Enumerated, _)
                             => (ReadEnumerated(context, memberType, slicedData) ?? new object[1]).GetValue(0),
 
-                        (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String 
+                        (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String
                             => ReadString(context, memberType, slicedData, oneElementStringArray)[0],
 
-                        (DatatypeMessageClass.Array, _) 
+                        (DatatypeMessageClass.Array, _)
                             => ReadArray(context, memberType, slicedData),
 
                         _ => default
@@ -227,30 +227,30 @@ namespace HDF5.NET
                 (DatatypeMessageClass.FloatingPoint, 4) => MemoryMarshal.Cast<byte, float>(slicedData).ToArray(),
                 (DatatypeMessageClass.FloatingPoint, 8) => MemoryMarshal.Cast<byte, double>(slicedData).ToArray(),
 
-                (DatatypeMessageClass.String, _) 
+                (DatatypeMessageClass.String, _)
                     => ReadString(context, baseType, slicedData),
 
-// TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
-                (DatatypeMessageClass.BitField, _) 
+                // TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
+                (DatatypeMessageClass.BitField, _)
                     => slicedData.ToArray(),
-                
-                (DatatypeMessageClass.Opaque, _) 
+
+                (DatatypeMessageClass.Opaque, _)
                     => slicedData.ToArray(),
-                
-                (DatatypeMessageClass.Compound, _) 
+
+                (DatatypeMessageClass.Compound, _)
                     => ReadCompound(context, baseType, slicedData),
 
-// TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
-                (DatatypeMessageClass.Reference, _) 
+                // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
+                (DatatypeMessageClass.Reference, _)
                     => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData).ToArray(),
-                
-                (DatatypeMessageClass.Enumerated, _) 
+
+                (DatatypeMessageClass.Enumerated, _)
                     => ReadEnumerated(context, baseType, slicedData),
-                
-                (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String 
+
+                (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String
                     => ReadString(context, baseType, slicedData),
-                
-                (DatatypeMessageClass.Array, _) 
+
+                (DatatypeMessageClass.Array, _)
                     => ReadArray(context, baseType, slicedData),
 
                 _ => default
@@ -281,8 +281,8 @@ namespace HDF5.NET
 
         public static string[] ReadString(
             H5Context context,
-            DatatypeMessage datatype, 
-            Span<byte> data, 
+            DatatypeMessage datatype,
+            Span<byte> data,
             string[]? result = default)
         {
             /* Padding
@@ -314,10 +314,10 @@ namespace HDF5.NET
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
-                    PaddingType.NullTerminate   => value => value.Split(new char[] { '\0' }, 2)[0],
-                    PaddingType.NullPad         => value => value.TrimEnd('\0'),
-                    PaddingType.SpacePad        => value => value.TrimEnd(' '),
-                    _                           => throw new Exception("Unsupported padding type.")
+                    PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
+                    PaddingType.NullPad => value => value.TrimEnd('\0'),
+                    PaddingType.SpacePad => value => value.TrimEnd(' '),
+                    _ => throw new Exception("Unsupported padding type.")
                 };
 
                 for (int i = 0; i < result.Length; i++)
@@ -346,10 +346,10 @@ namespace HDF5.NET
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
-                    PaddingType.NullTerminate   => value => value,
-                    PaddingType.NullPad         => value => value,
-                    PaddingType.SpacePad        => value => value.TrimEnd(' '),
-                    _                           => throw new Exception("Unsupported padding type.")
+                    PaddingType.NullTerminate => value => value,
+                    PaddingType.NullPad => value => value,
+                    PaddingType.SpacePad => value => value.TrimEnd(' '),
+                    _ => throw new Exception("Unsupported padding type.")
                 };
 
                 for (int i = 0; i < result.Length; i++)
@@ -393,8 +393,8 @@ namespace HDF5.NET
 
             return encoding switch
             {
-                CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data),
-                CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data),
+                CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
+                CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
                 _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
             };
         }
@@ -412,8 +412,8 @@ namespace HDF5.NET
 
             var result = encoding switch
             {
-                CharacterSetEncoding.ASCII  => Encoding.ASCII.GetString(data.ToArray()),
-                CharacterSetEncoding.UTF8   => Encoding.UTF8.GetString(data.ToArray()),
+                CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
+                CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
                 _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
             };
 

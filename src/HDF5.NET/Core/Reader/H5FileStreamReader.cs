@@ -70,7 +70,7 @@ namespace HDF5.NET
         {
             var buffer = new byte[count];
             Read(buffer);
-            
+
             return buffer;
         }
 
@@ -101,7 +101,7 @@ namespace HDF5.NET
             Span<byte> buffer = stackalloc byte[size];
             RandomAccess.Read(_handle, buffer, Position);
             _position.Value += size;
-            
+
             return MemoryMarshal.Cast<byte, T>(buffer)[0];
         }
 
