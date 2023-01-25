@@ -1,3 +1,13 @@
+## v1.0.0-alpha.23 - 2023-01-25
+
+> Important: The project has been renamed from HDF5.NET to PureHDF.
+
+### Bugs Fixed
+- Fix the problem that the new async methods were not fully thread-safe.
+
+### Features
+- Added multithreaded read support for `H5File.Open(string)`, `H5File.Open(Stream)` (if `Stream` is `FileStream`) and `H5File.Open(MemoryMappedViewAccessor)`. See https://github.com/Apollo3zehn/PureHDF#8-concurrency for more details.
+
 ## v1.0.0-alpha.22 - 2023-01-20
 
 ### Bugs Fixed
