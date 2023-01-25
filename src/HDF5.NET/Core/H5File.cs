@@ -57,7 +57,7 @@
                 useAsync);
 
 #if NET6_0_OR_GREATER
-            var reader = new H5FileStreamReader(stream);
+            var reader = new H5FileStreamReader(stream, leaveOpen: false);
 #else
             var reader = new H5StreamReader(stream, leaveOpen: false);
 #endif

@@ -10,7 +10,7 @@ namespace HDF5.NET.Tests.Reading
     {
         private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
 
-        private static readonly IList<object[]> _datasetNumericalTestData = TestData.NumericalData;
+        public static IList<object[]> DatasetNumericalTestData { get; } = TestData.NumericalData;
 
         [Fact]
         public void CanReadDataset_Dataspace_Scalar()
@@ -49,7 +49,7 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [MemberData(nameof(DatasetTests._datasetNumericalTestData))]
+        [MemberData(nameof(DatasetNumericalTestData))]
         public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>

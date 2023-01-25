@@ -24,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HDF5.NET.Benchmarks", "benchmarks\HDF5.NET.Benchmarks\HDF5.NET.Benchmarks.csproj", "{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HDF5.NET.AsyncBenchmark", "benchmarks\HDF5.NET.AsyncBenchmark\HDF5.NET.AsyncBenchmark.csproj", "{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HDF5.NET.ConcurrencyBenchmark", "benchmarks\HDF5.NET.ConcurrencyBenchmark\HDF5.NET.ConcurrencyBenchmark.csproj", "{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HDF5.NET.SourceGenerator", "src\HDF5.NET.SourceGenerator\HDF5.NET.SourceGenerator.csproj", "{313D0B71-0F97-4867-B419-ABA333B11A54}"
 EndProject

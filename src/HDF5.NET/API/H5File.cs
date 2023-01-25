@@ -72,7 +72,16 @@ namespace HDF5.NET
         /// <returns></returns>
         public static H5File Open(Stream stream, bool leaveOpen = false)
         {
-            var reader = new H5StreamReader(stream, leaveOpen: leaveOpen);
+            H5BaseReader reader;
+
+#if NET6_0_OR_GREATER
+            if (stream is FileStream fileStream)
+                reader = new H5FileStreamReader(fileStream, leaveOpen: leaveOpen);
+
+            else
+#endif
+                reader = new H5StreamReader(stream, leaveOpen: leaveOpen);
+
             return OpenCore(reader, string.Empty);
         }
 

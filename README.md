@@ -24,7 +24,20 @@ The implemention follows the [HDF5 File Format Specification](https://support.hd
 
 > Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
 
-# 1. Objects
+# Content
+
+1. [Objects](#1-objects)
+2. [Attributes](#2-attributes)
+3. [Data](#3-data)
+4. [Partial I/O and Hyperslabs](#4-partial-io-and-hyperslabs)
+5. [Filters](#5-filters)
+6. [Reading Compound Data](#6-reading-compound-data)
+7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
+8. [Concurrency](#8-concurrency)
+9. [Intellisense (.NET 5+)](#9-intellisense-net-5)
+10. [Comparison Table](#10-comparison-table)
+
+# 1 Objects
 
 ```cs
 // open HDF5 file, the returned H5File instance represents the root group ('/')
@@ -502,33 +515,9 @@ The type mapping is as follows:
 
 Not supported data types like `time` and `variable length type = sequence` will be represented as `null`.
 
-# 7. Advanced Scenarios
+## 7 Reading Multidimensional Data
 
-## 7.1 Memory-Mapped File
-
-In some cases, it might be useful to read data from a memory-mapped file instead of a regular `FileStream` to reduce the number of (costly) system calls. Depending on the file structure this may heavily increase random access performance. Here is an example:
-
-```cs
-using var mmf = MemoryMappedFile.CreateFromFile(
-    fileStream, 
-    mapName: default, 
-    capacity: 0, 
-    MemoryMappedFileAccess.Read,
-    HandleInheritability.None);
-
-using var mmfStream = mmf.CreateViewStream(
-    offset: 0, 
-    size: 0,
-    MemoryMappedFileAccess.Read);
-
-using var root = H5File.Open(mmfStream);
-
-...
-```
-
-## 7.2 Reading Multidimensional Data
-
-### 7.2.1 Generic Method
+### 7.1 Generic Method
 
 Sometimes you want to read the data as multidimensional arrays. In that case use one of the `byte[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
 
@@ -541,7 +530,7 @@ var data3D = dataset
 The methods accepts a `long[]` with the new array dimensions. This feature works similar to Matlab's [reshape](https://de.mathworks.com/help/matlab/ref/reshape.html) function. A slightly adapted citation explains the behavior:
 > When you use `-1` to automatically calculate a dimension size, the dimensions that you *do* explicitly specify must divide evenly into the number of elements in the input array.
 
-### 7.2.2 High-Performance Method (2D only)
+### 7.2 High-Performance Method (2D only)
 
 The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run `dotnet add package CommunityToolkit.HighPerformance` and then use it like this:
 
@@ -556,7 +545,72 @@ data2D = dataset
 
 No data are being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
 
-# 8 Asynchronous Data Access (.NET 6+)
+# 8 Concurrency
+
+Reading data from a dataset is thread-safe in the following cases, depending on the type of `H5File` constructor method you used:
+
+|         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`) | 
+|---------|-----------|--------------------|---------------------|
+| .NET 4+ | x         | ✓                  | x                   |
+| .NET 6+ | ✓         | ✓                  | ✓ (if: `Stream` is `FileStream`) |
+
+> The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
+
+> Currently the default `SimpleChunkCache` is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.
+
+## 8.1 Multi-Threading (Memory-Mapped File)
+
+If you have opened a file as memory-mapped file, you may read the data in parallel like this:
+
+```cs
+const ulong TOTAL_ELEMENT_COUNT = xxx;
+const ulong SEGMENT_COUNT = xxx;
+const ulong SEGMENT_SIZE = TOTAL_ELEMENT_COUNT / SEGMENT_COUNT;
+
+using var mmf = MemoryMappedFile.CreateFromFile(FILE_PATH);
+using var accessor = mmf.CreateViewAccessor();
+using var file = H5File.Open(accessor);
+
+var dataset = file.Dataset("xxx");
+var buffer = new float[TOTAL_ELEMENT_COUNT];
+
+Parallel.For(0, SEGMENT_COUNT, i =>
+{
+    var start = i * SEGMENT_SIZE;
+    var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+
+    dataset.Read<float>(partialBuffer, fileSelection);
+});
+
+```
+
+## 8.2 Multi-Threading (FileStream) (.NET 6+)
+
+Starting with .NET 6, there is a new API to access files in a thread-safe way which HDF5.NET utilizes. The process to load data in parallel is similar to the memory-mapped file approach above:
+
+```cs
+const ulong TOTAL_ELEMENT_COUNT = xxx;
+const ulong SEGMENT_COUNT = xxx;
+const ulong SEGMENT_SIZE = TOTAL_ELEMENT_COUNT / SEGMENT_COUNT;
+
+using var file = H5File.OpenRead(FILE_PATH);
+
+var dataset = file.Dataset("xxx");
+var buffer = new float[TOTAL_ELEMENT_COUNT];
+
+Parallel.For(0, SEGMENT_COUNT, i =>
+{
+    var start = i * SEGMENT_SIZE;
+    var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+
+    dataset.Read<float>(partialBuffer, fileSelection);
+});
+
+```
+
+## 8.3 Async (.NET 6+)
 
 HDF5.NET supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
 

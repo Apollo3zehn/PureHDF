@@ -3,11 +3,6 @@
 // a read operation. Solutions: locks, thread-local file handle, RandomAccess.
 
 /*
- * This benchmark was created on a system with the following specs:
- * - 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
- * - M2 SSD
- * - Kubuntu 22.10
- *
  * The aim of this benchmark is to proove that async programming is more efficient 
  * than sync programming (under certain conditions) in the context of HDF5.NET. The
  * performance is also compared to a multi-threaded approach.
@@ -55,21 +50,30 @@
  * the project in Release mode. If you use VSCode, select the "Run Async Benchmark"
  * configuration and start it using Ctrl + F5 (to no attach the debugger).
  *
- * Results (2023-01-10)
- * ====================
- * The sync benchmark took 2269,1 ms.
- * The async benchmark took 1459,1 ms.
- * The task-based benchmark took 1394,7 ms.
- * The multi-threaded benchmark took 644,2 ms.
+ * ======================================================================
+ * Results (2023-01-25)
+ * ======================================================================
+ * This benchmark was created on a system with the following specs:
+ * - 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+ * - M2 SSD
+ * - Kubuntu 22.10
+ * ======================================================================
+ * The sync benchmark took 2289,4 ms.
+ * The async benchmark took 1482,5 ms.
+ * The task-based benchmark took 1406,7 ms.
+ * The file-based multi-threaded benchmark took 627,5 ms.
+ * The memory-mapped-file based multi-threaded benchmark took 614,8 ms.
  * 
- *          The ratio async / sync is 0,64.
- *     The ratio task-based / sync is 0,61.
- * The ratio multi-threaded / sync is 0,28.
- * ====================
+ *                 The ratio async / sync is 0,65.
+ *            The ratio task-based / sync is 0,61.
+ * The ratio multi-threaded (file) / sync is 0,27.
+ *  The ratio multi-threaded (MMF) / sync is 0,27.
+ * ======================================================================
  */
 
 using System.Buffers;
 using System.Diagnostics;
+using System.IO.MemoryMappedFiles;
 using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks.Schedulers;
@@ -137,10 +141,15 @@ try
 
     (var taskBasedResult, var elapsed_task_based) = await TaskBasedBenchmark("task-based", Task.Run);
 
-    // 6 multi-threaded benchmark
+    // 6 multi-threaded benchmark (file)
     Console.ReadKey(intercept: true);
 
-    (var multiThreadedResult, var elapsed_multi_threaded) = MultiThreadedBenchmark();
+    (var multiThreadedFileResult, var elapsed_multi_threaded_file) = MultiThreadedBenchmark_File();
+
+    // 7 multi-threaded benchmark (mmf)
+    Console.ReadKey(intercept: true);
+
+    (var multiThreadedMMFResult, var elapsed_multi_threaded_mmf) = MultiThreadedBenchmark_MMF();
 
     //
     if (syncResult != asyncResult)
@@ -149,13 +158,17 @@ try
     if (syncResult != taskBasedResult)
         throw new Exception($"The sync result ({syncResult}) and task-based result ({taskBasedResult}) are not equal.");
 
-    if (syncResult != multiThreadedResult)
-        throw new Exception($"The sync result ({syncResult}) and multi-threaded result ({multiThreadedResult}) are not equal.");
+    if (syncResult != multiThreadedFileResult)
+        throw new Exception($"The sync result ({syncResult}) and multi-threaded (file) result ({multiThreadedFileResult}) are not equal.");
+
+    if (syncResult != multiThreadedMMFResult)
+        throw new Exception($"The sync result ({syncResult}) and multi-threaded (MMF) result ({multiThreadedMMFResult}) are not equal.");
 
     Console.WriteLine();
-    Console.WriteLine($"         The ratio async / sync is {elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
-    Console.WriteLine($"    The ratio task-based / sync is {elapsed_task_based.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
-    Console.WriteLine($"The ratio multi-threaded / sync is {elapsed_multi_threaded.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+    Console.WriteLine($"                The ratio async / sync is {elapsed_async.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+    Console.WriteLine($"           The ratio task-based / sync is {elapsed_task_based.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+    Console.WriteLine($"The ratio multi-threaded (file) / sync is {elapsed_multi_threaded_file.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
+    Console.WriteLine($" The ratio multi-threaded (MMF) / sync is {elapsed_multi_threaded_mmf.TotalMilliseconds / elapsed_sync.TotalMilliseconds:F2}.");
 }
 finally
 {
@@ -285,7 +298,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
     return (result, elapsed);
 }
 
-(double, TimeSpan) MultiThreadedBenchmark()
+(double, TimeSpan) MultiThreadedBenchmark_File()
 {
     var result = 0.0;
     var syncObject = new object();
@@ -311,10 +324,50 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
     var buffer = new float[BUFFER_SIZE];
     var stopwatch = Stopwatch.StartNew();
 
-    var options = new ParallelOptions()
+    Parallel.For(0, (int)SEGMENT_COUNT, i =>
     {
-        MaxDegreeOfParallelism = 1
-    };
+        var fileSelection = new HyperslabSelection(
+            start: (ulong)i * BUFFER_SIZE,
+            block: BUFFER_SIZE
+        );
+
+        dataset.Read<float>(buffer, fileSelection);
+
+        var currentResult = ProcessData(buffer);
+
+        lock (syncObject)
+        {
+            result += currentResult;
+        }
+    });
+
+    var elapsed_sync = stopwatch.Elapsed;
+    Console.WriteLine($"The file-based multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
+
+    return (result, elapsed_sync);
+}
+
+(double, TimeSpan) MultiThreadedBenchmark_MMF()
+{
+    var result = 0.0;
+    var syncObject = new object();
+
+    using var mmf = MemoryMappedFile.CreateFromFile(FILE_PATH);
+    using var accessor = mmf.CreateViewAccessor();
+    using var file = H5File.Open(accessor);
+
+    var dataset = file.Dataset("chunked");
+
+    /* The buffer has the size of a single chunk. The reason is
+     * that creating a very large buffer slows down the test
+     * dramatically (factor ~10). The test file is very large (1GB),
+     * and maybe this confuses the garbage collector. A definite
+     * cause could not be found. A real world application should
+     * rely on the MemoryPool to get an array and maybe limit the
+     * number of concurrent threads.
+     */
+    var buffer = new float[BUFFER_SIZE];
+    var stopwatch = Stopwatch.StartNew();
 
     Parallel.For(0, (int)SEGMENT_COUNT, i =>
     {
@@ -334,7 +387,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
     });
 
     var elapsed_sync = stopwatch.Elapsed;
-    Console.WriteLine($"The multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
+    Console.WriteLine($"The memory-mapped-file based multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
 
     return (result, elapsed_sync);
 }

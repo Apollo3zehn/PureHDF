@@ -11,13 +11,16 @@ namespace HDF5.NET
         private readonly ThreadLocal<long> _position = new();
         private readonly FileStream _stream; // it is important to keep a reference, otherwise the SafeFileHandle gets closed during the next GC
         private readonly SafeFileHandle _handle;
+        private readonly bool _leaveOpen;
 
-        public H5FileStreamReader(FileStream stream) : base(stream.Length)
+        public H5FileStreamReader(FileStream stream, bool leaveOpen) : base(stream.Length)
         {
             _stream = stream;
             _handle = _stream.SafeFileHandle;
 
             IsAsync = _handle.IsAsync;
+
+            _leaveOpen = leaveOpen;
         }
 
         public bool IsAsync { get; }
@@ -115,7 +118,8 @@ namespace HDF5.NET
             {
                 if (disposing)
                 {
-                    _stream.Dispose();
+                    if (!_leaveOpen)
+                        _stream.Dispose();
                 }
 
                 _disposedValue = true;

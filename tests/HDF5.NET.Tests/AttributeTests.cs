@@ -8,7 +8,7 @@ namespace HDF5.NET.Tests.Reading
     public class AttributeTests
     {
         private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
-        private static readonly IList<object[]> _attributeNumericalTestData = TestData.NumericalData;
+        public static IList<object[]> AttributeNumericalTestData { get; } = TestData.NumericalData;
 
         [Fact]
         public void CanReadAttribute_Dataspace_Scalar()
@@ -47,7 +47,7 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [MemberData(nameof(AttributeTests._attributeNumericalTestData))]
+        [MemberData(nameof(AttributeNumericalTestData))]
         public void CanReadAttribute_Numerical<T>(string name, T[] expected)
             where T : unmanaged
         {
