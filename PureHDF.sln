@@ -1,0 +1,83 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PureHDF", "src\PureHDF\PureHDF.csproj", "{CDDD9838-6BB3-4842-BFC8-396ED82C798E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4C09E841-1023-48F7-B290-734C029B0E78}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{9C8A732F-BE85-4461-A789-B19CD4B70C90}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PureHDF.Tests", "tests\PureHDF.Tests\PureHDF.Tests.csproj", "{07AF7465-5088-4AD2-A88E-BA6582F54AFD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8B9AF370-616F-4E6F-961E-5DFEC1620A2F}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		LICENSE.md = LICENSE.md
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PureHDF.BlazorBrowser", "src\PureHDF.BlazorBrowser\PureHDF.BlazorBrowser.csproj", "{219FC23D-2C50-45AF-AA97-EAC4881D3812}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{57ADB402-16BE-4AD1-B628-A90B2B98110E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PureHDF.Benchmarks", "benchmarks\PureHDF.Benchmarks\PureHDF.Benchmarks.csproj", "{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.ConcurrencyBenchmark", "benchmarks\PureHDF.ConcurrencyBenchmark\PureHDF.ConcurrencyBenchmark.csproj", "{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.SourceGenerator", "src\PureHDF.SourceGenerator\PureHDF.SourceGenerator.csproj", "{313D0B71-0F97-4867-B419-ABA333B11A54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.SourceGenerator.Tests", "tests\PureHDF.SourceGenerator.Tests\PureHDF.SourceGenerator.Tests.csproj", "{0510852E-B154-422A-A1E2-2C9783119A45}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDDD9838-6BB3-4842-BFC8-396ED82C798E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDDD9838-6BB3-4842-BFC8-396ED82C798E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDDD9838-6BB3-4842-BFC8-396ED82C798E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDDD9838-6BB3-4842-BFC8-396ED82C798E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07AF7465-5088-4AD2-A88E-BA6582F54AFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07AF7465-5088-4AD2-A88E-BA6582F54AFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07AF7465-5088-4AD2-A88E-BA6582F54AFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07AF7465-5088-4AD2-A88E-BA6582F54AFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{219FC23D-2C50-45AF-AA97-EAC4881D3812}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{219FC23D-2C50-45AF-AA97-EAC4881D3812}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{219FC23D-2C50-45AF-AA97-EAC4881D3812}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{219FC23D-2C50-45AF-AA97-EAC4881D3812}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22382596-2C76-4F3A-A4DE-76C04EA3EDCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{313D0B71-0F97-4867-B419-ABA333B11A54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{313D0B71-0F97-4867-B419-ABA333B11A54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{313D0B71-0F97-4867-B419-ABA333B11A54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{313D0B71-0F97-4867-B419-ABA333B11A54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0510852E-B154-422A-A1E2-2C9783119A45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0510852E-B154-422A-A1E2-2C9783119A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0510852E-B154-422A-A1E2-2C9783119A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0510852E-B154-422A-A1E2-2C9783119A45}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CDDD9838-6BB3-4842-BFC8-396ED82C798E} = {4C09E841-1023-48F7-B290-734C029B0E78}
+		{07AF7465-5088-4AD2-A88E-BA6582F54AFD} = {9C8A732F-BE85-4461-A789-B19CD4B70C90}
+		{219FC23D-2C50-45AF-AA97-EAC4881D3812} = {4C09E841-1023-48F7-B290-734C029B0E78}
+		{75B81BC8-60CC-4CAA-95D2-213A6DC68DC8} = {57ADB402-16BE-4AD1-B628-A90B2B98110E}
+		{22382596-2C76-4F3A-A4DE-76C04EA3EDCE} = {57ADB402-16BE-4AD1-B628-A90B2B98110E}
+		{313D0B71-0F97-4867-B419-ABA333B11A54} = {4C09E841-1023-48F7-B290-734C029B0E78}
+		{0510852E-B154-422A-A1E2-2C9783119A45} = {9C8A732F-BE85-4461-A789-B19CD4B70C90}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6278E75D-2E06-43AB-A275-270476503447}
+	EndGlobalSection
+EndGlobal

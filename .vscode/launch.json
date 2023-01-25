@@ -5,14 +5,14 @@
             "name": "Launch and Debug Standalone Blazor WebAssembly App",
             "type": "blazorwasm",
             "request": "launch",
-            "cwd": "${workspaceFolder}/src/HDF5.NET.BlazorBrowser"
+            "cwd": "${workspaceFolder}/src/PureHDF.BlazorBrowser"
         },
         {
-            "name": "Run Benchmark",
+            "name": "Run Inflate Benchmark",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.Benchmarks/Release/net7.0/HDF5.NET.Benchmarks.dll",
+            "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net6.0/PureHDF.Benchmarks.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
@@ -23,11 +23,17 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-async-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.AsyncBenchmark/Release/net7.0/HDF5.NET.AsyncBenchmark.dll",
+            "program": "${workspaceFolder}/artifacts/bin/PureHDF.AsyncBenchmark/Release/net6.0/PureHDF.AsyncBenchmark.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "externalTerminal"
+        },
+        {
+            "name": "Debug Source Generator",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickRemoteProcess}"
         }
     ]
 }

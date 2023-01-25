@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+   <!-- dotnet build /p:EmitCompilerGeneratedFiles=true -->
+  <PropertyGroup>
+    <Description>Generates strongly-typed bindings for your specific HDF5 file.</Description>
+    <PackageTags>HDF HDF5 hierarchical data file H5 source generator</PackageTags>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <SuppressWarnings>NU5128</SuppressWarnings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PureHDF\PureHDF.csproj" Version="$(Version)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+    <None Include="$(OutputPath)\PureHDF.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../doc/images/icon.png" Pack="true" PackagePath="/" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+  <!-- https://github.com/dotnet/roslyn/discussions/47517 -->
+  <Target Name="AddGenerationTimeReferences" AfterTargets="ResolvePackageDependenciesForBuild">
+    <ItemGroup>
+      <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" CopyToOutputDirectory="Always" />
+    </ItemGroup>
+  </Target>
+
+</Project>
