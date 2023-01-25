@@ -9,8 +9,8 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private H5File? _file;
-        private ObjectHeaderScratchPad? _scratchPad;
+        private readonly H5File? _file;
+        private readonly ObjectHeaderScratchPad? _scratchPad;
 
         #endregion
 
@@ -66,9 +66,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < segments.Length; i++)
             {
-                var group = current.Dereference() as H5Group;
-
-                if (group is null)
+                if (current.Dereference() is not H5Group group)
                     return false;
 
                 if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -91,9 +89,7 @@ namespace HDF5.NET
 
             for (int i = 0; i < segments.Length; i++)
             {
-                var group = current.Dereference() as H5Group;
-
-                if (group is null)
+                if (current.Dereference() is not H5Group group)
                     throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
 
                 if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -138,7 +134,7 @@ namespace HDF5.NET
                     .GetBTree1(DecodeGroupKey)
                     .TryFindUserData(out var userData,
                                     (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
-                                    (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
+                                    (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData)
                                         => NodeFound(localHeap, name, address, out userData));
 
                 if (success)
@@ -167,7 +163,7 @@ namespace HDF5.NET
                         .GetBTree1(DecodeGroupKey)
                         .TryFindUserData(out var userData,
                                         (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
-                                        (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData) 
+                                        (ulong address, BTree1GroupKey _, out BTree1SymbolTableUserData userData)
                                             => NodeFound(localHeap, name, address, out userData));
 
                     if (success)
@@ -244,7 +240,7 @@ namespace HDF5.NET
                     alreadyVisited.Add(Reference.Value);
             }
 
-            if (!skip) 
+            if (!skip)
             {
                 var references = this
                     .EnumerateReferences(linkAccess)
@@ -387,7 +383,7 @@ namespace HDF5.NET
 
             foreach (var record in records)
             {
-                using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
                 var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
 
                 yield return heapId.Read(reader =>
@@ -423,8 +419,8 @@ namespace HDF5.NET
                 }
                 else
                 {
-// TODO: duplicate3_of_3
-                    using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                    // TODO: duplicate3_of_3
+                    using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new LinkMessage(Context));
 
@@ -456,12 +452,12 @@ namespace HDF5.NET
                     .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                    .GetTarget(linkAccess, useAsync: Context.Reader.SafeFileHandle is null ? false : Context.Reader.SafeFileHandle.IsAsync),
+                    .GetTarget(linkAccess, useAsync: Context.Reader is H5FileStreamReader reader && reader.IsAsync),
 #else
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
                     .GetTarget(linkAccess, useAsync: default),
 #endif
-                
+
                 _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
             };
         }
@@ -486,7 +482,7 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private NamedReference AddScratchPad(NamedReference reference, ObjectHeaderScratchPad scratchPad)
+        private static NamedReference AddScratchPad(NamedReference reference, ObjectHeaderScratchPad scratchPad)
         {
             reference.ScratchPad = scratchPad;
             return reference;
@@ -509,7 +505,7 @@ namespace HDF5.NET
         #region Callbacks
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
+        private static int NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
         {
             // H5Gnode.c (H5G_node_cmp3)
 

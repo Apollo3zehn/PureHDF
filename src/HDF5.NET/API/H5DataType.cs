@@ -12,15 +12,12 @@
         /// </summary>
         public class FixedPointType
         {
-            private FixedPointBitFieldDescription _bitField;
-            private FixedPointPropertyDescription _property;
+            private readonly FixedPointBitFieldDescription _bitField;
 
             internal FixedPointType(
-                FixedPointBitFieldDescription bitField, 
-                FixedPointPropertyDescription property)
+                FixedPointBitFieldDescription bitField)
             {
                 _bitField = bitField;
-                _property = property;
 
                 IsSigned = _bitField.IsSigned;
             }
@@ -36,16 +33,7 @@
         /// </summary>
         public class FloatingPointType
         {
-            private FloatingPointBitFieldDescription _bitField;
-            private FloatingPointPropertyDescription _property;
-
-            internal FloatingPointType(
-                FloatingPointBitFieldDescription bitField, 
-                FloatingPointPropertyDescription property)
-            {
-                _bitField = bitField;
-                _property = property;
-            }
+            //
         }
 
         /// <summary>
@@ -53,13 +41,7 @@
         /// </summary>
         public class StringType
         {
-            private StringBitFieldDescription _bitField;
-
-            internal StringType(
-                StringBitFieldDescription bitField)
-            {
-                _bitField = bitField;
-            }
+            //
         }
 
         /// <summary>
@@ -67,16 +49,7 @@
         /// </summary>
         public class BitFieldType
         {
-            private BitFieldBitFieldDescription _bitField;
-            private BitFieldPropertyDescription _property;
-
-            internal BitFieldType(
-                BitFieldBitFieldDescription bitField, 
-                BitFieldPropertyDescription property)
-            {
-                _bitField = bitField;
-                _property = property;
-            }
+            //
         }
 
         /// <summary>
@@ -84,16 +57,7 @@
         /// </summary>
         public class OpaqueType
         {
-            private OpaqueBitFieldDescription _bitField;
-            private OpaquePropertyDescription _property;
-
-            internal OpaqueType(
-                OpaqueBitFieldDescription bitField, 
-                OpaquePropertyDescription property)
-            {
-                _bitField = bitField;
-                _property = property;
-            }
+            //
         }
 
         /// <summary>
@@ -113,14 +77,11 @@
                 H5DataType Type
             );
 
-            private CompoundBitFieldDescription _bitField;
-            private CompoundPropertyDescription[] _properties;
+            private readonly CompoundPropertyDescription[] _properties;
 
             internal CompoundType(
-                CompoundBitFieldDescription bitField, 
                 CompoundPropertyDescription[] properties)
             {
-                _bitField = bitField;
                 _properties = properties;
 
                 Members = _properties
@@ -142,13 +103,7 @@
         /// </summary>
         public class ReferenceType
         {
-            private ReferenceBitFieldDescription _bitField;
-
-            internal ReferenceType(
-                ReferenceBitFieldDescription bitField)
-            {
-                _bitField = bitField;
-            }
+            //
         }
 
         /// <summary>
@@ -156,16 +111,7 @@
         /// </summary>
         public class EnumerationType
         {
-            private EnumerationBitFieldDescription _bitField;
-            private EnumerationPropertyDescription _property;
-
-            internal EnumerationType(
-                EnumerationBitFieldDescription bitField, 
-                EnumerationPropertyDescription property)
-            {
-                _bitField = bitField;
-                _property = property;
-            }
+            //
         }
 
         /// <summary>
@@ -173,16 +119,7 @@
         /// </summary>
         public class VariableLengthType
         {
-            private VariableLengthBitFieldDescription _bitField;
-            private VariableLengthPropertyDescription _property;
-
-            internal VariableLengthType(
-                VariableLengthBitFieldDescription bitField, 
-                VariableLengthPropertyDescription property)
-            {
-                _bitField = bitField;
-                _property = property;
-            }
+            //
         }
 
         /// <summary>
@@ -190,14 +127,11 @@
         /// </summary>
         public class ArrayType
         {
-            private ArrayBitFieldDescription _bitField;
-            private ArrayPropertyDescription _property;
+            private readonly ArrayPropertyDescription _property;
 
             internal ArrayType(
-                ArrayBitFieldDescription bitField, 
                 ArrayPropertyDescription property)
             {
-                _bitField = bitField;
                 _property = property;
 
                 BaseType = new H5DataType(_property.BaseType);
@@ -234,8 +168,7 @@
                 {
                     if (Class == H5DataTypeClass.FixedPoint)
                         _fixedPoint = new FixedPointType(
-                            (FixedPointBitFieldDescription)_dataType.BitField, 
-                            (FixedPointPropertyDescription)_dataType.Properties[0]);
+                            (FixedPointBitFieldDescription)_dataType.BitField);
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FixedPoint}.");
@@ -255,9 +188,7 @@
                 if (_floatingPoint is null)
                 {
                     if (Class == H5DataTypeClass.FloatingPoint)
-                        _floatingPoint = new FloatingPointType(
-                            (FloatingPointBitFieldDescription)_dataType.BitField, 
-                            (FloatingPointPropertyDescription)_dataType.Properties[0]);
+                        _floatingPoint = new FloatingPointType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FloatingPoint}.");
@@ -277,8 +208,7 @@
                 if (_string is null)
                 {
                     if (Class == H5DataTypeClass.String)
-                        _string = new StringType(
-                            (StringBitFieldDescription)_dataType.BitField);
+                        _string = new StringType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.String}.");
@@ -298,9 +228,7 @@
                 if (_bitField is null)
                 {
                     if (Class == H5DataTypeClass.BitField)
-                        _bitField = new BitFieldType(
-                            (BitFieldBitFieldDescription)_dataType.BitField, 
-                            (BitFieldPropertyDescription)_dataType.Properties[0]);
+                        _bitField = new BitFieldType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.BitField}.");
@@ -320,9 +248,7 @@
                 if (_opaque is null)
                 {
                     if (Class == H5DataTypeClass.Opaque)
-                        _opaque = new OpaqueType(
-                            (OpaqueBitFieldDescription)_dataType.BitField, 
-                            (OpaquePropertyDescription)_dataType.Properties[0]);
+                        _opaque = new OpaqueType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Opaque}.");
@@ -343,7 +269,6 @@
                 {
                     if (Class == H5DataTypeClass.Compound)
                         _compound = new CompoundType(
-                            (CompoundBitFieldDescription)_dataType.BitField, 
                             _dataType.Properties.Cast<CompoundPropertyDescription>().ToArray());
 
                     else
@@ -364,8 +289,7 @@
                 if (_reference is null)
                 {
                     if (Class == H5DataTypeClass.Reference)
-                        _reference = new ReferenceType(
-                            (ReferenceBitFieldDescription)_dataType.BitField);
+                        _reference = new ReferenceType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Reference}.");
@@ -386,9 +310,7 @@
                 if (_enumeration is null)
                 {
                     if (Class == H5DataTypeClass.Enumerated)
-                        _enumeration = new EnumerationType(
-                            (EnumerationBitFieldDescription)_dataType.BitField,
-                            (EnumerationPropertyDescription)_dataType.Properties[0]);
+                        _enumeration = new EnumerationType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Enumerated}.");
@@ -408,9 +330,7 @@
                 if (_variableLength is null)
                 {
                     if (Class == H5DataTypeClass.Enumerated)
-                        _variableLength = new VariableLengthType(
-                            (VariableLengthBitFieldDescription)_dataType.BitField,
-                            (VariableLengthPropertyDescription)_dataType.Properties[0]);
+                        _variableLength = new VariableLengthType();
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
@@ -431,7 +351,6 @@
                 {
                     if (Class == H5DataTypeClass.Enumerated)
                         _array = new ArrayType(
-                            (ArrayBitFieldDescription)_dataType.BitField,
                             (ArrayPropertyDescription)_dataType.Properties[0]);
 
                     else

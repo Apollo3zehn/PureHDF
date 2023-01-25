@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType4(Superblock superblock, H5BinaryReader localReader)
+        public HugeObjectsFractalHeapIdSubType4(Superblock superblock, H5BaseReader localReader)
         {
             // address
             Address = superblock.ReadOffset(localReader);
@@ -34,7 +34,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
             throw new Exception("Filtered data is not yet supported.");
         }

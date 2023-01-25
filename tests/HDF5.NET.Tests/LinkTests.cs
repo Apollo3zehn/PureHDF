@@ -6,13 +6,6 @@ namespace HDF5.NET.Tests.Reading
 {
     public class LinkTests
     {
-        private readonly ITestOutputHelper _logger;
-
-        public LinkTests(ITestOutputHelper logger)
-        {
-            _logger = logger;
-        }
-
         [Theory]
         [InlineData("/", true, false)]
         [InlineData("/simple", true, false)]
@@ -239,7 +232,7 @@ namespace HDF5.NET.Tests.Reading
             // Act
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
-            var linkAccess = string.IsNullOrWhiteSpace(prefix) 
+            var linkAccess = string.IsNullOrWhiteSpace(prefix)
                 ? new H5LinkAccess()
                 : new H5LinkAccess() { ExternalLinkPrefix = prefix };
 

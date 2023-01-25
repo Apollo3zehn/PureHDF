@@ -2,22 +2,15 @@
 {
     internal class SymbolTableEntry
     {
-        #region Fields
-
-        Superblock _superblock;
-
-        #endregion
-
         #region Constructors
 
         public SymbolTableEntry(H5Context context)
         {
             var (reader, superblock) = context;
-            _superblock = superblock;
 
             // link name offset
             LinkNameOffset = superblock.ReadOffset(reader);
-            
+
             // object header address
             HeaderAddress = superblock.ReadOffset(reader);
 
@@ -28,7 +21,7 @@
             reader.ReadUInt32();
 
             // scratch pad
-            var before = reader.BaseStream.Position;
+            var before = reader.Position;
 
             ScratchPad = CacheType switch
             {
@@ -38,7 +31,7 @@
                 _ => throw new NotSupportedException()
             };
 
-            var after = reader.BaseStream.Position;
+            var after = reader.Position;
             var length = after - before;
 
             // read as many bytes as needed to read a total of 16 bytes, even if the scratch pad is not used

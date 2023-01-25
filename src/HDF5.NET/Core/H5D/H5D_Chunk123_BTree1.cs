@@ -7,15 +7,16 @@ namespace HDF5.NET
         #region Fields
 
         private BTree1Node<BTree1RawDataChunksKey>? _btree1;
-        private DataLayoutMessage12? _layout12;
-        private DataLayoutMessage3? _layout3;
-        private ChunkedStoragePropertyDescription3? _chunked3;
+
+        private readonly DataLayoutMessage12? _layout12;
+        private readonly DataLayoutMessage3? _layout3;
+        private readonly ChunkedStoragePropertyDescription3? _chunked3;
 
         #endregion
 
         #region Constructors
 
-        public H5D_Chunk123_BTree1(H5Dataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) : 
+        public H5D_Chunk123_BTree1(H5Dataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             _layout12 = layout;
@@ -57,8 +58,7 @@ namespace HDF5.NET
             {
                 Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
-                Func<BTree1RawDataChunksKey> decodeKey = 
-                    () => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
+                BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
                 _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context, decodeKey);
             }
@@ -90,7 +90,7 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int NodeCompare3(byte rank, ulong[] indices, BTree1RawDataChunksKey leftKey, BTree1RawDataChunksKey rightKey)
+        private static int NodeCompare3(byte rank, ulong[] indices, BTree1RawDataChunksKey leftKey, BTree1RawDataChunksKey rightKey)
         {
             // H5Dbtree.c (H5D__btree_cmp3)
 
@@ -125,7 +125,7 @@ namespace HDF5.NET
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool NodeFound(byte rank, ulong[] indices, ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
+        private static bool NodeFound(byte rank, ulong[] indices, ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
         {
             // H5Dbtree.c (H5D__btree_found)
 

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public H5D_Virtual(H5Dataset dataset, H5DatasetAccess datasetAccess) : 
+        public H5D_Virtual(H5Dataset dataset, H5DatasetAccess datasetAccess) :
             base(dataset, supportsBuffer: true, supportsStream: false, datasetAccess)
         {
             //
@@ -12,9 +12,9 @@
             var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
             var objectData = collection.GlobalHeapObjects[(int)index - 1].ObjectData;
-            using var localReader = new H5BinaryReader(new MemoryStream(objectData));
+            using var localReader = new H5StreamReader(new MemoryStream(objectData), leaveOpen: false);
 
-            var vdsGlobalHeapBlock = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);           
+            var vdsGlobalHeapBlock = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);
         }
 
         #endregion
@@ -35,7 +35,7 @@
             throw new NotImplementedException();
         }
 
-        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream? GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

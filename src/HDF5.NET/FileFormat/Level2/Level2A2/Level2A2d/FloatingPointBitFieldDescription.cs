@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FloatingPointBitFieldDescription(H5BinaryReader reader) : base(reader)
+        public FloatingPointBitFieldDescription(H5BaseReader reader) : base(reader)
         {
             //
         }
@@ -89,7 +89,7 @@
             }
         }
 
-        public byte SignLocation 
+        public byte SignLocation
         {
             get { return Data[1]; }
             set { Data[1] = value; }

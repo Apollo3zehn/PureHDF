@@ -4,14 +4,14 @@
     {
         #region Fields
 
-        private byte _firstByte;
-        private byte _extendedLength;
+        private readonly byte _firstByte;
+        private readonly byte _extendedLength;
 
         #endregion
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType2(H5BinaryReader localReader, byte firstByte) 
+        public TinyObjectsFractalHeapIdSubType2(H5BaseReader localReader, byte firstByte)
             : base(localReader, firstByte)
         {
             _firstByte = firstByte;

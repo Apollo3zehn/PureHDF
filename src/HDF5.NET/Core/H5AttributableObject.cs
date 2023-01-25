@@ -6,13 +6,13 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal H5AttributableObject(H5Context context, NamedReference reference, ObjectHeader header) 
+        internal H5AttributableObject(H5Context context, NamedReference reference, ObjectHeader header)
             : base(context, reference, header)
         {
             //
         }
 
-        internal H5AttributableObject(H5Context context, NamedReference reference) 
+        internal H5AttributableObject(H5Context context, NamedReference reference)
             : base(context, reference)
         {
             //
@@ -107,8 +107,8 @@ namespace HDF5.NET
 
             foreach (var record in records)
             {
-// TODO: duplicate1_of_3
-                using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                // TODO: duplicate1_of_3
+                using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
                 var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                 var message = heapId.Read(reader => new AttributeMessage(Context, Header), ref record01Cache);
 
@@ -141,8 +141,8 @@ namespace HDF5.NET
                 }
                 else
                 {
-// TODO: duplicate2_of_3
-                    using var localReader = new H5BinaryReader(new MemoryStream(record.HeapId));
+                    // TODO: duplicate2_of_3
+                    using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
                     var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
                     candidate = heapId.Read(reader => new AttributeMessage(Context, Header));
 

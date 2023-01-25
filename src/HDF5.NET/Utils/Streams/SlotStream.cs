@@ -1,12 +1,14 @@
-﻿namespace HDF5.NET
+﻿using System;
+
+namespace HDF5.NET
 {
     internal class SlotStream : Stream
     {
         private long _position;
-        private LocalHeap _heap;
+        private readonly LocalHeap _heap;
         private Stream? _stream;
-        private ExternalFileListSlot _slot;
-        private H5DatasetAccess _datasetAccess;
+        private readonly ExternalFileListSlot _slot;
+        private readonly H5DatasetAccess _datasetAccess;
 
         public SlotStream(LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
         {
@@ -26,15 +28,15 @@
 
         public override long Length => (long)_slot.Size;
 
-        public override long Position 
+        public override long Position
         {
-            get 
-            { 
-                return _position; 
+            get
+            {
+                return _position;
             }
-            set 
-            { 
-                throw new NotImplementedException(); 
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -68,7 +70,9 @@
 
             _stream = EnsureStream();
 
-            var actualLength = await _stream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
+            var actualLength = await _stream
+                .ReadAsync(buffer.AsMemory(offset, length), cancellationToken)
+                .ConfigureAwait(false);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
             buffer
@@ -117,6 +121,7 @@
             base.Dispose(disposing);
         }
 
+        // TODO File should be opened asynchronously if root file is also opened asynchronously. Then implement ReadAsync here.
         private Stream EnsureStream()
         {
             if (_stream is null)

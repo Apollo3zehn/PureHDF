@@ -7,7 +7,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        internal H5CommitedDatatype(H5Context context, NamedReference reference, ObjectHeader header) 
+        internal H5CommitedDatatype(H5Context context, NamedReference reference, ObjectHeader header)
             : base(context, reference, header)
         {
             Datatype = header.GetMessage<DatatypeMessage>();

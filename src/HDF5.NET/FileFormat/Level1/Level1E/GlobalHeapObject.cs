@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private static byte[] _emptyByteArray = new byte[0];
+        private static readonly byte[] _emptyByteArray = Array.Empty<byte>();
 
         #endregion
 
@@ -13,7 +13,7 @@
         public GlobalHeapObject(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // heap object index
             HeapObjectIndex = reader.ReadUInt16();
 

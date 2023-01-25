@@ -97,10 +97,10 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record05 DecodeRecord05() => new BTree2Record05(_context.Reader);
+        private BTree2Record05 DecodeRecord05() => new(_context.Reader);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record06 DecodeRecord06() => new BTree2Record06(_context.Reader);
+        private BTree2Record06 DecodeRecord06() => new(_context.Reader);
 
         #endregion
     }

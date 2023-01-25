@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public BitFieldPropertyDescription(H5BinaryReader reader)
+        public BitFieldPropertyDescription(H5BaseReader reader)
         {
             BitOffset = reader.ReadUInt16();
             BitPrecision = reader.ReadUInt16();

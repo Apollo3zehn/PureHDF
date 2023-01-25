@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public ObjectModificationMessage(H5BinaryReader reader)
+        public ObjectModificationMessage(H5BaseReader reader)
         {
             // version
             Version = reader.ReadByte();

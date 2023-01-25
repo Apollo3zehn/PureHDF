@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public H5D_Chunk4(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) : 
+        public H5D_Chunk4(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             Layout = layout;

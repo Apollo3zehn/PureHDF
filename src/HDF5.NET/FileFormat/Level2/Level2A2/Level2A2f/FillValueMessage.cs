@@ -5,7 +5,7 @@
     {
         #region Fields
 
-        private static byte[] _defaultValue = new byte[] { 0 };
+        private static readonly byte[] _defaultValue = new byte[] { 0 };
 
         private byte[]? _value;
         private byte _version;
@@ -14,7 +14,7 @@
 
         #region Constructors
 
-        public FillValueMessage(H5BinaryReader reader)
+        public FillValueMessage(H5BaseReader reader)
         {
             // see also H5dcpl.c (H5P_is_fill_value_defined) and H5Dint.c (H5D__update_oh_info):
             // if size = 0 then default value should be applied
@@ -78,7 +78,7 @@
                     // default
                     else
                     {
-                        Value = new byte[0];
+                        Value = Array.Empty<byte>();
                     }
 
                     break;

@@ -5,13 +5,6 @@ namespace HDF5.NET.Tests.Reading
 {
     public class OtherTests
     {
-        private readonly ITestOutputHelper _logger;
-
-        public OtherTests(ITestOutputHelper logger)
-        {
-            _logger = logger;
-        }
-
         [Fact]
         public void CanReadWrappedFile_Compact_sync()
         {

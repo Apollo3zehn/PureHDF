@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public VdsDatasetEntry(H5BinaryReader reader)
+        public VdsDatasetEntry(H5BaseReader reader)
         {
             // source file name
             SourceFileName = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);

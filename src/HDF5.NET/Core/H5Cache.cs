@@ -41,7 +41,7 @@ namespace HDF5.NET
 
         #region Global Heap
 
-        private static ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+        private static readonly ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
         public static GlobalHeapCollection GetGlobalHeapObject(H5Context context, ulong address)
         {
@@ -72,7 +72,7 @@ namespace HDF5.NET
 
         #region File Handles
 
-        private static ConcurrentDictionary<Superblock, Dictionary<string, H5File>> _fileMap;
+        private static readonly ConcurrentDictionary<Superblock, Dictionary<string, H5File>> _fileMap;
 
         public static H5File GetH5File(Superblock superblock, string absoluteFilePath, bool useAsync)
         {
@@ -90,7 +90,7 @@ namespace HDF5.NET
 
             if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
             {
-// TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
+                // TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
                 h5File = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
                 pathToH5FileMap[uri.AbsoluteUri] = h5File;
             }

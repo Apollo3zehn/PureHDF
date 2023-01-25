@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public OpaqueBitFieldDescription(H5BinaryReader reader) : base(reader)
+        public OpaqueBitFieldDescription(H5BaseReader reader) : base(reader)
         {
             //
         }

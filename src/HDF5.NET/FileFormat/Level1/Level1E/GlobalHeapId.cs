@@ -15,9 +15,9 @@
             _context = context;
         }
 
-        public GlobalHeapId(H5Context context, H5BinaryReader localReader)
+        public GlobalHeapId(H5Context context, H5BaseReader localReader)
         {
-            var (reader, superblock) = context;
+            var (_, superblock) = context;
             _context = context;
 
             CollectionAddress = superblock.ReadOffset(localReader);
@@ -35,7 +35,7 @@
         {
             get
             {
-// TODO: Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
+                // TODO: Because Global Heap ID gets a brand new reader (from the attribute), it cannot be reused here. Is this a good approach?
                 return H5Cache.GetGlobalHeapObject(_context, CollectionAddress);
             }
         }

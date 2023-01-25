@@ -12,10 +12,10 @@ namespace HDF5.NET
         #endregion
 
         #region Constructors
-        public H5D_Chunk4_BTree2(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) 
+        public H5D_Chunk4_BTree2(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess)
             : base(dataset, layout, datasetAccess)
         {
-            
+
         }
 
         #endregion
@@ -30,8 +30,8 @@ namespace HDF5.NET
                 {
                     Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
-                    Func<BTree2Record10> decodeKey 
-                        = () => DecodeRecord10(ChunkRank);
+                    BTree2Record10 decodeKey
+() => DecodeRecord10(ChunkRank);
 
                     _btree2_no_filter = new BTree2Header<BTree2Record10>(Dataset.Context, decodeKey);
                 }
@@ -54,8 +54,7 @@ namespace HDF5.NET
                     Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                     var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
 
-                    Func<BTree2Record11> decodeKey = 
-                        () => DecodeRecord11(ChunkRank, chunkSizeLength);
+                    BTree2Record11 decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);
 
                     _btree2_filter = new BTree2Header<BTree2Record11>(Dataset.Context, decodeKey);
                 }

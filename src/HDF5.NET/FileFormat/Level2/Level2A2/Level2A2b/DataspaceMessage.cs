@@ -45,7 +45,7 @@
             if (dimensionMaxSizesArePresent)
             {
                 DimensionMaxSizes = new ulong[Rank];
-                
+
                 for (int i = 0; i < Rank; i++)
                 {
                     DimensionMaxSizes[i] = superblock.ReadLength(reader);

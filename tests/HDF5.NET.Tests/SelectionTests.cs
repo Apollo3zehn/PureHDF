@@ -277,7 +277,7 @@ namespace HDF5.NET.Tests.Reading
             // Act
             for (int i = 0; i < 10; i++)
             {
-                SelectionUtils
+                _ = SelectionUtils
                     .Walk(rank: 3, dims, chunkDims, selection)
                     .ToArray();
             }
@@ -296,7 +296,7 @@ namespace HDF5.NET.Tests.Reading
             // Arrange
 
             // Act
-            Action action = () => new HyperslabSelection(rank: 3, start, stride, count, block);
+            void action() => _ = new HyperslabSelection(rank: 3, start, stride, count, block);
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -310,7 +310,7 @@ namespace HDF5.NET.Tests.Reading
             // Arrange
 
             // Act
-            Action action = () => new HyperslabSelection(rank: 3, start, stride, count, block);
+            void action() => _ = new HyperslabSelection(rank: 3, start, stride, count, block);
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -328,7 +328,7 @@ namespace HDF5.NET.Tests.Reading
                 blocks: new ulong[] { 2, 3 });
 
             // Act
-            Action action = () => selection.Walk(limits: new[] { 100UL, 100UL, 100UL }).ToList();
+            void action() => _ = selection.Walk(limits: new[] { 100UL, 100UL, 100UL }).ToList();
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -343,19 +343,19 @@ namespace HDF5.NET.Tests.Reading
             var selection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 25 },
-                strides: new ulong[] { 4, 4 }, 
+                strides: new ulong[] { 4, 4 },
                 counts: new ulong[] { 4, 4 },
                 blocks: new ulong[] { 2, 3 });
 
             // Act
-            Action action = () => selection.Walk(limits: limits).ToList();
+            void action() => _ = selection.Walk(limits: limits).ToList();
 
             // Assert
             Assert.Throws<ArgumentException>(action);
         }
 
         [Theory]
-        [InlineData(new ulong[] { 16, 30 }, new ulong[] { 16, 25, 30 } )]
+        [InlineData(new ulong[] { 16, 30 }, new ulong[] { 16, 25, 30 })]
         [InlineData(new ulong[] { 16, 25, 30 }, new ulong[] { 3, 3 })]
         public void WalkThrowsForInvalidRank(ulong[] dims, ulong[] chunkDims)
         {
@@ -363,7 +363,7 @@ namespace HDF5.NET.Tests.Reading
             var selection = new HyperslabSelection(1, 4, 3, 3);
 
             // Act
-            Action action = () => SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
+            void action() => _ = SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -398,7 +398,7 @@ namespace HDF5.NET.Tests.Reading
             );
 
             // Act
-            Action action = () => SelectionUtils
+            void action() => SelectionUtils
                 .CopyAsync(default(SyncReader), sourceRank: 2, targetRank: 2, copyInfo)
                 .GetAwaiter()
                 .GetResult();
@@ -574,7 +574,7 @@ namespace HDF5.NET.Tests.Reading
             var chunksBuffers = new Memory<byte>[]
             {
                 sourceBuffer0,
-                sourceBuffer1, 
+                sourceBuffer1,
                 sourceBuffer2,
                 sourceBuffer3
             };
@@ -901,9 +901,9 @@ namespace HDF5.NET.Tests.Reading
                 {
                     var fileId = H5F.open(filePath, H5F.ACC_RDONLY);
                     var datasetId = H5D.open(fileId, "/chunked/hyperslab");
-                    
+
                     var datasetSpaceId = H5S.create_simple(rank: 3, datasetDims, datasetDims);
-                    var res1 = H5S.select_hyperslab(datasetSpaceId, H5S.seloper_t.SET, 
+                    var res1 = H5S.select_hyperslab(datasetSpaceId, H5S.seloper_t.SET,
                         datasetSelection.Starts.ToArray(), datasetSelection.Strides.ToArray(),
                         datasetSelection.Counts.ToArray(), datasetSelection.Blocks.ToArray());
 
@@ -923,10 +923,10 @@ namespace HDF5.NET.Tests.Reading
                         }
                     }
 
-                    H5S.close(memorySpaceId);
-                    H5S.close(datasetSpaceId);
-                    H5D.close(datasetId);
-                    H5F.close(fileId);
+                    _ = H5S.close(memorySpaceId);
+                    _ = H5S.close(datasetSpaceId);
+                    _ = H5D.close(datasetId);
+                    _ = H5F.close(fileId);
                 }
 
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);

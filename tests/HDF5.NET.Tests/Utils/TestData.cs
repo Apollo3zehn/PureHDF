@@ -2,7 +2,7 @@
 {
     public class TestData
     {
-        private static TestStructL1 _nn_a = new TestStructL1()
+        private static TestStructL1 _nn_a = new()
         {
             ByteValue = 1,
             UShortValue = 2,
@@ -25,7 +25,7 @@
             }
         };
 
-        private static TestStructL1 _nn_b = new TestStructL1()
+        private static TestStructL1 _nn_b = new()
         {
             ByteValue = 2,
             UShortValue = 4,
@@ -49,7 +49,7 @@
             }
         };
 
-        private static TestStructStringAndArray _string_a = new TestStructStringAndArray()
+        private static TestStructStringAndArray _string_a = new()
         {
             FloatValue = (float)1.299e9,
             StringValue1 = "Hello",
@@ -65,7 +65,7 @@
             }
         };
 
-        private static TestStructStringAndArray _string_b = new TestStructStringAndArray()
+        private static TestStructStringAndArray _string_b = new()
         {
             FloatValue = (float)2.299e-9,
             StringValue1 = "Hello!",
@@ -83,7 +83,7 @@
 
         static TestData()
         {
-            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a, 
+            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
                                                  TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };
 
             TestData.BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
@@ -145,7 +145,7 @@
             TestData.SmallData = Enumerable.Range(0, 100).ToArray();
             TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
             TestData.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
-            TestData.HyperslabData = Enumerable.Range(0, 2*3*6).ToArray();
+            TestData.HyperslabData = Enumerable.Range(0, 2 * 3 * 6).ToArray();
         }
 
         public static TestEnum[] EnumData { get; }

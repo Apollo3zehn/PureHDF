@@ -12,10 +12,10 @@ namespace HDF5.NET
 
         #region Constructors
 
-        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BinaryReader, T> decode)
+        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BaseReader, T> decode)
         {
             var (reader, superblock) = context;
-            
+
             // H5FAdblock.c (H5FA__dblock_alloc)
             ElementsPerPage = 1UL << header.PageBits;
             PageCount = 0UL;
@@ -48,12 +48,12 @@ namespace HDF5.NET
             if (PageCount > 0)
             {
                 PageBitmap = reader.ReadBytes((int)pageBitmapSize);
-                Elements = new T[0];
+                Elements = Array.Empty<T>();
             }
             // elements
             else
             {
-                PageBitmap = new byte[0];
+                PageBitmap = Array.Empty<byte>();
 
                 Elements = Enumerable
                     .Range(0, (int)header.EntriesCount)

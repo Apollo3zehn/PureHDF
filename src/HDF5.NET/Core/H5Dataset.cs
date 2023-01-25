@@ -105,13 +105,13 @@ namespace HDF5.NET
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
             bool skipTypeCheck = false,
-            bool skipShuffle = false) 
-                where T : unmanaged 
+            bool skipShuffle = false)
+                where T : unmanaged
                 where TReader : IReader
         {
             // fast path for null dataspace
             if (InternalDataspace.Type == DataspaceType.Null)
-                return new T[0];
+                return Array.Empty<T>();
 
             // 
             if (!skipTypeCheck)
@@ -194,7 +194,7 @@ namespace HDF5.NET
                ? chunkIndices => bufferProvider.GetBufferAsync(reader, chunkIndices)
                : null;
 
-            Func<ulong[], H5Stream>? getSourceStream = bufferProvider.SupportsStream
+            Func<ulong[], Stream>? getSourceStream = bufferProvider.SupportsStream
                 ? chunkIndices => bufferProvider.GetH5Stream(chunkIndices)!
                 : null;
 
@@ -245,15 +245,13 @@ namespace HDF5.NET
                 throw new Exception("The provided target buffer is too small.");
 
             /* memory selection */
-            if (memorySelection is null)
-                memorySelection = new HyperslabSelection(start: 0, block: totalCount);
+            memorySelection ??= new HyperslabSelection(start: 0, block: totalCount);
 
             /* memory dims */
-            if (memoryDims is null)
-                memoryDims = new ulong[] { totalCount };
+            memoryDims ??= new ulong[] { totalCount };
 
             if (getSourceBufferAsync is null && getSourceStream is null)
-                new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
+                throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
 
             /* copy info */
             var copyInfo = new CopyInfo(
@@ -282,7 +280,7 @@ namespace HDF5.NET
             return result;
         }
 
-        private (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)
+        private static (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)
             where T : unmanaged
         {
             // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)

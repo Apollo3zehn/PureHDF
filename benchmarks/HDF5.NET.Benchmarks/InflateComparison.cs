@@ -28,8 +28,8 @@ namespace Benchmark
             var original = new byte[N];
 
             random.NextBytes(original);
-            
-            byte[] Deflate(byte[] original)
+
+            static byte[] Deflate(byte[] original)
             {
                 using var originalStream = new MemoryStream(original);
                 using var compressedStream = new MemoryStream();
@@ -103,7 +103,7 @@ namespace Benchmark
         {
             var state = new Span<inflate_state>(_state_ptr.ToPointer(), _state_length);
 
-            ISAL.isal_inflate_reset(_state_ptr);
+            _ = ISAL.isal_inflate_reset(_state_ptr);
 
             fixed (byte* ptrOut = _inflated)
             {

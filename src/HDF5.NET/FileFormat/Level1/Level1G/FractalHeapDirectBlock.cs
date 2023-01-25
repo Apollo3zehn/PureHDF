@@ -14,7 +14,7 @@ namespace HDF5.NET
         #region Constructors
 
         public FractalHeapDirectBlock(H5Context context, FractalHeapHeader header)
-        {            
+        {
             var (reader, superblock) = context;
             _context = context;
 

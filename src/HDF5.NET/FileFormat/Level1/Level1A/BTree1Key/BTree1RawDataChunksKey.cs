@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public BTree1RawDataChunksKey(H5BinaryReader reader, byte rank, ulong[] rawChunkDims)
+        public BTree1RawDataChunksKey(H5BaseReader reader, byte rank, ulong[] rawChunkDims)
         {
             // H5Dbtree.c (H5D__btree_decode_key)
 

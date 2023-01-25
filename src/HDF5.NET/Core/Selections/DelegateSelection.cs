@@ -2,6 +2,6 @@
 {
     partial class DelegateSelection : Selection
     {
-        private Func<ulong[], IEnumerable<Step>> _walker;
+        private readonly Func<ulong[], IEnumerable<Step>> _walker;
     }
 }

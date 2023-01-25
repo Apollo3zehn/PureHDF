@@ -10,7 +10,7 @@ namespace HDF5.NET
         #region Fields
 
         private H5Context _context;
-        private Func<T> _decodeKey;
+        private readonly Func<T> _decodeKey;
 
         #endregion
 
@@ -52,7 +52,7 @@ namespace HDF5.NET
         public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
         public BTree1NodeType NodeType { get; }
-        public byte NodeLevel { get;  }
+        public byte NodeLevel { get; }
         public ushort EntriesUsed { get; }
         public ulong LeftSiblingAddress { get; }
         public ulong RightSiblingAddress { get; }

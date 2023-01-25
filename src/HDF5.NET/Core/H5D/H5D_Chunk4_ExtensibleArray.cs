@@ -13,7 +13,7 @@
 
         private ExtensibleArrayHeader? _header;
 
-// TODO: This is necessary because generic version cannot be stored here without non-generic base class. Solution would be a generic thread safe per-dataset/file cache
+        // TODO: This is necessary because generic version cannot be stored here without non-generic base class. Solution would be a generic thread safe per-dataset/file cache
         private object? _indexBlock;
 
         #endregion
@@ -130,7 +130,7 @@
             }
         }
 
-        private T? GetElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? GetElement<T>(ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             if (_header is null)
             {
@@ -153,7 +153,7 @@
             }
         }
 
-        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
             var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
@@ -168,9 +168,9 @@
                 Dataset.Context.Reader.Seek((long)header.IndexBlockAddress, SeekOrigin.Begin);
 
                 _indexBlock = new ExtensibleArrayIndexBlock<T>(
-                    Dataset.Context.Reader, 
+                    Dataset.Context.Reader,
                     Dataset.Context.Superblock,
-                    header, 
+                    header,
                     decode);
             }
 
@@ -230,8 +230,8 @@
                     Dataset.Context.Reader.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
 
                     var secondaryBlock = new ExtensibleArraySecondaryBlock(
-                        Dataset.Context, 
-                        header, 
+                        Dataset.Context,
+                        header,
                         secondaryBlockIndex);
 
                     /* Compute the data block index in super block */
@@ -281,7 +281,7 @@
 
                         var dataBlockPage = new DataBlockPage<T>(
                             Dataset.Context.Reader,
-                            header.DataBlockPageElementsCount, 
+                            header.DataBlockPageElementsCount,
                             decode);
 
                         /* Set 'thing' info to refer to the data block page */

@@ -8,7 +8,7 @@ namespace HDF5.NET
 
         private byte _version;
         private byte[]? _data;
-        private H5BinaryReader _reader;
+        private readonly H5BaseReader _reader;
 
         #endregion
 
@@ -87,7 +87,7 @@ namespace HDF5.NET
             var end = Array.IndexOf(Data, (byte)0, (int)offset);
             var bytes = Data[(int)offset..end];
 
-            return Encoding.ASCII.GetString(bytes);           
+            return Encoding.ASCII.GetString(bytes);
         }
 
         #endregion

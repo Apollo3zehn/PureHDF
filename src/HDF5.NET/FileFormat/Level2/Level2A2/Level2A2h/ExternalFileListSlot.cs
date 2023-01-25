@@ -7,7 +7,7 @@
         public ExternalFileListSlot(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // name heap offset
             NameHeapOffset = superblock.ReadLength(reader);
 

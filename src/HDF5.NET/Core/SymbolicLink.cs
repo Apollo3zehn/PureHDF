@@ -20,9 +20,9 @@ namespace HDF5.NET
 
             (Value, ObjectPath) = linkMessage.LinkInfo switch
             {
-                SoftLinkInfo softLink           => (softLink.Value, null),
-                ExternalLinkInfo externalLink   => (externalLink.FilePath, externalLink.FullObjectPath),
-                _                               => throw new Exception($"The link info type '{linkMessage.LinkInfo.GetType().Name}' is not supported.")
+                SoftLinkInfo softLink => (softLink.Value, null),
+                ExternalLinkInfo externalLink => (externalLink.FilePath, externalLink.FullObjectPath),
+                _ => throw new Exception($"The link info type '{linkMessage.LinkInfo.GetType().Name}' is not supported.")
             };
 
             Parent = parent;
@@ -63,7 +63,7 @@ namespace HDF5.NET
                     };
                 }
             }
-            
+
             // external file
             else
             {

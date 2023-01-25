@@ -4,7 +4,7 @@
     {
         private FixedArrayHeader? _header;
 
-        public H5D_Chunk4_FixedArray(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) : 
+        public H5D_Chunk4_FixedArray(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
             base(dataset, layout, datasetAccess)
         {
             //
@@ -52,7 +52,7 @@
             }
         }
 
-        private T? GetElement<T>(ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? GetElement<T>(ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             if (_header is null)
             {
@@ -74,7 +74,7 @@
             }
         }
 
-        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5BinaryReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             // H5FA.c (H5FA_get)
 
@@ -102,7 +102,7 @@
 
                     /* Compute the address of the data block */
                     var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                    var pageAddress = Dataset.Context.Reader.BaseStream.Position + (long)(pageIndex * pageSize);
+                    var pageAddress = Dataset.Context.Reader.Position + (long)(pageIndex * pageSize);
 
                     /* Check for using last page, to set the number of elements on the page */
                     ulong elementCount;

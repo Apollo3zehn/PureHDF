@@ -10,12 +10,12 @@ namespace HDF5.NET
         Selection SourceSelection,
         Selection TargetSelection,
         Func<ulong[], Task<Memory<byte>>>? GetSourceBufferAsync,
-        Func<ulong[], H5Stream>? GetSourceStream,
+        Func<ulong[], Stream>? GetSourceStream,
         Func<ulong[], Memory<byte>> GetTargetBuffer,
         int TypeSize
     );
 
-    internal struct RelativeStep
+    internal readonly struct RelativeStep
     {
         public ulong[] Chunk { get; init; }
 
@@ -54,7 +54,7 @@ namespace HDF5.NET
                 /* process slice */
                 while (remaining > 0)
                 {
-// TODO: Performance issue.
+                    // TODO: Performance issue.
                     var scaledOffsets = new ulong[rank];
                     var chunkOffsets = new ulong[rank];
 
@@ -81,8 +81,8 @@ namespace HDF5.NET
         }
 
         public static Task CopyAsync<TReader>(
-            TReader reader, 
-            int sourceRank, 
+            TReader reader,
+            int sourceRank,
             int targetRank,
             CopyInfo copyInfo) where TReader : IReader
         {
@@ -98,30 +98,27 @@ namespace HDF5.NET
                 throw new RankException($"The length of each array parameter must match the rank parameter.");
 
             /* walkers */
-            var sourceWalker = SelectionUtils
-                .Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
+            var sourceWalker = Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
                 .GetEnumerator();
 
-            var targetWalker = SelectionUtils
-                .Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
+            var targetWalker = Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
                 .GetEnumerator();
 
             /* select method */
             if (copyInfo.GetSourceBufferAsync is not null)
-                return SelectionUtils.CopyMemoryAsync(reader, sourceWalker, targetWalker, copyInfo);
+                return CopyMemoryAsync(sourceWalker, targetWalker, copyInfo);
 
             else if (copyInfo.GetSourceStream is not null)
-                return SelectionUtils.CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
+                return CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
 
             else
                 throw new Exception($"Either GetSourceBuffer or GetSourceStream must be non-null.");
         }
 
-        private async static Task CopyMemoryAsync<TReader>(
-            TReader reader,
-            IEnumerator<RelativeStep> sourceWalker, 
-            IEnumerator<RelativeStep> targetWalker, 
-            CopyInfo copyInfo) where TReader : IReader
+        private async static Task CopyMemoryAsync(
+            IEnumerator<RelativeStep> sourceWalker,
+            IEnumerator<RelativeStep> targetWalker,
+            CopyInfo copyInfo)
         {
             /* initialize source walker */
             var sourceBuffer = default(Memory<byte>);
@@ -175,24 +172,23 @@ namespace HDF5.NET
                     /* copy */
                     var length = Math.Min(currentSource.Length, currentTarget.Length);
 
-                    currentSource
-                        .Slice(0, length)
+                    currentSource[..length]
                         .CopyTo(currentTarget);
 
-                    currentSource = currentSource.Slice(length);
-                    currentTarget = currentTarget.Slice(length);
+                    currentSource = currentSource[length..];
+                    currentTarget = currentTarget[length..];
                 }
             }
         }
 
         private async static Task CopyStreamAsync<TReader>(
             TReader reader,
-            IEnumerator<RelativeStep> sourceWalker, 
-            IEnumerator<RelativeStep> targetWalker, 
+            IEnumerator<RelativeStep> sourceWalker,
+            IEnumerator<RelativeStep> targetWalker,
             CopyInfo copyInfo) where TReader : IReader
         {
             /* initialize source walker */
-            var sourceStream = default(H5Stream)!;
+            var sourceStream = default(Stream)!;
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
@@ -244,13 +240,13 @@ namespace HDF5.NET
 
                     await reader.ReadAsync(                                             // corresponds to span.CopyTo
                         sourceStream,
-                        currentTarget.Slice(0, length), 
+                        currentTarget[..length],
                         offset).ConfigureAwait(false);
 
                     offset = (int)sourceStep.Offset * copyInfo.TypeSize;                // corresponds to 
                     currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;        // sourceBuffer.Slice()
 
-                    currentTarget = currentTarget.Slice(length);
+                    currentTarget = currentTarget[length..];
                 }
             }
         }

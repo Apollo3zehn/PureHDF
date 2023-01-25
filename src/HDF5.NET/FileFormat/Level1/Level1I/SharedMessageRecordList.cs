@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public SharedMessageRecordList(H5BinaryReader reader)
+        public SharedMessageRecordList(H5BaseReader reader)
         {
             // signature
             var signature = reader.ReadBytes(4);
@@ -14,7 +14,7 @@ namespace HDF5.NET
 
             // share message records
             SharedMessageRecords = new List<SharedMessageRecord>();
-// TODO: how to know how many?
+            // TODO: how to know how many?
 
             // checksum
             Checksum = reader.ReadUInt32();

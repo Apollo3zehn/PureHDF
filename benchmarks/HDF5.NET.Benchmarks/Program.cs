@@ -4,9 +4,9 @@ namespace Benchmark
 {
     public class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            var summary = BenchmarkRunner.Run<InflateComparison>();
+            _ = BenchmarkRunner.Run<InflateComparison>();
         }
     }
 }

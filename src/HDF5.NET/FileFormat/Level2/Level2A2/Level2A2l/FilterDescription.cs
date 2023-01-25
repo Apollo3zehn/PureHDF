@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FilterDescription(H5BinaryReader reader, byte version)
+        public FilterDescription(H5BaseReader reader, byte version)
         {
             // filter identifier
             Identifier = (FilterIdentifier)reader.ReadInt16();
@@ -12,9 +12,9 @@
             // name length
             var nameLength = version switch
             {
-                1                                               => reader.ReadUInt16(),
-                2 when (ushort)Identifier >= 256     => reader.ReadUInt16(),
-                2 when (ushort)Identifier < 256      => 0,
+                1 => reader.ReadUInt16(),
+                2 when (ushort)Identifier >= 256 => reader.ReadUInt16(),
+                2 when (ushort)Identifier < 256 => 0,
                 _ => throw new NotSupportedException($"Only version 1 or 2 instances of the {nameof(FilterDescription)} type are supported.")
             };
 

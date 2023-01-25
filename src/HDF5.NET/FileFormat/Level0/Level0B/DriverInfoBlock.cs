@@ -10,10 +10,10 @@
 
         #region Constructors
 
-        public DriverInfoBlock(H5BinaryReader reader)
+        public DriverInfoBlock(H5BaseReader reader)
         {
             // version
-            Version = reader.ReadByte(); 
+            Version = reader.ReadByte();
 
             // reserved
             reader.ReadBytes(3);
@@ -28,7 +28,7 @@
             DriverInfo = DriverId switch
             {
                 "NCSAmulti" => new MultiDriverInfo(reader),
-                "NCSAfami"  => new FamilyDriverInfo(reader),
+                "NCSAfami" => new FamilyDriverInfo(reader),
                 _ => throw new NotSupportedException($"The driver ID '{DriverId}' is not supported.")
             };
         }

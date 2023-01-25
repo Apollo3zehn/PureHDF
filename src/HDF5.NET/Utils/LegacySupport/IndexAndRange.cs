@@ -46,10 +46,10 @@ namespace System
         }
 
         /// <summary>Create an Index pointing at first element.</summary>
-        public static Index Start => new Index(0);
+        public static Index Start => new(0);
 
         /// <summary>Create an Index pointing at beyond last element.</summary>
-        public static Index End => new Index(~0);
+        public static Index End => new(~0);
 
         /// <summary>Create an Index from the start at the position indicated by the value.</summary>
         /// <param name="value">The index value from the start.</param>
@@ -193,13 +193,13 @@ namespace System
         }
 
         /// <summary>Create a Range object starting from start index to the end of the collection.</summary>
-        public static Range StartAt(Index start) => new Range(start, Index.End);
+        public static Range StartAt(Index start) => new(start, Index.End);
 
         /// <summary>Create a Range object starting from first element in the collection to the end Index.</summary>
-        public static Range EndAt(Index end) => new Range(Index.Start, end);
+        public static Range EndAt(Index end) => new(Index.Start, end);
 
         /// <summary>Create a Range object starting from first element to the end.</summary>
-        public static Range All => new Range(Index.Start, Index.End);
+        public static Range All => new(Index.Start, Index.End);
 
         /// <summary>Calculate the start offset and length of range object using a collection length.</summary>
         /// <param name="length">The length of the collection that the range will be used with. length has to be a positive value.</param>

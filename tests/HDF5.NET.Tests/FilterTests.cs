@@ -56,7 +56,7 @@ namespace HDF5.NET.Tests.Reading
             // import h5py
 
             // with h5py.File("scaleoffset.h5", "w") as f:
-            
+
             //     # minbits = 0
             //     size = 8 << 0
             //     data = [24, 24, 24, 24, 24, 24]
@@ -287,7 +287,7 @@ namespace HDF5.NET.Tests.Reading
             Assert.True(actual.SequenceEqual(TestData.MediumData));
         }
 
-// TODO: 16 byte and arbitrary number of bytes tests missing
+        // TODO: 16 byte and arbitrary number of bytes tests missing
         [Theory]
         [InlineData((byte)1, 1001)]
         [InlineData((short)2, 732)]
@@ -305,7 +305,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
+#pragma warning disable IDE0060
         public async Task CanUnshuffleGeneric<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {
@@ -322,7 +324,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled!.Length];
@@ -350,7 +352,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-        public async Task CanUnshuffleAvx2<T>(T dummy, int length) 
+#pragma warning disable IDE0060
+        public async Task CanUnshuffleAvx2<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {
@@ -367,7 +371,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled!.Length];
@@ -394,7 +398,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-        public async Task CanUnshuffleSse2<T>(T dummy, int length) 
+#pragma warning disable IDE0060
+        public async Task CanUnshuffleSse2<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {
@@ -411,7 +417,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled!.Length];
@@ -439,7 +445,7 @@ namespace HDF5.NET.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default(AsyncReader), null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
 
@@ -512,7 +518,9 @@ namespace HDF5.NET.Tests.Reading
         [InlineData((long)8, 438)]
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
+#pragma warning disable IDE0060
         public void CanConvertEndiannessAvx2<T>(T dummy, int length)
+#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
         {

@@ -7,7 +7,7 @@
         public ChunkedStoragePropertyDescription3(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             // rank
             Rank = reader.ReadByte();
 

@@ -4,16 +4,16 @@
     {
         #region Constructors
 
-        public DataspaceSelection(H5BinaryReader reader)
+        public DataspaceSelection(H5BaseReader reader)
         {
             SelectionType = (SelectionType)reader.ReadUInt32();
 
             SelectionInfo = SelectionType switch
             {
-                SelectionType.H5S_SEL_NONE      => new H5S_SEL_NONE(reader),
-                SelectionType.H5S_SEL_POINTS    => new H5S_SEL_POINTS(reader),
-                SelectionType.H5S_SEL_HYPER     => new H5S_SEL_HYPER(reader),
-                SelectionType.H5S_SEL_ALL       => new H5S_SEL_ALL(reader),
+                SelectionType.H5S_SEL_NONE => new H5S_SEL_NONE(reader),
+                SelectionType.H5S_SEL_POINTS => new H5S_SEL_POINTS(reader),
+                SelectionType.H5S_SEL_HYPER => new H5S_SEL_HYPER(reader),
+                SelectionType.H5S_SEL_ALL => new H5S_SEL_ALL(reader),
                 _ => throw new NotSupportedException($"The dataspace selection type '{SelectionType}' is not supported.")
             };
         }

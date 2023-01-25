@@ -6,9 +6,9 @@ namespace HDF5.NET.Tests
 {
     public static class DeflateHelper_Intel_ISA_L
     {
-        private static int _state_length = Unsafe.SizeOf<inflate_state>();
+        private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
 
-        private static ThreadLocal<IntPtr> _state_ptr = new ThreadLocal<IntPtr>(
+        private static readonly ThreadLocal<IntPtr> _state_ptr = new(
             valueFactory: DeflateHelper_Intel_ISA_L.CreateState,
             trackAllValues: false);
 
@@ -21,7 +21,7 @@ namespace HDF5.NET.Tests
 
                 ISAL.isal_inflate_reset(_state_ptr.Value);
 
-                buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
+                buffer = buffer[2..]; // skip ZLIB header to get only the DEFLATE stream
 
                 var length = 0;
                 var inflated = new byte[buffer.Length /* minimum size to expect */];

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ObjectCommentMessage(H5BinaryReader reader)
+        public ObjectCommentMessage(H5BaseReader reader)
         {
             // comment
             Comment = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);

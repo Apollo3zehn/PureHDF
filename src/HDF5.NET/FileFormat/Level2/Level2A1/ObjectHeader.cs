@@ -14,7 +14,7 @@ namespace HDF5.NET
         {
             _context = context;
 
-            Address = (ulong)context.Reader.BaseStream.Position;
+            Address = (ulong)context.Reader.Position;
             HeaderMessages = new List<HeaderMessage>();
         }
 
@@ -32,7 +32,7 @@ namespace HDF5.NET
 
         #region Methods
 
-// TODO: This method could als be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
+        // TODO: This method could als be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
         public T DecodeMessage<T>(MessageFlags messageFlags, Func<T> decode) where T : Message
         {
             // H5OShared.h (H5O_SHARED_DECODE)
@@ -100,7 +100,7 @@ namespace HDF5.NET
             {
                 prefixSize = 8UL;
                 gapSize = 0;
-            }    
+            }
             else if (version == 2)
             {
                 prefixSize = 4UL + (withCreationOrder ? 2UL : 0UL);
@@ -145,7 +145,7 @@ namespace HDF5.NET
             return headerMessages;
         }
 
-        private ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
+        private static ObjectType DetermineObjectType(List<HeaderMessage> headerMessages)
         {
             foreach (var message in headerMessages)
             {
@@ -184,7 +184,7 @@ namespace HDF5.NET
             /* Check for implicit shared object header message*/
             if (message.Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
             {
-// TODO: Implement 
+                // TODO: Implement 
                 throw new NotImplementedException("This code path is not yet implemented.");
             }
             else
@@ -195,15 +195,15 @@ namespace HDF5.NET
                      * is possible, for example, if an attribute's datatype is shared in
                      * the same object header the attribute is in.  Read the message
                      * directly. */
-// TODO: Implement 
+                    // TODO: Implement 
                     throw new NotImplementedException("This code path is not yet implemented.");
                 }
                 else
                 {
                     /* The shared message is in another object header */
 
-// TODO: This would greatly benefit from a caching mechanism!
-                    var address = _context.Reader.BaseStream.Position;
+                    // TODO: This would greatly benefit from a caching mechanism!
+                    var address = _context.Reader.Position;
                     _context.Reader.Seek((long)message.Address, SeekOrigin.Begin);
 
                     var header = ObjectHeader.Construct(_context);

@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Fields
 
-        private Func<T> _decodeKey;
+        private readonly Func<T> _decodeKey;
 
         private H5Context _context;
         private byte _version;
@@ -85,8 +85,8 @@ namespace HDF5.NET
                     NodeInfos[i].MaxRecordCount = maxInternalRecordCount;
                     NodeInfos[i].SplitRecordCount = (NodeInfos[i].MaxRecordCount * SplitPercent) / 100;
                     NodeInfos[i].MergeRecordCount = (NodeInfos[i].MaxRecordCount * MergePercent) / 100;
-                    NodeInfos[i].CumulatedTotalRecordCount = 
-                        (NodeInfos[i].MaxRecordCount + 1) * 
+                    NodeInfos[i].CumulatedTotalRecordCount =
+                        (NodeInfos[i].MaxRecordCount + 1) *
                          NodeInfos[i - 1].MaxRecordCount + NodeInfos[i].MaxRecordCount;
                     NodeInfos[i].CumulatedTotalRecordCountSize = (byte)H5Utils.FindMinByteCount(NodeInfos[i].CumulatedTotalRecordCount);
                 }
@@ -169,7 +169,7 @@ namespace HDF5.NET
             if (currentNodePointer.RecordCount == 0)
                 return false;
 
-// TODO: Optimizations missing.
+            // TODO: Optimizations missing.
 
             /* Current depth of the tree */
             var depth = Depth;
@@ -187,7 +187,7 @@ namespace HDF5.NET
                     throw new Exception("Unable to load B-tree internal node.");
 
                 /* Locate node pointer for child */
-                (index, cmp) = LocateRecord(internalNode.Records, compare);
+                (index, cmp) = BTree2Header<T>.LocateRecord(internalNode.Records, compare);
 
                 if (cmp > 0)
                     index++;
@@ -237,14 +237,14 @@ namespace HDF5.NET
                 var leafNode = new BTree2LeafNode<T>(_context.Reader, this, currentNodePointer.RecordCount, _decodeKey);
 
                 /* Locate record */
-                (index, cmp) = LocateRecord(leafNode.Records, compare);
+                (index, cmp) = BTree2Header<T>.LocateRecord(leafNode.Records, compare);
 
                 if (cmp == 0)
                 {
                     result = leafNode.Records[index];
                     return true;
 
-// TODO: Optimizations missing.
+                    // TODO: Optimizations missing.
                 }
             }
 
@@ -318,8 +318,9 @@ namespace HDF5.NET
             }
         }
 
-        private (uint index, int cmp) LocateRecord(T[] records,
-                                                   Func<T, int> compare)
+        private static (uint index, int cmp) LocateRecord(
+            T[] records,
+            Func<T, int> compare)
         {
             // H5B2int.c (H5B2__locate_record)
             // Return: Comparison value for insertion location. Negative for record

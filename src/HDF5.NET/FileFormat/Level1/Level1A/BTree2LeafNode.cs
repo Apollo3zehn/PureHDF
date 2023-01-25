@@ -6,7 +6,7 @@ namespace HDF5.NET
     {
         #region Constructors
 
-        public BTree2LeafNode(H5BinaryReader reader, BTree2Header<T> header, ushort recordCount, Func<T> decodeKey) 
+        public BTree2LeafNode(H5BaseReader reader, BTree2Header<T> header, ushort recordCount, Func<T> decodeKey)
             : base(reader, header, recordCount, BTree2LeafNode<T>.Signature, decodeKey)
         {
             // checksum

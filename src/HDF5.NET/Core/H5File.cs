@@ -2,10 +2,10 @@
 {
     partial class H5File
     {
-// TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
+        // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
         #region Fields
 
-        private bool _deleteOnClose;
+        private readonly bool _deleteOnClose;
         private Func<IChunkCache>? _chunkCacheFactory;
 
         #endregion
@@ -29,53 +29,56 @@
 
         internal static H5File OpenReadCore(string filePath, bool deleteOnClose = false)
         {
-            return H5File.OpenCore(
+            return OpenCore(
                 filePath,
-                FileMode.Open, 
-                FileAccess.Read, 
-                FileShare.Read, 
-                useAsync: false, 
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                useAsync: false,
                 deleteOnClose: deleteOnClose);
         }
 
         internal static H5File OpenCore(
-            string filePath, 
-            FileMode fileMode, 
-            FileAccess fileAccess, 
-            FileShare fileShare, 
-            bool useAsync = false, 
+            string filePath,
+            FileMode fileMode,
+            FileAccess fileAccess,
+            FileShare fileShare,
+            bool useAsync = false,
             bool deleteOnClose = false)
         {
             var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
 
-            var stream = new System.IO.FileStream(
-                absoluteFilePath, 
-                fileMode, 
+            var stream = new FileStream(
+                absoluteFilePath,
+                fileMode,
                 fileAccess,
                 fileShare,
                 4096,
                 useAsync);
 
-            return H5File.OpenCore(stream, absoluteFilePath, deleteOnClose);
+#if NET6_0_OR_GREATER
+            var reader = new H5FileStreamReader(stream, leaveOpen: false);
+#else
+            var reader = new H5StreamReader(stream, leaveOpen: false);
+#endif
+
+            return OpenCore(reader, absoluteFilePath, deleteOnClose);
         }
 
-        private static H5File OpenCore(Stream stream, string absoluteFilePath, bool deleteOnClose = false)
+        private static H5File OpenCore(H5BaseReader reader, string absoluteFilePath, bool deleteOnClose = false)
         {
             if (!BitConverter.IsLittleEndian)
                 throw new Exception("This library only works on little endian systems.");
-
-            var safeFileHandle = (stream as FileStream)?.SafeFileHandle;
-            var reader = new H5BinaryReader(stream, safeFileHandle);
 
             // superblock
             var stepSize = 512;
             var signature = reader.ReadBytes(8);
 
-            while (!H5File.ValidateSignature(signature, Superblock.FormatSignature))
+            while (!ValidateSignature(signature, Superblock.FormatSignature))
             {
                 reader.Seek(stepSize - 8, SeekOrigin.Current);
 
-                if (reader.BaseStream.Position >= reader.BaseStream.Length)
+                if (reader.Position >= reader.Length)
                     throw new Exception("The file is not a valid HDF 5 file.");
 
                 signature = reader.ReadBytes(8);
@@ -111,7 +114,6 @@
                 else
                     throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
             }
-
 
             reader.Seek((long)address, SeekOrigin.Begin);
             var context = new H5Context(reader, superblock);

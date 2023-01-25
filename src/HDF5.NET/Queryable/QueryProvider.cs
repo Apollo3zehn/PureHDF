@@ -5,8 +5,8 @@ namespace HDF5.NET
 {
     internal class QueryProvider<TFake> : IQueryProvider where TFake : unmanaged
     {
-        private ulong _datasetLength;
-        private Func<HyperslabSelection, TFake[]> _executor;
+        private readonly ulong _datasetLength;
+        private readonly Func<HyperslabSelection, TFake[]> _executor;
 
         private ulong _start;
         private ulong _stride;
@@ -88,7 +88,7 @@ namespace HDF5.NET
                     ProcessMethodCallExpression(methodCall);
                     break;
 
-                case ConstantExpression constant:
+                case ConstantExpression:
                     break;
 
                 default:
@@ -104,15 +104,15 @@ namespace HDF5.NET
             throw new Exception($"Unable to extract integer from expression.");
         }
 
-        private static string? GetDebugView(Expression expression)
-        {
-            if (expression is null)
-                return null;
+        // private static string? GetDebugView(Expression expression)
+        // {
+        //     if (expression is null)
+        //         return null;
 
-            var propertyInfo = typeof(Expression)
-                .GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic)!;
-                
-            return propertyInfo.GetValue(expression) as string;
-        }
+        //     var propertyInfo = typeof(Expression)
+        //         .GetProperty("DebugView", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+        //     return propertyInfo.GetValue(expression) as string;
+        // }
     }
 }

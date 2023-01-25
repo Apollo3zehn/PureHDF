@@ -21,8 +21,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_space is null)
-                    _space = new H5Dataspace(InternalDataspace);
+                _space ??= new H5Dataspace(InternalDataspace);
 
                 return _space;
             }
@@ -35,8 +34,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_type is null)
-                    _type = new H5DataType(InternalDataType);
+                _type ??= new H5DataType(InternalDataType);
 
                 return _type;
             }
@@ -49,8 +47,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_layout is null)
-                    _layout = new H5DataLayout(InternalDataLayout);
+                _layout ??= new H5DataLayout(InternalDataLayout);
 
                 return _layout;
             }
@@ -63,8 +60,7 @@ namespace HDF5.NET
         {
             get
             {
-                if (_fillValue is null)
-                    _fillValue = new H5FillValue(InternalFillValue);
+                _fillValue ??= new H5FillValue(InternalFillValue);
 
                 return _fillValue;
             }
@@ -89,7 +85,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default)
         {
             var result = ReadAsync<byte, SyncReader>(
-                default(SyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -119,7 +115,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
             var result = ReadAsync<T, SyncReader>(
-                default(SyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -175,7 +171,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
             ReadAsync<T, SyncReader>(
-                default(SyncReader),
+                default,
                 buffer,
                 fileSelection,
                 memorySelection,
@@ -202,7 +198,7 @@ namespace HDF5.NET
            H5DatasetAccess datasetAccess = default) where T : struct
         {
             var data = ReadAsync<byte, SyncReader>(
-                default(SyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -213,8 +209,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            if (getName is null)
-                getName = fieldInfo => fieldInfo.Name;
+            getName ??= fieldInfo => fieldInfo.Name;
 
             return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
@@ -234,7 +229,7 @@ namespace HDF5.NET
            H5DatasetAccess datasetAccess = default)
         {
             var data = ReadAsync<byte, SyncReader>(
-                default(SyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -263,7 +258,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default)
         {
             var data = ReadAsync<byte, SyncReader>(
-                default(SyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -297,7 +292,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default)
         {
             var result = await ReadAsync<byte, AsyncReader>(
-                default(AsyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -327,7 +322,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
             var result = await ReadAsync<T, AsyncReader>(
-                default(AsyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -358,7 +353,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
             return ReadAsync<T, AsyncReader>(
-                default(AsyncReader),
+                default,
                 buffer,
                 fileSelection,
                 memorySelection,
@@ -385,7 +380,7 @@ namespace HDF5.NET
            H5DatasetAccess datasetAccess = default) where T : struct
         {
             var data = await ReadAsync<byte, AsyncReader>(
-                default(AsyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -396,8 +391,7 @@ namespace HDF5.NET
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            if (getName is null)
-                getName = fieldInfo => fieldInfo.Name;
+            getName ??= fieldInfo => fieldInfo.Name;
 
             return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
@@ -417,7 +411,7 @@ namespace HDF5.NET
            H5DatasetAccess datasetAccess = default)
         {
             var data = await ReadAsync<byte, AsyncReader>(
-                default(AsyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,
@@ -446,7 +440,7 @@ namespace HDF5.NET
             H5DatasetAccess datasetAccess = default)
         {
             var data = await ReadAsync<byte, AsyncReader>(
-                default(AsyncReader),
+                default,
                 default,
                 fileSelection,
                 memorySelection,

@@ -1,16 +1,15 @@
 ﻿namespace HDF5.NET
 {
-    internal class ExternalFileListStream : H5Stream
+    internal class ExternalFileListStream : Stream
     {
         private long _position;
         private bool _loadSlot;
         private SlotStream? _slotStream;
-        private SlotStream[] _slotStreams;
+        private readonly SlotStream[] _slotStreams;
 
         public ExternalFileListStream(
-            bool isStackOnly,
-            ExternalFileListMessage externalFileList, 
-            H5DatasetAccess datasetAccess) : base(isStackOnly, default, default)
+            ExternalFileListMessage externalFileList,
+            H5DatasetAccess datasetAccess)
         {
             var offset = 0L;
 
@@ -44,15 +43,15 @@
 
         public override long Length { get; }
 
-        public override long Position 
+        public override long Position
         {
-            get 
-            { 
-                return _position; 
+            get
+            {
+                return _position;
             }
-            set 
-            { 
-                throw new NotImplementedException(); 
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -117,7 +116,10 @@
                 var streamRemaining = _slotStream.Length - _slotStream.Position;
                 var length = (int)Math.Min(remaining, streamRemaining);
 
-                await _slotStream.ReadAsync(buffer, offset, length).ConfigureAwait(false);
+                _ = await _slotStream
+                    .ReadAsync(buffer.AsMemory(offset, length), cancellationToken)
+                    .ConfigureAwait(false);
+
                 _position += length;
                 offset += length;
                 remaining -= length;

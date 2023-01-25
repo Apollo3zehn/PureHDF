@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ArrayPropertyDescription(H5BinaryReader reader, byte version)
+        public ArrayPropertyDescription(H5BaseReader reader, byte version)
         {
             // rank
             Rank = reader.ReadByte();
@@ -31,7 +31,7 @@
                     PermutationIndices[i] = reader.ReadUInt32();
                 }
             }
-                
+
             // base type
             BaseType = new DatatypeMessage(reader);
         }

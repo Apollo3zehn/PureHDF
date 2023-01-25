@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public CompoundPropertyDescription(H5BinaryReader reader, byte version, uint valueSize)
+        public CompoundPropertyDescription(H5BaseReader reader, byte version, uint valueSize)
         {
             switch (version)
             {
@@ -17,13 +17,13 @@
                     MemberByteOffset = reader.ReadUInt32();
 
                     // rank
-                    var rank = reader.ReadByte();
+                    _ = reader.ReadByte();
 
                     // padding bytes
                     reader.ReadBytes(3);
 
                     // dimension permutation
-                    var dimensionPermutation = reader.ReadUInt32();
+                    _ = reader.ReadUInt32();
 
                     // padding byte
                     reader.ReadBytes(4);

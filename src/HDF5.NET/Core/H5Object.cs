@@ -38,12 +38,9 @@
         {
             get
             {
-                if (_objectReferenceCount is null)
-                {
-                    _objectReferenceCount = Header
+                _objectReferenceCount ??= Header
                         .GetMessages<ObjectReferenceCountMessage>()
                         .FirstOrDefault();
-                }
 
                 return _objectReferenceCount;
             }

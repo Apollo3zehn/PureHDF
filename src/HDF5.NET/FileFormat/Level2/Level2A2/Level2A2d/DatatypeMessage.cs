@@ -4,23 +4,23 @@
     {
         #region Constructors
 
-        public DatatypeMessage(H5BinaryReader reader)
+        public DatatypeMessage(H5BaseReader reader)
         {
             ClassVersion = reader.ReadByte();
 
             BitField = Class switch
             {
-                DatatypeMessageClass.FixedPoint     => new FixedPointBitFieldDescription(reader),
-                DatatypeMessageClass.FloatingPoint  => new FloatingPointBitFieldDescription(reader),
-                DatatypeMessageClass.Time           => new TimeBitFieldDescription(reader),
-                DatatypeMessageClass.String         => new StringBitFieldDescription(reader),
-                DatatypeMessageClass.BitField       => new BitFieldBitFieldDescription(reader),
-                DatatypeMessageClass.Opaque         => new OpaqueBitFieldDescription(reader),
-                DatatypeMessageClass.Compound       => new CompoundBitFieldDescription(reader),
-                DatatypeMessageClass.Reference      => new ReferenceBitFieldDescription(reader),
-                DatatypeMessageClass.Enumerated     => new EnumerationBitFieldDescription(reader),
+                DatatypeMessageClass.FixedPoint => new FixedPointBitFieldDescription(reader),
+                DatatypeMessageClass.FloatingPoint => new FloatingPointBitFieldDescription(reader),
+                DatatypeMessageClass.Time => new TimeBitFieldDescription(reader),
+                DatatypeMessageClass.String => new StringBitFieldDescription(reader),
+                DatatypeMessageClass.BitField => new BitFieldBitFieldDescription(reader),
+                DatatypeMessageClass.Opaque => new OpaqueBitFieldDescription(reader),
+                DatatypeMessageClass.Compound => new CompoundBitFieldDescription(reader),
+                DatatypeMessageClass.Reference => new ReferenceBitFieldDescription(reader),
+                DatatypeMessageClass.Enumerated => new EnumerationBitFieldDescription(reader),
                 DatatypeMessageClass.VariableLength => new VariableLengthBitFieldDescription(reader),
-                DatatypeMessageClass.Array          => new ArrayBitFieldDescription(reader),
+                DatatypeMessageClass.Array => new ArrayBitFieldDescription(reader),
                 _ => throw new NotSupportedException($"The data type message class '{Class}' is not supported.")
             };
 

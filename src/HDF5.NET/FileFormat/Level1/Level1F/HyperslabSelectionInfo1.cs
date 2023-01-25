@@ -4,13 +4,13 @@
     {
         #region Constructors
 
-        public HyperslabSelectionInfo1(H5BinaryReader reader)
+        public HyperslabSelectionInfo1(H5BaseReader reader)
         {
             // reserved
             reader.ReadBytes(4);
 
             // length
-            var length = reader.ReadUInt32();
+            _ = reader.ReadUInt32();
 
             // rank
             Rank = reader.ReadUInt32();

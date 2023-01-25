@@ -8,11 +8,11 @@
             "cwd": "${workspaceFolder}/src/HDF5.NET.BlazorBrowser"
         },
         {
-            "name": "Run Benchmark",
+            "name": "Run Inflate Benchmark",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.Benchmarks/Release/net7.0/HDF5.NET.Benchmarks.dll",
+            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.Benchmarks/Release/net6.0/HDF5.NET.Benchmarks.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
@@ -23,7 +23,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-async-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.AsyncBenchmark/Release/net7.0/HDF5.NET.AsyncBenchmark.dll",
+            "program": "${workspaceFolder}/artifacts/bin/HDF5.NET.AsyncBenchmark/Release/net6.0/HDF5.NET.AsyncBenchmark.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

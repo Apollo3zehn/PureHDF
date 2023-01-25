@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public BTreeKValuesMessage(H5BinaryReader reader)
+        public BTreeKValuesMessage(H5BaseReader reader)
         {
             // version
             Version = reader.ReadByte();

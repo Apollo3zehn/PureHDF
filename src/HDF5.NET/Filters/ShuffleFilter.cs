@@ -17,7 +17,7 @@ namespace HDF5.NET
 
             else
 #endif
-                ShuffleGeneric.Shuffle(bytesOfType, source, destination);
+            ShuffleGeneric.Shuffle(bytesOfType, source, destination);
         }
 
         public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
@@ -31,7 +31,7 @@ namespace HDF5.NET
 
             else
 #endif
-                ShuffleGeneric.Unshuffle(bytesOfType, source, destination);
+            ShuffleGeneric.Unshuffle(bytesOfType, source, destination);
         }
     }
 }

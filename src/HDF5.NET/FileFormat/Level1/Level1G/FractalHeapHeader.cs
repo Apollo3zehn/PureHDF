@@ -106,7 +106,7 @@ namespace HDF5.NET
                 FilteredRootDirectBlockSize = superblock.ReadLength(reader);
                 IOFilterMask = reader.ReadUInt32();
                 IOFilterInfo = new FilterPipelineMessage(reader);
-            }           
+            }
 
             // checksum
             Checksum = reader.ReadUInt32();
@@ -256,7 +256,7 @@ namespace HDF5.NET
 
                 /* Locate child indirect block */
                 var indirectBlockEntry = indirectBlock.Entries[entry];
- 
+
                 /* Use new indirect block */
                 _context.Reader.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
                 indirectBlock = new FractalHeapIndirectBlock(_context, this, nrows);
@@ -342,7 +342,7 @@ namespace HDF5.NET
                     HugeIdsAreDirect = true;
 
                     /* Set the size of 'huge' object IDs */
-// TODO: Correct? Why is here not "+4"?
+                    // TODO: Correct? Why is here not "+4"?
                     HugeIdsSize = (byte)(superblock.OffsetsSize + superblock.LengthsSize + superblock.LengthsSize);
                 }
                 else

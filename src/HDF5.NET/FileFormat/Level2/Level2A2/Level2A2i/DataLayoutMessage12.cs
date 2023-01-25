@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        internal DataLayoutMessage12(H5Context context, byte version) : base(context.Reader)
+        internal DataLayoutMessage12(H5Context context, byte version)
         {
             var (reader, superblock) = context;
 
@@ -29,9 +29,9 @@
             // data address
             Address = LayoutClass switch
             {
-                LayoutClass.Compact     => ulong.MaxValue, // invalid address
-                LayoutClass.Contiguous  => superblock.ReadOffset(reader),
-                LayoutClass.Chunked     => superblock.ReadOffset(reader),
+                LayoutClass.Compact => ulong.MaxValue, // invalid address
+                LayoutClass.Contiguous => superblock.ReadOffset(reader),
+                LayoutClass.Chunked => superblock.ReadOffset(reader),
                 _ => throw new NotSupportedException($"The layout class '{LayoutClass}' is not supported.")
             };
 
@@ -55,7 +55,7 @@
             }
             else
             {
-                CompactData = new byte[0];
+                CompactData = Array.Empty<byte>();
             }
         }
 

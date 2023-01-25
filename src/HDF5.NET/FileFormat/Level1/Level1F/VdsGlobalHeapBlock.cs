@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public VdsGlobalHeapBlock(H5BinaryReader localReader, Superblock superblock)
+        public VdsGlobalHeapBlock(H5BaseReader localReader, Superblock superblock)
         {
             // version
             Version = localReader.ReadByte();

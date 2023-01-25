@@ -13,10 +13,10 @@ namespace HDF5.NET
         #region Constructors
 
         public ExtensibleArrayIndexBlock(
-            H5BinaryReader reader, 
-            Superblock superblock, 
-            ExtensibleArrayHeader header, 
-            Func<H5BinaryReader, T> decode)
+            H5BaseReader reader,
+            Superblock superblock,
+            ExtensibleArrayHeader header,
+            Func<H5BaseReader, T> decode)
         {
             // H5EAiblock.c (H5EA__iblock_alloc)
             SecondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);

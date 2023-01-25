@@ -1,12 +1,12 @@
 ﻿namespace HDF5.NET
 {
-    internal class UnsafeFillValueStream : H5Stream
+    internal class UnsafeFillValueStream : Stream
     {
-        private byte[] _fillValue;
-        private int _length;
+        private readonly byte[] _fillValue;
+        private readonly int _length;
         private long _position;
 
-        public UnsafeFillValueStream(bool isStackOnly, byte[] fillValue) : base(isStackOnly, default, default)
+        public UnsafeFillValueStream(byte[] fillValue)
         {
             _fillValue = fillValue.ToArray();
             _length = _fillValue.Length;
@@ -20,7 +20,7 @@
 
         public override long Length => long.MaxValue;
 
-        public override long Position 
+        public override long Position
         {
             get
             {

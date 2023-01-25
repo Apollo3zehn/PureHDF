@@ -58,7 +58,7 @@ namespace HDF5.NET
             }
         }
 
-        public CreationOrderFlags Flags { get; set; } 
+        public CreationOrderFlags Flags { get; set; }
         public ushort MaximumCreationIndex { get; set; }
         public ulong FractalHeapAddress { get; set; }
         public ulong BTree2NameIndexAddress { get; set; }
@@ -96,10 +96,10 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record08 DecodeRecord08() => new BTree2Record08(_context.Reader);
+        private BTree2Record08 DecodeRecord08() => new(_context.Reader);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record09 DecodeRecord09() => new BTree2Record09(_context.Reader);
+        private BTree2Record09 DecodeRecord09() => new(_context.Reader);
 
         #endregion
     }

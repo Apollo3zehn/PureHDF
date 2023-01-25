@@ -8,9 +8,9 @@ namespace HDF5.NET.Tests.Reading
 {
     public class DatasetTests
     {
-        private JsonSerializerOptions _options = new JsonSerializerOptions() { IncludeFields = true };
+        private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
 
-        public static IList<object[]> DatasetNumericalTestData = TestData.NumericalData;
+        public static IList<object[]> DatasetNumericalTestData { get; } = TestData.NumericalData;
 
         [Fact]
         public void CanReadDataset_Dataspace_Scalar()
@@ -49,7 +49,7 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [MemberData(nameof(DatasetTests.DatasetNumericalTestData))]
+        [MemberData(nameof(DatasetNumericalTestData))]
         public void CanReadDataset_Numerical<T>(string name, T[] expected) where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
@@ -97,11 +97,11 @@ namespace HDF5.NET.Tests.Reading
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("/struct/nullable");
 
-                Func<FieldInfo, string> converter = fieldInfo =>
+                static string converter(FieldInfo fieldInfo)
                 {
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     return attribute is not null ? attribute.Name : fieldInfo.Name;
-                };
+                }
 
                 var actual = dataset.ReadCompound<TestStructStringAndArray>(converter);
 
@@ -144,7 +144,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddString(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddString(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -162,7 +162,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddBitField(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitField(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -180,7 +180,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -198,7 +198,7 @@ namespace HDF5.NET.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddArray(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -268,16 +268,16 @@ namespace HDF5.NET.Tests.Reading
                 root.Context.Reader.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
 
                 // H5Rint.c (H5R__get_region)
-// TODO: use more structs?
+                // TODO: use more structs?
                 var globalHeapId = new GlobalHeapId(root.Context)
                 {
                     CollectionAddress = reference.CollectionAddress,
                     ObjectIndex = reference.ObjectIndex
                 };
-                
+
                 var globalHeapCollection = globalHeapId.Collection;
                 var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
-                using var localReader = new H5BinaryReader(new MemoryStream(globalHeapObject.ObjectData));
+                using var localReader = new H5StreamReader(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
                 var address = root.Context.Superblock.ReadOffset(localReader);
                 var selection = new DataspaceSelection(localReader);
 
@@ -332,12 +332,12 @@ namespace HDF5.NET.Tests.Reading
         {
             // INFO:
             // HDF lib says "external storage not supported with chunked layout". Same is true for compact layout.
-            
+
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var absolutePrefix = datasetName == "absolute" 
-                    ? Path.GetTempPath() 
+                var absolutePrefix = datasetName == "absolute"
+                    ? Path.GetTempPath()
                     : string.Empty;
 
                 var externalFilePrefix = datasetName == "prefix"
@@ -668,27 +668,27 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-//        [Fact]
-//        public void CanReadDataset_Virtual()
-//        {
-//// TODO: Check AddVirtualDataset, is extra path variable required?
-//// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?
-//// TODO: reading Vds Global Heap is not yet fully working
+        //        [Fact]
+        //        public void CanReadDataset_Virtual()
+        //        {
+        //// TODO: Check AddVirtualDataset, is extra path variable required?
+        //// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?
+        //// TODO: reading Vds Global Heap is not yet fully working
 
-//            TestUtils.RunForAllVersions(version =>
-//            {
-//                // Arrange
-//                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
-//                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
+        //            TestUtils.RunForAllVersions(version =>
+        //            {
+        //                // Arrange
+        //                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+        //                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
 
-//                // Act
-//                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
-//                var dataset = root.Dataset("vds");
-//                var actual = dataset.Read<int>();
+        //                // Act
+        //                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+        //                var dataset = root.Dataset("vds");
+        //                var actual = dataset.Read<int>();
 
-//                // Assert
-//                Assert.True(actual.SequenceEqual(TestData.SmallData));
-//            });
-//        }
+        //                // Assert
+        //                Assert.True(actual.SequenceEqual(TestData.SmallData));
+        //            });
+        //        }
     }
 }

@@ -3,7 +3,7 @@
     internal class MemorySpanStream : Stream
     {
         private long _position;
-        private Memory<byte> _memory;
+        private readonly Memory<byte> _memory;
         private Memory<byte> _sliced;
 
         public MemorySpanStream(Memory<byte> memory)
@@ -20,7 +20,7 @@
 
         public override long Length => _memory.Length;
 
-        public override long Position 
+        public override long Position
         {
             get
             {
@@ -42,8 +42,8 @@
             var length = Math.Min(_sliced.Length, count);
 
             _sliced
-                .Slice(0, length)
-                .CopyTo(buffer.AsMemory().Slice(offset));
+[..length]
+                .CopyTo(buffer.AsMemory()[offset..]);
 
             Position += length;
 
@@ -55,11 +55,11 @@
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    
+
                     if (offset > _memory.Length)
                         throw new NotSupportedException("Cannot seek behind the end of the array.");
 
-                    _sliced = _memory.Slice((int)offset);
+                    _sliced = _memory[(int)offset..];
                     _position = offset;
 
                     break;
@@ -69,7 +69,7 @@
                     if (offset > _sliced.Length)
                         throw new NotSupportedException("Cannot seek behind the end of the array.");
 
-                    _sliced = _sliced.Slice((int)offset);
+                    _sliced = _sliced[(int)offset..];
                     _position += offset;
 
                     break;
@@ -79,7 +79,7 @@
                     if (offset > _sliced.Length)
                         throw new NotSupportedException("Cannot seek before the start of the array.");
 
-                    _sliced = _memory.Slice(_memory.Length - (int)offset);
+                    _sliced = _memory[^((int)offset)..];
                     _position = _memory.Length - (int)offset;
 
                     break;

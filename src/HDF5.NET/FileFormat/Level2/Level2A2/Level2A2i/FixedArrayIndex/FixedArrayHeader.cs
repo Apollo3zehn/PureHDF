@@ -7,7 +7,7 @@ namespace HDF5.NET
         #region Fields
 
         private byte _version;
-        private Superblock _superblock;
+        private readonly Superblock _superblock;
 
         #endregion
 
@@ -16,7 +16,7 @@ namespace HDF5.NET
         public FixedArrayHeader(H5Context context)
         {
             var (reader, superblock) = context;
-            
+
             _superblock = superblock;
 
             // signature

@@ -8,13 +8,13 @@ namespace HDF5.NET
         #region Fields
 
         private H5Context _context;
-        private FractalHeapHeader _heapHeader;
+        private readonly FractalHeapHeader _heapHeader;
 
         #endregion
 
         #region Constructors
 
-        internal HugeObjectsFractalHeapIdSubType1(H5Context context, H5BinaryReader localReader, FractalHeapHeader header)
+        internal HugeObjectsFractalHeapIdSubType1(H5Context context, H5BaseReader localReader, FractalHeapHeader header)
         {
             _context = context;
             _heapHeader = header;
@@ -33,7 +33,7 @@ namespace HDF5.NET
 
         #region Methods
 
-        public override T Read<T>(Func<H5BinaryReader, T> func, [AllowNull]ref List<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
             var reader = _context.Reader;
 
@@ -47,7 +47,7 @@ namespace HDF5.NET
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
             reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
-            
+
             return func(reader);
         }
 
@@ -56,7 +56,7 @@ namespace HDF5.NET
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record01 DecodeRecord01() => new BTree2Record01(_context);
+        private BTree2Record01 DecodeRecord01() => new(_context);
 
         #endregion
     }

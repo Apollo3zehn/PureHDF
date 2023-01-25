@@ -22,7 +22,7 @@
             // reserved
             reader.ReadBytes(3);
 
-// TODO: Its value must be at least as large as the value contained in the Used Slots field.
+            // TODO: Its value must be at least as large as the value contained in the Used Slots field.
             // allocated slot count
             AllocatedSlotCount = reader.ReadUInt16();
 

@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public FractalHeapSingleSectionDataRecord(H5BinaryReader reader) : base(reader)
+        public FractalHeapSingleSectionDataRecord(H5BaseReader reader) : base(reader)
         {
             //
         }

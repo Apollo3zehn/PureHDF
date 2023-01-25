@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private FillValueMessage _fillValue;
+        private readonly FillValueMessage _fillValue;
 
         #endregion
 

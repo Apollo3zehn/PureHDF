@@ -257,7 +257,7 @@ namespace HDF5.NET
             throw new Exception($"Unable to open external file '{filePath}'.");
 
             // helper
-            string PathCombine(string prefix, string relativePath)
+            static string PathCombine(string prefix, string relativePath)
             {
                 try
                 {
@@ -289,7 +289,7 @@ namespace HDF5.NET
                 if (!string.IsNullOrWhiteSpace(datasetAccess.ExternalFilePrefix))
                 {
                     var propPrefix = datasetAccess.ExternalFilePrefix;
-                    
+
                     var propResult = propPrefix is null
                         ? filePath
                         : PathCombine(propPrefix, filePath);
@@ -301,7 +301,7 @@ namespace HDF5.NET
             }
 
             // helper
-            string PathCombine(string prefix, string relativePath)
+            static string PathCombine(string prefix, string relativePath)
             {
                 try
                 {
@@ -314,7 +314,7 @@ namespace HDF5.NET
             }
         }
 
-        public static ulong ReadUlong(H5BinaryReader reader, ulong size)
+        public static ulong ReadUlong(H5BaseReader reader, ulong size)
         {
             return size switch
             {
@@ -322,11 +322,11 @@ namespace HDF5.NET
                 2 => reader.ReadUInt16(),
                 4 => reader.ReadUInt32(),
                 8 => reader.ReadUInt64(),
-                _ => H5Utils.ReadUlongArbitrary(reader, size)
+                _ => ReadUlongArbitrary(reader, size)
             };
         }
 
-        private static ulong ReadUlongArbitrary(H5BinaryReader reader, ulong size)
+        private static ulong ReadUlongArbitrary(H5BaseReader reader, ulong size)
         {
             var result = 0UL;
             var shift = 0;

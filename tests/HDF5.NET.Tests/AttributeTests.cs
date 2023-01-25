@@ -7,8 +7,8 @@ namespace HDF5.NET.Tests.Reading
 {
     public class AttributeTests
     {
-        private JsonSerializerOptions _options = new JsonSerializerOptions() { IncludeFields = true };
-        public static IList<object[]> AttributeNumericalTestData = TestData.NumericalData;
+        private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
+        public static IList<object[]> AttributeNumericalTestData { get; } = TestData.NumericalData;
 
         [Fact]
         public void CanReadAttribute_Dataspace_Scalar()
@@ -27,7 +27,7 @@ namespace HDF5.NET.Tests.Reading
                 Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
             });
         }
-        
+
         [Fact]
         public void CanReadAttribute_Dataspace_Null()
         {
@@ -47,8 +47,8 @@ namespace HDF5.NET.Tests.Reading
         }
 
         [Theory]
-        [MemberData(nameof(AttributeTests.AttributeNumericalTestData))]
-        public void CanReadAttribute_Numerical<T>(string name, T[] expected) 
+        [MemberData(nameof(AttributeNumericalTestData))]
+        public void CanReadAttribute_Numerical<T>(string name, T[] expected)
             where T : unmanaged
         {
             TestUtils.RunForAllVersions(version =>
@@ -96,11 +96,11 @@ namespace HDF5.NET.Tests.Reading
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nullable");
 
-                Func<FieldInfo, string> converter = fieldInfo =>
+                static string converter(FieldInfo fieldInfo)
                 {
                     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     return attribute is not null ? attribute.Name : fieldInfo.Name;
-                };
+                }
 
                 var actual = attribute.ReadCompound<TestStructStringAndArray>(converter);
 
@@ -109,7 +109,7 @@ namespace HDF5.NET.Tests.Reading
             });
         }
 
-         [Fact]
+        [Fact]
         public void CanReadAttribute_Unknown()
         {
             TestUtils.RunForAllVersions(version =>

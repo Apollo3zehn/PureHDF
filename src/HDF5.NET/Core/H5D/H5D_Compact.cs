@@ -1,12 +1,10 @@
-﻿using System.Runtime.InteropServices;
-
-namespace HDF5.NET
+﻿namespace HDF5.NET
 {
     internal class H5D_Compact : H5D_Base
     {
         #region Constructors
 
-        public H5D_Compact(H5Dataset dataset, H5DatasetAccess datasetAccess) : 
+        public H5D_Compact(H5Dataset dataset, H5DatasetAccess datasetAccess) :
             base(dataset, supportsBuffer: true, supportsStream: false, datasetAccess)
         {
             //
@@ -31,7 +29,7 @@ namespace HDF5.NET
 
             if (Dataset.InternalDataLayout is DataLayoutMessage12 layout12)
             {
-// TODO: untested
+                // TODO: untested
                 buffer = layout12.CompactData;
             }
             else if (Dataset.InternalDataLayout is DataLayoutMessage3 layout34)
@@ -47,7 +45,7 @@ namespace HDF5.NET
             return Task.FromResult(buffer.AsMemory());
         }
 
-        public override H5Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream? GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }
