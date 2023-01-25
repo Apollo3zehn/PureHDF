@@ -1,4 +1,4 @@
-**See https://github.com/Apollo3zehn/PureHDF/issues/9 for not yet implemented features.**
+**See https://github.com/Apollo3zehn/PureHDF/issues/4 for not yet implemented features.**
 
 | API Documentation |
 | ------------------ |
@@ -694,7 +694,7 @@ async Task LoadAndProcessDataAsynchronously()
 
 Consider the following H5 file:
 
-![HDF View](doc/images/hdfview.png)
+![HDF View](https://github.com/Apollo3zehn/PureHDF/raw/master/doc/images/hdfview.png)
 
 If you would like to access `sub_dataset2` you would normally do
 
@@ -737,7 +737,7 @@ var myDataset = bindings.group1.sub_dataset2;
 
 Your IDE should now run the source generator behind the scenes and you should be able to get intellisense support:
 
-![Intellisense](doc/images/intellisense.png)
+![Intellisense](https://github.com/Apollo3zehn/PureHDF/raw/master/doc/images/intellisense.png)
 
 In case you do not want to access the dataset but the parent group instead, use the `Get()` method like this:
 
