@@ -325,7 +325,7 @@ public static Memory<byte> FilterFunc(
 ```
 
 ## 5.3 Tested External Filters
-- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/wiki/Deflate-Benchmark))
+- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md))
 - c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
 - bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
