@@ -389,7 +389,6 @@ namespace PureHDF.Tests
         {
             // see VirtualMapping.xlsx for a visualization
 
-
             var vspaceId = H5S.create_simple(1, new ulong[] { 20 }, new ulong[] { 20 });
             var dapl_id = H5P.create(H5P.DATASET_ACCESS);
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);

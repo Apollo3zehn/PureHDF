@@ -9,9 +9,6 @@
             // flags
             Flags = reader.ReadByte();
 
-            // reserved
-            reader.ReadBytes(3);
-
             // length
             Length = reader.ReadUInt32();
 

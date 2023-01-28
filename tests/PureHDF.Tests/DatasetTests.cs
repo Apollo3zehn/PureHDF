@@ -668,27 +668,23 @@ namespace PureHDF.Tests.Reading
             });
         }
 
-        //        [Fact]
-        //        public void CanReadDataset_Virtual()
-        //        {
-        //// TODO: Check AddVirtualDataset, is extra path variable required?
-        //// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?
-        //// TODO: reading Vds Global Heap is not yet fully working
+        [Fact]
+        public void CanReadDataset_Virtual()
+        {
+// TODO: Check AddVirtualDataset, is extra path variable required?
+// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?s
 
-        //            TestUtils.RunForAllVersions(version =>
-        //            {
-        //                // Arrange
-        //                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
-        //                filePath = @"C:\Users\wilvin\Downloads\tmpB82F.tmp";
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
 
-        //                // Act
-        //                using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
-        //                var dataset = root.Dataset("vds");
-        //                var actual = dataset.Read<int>();
+            // Act
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+            var dataset = root.Dataset("vds");
+            var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
+            var actual = dataset.Read<int>(selection);
 
-        //                // Assert
-        //                Assert.True(actual.SequenceEqual(TestData.SmallData));
-        //            });
-        //        }
+            // Assert
+            Assert.True(actual.SequenceEqual(TestData.SmallData));
+        }
     }
 }

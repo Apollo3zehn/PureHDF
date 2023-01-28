@@ -62,7 +62,7 @@ namespace PureHDF
             // https://github.com/Apollo3zehn/PureHDF/issues/25
             if (InternalFillValue is null)
             {
-                // The OldFillValueMessage is optional and so there might be not fill value
+                // The OldFillValueMessage is optional and so there might be no fill value
                 // message at all although the newer message is being marked as required. The
                 // workaround is to instantiate a new FillValueMessage with sensible defaults.
                 // It is not 100% clear if these defaults are fine.
