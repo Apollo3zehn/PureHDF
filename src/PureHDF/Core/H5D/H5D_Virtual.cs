@@ -5,7 +5,6 @@
         #region Fields
 
         private readonly VdsGlobalHeapBlock _block;
-        private readonly int _typeSize;
 
         #endregion
 
@@ -21,7 +20,6 @@
             using var localReader = new H5StreamReader(new MemoryStream(objectData), leaveOpen: false);
 
             _block = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);
-            _typeSize = (int)dataset.InternalDataType.Size;
         }
 
         #endregion
@@ -44,7 +42,10 @@
 
         public override Stream? GetH5Stream(ulong[] chunkIndices)
         {
-            return new VirtualDatasetStream(_block.VdsDatasetEntries, _typeSize);
+            return new VirtualDatasetStream(
+                _block.VdsDatasetEntries, 
+                dimensions: Dataset.InternalDataspace.DimensionSizes,
+                typeSize: Dataset.InternalDataType.Size);
         }
 
         #endregion

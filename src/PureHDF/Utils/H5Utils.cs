@@ -21,38 +21,52 @@ namespace PureHDF
             }
         }
 
-        public static ulong ToLinearIndex(this ulong[] indices, ulong[] dimensions)
+        public static ulong ToLinearIndex(this ulong[] coordinates, ulong[] dimensions)
         {
-            var index = 0UL;
-            var rank = indices.Length;
+            var linearIndex = 0UL;
+            var rank = coordinates.Length;
 
             if (dimensions.Length != rank)
-                throw new Exception("Rank of index and dimension arrays must be equal.");
+                throw new Exception("Rank of coordinates and dimensions arrays must be equal.");
 
             for (int i = 0; i < rank; i++)
             {
-                index = index * dimensions[i] + indices[i];
+                linearIndex = linearIndex * dimensions[i] + coordinates[i];
             }
 
-            return index;
+            return linearIndex;
         }
 
-        public static ulong ToLinearIndexPrecomputed(this ulong[] indices, ulong[] totalSize)
+        public static ulong ToLinearIndexPrecomputed(this ulong[] coordinates, ulong[] totalSize)
         {
             // H5VM.c (H5VM_array_offset_pre)
-            var index = 0UL;
-            var rank = indices.Length;
+            var linearIndex = 0UL;
+            var rank = coordinates.Length;
 
             if (totalSize.Length != rank)
-                throw new Exception("Rank of index and total size arrays must be equal.");
+                throw new Exception("Rank of coordinates and total size arrays must be equal.");
 
             /* Compute offset in array */
             for (int i = 0; i < rank; i++)
             {
-                index += totalSize[i] * indices[i];
+                linearIndex += totalSize[i] * coordinates[i];
             }
 
-            return index;
+            return linearIndex;
+        }
+
+        public static ulong[] ToCoordinates(this ulong linearIndex, ulong[] dimensions)
+        {
+            var rank = dimensions.Length;
+            var coordinates = new ulong[rank];
+
+            for (int i = rank - 1; i >= 0; i--)
+            {
+                linearIndex = (ulong)Math.DivRem((long)linearIndex, (long)dimensions[i], out var coordinate);
+                coordinates[i] = (ulong)coordinate;
+            }
+
+            return coordinates;
         }
 
         public static ulong[] AccumulateReverse(this ulong[] totalSize)
