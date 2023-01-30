@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace PureHDF
 {
     internal record CopyInfo(
@@ -56,7 +54,7 @@ namespace PureHDF
                 {
                     // TODO: Performance issue.
                     var scaledOffsets = new ulong[rank];
-                    var chunkOffsets = new ulong[rank];
+                    Span<ulong> chunkOffsets = stackalloc ulong[rank];
 
                     for (int dimension = 0; dimension < rank; dimension++)
                     {

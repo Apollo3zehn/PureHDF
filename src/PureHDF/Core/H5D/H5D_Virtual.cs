@@ -20,6 +20,19 @@
             using var localReader = new H5StreamReader(new MemoryStream(objectData), leaveOpen: false);
 
             _block = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);
+
+            // https://docs.hdfgroup.org/archive/support/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
+            // "A source dataset may have different rank and dimension sizes than the VDS. However, if a
+            // source dataset has an unlimited dimension, it must be the slowest-­changing dimension, and
+            // the virtual dataset must be the same rank and have the same dimension as unlimited."
+
+            // -> for now unlimited dimensions will not be supported
+
+            foreach (var dimension in Dataset.InternalDataspace.DimensionSizes)
+            {
+                if (dimension == H5Constants.Unlimited)
+                    throw new Exception("Virtual datasets with unlimited dimensions are not supported.");
+            }
         }
 
         #endregion

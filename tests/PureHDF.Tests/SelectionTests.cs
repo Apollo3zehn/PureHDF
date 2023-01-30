@@ -598,7 +598,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)]),
+                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
                 indices => default!,
                 indices => actualBuffer,
                 TypeSize: 4
@@ -719,7 +719,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 sourceSelection,
                 targetSelection,
-                indices => Task.FromResult(chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)]),
+                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
                 indices => default!,
                 indices => actualBuffer,
                 TypeSize: 4
@@ -852,7 +852,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(chunksBuffers[indices.ToLinearIndex(scaledDatasetDims)]),
+                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
                 indices => default!,
                 indices => actualBuffer,
                 TypeSize: 4

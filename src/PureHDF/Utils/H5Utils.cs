@@ -21,7 +21,7 @@ namespace PureHDF
             }
         }
 
-        public static ulong ToLinearIndex(this ulong[] coordinates, ulong[] dimensions)
+        public static ulong ToLinearIndex(this Span<ulong> coordinates, ulong[] dimensions)
         {
             var linearIndex = 0UL;
             var rank = coordinates.Length;

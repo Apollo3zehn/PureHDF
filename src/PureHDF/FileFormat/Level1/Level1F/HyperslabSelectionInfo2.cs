@@ -21,12 +21,16 @@
             Counts = new ulong[Rank];
             Blocks = new ulong[Rank];
 
+            CompactDimensions = new ulong[Rank];
+
             for (int i = 0; i < Rank; i++)
             {
                 Starts[i] = reader.ReadUInt64();
                 Strides[i] = reader.ReadUInt64();
                 Counts[i] = reader.ReadUInt64();
                 Blocks[i] = reader.ReadUInt64();
+
+                CompactDimensions[i] = Blocks[i] * Counts[i];
             }
         }
 
@@ -36,7 +40,6 @@
 
         public byte Flags { get; set; }
         public uint Length { get; set; }
-        public uint Rank { get; set; }
         public ulong[] Starts { get; set; }
         public ulong[] Strides { get; set; }
         public ulong[] Counts { get; set; }
