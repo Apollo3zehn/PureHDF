@@ -418,7 +418,7 @@ namespace PureHDF.Tests
 
             // file 2
             var fileName2 = $"{datasetName}_b.h5";
-            var path2 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.h5"), datasetAccess);
+            var path2 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, fileName2), datasetAccess);
 
             if (File.Exists(path2))
                 File.Delete(path2);
@@ -433,6 +433,14 @@ namespace PureHDF.Tests
             _ = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 1 });
             _ = H5P.set_virtual(dcpl_id, vspaceId, fileName2, "/vds/source_b", sourceSpaceId2);
 
+            // file 3 (non-existent)
+            var fileName3 = $"{datasetName}_c.h5";
+            var sourceSpaceId3 = H5S.create_simple(1, new ulong[] { 10UL }, new ulong[] { 10UL });
+
+            _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 15 }, new ulong[] { 1 }, new ulong[] { 1 }, new ulong[] { 1 });
+            _ = H5S.select_hyperslab(sourceSpaceId3, H5S.seloper_t.SET, new ulong[] { 0 }, new ulong[] { 1 }, new ulong[] { 1 }, new ulong[] { 1 });
+            _ = H5P.set_virtual(dcpl_id, vspaceId, fileName3, "/vds/source_c", sourceSpaceId3);
+
             // create virtual dataset
             var datasetId = H5D.create(fileId, "vds", H5T.NATIVE_INT32, vspaceId, dcpl_id: dcpl_id, dapl_id: dapl_id);
 
@@ -441,6 +449,8 @@ namespace PureHDF.Tests
 
             _ = H5S.close(sourceSpaceId2);
             _ = H5F.close(fileId2);
+
+            _ = H5S.close(sourceSpaceId3);
 
             _ = H5S.close(vspaceId);
             _ = H5D.close(datasetId);

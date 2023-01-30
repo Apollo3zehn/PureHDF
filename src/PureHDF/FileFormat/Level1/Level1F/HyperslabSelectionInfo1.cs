@@ -18,14 +18,15 @@
             // block count
             BlockCount = reader.ReadUInt32();
 
-            // block offsets / compact coordinates / compact dimensions
+            // block offsets / compact starts / compact dimensions
             CompactDimensions = new ulong[Rank];
 
             var totalOffsetGroups = BlockCount * Rank;
             BlockOffsets = new uint[totalOffsetGroups * 2];
-            CompactBlockCoordinates = new uint[totalOffsetGroups];
+            CompactBlockStarts = new uint[totalOffsetGroups];
+            CompactBlockEnds = new uint[totalOffsetGroups];
 
-            Initialize(reader, BlockOffsets, CompactBlockCoordinates, CompactDimensions);
+            Initialize(reader, BlockOffsets, CompactBlockStarts, CompactBlockEnds, CompactDimensions);
         }
 
         #endregion
@@ -34,13 +35,14 @@
 
         public uint BlockCount { get; set; }
         public uint[] BlockOffsets { get; set; }
-        public uint[] CompactBlockCoordinates { get; set; }
+        public uint[] CompactBlockStarts { get; set; }
+        public uint[] CompactBlockEnds { get; set; }
 
         #endregion
 
         #region Methods
 
-        private void Initialize(H5BaseReader reader, uint[] blockOffsets, uint[] compactBlockCoordinates, ulong[] compactDimensions)
+        private void Initialize(H5BaseReader reader, uint[] blockOffsets, uint[] compactBlockStarts, uint[] compactBlockEnds, ulong[] compactDimensions)
         {
             var isFirstBlock = true;
             Span<uint> previousStarts = stackalloc uint[(int)Rank];
@@ -70,7 +72,8 @@
                             compactDimensions[dimension] += previousEnds[dimension] - previousStarts[dimension] + 1;
                     }
 
-                    compactBlockCoordinates[dimensionIndex] = (uint)compactDimensions[dimension];
+                    compactBlockStarts[dimensionIndex] = (uint)compactDimensions[dimension];
+                    compactBlockEnds[dimensionIndex] = (uint)compactDimensions[dimension] + (end - start);
 
                     previousStarts[dimension] = start;
                     previousEnds[dimension] = end;

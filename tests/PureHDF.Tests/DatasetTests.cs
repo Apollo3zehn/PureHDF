@@ -671,8 +671,16 @@ namespace PureHDF.Tests.Reading
         [Fact]
         public void CanReadDataset_Virtual()
         {
-// TODO: Check AddVirtualDataset, is extra path variable required?
-// TODO: What about datasetAccess? Is it exactly equal to externalPrefix?s
+            // TODO: Not supported: Unlimited Dimensions
+
+            // TODO: Not yet implemented: Hyperslab V3
+            // TODO: Not yet implemented: async
+            // TODO: Not yet implemented: PointSelection
+            // TODO: Not yet checked: DatasetAccess
+
+            // TODO: Update virtual mapping with non-existend third file
+
+            // TODO: Check AddVirtualDataset, is extra path variable required?
 
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));

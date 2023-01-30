@@ -296,6 +296,7 @@ namespace PureHDF
             {
                 return filePath;
             }
+            
             // relative
             else
             {

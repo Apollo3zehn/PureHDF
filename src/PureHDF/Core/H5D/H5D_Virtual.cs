@@ -58,7 +58,8 @@
             return new VirtualDatasetStream(
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.InternalDataspace.DimensionSizes,
-                typeSize: Dataset.InternalDataType.Size);
+                typeSize: Dataset.InternalDataType.Size,
+                DatasetAccess);
         }
 
         #endregion

@@ -2,18 +2,23 @@
 {
     internal class VirtualDatasetStream : Stream
     {
-        private record struct LinearIndexResult(bool Success, ulong LinearIndex, ulong MaxCount);
+        private record struct VirtualResult(bool Success, ulong LinearIndex, ulong MaxCount);
+        private record struct SourceResult(ulong[] Coordinates, ulong MaxCount);
+        private record class DatasetInfo(H5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
 
-        private readonly VdsDatasetEntry[] _entries;
-        private readonly ulong[] _dimensions;
-        private readonly uint _typeSize;
         private long _position;
+        private readonly uint _typeSize;
+        private readonly ulong[] _dimensions;
+        private readonly H5DatasetAccess _datasetAccess;
+        private readonly VdsDatasetEntry[] _entries;
+        private readonly Dictionary<VdsDatasetEntry, DatasetInfo> _datasetInfoMap = new();
 
-        public VirtualDatasetStream(VdsDatasetEntry[] entries, ulong[] dimensions, uint typeSize)
+        public VirtualDatasetStream(VdsDatasetEntry[] entries, ulong[] dimensions, uint typeSize, H5DatasetAccess datasetAccess)
         {
             _entries = entries;
             _dimensions = dimensions;
             _typeSize = typeSize;
+            _datasetAccess = datasetAccess;
         }
 
         public override bool CanRead => true;
@@ -36,32 +41,7 @@
             }
         }
 
-        public override void Flush()
-        {
-            throw new NotImplementedException();
-        }
-
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        public override int Read(Span<byte> buffer)
-        {
-            return ReadCore(buffer);
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-#else
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return ReadCore(buffer.AsSpan(offset, count));
-        }
-#endif
-
-        // public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        // {
-
-        // }
+#region Methods
 
         private int ReadCore(Span<byte> buffer)
         {
@@ -80,49 +60,75 @@
             while (buffer.Length > 0)
             {
                 // 1. Linear index to coordinates in virtual dataset
-                var linearIndex = (ulong)_position / _typeSize;
-                var coordinates = H5Utils.ToCoordinates(linearIndex, _dimensions);
+                var virtualLinearIndex = (ulong)_position / _typeSize;
+                var virtualCoordinates = H5Utils.ToCoordinates(virtualLinearIndex, _dimensions);
 
                 // 2. Calculate linear index and max count
-                var result = default(LinearIndexResult);
-                var foundEntry = default(VdsDatasetEntry);
+                var virtualResult = default(VirtualResult);
+                var sourceSelection = default(DataspaceSelection);
+                var sourceDatasetInfo = default(DatasetInfo);
 
                 foreach (var entry in _entries)
                 {
-                    result = entry.VirtualSelection.SelectionInfo switch
+                    virtualResult = entry.VirtualSelection.Info switch
                     {
                         H5S_SEL_NONE => default,
                         H5S_SEL_POINTS => throw new NotImplementedException(),
-                        H5S_SEL_HYPER hyper => GetLinearIndex(hyper.HyperslabSelectionInfo, coordinates),
-                        H5S_SEL_ALL => new LinearIndexResult(Success: true, linearIndex, MaxCount: _dimensions[^1] - coordinates[^1]),
-                        _ => throw new NotSupportedException($"The selection of type {entry.VirtualSelection.SelectionType} is not supported.")
+                        H5S_SEL_HYPER hyper => GetLinearIndex(hyper.HyperslabSelectionInfo, virtualCoordinates),
+                        H5S_SEL_ALL => new VirtualResult(Success: true, virtualLinearIndex, MaxCount: _dimensions[^1] - virtualCoordinates[^1]),
+                        _ => throw new NotSupportedException($"The selection of type {entry.VirtualSelection.Type} is not supported.")
                     };
 
-                    foundEntry = entry;
+                    sourceSelection = entry.SourceSelection;
+                    sourceDatasetInfo = GetDatasetInfo(entry);
 
-                    if (result.Success)
+                    if (virtualResult.Success)
                         break;
                 }
 
-                // 3. Find min count (request vs virtual selection)
-                var count = result.Success
-                    ? Math.Min(buffer.Length / _typeSize, (long)result.MaxCount)
-                    : buffer.Length / _typeSize;
+                // 4. Find min count (request vs virtual selection)
+                var scaledBufferLength = (ulong)buffer.Length / _typeSize;
+
+                ulong virtualCount = virtualResult.Success
+                    ? Math.Min(scaledBufferLength, virtualResult.MaxCount)
+                    : scaledBufferLength;
 
                 // if there is a source dataset with the requested data
-                if (result.Success && foundEntry is not null)
+                if (virtualResult.Success  && sourceSelection is not null && sourceDatasetInfo is not null)
                 {
-                    // // 4. Convert to coordinates of source selection
-                    // var sourceCoordinates = foundEntry.SourceSelection.SelectionInfo switch
-                    // {
-                    //     H5S_SEL_NONE => throw new Exception("This should never happen!"),
-                    //     H5S_SEL_POINTS => throw new NotImplementedException(),
-                    //     H5S_SEL_HYPER hyper => GetCoordinates(hyper.HyperslabSelectionInfo, linearIndex),
-                    //     H5S_SEL_ALL => throw new NotImplementedException(),
-                    //     _ => throw new NotSupportedException($"The selection of type {foundEntry.SourceSelection.SelectionType} is not supported.")
-                    // };
+                    var linearIndex = virtualResult.LinearIndex;
+                    var remaining = virtualCount;
 
-                    // 5. Read with expanded coordinates (hyperslab)
+                    while (remaining > 0)
+                    {
+                        // 5. Convert to coordinates of source selection
+                        var (sourceStarts, sourceMaxCount) = sourceSelection.Info switch
+                        {
+                            H5S_SEL_NONE => throw new Exception("This should never happen!"),
+                            H5S_SEL_POINTS => throw new NotImplementedException(),
+                            H5S_SEL_HYPER hyper => GetCoordinates(hyper.HyperslabSelectionInfo, virtualResult.LinearIndex),
+                            H5S_SEL_ALL => new SourceResult(sourceDatasetInfo.Dataset.Space.Dimensions, MaxCount: xxx),
+                            _ => throw new NotSupportedException($"The selection of type {sourceSelection.Type} is not supported.")
+                        };
+
+                        var sourceCount = Math.Min(virtualCount, sourceMaxCount);
+                        var sourceBlocks = new ulong[sourceStarts.Length];
+                        sourceBlocks.AsSpan().Fill(1);
+                        sourceBlocks[^1] = sourceCount;
+
+                        // 6. Read with coordinates (hyperslab)
+                        var selection = new HyperslabSelection(sourceStarts.Length, starts: sourceStarts, blocks: sourceBlocks);
+                        // var slicedBuffer = buffer[..(int)sourceCount];
+
+                        // TODO fake
+                        var slicedBuffer = new byte[(int)sourceCount * _typeSize].AsMemory();
+                        sourceDatasetInfo.Dataset.Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+                        // TODO: read async
+
+                        // Update state
+                        remaining -= sourceCount;
+                        linearIndex += sourceCount;
+                    }
                 }
 
                 // else use the fill value
@@ -131,10 +137,8 @@
                     // fill value
                 }
 
-
-
                 // Update state
-                var consumed = count * _typeSize;
+                var consumed = (long)virtualCount * _typeSize;
                 _position += consumed;
                 buffer = buffer[(int)consumed..];
             }
@@ -142,33 +146,7 @@
             return buffer.Length;
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            if (origin == SeekOrigin.Begin)
-            {
-                _position = offset;
-                return offset;
-            }
-
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-        }
-
-        private static LinearIndexResult GetLinearIndex(HyperslabSelectionInfo selectionInfo, ulong[] coordinates)
+        private static VirtualResult GetLinearIndex(HyperslabSelectionInfo selectionInfo, ulong[] coordinates)
         {
             var success = false;
 
@@ -193,7 +171,7 @@
 
                         if (start <= coordinate && coordinate <= end)
                         {
-                            var compactStart = info1.CompactBlockCoordinates[dimensionIndex];
+                            var compactStart = info1.CompactBlockStarts[dimensionIndex];
 
                             compactCoordinates[dimension] = compactStart + (coordinate - start);
                             maxCount = end - coordinate + 1;
@@ -256,15 +234,175 @@
             if (success)
             {
                 var linearIndex = H5Utils.ToLinearIndex(compactCoordinates, selectionInfo.CompactDimensions);
-                return new LinearIndexResult(Success: true, linearIndex, maxCount);
+                return new VirtualResult(Success: true, linearIndex, maxCount);
             }
 
             return default;
         }
 
-        // private static ulong[] GetCoordinates(HyperslabSelectionInfo selectionInfo, ulong linearIndex)
+        private static SourceResult GetCoordinates(HyperslabSelectionInfo selectionInfo, ulong linearIndex)
+        {
+            var coordinates = new ulong[selectionInfo.Rank];
+            var compactCoordinates = H5Utils.ToCoordinates(linearIndex, selectionInfo.CompactDimensions);
+            ulong maxCount = default;
+
+            if (selectionInfo is HyperslabSelectionInfo1 info1)
+            {
+                var success = false;
+
+                // for each block
+                for (int blockIndex = 0; blockIndex < info1.BlockCount; blockIndex--)
+                {
+                    success = true;
+                    var offsetsGroupIndex = blockIndex * selectionInfo.Rank;
+
+                    // for each dimension
+                    for (var dimension = 0; dimension < selectionInfo.Rank; dimension++)
+                    {
+                        var dimensionIndex = offsetsGroupIndex + dimension;
+                        var compactCoordinate = compactCoordinates[dimension];
+
+                        var start = info1.BlockOffsets[dimensionIndex * 2];
+                        var compactBlockStart = info1.CompactBlockStarts[dimensionIndex];
+                        var compactBlockEnd = info1.CompactBlockEnds[dimensionIndex];
+
+                        if (compactBlockStart <= compactCoordinate && compactCoordinate <= compactBlockEnd)
+                        {
+                            coordinates[dimension] = start + (compactCoordinate - compactBlockStart);
+                            maxCount = compactBlockEnd - compactCoordinate + 1;
+                        }
+                        else
+                        {
+                            success = false;
+                            break;
+                        }
+                    }
+
+                    if (success)
+                        break;
+                }
+
+                if (!success)
+                    throw new Exception("This should never happen!");
+            }
+
+            else if (selectionInfo is HyperslabSelectionInfo2 info2)
+            {
+                throw new NotImplementedException(); // TODO IMPLEMENT!!
+            }
+
+            else if (selectionInfo is HyperslabSelectionInfo3 _)
+            {
+                throw new NotImplementedException("Hyperslab selection info v3 is not implemented.");
+            }
+
+            else
+            {
+                throw new NotSupportedException($"The hyperslab selection info of type {typeof(HyperslabSelectionInfo).Name} is not supported.");
+            }
+
+            return new SourceResult(coordinates, maxCount);
+        }
+
+        private DatasetInfo? GetDatasetInfo(VdsDatasetEntry entry)
+        {
+            if (!_datasetInfoMap.TryGetValue(entry, out var info))
+            {
+                var filePath = H5Utils.ConstructExternalFilePath(entry.SourceFileName, _datasetAccess);
+
+                if (File.Exists(filePath))
+                {
+                    // TODO: check how file should be opened
+                    var file = H5File.OpenRead(filePath);
+
+                    // TODO: Where to get link access from? From the virtual dataset?
+                    if (file.LinkExists(entry.SourceDataset, linkAccess: default))
+                    {
+                        var datasetAccess = _datasetAccess;
+
+                        if (_datasetAccess.ChunkCacheFactory is null)
+                            datasetAccess = _datasetAccess with { ChunkCacheFactory = () => new SimpleChunkCache() };
+
+                        var dataset = file.Dataset(entry.SourceDataset);
+
+                        info = new DatasetInfo(file, dataset, datasetAccess);
+                        _datasetInfoMap[entry] = info;
+                    }
+                }
+            }
+
+            return info;
+        }
+
+#endregion
+
+#region Stream
+
+        public override void Flush()
+        {
+            throw new NotImplementedException();
+        }
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+        {
+            return ReadCore(buffer);
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+#else
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return ReadCore(buffer.AsSpan(offset, count));
+        }
+#endif
+
+        // public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         // {
-        //     var compactCoordinates = H5Utils.ToCoordinates(linearIndex, selectionInfo.CompactDimensions);
+
         // }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            if (origin == SeekOrigin.Begin)
+            {
+                _position = offset;
+                return offset;
+            }
+
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            foreach (var datasetInfo in _datasetInfoMap.Values)
+            {
+                try
+                {
+                    datasetInfo.File.Dispose();
+                }
+                catch
+                {
+                    //
+                }
+            }
+
+            base.Dispose(disposing);
+        }
+
+#endregion
     }
 }
