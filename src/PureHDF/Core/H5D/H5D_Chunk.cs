@@ -153,7 +153,7 @@ namespace PureHDF
             return _chunkCache.GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices));
         }
 
-        public override Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

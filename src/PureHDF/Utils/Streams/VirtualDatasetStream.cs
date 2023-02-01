@@ -1,4 +1,6 @@
-﻿namespace PureHDF
+﻿using System.Buffers;
+
+namespace PureHDF
 {
     internal class VirtualDatasetStream : Stream
     {
@@ -9,15 +11,22 @@
         private long _position;
         private readonly uint _typeSize;
         private readonly ulong[] _dimensions;
+        private readonly byte[]? _fillValue;
         private readonly H5DatasetAccess _datasetAccess;
         private readonly VdsDatasetEntry[] _entries;
         private readonly Dictionary<VdsDatasetEntry, DatasetInfo> _datasetInfoMap = new();
 
-        public VirtualDatasetStream(VdsDatasetEntry[] entries, ulong[] dimensions, uint typeSize, H5DatasetAccess datasetAccess)
+        public VirtualDatasetStream(
+            VdsDatasetEntry[] entries, 
+            ulong[] dimensions, 
+            uint typeSize, 
+            byte[]? fillValue,
+            H5DatasetAccess datasetAccess)
         {
             _entries = entries;
             _dimensions = dimensions;
             _typeSize = typeSize;
+            _fillValue = fillValue;
             _datasetAccess = datasetAccess;
         }
 
@@ -43,7 +52,7 @@
 
 #region Methods
 
-        private int ReadCore(Span<byte> buffer)
+        private int ReadCore(Memory<byte> buffer)
         {
             // Overall algorithm:
             // - We get a linear byte index, which needs to be scaled by the type size.
@@ -93,57 +102,73 @@
                     ? Math.Min(scaledBufferLength, virtualResult.MaxCount)
                     : scaledBufferLength;
 
-                // if there is a source dataset with the requested data
-                if (virtualResult.Success  && sourceSelection is not null && sourceDatasetInfo is not null)
+                var virtualByteCount = (long)virtualCount * _typeSize;
+
+                // 5. Read data
+                var slicedBuffer = buffer[..(int)virtualByteCount];
+
+                // From source dataset
+                if (virtualResult.Success && 
+                    sourceSelection is not null && 
+                    sourceDatasetInfo is not null)
                 {
-                    var linearIndex = virtualResult.LinearIndex;
-                    var remaining = virtualCount;
+                    var selection = new DelegateSelection(
+                        virtualCount, 
+                        dimensions => Walker(virtualCount, virtualResult.LinearIndex, dimensions, sourceSelection));
 
-                    while (remaining > 0)
-                    {
-                        // 5. Convert to coordinates of source selection
-                        var (sourceStarts, sourceMaxCount) = sourceSelection.Info switch
-                        {
-                            H5S_SEL_NONE => throw new Exception("This should never happen!"),
-                            H5S_SEL_POINTS => throw new NotImplementedException(),
-                            H5S_SEL_HYPER hyper => GetCoordinates(hyper.HyperslabSelectionInfo, virtualResult.LinearIndex),
-                            H5S_SEL_ALL => new SourceResult(sourceDatasetInfo.Dataset.Space.Dimensions, MaxCount: xxx),
-                            _ => throw new NotSupportedException($"The selection of type {sourceSelection.Type} is not supported.")
-                        };
-
-                        var sourceCount = Math.Min(virtualCount, sourceMaxCount);
-                        var sourceBlocks = new ulong[sourceStarts.Length];
-                        sourceBlocks.AsSpan().Fill(1);
-                        sourceBlocks[^1] = sourceCount;
-
-                        // 6. Read with coordinates (hyperslab)
-                        var selection = new HyperslabSelection(sourceStarts.Length, starts: sourceStarts, blocks: sourceBlocks);
-                        // var slicedBuffer = buffer[..(int)sourceCount];
-
-                        // TODO fake
-                        var slicedBuffer = new byte[(int)sourceCount * _typeSize].AsMemory();
-                        sourceDatasetInfo.Dataset.Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
-                        // TODO: read async
-
-                        // Update state
-                        remaining -= sourceCount;
-                        linearIndex += sourceCount;
-                    }
+                    sourceDatasetInfo.Dataset.Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
                 }
 
-                // else use the fill value
+                // Fill value
                 else
                 {
-                    // fill value
+                    if (_fillValue is not null)
+                        slicedBuffer.Span.Fill(_fillValue);
+
+                    else
+                        slicedBuffer.Span.Fill(0);
                 }
 
                 // Update state
-                var consumed = (long)virtualCount * _typeSize;
-                _position += consumed;
-                buffer = buffer[(int)consumed..];
+                _position += virtualByteCount;
+                buffer = buffer[(int)virtualByteCount..];
             }
 
             return buffer.Length;
+        }
+
+        private static IEnumerable<Step> Walker(
+            ulong totalElementCount, 
+            ulong linearIndex, 
+            ulong[] dimensions,
+            DataspaceSelection sourceSelection)
+        {
+            var remaining = totalElementCount;
+
+            while (remaining > 0)
+            {
+                var (coordinates, sourceMaxCount) = sourceSelection.Info switch
+                {
+                    H5S_SEL_NONE => throw new Exception("This should never happen!"),
+                    H5S_SEL_POINTS => throw new NotImplementedException(),
+                    H5S_SEL_HYPER hyper => GetCoordinatesForHyperslabSelection(hyper.HyperslabSelectionInfo, linearIndex),
+                    H5S_SEL_ALL => GetCoordinatesForAllSelection(dimensions, linearIndex),
+
+                    _ => throw new NotSupportedException($"The selection of type {sourceSelection.Type} is not supported.")
+                };
+
+                var sourceCount = Math.Min(remaining, sourceMaxCount);
+
+                // Update state
+                remaining -= sourceCount;
+                linearIndex += sourceCount;
+
+                yield return new Step() 
+                { 
+                    Coordinates = coordinates, 
+                    ElementCount = sourceCount 
+                };
+            }
         }
 
         private static VirtualResult GetLinearIndex(HyperslabSelectionInfo selectionInfo, ulong[] coordinates)
@@ -217,7 +242,7 @@
                     }
 
                     compactCoordinates[dimension] = actualCount * block + blockOffset;
-                    maxCount = blockOffset - block;
+                    maxCount = block - blockOffset;
                 }
             }
 
@@ -240,23 +265,31 @@
             return default;
         }
 
-        private static SourceResult GetCoordinates(HyperslabSelectionInfo selectionInfo, ulong linearIndex)
+        private static SourceResult GetCoordinatesForAllSelection(ulong[] dimensions, ulong linearIndex)
+        {
+            var coordinates = H5Utils.ToCoordinates(linearIndex, dimensions);
+            var maxCount = dimensions[^1] - coordinates[^1];
+
+            return new SourceResult(coordinates, maxCount);
+        }
+
+        private static SourceResult GetCoordinatesForHyperslabSelection(HyperslabSelectionInfo selectionInfo, ulong linearIndex)
         {
             var coordinates = new ulong[selectionInfo.Rank];
             var compactCoordinates = H5Utils.ToCoordinates(linearIndex, selectionInfo.CompactDimensions);
+            var success = false;
             ulong maxCount = default;
 
+            // Expand compact coordinates
             if (selectionInfo is HyperslabSelectionInfo1 info1)
             {
-                var success = false;
-
-                // for each block
-                for (int blockIndex = 0; blockIndex < info1.BlockCount; blockIndex--)
+                // For each block
+                for (int blockIndex = 0; blockIndex < info1.BlockCount; blockIndex++)
                 {
                     success = true;
                     var offsetsGroupIndex = blockIndex * selectionInfo.Rank;
 
-                    // for each dimension
+                    // For each dimension
                     for (var dimension = 0; dimension < selectionInfo.Rank; dimension++)
                     {
                         var dimensionIndex = offsetsGroupIndex + dimension;
@@ -288,7 +321,32 @@
 
             else if (selectionInfo is HyperslabSelectionInfo2 info2)
             {
-                throw new NotImplementedException(); // TODO IMPLEMENT!!
+                success = true;
+
+                // for each dimension
+                for (int dimension = 0; dimension < info2.Rank; dimension++)
+                {
+                    var start = info2.Starts[dimension];
+                    var stride = info2.Strides[dimension];
+                    var count = info2.Counts[dimension];
+                    var block = info2.Blocks[dimension];
+                    var compactCoordinate = compactCoordinates[dimension];
+
+                    var actualCount = (ulong)Math.DivRem((long)compactCoordinate, (long)block, out var blockOffsetLong);
+                    var blockOffset = (ulong)blockOffsetLong;
+
+                    if (actualCount >= count || blockOffset >= block)
+                    {
+                        success = false;
+                        break;
+                    }
+
+                    coordinates[dimension] = start + actualCount * stride + blockOffset;
+                    maxCount = block - blockOffset;
+                }
+
+                if (!success)
+                    throw new Exception("This should never happen!");
             }
 
             else if (selectionInfo is HyperslabSelectionInfo3 _)
@@ -346,7 +404,14 @@
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
         public override int Read(Span<byte> buffer)
         {
-            return ReadCore(buffer);
+            // TODO: Avoidable? Just do not implement this Read overload?
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent(buffer.Length);
+            var memory = memoryOwner.Memory[..buffer.Length];
+            var readCount = ReadCore(memory);
+
+            memory.Span.CopyTo(buffer);
+
+            return readCount;
         }
 
         public override int Read(byte[] buffer, int offset, int count)
@@ -356,7 +421,7 @@
 #else
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return ReadCore(buffer.AsSpan(offset, count));
+            return ReadCore(buffer.AsMemory(offset, count));
         }
 #endif
 

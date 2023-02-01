@@ -53,12 +53,13 @@
             throw new NotImplementedException();
         }
 
-        public override Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream GetH5Stream(ulong[] chunkIndices)
         {
             return new VirtualDatasetStream(
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.InternalDataspace.DimensionSizes,
                 typeSize: Dataset.InternalDataType.Size,
+                fillValue: Dataset.InternalFillValue.Value,
                 DatasetAccess);
         }
 

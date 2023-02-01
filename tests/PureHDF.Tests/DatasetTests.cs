@@ -678,12 +678,17 @@ namespace PureHDF.Tests.Reading
             // TODO: Not yet implemented: PointSelection
             // TODO: Not yet checked: DatasetAccess
 
-            // TODO: Update virtual mapping with non-existend third file
+            // TODO: Add tests:
+            // - 3D
+            // - irregular hyperslab
+            // - point selection
+            // - H5_SEL_ALL
 
             // TODO: Check AddVirtualDataset, is extra path variable required?
 
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+            var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 
             // Act
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
@@ -692,7 +697,7 @@ namespace PureHDF.Tests.Reading
             var actual = dataset.Read<int>(selection);
 
             // Assert
-            Assert.True(actual.SequenceEqual(TestData.SmallData));
+            Assert.True(actual.SequenceEqual(expected));
         }
     }
 }

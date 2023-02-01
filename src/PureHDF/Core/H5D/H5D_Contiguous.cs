@@ -30,7 +30,7 @@
             throw new NotImplementedException();
         }
 
-        public override Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream GetH5Stream(ulong[] chunkIndices)
         {
             var address = Dataset.InternalDataLayout.Address;
 
@@ -41,11 +41,8 @@
                     if (Dataset.InternalExternalFileList is not null)
                         _stream = new ExternalFileListStream(Dataset.InternalExternalFileList, DatasetAccess);
 
-                    else if (Dataset.InternalFillValue.Value is not null)
-                        _stream = new UnsafeFillValueStream(Dataset.InternalFillValue.Value);
-
                     else
-                        _stream = null;
+                        _stream = new UnsafeFillValueStream(Dataset.InternalFillValue.Value ?? new byte[] { 0 });
                 }
                 else
                 {
