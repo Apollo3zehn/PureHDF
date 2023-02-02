@@ -1,64 +1,70 @@
 ﻿namespace PureHDF
 {
-    internal class HyperslabSelectionInfo1 : HyperslabSelectionInfo
+    internal class IrregularHyperslabSelectionInfo : HyperslabSelectionInfo
     {
         #region Constructors
 
-        public HyperslabSelectionInfo1(H5BaseReader reader)
+        public IrregularHyperslabSelectionInfo(H5BaseReader reader, uint rank, byte encodeSize)
         {
-            // reserved
-            reader.ReadBytes(4);
-
-            // length
-            _ = reader.ReadUInt32();
-
-            // rank
-            Rank = reader.ReadUInt32();
+            Rank = rank;
 
             // block count
-            BlockCount = reader.ReadUInt32();
+            BlockCount = ReadEncodedValue(reader, encodeSize);
 
             // block offsets / compact starts / compact dimensions
             CompactDimensions = new ulong[Rank];
 
             var totalOffsetGroups = BlockCount * Rank;
-            BlockOffsets = new uint[totalOffsetGroups * 2];
-            CompactBlockStarts = new uint[totalOffsetGroups];
-            CompactBlockEnds = new uint[totalOffsetGroups];
+            BlockOffsets = new ulong[totalOffsetGroups * 2];
+            CompactBlockStarts = new ulong[totalOffsetGroups];
+            CompactBlockEnds = new ulong[totalOffsetGroups];
 
-            Initialize(reader, BlockOffsets, CompactBlockStarts, CompactBlockEnds, CompactDimensions);
+            Initialize(
+                reader, 
+                encodeSize, 
+                BlockOffsets, 
+                CompactBlockStarts, 
+                CompactBlockEnds, 
+                CompactDimensions);
         }
 
         #endregion
 
         #region Properties
 
-        public uint BlockCount { get; set; }
-        public uint[] BlockOffsets { get; set; }
-        public uint[] CompactBlockStarts { get; set; }
-        public uint[] CompactBlockEnds { get; set; }
+        public ulong BlockCount { get; set; }
+        public ulong[] BlockOffsets { get; set; }
+        public ulong[] CompactBlockStarts { get; set; }
+        public ulong[] CompactBlockEnds { get; set; }
 
         #endregion
 
         #region Methods
 
-        private void Initialize(H5BaseReader reader, uint[] blockOffsets, uint[] compactBlockStarts, uint[] compactBlockEnds, ulong[] compactDimensions)
+        private void Initialize(
+            H5BaseReader reader,
+            byte encodeSize, 
+            ulong[] blockOffsets, 
+            ulong[] compactBlockStarts, 
+            ulong[] compactBlockEnds, 
+            ulong[] compactDimensions)
         {
             var isFirstBlock = true;
-            Span<uint> previousStarts = stackalloc uint[(int)Rank];
-            Span<uint> previousEnds = stackalloc uint[(int)Rank];
+            Span<ulong> previousStarts = stackalloc ulong[(int)Rank];
+            Span<ulong> previousEnds = stackalloc ulong[(int)Rank];
 
             // for each block
-            for (int block = 0; block < BlockCount; block++)
+            for (ulong block = 0; block < BlockCount; block++)
             {
                 var blockOffsetsIndex = block * Rank;
 
                 // for each dimension
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
-                    var start = reader.ReadUInt32();
-                    var end = reader.ReadUInt32();
-                    var dimensionIndex = blockOffsetsIndex + dimension;
+                    // start
+                    var start = ReadEncodedValue(reader, encodeSize);
+                    var end = ReadEncodedValue(reader, encodeSize);
+                    var dimensionIndex = (int)blockOffsetsIndex + dimension;
 
                     // store block offsets
                     blockOffsets[dimensionIndex * 2 + 0] = start;
@@ -82,7 +88,7 @@
                 isFirstBlock = false;
             }
 
-            // calculate compact dimensions
+            // compute compact dimensions
             for (int dimension = 0; dimension < Rank; dimension++)
             {
                 compactDimensions[dimension] += previousEnds[dimension] - previousStarts[dimension] + 1;

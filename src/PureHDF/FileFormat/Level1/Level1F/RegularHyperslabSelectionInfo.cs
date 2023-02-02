@@ -1,21 +1,13 @@
 ﻿namespace PureHDF
 {
-    internal class HyperslabSelectionInfo2 : HyperslabSelectionInfo
+    internal class RegularHyperslabSelectionInfo : HyperslabSelectionInfo
     {
         #region Constructors
 
-        public HyperslabSelectionInfo2(H5BaseReader reader)
+        public RegularHyperslabSelectionInfo(H5BaseReader reader, uint rank, byte encodeSize)
         {
-            // flags
-            Flags = reader.ReadByte();
+            Rank = rank;
 
-            // length
-            Length = reader.ReadUInt32();
-
-            // rank
-            Rank = reader.ReadUInt32();
-
-            // start, stride, count, block
             Starts = new ulong[Rank];
             Strides = new ulong[Rank];
             Counts = new ulong[Rank];
@@ -25,10 +17,10 @@
 
             for (int i = 0; i < Rank; i++)
             {
-                Starts[i] = reader.ReadUInt64();
-                Strides[i] = reader.ReadUInt64();
-                Counts[i] = reader.ReadUInt64();
-                Blocks[i] = reader.ReadUInt64();
+                Starts[i] = ReadEncodedValue(reader, encodeSize);
+                Strides[i] = ReadEncodedValue(reader, encodeSize);
+                Counts[i] = ReadEncodedValue(reader, encodeSize);
+                Blocks[i] = ReadEncodedValue(reader, encodeSize);
 
                 CompactDimensions[i] = Blocks[i] * Counts[i];
             }

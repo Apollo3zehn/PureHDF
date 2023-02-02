@@ -83,7 +83,7 @@ namespace PureHDF
                     {
                         H5S_SEL_NONE => default,
                         H5S_SEL_POINTS => throw new NotImplementedException(),
-                        H5S_SEL_HYPER hyper => GetLinearIndex(hyper.HyperslabSelectionInfo, virtualCoordinates),
+                        H5S_SEL_HYPER hyper => GetLinearIndex(hyper.SelectionInfo, virtualCoordinates),
                         H5S_SEL_ALL => new VirtualResult(Success: true, virtualLinearIndex, MaxCount: _dimensions[^1] - virtualCoordinates[^1]),
                         _ => throw new NotSupportedException($"The selection of type {entry.VirtualSelection.Type} is not supported.")
                     };
@@ -151,7 +151,7 @@ namespace PureHDF
                 {
                     H5S_SEL_NONE => throw new Exception("This should never happen!"),
                     H5S_SEL_POINTS => throw new NotImplementedException(),
-                    H5S_SEL_HYPER hyper => GetCoordinatesForHyperslabSelection(hyper.HyperslabSelectionInfo, linearIndex),
+                    H5S_SEL_HYPER hyper => GetCoordinatesForHyperslabSelection(hyper.SelectionInfo, linearIndex),
                     H5S_SEL_ALL => GetCoordinatesForAllSelection(dimensions, linearIndex),
 
                     _ => throw new NotSupportedException($"The selection of type {sourceSelection.Type} is not supported.")
@@ -178,25 +178,25 @@ namespace PureHDF
             ulong maxCount = default;
             Span<ulong> compactCoordinates = stackalloc ulong[(int)selectionInfo.Rank];
 
-            if (selectionInfo is HyperslabSelectionInfo1 info1)
+            if (selectionInfo is IrregularHyperslabSelectionInfo irregular)
             {
                 // for each block
-                for (uint blockIndex = 0; blockIndex < info1.BlockCount; blockIndex++)
+                for (uint blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
                 {
                     success = true;
-                    var offsetsGroupIndex = blockIndex * info1.Rank;
+                    var offsetsGroupIndex = blockIndex * irregular.Rank;
 
                     // for each dimension
-                    for (var dimension = 0; dimension < info1.Rank; dimension++)
+                    for (var dimension = 0; dimension < irregular.Rank; dimension++)
                     {
                         var dimensionIndex = offsetsGroupIndex + dimension;
-                        var start = info1.BlockOffsets[dimensionIndex * 2 + 0];
-                        var end = info1.BlockOffsets[dimensionIndex * 2 + 1];
+                        var start = irregular.BlockOffsets[dimensionIndex * 2 + 0];
+                        var end = irregular.BlockOffsets[dimensionIndex * 2 + 1];
                         var coordinate = coordinates[dimension];
 
                         if (start <= coordinate && coordinate <= end)
                         {
-                            var compactStart = info1.CompactBlockStarts[dimensionIndex];
+                            var compactStart = irregular.CompactBlockStarts[dimensionIndex];
 
                             compactCoordinates[dimension] = compactStart + (coordinate - start);
                             maxCount = end - coordinate + 1;
@@ -213,17 +213,17 @@ namespace PureHDF
                 }
             }
 
-            else if (selectionInfo is HyperslabSelectionInfo2 info2)
+            else if (selectionInfo is RegularHyperslabSelectionInfo regular)
             {
                 success = true;
 
                 // for each dimension
-                for (int dimension = 0; dimension < info2.Rank; dimension++)
+                for (int dimension = 0; dimension < regular.Rank; dimension++)
                 {
-                    var start = info2.Starts[dimension];
-                    var stride = info2.Strides[dimension];
-                    var count = info2.Counts[dimension];
-                    var block = info2.Blocks[dimension];
+                    var start = regular.Starts[dimension];
+                    var stride = regular.Strides[dimension];
+                    var count = regular.Counts[dimension];
+                    var block = regular.Blocks[dimension];
                     var coordinate = coordinates[dimension];
 
                     if (coordinate < start)
@@ -244,11 +244,6 @@ namespace PureHDF
                     compactCoordinates[dimension] = actualCount * block + blockOffset;
                     maxCount = block - blockOffset;
                 }
-            }
-
-            else if (selectionInfo is HyperslabSelectionInfo3 _)
-            {
-                throw new NotImplementedException("Hyperslab selection info v3 is not implemented.");
             }
 
             else
@@ -281,10 +276,10 @@ namespace PureHDF
             ulong maxCount = default;
 
             // Expand compact coordinates
-            if (selectionInfo is HyperslabSelectionInfo1 info1)
+            if (selectionInfo is IrregularHyperslabSelectionInfo irregular)
             {
                 // For each block
-                for (int blockIndex = 0; blockIndex < info1.BlockCount; blockIndex++)
+                for (ulong blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
                 {
                     success = true;
                     var offsetsGroupIndex = blockIndex * selectionInfo.Rank;
@@ -292,12 +287,12 @@ namespace PureHDF
                     // For each dimension
                     for (var dimension = 0; dimension < selectionInfo.Rank; dimension++)
                     {
-                        var dimensionIndex = offsetsGroupIndex + dimension;
+                        var dimensionIndex = (int)offsetsGroupIndex + dimension;
                         var compactCoordinate = compactCoordinates[dimension];
 
-                        var start = info1.BlockOffsets[dimensionIndex * 2];
-                        var compactBlockStart = info1.CompactBlockStarts[dimensionIndex];
-                        var compactBlockEnd = info1.CompactBlockEnds[dimensionIndex];
+                        var start = irregular.BlockOffsets[dimensionIndex * 2];
+                        var compactBlockStart = irregular.CompactBlockStarts[dimensionIndex];
+                        var compactBlockEnd = irregular.CompactBlockEnds[dimensionIndex];
 
                         if (compactBlockStart <= compactCoordinate && compactCoordinate <= compactBlockEnd)
                         {
@@ -319,17 +314,17 @@ namespace PureHDF
                     throw new Exception("This should never happen!");
             }
 
-            else if (selectionInfo is HyperslabSelectionInfo2 info2)
+            else if (selectionInfo is RegularHyperslabSelectionInfo regular)
             {
                 success = true;
 
                 // for each dimension
-                for (int dimension = 0; dimension < info2.Rank; dimension++)
+                for (int dimension = 0; dimension < regular.Rank; dimension++)
                 {
-                    var start = info2.Starts[dimension];
-                    var stride = info2.Strides[dimension];
-                    var count = info2.Counts[dimension];
-                    var block = info2.Blocks[dimension];
+                    var start = regular.Starts[dimension];
+                    var stride = regular.Strides[dimension];
+                    var count = regular.Counts[dimension];
+                    var block = regular.Blocks[dimension];
                     var compactCoordinate = compactCoordinates[dimension];
 
                     var actualCount = (ulong)Math.DivRem((long)compactCoordinate, (long)block, out var blockOffsetLong);
@@ -347,11 +342,6 @@ namespace PureHDF
 
                 if (!success)
                     throw new Exception("This should never happen!");
-            }
-
-            else if (selectionInfo is HyperslabSelectionInfo3 _)
-            {
-                throw new NotImplementedException("Hyperslab selection info v3 is not implemented.");
             }
 
             else

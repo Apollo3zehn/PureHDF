@@ -15,14 +15,8 @@
             // version
             Version = reader.ReadUInt32();
 
-            // hyperslab selection info
-            HyperslabSelectionInfo = Version switch
-            {
-                1 => new HyperslabSelectionInfo1(reader),
-                2 => new HyperslabSelectionInfo2(reader),
-                3 => new HyperslabSelectionInfo3(reader),
-                _ => throw new NotSupportedException($"Only {nameof(H5S_SEL_HYPER)} of version 1 or 2 are supported.")
-            };
+            // SelectionInfo
+            SelectionInfo = HyperslabSelectionInfo.Create(reader, Version);
         }
 
         #endregion
@@ -44,7 +38,7 @@
             }
         }
 
-        public HyperslabSelectionInfo HyperslabSelectionInfo { get; set; }
+        public HyperslabSelectionInfo SelectionInfo { get; set; }
 
         #endregion
     }
