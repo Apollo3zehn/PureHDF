@@ -3,7 +3,6 @@
     internal abstract class HyperslabSelectionInfo
     {
         public uint Rank { get; set; }
-        public ulong[] CompactDimensions { get; set; } = default!;
 
         public static HyperslabSelectionInfo Create(H5BaseReader reader, uint version)
         {

@@ -36,6 +36,7 @@
         public ulong[] Strides { get; set; }
         public ulong[] Counts { get; set; }
         public ulong[] Blocks { get; set; }
+        public ulong[] CompactDimensions { get; set; }
 
         #endregion
     }

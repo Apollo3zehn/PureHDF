@@ -21,7 +21,7 @@ namespace PureHDF
             }
         }
 
-        public static ulong ToLinearIndex(this Span<ulong> coordinates, ulong[] dimensions)
+        public static ulong ToLinearIndex(this Span<ulong> coordinates, Span<ulong> dimensions)
         {
             var linearIndex = 0UL;
             var rank = coordinates.Length;
@@ -60,13 +60,20 @@ namespace PureHDF
             var rank = dimensions.Length;
             var coordinates = new ulong[rank];
 
+            ToCoordinates(linearIndex, dimensions, coordinates);
+
+            return coordinates;
+        }
+
+        public static void ToCoordinates(this ulong linearIndex, Span<ulong> dimensions, Span<ulong> coordinates)
+        {
+            var rank = dimensions.Length;
+
             for (int i = rank - 1; i >= 0; i--)
             {
                 linearIndex = (ulong)Math.DivRem((long)linearIndex, (long)dimensions[i], out var coordinate);
                 coordinates[i] = (ulong)coordinate;
             }
-
-            return coordinates;
         }
 
         public static ulong[] AccumulateReverse(this ulong[] totalSize)
@@ -174,7 +181,7 @@ namespace PureHDF
 
         public static ulong CalculateSize(IEnumerable<uint> dimensionSizes, DataspaceType type = DataspaceType.Simple)
         {
-            return H5Utils.CalculateSize(dimensionSizes.Select(value => (ulong)value), type);
+            return CalculateSize(dimensionSizes.Select(value => (ulong)value), type);
         }
 
         public static ulong CalculateSize(IEnumerable<ulong> dimensionSizes, DataspaceType type = DataspaceType.Simple)

@@ -669,7 +669,7 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void CanReadDataset_Virtual()
+        public void CanReadDataset_Virtual_2D()
         {
             // TODO: Not supported: Unlimited Dimensions
 
@@ -687,7 +687,9 @@ namespace PureHDF.Tests.Reading
             // TODO: Check AddVirtualDataset, is extra path variable required?
 
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddVirtualDataset(fileId, "virtual", "", default));
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
+                => TestUtils.AddVirtualDataset_2D(fileId, "virtual", "", default));
+
             var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 
             // Act
@@ -695,6 +697,38 @@ namespace PureHDF.Tests.Reading
             var dataset = root.Dataset("vds");
             var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
             var actual = dataset.Read<int>(selection);
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Fact]
+        public void CanReadDataset_Virtual_source_irregular()
+        {
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
+                => TestUtils.AddVirtualDataset_source_irregular(fileId, "virtual"));
+
+            var expected = new int[] 
+            { 
+                13, 14, 15,
+                23, 24, 25,
+                33, 34, 35,
+
+                53, 54, 55,
+                61, 62, 63, 64, 65, 66, 67,
+                71, 72, 73, 74, 75, 76, 77,
+                81, 82, 83, 85, 86, 87,
+                
+                93, 94, 95,
+                103, 104, 105,
+                113, 114, 115,
+            };
+
+            // Act
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+            var dataset = root.Dataset("vds");
+            var actual = dataset.Read<int>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));

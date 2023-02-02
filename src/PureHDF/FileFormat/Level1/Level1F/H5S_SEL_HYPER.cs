@@ -44,12 +44,17 @@
         {
             var success = false;
 
+            ulong linearIndex = default;
             ulong maxCount = default;
-            Span<ulong> compactCoordinates = stackalloc ulong[(int)SelectionInfo.Rank];
+
+            var rank = SelectionInfo.Rank;
 
             if (SelectionInfo is IrregularHyperslabSelectionInfo irregular)
             {
-                // for each block
+                Span<ulong> blockDimensions = stackalloc ulong[(int)rank];
+                Span<ulong> blockCoordinates = stackalloc ulong[(int)rank];
+
+                // find block which envelops the provided coordinates
                 for (uint blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
                 {
                     success = true;
@@ -65,10 +70,8 @@
 
                         if (start <= coordinate && coordinate <= end)
                         {
-                            var compactStart = irregular.CompactBlockStarts[dimensionIndex];
-
-                            compactCoordinates[dimension] = compactStart + (coordinate - start);
-                            maxCount = end - coordinate + 1;
+                            blockCoordinates[dimension] = coordinates[dimension] - start;
+                            blockDimensions[dimension] = end - start + 1;
                         }
                         else
                         {
@@ -78,15 +81,23 @@
                     }
 
                     if (success)
+                    {
+                        var blockLinearStartIndex = irregular.BlockLinearIndices[blockIndex];
+                        var blockLinearIndex = H5Utils.ToLinearIndex(blockCoordinates, blockDimensions);
+
+                        linearIndex = blockLinearStartIndex + blockLinearIndex;
+                        maxCount = blockDimensions[^1] - blockCoordinates[^1];
                         break;
+                    }
                 }
             }
 
             else if (SelectionInfo is RegularHyperslabSelectionInfo regular)
             {
                 success = true;
+                Span<ulong> compactCoordinates = stackalloc ulong[(int)rank];
 
-                // for each dimension
+                // find hyperslab parameters which envelops the provided coordinates
                 for (int dimension = 0; dimension < regular.Rank; dimension++)
                 {
                     var start = regular.Starts[dimension];
@@ -111,6 +122,7 @@
                     }
 
                     compactCoordinates[dimension] = actualCount * block + blockOffset;
+                    linearIndex = H5Utils.ToLinearIndex(compactCoordinates, regular.CompactDimensions);
                     maxCount = block - blockOffset;
                 }
             }
@@ -120,11 +132,12 @@
                 throw new NotSupportedException($"The hyperslab selection info of type {typeof(HyperslabSelectionInfo).Name} is not supported.");
             }
 
+            // TODO theoretically the previous steps can fail if linear index is outside the dataset
             if (success)
             {
                 return new LinearIndexResult(
                     Success: true, 
-                    LinearIndex: H5Utils.ToLinearIndex(compactCoordinates, SelectionInfo.CompactDimensions),
+                    LinearIndex: linearIndex,
                     maxCount);
             }
 
@@ -134,44 +147,54 @@
 
         public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
         {
-            var coordinates = new ulong[SelectionInfo.Rank];
-            var compactCoordinates = H5Utils.ToCoordinates(linearIndex, SelectionInfo.CompactDimensions);
+            var rank = SelectionInfo.Rank;
+            var coordinates = new ulong[rank];
             var success = false;
             ulong maxCount = default;
 
-            // Expand compact coordinates
             if (SelectionInfo is IrregularHyperslabSelectionInfo irregular)
             {
-                // For each block
-                for (ulong blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
+                Span<ulong> blockDimensions = stackalloc ulong[(int)rank];
+                Span<ulong> blockStarts = stackalloc ulong[(int)rank];
+                Span<ulong> blockCoordinates = stackalloc ulong[(int)rank];
+
+                // find block which envelops the provided linear index
+                for (ulong blockIndex = irregular.BlockCount - 1; blockIndex >= 0; blockIndex--)
                 {
-                    success = true;
-                    var offsetsGroupIndex = blockIndex * SelectionInfo.Rank;
+                    var blockStartLinearIndex = irregular.BlockLinearIndices[blockIndex];
 
-                    // For each dimension
-                    for (var dimension = 0; dimension < SelectionInfo.Rank; dimension++)
+                    // TODO binary search
+                    if (blockStartLinearIndex <= linearIndex)
                     {
-                        var dimensionIndex = (int)offsetsGroupIndex + dimension;
-                        var compactCoordinate = compactCoordinates[dimension];
+                        var blockLinearIndex = linearIndex - blockStartLinearIndex;
+                        var blockOffsetsIndex = blockIndex * rank * 2;
 
-                        var start = irregular.BlockOffsets[dimensionIndex * 2];
-                        var compactBlockStart = irregular.CompactBlockStarts[dimensionIndex];
-                        var compactBlockEnd = irregular.CompactBlockEnds[dimensionIndex];
-
-                        if (compactBlockStart <= compactCoordinate && compactCoordinate <= compactBlockEnd)
+                        // Compute block dimension and fill starts array
+                        for (var dimension = 0; dimension < rank; dimension++)
                         {
-                            coordinates[dimension] = start + (compactCoordinate - compactBlockStart);
-                            maxCount = compactBlockEnd - compactCoordinate + 1;
-                        }
-                        else
-                        {
-                            success = false;
-                            break;
-                        }
-                    }
+                            var start = irregular.BlockOffsets[blockOffsetsIndex + 0 + (ulong)dimension];
+                            var end = irregular.BlockOffsets[blockOffsetsIndex + rank + (ulong)dimension];
 
-                    if (success)
+                            blockStarts[dimension] = start;
+                            blockDimensions[dimension] = end - start + 1;
+                        }
+
+                        // Compute block coordinates
+                        H5Utils.ToCoordinates(blockLinearIndex, blockDimensions, blockCoordinates);
+
+                        // Compute absolute coordinates
+                        for (var dimension = 0; dimension < rank; dimension++)
+                        {
+                            coordinates[dimension] = blockStarts[dimension] + blockCoordinates[dimension];
+                        }
+
+                        // Compute max count
+                        maxCount = blockDimensions[^1] - blockCoordinates[^1];
+
+                        // TODO theoretically the previous steps can fail if relative coordinates are outside the block
+                        success = true;
                         break;
+                    }
                 }
             }
 
@@ -179,7 +202,9 @@
             {
                 success = true;
 
-                // for each dimension
+                var compactCoordinates = H5Utils.ToCoordinates(linearIndex, regular.CompactDimensions);
+
+                // find hyperslab parameters which envelops the provided linear index
                 for (int dimension = 0; dimension < regular.Rank; dimension++)
                 {
                     var start = regular.Starts[dimension];
@@ -199,6 +224,8 @@
 
                     coordinates[dimension] = start + actualCount * stride + blockOffset;
                     maxCount = block - blockOffset;
+
+                    // TODO theoretically the previous steps can fail if relative coordinates are outside the block
                 }
             }
 
