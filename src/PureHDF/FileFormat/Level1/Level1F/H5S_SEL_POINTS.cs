@@ -59,6 +59,16 @@
         public uint PointCount { get; set; }
         public uint[] PointData { get; set; }
 
+        public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

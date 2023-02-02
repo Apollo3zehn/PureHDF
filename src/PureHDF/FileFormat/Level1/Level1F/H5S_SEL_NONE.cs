@@ -38,6 +38,16 @@
             }
         }
 
+        public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
+        {
+            return default;
+        }
+
+        public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
+        {
+            return default;
+        }
+
         #endregion
     }
 }

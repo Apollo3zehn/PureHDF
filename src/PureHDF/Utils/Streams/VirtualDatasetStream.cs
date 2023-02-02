@@ -4,13 +4,11 @@ namespace PureHDF
 {
     internal class VirtualDatasetStream : Stream
     {
-        private record struct VirtualResult(bool Success, ulong LinearIndex, ulong MaxCount);
-        private record struct SourceResult(ulong[] Coordinates, ulong MaxCount);
         private record class DatasetInfo(H5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
 
         private long _position;
         private readonly uint _typeSize;
-        private readonly ulong[] _dimensions;
+        private readonly ulong[] _virtualDimensions;
         private readonly byte[]? _fillValue;
         private readonly H5DatasetAccess _datasetAccess;
         private readonly VdsDatasetEntry[] _entries;
@@ -24,7 +22,7 @@ namespace PureHDF
             H5DatasetAccess datasetAccess)
         {
             _entries = entries;
-            _dimensions = dimensions;
+            _virtualDimensions = dimensions;
             _typeSize = typeSize;
             _fillValue = fillValue;
             _datasetAccess = datasetAccess;
@@ -70,23 +68,17 @@ namespace PureHDF
             {
                 // 1. Linear index to coordinates in virtual dataset
                 var virtualLinearIndex = (ulong)_position / _typeSize;
-                var virtualCoordinates = H5Utils.ToCoordinates(virtualLinearIndex, _dimensions);
+                var virtualCoordinates = H5Utils.ToCoordinates(virtualLinearIndex, _virtualDimensions);
 
                 // 2. Calculate linear index and max count
-                var virtualResult = default(VirtualResult);
+                var virtualResult = default(LinearIndexResult);
                 var sourceSelection = default(DataspaceSelection);
                 var sourceDatasetInfo = default(DatasetInfo);
 
                 foreach (var entry in _entries)
                 {
-                    virtualResult = entry.VirtualSelection.Info switch
-                    {
-                        H5S_SEL_NONE => default,
-                        H5S_SEL_POINTS => throw new NotImplementedException(),
-                        H5S_SEL_HYPER hyper => GetLinearIndex(hyper.SelectionInfo, virtualCoordinates),
-                        H5S_SEL_ALL => new VirtualResult(Success: true, virtualLinearIndex, MaxCount: _dimensions[^1] - virtualCoordinates[^1]),
-                        _ => throw new NotSupportedException($"The selection of type {entry.VirtualSelection.Type} is not supported.")
-                    };
+                    virtualResult = entry.VirtualSelection.Info
+                        .ToLinearIndex(_virtualDimensions, virtualCoordinates);
 
                     sourceSelection = entry.SourceSelection;
                     sourceDatasetInfo = GetDatasetInfo(entry);
@@ -114,9 +106,14 @@ namespace PureHDF
                 {
                     var selection = new DelegateSelection(
                         virtualCount, 
-                        dimensions => Walker(virtualCount, virtualResult.LinearIndex, dimensions, sourceSelection));
+                        sourceDimensions => Walker(
+                            virtualCount, 
+                            virtualResult.LinearIndex, 
+                            sourceDimensions, 
+                            sourceSelection));
 
-                    sourceDatasetInfo.Dataset.Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+                    sourceDatasetInfo.Dataset
+                        .Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
                 }
 
                 // Fill value
@@ -140,22 +137,18 @@ namespace PureHDF
         private static IEnumerable<Step> Walker(
             ulong totalElementCount, 
             ulong linearIndex, 
-            ulong[] dimensions,
+            ulong[] sourceDimensions,
             DataspaceSelection sourceSelection)
         {
             var remaining = totalElementCount;
 
             while (remaining > 0)
             {
-                var (coordinates, sourceMaxCount) = sourceSelection.Info switch
-                {
-                    H5S_SEL_NONE => throw new Exception("This should never happen!"),
-                    H5S_SEL_POINTS => throw new NotImplementedException(),
-                    H5S_SEL_HYPER hyper => GetCoordinatesForHyperslabSelection(hyper.SelectionInfo, linearIndex),
-                    H5S_SEL_ALL => GetCoordinatesForAllSelection(dimensions, linearIndex),
+                var (success, coordinates, sourceMaxCount) = sourceSelection.Info
+                    .ToCoordinates(sourceDimensions, linearIndex);
 
-                    _ => throw new NotSupportedException($"The selection of type {sourceSelection.Type} is not supported.")
-                };
+                if (!success)
+                    throw new Exception("This should never happen.");
 
                 var sourceCount = Math.Min(remaining, sourceMaxCount);
 
@@ -169,187 +162,6 @@ namespace PureHDF
                     ElementCount = sourceCount 
                 };
             }
-        }
-
-        private static VirtualResult GetLinearIndex(HyperslabSelectionInfo selectionInfo, ulong[] coordinates)
-        {
-            var success = false;
-
-            ulong maxCount = default;
-            Span<ulong> compactCoordinates = stackalloc ulong[(int)selectionInfo.Rank];
-
-            if (selectionInfo is IrregularHyperslabSelectionInfo irregular)
-            {
-                // for each block
-                for (uint blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
-                {
-                    success = true;
-                    var offsetsGroupIndex = blockIndex * irregular.Rank;
-
-                    // for each dimension
-                    for (var dimension = 0; dimension < irregular.Rank; dimension++)
-                    {
-                        var dimensionIndex = offsetsGroupIndex + dimension;
-                        var start = irregular.BlockOffsets[dimensionIndex * 2 + 0];
-                        var end = irregular.BlockOffsets[dimensionIndex * 2 + 1];
-                        var coordinate = coordinates[dimension];
-
-                        if (start <= coordinate && coordinate <= end)
-                        {
-                            var compactStart = irregular.CompactBlockStarts[dimensionIndex];
-
-                            compactCoordinates[dimension] = compactStart + (coordinate - start);
-                            maxCount = end - coordinate + 1;
-                        }
-                        else
-                        {
-                            success = false;
-                            break;
-                        }
-                    }
-
-                    if (success)
-                        break;
-                }
-            }
-
-            else if (selectionInfo is RegularHyperslabSelectionInfo regular)
-            {
-                success = true;
-
-                // for each dimension
-                for (int dimension = 0; dimension < regular.Rank; dimension++)
-                {
-                    var start = regular.Starts[dimension];
-                    var stride = regular.Strides[dimension];
-                    var count = regular.Counts[dimension];
-                    var block = regular.Blocks[dimension];
-                    var coordinate = coordinates[dimension];
-
-                    if (coordinate < start)
-                    {
-                        success = false;
-                        break;
-                    }
-
-                    var actualCount = (ulong)Math.DivRem((long)(coordinate - start), (long)stride, out var blockOffsetLong);
-                    var blockOffset = (ulong)blockOffsetLong;
-
-                    if (actualCount >= count || blockOffset >= block)
-                    {
-                        success = false;
-                        break;
-                    }
-
-                    compactCoordinates[dimension] = actualCount * block + blockOffset;
-                    maxCount = block - blockOffset;
-                }
-            }
-
-            else
-            {
-                throw new NotSupportedException($"The hyperslab selection info of type {typeof(HyperslabSelectionInfo).Name} is not supported.");
-            }
-
-            if (success)
-            {
-                var linearIndex = H5Utils.ToLinearIndex(compactCoordinates, selectionInfo.CompactDimensions);
-                return new VirtualResult(Success: true, linearIndex, maxCount);
-            }
-
-            return default;
-        }
-
-        private static SourceResult GetCoordinatesForAllSelection(ulong[] dimensions, ulong linearIndex)
-        {
-            var coordinates = H5Utils.ToCoordinates(linearIndex, dimensions);
-            var maxCount = dimensions[^1] - coordinates[^1];
-
-            return new SourceResult(coordinates, maxCount);
-        }
-
-        private static SourceResult GetCoordinatesForHyperslabSelection(HyperslabSelectionInfo selectionInfo, ulong linearIndex)
-        {
-            var coordinates = new ulong[selectionInfo.Rank];
-            var compactCoordinates = H5Utils.ToCoordinates(linearIndex, selectionInfo.CompactDimensions);
-            var success = false;
-            ulong maxCount = default;
-
-            // Expand compact coordinates
-            if (selectionInfo is IrregularHyperslabSelectionInfo irregular)
-            {
-                // For each block
-                for (ulong blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
-                {
-                    success = true;
-                    var offsetsGroupIndex = blockIndex * selectionInfo.Rank;
-
-                    // For each dimension
-                    for (var dimension = 0; dimension < selectionInfo.Rank; dimension++)
-                    {
-                        var dimensionIndex = (int)offsetsGroupIndex + dimension;
-                        var compactCoordinate = compactCoordinates[dimension];
-
-                        var start = irregular.BlockOffsets[dimensionIndex * 2];
-                        var compactBlockStart = irregular.CompactBlockStarts[dimensionIndex];
-                        var compactBlockEnd = irregular.CompactBlockEnds[dimensionIndex];
-
-                        if (compactBlockStart <= compactCoordinate && compactCoordinate <= compactBlockEnd)
-                        {
-                            coordinates[dimension] = start + (compactCoordinate - compactBlockStart);
-                            maxCount = compactBlockEnd - compactCoordinate + 1;
-                        }
-                        else
-                        {
-                            success = false;
-                            break;
-                        }
-                    }
-
-                    if (success)
-                        break;
-                }
-
-                if (!success)
-                    throw new Exception("This should never happen!");
-            }
-
-            else if (selectionInfo is RegularHyperslabSelectionInfo regular)
-            {
-                success = true;
-
-                // for each dimension
-                for (int dimension = 0; dimension < regular.Rank; dimension++)
-                {
-                    var start = regular.Starts[dimension];
-                    var stride = regular.Strides[dimension];
-                    var count = regular.Counts[dimension];
-                    var block = regular.Blocks[dimension];
-                    var compactCoordinate = compactCoordinates[dimension];
-
-                    var actualCount = (ulong)Math.DivRem((long)compactCoordinate, (long)block, out var blockOffsetLong);
-                    var blockOffset = (ulong)blockOffsetLong;
-
-                    if (actualCount >= count || blockOffset >= block)
-                    {
-                        success = false;
-                        break;
-                    }
-
-                    coordinates[dimension] = start + actualCount * stride + blockOffset;
-                    maxCount = block - blockOffset;
-                }
-
-                if (!success)
-                    throw new Exception("This should never happen!");
-            }
-
-            else
-            {
-                throw new NotSupportedException($"The hyperslab selection info of type {typeof(HyperslabSelectionInfo).Name} is not supported.");
-            }
-
-            return new SourceResult(coordinates, maxCount);
         }
 
         private DatasetInfo? GetDatasetInfo(VdsDatasetEntry entry)
