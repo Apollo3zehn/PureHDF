@@ -58,25 +58,43 @@
                 for (uint blockIndex = 0; blockIndex < irregular.BlockCount; blockIndex++)
                 {
                     success = true;
-                    var offsetsGroupIndex = blockIndex * irregular.Rank;
+                    var blockOffsetsIndex = blockIndex * rank * 2;
 
                     // for each dimension
-                    for (var dimension = 0; dimension < irregular.Rank; dimension++)
+                    for (var dimension = 0; dimension < rank; dimension++)
                     {
-                        var dimensionIndex = offsetsGroupIndex + dimension;
-                        var start = irregular.BlockOffsets[dimensionIndex * 2 + 0];
-                        var end = irregular.BlockOffsets[dimensionIndex * 2 + 1];
+                        var start = irregular.BlockOffsets[blockOffsetsIndex + 0 + (ulong)dimension];
+                        var end = irregular.BlockOffsets[blockOffsetsIndex + rank + (ulong)dimension];
                         var coordinate = coordinates[dimension];
 
                         if (start <= coordinate && coordinate <= end)
                         {
-                            blockCoordinates[dimension] = coordinates[dimension] - start;
+                            blockCoordinates[dimension] = coordinate - start;
                             blockDimensions[dimension] = end - start + 1;
                         }
                         else
                         {
-                            success = false;
-                            break;
+                            // Return max count if this is the fastest changing 
+                            // dimension since there will be not better matching 
+                            // blocks coming.
+                            if (dimension == rank - 1 && start > coordinate)
+                            {
+                                // find distance until the next block begins, 
+                                // otherwise 0 (i.e. there is no block)
+                                maxCount = start - coordinate;
+
+                                return new LinearIndexResult(
+                                    Success: false,
+                                    LinearIndex: linearIndex,
+                                    maxCount);
+                            }
+
+                            // Continue searching
+                            else
+                            {
+                                success = false;
+                                break;
+                            }
                         }
                     }
 
@@ -141,6 +159,7 @@
                     maxCount);
             }
 
+            // nothing found
             else
                 return default;
         }

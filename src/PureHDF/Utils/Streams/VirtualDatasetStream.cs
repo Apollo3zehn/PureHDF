@@ -80,19 +80,25 @@ namespace PureHDF
                     virtualResult = entry.VirtualSelection.Info
                         .ToLinearIndex(_virtualDimensions, virtualCoordinates);
 
-                    sourceSelection = entry.SourceSelection;
-                    sourceDatasetInfo = GetDatasetInfo(entry);
+                    if (virtualResult.Success || virtualResult.MaxCount != 0)
+                    {
+                        sourceSelection = entry.SourceSelection;
+                        sourceDatasetInfo = GetDatasetInfo(entry);
 
-                    if (virtualResult.Success)
                         break;
+                    }
                 }
 
                 // 4. Find min count (request vs virtual selection)
                 var scaledBufferLength = (ulong)buffer.Length / _typeSize;
 
-                ulong virtualCount = virtualResult.Success
-                    ? Math.Min(scaledBufferLength, virtualResult.MaxCount)
-                    : scaledBufferLength;
+                ulong virtualCount = virtualResult.MaxCount == 0
+                    // MaxCount == 0: there is no block in the fasted changing dimension
+                    ? scaledBufferLength
+                    // MaxCount != 0: 
+                    //  - block width (virtualResult.Success == true) or 
+                    //  - distance until next block begins (virtualResult.Success == false)
+                    : Math.Min(scaledBufferLength, virtualResult.MaxCount); // 
 
                 var virtualByteCount = (long)virtualCount * _typeSize;
 
