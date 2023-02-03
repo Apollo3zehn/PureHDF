@@ -302,5 +302,74 @@ namespace PureHDF.Tests
 
             _ = H5P.close(dcpl_id);
         }
+
+        public static unsafe void AddVirtualDataset_virtual_regular(long fileId, string datasetName)
+        {
+            /*
+             *      0   1   2   3   4   5   6   7   8   9 
+             *  00  -   -   -   -   -   -   -   -   -   - 
+             *  10  -   -   -   A   A   A   -   -   -   - 
+             *  20  -   -   -   A   A   A   -   -   -   - 
+             *  30  -   -   -   A   A   A   -   -   -   - 
+             *  40  -   -   -   -   -   -   -   -   -   - 
+             *  50  -   -   -   A   A   A   -   -   -   - 
+             * ...
+             * 360  -   -   -   -   -   -   -   -   -   - 
+             * 370  -   -   -   A   A   A   -   -   -   -
+             * 380  -   -   -   A   A   A   -   -   -   -
+             * 390  -   -   -   A   A   A   -   -   -   -
+             *
+             * A: selection A
+             */
+
+            // source file
+            var sourceFileName = $"{datasetName}.h5";
+
+            if (File.Exists(sourceFileName))
+                File.Delete(sourceFileName);
+
+            var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
+
+            // source dataset
+            var sourceSpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
+            var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
+            var memorySpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
+            var data = TestData.MediumData.Skip(0).Take(90).ToArray();
+
+            unsafe
+            {
+                fixed (int* ptr = data.AsSpan())
+                {
+                    _ = H5D.write(sourceDatasetId, H5T.NATIVE_INT32, memorySpaceId, H5S.ALL, 0, new IntPtr(ptr));
+                }
+            }
+
+            // virtual dataset
+            var virtualSpaceId = H5S.create_simple(2, new ulong[] { 40, 10 }, new ulong[] { 40, 10 });
+
+            // virtual selection A
+            _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET, 
+                start: new ulong[] { 1, 3 }, 
+                stride: new ulong[] { 4, 3 }, 
+                count: new ulong[] { 10, 1 },
+                block: new ulong[] { 3, 3 });
+
+            // create virtual dataset
+            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+            _ = H5P.set_virtual(dcpl_id, virtualSpaceId, sourceFileName, "/source", sourceSpaceId);
+
+            var datasetId = H5D.create(fileId, "vds", H5T.NATIVE_INT32, virtualSpaceId, dcpl_id: dcpl_id);
+
+            // clean up
+            _ = H5S.close(memorySpaceId);
+            _ = H5S.close(sourceSpaceId);
+            _ = H5D.close(sourceDatasetId);
+            _ = H5F.close(sourceFileId);
+
+            _ = H5S.close(virtualSpaceId);
+            _ = H5D.close(datasetId);
+
+            _ = H5P.close(dcpl_id);
+        }
     }
 }

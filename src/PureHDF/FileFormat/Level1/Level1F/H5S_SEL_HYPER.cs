@@ -75,7 +75,7 @@
                         else
                         {
                             // Return max count if this is the fastest changing 
-                            // dimension since there will be not better matching 
+                            // dimension since there will be no better matching 
                             // blocks coming.
                             if (dimension == rank - 1 && start > coordinate)
                             {
@@ -85,7 +85,7 @@
 
                                 return new LinearIndexResult(
                                     Success: false,
-                                    LinearIndex: linearIndex,
+                                    LinearIndex: default,
                                     maxCount);
                             }
 
@@ -116,7 +116,7 @@
                 Span<ulong> compactCoordinates = stackalloc ulong[(int)rank];
 
                 // find hyperslab parameters which envelops the provided coordinates
-                for (int dimension = 0; dimension < regular.Rank; dimension++)
+                for (int dimension = 0; dimension < rank; dimension++)
                 {
                     var start = regular.Starts[dimension];
                     var stride = regular.Strides[dimension];
@@ -124,19 +124,43 @@
                     var block = regular.Blocks[dimension];
                     var coordinate = coordinates[dimension];
 
+                    bool alreadyFailed = default;
+                    ulong actualCount = default;
+                    ulong blockOffset = default;
+
                     if (coordinate < start)
                     {
-                        success = false;
-                        break;
+                        alreadyFailed = true;
+                    }
+                    else
+                    {
+                        actualCount = (ulong)Math.DivRem((long)(coordinate - start), (long)stride, out var blockOffsetLong);
+                        blockOffset = (ulong)blockOffsetLong;
                     }
 
-                    var actualCount = (ulong)Math.DivRem((long)(coordinate - start), (long)stride, out var blockOffsetLong);
-                    var blockOffset = (ulong)blockOffsetLong;
-
-                    if (actualCount >= count || blockOffset >= block)
+                    if (alreadyFailed || actualCount >= count || blockOffset >= block)
                     {
-                        success = false;
-                        break;
+                        // Return max count if this is the fastest changing 
+                        // dimension since there will be no better matching 
+                        // blocks coming.
+                        if (dimension == rank - 1 && start > coordinate)
+                        {
+                            // find distance until the next block begins, 
+                            // otherwise 0 (i.e. there is no block)
+                            maxCount = start - coordinate;
+
+                            return new LinearIndexResult(
+                                Success: false,
+                                LinearIndex: default,
+                                maxCount);
+                        }
+
+                        // Continue searching
+                        else
+                        {
+                            success = false;
+                            break;
+                        }
                     }
 
                     compactCoordinates[dimension] = actualCount * block + blockOffset;
@@ -224,7 +248,7 @@
                 var compactCoordinates = H5Utils.ToCoordinates(linearIndex, regular.CompactDimensions);
 
                 // find hyperslab parameters which envelops the provided linear index
-                for (int dimension = 0; dimension < regular.Rank; dimension++)
+                for (int dimension = 0; dimension < rank; dimension++)
                 {
                     var start = regular.Starts[dimension];
                     var stride = regular.Strides[dimension];

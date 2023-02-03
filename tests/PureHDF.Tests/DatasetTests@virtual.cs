@@ -143,5 +143,36 @@ namespace PureHDF.Tests.Reading
             // Assert
             Assert.True(actual.SequenceEqual(expected));
         }
+
+        [Fact]
+        public void CanReadDataset_Virtual_virtual_regular()
+        {
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
+                => TestUtils.AddVirtualDataset_virtual_regular(fileId, "virtual"));
+
+            var expected = new int[400];
+            var index = 0;
+
+            for (int row = 1; row < 40; row++)
+            {
+                if (row % 4 == 0)
+                    continue;
+
+                for (int column = 3; column < 6; column++)
+                {
+                    expected[row * 10 + column] = index;
+                    index++;
+                }
+            }
+
+            // Act
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+            var dataset = root.Dataset("vds");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
     }
 }

@@ -52,6 +52,8 @@ namespace PureHDF
 
         private int ReadCore(Memory<byte> buffer)
         {
+            var length = buffer.Length;
+
             // Overall algorithm:
             // - We get a linear byte index, which needs to be scaled by the type size.
             // - That index is then converted into coordinates which identify the position in the multidimensional virtual dataset.
@@ -137,7 +139,7 @@ namespace PureHDF
                 buffer = buffer[(int)virtualByteCount..];
             }
 
-            return buffer.Length;
+            return length;
         }
 
         private static IEnumerable<Step> Walker(
