@@ -9,20 +9,13 @@ namespace PureHDF.Tests.Reading
         public void CanReadDataset_Virtual_2D()
         {
             // TODO: Not supported: Unlimited Dimensions
-
-            // TODO: Not yet implemented: Hyperslab V3
             // TODO: Not yet implemented: async
-            // TODO: Not yet implemented: PointSelection
             // TODO: Not yet checked: DatasetAccess
+            // TODO: Implement Span<byte> overload in streams
 
             // TODO: Add tests:
             // - 3D
-            // - irregular hyperslab
             // - point selection
-            // - H5_SEL_ALL
-
-            // Fix this test: Logic in VirtualDatasetStream @ L83 (if (virtualResult.Success || virtualResult.MaxCount != 0)) 
-            // in incorrect. We should select the _entry which is nearest.
 
             // TODO: Check AddVirtualDataset, is extra path variable required?
 

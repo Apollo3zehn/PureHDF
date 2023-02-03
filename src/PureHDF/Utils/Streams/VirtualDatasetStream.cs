@@ -74,20 +74,26 @@ namespace PureHDF
 
                 // 2. Calculate linear index and max count
                 var virtualResult = default(LinearIndexResult);
-                var sourceSelection = default(DataspaceSelection);
-                var sourceDatasetInfo = default(DatasetInfo);
+                var foundEntry = default(VdsDatasetEntry);
+                var minimumMaxCount = default(ulong);
 
                 foreach (var entry in _entries)
                 {
                     virtualResult = entry.VirtualSelection.Info
                         .ToLinearIndex(_virtualDimensions, virtualCoordinates);
 
-                    if (virtualResult.Success || virtualResult.MaxCount != 0)
+                    // we found a suitable selection
+                    if (virtualResult.Success)
                     {
-                        sourceSelection = entry.SourceSelection;
-                        sourceDatasetInfo = GetDatasetInfo(entry);
-
+                        foundEntry = entry;
+                        minimumMaxCount = virtualResult.MaxCount;
                         break;
+                    }
+                    // continue searching for the minimum distance to the next selection
+                    else if (virtualResult.MaxCount != 0)
+                    {
+                        if (minimumMaxCount == default || virtualResult.MaxCount < minimumMaxCount)
+                            minimumMaxCount = virtualResult.MaxCount;
                     }
                 }
 
@@ -95,12 +101,12 @@ namespace PureHDF
                 var scaledBufferLength = (ulong)buffer.Length / _typeSize;
 
                 ulong virtualCount = virtualResult.MaxCount == 0
-                    // MaxCount == 0: there is no block in the fasted changing dimension
+                    // MaxCount == 0: there is no block in the fastest changing dimension
                     ? scaledBufferLength
                     // MaxCount != 0: 
                     //  - block width (virtualResult.Success == true) or 
                     //  - distance until next block begins (virtualResult.Success == false)
-                    : Math.Min(scaledBufferLength, virtualResult.MaxCount); // 
+                    : Math.Min(scaledBufferLength, minimumMaxCount); // 
 
                 var virtualByteCount = (long)virtualCount * _typeSize;
 
@@ -108,9 +114,12 @@ namespace PureHDF
                 var slicedBuffer = buffer[..(int)virtualByteCount];
 
                 // From source dataset
-                if (virtualResult.Success && 
-                    sourceSelection is not null && 
-                    sourceDatasetInfo is not null)
+                var sourceDatasetInfo = default(DatasetInfo);
+
+                if (foundEntry is not null)
+                    sourceDatasetInfo = GetDatasetInfo(foundEntry);
+
+                if (sourceDatasetInfo is not null && foundEntry is not null)
                 {
                     var selection = new DelegateSelection(
                         virtualCount, 
@@ -118,7 +127,7 @@ namespace PureHDF
                             virtualCount, 
                             virtualResult.LinearIndex, 
                             sourceDimensions, 
-                            sourceSelection));
+                            foundEntry.SourceSelection));
 
                     sourceDatasetInfo.Dataset
                         .Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
