@@ -10,12 +10,6 @@ namespace PureHDF
             if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
                 throw new Exception("The external link file path is not a valid URI.");
 
-            // self
-            if (filePath == ".")
-            {
-                return thisFilePath;
-            }
-
             // absolute
             if (uri.IsAbsoluteUri)
             {
