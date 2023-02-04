@@ -60,6 +60,10 @@ namespace PureHDF
             if (File.Exists(thisResult))
                 return thisResult;
 
+            // 4. relative path
+            if (File.Exists(filePath))
+                return filePath;
+
             return default;
         }
 
@@ -137,6 +141,10 @@ namespace PureHDF
 
             if (File.Exists(thisResult))
                 return thisResult;
+
+            // 4. relative path
+            if (File.Exists(filePath))
+                return filePath;
 
             return default;
         }
