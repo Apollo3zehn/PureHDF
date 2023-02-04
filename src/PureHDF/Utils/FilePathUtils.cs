@@ -8,7 +8,7 @@ namespace PureHDF
             // https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5
 
             if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
-                throw new Exception("The external dataset file path is not a valid URI.");
+                throw new Exception("The external link file path is not a valid URI.");
 
             // self
             if (filePath == ".")
