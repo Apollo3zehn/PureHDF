@@ -5,7 +5,7 @@ namespace PureHDF
         public static string? FindExternalFileForLinkAccess(string thisFilePath, string filePath, H5LinkAccess linkAccess)
         {
             // HDF5 1.10 -> H5Lpublic.h @ H5Lcreate_external()
-            // reference: https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
+            // https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5
 
             if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
                 throw new Exception("The external dataset file path is not a valid URI.");
@@ -72,6 +72,8 @@ namespace PureHDF
         public static string? FindExternalFileForDatasetAccess(string thisFilePath, string filePath, H5DatasetAccess datasetAccess)
         {
             // HDF5 1.10 -> H5public.h @ H5Pset_efile_prefix()
+            // https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11
+            // https://github.com/HDFGroup/hdf5/issues/1759
 
             #error Needs to be reimplemented ... why is there HDF5_EXT_PREFIX and HDF5_EXTFILE_PREFIX ?
 
@@ -81,6 +83,8 @@ namespace PureHDF
         public static string? FindVirtualFile(string thisFilePath, string filePath, H5DatasetAccess datasetAccess)
         {
             // HDF5 1.10 -> H5public.h @ H5Pset_virtual()
+            // https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12
+
             if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
                 throw new Exception("The virtual dataset file path is not a valid URI.");
 
