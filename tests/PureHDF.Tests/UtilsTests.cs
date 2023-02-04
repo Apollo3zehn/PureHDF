@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading
             var expected = 7950UL;
 
             // Act
-            var actual = H5Utils.ToLinearIndex(coordinates, dimensions);
+            var actual = Utils.ToLinearIndex(coordinates, dimensions);
             
             // Assert
             Assert.Equal(expected, actual);
@@ -28,7 +28,7 @@ namespace PureHDF.Tests.Reading
             var expected = new ulong[] { 10, 20, 30 };
 
             // Act
-            var actual = H5Utils.ToCoordinates(linearIndex, dimensions);
+            var actual = Utils.ToCoordinates(linearIndex, dimensions);
             
             // Assert
             Assert.True(expected.SequenceEqual(actual));

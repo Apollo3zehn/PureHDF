@@ -10,7 +10,7 @@ namespace PureHDF
         {
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, SharedObjectHeaderMessageTable.Signature);
+            Utils.ValidateSignature(signature, SharedObjectHeaderMessageTable.Signature);
 
             //
             // TODO: implement this correctly

@@ -135,7 +135,7 @@ namespace PureHDF.Tests
             _ = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             // a (more than one chunk in file)
-            var pathA = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_a.raw"), datasetAccess);
+            var pathA = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, $"{datasetName}_a.raw"), datasetAccess);
 
             if (File.Exists(pathA))
                 File.Delete(pathA);
@@ -145,7 +145,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // b (file size smaller than set size)
-            var pathB = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.raw"), datasetAccess);
+            var pathB = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, $"{datasetName}_b.raw"), datasetAccess);
 
             if (File.Exists(pathB))
                 File.Delete(pathB);
@@ -153,7 +153,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // c (normal file)
-            var pathC = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_c.raw"), datasetAccess);
+            var pathC = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, $"{datasetName}_c.raw"), datasetAccess);
 
             if (File.Exists(pathC))
                 File.Delete(pathC);

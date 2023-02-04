@@ -75,7 +75,7 @@ namespace PureHDF
             var source = destination.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, Message.Datatype.Size);
+                Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
             return MemoryMarshal
                 .Cast<byte, T>(Message.Data)

@@ -72,7 +72,7 @@ namespace PureHDF
             if (version != 1)
             {
                 var signature = new byte[] { version }.Concat(context.Reader.ReadBytes(3)).ToArray();
-                H5Utils.ValidateSignature(signature, ObjectHeader2.Signature);
+                Utils.ValidateSignature(signature, ObjectHeader2.Signature);
                 version = context.Reader.ReadByte();
             }
 

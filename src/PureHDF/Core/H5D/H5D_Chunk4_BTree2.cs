@@ -40,7 +40,7 @@ namespace PureHDF
                 var success = _btree2_no_filter.TryFindRecord(out var record, record =>
                 {
                     // H5Dbtree2.c (H5D__bt2_compare)
-                    return H5Utils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
+                    return Utils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
                 });
 
                 return success
@@ -52,7 +52,7 @@ namespace PureHDF
                 if (_btree2_filter is null)
                 {
                     Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
-                    var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
+                    var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
                     BTree2Record11 decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);
 
@@ -63,7 +63,7 @@ namespace PureHDF
                 var success = _btree2_filter.TryFindRecord(out var record, record =>
                 {
                     // H5Dbtree2.c (H5D__bt2_compare)
-                    return H5Utils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
+                    return Utils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
                 });
 
                 return success

@@ -274,7 +274,7 @@ namespace PureHDF
             var source = byteBuffer.Span.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
+                Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
 
             /* return */
             return result;

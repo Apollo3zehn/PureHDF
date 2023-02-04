@@ -23,7 +23,7 @@
             }
             set
             {
-                if (!(1 <= value && value <= 8 && H5Utils.IsPowerOfTwo(value)))
+                if (!(1 <= value && value <= 8 && Utils.IsPowerOfTwo(value)))
                     throw new NotSupportedException("Superblock offsets size must be a power of two and in the range of 1..8.");
 
                 _offsetsSize = value;
@@ -38,7 +38,7 @@
             }
             set
             {
-                if (!(1 <= value && value <= 8 && H5Utils.IsPowerOfTwo(value)))
+                if (!(1 <= value && value <= 8 && Utils.IsPowerOfTwo(value)))
                     throw new NotSupportedException("Superblock lengths size must be a power of two and in the range of 1..8.");
 
                 _lengthsSize = value;
@@ -73,12 +73,12 @@
 
         public ulong ReadOffset(H5BaseReader reader)
         {
-            return H5Utils.ReadUlong(reader, OffsetsSize);
+            return Utils.ReadUlong(reader, OffsetsSize);
         }
 
         public ulong ReadLength(H5BaseReader reader)
         {
-            return H5Utils.ReadUlong(reader, LengthsSize);
+            return Utils.ReadUlong(reader, LengthsSize);
         }
 
         #endregion

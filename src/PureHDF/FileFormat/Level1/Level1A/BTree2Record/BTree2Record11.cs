@@ -12,7 +12,7 @@
             Address = superblock.ReadOffset(reader);
 
             // chunk size
-            ChunkSize = H5Utils.ReadUlong(reader, chunkSizeLength);
+            ChunkSize = Utils.ReadUlong(reader, chunkSizeLength);
 
             // filter mask
             FilterMask = reader.ReadUInt32();

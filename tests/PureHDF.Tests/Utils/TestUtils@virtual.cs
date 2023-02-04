@@ -19,7 +19,7 @@ namespace PureHDF.Tests
 
             // file 1
             var fileName1 = $"{datasetName}_a.h5";
-            var path1 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, fileName1), datasetAccess);
+            var path1 = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, fileName1), datasetAccess);
 
             if (File.Exists(path1))
                 File.Delete(path1);
@@ -36,7 +36,7 @@ namespace PureHDF.Tests
 
             // file 2
             var fileName2 = $"{datasetName}_b.h5";
-            var path2 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, fileName2), datasetAccess);
+            var path2 = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, fileName2), datasetAccess);
 
             if (File.Exists(path2))
                 File.Delete(path2);

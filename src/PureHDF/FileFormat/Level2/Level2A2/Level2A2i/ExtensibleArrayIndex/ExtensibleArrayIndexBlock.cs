@@ -25,7 +25,7 @@ namespace PureHDF
 
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
+            Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
 
             // version
             Version = reader.ReadByte();

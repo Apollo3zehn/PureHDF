@@ -23,7 +23,7 @@ namespace PureHDF
             // signature
             var signature = reader.ReadBytes(4);
             headerSize += 4;
-            H5Utils.ValidateSignature(signature, FractalHeapDirectBlock.Signature);
+            Utils.ValidateSignature(signature, FractalHeapDirectBlock.Signature);
 
             // version
             Version = reader.ReadByte();
@@ -35,7 +35,7 @@ namespace PureHDF
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            BlockOffset = H5Utils.ReadUlong(reader, (ulong)blockOffsetFieldSize);
+            BlockOffset = Utils.ReadUlong(reader, (ulong)blockOffsetFieldSize);
             headerSize += (ulong)blockOffsetFieldSize;
 
             // checksum

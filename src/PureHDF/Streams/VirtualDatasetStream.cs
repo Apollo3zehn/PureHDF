@@ -70,7 +70,7 @@ namespace PureHDF
             {
                 // 1. Linear index to coordinates in virtual dataset
                 var virtualLinearIndex = (ulong)_position / _typeSize;
-                var virtualCoordinates = H5Utils.ToCoordinates(virtualLinearIndex, _virtualDimensions);
+                var virtualCoordinates = Utils.ToCoordinates(virtualLinearIndex, _virtualDimensions);
 
                 // 2. Calculate linear index and max count
                 var virtualResult = default(LinearIndexResult);
@@ -185,9 +185,9 @@ namespace PureHDF
         {
             if (!_datasetInfoMap.TryGetValue(entry, out var info))
             {
-                var filePath = H5Utils.ConstructExternalFilePath(entry.SourceFileName, _datasetAccess);
+                var filePath = FilePathUtils.FindVirtualFile(entry.SourceFileName, _datasetAccess);
 
-                if (File.Exists(filePath))
+                if (filePath is not null)
                 {
                     // TODO: check how file should be opened
                     var file = H5File.OpenRead(filePath);

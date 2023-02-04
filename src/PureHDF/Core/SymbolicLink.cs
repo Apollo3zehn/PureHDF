@@ -69,7 +69,7 @@ namespace PureHDF
             {
                 try
                 {
-                    var absoluteFilePath = H5Utils.ConstructExternalFilePath(Parent.File, Value, linkAccess);
+                    var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(Parent.File, Value, linkAccess);
                     var externalFile = H5Cache.GetH5File(Parent.Context.Superblock, absoluteFilePath, useAsync: useAsync);
 
 #if NETSTANDARD2_0

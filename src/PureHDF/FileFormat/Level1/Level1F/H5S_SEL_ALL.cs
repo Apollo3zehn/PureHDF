@@ -40,7 +40,7 @@
 
         public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
         {
-            var linearIndex = H5Utils.ToLinearIndex(coordinates, sourceDimensions);
+            var linearIndex = Utils.ToLinearIndex(coordinates, sourceDimensions);
             var maxCount = sourceDimensions[^1] - coordinates[^1];
 
             return new LinearIndexResult(
@@ -51,7 +51,7 @@
 
         public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
         {
-            var coordinates = H5Utils.ToCoordinates(linearIndex, sourceDimensions);
+            var coordinates = Utils.ToCoordinates(linearIndex, sourceDimensions);
             var maxCount = sourceDimensions[^1] - coordinates[^1];
 
             return new CoordinatesResult(

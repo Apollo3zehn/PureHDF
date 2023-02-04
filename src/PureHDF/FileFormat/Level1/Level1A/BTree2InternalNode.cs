@@ -20,13 +20,13 @@ namespace PureHDF
                 NodePointers[i].Address = superblock.ReadOffset(reader);
 
                 // record count
-                var childRecordCount = H5Utils.ReadUlong(reader, header.MaxRecordCountSize);
+                var childRecordCount = Utils.ReadUlong(reader, header.MaxRecordCountSize);
                 NodePointers[i].RecordCount = (ushort)childRecordCount;
 
                 // total record count
                 if (nodeLevel > 1)
                 {
-                    var totalChildRecordCount = H5Utils.ReadUlong(reader, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
+                    var totalChildRecordCount = Utils.ReadUlong(reader, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
                     NodePointers[i].TotalRecordCount = totalChildRecordCount;
                 }
                 else

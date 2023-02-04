@@ -589,7 +589,7 @@ namespace PureHDF.Tests.Reading
 
             var actualBuffer = new byte[10 * 10 * sizeof(int)];
             var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
-            var scaledDatasetDims = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var copyInfo = new CopyInfo(
                 datasetDims,
@@ -710,7 +710,7 @@ namespace PureHDF.Tests.Reading
 
             var actualBuffer = new byte[5 * 6 * 11 * sizeof(int)];
             var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
-            var scaledDatasetDims = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var copyInfo = new CopyInfo(
                 datasetDims,
@@ -827,7 +827,7 @@ namespace PureHDF.Tests.Reading
 
             var expectedBuffer = new byte[11 * 11 * 12 * sizeof(int)];
             var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer);
-            var scaledDatasetDims = datasetDims.Select((dim, i) => H5Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             expected[277] = 1;
             expected[280] = 2;

@@ -101,7 +101,7 @@
                     if (success)
                     {
                         var blockLinearStartIndex = irregular.BlockLinearIndices[blockIndex];
-                        var blockLinearIndex = H5Utils.ToLinearIndex(blockCoordinates, blockDimensions);
+                        var blockLinearIndex = Utils.ToLinearIndex(blockCoordinates, blockDimensions);
 
                         linearIndex = blockLinearStartIndex + blockLinearIndex;
                         maxCount = blockDimensions[^1] - blockCoordinates[^1];
@@ -164,7 +164,7 @@
                     }
 
                     compactCoordinates[dimension] = actualCount * block + blockOffset;
-                    linearIndex = H5Utils.ToLinearIndex(compactCoordinates, regular.CompactDimensions);
+                    linearIndex = Utils.ToLinearIndex(compactCoordinates, regular.CompactDimensions);
                     maxCount = block - blockOffset;
                 }
             }
@@ -223,7 +223,7 @@
                         }
 
                         // Compute block coordinates
-                        H5Utils.ToCoordinates(blockLinearIndex, blockDimensions, blockCoordinates);
+                        Utils.ToCoordinates(blockLinearIndex, blockDimensions, blockCoordinates);
 
                         // Compute absolute coordinates
                         for (var dimension = 0; dimension < rank; dimension++)
@@ -245,7 +245,7 @@
             {
                 success = true;
 
-                var compactCoordinates = H5Utils.ToCoordinates(linearIndex, regular.CompactDimensions);
+                var compactCoordinates = Utils.ToCoordinates(linearIndex, regular.CompactDimensions);
 
                 // find hyperslab parameters which envelops the provided linear index
                 for (int dimension = 0; dimension < rank; dimension++)

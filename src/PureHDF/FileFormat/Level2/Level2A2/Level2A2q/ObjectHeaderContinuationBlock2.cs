@@ -11,7 +11,7 @@ namespace PureHDF
         {
             // signature
             var signature = context.Reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
+            Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
 
             // header messages
             var messages = ReadHeaderMessages(context, objectHeaderSize - 8, version, withCreationOrder);

@@ -3,7 +3,7 @@ using System.Text;
 
 namespace PureHDF
 {
-    internal static class H5Utils
+    internal static class Utils
     {
         public static void SwizzleCoords(ulong[] swizzledCoords, int unlimitedDim)
         {
@@ -205,134 +205,6 @@ namespace PureHDF
 
                 default:
                     throw new Exception($"The dataspace type '{type}' is not supported.");
-            }
-        }
-
-        public static string ConstructExternalFilePath(H5File file, string filePath, H5LinkAccess linkAccess)
-        {
-            // h5Fint.c (H5F_prefix_open_file)
-            // reference: https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
-
-            if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
-                throw new Exception("The external file path is not a valid URI.");
-
-            // absolute
-            if (uri.IsAbsoluteUri)
-            {
-                if (File.Exists(filePath))
-                    return filePath;
-            }
-            // relative
-            else
-            {
-                // prefixes
-                var envVariable = Environment
-                    .GetEnvironmentVariable("HDF5_EXT_PREFIX");
-
-                if (envVariable is not null)
-                {
-                    // cannot work on Windows
-                    //var envPrefixes = envVariable.Split(":");
-
-                    //foreach (var envPrefix in envPrefixes)
-                    //{
-                    //    var envResult = PathCombine(envPrefix, externalFilePath);
-
-                    //    if (File.Exists(envResult))
-                    //        return envResult;
-                    //}
-
-                    var envResult = PathCombine(envVariable, filePath);
-
-                    if (File.Exists(envResult))
-                        return envResult;
-                }
-
-                // link access property list
-                if (!string.IsNullOrWhiteSpace(linkAccess.ExternalLinkPrefix))
-                {
-                    var propPrefix = linkAccess.ExternalLinkPrefix;
-                    var propResult = PathCombine(propPrefix, filePath);
-
-                    if (File.Exists(propResult))
-                        return propResult;
-                }
-
-                // relative to this file
-                var filePrefix = Path.GetDirectoryName(file.Path);
-
-                var fileResult = filePrefix is null
-                    ? filePath
-                    : PathCombine(filePrefix, filePath);
-
-                if (File.Exists(fileResult))
-                    return fileResult;
-
-                // relative to current directory
-                var cdResult = Path.GetFullPath(filePath);
-
-                if (File.Exists(cdResult))
-                    return cdResult;
-            }
-
-            throw new Exception($"Unable to open external file '{filePath}'.");
-
-            // helper
-            static string PathCombine(string prefix, string relativePath)
-            {
-                try
-                {
-                    return Path.Combine(prefix, relativePath);
-                }
-                catch (Exception)
-                {
-                    throw new Exception("Unable to construct absolute file path for external file.");
-                }
-            }
-        }
-
-        public static string ConstructExternalFilePath(string filePath, H5DatasetAccess datasetAccess)
-        {
-            // H5system.c (H5_combine_path)
-
-            if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
-                throw new Exception("The external file path is not a valid URI.");
-
-            // absolute
-            if (uri.IsAbsoluteUri)
-            {
-                return filePath;
-            }
-            
-            // relative
-            else
-            {
-                // dataset access property list
-                if (!string.IsNullOrWhiteSpace(datasetAccess.ExternalFilePrefix))
-                {
-                    var propPrefix = datasetAccess.ExternalFilePrefix;
-
-                    var propResult = propPrefix is null
-                        ? filePath
-                        : PathCombine(propPrefix, filePath);
-
-                    return propResult;
-                }
-
-                return filePath;
-            }
-
-            // helper
-            static string PathCombine(string prefix, string relativePath)
-            {
-                try
-                {
-                    return Path.Combine(prefix, relativePath);
-                }
-                catch (Exception)
-                {
-                    throw new Exception("Unable to construct absolute file path for external file.");
-                }
             }
         }
 

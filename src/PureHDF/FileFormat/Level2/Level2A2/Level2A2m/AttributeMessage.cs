@@ -74,7 +74,7 @@
             }
 
             // data
-            var byteSize = H5Utils.CalculateSize(Dataspace.DimensionSizes, Dataspace.Type) * Datatype.Size;
+            var byteSize = Utils.CalculateSize(Dataspace.DimensionSizes, Dataspace.Type) * Datatype.Size;
             Data = context.Reader.ReadBytes((int)byteSize);
         }
 

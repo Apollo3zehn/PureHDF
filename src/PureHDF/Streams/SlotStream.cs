@@ -127,7 +127,7 @@ namespace PureHDF
             if (_stream is null)
             {
                 var name = _heap.GetObjectName(_slot.NameHeapOffset);
-                var filePath = H5Utils.ConstructExternalFilePath(name, _datasetAccess);
+                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(name, _datasetAccess);
 
                 if (!File.Exists(filePath))
                     throw new Exception($"External file '{filePath}' does not exist.");
