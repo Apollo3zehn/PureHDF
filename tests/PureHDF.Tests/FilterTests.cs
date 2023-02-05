@@ -428,6 +428,8 @@ namespace PureHDF.Tests.Reading
         }
 #endif
 
+// TODO Convert this test into a benchmark
+
         [Fact]
         public async Task ShufflePerformanceTest()
         {
