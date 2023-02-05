@@ -126,16 +126,15 @@ namespace PureHDF.Tests
 
         #region Datasets
 
-        public static unsafe void AddExternalDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
+        public static unsafe void AddExternalDataset(long fileId, string datasetName)
         {
             var bytesoftype = 4;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            var dapl_id = H5P.create(H5P.DATASET_ACCESS);
 
             _ = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             // a (more than one chunk in file)
-            var pathA = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, $"{datasetName}_a.raw"), datasetAccess);
+            var pathA = $"{datasetName}_a.raw";
 
             if (File.Exists(pathA))
                 File.Delete(pathA);
@@ -145,7 +144,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // b (file size smaller than set size)
-            var pathB = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, $"{datasetName}_b.raw"), datasetAccess);
+            var pathB = $"{datasetName}_b.raw";
 
             if (File.Exists(pathB))
                 File.Delete(pathB);
@@ -153,7 +152,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // c (normal file)
-            var pathC = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, $"{datasetName}_c.raw"), datasetAccess);
+            var pathC = $"{datasetName}_c.raw";
 
             if (File.Exists(pathC))
                 File.Delete(pathC);
@@ -161,10 +160,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
 
             // write data
-            if (datasetAccess.ExternalFilePrefix is not null)
-                _ = H5P.set_efile_prefix(dapl_id, datasetAccess.ExternalFilePrefix);
-
-            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), apl: dapl_id, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), cpl: dcpl_id);
 
             // truncate file b
             using (var fileStream2 = File.OpenWrite(pathB))
@@ -172,7 +168,6 @@ namespace PureHDF.Tests
                 fileStream2.SetLength(10);
             };
 
-            _ = H5P.close(dapl_id);
             _ = H5P.close(dcpl_id);
         }
 

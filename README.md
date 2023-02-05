@@ -81,7 +81,7 @@ var myH5Object = group.Get("/path/to/unknown/object");
 ## 1.2 Additional Info
 ### External File Link
 
-With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
+With a link pointing to an external file it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
 
 You can either set an environment variable:
 
@@ -92,10 +92,9 @@ Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
 Or you can pass the prefix as an overload parameter:
 
 ```cs
-var linkAccess = new H5LinkAccess() 
-{
-    ExternalLinkPrefix = prefix 
-}
+var linkAccess = new H5LinkAccess(
+    ExternalLinkPrefix: prefix 
+);
 
 var dataset = group.Dataset(path, linkAccess);
 ```

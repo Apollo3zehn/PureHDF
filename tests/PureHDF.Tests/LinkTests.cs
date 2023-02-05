@@ -251,7 +251,7 @@ namespace PureHDF.Tests.Reading
 
             // Assert
             Assert.NotNull(link);
-            Assert.Equal("Unable to open external file 'not-existing.h5'.", link!.Reason!.Message);
+            Assert.Equal("Could not find file not-existing.h5.", link!.Reason!.Message);
         }
 
         [Fact]

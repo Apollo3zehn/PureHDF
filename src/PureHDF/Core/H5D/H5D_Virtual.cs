@@ -56,6 +56,7 @@
         public override Stream GetH5Stream(ulong[] chunkIndices)
         {
             return new VirtualDatasetStream(
+                Dataset.File,
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.InternalDataspace.DimensionSizes,
                 typeSize: Dataset.InternalDataType.Size,

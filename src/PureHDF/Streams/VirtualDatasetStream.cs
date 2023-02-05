@@ -10,17 +10,20 @@ namespace PureHDF
         private readonly uint _typeSize;
         private readonly ulong[] _virtualDimensions;
         private readonly byte[]? _fillValue;
+        private readonly H5File _file;
         private readonly H5DatasetAccess _datasetAccess;
         private readonly VdsDatasetEntry[] _entries;
         private readonly Dictionary<VdsDatasetEntry, DatasetInfo> _datasetInfoMap = new();
 
         public VirtualDatasetStream(
+            H5File file,
             VdsDatasetEntry[] entries, 
             ulong[] dimensions, 
             uint typeSize, 
             byte[]? fillValue,
             H5DatasetAccess datasetAccess)
         {
+            _file = file;
             _entries = entries;
             _virtualDimensions = dimensions;
             _typeSize = typeSize;
@@ -185,12 +188,16 @@ namespace PureHDF
         {
             if (!_datasetInfoMap.TryGetValue(entry, out var info))
             {
-                var filePath = FilePathUtils.FindVirtualFile(entry.SourceFileName, _datasetAccess);
+                var filePath = FilePathUtils.FindVirtualFile(_file.Path, entry.SourceFileName, _datasetAccess);
 
                 if (filePath is not null)
                 {
                     // TODO: check how file should be opened
-                    var file = H5File.OpenRead(filePath);
+                    var file = filePath == "."
+                        // this file
+                        ? _file
+                        // external file
+                        : H5File.OpenRead(filePath);
 
                     // TODO: Where to get link access from? From the virtual dataset?
                     if (file.LinkExists(entry.SourceDataset, linkAccess: default))
@@ -276,7 +283,9 @@ namespace PureHDF
             {
                 try
                 {
-                    datasetInfo.File.Dispose();
+                    // do not close this file 
+                    if (datasetInfo.File != _file)
+                        datasetInfo.File.Dispose();
                 }
                 catch
                 {

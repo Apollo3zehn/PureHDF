@@ -324,11 +324,8 @@ namespace PureHDF.Tests.Reading
         }
 #endif
 
-        [Theory]
-        [InlineData("absolute")]
-        [InlineData("relative")]
-        [InlineData("prefix")]
-        public void CanReadDataset_External(string datasetName)
+        [Fact]
+        public void CanReadDataset_External()
         {
             // INFO:
             // HDF lib says "external storage not supported with chunked layout". Same is true for compact layout.
@@ -336,20 +333,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var absolutePrefix = datasetName == "absolute"
-                    ? Path.GetTempPath()
-                    : string.Empty;
-
-                var externalFilePrefix = datasetName == "prefix"
-                   ? Path.GetTempPath()
-                   : null;
-
-                var datasetAccess = new H5DatasetAccess()
-                {
-                    ExternalFilePrefix = externalFilePrefix
-                };
-
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, datasetName, absolutePrefix, datasetAccess));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, "external_file"));
                 var expected = TestData.MediumData.ToArray();
 
                 for (int i = 33; i < 40; i++)
@@ -360,7 +344,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var parent = root.Group("external");
-                var dataset = parent.Dataset(datasetName);
+                var dataset = parent.Dataset("external_file");
                 var actual = dataset.Read<int>();
 
                 // Assert

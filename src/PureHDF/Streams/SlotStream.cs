@@ -1,17 +1,17 @@
-﻿using System;
-
-namespace PureHDF
+﻿namespace PureHDF
 {
     internal class SlotStream : Stream
     {
         private long _position;
+        private readonly H5File _file;
         private readonly LocalHeap _heap;
         private Stream? _stream;
         private readonly ExternalFileListSlot _slot;
         private readonly H5DatasetAccess _datasetAccess;
 
-        public SlotStream(LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
+        public SlotStream(H5File file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
         {
+            _file = file;
             _heap = heap;
             _slot = slot;
             Offset = offset;
@@ -127,7 +127,7 @@ namespace PureHDF
             if (_stream is null)
             {
                 var name = _heap.GetObjectName(_slot.NameHeapOffset);
-                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(name, _datasetAccess);
+                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.Path, name, _datasetAccess);
 
                 if (!File.Exists(filePath))
                     throw new Exception($"External file '{filePath}' does not exist.");

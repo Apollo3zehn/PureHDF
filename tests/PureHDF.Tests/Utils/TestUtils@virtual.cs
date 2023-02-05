@@ -4,7 +4,7 @@ namespace PureHDF.Tests
 {
     public partial class TestUtils
     {
-        public static unsafe void AddVirtualDataset_2D(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
+        public static unsafe void AddVirtualDataset_2D(long fileId, string datasetName)
         {
             // see VirtualMapping.xlsx for a visualization
 
@@ -19,12 +19,11 @@ namespace PureHDF.Tests
 
             // file 1
             var fileName1 = $"{datasetName}_a.h5";
-            var path1 = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, fileName1), datasetAccess);
 
-            if (File.Exists(path1))
-                File.Delete(path1);
+            if (File.Exists(fileName1))
+                File.Delete(fileName1);
 
-            var fileId1 = H5F.create(path1, H5F.ACC_TRUNC);
+            var fileId1 = H5F.create(fileName1, H5F.ACC_TRUNC);
             var dataA = TestData.SmallData.Skip(0).Take(16).ToArray();
             Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
 
@@ -36,12 +35,11 @@ namespace PureHDF.Tests
 
             // file 2
             var fileName2 = $"{datasetName}_b.h5";
-            var path2 = FilePathUtils.FindExternalFileForDatasetAccess(Path.Combine(absolutePrefix, fileName2), datasetAccess);
 
-            if (File.Exists(path2))
-                File.Delete(path2);
+            if (File.Exists(fileName2))
+                File.Delete(fileName2);
 
-            var fileId2 = H5F.create(path2, H5F.ACC_TRUNC);
+            var fileId2 = H5F.create(fileName2, H5F.ACC_TRUNC);
             var dataB = TestData.SmallData.Skip(10).Take(16).ToArray();
             Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
 

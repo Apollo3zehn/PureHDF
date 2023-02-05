@@ -10,9 +10,9 @@ namespace PureHDF
         #region Properties
 
         /// <summary>
-        /// Gets the path of the opened HDF5 file. The value is :memory: if the file is not loaded from a file system.
+        /// Gets the path of the opened HDF5 file if loaded from the file system.
         /// </summary>
-        public string Path { get; } = ":memory:";
+        public string? Path { get; }
 
         /// <summary>
         /// Gets or sets the current chunk cache factory.

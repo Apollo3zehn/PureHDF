@@ -2,7 +2,7 @@ namespace PureHDF
 {
     internal static class FilePathUtils
     {
-        public static string? FindExternalFileForLinkAccess(string thisFilePath, string filePath, H5LinkAccess linkAccess)
+        public static string? FindExternalFileForLinkAccess(string? thisFilePath, string filePath, H5LinkAccess linkAccess)
         {
             // HDF5 1.10 -> H5Lpublic.h @ H5Lcreate_external()
             // https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5
@@ -55,10 +55,13 @@ namespace PureHDF
             }
 
             // 3. this file path
-            var thisResult = PathCombine(thisFilePath, filePath);
+            if (thisFilePath is not null)
+            {   
+                var thisResult = PathCombine(thisFilePath, filePath);
 
-            if (File.Exists(thisResult))
-                return thisResult;
+                if (File.Exists(thisResult))
+                    return thisResult;
+            }
 
             // 4. relative path
             if (File.Exists(filePath))
@@ -67,18 +70,18 @@ namespace PureHDF
             return default;
         }
 
-        public static string? FindExternalFileForDatasetAccess(string thisFilePath, string filePath, H5DatasetAccess datasetAccess)
+        public static string? FindExternalFileForDatasetAccess(string? thisFilePath, string filePath, H5DatasetAccess datasetAccess)
         {
             // HDF5 1.10 -> H5public.h @ H5Pset_efile_prefix()
             // https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11
             // https://github.com/HDFGroup/hdf5/issues/1759
 
-            #error Needs to be reimplemented ... why is there HDF5_EXT_PREFIX and HDF5_EXTFILE_PREFIX ?
+            
 
             return default;
         }
 
-        public static string? FindVirtualFile(string thisFilePath, string filePath, H5DatasetAccess datasetAccess)
+        public static string? FindVirtualFile(string? thisFilePath, string filePath, H5DatasetAccess datasetAccess)
         {
             // HDF5 1.10 -> H5public.h @ H5Pset_virtual()
             // https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12
@@ -89,7 +92,7 @@ namespace PureHDF
             // self
             if (filePath == ".")
             {
-                return thisFilePath;
+                return ".";
             }
 
             // absolute
@@ -137,10 +140,13 @@ namespace PureHDF
             }
 
             // 3. this file path
-            var thisResult = PathCombine(thisFilePath, filePath);
+            if (thisFilePath is not null)
+            {
+                var thisResult = PathCombine(thisFilePath, filePath);
 
-            if (File.Exists(thisResult))
-                return thisResult;
+                if (File.Exists(thisResult))
+                    return thisResult;
+            }
 
             // 4. relative path
             if (File.Exists(filePath))

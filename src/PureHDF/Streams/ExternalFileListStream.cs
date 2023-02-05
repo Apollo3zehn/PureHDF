@@ -8,6 +8,7 @@
         private readonly SlotStream[] _slotStreams;
 
         public ExternalFileListStream(
+            H5File file,
             ExternalFileListMessage externalFileList,
             H5DatasetAccess datasetAccess)
         {
@@ -17,7 +18,7 @@
                 .SlotDefinitions
                 .Select(slot =>
                 {
-                    var stream = new SlotStream(externalFileList.Heap, slot, offset, datasetAccess);
+                    var stream = new SlotStream(file, externalFileList.Heap, slot, offset, datasetAccess);
                     offset += stream.Length;
                     return stream;
                 })

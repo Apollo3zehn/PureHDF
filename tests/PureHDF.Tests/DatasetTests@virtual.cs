@@ -12,16 +12,16 @@ namespace PureHDF.Tests.Reading
             // TODO: Not yet implemented: async
             // TODO: Not yet checked: DatasetAccess
             // TODO: Implement Span<byte> overload in streams
+            // TODO: Find todos in source :D
 
             // TODO: Add tests:
+            // FilePathUtils
             // - 3D
             // - point selection
 
-            // TODO: Check AddVirtualDataset, is extra path variable required?
-
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
-                => TestUtils.AddVirtualDataset_2D(fileId, "virtual", "", default));
+                => TestUtils.AddVirtualDataset_2D(fileId, "virtual"));
 
             var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 
