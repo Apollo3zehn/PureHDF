@@ -1,6 +1,5 @@
 using HDF.PInvoke;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PureHDF.Tests.Reading
 {

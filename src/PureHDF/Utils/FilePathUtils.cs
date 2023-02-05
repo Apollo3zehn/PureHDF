@@ -38,7 +38,7 @@ namespace PureHDF
                 }
                 else
                 {
-                    var envPrefixes = envVariable.Split(":");
+                    var envPrefixes = envVariable.Split('.');
 
                     foreach (var envPrefix in envPrefixes)
                     {
@@ -179,7 +179,7 @@ namespace PureHDF
                 }
                 else
                 {
-                    var envPrefixes = envVariable.Split(":");
+                    var envPrefixes = envVariable.Split('.');
 
                     foreach (var envPrefix in envPrefixes)
                     {
