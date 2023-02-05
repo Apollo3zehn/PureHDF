@@ -69,7 +69,7 @@ namespace PureHDF
             {
                 try
                 {
-                    var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(Parent.File.Path, Value, linkAccess);
+                    var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(Parent.File.FolderPath, Value, linkAccess);
 
                     if (absoluteFilePath is null)
                         throw new Exception($"Could not find file {Value}.");

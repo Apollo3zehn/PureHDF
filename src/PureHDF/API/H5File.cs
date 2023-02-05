@@ -14,6 +14,8 @@ namespace PureHDF
         /// </summary>
         public string? Path { get; }
 
+        internal string? FolderPath { get; }
+
         /// <summary>
         /// Gets or sets the current chunk cache factory.
         /// </summary>

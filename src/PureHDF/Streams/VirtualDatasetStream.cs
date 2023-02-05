@@ -188,7 +188,7 @@ namespace PureHDF
         {
             if (!_datasetInfoMap.TryGetValue(entry, out var info))
             {
-                var filePath = FilePathUtils.FindVirtualFile(_file.Path, entry.SourceFileName, _datasetAccess);
+                var filePath = FilePathUtils.FindVirtualFile(_file.FolderPath, entry.SourceFileName, _datasetAccess);
 
                 if (filePath is not null)
                 {

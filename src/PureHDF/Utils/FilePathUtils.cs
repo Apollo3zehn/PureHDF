@@ -1,10 +1,12 @@
+using System.Runtime.InteropServices;
+
 namespace PureHDF
 {
     internal static class FilePathUtils
     {
-        public static string? FindExternalFileForLinkAccess(string? thisFilePath, string filePath, H5LinkAccess linkAccess)
+        public static string? FindExternalFileForLinkAccess(string? thisFolderPath, string filePath, H5LinkAccess linkAccess)
         {
-            // HDF5 1.10 -> H5Lpublic.h @ H5Lcreate_external()
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Lpublic.h#L1503-L1566
             // https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5
 
             if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
@@ -27,37 +29,41 @@ namespace PureHDF
 
             if (envVariable is not null)
             {
-                // cannot work on Windows
-                //var envPrefixes = envVariable.Split(":");
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    var envResult = Path.Combine(envVariable, filePath);
 
-                //foreach (var envPrefix in envPrefixes)
-                //{
-                //    var envResult = PathCombine(envPrefix, externalFilePath);
+                    if (File.Exists(envResult))
+                        return envResult;
+                }
+                else
+                {
+                    var envPrefixes = envVariable.Split(":");
 
-                //    if (File.Exists(envResult))
-                //        return envResult;
-                //}
+                    foreach (var envPrefix in envPrefixes)
+                    {
+                        var envResult = Path.Combine(envPrefix, filePath);
 
-                var envResult = PathCombine(envVariable, filePath);
-
-                if (File.Exists(envResult))
-                    return envResult;
+                        if (File.Exists(envResult))
+                            return envResult;
+                    }
+                }
             }
 
             // 2. link access property list
             if (linkAccess.ExternalLinkPrefix is not null)
             {
                 var propPrefix = linkAccess.ExternalLinkPrefix;
-                var propResult = PathCombine(propPrefix, filePath);
+                var propResult = Path.Combine(propPrefix, filePath);
 
                 if (File.Exists(propResult))
                     return propResult;
             }
 
             // 3. this file path
-            if (thisFilePath is not null)
+            if (thisFolderPath is not null)
             {   
-                var thisResult = PathCombine(thisFilePath, filePath);
+                var thisResult = Path.Combine(thisFolderPath, filePath);
 
                 if (File.Exists(thisResult))
                     return thisResult;
@@ -70,20 +76,72 @@ namespace PureHDF
             return default;
         }
 
-        public static string? FindExternalFileForDatasetAccess(string? thisFilePath, string filePath, H5DatasetAccess datasetAccess)
+        public static string? FindExternalFileForDatasetAccess(string? thisFolderPath, string filePath, H5DatasetAccess datasetAccess)
         {
-            // HDF5 1.10 -> H5public.h @ H5Pset_efile_prefix()
+            const string ORIGIN_TOKEN = "${ORIGIN}";
+
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L7084-L7116
             // https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11
             // https://github.com/HDFGroup/hdf5/issues/1759
 
-            
+            if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
+                throw new Exception("The virtual dataset file path is not a valid URI.");
+
+            // absolute
+            if (uri.IsAbsoluteUri)
+            {
+                if (File.Exists(filePath))
+                    return filePath;
+
+                else
+                    return default;
+            }
+
+            // relative
+
+            // 1. environment variable
+            var envVariable = Environment
+                .GetEnvironmentVariable("HDF5_EXTFILE_PREFIX");
+
+            if (envVariable is not null)
+            {
+                if (envVariable.StartsWith(ORIGIN_TOKEN) && thisFolderPath is not null)
+                    envVariable = Path.Combine(
+                        thisFolderPath, 
+                        envVariable[ORIGIN_TOKEN.Length..]);
+
+                var envResult = Path.Combine(envVariable, filePath);
+
+                if (File.Exists(envResult))
+                    return envResult;
+            }
+
+            // 2. dataset access property list
+            if (datasetAccess.ExternalFilePrefix is not null)
+            {
+                var propPrefix = datasetAccess.ExternalFilePrefix;
+
+                if (propPrefix.StartsWith(ORIGIN_TOKEN) && thisFolderPath is not null)
+                    propPrefix = Path.Combine(
+                        thisFolderPath, 
+                        propPrefix[ORIGIN_TOKEN.Length..]);
+
+                var propResult = Path.Combine(propPrefix, filePath);
+
+                if (File.Exists(propResult))
+                    return propResult;
+            }
+
+            // 3. relative path
+            if (File.Exists(filePath))
+                return filePath;
 
             return default;
         }
 
-        public static string? FindVirtualFile(string? thisFilePath, string filePath, H5DatasetAccess datasetAccess)
+        public static string? FindVirtualFile(string? thisFolderPath, string filePath, H5DatasetAccess datasetAccess)
         {
-            // HDF5 1.10 -> H5public.h @ H5Pset_virtual()
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L6607-L6670
             // https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12
 
             if (!Uri.TryCreate(filePath, UriKind.RelativeOrAbsolute, out var uri))
@@ -112,37 +170,41 @@ namespace PureHDF
 
             if (envVariable is not null)
             {
-                // cannot work on Windows
-                //var envPrefixes = envVariable.Split(":");
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    var envResult = Path.Combine(envVariable, filePath);
 
-                //foreach (var envPrefix in envPrefixes)
-                //{
-                //    var envResult = PathCombine(envPrefix, externalFilePath);
+                    if (File.Exists(envResult))
+                        return envResult;
+                }
+                else
+                {
+                    var envPrefixes = envVariable.Split(":");
 
-                //    if (File.Exists(envResult))
-                //        return envResult;
-                //}
+                    foreach (var envPrefix in envPrefixes)
+                    {
+                        var envResult = Path.Combine(envPrefix, filePath);
 
-                var envResult = PathCombine(envVariable, filePath);
-
-                if (File.Exists(envResult))
-                    return envResult;
+                        if (File.Exists(envResult))
+                            return envResult;
+                    }
+                }
             }
 
             // 2. dataset access property list
             if (datasetAccess.VirtualFilePrefix is not null)
             {
                 var propPrefix = datasetAccess.VirtualFilePrefix;
-                var propResult = PathCombine(propPrefix, filePath);
+                var propResult = Path.Combine(propPrefix, filePath);
 
                 if (File.Exists(propResult))
                     return propResult;
             }
 
             // 3. this file path
-            if (thisFilePath is not null)
+            if (thisFolderPath is not null)
             {
-                var thisResult = PathCombine(thisFilePath, filePath);
+                var thisResult = Path.Combine(thisFolderPath, filePath);
 
                 if (File.Exists(thisResult))
                     return thisResult;
@@ -153,18 +215,6 @@ namespace PureHDF
                 return filePath;
 
             return default;
-        }
-
-        static string PathCombine(string prefix, string relativePath)
-        {
-            try
-            {
-                return Path.Combine(prefix, relativePath);
-            }
-            catch
-            {
-                throw new Exception("Unable to construct absolute file path.");
-            }
         }
     }
 }

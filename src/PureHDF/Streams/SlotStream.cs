@@ -127,7 +127,7 @@
             if (_stream is null)
             {
                 var name = _heap.GetObjectName(_slot.NameHeapOffset);
-                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.Path, name, _datasetAccess);
+                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, name, _datasetAccess);
 
                 if (!File.Exists(filePath))
                     throw new Exception($"External file '{filePath}' does not exist.");

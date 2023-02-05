@@ -80,10 +80,10 @@ namespace PureHDF.Tests
             _ = H5G.close(hardLinkId1);
         }
 
-        public static unsafe void AddExternalFileLink(long fileId, string filePath)
+        public static unsafe void AddExternalFileLink(long fileId, string externalFilePath)
         {
             var groupId = H5G.create(fileId, "links");
-            _ = H5L.create_external(filePath, "/external/group", groupId, "external_link");
+            _ = H5L.create_external(externalFilePath, "/external/group", groupId, "external_link");
             _ = H5G.close(groupId);
         }
 
