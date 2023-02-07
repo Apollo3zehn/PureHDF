@@ -53,16 +53,5 @@
                     throw new NotSupportedException($"Only {nameof(H5S_SEL_HYPER)} of version 1, 2 or 3 are supported.");
             }
         }
-
-        protected static ulong ReadEncodedValue(H5BaseReader reader, byte encodeSize)
-        {
-            return encodeSize switch
-            {
-                2 => reader.ReadUInt16(),
-                4 => reader.ReadUInt32(),
-                8 => reader.ReadUInt64(),
-                _ => throw new Exception($"Invalid encode size {encodeSize}.")
-            };
-        }
     }
 }

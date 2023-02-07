@@ -31,8 +31,8 @@
             }
             set
             {
-                if (!(1 <= value && value <= 2))
-                    throw new FormatException($"Only version 1 and version 2 instances of type {nameof(H5S_SEL_HYPER)} are supported.");
+                if (!(1 <= value && value <= 3))
+                    throw new FormatException($"Only version 1, version 2 and version 3 instances of type {nameof(H5S_SEL_HYPER)} are supported.");
 
                 _version = value;
             }
@@ -278,10 +278,10 @@
             }
 
             if (success)
-                return new CoordinatesResult(Success: true, coordinates, maxCount);
+                return new CoordinatesResult(coordinates, maxCount);
 
             else
-                return default;
+                throw new Exception("This should never happen.");
         }
 
         #endregion

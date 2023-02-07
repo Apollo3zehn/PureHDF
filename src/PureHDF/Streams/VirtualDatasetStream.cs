@@ -164,11 +164,8 @@ namespace PureHDF
 
             while (remaining > 0)
             {
-                var (success, coordinates, sourceMaxCount) = sourceSelection.Info
+                var (coordinates, sourceMaxCount) = sourceSelection.Info
                     .ToCoordinates(sourceDimensions, linearIndex);
-
-                if (!success)
-                    throw new Exception("This should never happen.");
 
                 var sourceCount = Math.Min(remaining, sourceMaxCount);
 

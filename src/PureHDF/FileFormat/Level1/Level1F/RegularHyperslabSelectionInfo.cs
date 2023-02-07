@@ -17,10 +17,10 @@
 
             for (int i = 0; i < Rank; i++)
             {
-                Starts[i] = ReadEncodedValue(reader, encodeSize);
-                Strides[i] = ReadEncodedValue(reader, encodeSize);
-                Counts[i] = ReadEncodedValue(reader, encodeSize);
-                Blocks[i] = ReadEncodedValue(reader, encodeSize);
+                Starts[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+                Strides[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+                Counts[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+                Blocks[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
 
                 CompactDimensions[i] = Blocks[i] * Counts[i];
             }

@@ -9,7 +9,7 @@
             Rank = rank;
 
             // block count
-            BlockCount = ReadEncodedValue(reader, encodeSize);
+            BlockCount = H5S_SEL.ReadEncodedValue(reader, encodeSize);
 
             // block offsets / compact starts
             var totalOffsetGroups = BlockCount * Rank;
@@ -78,7 +78,7 @@
                 // starts
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
-                    var start = ReadEncodedValue(reader, encodeSize);
+                    var start = H5S_SEL.ReadEncodedValue(reader, encodeSize);
                     var dimensionIndex = (int)blockOffsetsIndex * 2 + 0 +  dimension;
                     blockOffsets[dimensionIndex] = start;
                     previousStarts[dimension] = start;
@@ -87,7 +87,7 @@
                 // ends
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
-                    var end = ReadEncodedValue(reader, encodeSize);
+                    var end = H5S_SEL.ReadEncodedValue(reader, encodeSize);
                     var dimensionIndex = (int)blockOffsetsIndex * 2 + Rank + dimension;
                     blockOffsets[dimensionIndex] = end;
                     previousEnds[dimension] = end;
