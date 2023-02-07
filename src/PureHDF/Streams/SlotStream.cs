@@ -1,4 +1,6 @@
-﻿namespace PureHDF
+﻿using System.Runtime.CompilerServices;
+
+namespace PureHDF
 {
     internal class SlotStream : Stream
     {
@@ -45,39 +47,71 @@
             throw new NotImplementedException();
         }
 
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+        {
+            return ReadCore(buffer);
+        }
+
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var length = (int)Math.Min(Length - Position, count);
+            throw new NotImplementedException();
+        }
+#else
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return ReadCore(buffer.AsSpan(offset, count));
+        }
+#endif
+
+        public int ReadCore(Span<byte> buffer)
+        {
+            var length = (int)Math.Min(Length - Position, buffer.Length);
 
             _stream = EnsureStream();
 
-            var actualLength = _stream.Read(buffer, offset, length);
+            var actualLength = _stream.Read(buffer[..length]);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
-            buffer
-                .AsSpan()
-                .Slice(offset + actualLength, length - actualLength)
-                .Fill(0);
+            buffer[actualLength..length]
+                .Clear();
 
             _position += length;
 
             return length;
         }
 
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var length = (int)Math.Min(Length - Position, count);
+            return ReadAsyncCore(buffer, cancellationToken);
+        }
+
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+#else
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return ReadAsyncCore(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+        }
+#endif
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async ValueTask<int> ReadAsyncCore(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            var length = (int)Math.Min(Length - Position, buffer.Length);
 
             _stream = EnsureStream();
 
             var actualLength = await _stream
-                .ReadAsync(buffer.AsMemory(offset, length), cancellationToken)
+                .ReadAsync(buffer[..length], cancellationToken)
                 .ConfigureAwait(false);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
             buffer
-                .AsSpan()
-                .Slice(offset + actualLength, length - actualLength)
+                .Span[actualLength..length]
                 .Fill(0);
 
             _position += length;

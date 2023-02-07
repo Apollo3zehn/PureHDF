@@ -826,6 +826,20 @@ namespace PureHDF.Tests
 
         #region Helpers
 
+        public static async Task RunForAllVersionsAsync(Func<H5F.libver_t, Task> action)
+        {
+            var versions = new H5F.libver_t[]
+            {
+                H5F.libver_t.V18,
+                H5F.libver_t.V110
+            };
+
+            foreach (var version in versions)
+            {
+                await action(version);
+            }
+        }
+
         public static void RunForAllVersions(Action<H5F.libver_t> action)
         {
             var versions = new H5F.libver_t[]

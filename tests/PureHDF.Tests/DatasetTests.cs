@@ -353,6 +353,34 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
+        public async Task CanReadDataset_External_async()
+        {
+            // INFO:
+            // HDF lib says "external storage not supported with chunked layout". Same is true for compact layout.
+
+            await TestUtils.RunForAllVersionsAsync(async version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, "external_file"));
+                var expected = TestData.MediumData.ToArray();
+
+                for (int i = 33; i < 40; i++)
+                {
+                    expected[i] = 0;
+                }
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var parent = root.Group("external");
+                var dataset = parent.Dataset("external_file");
+                var actual = await dataset.ReadAsync<int>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
+        [Fact]
         public void CanReadDataset_Compact()
         {
             TestUtils.RunForAllVersions(version =>
