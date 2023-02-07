@@ -181,7 +181,7 @@ public class FilePathUtilsTests
 
         // Act
         var actual = FilePathUtils
-            .FindVirtualFile(
+            .FindExternalFileForVirtualDataset(
                 default, expected, default);
 
         // Assert
@@ -204,7 +204,7 @@ public class FilePathUtilsTests
         {
             // Act
             var actual = FilePathUtils
-                .FindVirtualFile(
+                .FindExternalFileForVirtualDataset(
                     default, relativePath, default, fileExists);
 
             // Assert
@@ -230,7 +230,7 @@ public class FilePathUtilsTests
 
         // Act
         var actual = FilePathUtils
-            .FindVirtualFile(
+            .FindExternalFileForVirtualDataset(
                 default, relativePath, datasetAccess, fileExists);
 
         // Assert
@@ -248,7 +248,7 @@ public class FilePathUtilsTests
 
         // Act
         var actual = FilePathUtils
-            .FindVirtualFile(
+            .FindExternalFileForVirtualDataset(
                 THIS_FOLDER_PATH, relativePath, default, fileExists);
 
         // Assert
@@ -265,7 +265,7 @@ public class FilePathUtilsTests
 
         // Act
         var actual = FilePathUtils
-            .FindVirtualFile(
+            .FindExternalFileForVirtualDataset(
                 default, expected, default, fileExists);
 
         // Assert
@@ -290,7 +290,7 @@ public class FilePathUtilsTests
         {
             // Act
             var actual = FilePathUtils
-                .FindVirtualFile(
+                .FindExternalFileForVirtualDataset(
                     THIS_FOLDER_PATH, expected, datasetAccess, fileExists);
 
             // Assert
@@ -320,7 +320,7 @@ public class FilePathUtilsTests
         {
             // Act
             var actual = FilePathUtils
-                .FindVirtualFile(
+                .FindExternalFileForVirtualDataset(
                     THIS_FOLDER_PATH, filePath, datasetAccess, fileExists);
 
             // Assert

@@ -28,7 +28,7 @@ namespace PureHDF
                 fileExists);
         }
 
-        public static string? FindVirtualFile(
+        public static string? FindExternalFileForVirtualDataset(
             string? thisFolderPath, 
             string filePath, 
             H5DatasetAccess datasetAccess, 

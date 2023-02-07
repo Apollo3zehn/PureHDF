@@ -79,25 +79,6 @@ var myH5Object = group.Get("/path/to/unknown/object");
 ```
 
 ## 1.2 Additional Info
-### External File Link
-
-With a link pointing to an external file it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
-
-You can either set an environment variable:
-
-```cs
-Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
-```
-
-Or you can pass the prefix as an overload parameter:
-
-```cs
-var linkAccess = new H5LinkAccess(
-    ExternalLinkPrefix: prefix 
-);
-
-var dataset = group.Dataset(path, linkAccess);
-```
 
 ### Iteration
 
@@ -120,6 +101,48 @@ foreach (var link in group.Children)
 ```
 
 An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
+
+### External Files
+
+There are multiple mechanisms in HDF5 that allow one file to reference another file. The external file resolution algorithm is specific to each of these mechanisms:
+
+| Type | Documentation | Algorithm | Environment variable |
+|---|---|---|---|
+| External Link | [Link](https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5) | [Link](https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Lpublic.h#L1503-L1566) | `HDF5_EXT_PREFIX` |
+| External Dataset Storage | [Link](https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11) | [Link](https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L7084-L7116) | `HDF5_EXTFILE_PREFIX` |
+| Virtual Datasets | [Link](https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12) | [Link](https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L6607-L6670) | `HDF5_VDS_PREFIX` |
+
+Usage:
+
+**External Link**
+
+```cs
+var linkAccess = new H5LinkAccess(
+    ExternalLinkPrefix: prefix 
+);
+
+var dataset = group.Dataset(path, linkAccess);
+```
+
+**External Dataset Storage**
+
+```cs
+var datasetAccess = new H5DatasetAccess(
+    ExternalFilePrefix: prefix 
+);
+
+var data = dataset.Read<float>(..., datasetAccess: datasetAccess);
+```
+
+**Virtual Datasets**
+
+```cs
+var datasetAccess = new H5DatasetAccess(
+    VirtualPrefix: prefix 
+);
+
+var data = dataset.Read<float>(..., datasetAccess: datasetAccess);
+```
 
 # 2. Attributes
 
