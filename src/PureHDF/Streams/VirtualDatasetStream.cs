@@ -143,7 +143,7 @@ namespace PureHDF
                         slicedBuffer.Span.Fill(_fillValue);
 
                     else
-                        slicedBuffer.Span.Fill(0);
+                        slicedBuffer.Span.Clear();
                 }
 
                 // Update state

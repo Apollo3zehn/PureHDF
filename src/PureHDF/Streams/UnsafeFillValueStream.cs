@@ -46,7 +46,7 @@
         {
             if (_fillValue is null)
             {
-                buffer.AsSpan().Fill(0);
+                buffer.AsSpan().Clear();
             }
 
             else

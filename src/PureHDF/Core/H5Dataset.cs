@@ -213,7 +213,7 @@ namespace PureHDF
                     case DataspaceType.Simple:
 
                         var starts = datasetDims.ToArray();
-                        starts.AsSpan().Fill(0);
+                        starts.AsSpan().Clear();
 
                         fileSelection = new HyperslabSelection(rank: datasetDims.Length, starts: starts, blocks: datasetDims);
 

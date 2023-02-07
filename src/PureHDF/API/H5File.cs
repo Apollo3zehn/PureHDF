@@ -108,7 +108,7 @@ namespace PureHDF
             {
                 try
                 {
-                    System.IO.File.Delete(Path);
+                    System.IO.File.Delete(Path!);
                 }
                 catch
                 {

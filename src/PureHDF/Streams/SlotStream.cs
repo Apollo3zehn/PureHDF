@@ -132,7 +132,7 @@
                 if (!File.Exists(filePath))
                     throw new Exception($"External file '{filePath}' does not exist.");
 
-                _stream = File.OpenRead(filePath);
+                _stream = File.OpenRead(filePath!);
                 _stream.Seek((long)_slot.Offset, SeekOrigin.Begin);
             }
 

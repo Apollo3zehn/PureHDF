@@ -53,7 +53,7 @@ namespace Benchmark
             // create inflate_state
             _state_length = Unsafe.SizeOf<inflate_state>();
             _state_ptr = Marshal.AllocHGlobal(Unsafe.SizeOf<inflate_state>());
-            new Span<byte>(_state_ptr.ToPointer(), _state_length).Fill(0);
+            new Span<byte>(_state_ptr.ToPointer(), _state_length).Clear();
         }
 
         [GlobalCleanup]
