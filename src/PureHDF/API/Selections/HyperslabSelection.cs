@@ -49,7 +49,7 @@ namespace PureHDF
         /// <summary>
         /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
         /// </summary>
-        /// <param name="rank"></param>
+        /// <param name="rank">The rank of the selection.</param>
         /// <param name="starts">The start coordinate of the block along each dimension.</param>
         /// <param name="strides">The number of elements to separate each block to be selected along each dimension.</param>
         /// <param name="counts">The number of blocks to select along each dimension.</param>

@@ -11,13 +11,13 @@ namespace PureHDF.Tests.Reading
             // TODO: Not supported: Unlimited Dimensions
             // TODO: Not yet implemented: async
             // TODO: Not yet checked: DatasetAccess
-            // TODO: Implement Span<byte> overload in streams
             // TODO: Find todos in source :D
 
             // TODO: Add tests:
             // FilePathUtils
             // - 3D
             // - point selection
+            // - delegate selection test
 
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 

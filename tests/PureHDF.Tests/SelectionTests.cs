@@ -31,6 +31,68 @@ namespace PureHDF.Tests.Reading
          *   /  Dataset dimensions:  [14, 14, 14]      / 14
          *  /     Chunk dimensions:  [3, 3, 3]        /
          * /_  _  _  _  _  _  _  _  _  _  _  _  _  _ /
+         * |X      |       X|        |        |     |
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     |
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  X  _| _  _  _| _  _|
+         * |       |        |        |        |     | 14
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     |
+         * |       |        |        |        |     |   /
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|  /
+         * |   X   |        |        |        |     | /
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|/
+         *                    14
+         */
+        public void CanWalk_PointSelection()
+        {
+            // Arrange
+            var dims = new ulong[] { 14, 14, 14 };
+            var chunkDims = new ulong[] { 3, 3, 3 };
+
+            var selection = new PointSelection(new ulong[,] {
+                { 00, 00, 00 },
+                { 00, 05, 10 },
+                { 12, 01, 10 },
+                { 05, 07, 09 }
+            });
+
+            var expected = new RelativeStep[]
+            {
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 3}, Offset = 7, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {4, 0, 3}, Offset = 4, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 3}, Offset = 21, Length = 1 },
+            };
+
+            // Act
+            var actual = SelectionUtils
+                .Walk(rank: 3, dims, chunkDims, selection)
+                .ToArray();
+
+            // Assert
+            for (int i = 0; i < actual.Length; i++)
+            {
+                var actual_current = actual[i];
+                var expected_current = expected[i];
+
+                Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
+                Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
+                Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
+                Assert.Equal(actual_current.Offset, expected_current.Offset);
+                Assert.Equal(actual_current.Length, expected_current.Length);
+            }
+        }
+
+
+        [Fact]
+        /*    /                                         /
+         *   /  Dataset dimensions:  [14, 14, 14]      / 14
+         *  /     Chunk dimensions:  [3, 3, 3]        /
+         * /_  _  _  _  _  _  _  _  _  _  _  _  _  _ /
          * |       |        |        |        |     |
          * |       |        |        |        |     |
          * |_  _  _| X  X  _| _  _  X| X  _  _| _  _|
@@ -47,7 +109,7 @@ namespace PureHDF.Tests.Reading
          * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|/
          *                    14
          */
-        public void CanWalk()
+        public void CanWalk_Hyperslab()
         {
             // Arrange
             var dims = new ulong[] { 14, 14, 14 };
