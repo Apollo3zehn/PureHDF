@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading
         // -> hyperslab's actual points are not allowed to exceed the extend of the dimension
 
         // Restrictions:
-        // - The maximum number of elements in a chunk is 232 - 1 which is equal to 4,294,967,295.
+        // - The maximum number of elements in a chunk is 2^32 - 1 which is equal to 4,294,967,295.
         // - The maximum size for any chunk is 4GB.
         // - The size of a chunk cannot exceed the size of a fixed-size dataset. For example, a 
         //   dataset consisting of a 5x4 fixed-size array cannot be defined with 10x10 chunks.
@@ -24,6 +24,70 @@ namespace PureHDF.Tests.Reading
         public SelectionTests(ITestOutputHelper logger)
         {
             _logger = logger;
+        }
+
+        [Fact]
+        /*    /                                         /
+         *   /  Dataset dimensions:  [14, 14, 14]      / 14
+         *  /     Chunk dimensions:  [3, 3, 3]        /
+         * /_  _  _  _  _  _  _  _  _  _  _  _  _  _ /
+         * |X      |       X|        |        |     |
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     |
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  X  _| _  _  _| _  _|
+         * |       |        |        |        |     | 14
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     |
+         * |       |        |        |        |     |   /
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|  /
+         * |   X   |        |        |        |     | /
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|/
+         *                    14
+         */
+        public void CanWalk_DelegateSelection()
+        {
+            // Arrange
+            var dims = new ulong[] { 14, 14, 14 };
+            var chunkDims = new ulong[] { 3, 3, 3 };
+
+            static IEnumerable<Step> Walker(ulong[] in2)
+            {
+                yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
+                yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 1 };
+                yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 1 };
+                yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 1 };
+            };
+
+            var selection = new DelegateSelection(totalElementCount: 5, Walker);
+
+            var expected = new RelativeStep[]
+            {
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 0, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 3}, Offset = 7, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {4, 0, 3}, Offset = 4, Length = 1 },
+                new RelativeStep() { Chunk = new ulong[] {1, 2, 3}, Offset = 21, Length = 1 },
+            };
+
+            // Act
+            var actual = SelectionUtils
+                .Walk(rank: 3, dims, chunkDims, selection)
+                .ToArray();
+
+            // Assert
+            for (int i = 0; i < actual.Length; i++)
+            {
+                var actual_current = actual[i];
+                var expected_current = expected[i];
+
+                Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
+                Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
+                Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
+                Assert.Equal(actual_current.Offset, expected_current.Offset);
+                Assert.Equal(actual_current.Length, expected_current.Length);
+            }
         }
 
         [Fact]
@@ -86,7 +150,6 @@ namespace PureHDF.Tests.Reading
                 Assert.Equal(actual_current.Length, expected_current.Length);
             }
         }
-
 
         [Fact]
         /*    /                                         /
