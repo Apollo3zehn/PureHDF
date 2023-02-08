@@ -68,9 +68,9 @@ namespace PureHDF
             return buffer.Length;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer)
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            throw new Exception($"Memory-mapped files cannot be access asynchronously.");
+            throw new Exception($"Memory-mapped files cannot be accessed asynchronously.");
         }
 
         public override byte ReadByte()

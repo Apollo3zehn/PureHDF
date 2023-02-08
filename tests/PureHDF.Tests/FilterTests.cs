@@ -324,7 +324,7 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadCoreAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled!.Length];
@@ -371,7 +371,7 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadCoreAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled!.Length];
@@ -417,7 +417,7 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadCoreAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
             var actual = new byte[actual_shuffled!.Length];
@@ -447,7 +447,7 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadAsync<byte, AsyncReader>(default, null, skipShuffle: true);
+            var actual_shuffled = await dataset.ReadCoreAsync<byte, AsyncReader>(default, null, skipShuffle: true);
 
             // Act
 

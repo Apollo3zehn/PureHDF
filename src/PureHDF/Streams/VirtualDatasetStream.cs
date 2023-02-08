@@ -55,7 +55,9 @@ namespace PureHDF
 #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#pragma warning disable CS1998
         private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useAsync)
+#pragma warning restore CS1998
         {
             var length = buffer.Length;
 
@@ -134,13 +136,20 @@ namespace PureHDF
                             sourceDimensions, 
                             foundEntry.SourceSelection));
 
+#if NET6_0_OR_GREATER
                     if (useAsync)
                         await sourceDatasetInfo.Dataset
-                            .ReadAsync(slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+                            .ReadAsync(buffer: slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess)
+                            .ConfigureAwait(false);
 
                     else
                         sourceDatasetInfo.Dataset
-                            .Read(slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+                            .Read(buffer: slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+#else
+
+                    sourceDatasetInfo.Dataset
+                        .Read(buffer: slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+#endif
                 }
 
                 // Fill value
@@ -251,24 +260,14 @@ namespace PureHDF
 #else
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return ReadCore(buffer.AsMemory(offset, count));
+            return ReadCoreAsync(buffer.AsMemory(offset, count), useAsync: false).Result;
         }
 #endif
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+#if NET6_0_OR_GREATER
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             return ReadCoreAsync(buffer, useAsync: true);
-        }
-
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-#else
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            return ReadCoreAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
         }
 #endif
 

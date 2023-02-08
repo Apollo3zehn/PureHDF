@@ -13,9 +13,9 @@
 
 #if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP3_0_OR_GREATER
         public abstract int Read(Span<byte> buffer);
+        public abstract ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken);
 #endif
 
-        public abstract ValueTask<int> ReadAsync(Memory<byte> buffer);
         public abstract new byte ReadByte();
         public abstract byte[] ReadBytes(int count);
         public abstract ushort ReadUInt16();
@@ -36,11 +36,9 @@
 
         public override abstract long Seek(long offset, SeekOrigin seekOrigin);
 
-        // ReadAsync: https://devblogs.microsoft.com/pfxteam/overriding-stream-asynchrony/
-        // see "If you don’t override ..."
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return Read(buffer.AsSpan(offset, count));
+            throw new NotImplementedException();
         }
 
         public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();

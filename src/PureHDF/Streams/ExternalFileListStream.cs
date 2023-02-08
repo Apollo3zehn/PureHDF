@@ -115,30 +115,8 @@ namespace PureHDF
             return buffer.Length;
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return ReadCoreAsync(buffer, cancellationToken);
-        }
-
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-#else
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            // WARNING: Original "buffer" is a Memory<byte> and to be compatible with stream,
-            // the method Stream.Read uses an internal ArrayPool array which is not cleared
-            // after return. This means that the buffer could contain data from previous tests.
-            // Therefore, always read the returned number of bytes and do NOT SKIP any data, e.g.
-            // when a file is smaller than the corresponding slot!
-            return ReadCoreAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
-        }
-#endif
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+#if NET6_0_OR_GREATER
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             var offset = 0;
             var remaining = buffer.Length;
@@ -169,6 +147,7 @@ namespace PureHDF
 
             return buffer.Length;
         }
+#endif
 
         public override long Seek(long offset, SeekOrigin origin)
         {

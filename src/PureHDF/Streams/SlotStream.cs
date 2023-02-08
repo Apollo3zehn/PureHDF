@@ -82,25 +82,8 @@ namespace PureHDF
             return length;
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return ReadCoreAsync(buffer, cancellationToken);
-        }
-
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
-#else
-        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        {
-            return ReadCoreAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
-        }
-#endif
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+#if NET6_0_OR_GREATER
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             var length = (int)Math.Min(Length - Position, buffer.Length);
 
@@ -119,6 +102,7 @@ namespace PureHDF
 
             return length;
         }
+#endif
 
         public override long Seek(long offset, SeekOrigin origin)
         {

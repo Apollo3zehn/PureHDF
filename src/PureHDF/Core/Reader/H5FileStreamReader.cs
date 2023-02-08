@@ -56,9 +56,9 @@ namespace PureHDF
             return count;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer)
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var count = RandomAccess.ReadAsync(_handle, buffer, Position);
+            var count = RandomAccess.ReadAsync(_handle, buffer, Position, cancellationToken);
             _position.Value += buffer.Length;
 
             return count;

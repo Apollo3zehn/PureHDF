@@ -30,10 +30,30 @@
             _reader.Flush();
         }
 
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+        {
+            return _reader.Read(buffer);
+        }
+
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return _reader.Read(buffer, offset, count);
+            throw new NotImplementedException();
         }
+#else
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return _reader.Read(buffer.AsSpan(offset, count));
+        }
+#endif
+
+#if NET6_0_OR_GREATER
+        // required to avoid thread changes which would make the thread-local positions in derived classes useless
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return _reader.ReadAsync(buffer, cancellationToken);
+        }
+#endif
 
         public override long Seek(long offset, SeekOrigin origin)
         {

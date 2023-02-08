@@ -84,7 +84,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = ReadAsync<byte, SyncReader>(
+            var result = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -114,7 +114,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = ReadAsync<T, SyncReader>(
+            var result = ReadCoreAsync<T, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -170,7 +170,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            ReadAsync<T, SyncReader>(
+            ReadCoreAsync<T, SyncReader>(
                 default,
                 buffer,
                 fileSelection,
@@ -197,7 +197,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = ReadAsync<byte, SyncReader>(
+            var data = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -228,7 +228,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = ReadAsync<byte, SyncReader>(
+            var data = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -257,7 +257,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = ReadAsync<byte, SyncReader>(
+            var data = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -291,7 +291,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = await ReadAsync<byte, AsyncReader>(
+            var result = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -321,7 +321,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = await ReadAsync<T, AsyncReader>(
+            var result = await ReadCoreAsync<T, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -352,7 +352,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            return ReadAsync<T, AsyncReader>(
+            return ReadCoreAsync<T, AsyncReader>(
                 default,
                 buffer,
                 fileSelection,
@@ -379,7 +379,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = await ReadAsync<byte, AsyncReader>(
+            var data = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -410,7 +410,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = await ReadAsync<byte, AsyncReader>(
+            var data = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -439,7 +439,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = await ReadAsync<byte, AsyncReader>(
+            var data = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,

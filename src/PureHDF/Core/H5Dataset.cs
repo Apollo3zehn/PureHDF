@@ -97,7 +97,7 @@ namespace PureHDF
 
         #region Private
 
-        internal async Task<T[]?> ReadAsync<T, TReader>(
+        internal async Task<T[]?> ReadCoreAsync<T, TReader>(
             TReader reader,
             Memory<T> buffer,
             Selection? fileSelection = default,
