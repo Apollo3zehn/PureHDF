@@ -4,7 +4,7 @@ namespace PureHDF.Tests
 {
     public partial class TestUtils
     {
-        public static unsafe void AddVirtualDataset_2D(long fileId, string datasetName)
+        public static unsafe void AddVirtualDataset(long fileId, string datasetName)
         {
             // see VirtualMapping.xlsx for a visualization
 

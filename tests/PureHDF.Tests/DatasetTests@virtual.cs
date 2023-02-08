@@ -7,17 +7,11 @@ namespace PureHDF.Tests.Reading
     public partial class DatasetTests
     {
         [Fact]
-        public void CanReadDataset_Virtual_2D_sync()
+        public void CanReadDataset_Virtual_sync()
         {
-            // TODO: Not supported: Unlimited Dimensions
-            // TODO: Find todos in source :D
-
-            // TODO: Add tests:
-            // - 3D
-
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
-                => TestUtils.AddVirtualDataset_2D(fileId, "virtual"));
+                => TestUtils.AddVirtualDataset(fileId, "virtual"));
 
             var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 
@@ -32,11 +26,11 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public async Task CanReadDataset_Virtual_2D_async()
+        public async Task CanReadDataset_Virtual_async()
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
-                => TestUtils.AddVirtualDataset_2D(fileId, "virtual"));
+                => TestUtils.AddVirtualDataset(fileId, "virtual"));
 
             var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 

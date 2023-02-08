@@ -35,7 +35,8 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
 9. [Intellisense (.NET 5+)](#9-intellisense-net-5)
-10. [Comparison Table](#10-comparison-table)
+10. [Unsupported Features](#10-unsupported-features)
+11. [Comparison Table](#11-comparison-table)
 
 # 1 Objects
 
@@ -842,7 +843,13 @@ var myGroup = bindings.group1.Get();
 
 > Note: Invalid characters like spaces will be replaced by underscores.
 
-# 10 Comparison Table
+# 10 Unsupported Features
+
+The following features are not (yet) supported:
+
+- Virtual datasets with **unlimited dimensions**.
+
+# 11 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 
