@@ -1,4 +1,5 @@
 ﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace PureHDF
 {
@@ -53,7 +54,8 @@ namespace PureHDF
 
 #region Methods
 
-        private int ReadCore(Memory<byte> buffer)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useAsync)
         {
             var length = buffer.Length;
 
@@ -132,8 +134,13 @@ namespace PureHDF
                             sourceDimensions, 
                             foundEntry.SourceSelection));
 
-                    sourceDatasetInfo.Dataset
-                        .Read(slicedBuffer, selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+                    if (useAsync)
+                        await sourceDatasetInfo.Dataset
+                            .ReadAsync(slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
+
+                    else
+                        sourceDatasetInfo.Dataset
+                            .Read(slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
                 }
 
                 // Fill value
@@ -230,7 +237,7 @@ namespace PureHDF
             // TODO: Avoidable? Just do not implement this Read overload?
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(buffer.Length);
             var memory = memoryOwner.Memory[..buffer.Length];
-            var readCount = ReadCore(memory);
+            var readCount = ReadCoreAsync(memory, useAsync: false).Result;
 
             memory.Span.CopyTo(buffer);
 
@@ -248,10 +255,22 @@ namespace PureHDF
         }
 #endif
 
-        // public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-        // {
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return ReadCoreAsync(buffer, useAsync: true);
+        }
 
-        // }
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+#else
+        public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return ReadCoreAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+        }
+#endif
 
         public override long Seek(long offset, SeekOrigin origin)
         {

@@ -64,6 +64,7 @@ namespace PureHDF
         }
 #endif
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadCore(Span<byte> buffer)
         {
             var length = (int)Math.Min(Length - Position, buffer.Length);
@@ -84,7 +85,7 @@ namespace PureHDF
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return ReadAsyncCore(buffer, cancellationToken);
+            return ReadCoreAsync(buffer, cancellationToken);
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -94,12 +95,12 @@ namespace PureHDF
 #else
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return ReadAsyncCore(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+            return ReadCoreAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
         }
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async ValueTask<int> ReadAsyncCore(Memory<byte> buffer, CancellationToken cancellationToken)
+        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             var length = (int)Math.Min(Length - Position, buffer.Length);
 

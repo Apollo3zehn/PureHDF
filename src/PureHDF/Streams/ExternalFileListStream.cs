@@ -1,4 +1,6 @@
-﻿namespace PureHDF
+﻿using System.Runtime.CompilerServices;
+
+namespace PureHDF
 {
     internal class ExternalFileListStream : Stream
     {
@@ -83,6 +85,7 @@
         }
 #endif
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadCore(Span<byte> buffer)
         {
             var offset = 0;
@@ -115,7 +118,7 @@
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return ReadAsyncCore(buffer, cancellationToken);
+            return ReadCoreAsync(buffer, cancellationToken);
         }
 
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
@@ -130,11 +133,12 @@
             // after return. This means that the buffer could contain data from previous tests.
             // Therefore, always read the returned number of bytes and do NOT SKIP any data, e.g.
             // when a file is smaller than the corresponding slot!
-            return ReadAsyncCore(buffer.AsMemory(offset, count), cancellationToken).AsTask();
+            return ReadCoreAsync(buffer.AsMemory(offset, count), cancellationToken).AsTask();
         }
 #endif
 
-        public async ValueTask<int> ReadAsyncCore(Memory<byte> buffer, CancellationToken cancellationToken)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             var offset = 0;
             var remaining = buffer.Length;

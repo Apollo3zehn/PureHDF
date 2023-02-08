@@ -7,10 +7,9 @@ namespace PureHDF.Tests.Reading
     public partial class DatasetTests
     {
         [Fact]
-        public void CanReadDataset_Virtual_2D()
+        public void CanReadDataset_Virtual_2D_sync()
         {
             // TODO: Not supported: Unlimited Dimensions
-            // TODO: Not yet implemented: async
             // TODO: Not yet checked: DatasetAccess
             // TODO: Find todos in source :D
 
@@ -29,6 +28,25 @@ namespace PureHDF.Tests.Reading
             var dataset = root.Dataset("vds");
             var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
             var actual = dataset.Read<int>(selection);
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Fact]
+        public async Task CanReadDataset_Virtual_2D_async()
+        {
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
+                => TestUtils.AddVirtualDataset_2D(fileId, "virtual"));
+
+            var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
+
+            // Act
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: false);
+            var dataset = root.Dataset("vds");
+            var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
+            var actual = await dataset.ReadAsync<int>(selection);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
