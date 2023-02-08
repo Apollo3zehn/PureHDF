@@ -45,7 +45,7 @@
 
         public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
         {
-            return default;
+            throw new Exception("This should never happen.");
         }
 
         #endregion

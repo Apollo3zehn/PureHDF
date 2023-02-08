@@ -54,8 +54,8 @@
             var coordinates = Utils.ToCoordinates(linearIndex, sourceDimensions);
             var maxCount = sourceDimensions[^1] - coordinates[^1];
 
+            // TODO theoretically this can fail
             return new CoordinatesResult(
-                Success: true, // TODO theoretically this can fail
                 coordinates, 
                 maxCount);
         }

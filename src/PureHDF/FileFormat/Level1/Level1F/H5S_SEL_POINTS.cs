@@ -85,8 +85,9 @@
         public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
         {
             var result = default(LinearIndexResult);
+            var pointCount = PointData.GetLength(0);
 
-            for (ulong pointIndex = 0; pointIndex < (ulong)PointData.Length; pointIndex++)
+            for (ulong pointIndex = 0; pointIndex < (ulong)pointCount; pointIndex++)
             {
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
@@ -106,9 +107,9 @@
 
                     else
                     {
-                        if (dimension == Rank - 1 && currentCoordinate < requestedCoordinate)
+                        if (dimension == Rank - 1 && requestedCoordinate < currentCoordinate)
                         {
-                            var maxCount = requestedCoordinate - currentCoordinate;
+                            var maxCount = currentCoordinate - requestedCoordinate;
 
                             if (result.MaxCount == 0 || maxCount < result.MaxCount)
                             {
