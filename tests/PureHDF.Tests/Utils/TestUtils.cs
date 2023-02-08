@@ -759,6 +759,46 @@ namespace PureHDF.Tests
             }
         }
 
+        public static unsafe void AddVariableLengthSequence(long fileId, ContainerType container)
+        {
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L1621-L1642
+            // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/test/tarray.c#L1113
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L234-L241
+
+            // typedef struct {
+            //     size_t len; /**< Length of VL data (in base type units) */
+            //     void  *p;   /**< Pointer to VL data */
+            // } hvl_t;
+
+            var dims = new ulong[] { 10 };
+            var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
+
+            var dataVar = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var dataVarChar = dataVar
+               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
+               .ToArray();
+
+            fixed (byte* dataVarPtr = dataVarChar)
+            {
+                var basePtr = new IntPtr(dataVarPtr);
+
+                var addresses = new IntPtr[]
+                {
+                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 4), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
+                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
+                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34)
+                };
+
+                fixed (void* dataVarAddressesPtr = addresses)
+                {
+                    Add(container, fileId, "sequence", "variable", typeId, dataVarAddressesPtr, dims);
+                }
+            }
+
+            _ = H5T.close(typeId);
+        }
+
         public static unsafe void AddMass(long fileId, ContainerType container)
         {
             var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
