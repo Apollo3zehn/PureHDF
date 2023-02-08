@@ -53,7 +53,7 @@ namespace PureHDF.Tests.Reading
             var dims = new ulong[] { 14, 14, 14 };
             var chunkDims = new ulong[] { 3, 3, 3 };
 
-            static IEnumerable<Step> Walker(ulong[] in2)
+            static IEnumerable<Step> Walker(ulong[] datasetDimensions)
             {
                 yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
                 yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 1 };

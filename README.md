@@ -29,7 +29,7 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 1. [Objects](#1-objects)
 2. [Attributes](#2-attributes)
 3. [Data](#3-data)
-4. [Partial I/O and Hyperslabs](#4-partial-io-and-hyperslabs)
+4. [Data Selection / Data Slicing](#4-data-selection--data-slicing)
 5. [Filters](#5-filters)
 6. [Reading Compound Data](#6-reading-compound-data)
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
@@ -245,11 +245,64 @@ The following code samples work for datasets as well as attributes.
 
 For more information on compound data, see section [Reading compound data](#6-reading-compound-data).
 
-# 4. Partial I/O and Hyperslabs
+# 4. Data Selection / Data Slicing
 
 ## 4.1 Overview
 
-Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
+Data selection is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. 
+
+PureHDF supports three types of selections. These are:
+
+| Type                 | Description                                                                                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HyperslabSelection` | A hyperslab is a selection of elements from a hyper rectangle.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.1 Hyperslab Selection |
+| `PointSelection`     | Selects a collection of points.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.2 Select Points                                      |
+| `DelegateSelection`  | This selection accepts a custom walker which selects the user defined points or blocks.                                                                                          |
+
+## 4.2 Examples
+
+Selections can be passed to the read method to avoid reading the full dataset like this:
+
+```cs
+var fileSelection = ...;
+var data = dataset.Read<int>(fileSelection: fileSelection);
+```
+
+Alternatively, if the selection should not be applied to the file but to the memory buffer, use the `memorySelection` parameter:
+
+```cs
+var memorySelection = ...;
+var data = dataset.Read<int>(memorySelection: memorySelection);
+```
+
+All parameters are optional. For example, when the `fileSelection` parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
+
+> Note: There are an overload methods that allow you to provide your own buffer.
+
+**Point selection**
+
+Point selections require a two-dimension `n` x `m` array where `n` is the number of points and `m` the rank of the dataset. Here is an example with four points to select data from a dataset of rank = `3`.
+
+```cs
+var selection = new PointSelection(new ulong[,] {
+    { 00, 00, 00 },
+    { 00, 05, 10 },
+    { 12, 01, 10 },
+    { 05, 07, 09 }
+});
+```
+
+**Hyperslab selection**
+
+A hyperslab selection can be used to select a contiguous block of elements or to select multiple blocks.
+
+The simplest example is a selection for a 1-dimensional dataset at a certain offset (`start: 10`) and a certain length (`block: 50`):
+
+```cs
+var fileSelection = new HyperslabSelection(start: 10, block: 50);
+```
+
+The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
 
 ```cs
 var dataset = root.Dataset("myDataset");
@@ -280,11 +333,23 @@ var result = dataset
     .ToArray2D(75, 25);
 ``` 
 
-All shown parameters are optional. For example, when the `fileSelection` parameter is unspecified, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
+**Delegate selection**
 
-Additionally, there is an overload method that allows you to provide your own buffer.
+A delegate accepts a custom walker function which select blocks of data at certain coordinates. Here is an example which selects a total number of 11 elements from a 3-dimensional dataset:
 
-## 4.2 Experimental: IQueryable (1-dimensional data only)
+```cs
+static IEnumerable<Step> Walker(ulong[] datasetDimensions)
+{
+    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
+    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
+    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
+    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+};
+
+var selection = new DelegateSelection(totalElementCount: 11, Walker);
+```
+
+## 4.3 Experimental: IQueryable (1-dimensional data only)
 
 Another way to build the file selection is to invoke the `AsQueryable` method which can then be used as follows:
 
