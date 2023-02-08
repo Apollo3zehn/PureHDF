@@ -205,20 +205,20 @@ namespace PureHDF
 
                 if (filePath is not null)
                 {
-                    // TODO: check how file should be opened
+                    // TODO: File should be opened asynchronously if this file is also opened asynchronously.
                     var file = filePath == "."
                         // this file
                         ? _file
                         // external file
                         : H5File.OpenRead(filePath);
 
-                    // TODO: Where to get link access from? From the virtual dataset?
-                    if (file.LinkExists(entry.SourceDataset, linkAccess: default))
+                    if (file.LinkExists(entry.SourceDataset, linkAccess: default /* no link access available */))
                     {
                         var datasetAccess = _datasetAccess;
+                        var chunkCache = new SimpleChunkCache();
 
                         if (_datasetAccess.ChunkCacheFactory is null)
-                            datasetAccess = _datasetAccess with { ChunkCacheFactory = () => new SimpleChunkCache() };
+                            datasetAccess = _datasetAccess with { ChunkCacheFactory = () => chunkCache };
 
                         var dataset = file.Dataset(entry.SourceDataset);
 

@@ -10,11 +10,9 @@ namespace PureHDF.Tests.Reading
         public void CanReadDataset_Virtual_2D_sync()
         {
             // TODO: Not supported: Unlimited Dimensions
-            // TODO: Not yet checked: DatasetAccess
             // TODO: Find todos in source :D
 
             // TODO: Add tests:
-            // FilePathUtils
             // - 3D
 
             // Arrange

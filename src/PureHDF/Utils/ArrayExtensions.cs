@@ -37,7 +37,13 @@ namespace PureHDF
         private static unsafe void CopyData<T>(T[] source, void* target)
             where T : unmanaged
         {
-            // TODO: Unsafe.CopyBlock
+            // TODO: Unsafe.CopyBlock:
+            //
+            // var multiDimArray = new int[4,7];
+            // var flatArray = Unsafe.As<int[]>(multiDimArray); 
+            // => this works partially ... the flatArray length is 28 ...
+            // but the first 4 bytes of multiDimArray are 4, 7, 0, 0. So 
+            // we cannot access the last 4 bytes of the actua array.
 
             var sourceBytes = MemoryMarshal.AsBytes(source.AsSpan());
             var bytePtr = (byte*)target;

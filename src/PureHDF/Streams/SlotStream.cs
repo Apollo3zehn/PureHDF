@@ -140,7 +140,7 @@ namespace PureHDF
             base.Dispose(disposing);
         }
 
-        // TODO File should be opened asynchronously if root file is also opened asynchronously. Then implement ReadAsync here.
+        // TODO File should be opened asynchronously if this file is also opened asynchronously.
         private Stream EnsureStream()
         {
             if (_stream is null)

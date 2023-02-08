@@ -41,7 +41,7 @@ namespace PureHDF
                 return ".";
 
             return Find(
-                thisFolderPath, 
+                thisFolderPath,
                 filePath, 
                 datasetAccess.ExternalFilePrefix, 
                 HDF5_VDS_PREFIX, 
