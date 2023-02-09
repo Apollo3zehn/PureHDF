@@ -1,6 +1,7 @@
 ﻿using HDF.PInvoke;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Xunit;
 
@@ -8,7 +9,11 @@ namespace PureHDF.Tests.Reading
 {
     public partial class DatasetTests
     {
-        private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
+        private readonly JsonSerializerOptions _options = new() 
+        { 
+            IncludeFields = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
 
         public static IList<object[]> DatasetNumericalTestData { get; } = TestData.NumericalData;
 
@@ -55,7 +60,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddNumerical(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumerical(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -73,7 +78,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -91,7 +96,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -106,17 +111,70 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.ReadCompound<TestStructStringAndArray>(converter);
 
                 // Assert
-                Assert.Equal(JsonSerializer.Serialize(TestData.StringStructData, _options), JsonSerializer.Serialize(actual, _options));
+                Assert.Equal(
+                    JsonSerializer.Serialize(TestData.StringStructData, _options), 
+                    JsonSerializer.Serialize(actual, _options));
             });
         }
 
         [Fact]
-        public void CanReadDataset_Unknown()
+        public void CanReadDataset_NullableStruct_memory_selection()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var dataset = root.Dataset("/struct/nullable");
+                var memorySelection = new HyperslabSelection(start: 1, stride: 2, count: 12, block: 1);
+
+                static string converter(FieldInfo fieldInfo)
+                {
+                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    return attribute is not null ? attribute.Name : fieldInfo.Name;
+                }
+
+                var actual = dataset.ReadCompound<TestStructStringAndArray>(
+                    converter,
+                    memorySelection: memorySelection, 
+                    memoryDims: new ulong[] { 24 });
+
+                // Assert
+                Assert.Equal(24, actual.Length);
+
+                var defaultSerialized = JsonSerializer.Serialize(default(TestStructStringAndArray), _options);
+
+                defaultSerialized = defaultSerialized
+                    .Replace("\"FloatArray\":null", "\"FloatArray\":[0,0,0]");
+
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        Assert.Equal(
+                            defaultSerialized, 
+                            JsonSerializer.Serialize(actual[i], _options));
+                    }
+
+                    else
+                    {
+                        Assert.Equal(
+                            JsonSerializer.Serialize(TestData.StringStructData[i / 2], _options), 
+                            JsonSerializer.Serialize(actual[i], _options));
+                    }
+                }
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_UnknownStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -127,6 +185,55 @@ namespace PureHDF.Tests.Reading
                 Assert.Equal(
                     JsonSerializer.Serialize(TestData.StringStructData, _options).Replace("ShortValueWithCustomName", "ShortValue"),
                     JsonSerializer.Serialize(actual, _options));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_UnknownStruct_memory_selection()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var dataset = root.Dataset("/struct/nullable");
+                var memorySelection = new HyperslabSelection(start: 1, stride: 2, count: 12, block: 1);
+
+                var actual = dataset.ReadCompound(
+                    memorySelection: memorySelection, 
+                    memoryDims: new ulong[] { 24 });
+
+                // Assert
+                Assert.Equal(24, actual.Length);
+
+                var defaultSerialized = JsonSerializer
+                .Serialize(default(TestStructStringAndArray), _options);
+
+                defaultSerialized = defaultSerialized
+                    .Replace("\"FloatArray\":null", "\"FloatArray\":[0,0,0]")
+                    .Replace("ShortValueWithCustomName", "ShortValue");
+                    
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        Assert.Equal(
+                            defaultSerialized, 
+                            JsonSerializer.Serialize(actual[i], _options));
+                    }
+
+                    else
+                    {
+                        Assert.Equal(
+                            JsonSerializer
+                                .Serialize(TestData.StringStructData[i / 2], _options)
+                                .Replace("ShortValueWithCustomName", "ShortValue"), 
+                            JsonSerializer
+                                .Serialize(actual[i], _options));
+                    }
+                }
             });
         }
 
@@ -150,6 +257,34 @@ namespace PureHDF.Tests.Reading
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var dataset = root.Dataset($"/string/{name}");
                 var actual = dataset.ReadString();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_String_memory_selection()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddString(fileId, ContainerType.Dataset));
+
+                var expected = new string?[] 
+                { 
+                    null, "001", null, "11", null, "22", null, "33", null, "44", null, "55", 
+                    null, "66", null, "77", null, "  ", null, "AA", null, "ZZ", null, "!!"
+                };
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var dataset = root.Dataset($"/string/variable");
+                var memorySelection = new HyperslabSelection(start: 1, stride: 2, count: 12, block: 1);
+
+                var actual = dataset.ReadString(
+                    memorySelection: memorySelection, 
+                    memoryDims: new ulong[] { 24 });
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
@@ -311,7 +446,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);

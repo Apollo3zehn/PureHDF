@@ -7,12 +7,12 @@
         public OldObjectModificationTimeMessage(H5BaseReader reader)
         {
             // date / time
-            Year = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 4));
-            Month = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 2));
-            DayOfMonth = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 2));
-            Hour = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 2));
-            Minute = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 2));
-            Second = int.Parse(H5ReadUtils.ReadFixedLengthString(reader, 2));
+            Year = int.Parse(ReadUtils.ReadFixedLengthString(reader, 4));
+            Month = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
+            DayOfMonth = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
+            Hour = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
+            Minute = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
+            Second = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
 
             // reserved
             reader.ReadBytes(2);

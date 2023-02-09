@@ -391,10 +391,7 @@ Before you can use external filters, you need to register them using ```H5Filter
 This function could look like the following and should be adapted to your specific filter library:
 
 ```cs
-public static Memory<byte> FilterFunc(
-    H5FilterFlags flags, 
-    uint[] parameters, 
-    Memory<byte> buffer)
+public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 {
     // Decompressing
     if (flags.HasFlag(H5FilterFlags.Decompress))
@@ -408,7 +405,7 @@ public static Memory<byte> FilterFunc(
     {
         throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
-}
+};
 
 ```
 

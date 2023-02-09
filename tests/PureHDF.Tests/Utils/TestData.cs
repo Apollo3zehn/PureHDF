@@ -83,13 +83,13 @@
 
         static TestData()
         {
-            TestData.EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
+            EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
                                                  TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };
 
-            TestData.BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+            BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
                                                          TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 };
 
-            TestData.ArrayData = new int[2, 3, 4, 5];
+            ArrayData = new int[2, 3, 4, 5];
 
             for (int i = 0; i < 2; i++)
             {
@@ -99,13 +99,13 @@
                     {
                         for (int l = 0; l < 5; l++)
                         {
-                            TestData.ArrayData[i, j, k, l] = i * j * j * k * l;
+                            ArrayData[i, j, k, l] = i * j * j * k * l;
                         }
                     }
                 }
             }
 
-            TestData.NumericalData = new List<object[]>
+            NumericalData = new List<object[]>
             {
                 new object[] { "D1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
                 new object[] { "D2", new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
@@ -117,35 +117,35 @@
                 new object[] { "D8", new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
                 new object[] { "D9", new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 } },
                 new object[] {"D10", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 } },
-                new object[] {"D11", TestData.EnumData },
+                new object[] {"D11", EnumData },
             };
 
-            TestData.NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
+            NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
 
             unsafe
             {
-                var struct1 = TestData.NonNullableStructData[0].L2Struct1;
+                var struct1 = NonNullableStructData[0].L2Struct1;
                 struct1.FloatArray[0] = 1.1f;
                 struct1.FloatArray[1] = 2.2f;
                 struct1.FloatArray[2] = 3.3f;
-                TestData.NonNullableStructData[0].L2Struct1 = struct1;
+                NonNullableStructData[0].L2Struct1 = struct1;
 
-                var struct2 = TestData.NonNullableStructData[0].L2Struct2;
+                var struct2 = NonNullableStructData[0].L2Struct2;
                 struct2.FloatArray[0] = 2.1f;
                 struct2.FloatArray[1] = 3.2f;
                 struct2.FloatArray[2] = 4.3f;
-                TestData.NonNullableStructData[0].L2Struct2 = struct2;
+                NonNullableStructData[0].L2Struct2 = struct2;
 
-                TestData.NonNullableStructData[1].L2Struct1 = struct1;
-                TestData.NonNullableStructData[1].L2Struct2 = struct2;
+                NonNullableStructData[1].L2Struct1 = struct1;
+                NonNullableStructData[1].L2Struct2 = struct2;
             }
 
-            TestData.StringStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
-            TestData.TinyData = new byte[] { 99 };
-            TestData.SmallData = Enumerable.Range(0, 100).ToArray();
-            TestData.MediumData = Enumerable.Range(0, 10_000).ToArray();
-            TestData.HugeData = Enumerable.Range(0, 10_000_000).ToArray();
-            TestData.HyperslabData = Enumerable.Range(0, 2 * 3 * 6).ToArray();
+            StringStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+            TinyData = new byte[] { 99 };
+            SmallData = Enumerable.Range(0, 100).ToArray();
+            MediumData = Enumerable.Range(0, 10_000).ToArray();
+            HugeData = Enumerable.Range(0, 10_000_000).ToArray();
+            HyperslabData = Enumerable.Range(0, 2 * 3 * 6).ToArray();
         }
 
         public static TestEnum[] EnumData { get; }

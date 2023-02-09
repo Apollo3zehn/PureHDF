@@ -480,7 +480,7 @@ namespace PureHDF.Tests
                     .GetType()
                     .GetElementType()!;
 
-                var typeId = TestUtils.GetHdfTypeIdFromType(type);
+                var typeId = GetHdfTypeIdFromType(type);
 
                 if (type == typeof(TestEnum))
                 {
@@ -585,12 +585,12 @@ namespace PureHDF.Tests
             var dims = new ulong[] { 2, 2, 3 }; /* "extendible contiguous non-external dataset not allowed" */
 
             // non-nullable struct
-            var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
             Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
             res = H5T.close(typeId);
 
             // nullable struct
-            var typeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
+            var typeIdNullable = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
             var dataNullable = TestData.StringStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
@@ -801,7 +801,7 @@ namespace PureHDF.Tests
 
         public static unsafe void AddMass(long fileId, ContainerType container)
         {
-            var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
 
             for (int i = 0; i < 1000; i++)
             {
@@ -1061,14 +1061,14 @@ namespace PureHDF.Tests
             {
                 var elementType = type.GetElementType()!;
                 var dims = new ulong[] { arrayLength.Value };
-                var typeId = H5T.array_create(TestUtils.GetHdfTypeIdFromType(elementType), rank: 1, dims);
+                var typeId = H5T.array_create(GetHdfTypeIdFromType(elementType), rank: 1, dims);
 
                 return typeId;
             }
 
             else if (type.IsEnum)
             {
-                var baseTypeId = TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(type));
+                var baseTypeId = GetHdfTypeIdFromType(Enum.GetUnderlyingType(type));
                 var typeId = H5T.enum_create(baseTypeId);
 
                 foreach (var value in Enum.GetValues(type))
@@ -1104,7 +1104,7 @@ namespace PureHDF.Tests
                         ? new Nullable<ulong>((ulong)marshalAsAttribute.SizeConst)
                         : null;
 
-                    var fieldType = TestUtils.GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
+                    var fieldType = GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
                     var nameAttribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     var hdfFieldName = nameAttribute is not null ? nameAttribute.Name : fieldInfo.Name;
 

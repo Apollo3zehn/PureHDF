@@ -8,7 +8,6 @@
 
         // these fields will all be initialized in Initialize()
         private ulong[] _swizzledChunkDims = default!;
-        private ulong[] _swizzledDownChunkCounts = default!;
         private ulong[] _swizzledDownMaxChunkCounts = default!;
 
         private ExtensibleArrayHeader? _header;
@@ -52,7 +51,7 @@
                 Utils.SwizzleCoords(swizzledScaledDims, _unlimitedDim);
 
                 /* Get the swizzled "down" sizes for each dimension */
-                _swizzledDownChunkCounts = swizzledScaledDims.AccumulateReverse();
+                // _swizzledDownChunkCounts = swizzledScaledDims.AccumulateReverse();
 
                 /* Get the swizzled max number of chunks in each dimension */
                 var swizzledScaledMaxDims = ScaledMaxDims.ToArray();

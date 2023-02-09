@@ -22,10 +22,10 @@
             Flags = (byte)((data & 0x0F) >> 0); // take only lower 4 bits
 
             // file name
-            FilePath = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            FilePath = ReadUtils.ReadNullTerminatedString(reader, pad: false);
 
             // full object path
-            FullObjectPath = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            FullObjectPath = ReadUtils.ReadNullTerminatedString(reader, pad: false);
         }
 
         #endregion

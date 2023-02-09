@@ -10,7 +10,7 @@
             ValueLength = reader.ReadUInt16();
 
             // value
-            Value = H5ReadUtils.ReadFixedLengthString(reader, ValueLength);
+            Value = ReadUtils.ReadFixedLengthString(reader, ValueLength);
         }
 
         #endregion

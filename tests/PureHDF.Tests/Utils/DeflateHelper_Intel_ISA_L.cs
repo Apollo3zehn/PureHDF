@@ -12,7 +12,7 @@ namespace PureHDF.Tests
             valueFactory: CreateState,
             trackAllValues: false);
 
-        public static unsafe Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        public unsafe static FilterFunc FilterFunc { get; } = (flags, parameters, buffer) =>
         {
             /* We're decompressing */
             if (flags.HasFlag(H5FilterFlags.Decompress))
@@ -73,7 +73,7 @@ namespace PureHDF.Tests
             {
                 throw new Exception("Writing data chunks is not yet supported by PureHDF.");
             }
-        }
+        };
 
         private static unsafe IntPtr CreateState()
         {

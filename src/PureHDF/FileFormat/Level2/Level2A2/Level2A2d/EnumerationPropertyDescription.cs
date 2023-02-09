@@ -15,9 +15,9 @@
             for (int i = 0; i < memberCount; i++)
             {
                 if (version <= 2)
-                    Names.Add(H5ReadUtils.ReadNullTerminatedString(reader, pad: true));
+                    Names.Add(ReadUtils.ReadNullTerminatedString(reader, pad: true));
                 else
-                    Names.Add(H5ReadUtils.ReadNullTerminatedString(reader, pad: false));
+                    Names.Add(ReadUtils.ReadNullTerminatedString(reader, pad: false));
             }
 
             // values

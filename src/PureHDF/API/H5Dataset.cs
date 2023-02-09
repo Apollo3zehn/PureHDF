@@ -211,7 +211,7 @@ namespace PureHDF
 
             getName ??= fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
+            return ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadCompound(Context, InternalDataType, data);
+            return ReadUtils.ReadCompound(Context, InternalDataType, data);
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace PureHDF
         /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
         /// <param name="datasetAccess">The dataset access properties.</param>
         /// <returns>The read data as array of <see cref="string"/>.</returns>
-        public string[] ReadString(
+        public string?[] ReadString(
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
@@ -270,7 +270,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadString(Context, InternalDataType, data);
+            return ReadUtils.ReadString(Context, InternalDataType, data);
         }
 
         #endregion
@@ -393,7 +393,7 @@ namespace PureHDF
 
             getName ??= fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
+            return ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
 
         /// <summary>
@@ -422,7 +422,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadCompound(Context, InternalDataType, data);
+            return ReadUtils.ReadCompound(Context, InternalDataType, data);
         }
 
         /// <summary>
@@ -433,7 +433,7 @@ namespace PureHDF
         /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
         /// <param name="datasetAccess">The dataset access properties.</param>
         /// <returns>A task which returns the read data as array of <see cref="string"/>.</returns>
-        public async Task<string[]> ReadStringAsync(
+        public async Task<string?[]> ReadStringAsync(
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
@@ -452,7 +452,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadString(Context, InternalDataType, data);
+            return ReadUtils.ReadString(Context, InternalDataType, data);
         }
 
 #endif

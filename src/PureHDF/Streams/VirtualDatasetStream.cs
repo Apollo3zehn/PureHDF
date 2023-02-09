@@ -246,7 +246,9 @@ namespace PureHDF
             // TODO: Avoidable? Just do not implement this Read overload?
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(buffer.Length);
             var memory = memoryOwner.Memory[..buffer.Length];
+#pragma warning disable CA2012
             var readCount = ReadCoreAsync(memory, useAsync: false).Result;
+#pragma warning restore CA2012
 
             memory.Span.CopyTo(buffer);
 

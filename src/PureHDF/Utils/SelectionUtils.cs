@@ -241,8 +241,8 @@ namespace PureHDF
                         currentTarget[..length],
                         offset).ConfigureAwait(false);
 
-                    offset = (int)sourceStep.Offset * copyInfo.TypeSize;                // corresponds to 
-                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;        // sourceBuffer.Slice()
+                    offset += length;                                                   // corresponds to 
+                    currentLength -= length;                                            // sourceBuffer.Slice()
 
                     currentTarget = currentTarget[length..];
                 }

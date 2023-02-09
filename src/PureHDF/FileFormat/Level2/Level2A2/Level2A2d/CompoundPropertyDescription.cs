@@ -11,7 +11,7 @@
                 case 1:
 
                     // name
-                    Name = H5ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: true);
 
                     // member byte offset
                     MemberByteOffset = reader.ReadUInt32();
@@ -44,7 +44,7 @@
                 case 2:
 
                     // name
-                    Name = H5ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: true);
 
                     // member byte offset
                     MemberByteOffset = reader.ReadUInt32();
@@ -57,7 +57,7 @@
                 case 3:
 
                     // name
-                    Name = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
+                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: false);
 
                     // member byte offset
                     var byteCount = Utils.FindMinByteCount(valueSize);
