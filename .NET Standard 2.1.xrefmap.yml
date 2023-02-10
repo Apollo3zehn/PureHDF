@@ -561,6 +561,22 @@ references:
   commentId: T:PureHDF.H5DatasetAccess
   fullName: PureHDF.H5DatasetAccess
   nameWithType: H5DatasetAccess
+- uid: PureHDF.H5DatasetAccess.#ctor(System.String,System.String,System.Func{PureHDF.IChunkCache})
+  name: H5DatasetAccess(String, String, Func<IChunkCache>)
+  href: api/netstandard2.1/PureHDF.H5DatasetAccess.html#PureHDF_H5DatasetAccess__ctor_System_String_System_String_System_Func_PureHDF_IChunkCache__
+  commentId: M:PureHDF.H5DatasetAccess.#ctor(System.String,System.String,System.Func{PureHDF.IChunkCache})
+  name.vb: H5DatasetAccess(String, String, Func(Of IChunkCache))
+  fullName: PureHDF.H5DatasetAccess.H5DatasetAccess(System.String, System.String, System.Func<PureHDF.IChunkCache>)
+  fullName.vb: PureHDF.H5DatasetAccess.H5DatasetAccess(System.String, System.String, System.Func(Of PureHDF.IChunkCache))
+  nameWithType: H5DatasetAccess.H5DatasetAccess(String, String, Func<IChunkCache>)
+  nameWithType.vb: H5DatasetAccess.H5DatasetAccess(String, String, Func(Of IChunkCache))
+- uid: PureHDF.H5DatasetAccess.#ctor*
+  name: H5DatasetAccess
+  href: api/netstandard2.1/PureHDF.H5DatasetAccess.html#PureHDF_H5DatasetAccess__ctor_
+  commentId: Overload:PureHDF.H5DatasetAccess.#ctor
+  isSpec: "True"
+  fullName: PureHDF.H5DatasetAccess.H5DatasetAccess
+  nameWithType: H5DatasetAccess.H5DatasetAccess
 - uid: PureHDF.H5DatasetAccess.ChunkCacheFactory
   name: ChunkCacheFactory
   href: api/netstandard2.1/PureHDF.H5DatasetAccess.html#PureHDF_H5DatasetAccess_ChunkCacheFactory
@@ -587,6 +603,19 @@ references:
   isSpec: "True"
   fullName: PureHDF.H5DatasetAccess.ExternalFilePrefix
   nameWithType: H5DatasetAccess.ExternalFilePrefix
+- uid: PureHDF.H5DatasetAccess.VirtualPrefix
+  name: VirtualPrefix
+  href: api/netstandard2.1/PureHDF.H5DatasetAccess.html#PureHDF_H5DatasetAccess_VirtualPrefix
+  commentId: P:PureHDF.H5DatasetAccess.VirtualPrefix
+  fullName: PureHDF.H5DatasetAccess.VirtualPrefix
+  nameWithType: H5DatasetAccess.VirtualPrefix
+- uid: PureHDF.H5DatasetAccess.VirtualPrefix*
+  name: VirtualPrefix
+  href: api/netstandard2.1/PureHDF.H5DatasetAccess.html#PureHDF_H5DatasetAccess_VirtualPrefix_
+  commentId: Overload:PureHDF.H5DatasetAccess.VirtualPrefix
+  isSpec: "True"
+  fullName: PureHDF.H5DatasetAccess.VirtualPrefix
+  nameWithType: H5DatasetAccess.VirtualPrefix
 - uid: PureHDF.H5Dataspace
   name: H5Dataspace
   href: api/netstandard2.1/PureHDF.H5Dataspace.html
@@ -918,6 +947,19 @@ references:
   commentId: T:PureHDF.H5DataType.OpaqueType
   fullName: PureHDF.H5DataType.OpaqueType
   nameWithType: H5DataType.OpaqueType
+- uid: PureHDF.H5DataType.OpaqueType.Tag
+  name: Tag
+  href: api/netstandard2.1/PureHDF.H5DataType.OpaqueType.html#PureHDF_H5DataType_OpaqueType_Tag
+  commentId: P:PureHDF.H5DataType.OpaqueType.Tag
+  fullName: PureHDF.H5DataType.OpaqueType.Tag
+  nameWithType: H5DataType.OpaqueType.Tag
+- uid: PureHDF.H5DataType.OpaqueType.Tag*
+  name: Tag
+  href: api/netstandard2.1/PureHDF.H5DataType.OpaqueType.html#PureHDF_H5DataType_OpaqueType_Tag_
+  commentId: Overload:PureHDF.H5DataType.OpaqueType.Tag
+  isSpec: "True"
+  fullName: PureHDF.H5DataType.OpaqueType.Tag
+  nameWithType: H5DataType.OpaqueType.Tag
 - uid: PureHDF.H5DataType.Reference
   name: Reference
   href: api/netstandard2.1/PureHDF.H5DataType.html#PureHDF_H5DataType_Reference
@@ -1403,6 +1445,19 @@ references:
   commentId: T:PureHDF.H5LinkAccess
   fullName: PureHDF.H5LinkAccess
   nameWithType: H5LinkAccess
+- uid: PureHDF.H5LinkAccess.#ctor(System.String)
+  name: H5LinkAccess(String)
+  href: api/netstandard2.1/PureHDF.H5LinkAccess.html#PureHDF_H5LinkAccess__ctor_System_String_
+  commentId: M:PureHDF.H5LinkAccess.#ctor(System.String)
+  fullName: PureHDF.H5LinkAccess.H5LinkAccess(System.String)
+  nameWithType: H5LinkAccess.H5LinkAccess(String)
+- uid: PureHDF.H5LinkAccess.#ctor*
+  name: H5LinkAccess
+  href: api/netstandard2.1/PureHDF.H5LinkAccess.html#PureHDF_H5LinkAccess__ctor_
+  commentId: Overload:PureHDF.H5LinkAccess.#ctor
+  isSpec: "True"
+  fullName: PureHDF.H5LinkAccess.H5LinkAccess
+  nameWithType: H5LinkAccess.H5LinkAccess
 - uid: PureHDF.H5LinkAccess.ExternalLinkPrefix
   name: ExternalLinkPrefix
   href: api/netstandard2.1/PureHDF.H5LinkAccess.html#PureHDF_H5LinkAccess_ExternalLinkPrefix
@@ -1624,6 +1679,57 @@ references:
   isSpec: "True"
   fullName: PureHDF.IChunkCache.GetChunkAsync
   nameWithType: IChunkCache.GetChunkAsync
+- uid: PureHDF.PointSelection
+  name: PointSelection
+  href: api/netstandard2.1/PureHDF.PointSelection.html
+  commentId: T:PureHDF.PointSelection
+  fullName: PureHDF.PointSelection
+  nameWithType: PointSelection
+- uid: PureHDF.PointSelection.#ctor(System.UInt64[0:,0:])
+  name: PointSelection(UInt64[,])
+  href: api/netstandard2.1/PureHDF.PointSelection.html#PureHDF_PointSelection__ctor_System_UInt64_0__0___
+  commentId: M:PureHDF.PointSelection.#ctor(System.UInt64[0:,0:])
+  name.vb: PointSelection(UInt64(,))
+  fullName: PureHDF.PointSelection.PointSelection(System.UInt64[,])
+  fullName.vb: PureHDF.PointSelection.PointSelection(System.UInt64(,))
+  nameWithType: PointSelection.PointSelection(UInt64[,])
+  nameWithType.vb: PointSelection.PointSelection(UInt64(,))
+- uid: PureHDF.PointSelection.#ctor*
+  name: PointSelection
+  href: api/netstandard2.1/PureHDF.PointSelection.html#PureHDF_PointSelection__ctor_
+  commentId: Overload:PureHDF.PointSelection.#ctor
+  isSpec: "True"
+  fullName: PureHDF.PointSelection.PointSelection
+  nameWithType: PointSelection.PointSelection
+- uid: PureHDF.PointSelection.TotalElementCount
+  name: TotalElementCount
+  href: api/netstandard2.1/PureHDF.PointSelection.html#PureHDF_PointSelection_TotalElementCount
+  commentId: P:PureHDF.PointSelection.TotalElementCount
+  fullName: PureHDF.PointSelection.TotalElementCount
+  nameWithType: PointSelection.TotalElementCount
+- uid: PureHDF.PointSelection.TotalElementCount*
+  name: TotalElementCount
+  href: api/netstandard2.1/PureHDF.PointSelection.html#PureHDF_PointSelection_TotalElementCount_
+  commentId: Overload:PureHDF.PointSelection.TotalElementCount
+  isSpec: "True"
+  fullName: PureHDF.PointSelection.TotalElementCount
+  nameWithType: PointSelection.TotalElementCount
+- uid: PureHDF.PointSelection.Walk(System.UInt64[])
+  name: Walk(UInt64[])
+  href: api/netstandard2.1/PureHDF.PointSelection.html#PureHDF_PointSelection_Walk_System_UInt64___
+  commentId: M:PureHDF.PointSelection.Walk(System.UInt64[])
+  name.vb: Walk(UInt64())
+  fullName: PureHDF.PointSelection.Walk(System.UInt64[])
+  fullName.vb: PureHDF.PointSelection.Walk(System.UInt64())
+  nameWithType: PointSelection.Walk(UInt64[])
+  nameWithType.vb: PointSelection.Walk(UInt64())
+- uid: PureHDF.PointSelection.Walk*
+  name: Walk
+  href: api/netstandard2.1/PureHDF.PointSelection.html#PureHDF_PointSelection_Walk_
+  commentId: Overload:PureHDF.PointSelection.Walk
+  isSpec: "True"
+  fullName: PureHDF.PointSelection.Walk
+  nameWithType: PointSelection.Walk
 - uid: PureHDF.Selection
   name: Selection
   href: api/netstandard2.1/PureHDF.Selection.html

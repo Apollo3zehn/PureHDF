@@ -61,7 +61,7 @@
           <div class="col-md-10">
             <article class="content wrap" id="_content" data-uid="">
 
-<p><strong>See <a href="https://github.com/Apollo3zehn/PureHDF/issues/9">https://github.com/Apollo3zehn/PureHDF/issues/9</a> for not yet implemented features.</strong></p>
+<p><strong>See <a href="https://github.com/Apollo3zehn/PureHDF/issues/4">https://github.com/Apollo3zehn/PureHDF/issues/4</a> for not yet implemented features.</strong></p>
 <table>
 <thead>
 <tr>
@@ -93,11 +93,25 @@
 <li>.NET 5+</li>
 </ul>
 <p>This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.</p>
-<p>The implemention follows the <a href="https://support.hdfgroup.org/HDF5/doc/H5.format.html">HDF5 File Format Specification</a>.</p>
+<p>The implemention follows the <a href="https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html">HDF5 File Format Specification (HDF5 1.10)</a>.</p>
 <blockquote>
 <p>Overwhelmed by the number of different HDF 5 libraries? <a href="#9-comparison-table">Here</a> is a comparison table.</p>
 </blockquote>
-<h1 id="1-objects">1. Objects</h1>
+<h1 id="content">Content</h1>
+<ol>
+<li><a href="#1-objects">Objects</a></li>
+<li><a href="#2-attributes">Attributes</a></li>
+<li><a href="#3-data">Data</a></li>
+<li><a href="#4-data-selection--data-slicing">Data Selection / Data Slicing</a></li>
+<li><a href="#5-filters">Filters</a></li>
+<li><a href="#6-reading-compound-data">Reading Compound Data</a></li>
+<li><a href="#7-reading-multidimensional-data">Reading Multidimensional Data</a></li>
+<li><a href="#8-concurrency">Concurrency</a></li>
+<li><a href="#9-intellisense-net-5">Intellisense (.NET 5+)</a></li>
+<li><a href="#10-unsupported-features">Unsupported Features</a></li>
+<li><a href="#11-comparison-table">Comparison Table</a></li>
+</ol>
+<h1 id="1-objects">1 Objects</h1>
 <pre><code class="lang-cs">// open HDF5 file, the returned H5File instance represents the root group ('/')
 using var root = H5File.OpenRead(filePath);
 </code></pre>
@@ -124,19 +138,6 @@ var commitedDatatype = group.CommitedDatatype(&quot;myCommitedDatatype&quot;);
 var myH5Object = group.Get(&quot;/path/to/unknown/object&quot;);
 </code></pre>
 <h2 id="12-additional-info">1.2 Additional Info</h2>
-<h3 id="external-file-link">External File Link</h3>
-<p>With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this <a href="https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm">overview</a>).</p>
-<p>You can either set an environment variable:</p>
-<pre><code class="lang-cs">Environment.SetEnvironmentVariable(&quot;HDF5_EXT_PREFIX&quot;, &quot;/my/prefix/path&quot;);
-</code></pre>
-<p>Or you can pass the prefix as an overload parameter:</p>
-<pre><code class="lang-cs">var linkAccess = new H5LinkAccess() 
-{
-    ExternalLinkPrefix = prefix 
-}
-
-var dataset = group.Dataset(path, linkAccess);
-</code></pre>
 <h3 id="iteration">Iteration</h3>
 <p>Iterate through all links in a group:</p>
 <pre><code class="lang-cs">foreach (var link in group.Children)
@@ -147,13 +148,67 @@ var dataset = group.Dataset(path, linkAccess);
         H5Dataset dataset           =&gt; $&quot;I am a dataset, call me '{dataset.Name}'.&quot;,
         H5CommitedDatatype datatype =&gt; $&quot;I am the data type '{datatype.Name}'.&quot;,
         H5UnresolvedLink lostLink   =&gt; $&quot;I cannot find my link target =( shame on '{lostLink.Name}'.&quot;
-        _                           =&gt; throw new Exception(&quot;Unknown link type&quot;);
-    }
+        _                           =&gt; throw new Exception(&quot;Unknown link type&quot;)
+    };
 
     Console.WriteLine(message)
 }
 </code></pre>
 <p>An <code>H5UnresolvedLink</code> becomes part of the <code>Children</code> collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.</p>
+<h3 id="external-files">External Files</h3>
+<p>There are multiple mechanisms in HDF5 that allow one file to reference another file. The external file resolution algorithm is specific to each of these mechanisms:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Documentation</th>
+<th>Algorithm</th>
+<th>Environment variable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>External Link</td>
+<td><a href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5">Link</a></td>
+<td><a href="https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Lpublic.h#L1503-L1566">Link</a></td>
+<td><code>HDF5_EXT_PREFIX</code></td>
+</tr>
+<tr>
+<td>External Dataset Storage</td>
+<td><a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11">Link</a></td>
+<td><a href="https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L7084-L7116">Link</a></td>
+<td><code>HDF5_EXTFILE_PREFIX</code></td>
+</tr>
+<tr>
+<td>Virtual Datasets</td>
+<td><a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12">Link</a></td>
+<td><a href="https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L6607-L6670">Link</a></td>
+<td><code>HDF5_VDS_PREFIX</code></td>
+</tr>
+</tbody>
+</table>
+<p>Usage:</p>
+<p><strong>External Link</strong></p>
+<pre><code class="lang-cs">var linkAccess = new H5LinkAccess(
+    ExternalLinkPrefix: prefix 
+);
+
+var dataset = group.Dataset(path, linkAccess);
+</code></pre>
+<p><strong>External Dataset Storage</strong></p>
+<pre><code class="lang-cs">var datasetAccess = new H5DatasetAccess(
+    ExternalFilePrefix: prefix 
+);
+
+var data = dataset.Read&lt;float&gt;(..., datasetAccess: datasetAccess);
+</code></pre>
+<p><strong>Virtual Datasets</strong></p>
+<pre><code class="lang-cs">var datasetAccess = new H5DatasetAccess(
+    VirtualPrefix: prefix 
+);
+
+var data = dataset.Read&lt;float&gt;(..., datasetAccess: datasetAccess);
+</code></pre>
 <h1 id="2-attributes">2. Attributes</h1>
 <pre><code class="lang-cs">// get attribute of group
 var attribute = group.Attribute(&quot;myAttributeOnAGroup&quot;);
@@ -247,9 +302,60 @@ var attribute = dataset.Attribute(&quot;myAttributeOnADataset&quot;);
 // -&gt; not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
 </code></pre>
 <p>For more information on compound data, see section <a href="#6-reading-compound-data">Reading compound data</a>.</p>
-<h1 id="4-partial-io-and-hyperslabs">4. Partial I/O and Hyperslabs</h1>
+<h1 id="4-data-selection--data-slicing">4. Data Selection / Data Slicing</h1>
 <h2 id="41-overview">4.1 Overview</h2>
-<p>Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to <code>dataset.Read()</code>. However, if you want to read only parts of the dataset, <a href="https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html">hyperslab selections</a> are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):</p>
+<p>Data selection is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to <code>dataset.Read()</code>. However, if you want to read only parts of the dataset, <a href="https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html">selections</a> are your friend.</p>
+<p>PureHDF supports three types of selections. These are:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HyperslabSelection</code></td>
+<td>A hyperslab is a selection of elements from a hyper rectangle.<br><a href="https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides">HDF5 User's Guide</a> &gt; 7.4.1.1 Hyperslab Selection</td>
+</tr>
+<tr>
+<td><code>PointSelection</code></td>
+<td>Selects a collection of points.<br><a href="https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides">HDF5 User's Guide</a> &gt; 7.4.1.2 Select Points</td>
+</tr>
+<tr>
+<td><code>DelegateSelection</code></td>
+<td>This selection accepts a custom walker which selects the user defined points or blocks.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="42-examples">4.2 Examples</h2>
+<p>Selections can be passed to the read method to avoid reading the full dataset like this:</p>
+<pre><code class="lang-cs">var fileSelection = ...;
+var data = dataset.Read&lt;int&gt;(fileSelection: fileSelection);
+</code></pre>
+<p>Alternatively, if the selection should not be applied to the file but to the memory buffer, use the <code>memorySelection</code> parameter:</p>
+<pre><code class="lang-cs">var memorySelection = ...;
+var data = dataset.Read&lt;int&gt;(memorySelection: memorySelection);
+</code></pre>
+<p>All parameters are optional. For example, when the <code>fileSelection</code> parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.</p>
+<blockquote>
+<p>Note: There are an overload methods that allow you to provide your own buffer.</p>
+</blockquote>
+<p><strong>Point selection</strong></p>
+<p>Point selections require a two-dimension <code>n</code> x <code>m</code> array where <code>n</code> is the number of points and <code>m</code> the rank of the dataset. Here is an example with four points to select data from a dataset of rank = <code>3</code>.</p>
+<pre><code class="lang-cs">var selection = new PointSelection(new ulong[,] {
+    { 00, 00, 00 },
+    { 00, 05, 10 },
+    { 12, 01, 10 },
+    { 05, 07, 09 }
+});
+</code></pre>
+<p><strong>Hyperslab selection</strong></p>
+<p>A hyperslab selection can be used to select a contiguous block of elements or to select multiple blocks.</p>
+<p>The simplest example is a selection for a 1-dimensional dataset at a certain offset (<code>start: 10</code>) and a certain length (<code>block: 50</code>):</p>
+<pre><code class="lang-cs">var fileSelection = new HyperslabSelection(start: 10, block: 50);
+</code></pre>
+<p>The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):</p>
 <pre><code class="lang-cs">var dataset = root.Dataset(&quot;myDataset&quot;);
 var memoryDims = new ulong[] { 75, 25 };
 
@@ -277,9 +383,19 @@ var result = dataset
     )
     .ToArray2D(75, 25);
 </code></pre>
-<p>All shown parameters are optional. For example, when the <code>fileSelection</code> parameter is unspecified, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.</p>
-<p>Additionally, there is an overload method that allows you to provide your own buffer.</p>
-<h2 id="42-experimental-iqueryable-1-dimensional-data-only">4.2 Experimental: IQueryable (1-dimensional data only)</h2>
+<p><strong>Delegate selection</strong></p>
+<p>A delegate accepts a custom walker function which select blocks of data at certain coordinates. Here is an example which selects a total number of 11 elements from a 3-dimensional dataset:</p>
+<pre><code class="lang-cs">static IEnumerable&lt;Step&gt; Walker(ulong[] datasetDimensions)
+{
+    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
+    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
+    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
+    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+};
+
+var selection = new DelegateSelection(totalElementCount: 11, Walker);
+</code></pre>
+<h2 id="43-experimental-iqueryable-1-dimensional-data-only">4.3 Experimental: IQueryable (1-dimensional data only)</h2>
 <p>Another way to build the file selection is to invoke the <code>AsQueryable</code> method which can then be used as follows:</p>
 <pre><code class="lang-cs">var result = dataset.AsQueryable&lt;int&gt;()
     .Skip(5)    // start
@@ -307,10 +423,7 @@ var result = dataset
 <h2 id="52-external-filters">5.2 External Filters</h2>
 <p>Before you can use external filters, you need to register them using <code>H5Filter.Register(...)</code>. This method accepts a filter identifier, a filter name and the actual filter function.</p>
 <p>This function could look like the following and should be adapted to your specific filter library:</p>
-<pre><code class="lang-cs">public static Memory&lt;byte&gt; FilterFunc(
-    H5FilterFlags flags, 
-    uint[] parameters, 
-    Memory&lt;byte&gt; buffer)
+<pre><code class="lang-cs">public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =&gt;
 {
     // Decompressing
     if (flags.HasFlag(H5FilterFlags.Decompress))
@@ -324,12 +437,12 @@ var result = dataset
     {
         throw new Exception(&quot;Writing data chunks is not yet supported by PureHDF.&quot;);
     }
-}
+};
 
 </code></pre>
 <h2 id="53-tested-external-filters">5.3 Tested External Filters</h2>
 <ul>
-<li>deflate (based on <a href="https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/">Intrinsics.ISA-L.PInvoke</a>, SSE2 / AVX2 / AVX512, <a href="https://github.com/Apollo3zehn/PureHDF/wiki/Deflate-Benchmark">benchmark results</a>)</li>
+<li>deflate (based on <a href="https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/">Intrinsics.ISA-L.PInvoke</a>, SSE2 / AVX2 / AVX512, <a href="https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md">benchmark results</a>)</li>
 <li>c-blosc2 (based on <a href="https://www.nuget.org/packages/Blosc2.PInvoke">Blosc2.PInvoke</a>, SSE2 / AVX2)</li>
 <li>bzip2 (based on <a href="https://www.nuget.org/packages/SharpZipLib">SharpZipLib</a>)</li>
 </ul>
@@ -564,27 +677,8 @@ var compoundData = dataset.ReadCompound&lt;NullableStructWithCustomFieldName&gt;
 </tbody>
 </table>
 <p>Not supported data types like <code>time</code> and <code>variable length type = sequence</code> will be represented as <code>null</code>.</p>
-<h1 id="7-advanced-scenarios">7. Advanced Scenarios</h1>
-<h2 id="71-memory-mapped-file">7.1 Memory-Mapped File</h2>
-<p>In some cases, it might be useful to read data from a memory-mapped file instead of a regular <code>FileStream</code> to reduce the number of (costly) system calls. Depending on the file structure this may heavily increase random access performance. Here is an example:</p>
-<pre><code class="lang-cs">using var mmf = MemoryMappedFile.CreateFromFile(
-    fileStream, 
-    mapName: default, 
-    capacity: 0, 
-    MemoryMappedFileAccess.Read,
-    HandleInheritability.None);
-
-using var mmfStream = mmf.CreateViewStream(
-    offset: 0, 
-    size: 0,
-    MemoryMappedFileAccess.Read);
-
-using var root = H5File.Open(mmfStream);
-
-...
-</code></pre>
-<h2 id="72-reading-multidimensional-data">7.2 Reading Multidimensional Data</h2>
-<h3 id="721-generic-method">7.2.1 Generic Method</h3>
+<h2 id="7-reading-multidimensional-data">7 Reading Multidimensional Data</h2>
+<h3 id="71-generic-method">7.1 Generic Method</h3>
 <p>Sometimes you want to read the data as multidimensional arrays. In that case use one of the <code>byte[]</code> overloads like <code>ToArray3D</code> (there are overloads up to 6D). Here is an example:</p>
 <pre><code class="lang-cs">var data3D = dataset
     .Read&lt;int&gt;()
@@ -594,7 +688,7 @@ using var root = H5File.Open(mmfStream);
 <blockquote>
 <p>When you use <code>-1</code> to automatically calculate a dimension size, the dimensions that you <em>do</em> explicitly specify must divide evenly into the number of elements in the input array.</p>
 </blockquote>
-<h3 id="722-high-performance-method-2d-only">7.2.2 High-Performance Method (2D only)</h3>
+<h3 id="72-high-performance-method-2d-only">7.2 High-Performance Method (2D only)</h3>
 <p>The previously shown method (<code>ToArrayXD</code>) performs a copy operation. If you would like to avoid this, you might find the <code>Span2D</code> type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run <code>dotnet add package CommunityToolkit.HighPerformance</code> and then use it like this:</p>
 <pre><code class="lang-cs">using CommunityToolkit.HighPerformance;
 
@@ -604,13 +698,104 @@ data2D = dataset
     .AsSpan2D(height: 20, width: 10);
 </code></pre>
 <p>No data are being copied and you can work with the array similar to a normal <code>Span&lt;T&gt;</code>, i.e. you may want to <a href="https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d">slice</a> through it.</p>
-<h1 id="8-asynchronous-data-access">8 Asynchronous Data Access</h1>
+<h1 id="8-concurrency">8 Concurrency</h1>
+<p>Reading data from a dataset is thread-safe in the following cases, depending on the type of <code>H5File</code> constructor method you used:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Open(<code>string</code>)</th>
+<th>Open(<code>MemoryMappedViewAccessor</code>)</th>
+<th>Open(<code>Stream</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.NET 4+</td>
+<td>x</td>
+<td>✓</td>
+<td>x</td>
+</tr>
+<tr>
+<td>.NET 6+</td>
+<td>✓</td>
+<td>✓</td>
+<td>✓ (if: <code>Stream</code> is <code>FileStream</code>)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.</p>
+</blockquote>
+<blockquote>
+<p>Currently the default <code>SimpleChunkCache</code> is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.</p>
+</blockquote>
+<h2 id="81-multi-threading-memory-mapped-file">8.1 Multi-Threading (Memory-Mapped File)</h2>
+<p>If you have opened a file as memory-mapped file, you may read the data in parallel like this:</p>
+<pre><code class="lang-cs">const ulong TOTAL_ELEMENT_COUNT = xxx;
+const ulong SEGMENT_COUNT = xxx;
+const ulong SEGMENT_SIZE = TOTAL_ELEMENT_COUNT / SEGMENT_COUNT;
+
+using var mmf = MemoryMappedFile.CreateFromFile(FILE_PATH);
+using var accessor = mmf.CreateViewAccessor();
+using var file = H5File.Open(accessor);
+
+var dataset = file.Dataset(&quot;xxx&quot;);
+var buffer = new float[TOTAL_ELEMENT_COUNT];
+
+Parallel.For(0, SEGMENT_COUNT, i =&gt;
+{
+    var start = i * SEGMENT_SIZE;
+    var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+
+    dataset.Read&lt;float&gt;(partialBuffer, fileSelection);
+});
+
+</code></pre>
+<h2 id="82-multi-threading-filestream-net-6">8.2 Multi-Threading (FileStream) (.NET 6+)</h2>
+<p>Starting with .NET 6, there is a new API to access files in a thread-safe way which PureHDF utilizes. The process to load data in parallel is similar to the memory-mapped file approach above:</p>
+<pre><code class="lang-cs">const ulong TOTAL_ELEMENT_COUNT = xxx;
+const ulong SEGMENT_COUNT = xxx;
+const ulong SEGMENT_SIZE = TOTAL_ELEMENT_COUNT / SEGMENT_COUNT;
+
+using var file = H5File.OpenRead(FILE_PATH);
+
+var dataset = file.Dataset(&quot;xxx&quot;);
+var buffer = new float[TOTAL_ELEMENT_COUNT];
+
+Parallel.For(0, SEGMENT_COUNT, i =&gt;
+{
+    var start = i * SEGMENT_SIZE;
+    var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+
+    dataset.Read&lt;float&gt;(partialBuffer, fileSelection);
+});
+
+</code></pre>
+<h2 id="83-async-net-6">8.3 Async (.NET 6+)</h2>
 <p>PureHDF supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.</p>
+<blockquote>
+<p>Note: All <code>async</code> methods shown below are only truly asynchronous if the <a href="https://learn.microsoft.com/en-us/dotnet/api/system.io.filestream.-ctor?view=net-7.0#system-io-filestream-ctor(system-string-system-io-filemode-system-io-fileaccess-system-io-fileshare-system-int32-system-boolean)">FileStream</a> is opened with the <code>useAsync</code> parameter set to <code>true</code>:</p>
+</blockquote>
+<pre><code class="lang-cs">var h5File = H5File.Open(
+    filePath,
+    FileMode.Open, 
+    FileAccess.Read, 
+    FileShare.Read, 
+    useAsync: true);
+
+// alternative
+var stream = new FileStream(..., useAsync: true);
+var h5File = H5File.Open(stream);
+</code></pre>
 <p><strong>Sample 1: Load data of two datasets</strong></p>
 <pre><code class="lang-cs">async Task LoadDataAsynchronously()
 {
     var data1Task = dataset1.ReadAsync&lt;int&gt;();
     var data2Task = dataset2.ReadAsync&lt;int&gt;();
+
     await Task.WhenAll(data1Task, data2Task);
 }
 </code></pre>
@@ -622,11 +807,13 @@ data2D = dataset
         var data1 = await dataset1.ReadAsync&lt;int&gt;();
         ProcessData(data1);
     });
+
     var processedData2Task = Task.Run(async () =&gt; 
     {
         var data2 = await dataset2.ReadAsync&lt;int&gt;();
         ProcessData(data2);
     });
+
     await Task.WhenAll(processedData1Task, processedData2Task);
 }
 </code></pre>
@@ -638,18 +825,73 @@ async Task LoadAndProcessDataAsynchronously()
     {
         var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
         var data1 = await dataset1.ReadAsync&lt;int&gt;(fileSelection1);
+
         ProcessData(data1);
     });
+
     var processedData2Task = Task.Run(async () =&gt; 
     {
         var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
         var data2 = await dataset2.ReadAsync&lt;int&gt;(fileSelection2);
+
         ProcessData(data2);
     });
+
     await Task.WhenAll(processedData1Task, processedData2Task);
 }
 </code></pre>
-<h1 id="9-comparison-table">9 Comparison Table</h1>
+<h1 id="9-intellisense-net-5">9 Intellisense (.NET 5+)</h1>
+<h2 id="91-introduction">9.1 Introduction</h2>
+<p>Consider the following H5 file:</p>
+<p><img src="https://github.com/Apollo3zehn/PureHDF/raw/master/doc/images/hdfview.png" alt="HDF View"></p>
+<p>If you would like to access <code>sub_dataset2</code> you would normally do</p>
+<pre><code class="lang-cs">    using var h5File = H5File.OpenRead(FILE_PATH);
+    var dataset = h5File.Group(&quot;group1&quot;).Dataset(&quot;sub_dataset2&quot;);
+</code></pre>
+<p>When you have files with a large number of groups or a deep hierarchy and you often need to work on different paths within the file, it could very useful to get intellisense support from your favourite IDE which helps you navigating through the file.</p>
+<p>PureHDF utilizes the source generator feature introduced with .NET 5 which allows to generate additional code during compilation. The generator, which comes with the <code>PureHDF.SourceGenerator</code> package, enables you to interact with the H5 file like this:</p>
+<pre><code class="lang-cs">var dataset = bindings.group1.sub_dataset2;
+</code></pre>
+<h2 id="92-getting-started">9.2 Getting Started</h2>
+<p>Run the following command:</p>
+<pre><code class="lang-bash">dotnet add package PureHDF.SourceGenerator
+dotnet restore
+</code></pre>
+<blockquote>
+<p>Note: Make sure that all project dependencies are restored before you continue.</p>
+</blockquote>
+<p>Then define the path to your H5 file from which the bindings should be generated and use it in combination with the <code>H5SourceGenerator</code> attribute:</p>
+<pre><code class="lang-cs">using PureHDF;
+
+[H5SourceGenerator(filePath: Program.FILE_PATH)]
+internal partial class MyGeneratedH5Bindings {};
+
+static class Program
+{
+    public const string FILE_PATH = &quot;myFile.h5&quot;;
+
+    static void Main()
+    {
+        using var h5File = H5File.OpenRead(FILE_PATH);
+        var bindings = new MyGeneratedH5Bindings(h5File);
+        var myDataset = bindings.group1.sub_dataset2;
+    }
+}
+</code></pre>
+<p>Your IDE should now run the source generator behind the scenes and you should be able to get intellisense support:</p>
+<p><img src="https://github.com/Apollo3zehn/PureHDF/raw/master/doc/images/intellisense.png" alt="Intellisense"></p>
+<p>In case you do not want to access the dataset but the parent group instead, use the <code>Get()</code> method like this:</p>
+<pre><code class="lang-cs">var myGroup = bindings.group1.Get();
+</code></pre>
+<blockquote>
+<p>Note: Invalid characters like spaces will be replaced by underscores.</p>
+</blockquote>
+<h1 id="10-unsupported-features">10 Unsupported Features</h1>
+<p>The following features are not (yet) supported:</p>
+<ul>
+<li>Virtual datasets with <strong>unlimited dimensions</strong>.</li>
+</ul>
+<h1 id="11-comparison-table">11 Comparison Table</h1>
 <p>The following table considers only projects listed on Nuget.org.</p>
 <table>
 <thead>
@@ -683,10 +925,10 @@ async Task LoadAndProcessDataAsynchronously()
 <td>all</td>
 <td>managed</td>
 <td>ro</td>
-<td>N/A</td>
+<td>1.10.*</td>
 <td>MIT</td>
 <td>Apollo3zehn</td>
-<td>version does not apply, standalone implementation</td>
+<td></td>
 </tr>
 <tr>
 <td><a href="https://www.nuget.org/packages/HDF5-CSharp">HDF5-CSharp</a></td>
@@ -760,7 +1002,7 @@ async Task LoadAndProcessDataAsynchronously()
 <td>Windows</td>
 <td>bindings</td>
 <td>rw</td>
-<td>1.8,1.10</td>
+<td>1.8,1.10.6</td>
 <td>HDF5</td>
 <td>hdf,gheber</td>
 <td></td>
@@ -837,7 +1079,7 @@ async Task LoadAndProcessDataAsynchronously()
 <td>Windows</td>
 <td>bindings</td>
 <td>rw</td>
-<td>1.8,1.10</td>
+<td>1.8,1.10.6</td>
 <td>HDF5</td>
 <td>hdf,gheber</td>
 <td></td>

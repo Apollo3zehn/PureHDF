@@ -76,12 +76,64 @@
   <div class="markdown level0 summary"><p>A structure which controls how the dataset is accessed. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html">hdfgroup.org</a></p>
 </div>
   <div class="markdown level0 conceptual"></div>
+  <div class="implements">
+    <h5>Implements</h5>
+    <div><span class="xref">System.IEquatable</span>&lt;<a class="xref" href="PureHDF.H5DatasetAccess.html">H5DatasetAccess</a>&gt;</div>
+  </div>
   <h6><strong>Namespace</strong>: <a class="xref" href="PureHDF.html">PureHDF</a></h6>
   <h6><strong>Assembly</strong>: PureHDF.dll</h6>
   <h5 id="PureHDF_H5DatasetAccess_syntax">Syntax</h5>
   <div class="codewrapper">
     <pre><code class="lang-csharp hljs">public readonly struct H5DatasetAccess</code></pre>
   </div>
+  <h3 id="constructors">Constructors
+</h3>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Apollo3zehn/PureHDF/new/master/apiSpec/new?filename=PureHDF_H5DatasetAccess__ctor_System_Nullable_System_String__System_Nullable_System_String__System_Nullable_Func_PureHDF_IChunkCache___.md&amp;value=---%0Auid%3A%20PureHDF.H5DatasetAccess.%23ctor(System.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BSystem.String%7D%2CSystem.Nullable%7BFunc%7BPureHDF.IChunkCache%7D%7D)%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties.cs/#L9">View Source</a>
+  </span>
+  <a id="PureHDF_H5DatasetAccess__ctor_" data-uid="PureHDF.H5DatasetAccess.#ctor*"></a>
+  <h4 id="PureHDF_H5DatasetAccess__ctor_System_Nullable_System_String__System_Nullable_System_String__System_Nullable_Func_PureHDF_IChunkCache___" data-uid="PureHDF.H5DatasetAccess.#ctor(System.Nullable{System.String},System.Nullable{System.String},System.Nullable{Func{PureHDF.IChunkCache}})">H5DatasetAccess(Nullable&lt;String&gt;, Nullable&lt;String&gt;, Nullable&lt;Func&lt;IChunkCache&gt;&gt;)</h4>
+  <div class="markdown level1 summary"><p>A structure which controls how the dataset is accessed. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html">hdfgroup.org</a></p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="declaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public H5DatasetAccess(string? ExternalFilePrefix = null, string? VirtualPrefix = null, Func&lt;IChunkCache&gt;? ChunkCacheFactory = null)</code></pre>
+  </div>
+  <h5 class="parameters">Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">ExternalFilePrefix</span></td>
+        <td><p>The external dataset storage file prefix. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11">hdfgroup.org</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td><span class="parametername">VirtualPrefix</span></td>
+        <td><p>The prefix to be applied to VDS source file paths. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12">hdfgroup.org</a>.</p>
+</td>
+      </tr>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">Func</span>&lt;<a class="xref" href="PureHDF.IChunkCache.html">IChunkCache</a>&gt;&gt;</td>
+        <td><span class="parametername">ChunkCacheFactory</span></td>
+        <td><p>The factory to create the chunk cache. If <span class="xref">null</span>, the factory of the <a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_ChunkCacheFactory">ChunkCacheFactory</a> property is used.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
   <h3 id="properties">Properties
 </h3>
   <span class="small pull-right mobile-hide">
@@ -89,11 +141,11 @@
     <a href="https://github.com/Apollo3zehn/PureHDF/new/master/apiSpec/new?filename=PureHDF_H5DatasetAccess_ChunkCacheFactory.md&amp;value=---%0Auid%3A%20PureHDF.H5DatasetAccess.ChunkCacheFactory%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties/H5DatasetAccess.cs/#L16">View Source</a>
+    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties.cs/#L12">View Source</a>
   </span>
   <a id="PureHDF_H5DatasetAccess_ChunkCacheFactory_" data-uid="PureHDF.H5DatasetAccess.ChunkCacheFactory*"></a>
   <h4 id="PureHDF_H5DatasetAccess_ChunkCacheFactory" data-uid="PureHDF.H5DatasetAccess.ChunkCacheFactory">ChunkCacheFactory</h4>
-  <div class="markdown level1 summary"><p>Gets the factory to create the chunk cache. If <span class="xref">null</span>, the factory of the <a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_ChunkCacheFactory">ChunkCacheFactory</a> property is used.</p>
+  <div class="markdown level1 summary"><p>The factory to create the chunk cache. If <span class="xref">null</span>, the factory of the <a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_ChunkCacheFactory">ChunkCacheFactory</a> property is used.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
   <h5 class="declaration">Declaration</h5>
@@ -120,11 +172,11 @@
     <a href="https://github.com/Apollo3zehn/PureHDF/new/master/apiSpec/new?filename=PureHDF_H5DatasetAccess_ExternalFilePrefix.md&amp;value=---%0Auid%3A%20PureHDF.H5DatasetAccess.ExternalFilePrefix%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
   </span>
   <span class="small pull-right mobile-hide">
-    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties/H5DatasetAccess.cs/#L11">View Source</a>
+    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties.cs/#L10">View Source</a>
   </span>
   <a id="PureHDF_H5DatasetAccess_ExternalFilePrefix_" data-uid="PureHDF.H5DatasetAccess.ExternalFilePrefix*"></a>
   <h4 id="PureHDF_H5DatasetAccess_ExternalFilePrefix" data-uid="PureHDF.H5DatasetAccess.ExternalFilePrefix">ExternalFilePrefix</h4>
-  <div class="markdown level1 summary"><p>Gets the external dataset storage file prefix. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#gad487f84157fd0944cbe1cbd4dea4e1b8">hdfgroup.org</a>.</p>
+  <div class="markdown level1 summary"><p>The external dataset storage file prefix. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11">hdfgroup.org</a>.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
   <h5 class="declaration">Declaration</h5>
@@ -146,6 +198,41 @@
       </tr>
     </tbody>
   </table>
+  <span class="small pull-right mobile-hide">
+    <span class="divider">|</span>
+    <a href="https://github.com/Apollo3zehn/PureHDF/new/master/apiSpec/new?filename=PureHDF_H5DatasetAccess_VirtualPrefix.md&amp;value=---%0Auid%3A%20PureHDF.H5DatasetAccess.VirtualPrefix%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">Improve this Doc</a>
+  </span>
+  <span class="small pull-right mobile-hide">
+    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties.cs/#L11">View Source</a>
+  </span>
+  <a id="PureHDF_H5DatasetAccess_VirtualPrefix_" data-uid="PureHDF.H5DatasetAccess.VirtualPrefix*"></a>
+  <h4 id="PureHDF_H5DatasetAccess_VirtualPrefix" data-uid="PureHDF.H5DatasetAccess.VirtualPrefix">VirtualPrefix</h4>
+  <div class="markdown level1 summary"><p>The prefix to be applied to VDS source file paths. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12">hdfgroup.org</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+  <h5 class="declaration">Declaration</h5>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? VirtualPrefix { readonly get; set; }</code></pre>
+  </div>
+  <h5 class="propertyValue">Property Value</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="xref">System.Nullable</span>&lt;<span class="xref">System.String</span>&gt;</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="implements">Implements</h3>
+  <div>
+      <span class="xref">System.IEquatable&lt;&gt;</span>
+  </div>
 </article>
           </div>
 
@@ -157,7 +244,7 @@
                     <a href="https://github.com/Apollo3zehn/PureHDF/new/master/apiSpec/new?filename=PureHDF_H5DatasetAccess.md&amp;value=---%0Auid%3A%20PureHDF.H5DatasetAccess%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
                   </li>
                   <li>
-                    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties/H5DatasetAccess.cs/#L6" class="contribution-link">View Source</a>
+                    <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/API/H5Properties.cs/#L9" class="contribution-link">View Source</a>
                   </li>
                 </ul>
               </div>

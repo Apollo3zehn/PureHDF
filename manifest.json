@@ -145,7 +145,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.ArrayType.html",
-          "hash": "X4zrVdGGYFfR4BEpM9PaXKnBFqsOhG6hOCR70lF31IM="
+          "hash": "cIEKyzKikLuByFYOM6zfvHOQW/5NWTZ6+9QZsLUurJ8="
         }
       },
       "is_incremental": false,
@@ -171,7 +171,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "DCDlhZJesw+dKtVVk4lnb+BQANOhvkCl1GF27l7JNCE="
+          "hash": "DnlCcDiFophqdicq+BPGPEv+KoRHKTCcOs4W3D8VhNI="
         }
       },
       "is_incremental": false,
@@ -184,7 +184,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.CompoundType.html",
-          "hash": "HzREEoi8imxO4Drz9RIk4NdrZK2u/ejN9QIE4oxJPlQ="
+          "hash": "F7TtyIn+iOWuqurxV89kIID5Y7DGr38xw2ub4gtTP1g="
         }
       },
       "is_incremental": false,
@@ -197,7 +197,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "BQgh6pRKtyKFLT2VZNSWem1cIKFC4KCIM8etg9NeCD0="
+          "hash": "EFFvnrEAKdIuUaOIHdPPtQto9hSUr70yS1wAwuJ5GR8="
         }
       },
       "is_incremental": false,
@@ -236,7 +236,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "XxGAVg6qwGjHHoOzSJ8rFV6xsvSdo43II1HORw9d9Dc="
+          "hash": "u0iLGjw1QHfZoJaY4Xj8C9fxE0xpxVb7ejPmdXVMGQg="
         }
       },
       "is_incremental": false,
@@ -249,7 +249,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "sO1jyjDW2KQ+AQLeAsyQ07MpVKASVMxFu9mhM2bCmyw="
+          "hash": "th6y0zrgnPEN1J6DNQr6bf3GgissnEje0/M8ZLv/HFc="
         }
       },
       "is_incremental": false,
@@ -275,7 +275,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "+iabTAcbQjOKJ6CLhCGh2J7lOgt7lLL6GVtOioH7WHY="
+          "hash": "niDDC9FIes2KBejRFoniEuJZhBLPDn/pKldJp0lyLt8="
         }
       },
       "is_incremental": false,
@@ -288,7 +288,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DataType.html",
-          "hash": "xLlpjy6UQakW0nj0UgzkvnDAGnN25XpDytZ1xPPUTOg="
+          "hash": "FVrpeH4aAqJZ3wzQRw0HGKTasIbAhsLotuG+yRhyDKw="
         }
       },
       "is_incremental": false,
@@ -327,7 +327,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5DatasetAccess.html",
-          "hash": "3dQfftayenemMKcFryTZSs6fHvGc0gX/nAy9F8S2he4="
+          "hash": "UubfXaUuWbzCg2H7iWWvqCSciceB7cQcW8/YUtnP3b8="
         }
       },
       "is_incremental": false,
@@ -366,7 +366,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5File.html",
-          "hash": "pzh6bXV87Kxs7SVm2cxjbu1VCFNxokN8OFyoUePBe+o="
+          "hash": "ksxC5y5Fynk0pelL70hILwvJRRaOuv1vrU7Hz0Ibeus="
         }
       },
       "is_incremental": false,
@@ -444,7 +444,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.H5LinkAccess.html",
-          "hash": "icbskeHES8RcKRrLgXCXlrVdzLVi9UpIi4kvXmm3ny8="
+          "hash": "og7W67Cy7Pk+64lNF5VHzf68ny8ns5/0qzfzGvWzfY0="
         }
       },
       "is_incremental": false,
@@ -535,7 +535,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.HyperslabSelection.html",
-          "hash": "gRcGJTJTfFCYGP9EtmZuCe8C121p1BKqhFjAaWXYunQ="
+          "hash": "BdIcBoS4q/4IwupakFauZ0zc2XCtOokmzMCfM9/YjbA="
         }
       },
       "is_incremental": false,
@@ -557,11 +557,24 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/net50/PureHDF.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/net50/PureHDF.PointSelection.html",
+          "hash": "a7eYOpOJkH1oPCljtOhsmsrbFChi6YZfhSzZ94rLYX4="
+        }
+      },
+      "is_incremental": false,
+      "version": ".NET 5",
+      "group": ".NET 5"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/net50/PureHDF.Selection.yml",
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.Selection.html",
-          "hash": "GEwmIN7B0KtVH+NUHD7lAITmFYVq3osfoQSoVWk6dUQ="
+          "hash": "mGa3O461Eb5mNJXUGeXJRq0Roi0tX6AJ52lLCFOkilI="
         }
       },
       "is_incremental": false,
@@ -587,7 +600,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.Step.html",
-          "hash": "JgwdYJCoM20UCVNwtfVGVFWl1gp/fheKkEtZuCIC9Ys="
+          "hash": "hyRsd2gWEMN9+gqyXQT98sS89XG2DucTsWveXWMHQaI="
         }
       },
       "is_incremental": false,
@@ -600,7 +613,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/PureHDF.html",
-          "hash": "n3lNJcmTxdAdREAWYN2coEObwszhbjvBt8vNYsSScRo="
+          "hash": "Qs+XMB0eUXlzb+ghA04bIlE0QELgitBy7Dakvi+FIdU="
         }
       },
       "is_incremental": false,
@@ -613,7 +626,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net50/toc.html",
-          "hash": "Z0xAeM5fTXEHLNqBofbnnMPpAyz5uWVmlm7vMxQ4Zwg="
+          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
         }
       },
       "is_incremental": false,
@@ -756,7 +769,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.ArrayType.html",
-          "hash": "aixCT5kFIrDzLR9/0tOwQBZKUp1gYy9TXWkkh9GZJk0="
+          "hash": "jw27GTfj4obrJrQU29j5YTg850LNlX6EooVsx7REGPI="
         }
       },
       "is_incremental": false,
@@ -782,7 +795,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "OV5vrPHdOVM+pchSKeoF6Hi6GR5MCi783jqJKuzxLbY="
+          "hash": "ucD1PWXkIVs3+E3+Dxepxm8dXPWRLccsZIg5ULNbI5A="
         }
       },
       "is_incremental": false,
@@ -795,7 +808,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.CompoundType.html",
-          "hash": "Xanavxq5Rn/aVVw7mxIOGWEYNqt+w8FL724T3Ul1EpU="
+          "hash": "BJr87O5G8DFdWc/68Cobu3XCoAovvKJZUTQDwiW4298="
         }
       },
       "is_incremental": false,
@@ -808,7 +821,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "lQD5SHYFkgeZvthvgSn7MCSQqtXiGSBTK36xGQBp+xU="
+          "hash": "Nq509fsXFf11xcOlCZOX5nOOOyEYpV9b1kgJnyU8Gb8="
         }
       },
       "is_incremental": false,
@@ -847,7 +860,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "f8NYD5mhmIdQ5AUv0WKPZKqLLAO4widFkuPxbdri/Yc="
+          "hash": "FnC201cZD0+sUPobSTJkLjId0uXQt/TxHw6aRbZHDzM="
         }
       },
       "is_incremental": false,
@@ -860,7 +873,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "WrdOvxSwmu85CuXCfVxavCpBS3b6a2tA49zt07FHssQ="
+          "hash": "pX7XT3PXEFX+70exXd/uxN05ETGJ51rMxaJK+tCvL1E="
         }
       },
       "is_incremental": false,
@@ -886,7 +899,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "6oaEQWxImorUKPlzH8yeocGvAX/X3FmGv+lTw1YIsiU="
+          "hash": "DyTn9FuG3S93v/Np4pjRQb9FIvDMRDLKCrqNZF2T0rM="
         }
       },
       "is_incremental": false,
@@ -899,7 +912,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DataType.html",
-          "hash": "UkFALa1FvyXWLweK+GS6gFZAOEl9VtQrRcv3KU2wRJM="
+          "hash": "uWg+jHSSo8GDh5qquFIWkhPZVHpyhtDZpatmNpBBmyg="
         }
       },
       "is_incremental": false,
@@ -938,7 +951,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5DatasetAccess.html",
-          "hash": "0PRBZXkSEr0pygD0UcZWqd69noOrsYmEg0UDBd0th+U="
+          "hash": "KmpoHwAB5fg5LwG+Yq9bbHfSHVv2JsO1TAkc3Sfy/Ck="
         }
       },
       "is_incremental": false,
@@ -977,7 +990,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5File.html",
-          "hash": "GyV4HTmfPt6GS74FKlAsHO8uIlpM1+GNRxBo+s2vUKM="
+          "hash": "De9AtKTT4lohCAE7/a2uM+X1SZ/g/1ZE6StgI54LsWg="
         }
       },
       "is_incremental": false,
@@ -1055,7 +1068,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.H5LinkAccess.html",
-          "hash": "2yUSeChGDKRb0/EFyb5NQaJjkEhHzc2ON5smZd+IAOg="
+          "hash": "d5FTdCMYp/Gxzsf9X9JHypABFYbD4dRV8l/6JTRFqdg="
         }
       },
       "is_incremental": false,
@@ -1146,7 +1159,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.HyperslabSelection.html",
-          "hash": "gsHNtXK5fHQDlptD35hyQ8YKR6yvouuQRt0heTk5kcI="
+          "hash": "RzsOZyvjwPNiW20hIFb3n9S4l36zNxU838pK7r/X9ag="
         }
       },
       "is_incremental": false,
@@ -1168,11 +1181,24 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/net60/PureHDF.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/net60/PureHDF.PointSelection.html",
+          "hash": "ESJLBG2yzE3TJlMvHmqCSiqpL4qExsq5JoJT3o4nQrY="
+        }
+      },
+      "is_incremental": false,
+      "version": ".NET 6",
+      "group": ".NET 6"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/net60/PureHDF.Selection.yml",
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.Selection.html",
-          "hash": "T89AUvT6Ejvz5sdDLdPxRvgmz92qYUKMeUCxnWt5nNo="
+          "hash": "s1/rOSDl8bgTXmJ1LMjxzXlJiLZQpqPQQkoYnRvlIpU="
         }
       },
       "is_incremental": false,
@@ -1198,7 +1224,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.Step.html",
-          "hash": "E/n2Fjk4z6ewXPk9QFkAoAdWViNHOkdGc1yxKZ0pRxU="
+          "hash": "xPZkI0899gT+AeFvVYd0E3PmxRGXhJlpcjGBvzNJRbk="
         }
       },
       "is_incremental": false,
@@ -1211,7 +1237,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/PureHDF.html",
-          "hash": "Zzwo9o8a4kuIVJIWJskA6JHSfVC3UKx24jibUNB9CCM="
+          "hash": "D6VgZ+Zurx6ZPfLW3OUxfPmu4Y6Wl6KQWSX3XBrQ9D4="
         }
       },
       "is_incremental": false,
@@ -1224,7 +1250,7 @@
       "output": {
         ".html": {
           "relative_path": "api/net60/toc.html",
-          "hash": "Z0xAeM5fTXEHLNqBofbnnMPpAyz5uWVmlm7vMxQ4Zwg="
+          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
         }
       },
       "is_incremental": false,
@@ -1367,7 +1393,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.ArrayType.html",
-          "hash": "m85rkpp945By0ORtE0j1sysMKGAAHHcfJdBycSxvkdQ="
+          "hash": "DAFtGUuccmS99W9PW0BbFwFXqlh4ikmqkHoUM68NwbE="
         }
       },
       "is_incremental": false,
@@ -1393,7 +1419,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "khkcrxk9POh8rvMVboYbhxodxFod6khYLqOfKftl2dg="
+          "hash": "Ys2MBLTKUCB9i0z69++KKgK7FD129waQdJYjoiIQNaY="
         }
       },
       "is_incremental": false,
@@ -1406,7 +1432,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.CompoundType.html",
-          "hash": "+WmsPLS9sFC3QmcGs72nmp0wLmQPHGAOn8IFUfaeIZw="
+          "hash": "L4dZ4twh2TNOKN5rE3xYteYqBnFJ6m7dcXUxBV+Hd0w="
         }
       },
       "is_incremental": false,
@@ -1419,7 +1445,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "Y3Pfwjpazq7ZiviyS+vQKIXNgbAzg8LrlW4OBUqgs4Y="
+          "hash": "l6nDX1Pc405DhE0F+FMml1zWSGdhL4NTxzRifX2iouM="
         }
       },
       "is_incremental": false,
@@ -1458,7 +1484,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "uJDjzK908i8B2touJvQyMwqJ5IyoBiSyusQeCcE6IBI="
+          "hash": "EZH/zmUx+HtBm2dFaJJd3pErKKnfsmV0IkkmEeQdZFA="
         }
       },
       "is_incremental": false,
@@ -1471,7 +1497,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "JQ/+E1ahjz22l3aUerW+0mAf5H/ZD1woe5DZ/2uK57o="
+          "hash": "h9S+/evRt0UkckWBoIwayNaGY8jZlVfrn66IywcmMrM="
         }
       },
       "is_incremental": false,
@@ -1497,7 +1523,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "bfsm8T2jQWtwkl+Sw57yW7WdRmfdFRMT0dW1xGhiDgQ="
+          "hash": "vWGBPKs63oWHUJJq4eoUGHiD1lfO1a4wbuym8jJ1O94="
         }
       },
       "is_incremental": false,
@@ -1510,7 +1536,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DataType.html",
-          "hash": "vCdVZuFsR7Xev05Fmq8oTkY+ps3G7EBQQMccudbF3j0="
+          "hash": "BkMA53eurG+9/z5XRja9I291RW6qi2QD8f3AJyLBwV0="
         }
       },
       "is_incremental": false,
@@ -1536,7 +1562,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5Dataset.html",
-          "hash": "k3TS/suBJgllBTC3+/AGD2sOTnV5qwmTXYSTsBu40Og="
+          "hash": "s0i72ycGvNvtBDHyMTVWIkr/TO1jTGHMww3FD0OTYYM="
         }
       },
       "is_incremental": false,
@@ -1549,7 +1575,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5DatasetAccess.html",
-          "hash": "4oJFS5hTGhMsWbOyv+7k3QjvlOZdT4ZUbScbq9mTyRo="
+          "hash": "Azy7IURy62rS3xxWf5AmwlzlneThDFqa2gzd2jQ9K34="
         }
       },
       "is_incremental": false,
@@ -1588,7 +1614,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5File.html",
-          "hash": "X5gVwDTzXvKV/yFRBsNUA71CII7pGmZW8s82bXOjqsU="
+          "hash": "eoe69M+toCublFQsvVfSwpXXSl7LauUhO134S5tcDx8="
         }
       },
       "is_incremental": false,
@@ -1666,7 +1692,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.H5LinkAccess.html",
-          "hash": "ltmzd3Zul/LaqudduXeycBdT+dneizzy2Cyr/ELsGfY="
+          "hash": "CUkMo3gOojrd9ngGSZm6tXhMxPf9RVeA7Ng1plpKHi0="
         }
       },
       "is_incremental": false,
@@ -1757,7 +1783,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.HyperslabSelection.html",
-          "hash": "atiTWetLHmotZW+coJDpJ/+pR5OO9eD/L3qC15mBEuU="
+          "hash": "KkxV6mbaa36i10okEZs4nRHqK2XuxPgfv7k9qbKF4jc="
         }
       },
       "is_incremental": false,
@@ -1779,11 +1805,24 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/netstandard2.0/PureHDF.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/netstandard2.0/PureHDF.PointSelection.html",
+          "hash": "ZaW4eoiVB/MJ4koZ0ZwqPYV8XR60vwOwIp7UKtOOgl8="
+        }
+      },
+      "is_incremental": false,
+      "version": ".NET Standard 2.0",
+      "group": ".NET Standard 2.0"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/netstandard2.0/PureHDF.Selection.yml",
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.Selection.html",
-          "hash": "bv21SJd5o5EBOTQB0zQoDZuHhEbi4Ir55+cTqdQ9iFY="
+          "hash": "VW6DgaIQEsIOFFOdsHXWmgfd0MVicvqj31EbCe/TaX4="
         }
       },
       "is_incremental": false,
@@ -1809,7 +1848,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.Step.html",
-          "hash": "vPsqrpnq17IiuQVHxwr4Vc2sCyt08hLDHMJai1tm6So="
+          "hash": "DqnilrdN6JR2tOytUX/RhjMQ6UYgdyINO6e8k66yMpU="
         }
       },
       "is_incremental": false,
@@ -1822,7 +1861,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/PureHDF.html",
-          "hash": "syoXza/7I9EMQccbZqrxo6oUwP9bzfj5gq1RIX3XZkk="
+          "hash": "4VUhq2hjSlEn6tHLtGUdIzY+KZMhKIol9ncqayNOEUU="
         }
       },
       "is_incremental": false,
@@ -1835,7 +1874,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.0/toc.html",
-          "hash": "Z0xAeM5fTXEHLNqBofbnnMPpAyz5uWVmlm7vMxQ4Zwg="
+          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
         }
       },
       "is_incremental": false,
@@ -1978,7 +2017,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.ArrayType.html",
-          "hash": "WC5rtZFj8y1vCtZdzY+30m3RAo+cUrgvCX4XKgF+sds="
+          "hash": "uiT+2tSWmrw0fBKWop++cwDukKgekra0elJRavEqby4="
         }
       },
       "is_incremental": false,
@@ -2004,7 +2043,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "hIyF+3FoedK5khplZIXdKVxEq7MiGFFjnKVbLcvk8fo="
+          "hash": "hrWcAZnoWs/VmpxNY6sv2u38kPO1mb+u/ubY7GUt1gc="
         }
       },
       "is_incremental": false,
@@ -2017,7 +2056,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.CompoundType.html",
-          "hash": "XVVg9VfKB0ttRTIjQehSU12NW0jR3eB08J+7YEWAdQ0="
+          "hash": "Ly/eHAionlO3k1GP5IhEwDz0kwo1skX6tzFXbShRVeM="
         }
       },
       "is_incremental": false,
@@ -2030,7 +2069,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "ah60LPtGNuy6QTCTsF2AQ4fMTIu269mzGdonE7FmjHE="
+          "hash": "vghV2V9NtntPAUVyNXM1hFZWlaTJ+n1ULimf80chsDI="
         }
       },
       "is_incremental": false,
@@ -2069,7 +2108,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "3JtINMKxMIaUCYrV9mFAbnb9tFlhDDAB3SZg1SSHDlY="
+          "hash": "tawbaqTqtUleiZKuONBcm4B238SJZaHwBgZRSDA/roY="
         }
       },
       "is_incremental": false,
@@ -2082,7 +2121,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "lbjun3fejAkPyq6x04NRzYpMXVgWVSTVXm9mw4BcPAc="
+          "hash": "D5mZyDh6Oa8kiwRpkGXx80c+vt4VJri2aBnNz0MuKQc="
         }
       },
       "is_incremental": false,
@@ -2108,7 +2147,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "zde81rPNDRI0GR5U59kYyOQpND8jtcXW0f88I9wpNLk="
+          "hash": "ysrTnJs+NhdLlmdFxl7nW3scLIWTXhEpYhZ7y2eVhHg="
         }
       },
       "is_incremental": false,
@@ -2121,7 +2160,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DataType.html",
-          "hash": "5nfSv4YpwKTM71+Jfjgkkwk4jSS2eCeRbMZAKZLYuG8="
+          "hash": "XO2T5zaO3SuBUwX7lOEHI7urM/oL3WH5Fly/Np5dwNo="
         }
       },
       "is_incremental": false,
@@ -2160,7 +2199,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5DatasetAccess.html",
-          "hash": "x26mQlhjNuTKAViSuEeeNYXubDpppLI2ZCxq0NJXOj4="
+          "hash": "b5oaEury9SSNqa3scE3us22TbxEcbr8fqVaSl3Nvkrk="
         }
       },
       "is_incremental": false,
@@ -2199,7 +2238,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5File.html",
-          "hash": "4YAvralqL6/PSFdvdNy5T3KsYuvszSt8ELVvqDCl1B8="
+          "hash": "QNtdi+HtuUReGWn++ykIJSv8IgC+mpkZ+3cL7k8VdNY="
         }
       },
       "is_incremental": false,
@@ -2277,7 +2316,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.H5LinkAccess.html",
-          "hash": "62I1GDAWGGvo3ljn5LJz1W0NLm0fVGwzSJLU7Zzsr5g="
+          "hash": "hr6rNsz2H/KiHOYyGzwX4Q55FPNZIe7BTwuzj+Wk3Js="
         }
       },
       "is_incremental": false,
@@ -2368,7 +2407,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.HyperslabSelection.html",
-          "hash": "5pt4LnRbhiyUq1W4iz5etctIui89ekm3K2pOjVLwcHc="
+          "hash": "V2Bp2a+ppdJHC8BKoKSIVTo+iLkuFoaD/Ca44gQa0Wk="
         }
       },
       "is_incremental": false,
@@ -2390,11 +2429,24 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/netstandard2.1/PureHDF.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/netstandard2.1/PureHDF.PointSelection.html",
+          "hash": "vgjQd+7rr09/JvZdo1AfqsBQ+N7i/dMojVD56y2xLx4="
+        }
+      },
+      "is_incremental": false,
+      "version": ".NET Standard 2.1",
+      "group": ".NET Standard 2.1"
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/netstandard2.1/PureHDF.Selection.yml",
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.Selection.html",
-          "hash": "p5W1UcDQTMakzTt73nDXAHiVbkUTGxcsrWpoBssIzyc="
+          "hash": "aVbXz1bLozBVIk+sPlSJ5rBivdP0UbYugVxbFwotsA4="
         }
       },
       "is_incremental": false,
@@ -2420,7 +2472,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.Step.html",
-          "hash": "kPd3gkiVdc+z6srGcmicdrL1cEbP5f6OI4yKycJHBPo="
+          "hash": "kKd/THfO64o19bmM+G1yJVIJcQo8uNjnAlx40MemaoQ="
         }
       },
       "is_incremental": false,
@@ -2433,7 +2485,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/PureHDF.html",
-          "hash": "N24wmPMnLZ7IJZ8SOxg/ZRyWjEPRTNn0o19job7X6sg="
+          "hash": "JCYxTpMUKlZ80WZGuyM46MVQ8rR9hYwhQWDCjpJjJm8="
         }
       },
       "is_incremental": false,
@@ -2446,7 +2498,7 @@
       "output": {
         ".html": {
           "relative_path": "api/netstandard2.1/toc.html",
-          "hash": "Z0xAeM5fTXEHLNqBofbnnMPpAyz5uWVmlm7vMxQ4Zwg="
+          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
         }
       },
       "is_incremental": false,
@@ -2514,7 +2566,7 @@
       "output": {
         ".html": {
           "relative_path": "index.html",
-          "hash": "yxwKxNUGZDwBFqvlAwXr+R8qO+IkagstW3mMAuRF85s="
+          "hash": "/jaf0KTDqQnxNA/GOdTBZipO2j7fr7wihWCVuy83xhQ="
         }
       },
       "is_incremental": false,
@@ -2560,7 +2612,7 @@
         "ManagedReferenceDocumentProcessor": {
           "can_incremental": false,
           "incrementalPhase": "build",
-          "total_file_count": 46,
+          "total_file_count": 47,
           "skipped_file_count": 0
         },
         "TocDocumentProcessor": {
@@ -2585,7 +2637,7 @@
         "ManagedReferenceDocumentProcessor": {
           "can_incremental": false,
           "incrementalPhase": "build",
-          "total_file_count": 46,
+          "total_file_count": 47,
           "skipped_file_count": 0
         },
         "TocDocumentProcessor": {
@@ -2610,7 +2662,7 @@
         "ManagedReferenceDocumentProcessor": {
           "can_incremental": false,
           "incrementalPhase": "build",
-          "total_file_count": 46,
+          "total_file_count": 47,
           "skipped_file_count": 0
         },
         "TocDocumentProcessor": {
@@ -2635,7 +2687,7 @@
         "ManagedReferenceDocumentProcessor": {
           "can_incremental": false,
           "incrementalPhase": "build",
-          "total_file_count": 46,
+          "total_file_count": 47,
           "skipped_file_count": 0
         },
         "TocDocumentProcessor": {
