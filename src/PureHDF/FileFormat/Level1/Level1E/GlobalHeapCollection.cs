@@ -31,7 +31,7 @@ namespace PureHDF
             CollectionSize = superblock.ReadLength(reader);
 
             // global heap objects
-            GlobalHeapObjects = new List<GlobalHeapObject>();
+            GlobalHeapObjects = new Dictionary<int, GlobalHeapObject>();
 
             var headerSize = 8UL + superblock.LengthsSize;
             var remaining = CollectionSize;
@@ -45,7 +45,7 @@ namespace PureHDF
                 if (globalHeapObject.HeapObjectIndex == 0)
                     break;
 
-                GlobalHeapObjects.Add(globalHeapObject);
+                GlobalHeapObjects[globalHeapObject.HeapObjectIndex - 1] = globalHeapObject;
                 var after = reader.Position;
                 var consumed = (ulong)(after - before);
 
@@ -89,7 +89,7 @@ namespace PureHDF
             }
         }
 
-        public List<GlobalHeapObject> GlobalHeapObjects { get; set; }
+        public Dictionary<int, GlobalHeapObject> GlobalHeapObjects { get; set; }
 
         #endregion
     }
