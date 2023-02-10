@@ -110,7 +110,7 @@ namespace PureHDF
             RawChunkDims = GetRawChunkDims();
             ChunkDims = RawChunkDims[..^1].ToArray();
             ChunkRank = (byte)ChunkDims.Length;
-            ChunkByteSize = H5Utils.CalculateSize(ChunkDims) * Dataset.InternalDataType.Size;
+            ChunkByteSize = Utils.CalculateSize(ChunkDims) * Dataset.InternalDataType.Size;
             Dims = Dataset.InternalDataspace.DimensionSizes;
             MaxDims = Dataset.InternalDataspace.DimensionMaxSizes;
             TotalChunkCount = 1;
@@ -121,13 +121,13 @@ namespace PureHDF
 
             for (int i = 0; i < ChunkRank; i++)
             {
-                ScaledDims[i] = H5Utils.CeilDiv(Dims[i], ChunkDims[i]);
+                ScaledDims[i] = Utils.CeilDiv(Dims[i], ChunkDims[i]);
 
                 if (MaxDims[i] == H5Constants.Unlimited)
                     ScaledMaxDims[i] = H5Constants.Unlimited;
 
                 else
-                    ScaledMaxDims[i] = H5Utils.CeilDiv(MaxDims[i], ChunkDims[i]);
+                    ScaledMaxDims[i] = Utils.CeilDiv(MaxDims[i], ChunkDims[i]);
 
                 TotalChunkCount *= ScaledDims[i];
 
@@ -153,7 +153,7 @@ namespace PureHDF
             return _chunkCache.GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices));
         }
 
-        public override Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

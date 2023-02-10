@@ -1,17 +1,19 @@
-﻿using System;
+﻿using System.Runtime.CompilerServices;
 
 namespace PureHDF
 {
     internal class SlotStream : Stream
     {
         private long _position;
+        private readonly H5File _file;
         private readonly LocalHeap _heap;
         private Stream? _stream;
         private readonly ExternalFileListSlot _slot;
         private readonly H5DatasetAccess _datasetAccess;
 
-        public SlotStream(LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
+        public SlotStream(H5File file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
         {
+            _file = file;
             _heap = heap;
             _slot = slot;
             Offset = offset;
@@ -45,45 +47,62 @@ namespace PureHDF
             throw new NotImplementedException();
         }
 
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+        public override int Read(Span<byte> buffer)
+        {
+            return ReadCore(buffer);
+        }
+
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var length = (int)Math.Min(Length - Position, count);
+            throw new NotImplementedException();
+        }
+#else
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            return ReadCore(buffer.AsSpan(offset, count));
+        }
+#endif
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int ReadCore(Span<byte> buffer)
+        {
+            var length = (int)Math.Min(Length - Position, buffer.Length);
 
             _stream = EnsureStream();
 
-            var actualLength = _stream.Read(buffer, offset, length);
+            var actualLength = _stream.Read(buffer[..length]);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
-            buffer
-                .AsSpan()
-                .Slice(offset + actualLength, length - actualLength)
-                .Fill(0);
+            buffer[actualLength..length]
+                .Clear();
 
             _position += length;
 
             return length;
         }
 
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+#if NET6_0_OR_GREATER
+        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var length = (int)Math.Min(Length - Position, count);
+            var length = (int)Math.Min(Length - Position, buffer.Length);
 
             _stream = EnsureStream();
 
             var actualLength = await _stream
-                .ReadAsync(buffer.AsMemory(offset, length), cancellationToken)
+                .ReadAsync(buffer[..length], cancellationToken)
                 .ConfigureAwait(false);
 
             // If file is shorter than slot: fill remaining buffer with zeros.
             buffer
-                .AsSpan()
-                .Slice(offset + actualLength, length - actualLength)
+                .Span[actualLength..length]
                 .Fill(0);
 
             _position += length;
 
             return length;
         }
+#endif
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -121,18 +140,18 @@ namespace PureHDF
             base.Dispose(disposing);
         }
 
-        // TODO File should be opened asynchronously if root file is also opened asynchronously. Then implement ReadAsync here.
+        // TODO File should be opened asynchronously if this file is also opened asynchronously.
         private Stream EnsureStream()
         {
             if (_stream is null)
             {
                 var name = _heap.GetObjectName(_slot.NameHeapOffset);
-                var filePath = H5Utils.ConstructExternalFilePath(name, _datasetAccess);
+                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, name, _datasetAccess);
 
                 if (!File.Exists(filePath))
                     throw new Exception($"External file '{filePath}' does not exist.");
 
-                _stream = File.OpenRead(filePath);
+                _stream = File.OpenRead(filePath!);
                 _stream.Seek((long)_slot.Offset, SeekOrigin.Begin);
             }
 

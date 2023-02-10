@@ -40,7 +40,7 @@ namespace PureHDF
 
             // size of chunk 0
             var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
-            SizeOfChunk0 = H5Utils.ReadUlong(reader, chunkFieldSize);
+            SizeOfChunk0 = Utils.ReadUlong(reader, chunkFieldSize);
 
             // header messages
             var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);

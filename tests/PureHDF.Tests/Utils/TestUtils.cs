@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace PureHDF.Tests
 {
-    public class TestUtils
+    public partial class TestUtils
     {
         #region Links
 
@@ -80,10 +80,10 @@ namespace PureHDF.Tests
             _ = H5G.close(hardLinkId1);
         }
 
-        public static unsafe void AddExternalFileLink(long fileId, string filePath)
+        public static unsafe void AddExternalFileLink(long fileId, string externalFilePath)
         {
             var groupId = H5G.create(fileId, "links");
-            _ = H5L.create_external(filePath, "/external/group", groupId, "external_link");
+            _ = H5L.create_external(externalFilePath, "/external/group", groupId, "external_link");
             _ = H5G.close(groupId);
         }
 
@@ -126,16 +126,15 @@ namespace PureHDF.Tests
 
         #region Datasets
 
-        public static unsafe void AddExternalDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
+        public static unsafe void AddExternalDataset(long fileId, string datasetName)
         {
             var bytesoftype = 4;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-            var dapl_id = H5P.create(H5P.DATASET_ACCESS);
 
             _ = H5P.set_layout(dcpl_id, H5D.layout_t.CONTIGUOUS);
 
             // a (more than one chunk in file)
-            var pathA = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_a.raw"), datasetAccess);
+            var pathA = $"{datasetName}_a.raw";
 
             if (File.Exists(pathA))
                 File.Delete(pathA);
@@ -145,7 +144,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathA, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // b (file size smaller than set size)
-            var pathB = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.raw"), datasetAccess);
+            var pathB = $"{datasetName}_b.raw";
 
             if (File.Exists(pathB))
                 File.Delete(pathB);
@@ -153,7 +152,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathB, new IntPtr(0), (ulong)(10 * bytesoftype));
 
             // c (normal file)
-            var pathC = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_c.raw"), datasetAccess);
+            var pathC = $"{datasetName}_c.raw";
 
             if (File.Exists(pathC))
                 File.Delete(pathC);
@@ -161,10 +160,7 @@ namespace PureHDF.Tests
             _ = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
 
             // write data
-            if (datasetAccess.ExternalFilePrefix is not null)
-                _ = H5P.set_efile_prefix(dapl_id, datasetAccess.ExternalFilePrefix);
-
-            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), apl: dapl_id, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), cpl: dcpl_id);
 
             // truncate file b
             using (var fileStream2 = File.OpenWrite(pathB))
@@ -172,7 +168,6 @@ namespace PureHDF.Tests
                 fileStream2.SetLength(10);
             };
 
-            _ = H5P.close(dapl_id);
             _ = H5P.close(dcpl_id);
         }
 
@@ -385,72 +380,6 @@ namespace PureHDF.Tests
             _ = H5P.close(dcpl_id);
         }
 
-        public static unsafe void AddVirtualDataset(long fileId, string datasetName, string absolutePrefix, H5DatasetAccess datasetAccess)
-        {
-            // see VirtualMapping.xlsx for a visualization
-
-
-            var vspaceId = H5S.create_simple(1, new ulong[] { 20 }, new ulong[] { 20 });
-            var dapl_id = H5P.create(H5P.DATASET_ACCESS);
-            var dcpl_id = H5P.create(H5P.DATASET_CREATE);
-
-            unsafe
-            {
-                var value = -1;
-                _ = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT32, new IntPtr(&value));
-            }
-
-            // file 1
-            var fileName1 = $"{datasetName}_a.h5";
-            var path1 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, fileName1), datasetAccess);
-
-            if (File.Exists(path1))
-                File.Delete(path1);
-
-            var fileId1 = H5F.create(path1, H5F.ACC_TRUNC);
-            var dataA = TestData.SmallData.Skip(0).Take(16).ToArray();
-            Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
-
-            var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)dataA.Length }, new ulong[] { (ulong)dataA.Length });
-
-            _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 3 });
-            _ = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 2 }, new ulong[] { 5 }, new ulong[] { 3 }, new ulong[] { 2 });
-            _ = H5P.set_virtual(dcpl_id, vspaceId, fileName1, "/vds/source_a", sourceSpaceId1);
-
-            // file 2
-            var fileName2 = $"{datasetName}_b.h5";
-            var path2 = H5Utils.ConstructExternalFilePath(Path.Combine(absolutePrefix, $"{datasetName}_b.h5"), datasetAccess);
-
-            if (File.Exists(path2))
-                File.Delete(path2);
-
-            var fileId2 = H5F.create(path2, H5F.ACC_TRUNC);
-            var dataB = TestData.SmallData.Skip(10).Take(16).ToArray();
-            Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
-
-            var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)dataB.Length }, new ulong[] { (ulong)dataB.Length });
-
-            _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 6 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 2 });
-            _ = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 1 });
-            _ = H5P.set_virtual(dcpl_id, vspaceId, fileName2, "/vds/source_b", sourceSpaceId2);
-
-            // create virtual dataset
-            var datasetId = H5D.create(fileId, "vds", H5T.NATIVE_INT32, vspaceId, dcpl_id: dcpl_id, dapl_id: dapl_id);
-
-            _ = H5S.close(sourceSpaceId1);
-            _ = H5F.close(fileId1);
-
-            _ = H5S.close(sourceSpaceId2);
-            _ = H5F.close(fileId2);
-
-            _ = H5S.close(vspaceId);
-            _ = H5D.close(datasetId);
-
-            _ = H5P.close(dapl_id);
-            _ = H5P.close(dcpl_id);
-        }
-
-
         #endregion
 
         #region Filter
@@ -551,7 +480,7 @@ namespace PureHDF.Tests
                     .GetType()
                     .GetElementType()!;
 
-                var typeId = TestUtils.GetHdfTypeIdFromType(type);
+                var typeId = GetHdfTypeIdFromType(type);
 
                 if (type == typeof(TestEnum))
                 {
@@ -656,12 +585,12 @@ namespace PureHDF.Tests
             var dims = new ulong[] { 2, 2, 3 }; /* "extendible contiguous non-external dataset not allowed" */
 
             // non-nullable struct
-            var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
             Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
             res = H5T.close(typeId);
 
             // nullable struct
-            var typeIdNullable = TestUtils.GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
+            var typeIdNullable = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
             var dataNullable = TestData.StringStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
@@ -830,9 +759,49 @@ namespace PureHDF.Tests
             }
         }
 
+        public static unsafe void AddVariableLengthSequence(long fileId, ContainerType container)
+        {
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L1621-L1642
+            // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/test/tarray.c#L1113
+            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L234-L241
+
+            // typedef struct {
+            //     size_t len; /**< Length of VL data (in base type units) */
+            //     void  *p;   /**< Pointer to VL data */
+            // } hvl_t;
+
+            var dims = new ulong[] { 10 };
+            var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
+
+            var dataVar = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
+            var dataVarChar = dataVar
+               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
+               .ToArray();
+
+            fixed (byte* dataVarPtr = dataVarChar)
+            {
+                var basePtr = new IntPtr(dataVarPtr);
+
+                var addresses = new IntPtr[]
+                {
+                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 4), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
+                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
+                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34)
+                };
+
+                fixed (void* dataVarAddressesPtr = addresses)
+                {
+                    Add(container, fileId, "sequence", "variable", typeId, dataVarAddressesPtr, dims);
+                }
+            }
+
+            _ = H5T.close(typeId);
+        }
+
         public static unsafe void AddMass(long fileId, ContainerType container)
         {
-            var typeId = TestUtils.GetHdfTypeIdFromType(typeof(TestStructL1));
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
 
             for (int i = 0; i < 1000; i++)
             {
@@ -896,6 +865,20 @@ namespace PureHDF.Tests
         #endregion
 
         #region Helpers
+
+        public static async Task RunForAllVersionsAsync(Func<H5F.libver_t, Task> action)
+        {
+            var versions = new H5F.libver_t[]
+            {
+                H5F.libver_t.V18,
+                H5F.libver_t.V110
+            };
+
+            foreach (var version in versions)
+            {
+                await action(version);
+            }
+        }
 
         public static void RunForAllVersions(Action<H5F.libver_t> action)
         {
@@ -1078,14 +1061,14 @@ namespace PureHDF.Tests
             {
                 var elementType = type.GetElementType()!;
                 var dims = new ulong[] { arrayLength.Value };
-                var typeId = H5T.array_create(TestUtils.GetHdfTypeIdFromType(elementType), rank: 1, dims);
+                var typeId = H5T.array_create(GetHdfTypeIdFromType(elementType), rank: 1, dims);
 
                 return typeId;
             }
 
             else if (type.IsEnum)
             {
-                var baseTypeId = TestUtils.GetHdfTypeIdFromType(Enum.GetUnderlyingType(type));
+                var baseTypeId = GetHdfTypeIdFromType(Enum.GetUnderlyingType(type));
                 var typeId = H5T.enum_create(baseTypeId);
 
                 foreach (var value in Enum.GetValues(type))
@@ -1121,7 +1104,7 @@ namespace PureHDF.Tests
                         ? new Nullable<ulong>((ulong)marshalAsAttribute.SizeConst)
                         : null;
 
-                    var fieldType = TestUtils.GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
+                    var fieldType = GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
                     var nameAttribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
                     var hdfFieldName = nameAttribute is not null ? nameAttribute.Name : fieldInfo.Name;
 

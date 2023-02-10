@@ -20,14 +20,14 @@
             /* Check for filters on chunks */
             if (Dataset.InternalFilterPipeline is not null)
             {
-                var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
+                var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
                 var element = GetElement(chunkIndex, reader =>
                 {
                     return new FilteredDataBlockElement()
                     {
                         Address = Dataset.Context.Superblock.ReadOffset(reader),
-                        ChunkSize = (uint)H5Utils.ReadUlong(reader, chunkSizeLength),
+                        ChunkSize = (uint)Utils.ReadUlong(reader, chunkSizeLength),
                         FilterMask = reader.ReadUInt32()
                     };
                 });
@@ -95,7 +95,7 @@
                 var bitMaskIndex = (int)pageIndex % 8;
 
                 /* Check if the page is defined yet */
-                if ((pageBitmapEntry & H5Utils.SequentialBitMask[bitMaskIndex]) > 0)
+                if ((pageBitmapEntry & Utils.SequentialBitMask[bitMaskIndex]) > 0)
                 {
                     /* Compute the element index */
                     var elementIndex = index % dataBlock.ElementsPerPage;

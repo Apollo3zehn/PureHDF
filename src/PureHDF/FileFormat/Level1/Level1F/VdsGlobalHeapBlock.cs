@@ -16,12 +16,12 @@
             Version = localReader.ReadByte();
 
             // entry count
-            EntryCount = superblock.ReadLength(localReader);
+            var entryCount = superblock.ReadLength(localReader);
 
             // vds dataset entries
-            VdsDatasetEntries = new VdsDatasetEntry[(int)EntryCount];
+            VdsDatasetEntries = new VdsDatasetEntry[(int)entryCount];
 
-            for (ulong i = 0; i < EntryCount; i++)
+            for (ulong i = 0; i < entryCount; i++)
             {
                 VdsDatasetEntries[i] = new VdsDatasetEntry(localReader);
             }
@@ -49,7 +49,6 @@
             }
         }
 
-        public ulong EntryCount { get; set; }
         public VdsDatasetEntry[] VdsDatasetEntries { get; set; }
         public uint Checksum { get; set; }
 

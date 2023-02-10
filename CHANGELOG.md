@@ -1,3 +1,12 @@
+## v1.0.0-alpha.24 - 2023-02-10
+
+### Bugs fixed
+- Fixed a problen with the global heap (#28).
+
+### Features
+- Support for virtual datasets.
+- PointSelection
+
 ## v1.0.0-alpha.23 - 2023-01-25
 
 > Important: The project has been renamed from HDF5.NET to PureHDF.

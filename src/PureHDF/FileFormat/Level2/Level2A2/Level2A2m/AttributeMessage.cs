@@ -39,9 +39,9 @@
 
             // name
             if (Version == 1)
-                Name = H5ReadUtils.ReadNullTerminatedString(context.Reader, pad: true, encoding: _nameEncoding);
+                Name = ReadUtils.ReadNullTerminatedString(context.Reader, pad: true, encoding: _nameEncoding);
             else
-                Name = H5ReadUtils.ReadNullTerminatedString(context.Reader, pad: false, encoding: _nameEncoding);
+                Name = ReadUtils.ReadNullTerminatedString(context.Reader, pad: false, encoding: _nameEncoding);
 
             // datatype
             var flags1 = Flags.HasFlag(AttributeMessageFlags.SharedDatatype)
@@ -74,7 +74,7 @@
             }
 
             // data
-            var byteSize = H5Utils.CalculateSize(Dataspace.DimensionSizes, Dataspace.Type) * Datatype.Size;
+            var byteSize = Utils.CalculateSize(Dataspace.DimensionSizes, Dataspace.Type) * Datatype.Size;
             Data = context.Reader.ReadBytes((int)byteSize);
         }
 

@@ -55,7 +55,7 @@ namespace PureHDF
 
             if (!addressToCollectionMap.TryGetValue(address, out var collection))
             {
-                collection = H5Cache.ReadGlobalHeapCollection(context, address);
+                collection = ReadGlobalHeapCollection(context, address);
                 addressToCollectionMap[address] = collection;
             }
 

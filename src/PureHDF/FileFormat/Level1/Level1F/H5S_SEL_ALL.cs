@@ -38,6 +38,28 @@
             }
         }
 
+        public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
+        {
+            var linearIndex = Utils.ToLinearIndex(coordinates, sourceDimensions);
+            var maxCount = sourceDimensions[^1] - coordinates[^1];
+
+            return new LinearIndexResult(
+                Success: true, // TODO theoretically this can fail
+                linearIndex,
+                maxCount);
+        }
+
+        public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
+        {
+            var coordinates = Utils.ToCoordinates(linearIndex, sourceDimensions);
+            var maxCount = sourceDimensions[^1] - coordinates[^1];
+
+            // TODO theoretically this can fail
+            return new CoordinatesResult(
+                coordinates, 
+                maxCount);
+        }
+
         #endregion
     }
 }

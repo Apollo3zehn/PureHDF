@@ -8,7 +8,6 @@
 
         // these fields will all be initialized in Initialize()
         private ulong[] _swizzledChunkDims = default!;
-        private ulong[] _swizzledDownChunkCounts = default!;
         private ulong[] _swizzledDownMaxChunkCounts = default!;
 
         private ExtensibleArrayHeader? _header;
@@ -45,18 +44,18 @@
             {
                 /* Get the swizzled chunk dimensions */
                 _swizzledChunkDims = ChunkDims.ToArray();
-                H5Utils.SwizzleCoords(_swizzledChunkDims, _unlimitedDim);
+                Utils.SwizzleCoords(_swizzledChunkDims, _unlimitedDim);
 
                 /* Get the swizzled number of chunks in each dimension */
                 var swizzledScaledDims = ScaledDims.ToArray();
-                H5Utils.SwizzleCoords(swizzledScaledDims, _unlimitedDim);
+                Utils.SwizzleCoords(swizzledScaledDims, _unlimitedDim);
 
                 /* Get the swizzled "down" sizes for each dimension */
-                _swizzledDownChunkCounts = swizzledScaledDims.AccumulateReverse();
+                // _swizzledDownChunkCounts = swizzledScaledDims.AccumulateReverse();
 
                 /* Get the swizzled max number of chunks in each dimension */
                 var swizzledScaledMaxDims = ScaledMaxDims.ToArray();
-                H5Utils.SwizzleCoords(swizzledScaledMaxDims, _unlimitedDim);
+                Utils.SwizzleCoords(swizzledScaledMaxDims, _unlimitedDim);
 
                 /* Get the swizzled max "down" sizes for each dimension */
                 _swizzledDownMaxChunkCounts = swizzledScaledMaxDims.AccumulateReverse();
@@ -80,11 +79,11 @@
                     swizzledCoords[i] = chunkIndices[i] * ChunkDims[i];
                 }
 
-                H5Utils.SwizzleCoords(swizzledCoords, _unlimitedDim);
+                Utils.SwizzleCoords(swizzledCoords, _unlimitedDim);
 
                 /* Calculate the index of this chunk */
                 var swizzledScaledDims = swizzledCoords
-                    .Select((swizzledCoord, i) => H5Utils.CeilDiv(swizzledCoord, _swizzledChunkDims[i]))
+                    .Select((swizzledCoord, i) => Utils.CeilDiv(swizzledCoord, _swizzledChunkDims[i]))
                     .ToArray();
 
                 chunkIndex = swizzledScaledDims.ToLinearIndexPrecomputed(_swizzledDownMaxChunkCounts);
@@ -98,14 +97,14 @@
             /* Check for filters on chunks */
             if (Dataset.InternalFilterPipeline is not null)
             {
-                var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
+                var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
                 var element = GetElement(chunkIndex, reader =>
                 {
                     return new FilteredDataBlockElement()
                     {
                         Address = Dataset.Context.Superblock.ReadOffset(reader),
-                        ChunkSize = (uint)H5Utils.ReadUlong(reader, chunkSizeLength),
+                        ChunkSize = (uint)Utils.ReadUlong(reader, chunkSizeLength),
                         FilterMask = reader.ReadUInt32()
                     };
                 });
@@ -156,7 +155,7 @@
         private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
-            var chunkSizeLength = H5Utils.ComputeChunkSizeLength(ChunkByteSize);
+            var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
             /* Check if we should create the index block */
             if (Dataset.Context.Superblock.IsUndefinedAddress(header.IndexBlockAddress))
@@ -273,7 +272,7 @@
                         var pageBitmapEntry = secondaryBlock.PageBitmap[pageIndex / 8];
                         var bitMaskIndex = (int)pageIndex % 8;
 
-                        if ((pageBitmapEntry & H5Utils.SequentialBitMask[bitMaskIndex]) == 0)
+                        if ((pageBitmapEntry & Utils.SequentialBitMask[bitMaskIndex]) == 0)
                             return null;
 
                         /* Protect data block page */

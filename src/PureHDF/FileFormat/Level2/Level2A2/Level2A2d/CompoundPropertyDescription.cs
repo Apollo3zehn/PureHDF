@@ -11,7 +11,7 @@
                 case 1:
 
                     // name
-                    Name = H5ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: true);
 
                     // member byte offset
                     MemberByteOffset = reader.ReadUInt32();
@@ -44,7 +44,7 @@
                 case 2:
 
                     // name
-                    Name = H5ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: true);
 
                     // member byte offset
                     MemberByteOffset = reader.ReadUInt32();
@@ -57,10 +57,10 @@
                 case 3:
 
                     // name
-                    Name = H5ReadUtils.ReadNullTerminatedString(reader, pad: false);
+                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: false);
 
                     // member byte offset
-                    var byteCount = H5Utils.FindMinByteCount(valueSize);
+                    var byteCount = Utils.FindMinByteCount(valueSize);
 
                     if (!(1 <= byteCount && byteCount <= 8))
                         throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");

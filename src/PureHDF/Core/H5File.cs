@@ -20,6 +20,7 @@
             : base(context, reference, header)
         {
             Path = absoluteFilePath;
+            FolderPath = System.IO.Path.GetDirectoryName(absoluteFilePath);
             _deleteOnClose = deleteOnClose;
         }
 

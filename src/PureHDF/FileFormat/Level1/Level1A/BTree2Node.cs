@@ -12,7 +12,7 @@
         {
             // signature
             var actualSignature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(actualSignature, signature);
+            Utils.ValidateSignature(actualSignature, signature);
 
             // version
             Version = reader.ReadByte();

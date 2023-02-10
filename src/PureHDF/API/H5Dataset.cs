@@ -84,7 +84,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = ReadAsync<byte, SyncReader>(
+            var result = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -114,7 +114,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = ReadAsync<T, SyncReader>(
+            var result = ReadCoreAsync<T, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -170,7 +170,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            ReadAsync<T, SyncReader>(
+            ReadCoreAsync<T, SyncReader>(
                 default,
                 buffer,
                 fileSelection,
@@ -197,7 +197,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = ReadAsync<byte, SyncReader>(
+            var data = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -211,7 +211,7 @@ namespace PureHDF
 
             getName ??= fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
+            return ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = ReadAsync<byte, SyncReader>(
+            var data = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -240,7 +240,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadCompound(Context, InternalDataType, data);
+            return ReadUtils.ReadCompound(Context, InternalDataType, data);
         }
 
         /// <summary>
@@ -251,13 +251,13 @@ namespace PureHDF
         /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
         /// <param name="datasetAccess">The dataset access properties.</param>
         /// <returns>The read data as array of <see cref="string"/>.</returns>
-        public string[] ReadString(
+        public string?[] ReadString(
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = ReadAsync<byte, SyncReader>(
+            var data = ReadCoreAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -270,7 +270,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadString(Context, InternalDataType, data);
+            return ReadUtils.ReadString(Context, InternalDataType, data);
         }
 
         #endregion
@@ -291,7 +291,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = await ReadAsync<byte, AsyncReader>(
+            var result = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -321,7 +321,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = await ReadAsync<T, AsyncReader>(
+            var result = await ReadCoreAsync<T, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -352,7 +352,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            return ReadAsync<T, AsyncReader>(
+            return ReadCoreAsync<T, AsyncReader>(
                 default,
                 buffer,
                 fileSelection,
@@ -379,7 +379,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = await ReadAsync<byte, AsyncReader>(
+            var data = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -393,7 +393,7 @@ namespace PureHDF
 
             getName ??= fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
+            return ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
         }
 
         /// <summary>
@@ -410,7 +410,7 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = await ReadAsync<byte, AsyncReader>(
+            var data = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -422,7 +422,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadCompound(Context, InternalDataType, data);
+            return ReadUtils.ReadCompound(Context, InternalDataType, data);
         }
 
         /// <summary>
@@ -433,13 +433,13 @@ namespace PureHDF
         /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
         /// <param name="datasetAccess">The dataset access properties.</param>
         /// <returns>A task which returns the read data as array of <see cref="string"/>.</returns>
-        public async Task<string[]> ReadStringAsync(
+        public async Task<string?[]> ReadStringAsync(
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = await ReadAsync<byte, AsyncReader>(
+            var data = await ReadCoreAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -452,7 +452,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return H5ReadUtils.ReadString(Context, InternalDataType, data);
+            return ReadUtils.ReadString(Context, InternalDataType, data);
         }
 
 #endif

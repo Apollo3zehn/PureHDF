@@ -2,14 +2,17 @@
 {
     internal class UnsafeFillValueStream : Stream
     {
-        private readonly byte[] _fillValue;
+        private readonly byte[]? _fillValue;
         private readonly int _length;
         private long _position;
 
-        public UnsafeFillValueStream(byte[] fillValue)
+        public UnsafeFillValueStream(byte[]? fillValue)
         {
-            _fillValue = fillValue.ToArray();
-            _length = _fillValue.Length;
+            _fillValue = fillValue;
+
+            _length = _fillValue is null 
+                ? 1 
+                : _fillValue.Length;
         }
 
         public override bool CanRead => true;
@@ -41,18 +44,26 @@
         // see "If you don’t override ..."
         public override unsafe int Read(byte[] buffer, int offset, int count)
         {
-            unsafe
+            if (_fillValue is null)
             {
-                fixed (byte* ptrSrc = _fillValue, ptrDst = buffer)
-                {
-                    for (int i = 0; i < count; i++)
-                    {
-                        ptrDst[offset + i] = ptrSrc[(_position + i) % _length];
-                    }
-                }
+                buffer.AsSpan().Clear();
             }
 
-            _position += count;
+            else
+            {
+                unsafe
+                {
+                    fixed (byte* ptrSrc = _fillValue, ptrDst = buffer)
+                    {
+                        for (int i = 0; i < count; i++)
+                        {
+                            ptrDst[offset + i] = ptrSrc[(_position + i) % _length];
+                        }
+                    }
+                }
+
+                _position += count;
+            }
 
             return count;
         }

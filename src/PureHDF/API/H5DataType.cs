@@ -57,7 +57,16 @@
         /// </summary>
         public class OpaqueType
         {
-            //
+            internal OpaqueType(
+                OpaquePropertyDescription property)
+            {
+                Tag = property.Tag;
+            }
+
+            /// <summary>
+            /// Gets a description for the opaque type.
+            /// </summary>
+            public string Tag { get; }
         }
 
         /// <summary>
@@ -248,7 +257,7 @@
                 if (_opaque is null)
                 {
                     if (Class == H5DataTypeClass.Opaque)
-                        _opaque = new OpaqueType();
+                        _opaque = new OpaqueType((OpaquePropertyDescription)_dataType.Properties[0]);
 
                     else
                         throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Opaque}.");

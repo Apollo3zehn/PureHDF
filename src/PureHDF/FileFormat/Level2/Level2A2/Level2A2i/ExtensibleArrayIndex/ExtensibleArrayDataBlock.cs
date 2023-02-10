@@ -29,7 +29,7 @@ namespace PureHDF
 
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, ExtensibleArrayDataBlock<T>.Signature);
+            Utils.ValidateSignature(signature, ExtensibleArrayDataBlock<T>.Signature);
 
             // version
             Version = reader.ReadByte();
@@ -41,7 +41,7 @@ namespace PureHDF
             HeaderAddress = superblock.ReadOffset(reader);
 
             // block offset
-            BlockOffset = H5Utils.ReadUlong(reader, header.ArrayOffsetsSize);
+            BlockOffset = Utils.ReadUlong(reader, header.ArrayOffsetsSize);
 
             // elements
             if (PageCount == 0)

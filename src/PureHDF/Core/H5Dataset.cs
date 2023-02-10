@@ -62,7 +62,7 @@ namespace PureHDF
             // https://github.com/Apollo3zehn/PureHDF/issues/25
             if (InternalFillValue is null)
             {
-                // The OldFillValueMessage is optional and so there might be not fill value
+                // The OldFillValueMessage is optional and so there might be no fill value
                 // message at all although the newer message is being marked as required. The
                 // workaround is to instantiate a new FillValueMessage with sensible defaults.
                 // It is not 100% clear if these defaults are fine.
@@ -97,7 +97,7 @@ namespace PureHDF
 
         #region Private
 
-        internal async Task<T[]?> ReadAsync<T, TReader>(
+        internal async Task<T[]?> ReadCoreAsync<T, TReader>(
             TReader reader,
             Memory<T> buffer,
             Selection? fileSelection = default,
@@ -213,7 +213,7 @@ namespace PureHDF
                     case DataspaceType.Simple:
 
                         var starts = datasetDims.ToArray();
-                        starts.AsSpan().Fill(0);
+                        starts.AsSpan().Clear();
 
                         fileSelection = new HyperslabSelection(rank: datasetDims.Length, starts: starts, blocks: datasetDims);
 
@@ -225,30 +225,34 @@ namespace PureHDF
                 }
             }
 
-            /* result buffer */
-            var result = default(T[]);
+            /* memory dims */
             var totalCount = fileSelection.TotalElementCount;
-            var byteSize = totalCount * InternalDataType.Size;
+
+            if (memorySelection is not null && memoryDims is null)
+                throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
+
+            memoryDims ??= new ulong[] { totalCount };
+
+            /* memory selection */
+            memorySelection ??= new HyperslabSelection(start: 0, block: totalCount);
+
+            /* target buffer */
+            var target = default(T[]);
+            var targetByteSize = Utils.CalculateSize(memoryDims) * InternalDataType.Size;
 
             Memory<byte> byteBuffer;
 
             // user did not provide buffer
             if (buffer.Equals(default))
-                (result, byteBuffer) = GetBuffer<T>(byteSize);
+                (target, byteBuffer) = GetBuffer<T>(targetByteSize);
 
             // user provided buffer is large enough
-            else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length >= byteSize)
+            else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length >= targetByteSize)
                 byteBuffer = buffer.Cast<T, byte>();
 
             // user provided buffer is too small
             else
                 throw new Exception("The provided target buffer is too small.");
-
-            /* memory selection */
-            memorySelection ??= new HyperslabSelection(start: 0, block: totalCount);
-
-            /* memory dims */
-            memoryDims ??= new ulong[] { totalCount };
 
             if (getSourceBufferAsync is null && getSourceStream is null)
                 throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
@@ -274,10 +278,10 @@ namespace PureHDF
             var source = byteBuffer.Span.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
+                Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
 
             /* return */
-            return result;
+            return target;
         }
 
         private static (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)

@@ -24,7 +24,7 @@ namespace PureHDF
             _decodeKey = decodeKey;
 
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
+            Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
 
             NodeType = (BTree1NodeType)reader.ReadByte();
             NodeLevel = reader.ReadByte();

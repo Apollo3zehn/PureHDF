@@ -6,12 +6,12 @@
     public struct Step
     {
         /// <summary>
-        /// Gets the data coordinates.
+        /// Gets or sets the data coordinates.
         /// </summary>
         public ulong[] Coordinates { get; set; }
 
         /// <summary>
-        /// Gets the number of elements to select along the fastest changing dimension.
+        /// Gets or sets the number of elements to select along the fastest changing dimension.
         /// </summary>
         public ulong ElementCount { get; set; }
     }

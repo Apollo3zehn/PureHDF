@@ -45,7 +45,7 @@
             return Task.FromResult(buffer.AsMemory());
         }
 
-        public override Stream? GetH5Stream(ulong[] chunkIndices)
+        public override Stream GetH5Stream(ulong[] chunkIndices)
         {
             throw new NotImplementedException();
         }

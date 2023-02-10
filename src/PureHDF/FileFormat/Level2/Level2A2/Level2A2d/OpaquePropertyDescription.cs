@@ -6,7 +6,7 @@
 
         public OpaquePropertyDescription(H5BaseReader reader, byte tagByteLength)
         {
-            Tag = H5ReadUtils
+            Tag = ReadUtils
                 .ReadFixedLengthString(reader, tagByteLength)
                 .TrimEnd('\0');
 

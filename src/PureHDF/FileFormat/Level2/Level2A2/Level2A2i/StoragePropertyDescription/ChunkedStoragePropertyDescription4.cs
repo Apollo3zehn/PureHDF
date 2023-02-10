@@ -22,7 +22,7 @@
 
             for (uint i = 0; i < Rank; i++)
             {
-                DimensionSizes[i] = H5Utils.ReadUlong(reader, DimensionSizeEncodedLength);
+                DimensionSizes[i] = Utils.ReadUlong(reader, DimensionSizeEncodedLength);
             }
 
             // chunk indexing type

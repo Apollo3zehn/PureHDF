@@ -5,7 +5,7 @@ using System.Text;
 
 namespace PureHDF
 {
-    internal static class H5ReadUtils
+    internal static class ReadUtils
     {
         public static unsafe T[] ReadCompound<T>(
             H5Context context,
@@ -59,10 +59,12 @@ namespace PureHDF
             var targetArray = new T[targetArraySize];
             var targetElementSize = Marshal.SizeOf<T>();
 
+            var targetRawBytes = new byte[targetElementSize];
+            var stringMap = new Dictionary<FieldProperties, string?>();
+
             for (int i = 0; i < targetArray.Length; i++)
             {
-                var targetRawBytes = new byte[targetElementSize];
-                var stringMap = new Dictionary<FieldProperties, string>();
+                stringMap.Clear();
 
                 foreach (var member in members)
                 {
@@ -107,7 +109,7 @@ namespace PureHDF
                     foreach (var entry in stringMap)
                     {
                         var reference = __makeref(targetArray[i]);
-                        entry.Key.FieldInfo.SetValueDirect(reference, entry.Value);
+                        entry.Key.FieldInfo.SetValueDirect(reference, entry.Value!);
                     }
                 }
             }
@@ -115,15 +117,12 @@ namespace PureHDF
             return targetArray;
         }
 
-        private static readonly string[] oneElementStringArray = new string[1];
-        private static readonly Dictionary<string, object?>[] oneElementCompountArray = new Dictionary<string, object?>[1];
-
         public static unsafe Dictionary<string, object?>[] ReadCompound(
             H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
             Dictionary<string, object?>[]? result = default)
-        {
+        {           
             if (datatype.Class != DatatypeMessageClass.Compound)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
 
@@ -139,6 +138,9 @@ namespace PureHDF
                 var elementCount = data.Length / datatype.Size;
                 result = new Dictionary<string, object?>[elementCount];
             }
+
+            var oneElementStringArray = new string[1];
+            var oneElementCompoundArray = new Dictionary<string, object?>[1];
 
             for (int i = 0; i < result.Length; i++)
             {
@@ -179,7 +181,7 @@ namespace PureHDF
                             => slicedData.ToArray(),
 
                         (DatatypeMessageClass.Compound, _)
-                            => ReadCompound(context, memberType, slicedData, oneElementCompountArray)[0],
+                            => ReadCompound(context, memberType, slicedData, oneElementCompoundArray)[0],
 
                         // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.Reference, _)
@@ -279,11 +281,11 @@ namespace PureHDF
             return ReadRawArray(context, baseType, slicedData);
         }
 
-        public static string[] ReadString(
+        public static string?[] ReadString(
             H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
-            string[]? result = default)
+            string?[]? result = default)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -320,7 +322,7 @@ namespace PureHDF
 
                 for (int i = 0; i < result.Length; i++)
                 {
-                    var value = H5ReadUtils.ReadFixedLengthString(data[position..(position + size)]);
+                    var value = ReadFixedLengthString(data[position..(position + size)]);
 
                     value = trim(value);
                     result[i] = value;
@@ -334,7 +336,7 @@ namespace PureHDF
                  */
 
                 if (datatype.BitField is not VariableLengthBitFieldDescription bitField)
-                    throw new Exception("Variable-length bit field desciption must not be null.");
+                    throw new Exception("Variable-length bit field description must not be null.");
 
                 if (bitField.Type != VariableLengthType.String)
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
@@ -354,12 +356,22 @@ namespace PureHDF
                 {
                     var dataSize = localReader.ReadUInt32(); // for what do we need this?
                     var globalHeapId = new GlobalHeapId(context, localReader);
-                    var globalHeapCollection = globalHeapId.Collection;
-                    var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
-                    var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
-                    value = trim(value);
-                    result[i] = value;
+                    // TODO: is this reliable? What if user provides buffer initialized with e.g. 99?
+                    if (globalHeapId.CollectionAddress > 0 /* may be 0 when memory selections are used */)
+                    {
+                        var globalHeapCollection = globalHeapId.Collection;
+                        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
+                        var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
+
+                        value = trim(value);
+                        result[i] = value;
+                    }
+
+                    else
+                    {
+                        result[i] = default;
+                    }
                 }
             }
 

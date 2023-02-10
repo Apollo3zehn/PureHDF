@@ -1,5 +1,3 @@
-using System.Diagnostics;
-
 namespace PureHDF
 {
     internal record CopyInfo(
@@ -56,7 +54,7 @@ namespace PureHDF
                 {
                     // TODO: Performance issue.
                     var scaledOffsets = new ulong[rank];
-                    var chunkOffsets = new ulong[rank];
+                    Span<ulong> chunkOffsets = stackalloc ulong[rank];
 
                     for (int dimension = 0; dimension < rank; dimension++)
                     {
@@ -243,8 +241,8 @@ namespace PureHDF
                         currentTarget[..length],
                         offset).ConfigureAwait(false);
 
-                    offset = (int)sourceStep.Offset * copyInfo.TypeSize;                // corresponds to 
-                    currentLength -= (int)sourceStep.Length * copyInfo.TypeSize;        // sourceBuffer.Slice()
+                    offset += length;                                                   // corresponds to 
+                    currentLength -= length;                                            // sourceBuffer.Slice()
 
                     currentTarget = currentTarget[length..];
                 }

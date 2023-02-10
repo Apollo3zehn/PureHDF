@@ -114,10 +114,10 @@ namespace PureHDF
 
             else
             {
-                if (H5Utils.VectorCompare((byte)(rank + 1), indices, rightKey.ScaledChunkOffsets) >= 0)
+                if (Utils.VectorCompare((byte)(rank + 1), indices, rightKey.ScaledChunkOffsets) >= 0)
                     return 1;
 
-                else if (H5Utils.VectorCompare((byte)(rank + 1), indices, leftKey.ScaledChunkOffsets) < 0)
+                else if (Utils.VectorCompare((byte)(rank + 1), indices, leftKey.ScaledChunkOffsets) < 0)
                     return -1;
             }
 

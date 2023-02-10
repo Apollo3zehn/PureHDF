@@ -32,7 +32,7 @@ namespace PureHDF
 
         #region Methods
 
-        // TODO: This method could als be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
+        // TODO: This method could also be static or moved to another type. Is does not strictly belong to object header. Only "Address" is required from object header.
         public T DecodeMessage<T>(MessageFlags messageFlags, Func<T> decode) where T : Message
         {
             // H5OShared.h (H5O_SHARED_DECODE)
@@ -72,7 +72,7 @@ namespace PureHDF
             if (version != 1)
             {
                 var signature = new byte[] { version }.Concat(context.Reader.ReadBytes(3)).ToArray();
-                H5Utils.ValidateSignature(signature, ObjectHeader2.Signature);
+                Utils.ValidateSignature(signature, ObjectHeader2.Signature);
                 version = context.Reader.ReadByte();
             }
 

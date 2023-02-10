@@ -18,8 +18,8 @@ namespace PureHDF
             _reader = reader;
             _header = header;
 
-            Offset = H5Utils.ReadUlong(localReader, offsetByteCount);
-            Length = H5Utils.ReadUlong(localReader, lengthByteCount);
+            Offset = Utils.ReadUlong(localReader, offsetByteCount);
+            Length = Utils.ReadUlong(localReader, lengthByteCount);
         }
 
         #endregion

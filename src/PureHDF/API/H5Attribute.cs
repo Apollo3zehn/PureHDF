@@ -75,7 +75,7 @@ namespace PureHDF
             var source = destination.ToArray();
 
             if (byteOrderAware is not null)
-                H5Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, Message.Datatype.Size);
+                Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
             return MemoryMarshal
                 .Cast<byte, T>(Message.Data)
@@ -93,7 +93,7 @@ namespace PureHDF
         {
             getName ??= fieldInfo => fieldInfo.Name;
 
-            return H5ReadUtils.ReadCompound<T>(_context, Message.Datatype, Message.Data, getName);
+            return ReadUtils.ReadCompound<T>(_context, Message.Datatype, Message.Data, getName);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace PureHDF
         /// <returns>The read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</returns>
         public Dictionary<string, object?>[] ReadCompound()
         {
-            return H5ReadUtils.ReadCompound(_context, Message.Datatype, Message.Data);
+            return ReadUtils.ReadCompound(_context, Message.Datatype, Message.Data);
         }
 
         /// <summary>
@@ -111,7 +111,11 @@ namespace PureHDF
         /// <returns>The read data as array of <see cref="string"/>.</returns>
         public string[] ReadString()
         {
-            return H5ReadUtils.ReadString(_context, Message.Datatype, Message.Data);
+            // The read strings are never == null (afaik). This can only happen with 
+            // a memory selection which is not supported for attributes.
+            #pragma warning disable CS8619
+            return ReadUtils.ReadString(_context, Message.Datatype, Message.Data);
+            #pragma warning restore CS8619
         }
 
         #endregion

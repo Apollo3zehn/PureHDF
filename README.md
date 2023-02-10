@@ -15,12 +15,12 @@ A pure C# library without native dependencies that makes reading of HDF5 files (
 
 The minimum supported target framework is .NET Standard 2.0 which includes
 - .NET Framework 4.6.1+ 
-- .NET Core (all versions) 
+- .NET Core (all versions)
 - .NET 5+
 
 This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.
 
-The implemention follows the [HDF5 File Format Specification](https://support.hdfgroup.org/HDF5/doc/H5.format.html).
+The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html).
 
 > Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
 
@@ -29,13 +29,14 @@ The implemention follows the [HDF5 File Format Specification](https://support.hd
 1. [Objects](#1-objects)
 2. [Attributes](#2-attributes)
 3. [Data](#3-data)
-4. [Partial I/O and Hyperslabs](#4-partial-io-and-hyperslabs)
+4. [Data Selection / Data Slicing](#4-data-selection--data-slicing)
 5. [Filters](#5-filters)
 6. [Reading Compound Data](#6-reading-compound-data)
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
 9. [Intellisense (.NET 5+)](#9-intellisense-net-5)
-10. [Comparison Table](#10-comparison-table)
+10. [Unsupported Features](#10-unsupported-features)
+11. [Comparison Table](#11-comparison-table)
 
 # 1 Objects
 
@@ -79,26 +80,6 @@ var myH5Object = group.Get("/path/to/unknown/object");
 ```
 
 ## 1.2 Additional Info
-### External File Link
-
-With an external link pointing to a relative file path it might be necessary to provide a file prefix (see also this [overview](https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm)).
-
-You can either set an environment variable:
-
-```cs
-Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", "/my/prefix/path");
-```
-
-Or you can pass the prefix as an overload parameter:
-
-```cs
-var linkAccess = new H5LinkAccess() 
-{
-    ExternalLinkPrefix = prefix 
-}
-
-var dataset = group.Dataset(path, linkAccess);
-```
 
 ### Iteration
 
@@ -121,6 +102,48 @@ foreach (var link in group.Children)
 ```
 
 An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
+
+### External Files
+
+There are multiple mechanisms in HDF5 that allow one file to reference another file. The external file resolution algorithm is specific to each of these mechanisms:
+
+| Type | Documentation | Algorithm | Environment variable |
+|---|---|---|---|
+| External Link | [Link](https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5) | [Link](https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Lpublic.h#L1503-L1566) | `HDF5_EXT_PREFIX` |
+| External Dataset Storage | [Link](https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11) | [Link](https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L7084-L7116) | `HDF5_EXTFILE_PREFIX` |
+| Virtual Datasets | [Link](https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12) | [Link](https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L6607-L6670) | `HDF5_VDS_PREFIX` |
+
+Usage:
+
+**External Link**
+
+```cs
+var linkAccess = new H5LinkAccess(
+    ExternalLinkPrefix: prefix 
+);
+
+var dataset = group.Dataset(path, linkAccess);
+```
+
+**External Dataset Storage**
+
+```cs
+var datasetAccess = new H5DatasetAccess(
+    ExternalFilePrefix: prefix 
+);
+
+var data = dataset.Read<float>(..., datasetAccess: datasetAccess);
+```
+
+**Virtual Datasets**
+
+```cs
+var datasetAccess = new H5DatasetAccess(
+    VirtualPrefix: prefix 
+);
+
+var data = dataset.Read<float>(..., datasetAccess: datasetAccess);
+```
 
 # 2. Attributes
 
@@ -223,11 +246,64 @@ The following code samples work for datasets as well as attributes.
 
 For more information on compound data, see section [Reading compound data](#6-reading-compound-data).
 
-# 4. Partial I/O and Hyperslabs
+# 4. Data Selection / Data Slicing
 
 ## 4.1 Overview
 
-Partial I/O is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [hyperslab selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. The following code shows how to work with these selections using a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
+Data selection is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to `dataset.Read()`. However, if you want to read only parts of the dataset, [selections](https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html) are your friend. 
+
+PureHDF supports three types of selections. These are:
+
+| Type                 | Description                                                                                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HyperslabSelection` | A hyperslab is a selection of elements from a hyper rectangle.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.1 Hyperslab Selection |
+| `PointSelection`     | Selects a collection of points.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.2 Select Points                                      |
+| `DelegateSelection`  | This selection accepts a custom walker which selects the user defined points or blocks.                                                                                          |
+
+## 4.2 Examples
+
+Selections can be passed to the read method to avoid reading the full dataset like this:
+
+```cs
+var fileSelection = ...;
+var data = dataset.Read<int>(fileSelection: fileSelection);
+```
+
+Alternatively, if the selection should not be applied to the file but to the memory buffer, use the `memorySelection` parameter:
+
+```cs
+var memorySelection = ...;
+var data = dataset.Read<int>(memorySelection: memorySelection);
+```
+
+All parameters are optional. For example, when the `fileSelection` parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
+
+> Note: There are an overload methods that allow you to provide your own buffer.
+
+**Point selection**
+
+Point selections require a two-dimension `n` x `m` array where `n` is the number of points and `m` the rank of the dataset. Here is an example with four points to select data from a dataset of rank = `3`.
+
+```cs
+var selection = new PointSelection(new ulong[,] {
+    { 00, 00, 00 },
+    { 00, 05, 10 },
+    { 12, 01, 10 },
+    { 05, 07, 09 }
+});
+```
+
+**Hyperslab selection**
+
+A hyperslab selection can be used to select a contiguous block of elements or to select multiple blocks.
+
+The simplest example is a selection for a 1-dimensional dataset at a certain offset (`start: 10`) and a certain length (`block: 50`):
+
+```cs
+var fileSelection = new HyperslabSelection(start: 10, block: 50);
+```
+
+The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
 
 ```cs
 var dataset = root.Dataset("myDataset");
@@ -258,11 +334,23 @@ var result = dataset
     .ToArray2D(75, 25);
 ``` 
 
-All shown parameters are optional. For example, when the `fileSelection` parameter is unspecified, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
+**Delegate selection**
 
-Additionally, there is an overload method that allows you to provide your own buffer.
+A delegate accepts a custom walker function which select blocks of data at certain coordinates. Here is an example which selects a total number of 11 elements from a 3-dimensional dataset:
 
-## 4.2 Experimental: IQueryable (1-dimensional data only)
+```cs
+static IEnumerable<Step> Walker(ulong[] datasetDimensions)
+{
+    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
+    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
+    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
+    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+};
+
+var selection = new DelegateSelection(totalElementCount: 11, Walker);
+```
+
+## 4.3 Experimental: IQueryable (1-dimensional data only)
 
 Another way to build the file selection is to invoke the `AsQueryable` method which can then be used as follows:
 
@@ -303,10 +391,7 @@ Before you can use external filters, you need to register them using ```H5Filter
 This function could look like the following and should be adapted to your specific filter library:
 
 ```cs
-public static Memory<byte> FilterFunc(
-    H5FilterFlags flags, 
-    uint[] parameters, 
-    Memory<byte> buffer)
+public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 {
     // Decompressing
     if (flags.HasFlag(H5FilterFlags.Decompress))
@@ -320,12 +405,12 @@ public static Memory<byte> FilterFunc(
     {
         throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
-}
+};
 
 ```
 
 ## 5.3 Tested External Filters
-- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/wiki/Deflate-Benchmark))
+- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md))
 - c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
 - bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
 
@@ -717,6 +802,7 @@ Run the following command:
 
 ```bash
 dotnet add package PureHDF.SourceGenerator
+dotnet restore
 ```
 
 > Note: Make sure that all project dependencies are restored before you continue.
@@ -724,15 +810,22 @@ dotnet add package PureHDF.SourceGenerator
 Then define the path to your H5 file from which the bindings should be generated and use it in combination with the `H5SourceGenerator` attribute:
 
 ```cs
-const string FILE_PATH = "myFile.h5";
+using PureHDF;
 
 [H5SourceGenerator(filePath: Program.FILE_PATH)]
 internal partial class MyGeneratedH5Bindings {};
 
-// ...
-using var h5File = H5File.OpenRead(FILE_PATH);
-var bindings = new MyGeneratedH5Bindings(h5File);
-var myDataset = bindings.group1.sub_dataset2;
+static class Program
+{
+    public const string FILE_PATH = "myFile.h5";
+
+    static void Main()
+    {
+        using var h5File = H5File.OpenRead(FILE_PATH);
+        var bindings = new MyGeneratedH5Bindings(h5File);
+        var myDataset = bindings.group1.sub_dataset2;
+    }
+}
 ```
 
 Your IDE should now run the source generator behind the scenes and you should be able to get intellisense support:
@@ -747,28 +840,34 @@ var myGroup = bindings.group1.Get();
 
 > Note: Invalid characters like spaces will be replaced by underscores.
 
-# 10 Comparison Table
+# 10 Unsupported Features
+
+The following features are not (yet) supported:
+
+- Virtual datasets with **unlimited dimensions**.
+
+# 11 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 
 |         Name                                                                      | Arch    | Platform    | Kind     | Mode | Version   | License     | Maintainer         | Comment              |  
 | --------------------------------------------------------------------------------- | ------- | ----------- | -------- | ---- | --------- | ----------- | ------------------ | -------------------- |  
 | **v1.10**                                                                         |         |             |          |      |           |             |                    |                      |  
-| [PureHDF](https://www.nuget.org/packages/PureHDF)                               | all     | all         | managed  | ro   | N/A       | MIT         | Apollo3zehn        | version does not apply, standalone implementation |  
+| [PureHDF](https://www.nuget.org/packages/PureHDF)                                 | all     | all         | managed  | ro   | 1.10.*    | MIT         | Apollo3zehn        |                      |
 | [HDF5-CSharp](https://www.nuget.org/packages/HDF5-CSharp)                         | x86,x64 | Win,Lin,Mac | HL       | rw   | 1.10.6    | MIT         | LiorBanai          |                      |  
 | [SciSharp.Keras.HDF5](https://www.nuget.org/packages/SciSharp.Keras.HDF5)         | x86,x64 | Win,Lin,Mac | HL       | rw   | 1.10.5    | MIT         | SciSharp           | fork of HDF-CSharp   |  
 | [ILNumerics.IO.HDF5](https://www.nuget.org/packages/ILNumerics.IO.HDF5)           | x64     | Win,Lin     | HL       | rw   | ?         | proprietary | IL\_Numerics\_GmbH | probably 1.10        |  
 | [LiteHDF](https://www.nuget.org/packages/LiteHDF)                                 | x86,x64 | Win,Lin,Mac | HL       | ro   | 1.10.5    | MIT         | silkfire           |                      |  
 | [hdflib](https://www.nuget.org/packages/hdflib)                                   | x86,x64 | Windows     | HL       | wo   | 1.10.6    | MIT         | bdebree            |                      |  
 | [Mbc.Hdf5Utils](https://www.nuget.org/packages/Mbc.Hdf5Utils)                     | x86,x64 | Win,Lin,Mac | HL       | rw   | 1.10.6    | Apache-2.0  | bqstony            |                      |  
-| [HDF.PInvoke](https://www.nuget.org/packages/HDF.PInvoke)                         | x86,x64 | Windows     | bindings | rw   | 1.8,1.10  | HDF5        | hdf,gheber         |                      |  
+| [HDF.PInvoke](https://www.nuget.org/packages/HDF.PInvoke)                         | x86,x64 | Windows     | bindings | rw   | 1.8,1.10.6| HDF5        | hdf,gheber         |                      |  
 | [HDF.PInvoke.1.10](https://www.nuget.org/packages/HDF.PInvoke.1.10)               | x86,x64 | Win,Lin,Mac | bindings | rw   | 1.10.6    | HDF5        | hdf,Apollo3zehn    |                      |  
 | [HDF.PInvoke.NETStandard](https://www.nuget.org/packages/HDF.PInvoke.NETStandard) | x86,x64 | Win,Lin,Mac | bindings | rw   | 1.10.5    | HDF5        | surban             |                      |  
 | **v1.8**                                                                          |         |             |          |      |           |             |                    |                      |  
 | [HDF5DotNet.x64](https://www.nuget.org/packages/HDF5DotNet.x64)                   | x64     | Windows     | HL       | rw   | 1.8       | HDF5        | thieum             |                      |  
 | [HDF5DotNet.x86](https://www.nuget.org/packages/HDF5DotNet.x86)                   | x86     | Windows     | HL       | rw   | 1.8       | HDF5        | thieum             |                      |  
 | [sharpHDF](https://www.nuget.org/packages/sharpHDF)                               | x64     | Windows     | HL       | rw   | 1.8       | MIT         | bengecko           |                      |  
-| [HDF.PInvoke](https://www.nuget.org/packages/HDF.PInvoke)                         | x86,x64 | Windows     | bindings | rw   | 1.8,1.10  | HDF5        | hdf,gheber         |                      |  
+| [HDF.PInvoke](https://www.nuget.org/packages/HDF.PInvoke)                         | x86,x64 | Windows     | bindings | rw   | 1.8,1.10.6| HDF5        | hdf,gheber         |                      |  
 | [hdf5-v120-complete](https://www.nuget.org/packages/hdf5-v120-complete)           | x86,x64 | Windows     | native   | rw   | 1.8       | HDF5        | daniel.gracia      |                      |  
 | [hdf5-v120](https://www.nuget.org/packages/hdf5-v120)                             | x86,x64 | Windows     | native   | rw   | 1.8       | HDF5        | keen               |                      |  
 

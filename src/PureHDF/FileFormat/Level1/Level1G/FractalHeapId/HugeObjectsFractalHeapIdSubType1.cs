@@ -20,7 +20,7 @@ namespace PureHDF
             _heapHeader = header;
 
             // BTree2 key
-            BTree2Key = H5Utils.ReadUlong(localReader, header.HugeIdsSize);
+            BTree2Key = Utils.ReadUlong(localReader, header.HugeIdsSize);
         }
 
         #endregion

@@ -1,6 +1,5 @@
 using HDF.PInvoke;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PureHDF.Tests.Reading
 {
@@ -177,45 +176,11 @@ namespace PureHDF.Tests.Reading
             });
         }
 
-        [Theory]
-        [InlineData("absolute", "", "")] // direct access
-        [InlineData("relative", "single", "")] // use environment variable
-        //[InlineData("relative", "multiple", "")] // this test will fail on Windows because of colon in path
-        [InlineData("relative", "", "yes")] // use link access property list
-        [InlineData("relative", "", "")] // file sits next to calling file
-        [InlineData("relativecd", "", "")] // file sits next to current directory
-        public void CanFollowExternalLink(string externalFilePath, string environment, string prefix)
+        [Fact]
+        public void CanFollowExternalLink()
         {
             // Arrange
-            if (externalFilePath == "absolute")
-            {
-                externalFilePath = Path.GetTempFileName();
-            }
-
-            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
-
-            if (externalFilePath == "relative")
-                externalFilePath = Path.Combine(Path.GetTempPath(), externalFilePath);
-            else if (externalFilePath == "relativecd")
-                externalFilePath = Path.Combine(Environment.CurrentDirectory, externalFilePath);
-
-            if (environment == "single")
-            {
-                environment = Path.GetDirectoryName(externalFilePath)!;
-                Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", environment);
-            }
-            else if (environment == "multiple")
-            {
-                // Why did HDF Group choose a colon as prefix separator? This test must fail.
-                environment = $"::C:\\temp:{Path.GetDirectoryName(externalFilePath)}";
-                Environment.SetEnvironmentVariable("HDF5_EXT_PREFIX", environment);
-            }
-
-            if (prefix == "yes")
-                prefix = Path.GetDirectoryName(externalFilePath)!;
-
-            long res;
-
+            var externalFilePath = Path.GetTempFileName();
             var externalFileId = H5F.create(externalFilePath, H5F.ACC_TRUNC);
             var externalGroupId1 = H5G.create(externalFileId, "external");
             var externalGroupId2 = H5G.create(externalGroupId1, "group");
@@ -223,20 +188,20 @@ namespace PureHDF.Tests.Reading
             var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
             var datasetId = H5D.create(externalGroupId2, "Hello from external file =)", H5T.NATIVE_UINT, spaceId);
 
+            long res;
+
             res = H5S.close(spaceId);
             res = H5D.close(datasetId);
             res = H5G.close(externalGroupId2);
             res = H5G.close(externalGroupId1);
             res = H5F.close(externalFileId);
 
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
+
             // Act
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
 
-            var linkAccess = string.IsNullOrWhiteSpace(prefix)
-                ? new H5LinkAccess()
-                : new H5LinkAccess() { ExternalLinkPrefix = prefix };
-
-            var dataset = root.Dataset("/links/external_link/Hello from external file =)", linkAccess);
+            var dataset = root.Dataset("/links/external_link/Hello from external file =)");
         }
 
         [Fact]
@@ -251,7 +216,7 @@ namespace PureHDF.Tests.Reading
 
             // Assert
             Assert.NotNull(link);
-            Assert.Equal("Unable to open external file 'not-existing.h5'.", link!.Reason!.Message);
+            Assert.Equal("Could not find file not-existing.h5.", link!.Reason!.Message);
         }
 
         [Fact]

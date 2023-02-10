@@ -24,7 +24,7 @@ namespace PureHDF
 
             // signature
             var signature = reader.ReadBytes(4);
-            H5Utils.ValidateSignature(signature, BTree2Header<T>.Signature);
+            Utils.ValidateSignature(signature, BTree2Header<T>.Signature);
 
             // version
             Version = reader.ReadByte();
@@ -72,7 +72,7 @@ namespace PureHDF
 
             /* Compute size to store # of records in each node */
             /* (uses leaf # of records because its the largest) */
-            MaxRecordCountSize = (byte)H5Utils.FindMinByteCount(NodeInfos[0].MaxRecordCount); ;
+            MaxRecordCountSize = (byte)Utils.FindMinByteCount(NodeInfos[0].MaxRecordCount); ;
 
             /* Initialize internal node info */
             if (Depth > 0)
@@ -88,7 +88,7 @@ namespace PureHDF
                     NodeInfos[i].CumulatedTotalRecordCount =
                         (NodeInfos[i].MaxRecordCount + 1) *
                          NodeInfos[i - 1].MaxRecordCount + NodeInfos[i].MaxRecordCount;
-                    NodeInfos[i].CumulatedTotalRecordCountSize = (byte)H5Utils.FindMinByteCount(NodeInfos[i].CumulatedTotalRecordCount);
+                    NodeInfos[i].CumulatedTotalRecordCountSize = (byte)Utils.FindMinByteCount(NodeInfos[i].CumulatedTotalRecordCount);
                 }
             }
         }

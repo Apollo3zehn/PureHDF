@@ -17,12 +17,12 @@
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1 };
-            ArrayExtensions.ValidateInputData(data, dims);
+            ValidateInputData(data, dims);
             var output = new T[dims[0], dims[1]];
 
             fixed (void* ptr = output)
             {
-                ArrayExtensions.CopyData(data, ptr);
+                CopyData(data, ptr);
             }
 
             return output;
@@ -41,12 +41,12 @@
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2 };
-            ArrayExtensions.ValidateInputData(data, dims);
+            ValidateInputData(data, dims);
             var output = new T[dims[0], dims[1], dims[2]];
 
             fixed (void* ptr = output)
             {
-                ArrayExtensions.CopyData(data, ptr);
+                CopyData(data, ptr);
             }
 
             return output;
@@ -66,12 +66,12 @@
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3 };
-            ArrayExtensions.ValidateInputData(data, dims);
+            ValidateInputData(data, dims);
             var output = new T[dims[0], dims[1], dims[2], dims[3]];
 
             fixed (void* ptr = output)
             {
-                ArrayExtensions.CopyData(data, ptr);
+                CopyData(data, ptr);
             }
 
             return output;
@@ -92,12 +92,12 @@
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3, dim4 };
-            ArrayExtensions.ValidateInputData(data, dims);
+            ValidateInputData(data, dims);
             var output = new T[dims[0], dims[1], dims[2], dims[3], dims[4]];
 
             fixed (void* ptr = output)
             {
-                ArrayExtensions.CopyData(data, ptr);
+                CopyData(data, ptr);
             }
 
             return output;
@@ -119,12 +119,12 @@
             where T : unmanaged
         {
             var dims = new long[] { dim0, dim1, dim2, dim3, dim4, dim5 };
-            ArrayExtensions.ValidateInputData(data, dims);
+            ValidateInputData(data, dims);
             var output = new T[dims[0], dims[1], dims[2], dims[3], dims[4], dims[5]];
 
             fixed (void* ptr = output)
             {
-                ArrayExtensions.CopyData(data, ptr);
+                CopyData(data, ptr);
             }
 
             return output;

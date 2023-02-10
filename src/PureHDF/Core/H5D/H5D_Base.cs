@@ -37,7 +37,7 @@ namespace PureHDF
 
         public abstract Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
 
-        public abstract Stream? GetH5Stream(ulong[] chunkIndices);
+        public abstract Stream GetH5Stream(ulong[] chunkIndices);
 
         #endregion
 

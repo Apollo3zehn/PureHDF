@@ -9,10 +9,10 @@ namespace PureHDF.Tests
         private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
 
         private static readonly ThreadLocal<IntPtr> _state_ptr = new(
-            valueFactory: DeflateHelper_Intel_ISA_L.CreateState,
+            valueFactory: CreateState,
             trackAllValues: false);
 
-        public static unsafe Memory<byte> FilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+        public unsafe static FilterFunc FilterFunc { get; } = (flags, parameters, buffer) =>
         {
             /* We're decompressing */
             if (flags.HasFlag(H5FilterFlags.Decompress))
@@ -73,12 +73,12 @@ namespace PureHDF.Tests
             {
                 throw new Exception("Writing data chunks is not yet supported by PureHDF.");
             }
-        }
+        };
 
         private static unsafe IntPtr CreateState()
         {
             var ptr = Marshal.AllocHGlobal(Unsafe.SizeOf<inflate_state>());
-            new Span<byte>(ptr.ToPointer(), _state_length).Fill(0);
+            new Span<byte>(ptr.ToPointer(), _state_length).Clear();
 
             return ptr;
         }
