@@ -382,35 +382,6 @@ namespace PureHDF.Tests.Reading
             }
         }
 
-        [Fact(Skip = "Only for performance tests.")]
-        public void WalkPerformance()
-        {
-            // Arrange
-            var dims = new ulong[] { 1000, 200, 200 };
-            var chunkDims = new ulong[] { 1000, 200, 200 };
-
-            var selection = new HyperslabSelection(
-                rank: 3,
-                starts: new ulong[] { 1, 1, 1 },
-                strides: new ulong[] { 31, 31, 31 },
-                counts: new ulong[] { 30, 6, 6 },
-                blocks: new ulong[] { 25, 26, 27 }
-            );
-
-            var sw = Stopwatch.StartNew();
-
-            // Act
-            for (int i = 0; i < 10; i++)
-            {
-                _ = SelectionUtils
-                    .Walk(rank: 3, dims, chunkDims, selection)
-                    .ToArray();
-            }
-
-            // Assert
-            _logger.WriteLine($"Elapsed: {sw.Elapsed.TotalMilliseconds} ms");
-        }
-
         [Theory]
         [InlineData(new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
