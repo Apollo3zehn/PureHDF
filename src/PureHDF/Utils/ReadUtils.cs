@@ -281,11 +281,11 @@ namespace PureHDF
             return ReadRawArray(context, baseType, slicedData);
         }
 
-        public static string?[] ReadString(
+        public static string[] ReadString(
             H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
-            string?[]? result = default)
+            string[]? result = default)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -356,22 +356,12 @@ namespace PureHDF
                 {
                     var dataSize = localReader.ReadUInt32(); // for what do we need this?
                     var globalHeapId = new GlobalHeapId(context, localReader);
+                    var globalHeapCollection = globalHeapId.Collection;
+                    var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
+                    var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
-                    // TODO: is this reliable? What if user provides buffer initialized with e.g. 99?
-                    if (globalHeapId.CollectionAddress > 0 /* may be 0 when memory selections are used */)
-                    {
-                        var globalHeapCollection = globalHeapId.Collection;
-                        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
-                        var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
-
-                        value = trim(value);
-                        result[i] = value;
-                    }
-
-                    else
-                    {
-                        result[i] = default;
-                    }
+                    value = trim(value);
+                    result[i] = value;
                 }
             }
 
