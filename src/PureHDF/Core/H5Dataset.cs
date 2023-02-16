@@ -97,21 +97,97 @@ namespace PureHDF
 
         #region Private
 
-        internal async Task<T[]?> ReadCoreAsync<T, TReader>(
+        internal async Task<TResult[]?> ReadCoreUnmanagedAsync<TResult, TReader>(
             TReader reader,
-            Memory<T> buffer,
+            Memory<TResult> buffer,
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
             bool skipTypeCheck = false,
             bool skipShuffle = false)
-                where T : unmanaged
+                where TResult : unmanaged
                 where TReader : IReader
         {
-            // fast path for null dataspace
-            if (InternalDataspace.Type == DataspaceType.Null)
-                return Array.Empty<T>();
+            if (Unsafe.SizeOf<TResult>() != InternalDataType.Size)
+                throw new Exception($"The size of the generic parameter {nameof(TResult)} does not match the size of the HDF5 data type.");
+
+            var result = default(TResult[]);
+
+            Memory<TResult> getBuffer(ulong elementCount)
+            {
+                result = EnsureUnmanagedBuffer(buffer, elementCount);
+                return result ?? buffer;
+            };
+
+            void converter(Memory<byte> source, Memory<TResult> target) 
+                => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
+
+            await ReadCoreAsync(
+                reader,
+                getBuffer,
+                converter,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipTypeCheck: skipTypeCheck,
+                skipShuffle: skipShuffle
+            );
+
+            return result;
+        }
+
+        internal async Task<TResult[]> ReadCoreReferenceAsync<TResult, TReader>(
+            TReader reader,
+            Action<Memory<byte>, Memory<TResult>> converter,
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default,
+            bool skipTypeCheck = false,
+            bool skipShuffle = false)
+                where TReader : IReader
+        {
+            var result = default(TResult[]);
+
+            Memory<TResult> getBuffer(ulong elementCount)
+            {
+                result = new TResult[elementCount];
+                return result;
+            };
+
+            await ReadCoreAsync(
+                reader,
+                getBuffer,
+                converter,
+                fileSelection,
+                memorySelection,
+                memoryDims,
+                datasetAccess,
+                skipTypeCheck: skipTypeCheck,
+                skipShuffle: skipShuffle
+            );
+
+            return result!;
+        }
+
+        internal async Task ReadCoreAsync<TResult, TReader>(
+            TReader reader,
+            Func<ulong, Memory<TResult>> getBuffer,
+            Action<Memory<byte>, Memory<TResult>> converter,
+            Selection? fileSelection = default,
+            Selection? memorySelection = default,
+            ulong[]? memoryDims = default,
+            H5DatasetAccess datasetAccess = default,
+            bool skipTypeCheck = false,
+            bool skipShuffle = false)
+                where TReader : IReader
+        {
+            // TODO now:
+            // // fast path for null dataspace
+            // if (InternalDataspace.Type == DataspaceType.Null)
+            //     return Array.Empty<TResult>();
 
             // 
             if (!skipTypeCheck)
@@ -198,6 +274,9 @@ namespace PureHDF
                 ? chunkIndices => bufferProvider.GetH5Stream(chunkIndices)!
                 : null;
 
+            if (getSourceBufferAsync is null && getSourceStream is null)
+                throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
+
             /* dataset dims */
             var datasetDims = GetDatasetDims();
 
@@ -226,39 +305,22 @@ namespace PureHDF
             }
 
             /* memory dims */
-            var totalCount = fileSelection.TotalElementCount;
+            var sourceElementCount = fileSelection.TotalElementCount;
 
             if (memorySelection is not null && memoryDims is null)
                 throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
 
-            memoryDims ??= new ulong[] { totalCount };
+            memoryDims ??= new ulong[] { sourceElementCount };
 
             /* memory selection */
-            memorySelection ??= new HyperslabSelection(start: 0, block: totalCount);
+            memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
             /* target buffer */
-            var target = default(T[]);
-            var targetByteSize = Utils.CalculateSize(memoryDims) * InternalDataType.Size;
-
-            Memory<byte> byteBuffer;
-
-            // user did not provide buffer
-            if (buffer.Equals(default))
-                (target, byteBuffer) = GetBuffer<T>(targetByteSize);
-
-            // user provided buffer is large enough
-            else if ((ulong)MemoryMarshal.AsBytes(buffer.Span).Length >= targetByteSize)
-                byteBuffer = buffer.Cast<T, byte>();
-
-            // user provided buffer is too small
-            else
-                throw new Exception("The provided target buffer is too small.");
-
-            if (getSourceBufferAsync is null && getSourceStream is null)
-                throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
+            var targetElementCount = Utils.CalculateSize(memoryDims);
+            var targetBuffer = getBuffer(targetElementCount);
 
             /* copy info */
-            var copyInfo = new CopyInfo(
+            var copyInfo = new CopyInfo<TResult>(
                 datasetDims,
                 datasetChunkDims,
                 memoryDims,
@@ -267,42 +329,52 @@ namespace PureHDF
                 memorySelection,
                 GetSourceBufferAsync: getSourceBufferAsync,
                 GetSourceStream: getSourceStream,
-                GetTargetBuffer: indices => byteBuffer,
+                GetTargetBuffer: _ => targetBuffer,
+                Converter: converter,
                 TypeSize: (int)InternalDataType.Size
             );
 
-            await SelectionUtils.CopyAsync<TReader>(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo).ConfigureAwait(false);
+            await SelectionUtils
+                .CopyAsync(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo)
+                .ConfigureAwait(false);
 
-            /* ensure correct endianness */
-            var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
-            var source = byteBuffer.Span.ToArray();
+            // TODO now: 
 
-            if (byteOrderAware is not null)
-                Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
+            // /* ensure correct endianness */
+            // var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
+            // var source = byteBuffer.Span.ToArray();
 
-            /* return */
-            return target;
+            // if (byteOrderAware is not null)
+            //     Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
         }
 
-        private static (T[], Memory<byte>) GetBuffer<T>(ulong byteSize)
-            where T : unmanaged
+        internal T[]? EnsureUnmanagedBuffer<T>(Memory<T> buffer, ulong elementCount) where T : unmanaged
         {
-            // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)
-            var sizeOfT = (ulong)Unsafe.SizeOf<T>();
+            /* target buffer */
+            var targetByteSize = elementCount * InternalDataType.Size;
 
-            if (byteSize % sizeOfT != 0)
-                throw new Exception("The size of the target buffer (number of selected elements times the datasets data-type byte size) must be a multiple of the byte size of the generic parameter T.");
+            // user did not provide buffer
+            if (buffer.Equals(default))
+            {
+                // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)
+                var sizeOfT = (ulong)Unsafe.SizeOf<T>();
 
-            var arraySize = byteSize / sizeOfT;
+                if (targetByteSize % sizeOfT != 0)
+                    throw new Exception("The size of the target buffer (number of selected elements times the datasets data-type byte size) must be a multiple of the byte size of the generic parameter T.");
 
-            // create the buffer
-            var TBuffer = new T[arraySize];
+                var arraySize = targetByteSize / sizeOfT;
 
-            var byteBuffer = TBuffer
-                .AsMemory()
-                .Cast<T, byte>();
+                // create the buffer
+                return new T[arraySize]; 
+            }
 
-            return (TBuffer, byteBuffer);
+            // user provided buffer is too small
+            else if (buffer.Length < (int)elementCount)
+            {
+                throw new Exception("The provided target buffer is too small.");
+            }
+
+            return default;
         }
 
         internal ulong[] GetDatasetDims()

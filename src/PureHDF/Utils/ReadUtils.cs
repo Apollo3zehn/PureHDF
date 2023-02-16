@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -7,10 +8,11 @@ namespace PureHDF
 {
     internal static class ReadUtils
     {
-        public static unsafe T[] ReadCompound<T>(
+        public static unsafe Memory<T> ReadCompound<T>(
             H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
+            Memory<T> destination,
             Func<FieldInfo, string> getName) where T : struct
         {
             if (datatype.Class != DatatypeMessageClass.Compound)
@@ -55,14 +57,13 @@ namespace PureHDF
             var sourceRawBytes = data;
             var sourceElementSize = datatype.Size;
 
-            var targetArraySize = data.Length / datatype.Size;
-            var targetArray = new T[targetArraySize];
-            var targetElementSize = Marshal.SizeOf<T>();
+            var destinationElementSize = Marshal.SizeOf<T>();
 
-            var targetRawBytes = new byte[targetElementSize];
+            using var destinationRawBytesOwner = MemoryPool<byte>.Shared.Rent(destinationElementSize);
+            var destinationRawBytes = destinationRawBytesOwner.Memory;
             var stringMap = new Dictionary<FieldProperties, string?>();
 
-            for (int i = 0; i < targetArray.Length; i++)
+            for (int i = 0; i < destination.Length; i++)
             {
                 stringMap.Clear();
 
@@ -92,29 +93,30 @@ namespace PureHDF
 
                         sourceRawBytes
                             .Slice(sourceIndex, fieldSize)
-                            .CopyTo(targetRawBytes.AsSpan(targetIndex, fieldSize));
+                            .CopyTo(destinationRawBytes.Span.Slice(targetIndex, fieldSize));
                     }
                 }
 
                 sourceOffset += sourceElementSize;
+                var destinationSpan = destination.Span;
 
-                fixed (byte* ptr = targetRawBytes.AsSpan())
+                fixed (byte* ptr = destinationRawBytes.Span)
                 {
                     // http://benbowen.blog/post/fun_with_makeref/
                     // https://stackoverflow.com/questions/4764573/why-is-typedreference-behind-the-scenes-its-so-fast-and-safe-almost-magical
                     // Both do not work because struct layout is different with __makeref:
                     // https://stackoverflow.com/questions/1918037/layout-of-net-value-type-in-memory
-                    targetArray[i] = Marshal.PtrToStructure<T>(new IntPtr(ptr));
+                    destinationSpan[i] = Marshal.PtrToStructure<T>(new IntPtr(ptr));
 
                     foreach (var entry in stringMap)
                     {
-                        var reference = __makeref(targetArray[i]);
+                        var reference = __makeref(destinationSpan[i]);
                         entry.Key.FieldInfo.SetValueDirect(reference, entry.Value!);
                     }
                 }
             }
 
-            return targetArray;
+            return destination;
         }
 
         public static unsafe Dictionary<string, object?>[] ReadCompound(
@@ -171,7 +173,7 @@ namespace PureHDF
                         (DatatypeMessageClass.FloatingPoint, 8) => MemoryMarshal.Cast<byte, double>(slicedData)[0],
 
                         (DatatypeMessageClass.String, _)
-                            => ReadString(context, memberType, slicedData, oneElementStringArray)[0],
+                            => ReadString(context, memberType, slicedData, oneElementStringArray).Span[0],
 
                         // TODO: Bitfield padding type is not being applied here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.BitField, _)
@@ -192,7 +194,7 @@ namespace PureHDF
                             => (ReadEnumerated(context, memberType, slicedData) ?? new object[1]).GetValue(0),
 
                         (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String
-                            => ReadString(context, memberType, slicedData, oneElementStringArray)[0],
+                            => ReadString(context, memberType, slicedData, oneElementStringArray).Span[0],
 
                         (DatatypeMessageClass.Array, _)
                             => ReadArray(context, memberType, slicedData),
@@ -284,8 +286,22 @@ namespace PureHDF
         public static string[] ReadString(
             H5Context context,
             DatatypeMessage datatype,
-            Span<byte> data,
-            string[]? result = default)
+            Span<byte> data)
+        {
+            var size = (int)datatype.Size;
+            var elementCount = data.Length / size;
+            var destination = new string[elementCount];
+
+            ReadString(context, datatype, data, destination);
+
+            return destination;
+        }
+
+        public static Memory<string> ReadString(
+            H5Context context,
+            DatatypeMessage datatype,
+            Span<byte> source,
+            Memory<string> destination)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -293,13 +309,7 @@ namespace PureHDF
              * the same when simply reading them from file.
              */
             var size = (int)datatype.Size;
-
-            if (result is null)
-            {
-                var elementCount = data.Length / size;
-                result = new string[elementCount];
-            }
-
+            var destinationSpan = destination.Span;
             var isFixed = datatype.Class == DatatypeMessageClass.String;
 
             if (!isFixed && datatype.Class != DatatypeMessageClass.VariableLength)
@@ -314,18 +324,22 @@ namespace PureHDF
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
+#if NETSTANDARD2_0
                     PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
+#else
+                    PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
+#endif
                     PaddingType.NullPad => value => value.TrimEnd('\0'),
                     PaddingType.SpacePad => value => value.TrimEnd(' '),
                     _ => throw new Exception("Unsupported padding type.")
                 };
 
-                for (int i = 0; i < result.Length; i++)
+                for (int i = 0; i < destination.Length; i++)
                 {
-                    var value = ReadFixedLengthString(data[position..(position + size)]);
+                    var value = ReadFixedLengthString(source[position..(position + size)]);
 
                     value = trim(value);
-                    result[i] = value;
+                    destinationSpan[i] = value;
                     position += size;
                 }
             }
@@ -342,7 +356,7 @@ namespace PureHDF
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
-                using var localReader = new H5StreamReader(new MemoryStream(data.ToArray()), leaveOpen: false);
+                using var localReader = new H5StreamReader(new MemoryStream(source.ToArray()), leaveOpen: false);
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
@@ -352,7 +366,7 @@ namespace PureHDF
                     _ => throw new Exception("Unsupported padding type.")
                 };
 
-                for (int i = 0; i < result.Length; i++)
+                for (int i = 0; i < destination.Length; i++)
                 {
                     var dataSize = localReader.ReadUInt32(); // for what do we need this?
                     var globalHeapId = new GlobalHeapId(context, localReader);
@@ -361,11 +375,11 @@ namespace PureHDF
                     var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
                     value = trim(value);
-                    result[i] = value;
+                    destinationSpan[i] = value;
                 }
             }
 
-            return result;
+            return destination;
         }
 
         public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)

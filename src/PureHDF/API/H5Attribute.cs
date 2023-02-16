@@ -111,11 +111,7 @@ namespace PureHDF
         /// <returns>The read data as array of <see cref="string"/>.</returns>
         public string[] ReadString()
         {
-            // The read strings are never == null (afaik). This can only happen with 
-            // a memory selection which is not supported for attributes.
-            #pragma warning disable CS8619
             return ReadUtils.ReadString(_context, Message.Datatype, Message.Data);
-            #pragma warning restore CS8619
         }
 
         #endregion

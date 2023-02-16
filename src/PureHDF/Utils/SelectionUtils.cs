@@ -1,6 +1,8 @@
+using System.Buffers;
+
 namespace PureHDF
 {
-    internal record CopyInfo(
+    internal record CopyInfo<T>(
         ulong[] SourceDims,
         ulong[] SourceChunkDims,
         ulong[] TargetDims,
@@ -9,7 +11,8 @@ namespace PureHDF
         Selection TargetSelection,
         Func<ulong[], Task<Memory<byte>>>? GetSourceBufferAsync,
         Func<ulong[], Stream>? GetSourceStream,
-        Func<ulong[], Memory<byte>> GetTargetBuffer,
+        Func<ulong[], Memory<T>> GetTargetBuffer,
+        Action<Memory<byte>, Memory<T>> Converter,
         int TypeSize
     );
 
@@ -24,6 +27,41 @@ namespace PureHDF
 
     internal static class SelectionUtils
     {
+        public static Task CopyAsync<TResult, TReader>(
+            TReader reader,
+            int sourceRank,
+            int targetRank,
+            CopyInfo<TResult> copyInfo) where TReader : IReader
+        {
+            /* validate selections */
+            if (copyInfo.SourceSelection.TotalElementCount != copyInfo.TargetSelection.TotalElementCount)
+                throw new ArgumentException("The lengths of the source selection and target selection are not equal.");
+
+            /* validate rank of dims */
+            if (copyInfo.SourceDims.Length != sourceRank ||
+                copyInfo.SourceChunkDims.Length != sourceRank ||
+                copyInfo.TargetDims.Length != targetRank ||
+                copyInfo.TargetChunkDims.Length != targetRank)
+                throw new RankException($"The length of each array parameter must match the rank parameter.");
+
+            /* walkers */
+            var sourceWalker = Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
+                .GetEnumerator();
+
+            var targetWalker = Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
+                .GetEnumerator();
+
+            /* select method */
+            if (copyInfo.GetSourceBufferAsync is not null)
+                return CopyMemoryAsync(sourceWalker, targetWalker, copyInfo);
+
+            else if (copyInfo.GetSourceStream is not null)
+                return CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
+
+            else
+                throw new Exception($"Either GetSourceBuffer or GetSourceStream must be non-null.");
+        }
+
         public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
         {
             /* check if there is anything to do */
@@ -78,54 +116,19 @@ namespace PureHDF
             }
         }
 
-        public static Task CopyAsync<TReader>(
-            TReader reader,
-            int sourceRank,
-            int targetRank,
-            CopyInfo copyInfo) where TReader : IReader
-        {
-            /* validate selections */
-            if (copyInfo.SourceSelection.TotalElementCount != copyInfo.TargetSelection.TotalElementCount)
-                throw new ArgumentException("The length of the source selection and target selection are not equal.");
-
-            /* validate rank of dims */
-            if (copyInfo.SourceDims.Length != sourceRank ||
-                copyInfo.SourceChunkDims.Length != sourceRank ||
-                copyInfo.TargetDims.Length != targetRank ||
-                copyInfo.TargetChunkDims.Length != targetRank)
-                throw new RankException($"The length of each array parameter must match the rank parameter.");
-
-            /* walkers */
-            var sourceWalker = Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
-                .GetEnumerator();
-
-            var targetWalker = Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
-                .GetEnumerator();
-
-            /* select method */
-            if (copyInfo.GetSourceBufferAsync is not null)
-                return CopyMemoryAsync(sourceWalker, targetWalker, copyInfo);
-
-            else if (copyInfo.GetSourceStream is not null)
-                return CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
-
-            else
-                throw new Exception($"Either GetSourceBuffer or GetSourceStream must be non-null.");
-        }
-
-        private async static Task CopyMemoryAsync(
+        private async static Task CopyMemoryAsync<TResult>(
             IEnumerator<RelativeStep> sourceWalker,
             IEnumerator<RelativeStep> targetWalker,
-            CopyInfo copyInfo)
+            CopyInfo<TResult> copyInfo)
         {
             /* initialize source walker */
             var sourceBuffer = default(Memory<byte>);
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
-            var targetBuffer = default(Memory<byte>);
+            var targetBuffer = default(Memory<TResult>);
             var lastTargetChunk = default(ulong[]);
-            var currentTarget = default(Memory<byte>);
+            var currentTarget = default(Memory<TResult>);
 
             /* walk until end */
             while (sourceWalker.MoveNext())
@@ -163,36 +166,36 @@ namespace PureHDF
                         }
 
                         currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset * copyInfo.TypeSize,
-                            (int)targetStep.Length * copyInfo.TypeSize);
+                            (int)targetStep.Offset,
+                            (int)targetStep.Length);
                     }
 
                     /* copy */
-                    var length = Math.Min(currentSource.Length, currentTarget.Length);
+                    var length = Math.Min(currentSource.Length / copyInfo.TypeSize, currentTarget.Length);
+                    var byteLength = length * copyInfo.TypeSize;
 
-                    currentSource[..length]
-                        .CopyTo(currentTarget);
+                    copyInfo.Converter(currentSource, currentTarget);
 
-                    currentSource = currentSource[length..];
+                    currentSource = currentSource[byteLength..];
                     currentTarget = currentTarget[length..];
                 }
             }
         }
 
-        private async static Task CopyStreamAsync<TReader>(
+        private async static Task CopyStreamAsync<TResult, TReader>(
             TReader reader,
             IEnumerator<RelativeStep> sourceWalker,
             IEnumerator<RelativeStep> targetWalker,
-            CopyInfo copyInfo) where TReader : IReader
+            CopyInfo<TResult> copyInfo) where TReader : IReader
         {
             /* initialize source walker */
             var sourceStream = default(Stream)!;
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
-            var targetBuffer = default(Memory<byte>);
+            var targetBuffer = default(Memory<TResult>);
             var lastTargetChunk = default(ulong[]);
-            var currentTarget = default(Memory<byte>);
+            var currentTarget = default(Memory<TResult>);
 
             /* walk until end */
             while (sourceWalker.MoveNext())
@@ -207,8 +210,9 @@ namespace PureHDF
                     lastSourceChunk = sourceStep.Chunk;
                 }
 
-                var offset = (int)sourceStep.Offset * copyInfo.TypeSize;                                // corresponds to 
-                var currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
+                var byteOffset = (int)sourceStep.Offset * copyInfo.TypeSize;                            // corresponds to 
+                var currentLength = (int)sourceStep.Length;                                             // sourceBuffer.Slice()
+                var currentByteLength = currentLength * copyInfo.TypeSize;           
 
                 while (currentLength > 0)
                 {
@@ -229,22 +233,30 @@ namespace PureHDF
                         }
 
                         currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset * copyInfo.TypeSize,
-                            (int)targetStep.Length * copyInfo.TypeSize);
+                            (int)targetStep.Offset,
+                            (int)targetStep.Length);
                     }
 
                     /* copy */
                     var length = Math.Min(currentLength, currentTarget.Length);
+                    var byteLength = length * copyInfo.TypeSize;
+
+// TODO now: do not copy if not necessary
+                    using var rentedOwner = MemoryPool<byte>.Shared.Rent(byteLength);
+                    var rentedMemory = rentedOwner.Memory[..byteLength];
 
                     await reader.ReadAsync(                                             // corresponds to span.CopyTo
                         sourceStream,
-                        currentTarget[..length],
-                        offset).ConfigureAwait(false);
+                        rentedMemory,
+                        byteOffset).ConfigureAwait(false);
 
-                    offset += length;                                                   // corresponds to 
+                    copyInfo.Converter(rentedMemory, currentTarget);
+
+                    byteOffset += byteLength;                                           // corresponds to 
                     currentLength -= length;                                            // sourceBuffer.Slice()
+                    currentByteLength -= byteLength;                                    // sourceBuffer.Slice()
 
-                    currentTarget = currentTarget[length..];
+                    currentTarget =  [length..];
                 }
             }
         }
