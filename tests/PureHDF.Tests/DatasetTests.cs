@@ -411,7 +411,7 @@ namespace PureHDF.Tests.Reading
                 };
 
                 var globalHeapCollection = globalHeapId.Collection;
-                var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
+                var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
                 using var localReader = new H5StreamReader(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
                 var address = root.Context.Superblock.ReadOffset(localReader);
                 var selection = new DataspaceSelection(localReader);

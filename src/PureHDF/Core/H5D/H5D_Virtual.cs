@@ -16,7 +16,7 @@
             var layoutMessage = (DataLayoutMessage4)dataset.InternalDataLayout;
             var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
-            var objectData = collection.GlobalHeapObjects[(int)index - 1].ObjectData;
+            var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
             using var localReader = new H5StreamReader(new MemoryStream(objectData), leaveOpen: false);
 
             _block = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);

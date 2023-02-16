@@ -45,7 +45,7 @@ namespace PureHDF
                 if (globalHeapObject.HeapObjectIndex == 0)
                     break;
 
-                GlobalHeapObjects[globalHeapObject.HeapObjectIndex - 1] = globalHeapObject;
+                GlobalHeapObjects[globalHeapObject.HeapObjectIndex] = globalHeapObject;
                 var after = reader.Position;
                 var consumed = (ulong)(after - before);
 

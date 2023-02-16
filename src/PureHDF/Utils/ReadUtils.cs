@@ -361,7 +361,7 @@ namespace PureHDF
                     if (globalHeapId.CollectionAddress > 0 /* may be 0 when memory selections are used */)
                     {
                         var globalHeapCollection = globalHeapId.Collection;
-                        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex - 1];
+                        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
                         var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
                         value = trim(value);
