@@ -61,6 +61,8 @@ namespace PureHDF
 
             using var destinationRawBytesOwner = MemoryPool<byte>.Shared.Rent(destinationElementSize);
             var destinationRawBytes = destinationRawBytesOwner.Memory[..destinationElementSize];
+            destinationRawBytes.Span.Clear();
+
             var stringMap = new Dictionary<FieldProperties, string?>();
 
             for (int i = 0; i < destination.Length; i++)

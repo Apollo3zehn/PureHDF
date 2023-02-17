@@ -101,6 +101,10 @@ namespace PureHDF
                 }
 
                 var streamRemaining = _slotStream.Length - _slotStream.Position;
+
+                if (streamRemaining <= 0)
+                    throw new Exception("The current stream has already been consumed.");
+
                 var length = (int)Math.Min(remaining, streamRemaining);
 
                 _slotStream.Read(buffer.Slice(offset, length));

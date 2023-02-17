@@ -10,8 +10,9 @@ namespace Benchmark
             {
                 _ = args[0] switch
                 {
-                    "inflate" => BenchmarkRunner.Run<InflateComparison>(),
-                    "walk-performance" => BenchmarkRunner.Run<WalkPerformance>(),
+                    "inflate" => BenchmarkRunner.Run<Inflate>(),
+                    "walk" => BenchmarkRunner.Run<Walk>(),
+                    "shuffle" => BenchmarkRunner.Run<Shuffle>(),
                     _ => throw new Exception($"Unknown benchmark {args[0]}")
                 };
             }

@@ -13,7 +13,8 @@ namespace PureHDF
         Func<ulong[], Stream>? GetSourceStream,
         Func<ulong[], Memory<T>> GetTargetBuffer,
         Action<Memory<byte>, Memory<T>> Converter,
-        int TypeSize
+        int SourceTypeSize,
+        int TargetTypeFactor
     );
 
     internal readonly struct RelativeStep
@@ -144,8 +145,8 @@ namespace PureHDF
                 }
 
                 var currentSource = sourceBuffer.Slice(
-                    (int)sourceStep.Offset * copyInfo.TypeSize,
-                    (int)sourceStep.Length * copyInfo.TypeSize);
+                    (int)sourceStep.Offset * copyInfo.SourceTypeSize,
+                    (int)sourceStep.Length * copyInfo.SourceTypeSize);
 
                 while (currentSource.Length > 0)
                 {
@@ -166,18 +167,21 @@ namespace PureHDF
                         }
 
                         currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset,
-                            (int)targetStep.Length);
+                            (int)targetStep.Offset * copyInfo.TargetTypeFactor,
+                            (int)targetStep.Length * copyInfo.TargetTypeFactor);
                     }
 
                     /* copy */
-                    var length = Math.Min(currentSource.Length / copyInfo.TypeSize, currentTarget.Length);
-                    var byteLength = length * copyInfo.TypeSize;
+                    var length = Math.Min(currentSource.Length / copyInfo.SourceTypeSize, currentTarget.Length);
+                    var targetLength = length * copyInfo.TargetTypeFactor;
+                    var sourceLength = length * copyInfo.SourceTypeSize;
 
-                    copyInfo.Converter(currentSource[..byteLength], currentTarget[..length]);
+                    copyInfo.Converter(
+                        currentSource[..sourceLength], 
+                        currentTarget[..targetLength]);
 
-                    currentSource = currentSource[byteLength..];
-                    currentTarget = currentTarget[length..];
+                    currentSource = currentSource[sourceLength..];
+                    currentTarget = currentTarget[targetLength..];
                 }
             }
         }
@@ -232,41 +236,44 @@ namespace PureHDF
                         }
 
                         currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset,
-                            (int)targetStep.Length);
+                            (int)targetStep.Offset * copyInfo.TargetTypeFactor,
+                            (int)targetStep.Length * copyInfo.TargetTypeFactor);
                     }
 
                     /* copy */
-                    var length = Math.Min(currentLength, currentTarget.Length);
+                    var length = Math.Min(currentLength, currentTarget.Length / copyInfo.TargetTypeFactor);
+                    var targetLength = length * copyInfo.TargetTypeFactor;
 
                     if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
                     {
                         virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
 
                         await virtualDatasetStream
-                            .ReadVirtualAsync(currentTarget[..length])
+                            .ReadVirtualAsync(currentTarget[..targetLength])
                             .ConfigureAwait(false);
                     }
 
                     else
                     {
-                        var byteLength = length * copyInfo.TypeSize;
+                        var sourceLength = length * copyInfo.SourceTypeSize;
 
                         // TODO: do not copy if not necessary
-                        using var rentedOwner = MemoryPool<byte>.Shared.Rent(byteLength);
-                        var rentedMemory = rentedOwner.Memory[..byteLength];
+                        using var rentedOwner = MemoryPool<byte>.Shared.Rent(sourceLength);
+                        var rentedMemory = rentedOwner.Memory;
 
                         await reader.ReadAsync(
                             sourceStream,
-                            rentedMemory,
-                            currentOffset * copyInfo.TypeSize).ConfigureAwait(false);
+                            rentedMemory[..sourceLength],
+                            currentOffset * copyInfo.SourceTypeSize).ConfigureAwait(false);
 
-                        copyInfo.Converter(rentedMemory, currentTarget[..length]);
+                        copyInfo.Converter(
+                            rentedMemory[..sourceLength], 
+                            currentTarget[..targetLength]);
                     }
 
                     currentOffset += length;
                     currentLength -= length;
-                    currentTarget = currentTarget[length..];
+                    currentTarget = currentTarget[targetLength..];
                 }
             }
         }

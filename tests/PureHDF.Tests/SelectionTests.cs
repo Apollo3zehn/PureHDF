@@ -485,7 +485,8 @@ namespace PureHDF.Tests.Reading
                 default,
                 default!,
                 default!,
-                0
+                0,
+                1
             );
 
             // Act
@@ -535,7 +536,8 @@ namespace PureHDF.Tests.Reading
                 indices => default!,
                 indices => default,
                 Converter: default!,
-                TypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -579,7 +581,8 @@ namespace PureHDF.Tests.Reading
                 indices => default!,
                 indices => default,
                 Converter: default!,
-                TypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -693,7 +696,8 @@ namespace PureHDF.Tests.Reading
                 indices => default!,
                 indices => actual,
                 Converter,
-                TypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -813,7 +817,8 @@ namespace PureHDF.Tests.Reading
                 indices => default!,
                 indices => actual,
                 Converter,
-                TypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -945,7 +950,8 @@ namespace PureHDF.Tests.Reading
                 indices => default!,
                 indices => actual,
                 Converter,
-                TypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -1038,7 +1044,8 @@ namespace PureHDF.Tests.Reading
                     indices => default!,
                     indices => intermediate,
                     Converter,
-                    TypeSize: 4
+                    SourceTypeSize: 4,
+                    TargetTypeFactor: 1
                 );
 
                 SelectionUtils
@@ -1063,7 +1070,8 @@ namespace PureHDF.Tests.Reading
                     indices => default!,
                     indices => actual,
                     Converter: default!,
-                    TypeSize: 4
+                    SourceTypeSize: 4,
+                    TargetTypeFactor: 1
                 );
 
                 // Act

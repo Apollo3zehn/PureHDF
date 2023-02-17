@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 namespace Benchmark
 {
     [MemoryDiagnoser]
-    public class InflateComparison
+    public class Inflate
     {
         private byte[] _original = default!;
         private byte[] _deflated = default!;
@@ -83,7 +83,7 @@ namespace Benchmark
             return _inflated;
         }
 
-        [Benchmark()]
+        [Benchmark]
         public Memory<byte> SharpZipLibInflater()
         {
             _deflatedStream.Position = 0;
@@ -98,7 +98,7 @@ namespace Benchmark
             return _inflated;
         }
 
-        [Benchmark()]
+        [Benchmark]
         public unsafe Memory<byte> Intel_ISA_L_Inflate()
         {
             var state = new Span<inflate_state>(_state_ptr.ToPointer(), _state_length);

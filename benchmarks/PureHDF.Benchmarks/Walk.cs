@@ -4,7 +4,7 @@ using PureHDF;
 namespace Benchmark
 {
     [MemoryDiagnoser]
-    public class WalkPerformance
+    public class Walk
     {
         public ulong[] Dims = new ulong[] { 1000, 200, 200 };
 
@@ -19,7 +19,7 @@ namespace Benchmark
         );
 
         [Benchmark(Baseline = true)]
-        public int Walk()
+        public int Execute()
         {
             var steps = SelectionUtils
                 .Walk(rank: 3, Dims, ChunkDims, Selection)

@@ -109,8 +109,14 @@ namespace PureHDF
                 where TResult : unmanaged
                 where TReader : IReader
         {
-            if (Unsafe.SizeOf<TResult>() != InternalDataType.Size)
-                throw new Exception($"The size of the generic parameter {nameof(TResult)} does not match the size of the HDF5 data type.");
+            // only allow size of T that matches bytesOfType or size of T = 1
+            var sizeOfT = (ulong)Unsafe.SizeOf<TResult>();
+            var bytesOfType = InternalDataType.Size;
+
+            if (bytesOfType % sizeOfT != 0)
+                throw new Exception("The size of the generic parameter must be a multiple of the HDF5 file internal data type size.");
+
+            var factor = (int)(bytesOfType / sizeOfT);
 
             static void converter(Memory<byte> source, Memory<TResult> target) 
                 => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
@@ -119,7 +125,7 @@ namespace PureHDF
                 => dataset.ReadCoreValueAsync(
                     reader, 
                     destination, 
-                    fileSelection: fileSelection, 
+                    fileSelection: fileSelection,
                     datasetAccess: datasetAccess);
 
             var fillValue = InternalFillValue.Value is null
@@ -132,6 +138,7 @@ namespace PureHDF
                 converter,
                 readVirtualDelegate,
                 fillValue,
+                factor,
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -187,6 +194,7 @@ namespace PureHDF
                 converter,
                 readVirtualDelegate,
                 fillValue,
+                factor: 1,
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -203,6 +211,7 @@ namespace PureHDF
             Action<Memory<byte>, Memory<TResult>> converter,
             ReadVirtualDelegate<TResult> readVirtualDelegate,
             TResult? fillValue,
+            int factor,
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
@@ -320,9 +329,10 @@ namespace PureHDF
             memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
             /* target buffer */
-            var targetElementCount = Utils.CalculateSize(memoryDims);
+            var destinationElementCount = Utils.CalculateSize(memoryDims);
+            var destinationElementCountScaled = destinationElementCount * (ulong)factor;
 
-            EnsureBuffer(destination, targetElementCount, out var optionalDestinationArray);
+            EnsureBuffer(destination, destinationElementCountScaled, out var optionalDestinationArray);
             var destinationMemory = optionalDestinationArray ?? destination;
 
             /* copy info */
@@ -337,7 +347,8 @@ namespace PureHDF
                 GetSourceStream: getSourceStream,
                 GetTargetBuffer: _ => destinationMemory,
                 Converter: converter,
-                TypeSize: (int)InternalDataType.Size
+                SourceTypeSize: (int)InternalDataType.Size,
+                TargetTypeFactor: factor
             );
 
             await SelectionUtils
@@ -347,19 +358,19 @@ namespace PureHDF
             return optionalDestinationArray;
         }
 
-        internal static void EnsureBuffer<T>(Memory<T> buffer, ulong elementCount, out T[]? newArray)
+        internal static void EnsureBuffer<TResult>(Memory<TResult> destination, ulong destinationElementCount, out TResult[]? newArray)
         {
             newArray = default;
 
             // user did not provide buffer
-            if (buffer.Equals(default))
+            if (destination.Equals(default))
             {
                 // create the buffer
-                newArray = new T[elementCount];
+                newArray = new TResult[destinationElementCount];
             }
 
             // user provided buffer is too small
-            else if (buffer.Length < (int)elementCount)
+            else if (destination.Length < (int)destinationElementCount)
             {
                 throw new Exception("The provided target buffer is too small.");
             }
