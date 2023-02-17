@@ -174,7 +174,7 @@ namespace PureHDF
                     var length = Math.Min(currentSource.Length / copyInfo.TypeSize, currentTarget.Length);
                     var byteLength = length * copyInfo.TypeSize;
 
-                    copyInfo.Converter(currentSource, currentTarget);
+                    copyInfo.Converter(currentSource[..byteLength], currentTarget[..length]);
 
                     currentSource = currentSource[byteLength..];
                     currentTarget = currentTarget[length..];
@@ -210,9 +210,8 @@ namespace PureHDF
                     lastSourceChunk = sourceStep.Chunk;
                 }
 
-                var byteOffset = (int)sourceStep.Offset * copyInfo.TypeSize;                            // corresponds to 
-                var currentLength = (int)sourceStep.Length;                                             // sourceBuffer.Slice()
-                var currentByteLength = currentLength * copyInfo.TypeSize;           
+                var currentOffset = (int)sourceStep.Offset;
+                var currentLength = (int)sourceStep.Length;
 
                 while (currentLength > 0)
                 {
@@ -239,24 +238,35 @@ namespace PureHDF
 
                     /* copy */
                     var length = Math.Min(currentLength, currentTarget.Length);
-                    var byteLength = length * copyInfo.TypeSize;
 
-// TODO now: do not copy if not necessary
-                    using var rentedOwner = MemoryPool<byte>.Shared.Rent(byteLength);
-                    var rentedMemory = rentedOwner.Memory[..byteLength];
+                    if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
+                    {
+                        virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
 
-                    await reader.ReadAsync(                                             // corresponds to span.CopyTo
-                        sourceStream,
-                        rentedMemory,
-                        byteOffset).ConfigureAwait(false);
+                        await virtualDatasetStream
+                            .ReadVirtualAsync(currentTarget[..length])
+                            .ConfigureAwait(false);
+                    }
 
-                    copyInfo.Converter(rentedMemory, currentTarget);
+                    else
+                    {
+                        var byteLength = length * copyInfo.TypeSize;
 
-                    byteOffset += byteLength;                                           // corresponds to 
-                    currentLength -= length;                                            // sourceBuffer.Slice()
-                    currentByteLength -= byteLength;                                    // sourceBuffer.Slice()
+                        // TODO: do not copy if not necessary
+                        using var rentedOwner = MemoryPool<byte>.Shared.Rent(byteLength);
+                        var rentedMemory = rentedOwner.Memory[..byteLength];
 
-                    currentTarget =  [length..];
+                        await reader.ReadAsync(
+                            sourceStream,
+                            rentedMemory,
+                            currentOffset * copyInfo.TypeSize).ConfigureAwait(false);
+
+                        copyInfo.Converter(rentedMemory, currentTarget[..length]);
+                    }
+
+                    currentOffset += length;
+                    currentLength -= length;
+                    currentTarget = currentTarget[length..];
                 }
             }
         }

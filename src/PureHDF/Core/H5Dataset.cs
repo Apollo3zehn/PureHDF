@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -97,14 +98,13 @@ namespace PureHDF
 
         #region Private
 
-        internal async Task<TResult[]?> ReadCoreUnmanagedAsync<TResult, TReader>(
+        internal async Task<TResult[]?> ReadCoreValueAsync<TResult, TReader>(
             TReader reader,
-            Memory<TResult> buffer,
+            Memory<TResult> destination,
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
-            bool skipTypeCheck = false,
             bool skipShuffle = false)
                 where TResult : unmanaged
                 where TReader : IReader
@@ -112,108 +112,112 @@ namespace PureHDF
             if (Unsafe.SizeOf<TResult>() != InternalDataType.Size)
                 throw new Exception($"The size of the generic parameter {nameof(TResult)} does not match the size of the HDF5 data type.");
 
-            var result = default(TResult[]);
-
-            Memory<TResult> getBuffer(ulong elementCount)
-            {
-                result = EnsureUnmanagedBuffer(buffer, elementCount);
-                return result ?? buffer;
-            };
-
-            void converter(Memory<byte> source, Memory<TResult> target) 
+            static void converter(Memory<byte> source, Memory<TResult> target) 
                 => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
 
-            await ReadCoreAsync(
+            Task readVirtualDelegate(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+                => dataset.ReadCoreValueAsync(
+                    reader, 
+                    destination, 
+                    fileSelection: fileSelection, 
+                    datasetAccess: datasetAccess);
+
+            var fillValue = InternalFillValue.Value is null
+                ? default
+                : MemoryMarshal.Cast<byte, TResult>(InternalFillValue.Value)[0];
+
+            var result = await ReadCoreAsync(
                 reader,
-                getBuffer,
+                destination,
                 converter,
+                readVirtualDelegate,
+                fillValue,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipTypeCheck: skipTypeCheck,
                 skipShuffle: skipShuffle
             );
+
+            /* ensure correct endianness */
+            if (InternalDataType.BitField is IByteOrderAware byteOrderAware)
+            {
+                Utils.EnsureEndianness(
+                    source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */, 
+                    destination: MemoryMarshal.AsBytes(result.AsSpan()), 
+                    byteOrderAware.ByteOrder, 
+                    InternalDataType.Size);
+            }
 
             return result;
         }
 
-        internal async Task<TResult[]> ReadCoreReferenceAsync<TResult, TReader>(
+        internal async Task<TResult[]?> ReadCoreReferenceAsync<TResult, TReader>(
             TReader reader,
+            Memory<TResult> destination,
             Action<Memory<byte>, Memory<TResult>> converter,
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
-            bool skipTypeCheck = false,
             bool skipShuffle = false)
                 where TReader : IReader
         {
-            var result = default(TResult[]);
+            Task readVirtualDelegate(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+                => dataset.ReadCoreReferenceAsync(
+                    reader,
+                    destination,
+                    converter,
+                    fileSelection: fileSelection,
+                    datasetAccess: datasetAccess);
 
-            Memory<TResult> getBuffer(ulong elementCount)
+            using var fillValueArrayOwner = MemoryPool<TResult>.Shared.Rent(1);
+            var fillValueArray = fillValueArrayOwner.Memory[..1];
+            var fillValue = default(TResult);
+
+            if (InternalFillValue.Value is not null)
             {
-                result = new TResult[elementCount];
-                return result;
-            };
+                converter(InternalFillValue.Value, fillValueArray);
+                fillValue = fillValueArray.Span[0];
+            }
 
-            await ReadCoreAsync(
+            var result = await ReadCoreAsync(
                 reader,
-                getBuffer,
+                destination,
                 converter,
+                readVirtualDelegate,
+                fillValue,
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipTypeCheck: skipTypeCheck,
                 skipShuffle: skipShuffle
             );
 
             return result!;
         }
 
-        internal async Task ReadCoreAsync<TResult, TReader>(
+        internal async Task<TResult[]?> ReadCoreAsync<TResult, TReader>(
             TReader reader,
-            Func<ulong, Memory<TResult>> getBuffer,
+            Memory<TResult> destination,
             Action<Memory<byte>, Memory<TResult>> converter,
+            ReadVirtualDelegate<TResult> readVirtualDelegate,
+            TResult? fillValue,
             Selection? fileSelection = default,
             Selection? memorySelection = default,
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default,
-            bool skipTypeCheck = false,
             bool skipShuffle = false)
                 where TReader : IReader
         {
-            // TODO now:
-            // // fast path for null dataspace
-            // if (InternalDataspace.Type == DataspaceType.Null)
-            //     return Array.Empty<TResult>();
-
-            // 
-            if (!skipTypeCheck)
-            {
-                switch (InternalDataType.Class)
-                {
-                    case DatatypeMessageClass.FixedPoint:
-                    case DatatypeMessageClass.FloatingPoint:
-                    case DatatypeMessageClass.BitField:
-                    case DatatypeMessageClass.Opaque:
-                    case DatatypeMessageClass.Compound:
-                    case DatatypeMessageClass.Reference:
-                    case DatatypeMessageClass.Enumerated:
-                    case DatatypeMessageClass.Array:
-                        break;
-
-                    default:
-                        throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Reference}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
-                }
-            }
+            // fast path for null dataspace
+            if (InternalDataspace.Type == DataspaceType.Null)
+                return Array.Empty<TResult>();
 
             // for testing only
             if (skipShuffle && InternalFilterPipeline is not null)
             {
-                var filtersToRemove = this
-                    .InternalFilterPipeline
+                var filtersToRemove = InternalFilterPipeline
                     .FilterDescriptions
                     .Where(description => description.Identifier == FilterIdentifier.Shuffle)
                     .ToList();
@@ -258,7 +262,7 @@ namespace PureHDF
                  * mapping information. The mapping associates the VDS to the source
                  * dataset elements that are stored across a collection of HDF5 files.
                  */
-                LayoutClass.VirtualStorage => new H5D_Virtual(this, datasetAccess),
+                LayoutClass.VirtualStorage => new H5D_Virtual<TResult>(this, datasetAccess, fillValue, readVirtualDelegate),
 
                 /* default */
                 _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
@@ -317,7 +321,9 @@ namespace PureHDF
 
             /* target buffer */
             var targetElementCount = Utils.CalculateSize(memoryDims);
-            var targetBuffer = getBuffer(targetElementCount);
+
+            EnsureBuffer(destination, targetElementCount, out var optionalDestinationArray);
+            var destinationMemory = optionalDestinationArray ?? destination;
 
             /* copy info */
             var copyInfo = new CopyInfo<TResult>(
@@ -329,7 +335,7 @@ namespace PureHDF
                 memorySelection,
                 GetSourceBufferAsync: getSourceBufferAsync,
                 GetSourceStream: getSourceStream,
-                GetTargetBuffer: _ => targetBuffer,
+                GetTargetBuffer: _ => destinationMemory,
                 Converter: converter,
                 TypeSize: (int)InternalDataType.Size
             );
@@ -338,34 +344,18 @@ namespace PureHDF
                 .CopyAsync(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo)
                 .ConfigureAwait(false);
 
-            // TODO now: 
-
-            // /* ensure correct endianness */
-            // var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
-            // var source = byteBuffer.Span.ToArray();
-
-            // if (byteOrderAware is not null)
-            //     Utils.EnsureEndianness(source, byteBuffer.Span, byteOrderAware.ByteOrder, InternalDataType.Size);
+            return optionalDestinationArray;
         }
 
-        internal T[]? EnsureUnmanagedBuffer<T>(Memory<T> buffer, ulong elementCount) where T : unmanaged
+        internal static void EnsureBuffer<T>(Memory<T> buffer, ulong elementCount, out T[]? newArray)
         {
-            /* target buffer */
-            var targetByteSize = elementCount * InternalDataType.Size;
+            newArray = default;
 
             // user did not provide buffer
             if (buffer.Equals(default))
             {
-                // convert file type (e.g. 2 bytes) to T (e.g. custom struct with 35 bytes)
-                var sizeOfT = (ulong)Unsafe.SizeOf<T>();
-
-                if (targetByteSize % sizeOfT != 0)
-                    throw new Exception("The size of the target buffer (number of selected elements times the datasets data-type byte size) must be a multiple of the byte size of the generic parameter T.");
-
-                var arraySize = targetByteSize / sizeOfT;
-
                 // create the buffer
-                return new T[arraySize]; 
+                newArray = new T[elementCount];
             }
 
             // user provided buffer is too small
@@ -373,8 +363,6 @@ namespace PureHDF
             {
                 throw new Exception("The provided target buffer is too small.");
             }
-
-            return default;
         }
 
         internal ulong[] GetDatasetDims()

@@ -60,7 +60,7 @@ namespace PureHDF
             var destinationElementSize = Marshal.SizeOf<T>();
 
             using var destinationRawBytesOwner = MemoryPool<byte>.Shared.Rent(destinationElementSize);
-            var destinationRawBytes = destinationRawBytesOwner.Memory;
+            var destinationRawBytes = destinationRawBytesOwner.Memory[..destinationElementSize];
             var stringMap = new Dictionary<FieldProperties, string?>();
 
             for (int i = 0; i < destination.Length; i++)
@@ -119,14 +119,30 @@ namespace PureHDF
             return destination;
         }
 
-        public static unsafe Dictionary<string, object?>[] ReadCompound(
+        public static Dictionary<string, object?>[] ReadCompound(
+            H5Context context,
+            DatatypeMessage datatype,
+            Span<byte> data)
+        {
+            var size = (int)datatype.Size;
+            var elementCount = data.Length / size;
+            var destination = new Dictionary<string, object?>[elementCount];
+
+            ReadCompound(context, datatype, data, destination);
+
+            return destination;
+        }
+
+        public static unsafe Memory<Dictionary<string, object?>> ReadCompound(
             H5Context context,
             DatatypeMessage datatype,
             Span<byte> data,
-            Dictionary<string, object?>[]? result = default)
+            Memory<Dictionary<string, object?>> destination)
         {           
             if (datatype.Class != DatatypeMessageClass.Compound)
                 throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
+
+            var destinationSpan = destination.Span;
 
             var members = datatype.Properties
                 .Cast<CompoundPropertyDescription>()
@@ -135,16 +151,13 @@ namespace PureHDF
             var sourceOffset = 0UL;
             var sourceElementSize = datatype.Size;
 
-            if (result is null)
-            {
-                var elementCount = data.Length / datatype.Size;
-                result = new Dictionary<string, object?>[elementCount];
-            }
+            using var oneElementStringArrayOwner = MemoryPool<string>.Shared.Rent(1);
+            var oneElementStringArray = oneElementStringArrayOwner.Memory[..1];
 
-            var oneElementStringArray = new string[1];
-            var oneElementCompoundArray = new Dictionary<string, object?>[1];
+            using var oneElementCompoundArrayOwner = MemoryPool<Dictionary<string, object?>>.Shared.Rent(1);
+            var oneElementCompoundArray = oneElementCompoundArrayOwner.Memory[..1];
 
-            for (int i = 0; i < result.Length; i++)
+            for (int i = 0; i < destination.Length; i++)
             {
                 var map = new Dictionary<string, object?>();
 
@@ -183,7 +196,7 @@ namespace PureHDF
                             => slicedData.ToArray(),
 
                         (DatatypeMessageClass.Compound, _)
-                            => ReadCompound(context, memberType, slicedData, oneElementCompoundArray)[0],
+                            => ReadCompound(context, memberType, slicedData, oneElementCompoundArray).Span[0],
 
                         // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                         (DatatypeMessageClass.Reference, _)
@@ -203,11 +216,11 @@ namespace PureHDF
                     };
                 }
 
-                result[i] = map;
+                destinationSpan[i] = map;
                 sourceOffset += sourceElementSize;
             }
 
-            return result;
+            return destination;
         }
 
         private static Array? ReadRawArray(H5Context context, DatatypeMessage baseType, Span<byte> slicedData)
@@ -424,7 +437,7 @@ namespace PureHDF
                 byteValue = reader.ReadByte();
             }
 
-            var result = encoding switch
+            var destination = encoding switch
             {
                 CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
                 CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
@@ -434,11 +447,11 @@ namespace PureHDF
             if (pad)
             {
                 // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
-                var paddingCount = (padSize - (result.Length + 1) % padSize) % padSize;
+                var paddingCount = (padSize - (destination.Length + 1) % padSize) % padSize;
                 reader.Seek(paddingCount, SeekOrigin.Current);
             }
 
-            return result;
+            return destination;
         }
 
         public static bool IsReferenceOrContainsReferences(Type type)

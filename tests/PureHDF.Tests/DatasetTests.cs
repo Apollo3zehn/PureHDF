@@ -146,9 +146,6 @@ namespace PureHDF.Tests.Reading
 
                 var defaultSerialized = JsonSerializer.Serialize(default(TestStructStringAndArray), _options);
 
-                defaultSerialized = defaultSerialized
-                    .Replace("\"FloatArray\":null", "\"FloatArray\":[0,0,0]");
-
                 for (int i = 0; i < actual.Length; i++)
                 {
                     if (i % 2 == 0)
@@ -210,18 +207,12 @@ namespace PureHDF.Tests.Reading
 
                 var defaultSerialized = JsonSerializer
                 .Serialize(default(TestStructStringAndArray), _options);
-
-                defaultSerialized = defaultSerialized
-                    .Replace("\"FloatArray\":null", "\"FloatArray\":[0,0,0]")
-                    .Replace("ShortValueWithCustomName", "ShortValue");
-                    
+                  
                 for (int i = 0; i < actual.Length; i++)
                 {
                     if (i % 2 == 0)
                     {
-                        Assert.Equal(
-                            defaultSerialized, 
-                            JsonSerializer.Serialize(actual[i], _options));
+                        Assert.Null(actual[i]);
                     }
 
                     else

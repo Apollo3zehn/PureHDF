@@ -93,7 +93,12 @@ namespace PureHDF
         {
             getName ??= fieldInfo => fieldInfo.Name;
 
-            return ReadUtils.ReadCompound<T>(_context, Message.Datatype, Message.Data, getName);
+            var elementCount = Message.Data.Length / Message.Datatype.Size;
+            var result = new T[elementCount];
+
+            ReadUtils.ReadCompound<T>(_context, Message.Datatype, Message.Data, result, getName);
+
+            return result;
         }
 
         /// <summary>
@@ -102,7 +107,12 @@ namespace PureHDF
         /// <returns>The read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</returns>
         public Dictionary<string, object?>[] ReadCompound()
         {
-            return ReadUtils.ReadCompound(_context, Message.Datatype, Message.Data);
+            var elementCount = Message.Data.Length / Message.Datatype.Size;
+            var result = new Dictionary<string, object?>[elementCount];
+
+            ReadUtils.ReadCompound(_context, Message.Datatype, Message.Data, result);
+
+            return result;
         }
 
         /// <summary>

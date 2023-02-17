@@ -1,18 +1,27 @@
 ﻿namespace PureHDF
 {
-    internal class H5D_Virtual : H5D_Base
+    internal class H5D_Virtual<TResult> : H5D_Base
     {
         #region Fields
 
         private readonly VdsGlobalHeapBlock _block;
+        private readonly TResult? _fillValue;
+        private readonly ReadVirtualDelegate<TResult> _readVirtualDelegate;
 
         #endregion
 
         #region Constructors
 
-        public H5D_Virtual(H5Dataset dataset, H5DatasetAccess datasetAccess) :
-            base(dataset, supportsBuffer: false, supportsStream: true, datasetAccess)
+        public H5D_Virtual(
+            H5Dataset dataset, 
+            H5DatasetAccess datasetAccess,
+            TResult? fillValue,
+            ReadVirtualDelegate<TResult> readVirtualDelegate) 
+            : base(dataset, supportsBuffer: false, supportsStream: true, datasetAccess)
         {
+            _fillValue = fillValue;
+            _readVirtualDelegate = readVirtualDelegate;
+
             var layoutMessage = (DataLayoutMessage4)dataset.InternalDataLayout;
             var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
@@ -55,13 +64,14 @@
 
         public override Stream GetH5Stream(ulong[] chunkIndices)
         {
-            return new VirtualDatasetStream(
+            return new VirtualDatasetStream<TResult>(
                 Dataset.File,
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.InternalDataspace.DimensionSizes,
-                typeSize: Dataset.InternalDataType.Size,
-                fillValue: Dataset.InternalFillValue.Value,
-                DatasetAccess);
+                fillValue: _fillValue,
+                DatasetAccess,
+                _readVirtualDelegate
+            );
         }
 
         #endregion

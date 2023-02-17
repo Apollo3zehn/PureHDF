@@ -278,11 +278,11 @@ var data = dataset.Read<int>(memorySelection: memorySelection);
 
 All parameters are optional. For example, when the `fileSelection` parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
 
-> Note: There are an overload methods that allow you to provide your own buffer.
+> Note: There are overload methods that allow you to provide your own buffer.
 
 **Point selection**
 
-Point selections require a two-dimension `n` x `m` array where `n` is the number of points and `m` the rank of the dataset. Here is an example with four points to select data from a dataset of rank = `3`.
+Point selections require a two-dimensional `n` x `m` array where `n` is the number of points and `m` the rank of the dataset. Here is an example with four points to select data from a dataset of rank = `3`.
 
 ```cs
 var selection = new PointSelection(new ulong[,] {

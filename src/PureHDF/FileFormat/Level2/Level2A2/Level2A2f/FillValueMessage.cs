@@ -5,8 +5,6 @@
     {
         #region Fields
 
-        private static readonly byte[] _defaultValue = new byte[] { 0 };
-
         private byte[]? _value;
         private byte _version;
 
@@ -123,15 +121,12 @@
         {
             set
             {
-                _value = value;
+                if (value?.Length > 0)
+                    _value = value;
             }
             get
             {
-                if (_value?.Length == 0)
-                    return _defaultValue;
-
-                else
-                    return _value;
+                return _value;
             }
         }
 

@@ -84,7 +84,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = ReadCoreUnmanagedAsync<byte, SyncReader>(
+            var result = ReadCoreValueAsync<byte, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -114,7 +114,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = ReadCoreUnmanagedAsync<T, SyncReader>(
+            var result = ReadCoreValueAsync<T, SyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -170,7 +170,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            ReadCoreUnmanagedAsync<T, SyncReader>(
+            ReadCoreValueAsync<T, SyncReader>(
                 default,
                 buffer,
                 fileSelection,
@@ -201,6 +201,7 @@ namespace PureHDF
 
             var data = ReadCoreReferenceAsync<T, SyncReader>(
                 default,
+                default,
                 (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination, getName),
                 fileSelection,
                 memorySelection,
@@ -228,9 +229,10 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = ReadCoreUnmanagedAsync<byte, SyncReader>(
+            var data = ReadCoreReferenceAsync<Dictionary<string, object?>, SyncReader>(
                 default,
                 default,
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -240,7 +242,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return ReadUtils.ReadCompound(Context, InternalDataType, data);
+            return data;
         }
 
 // TODO: Unify names: result, destination, destination
@@ -261,13 +263,13 @@ namespace PureHDF
         {
             var result = ReadCoreReferenceAsync<string, SyncReader>(
                 default,
+                default,
                 (source, destination) => ReadUtils.ReadString(Context, InternalDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false,
-                skipTypeCheck: true).GetAwaiter().GetResult();
+                skipShuffle: false).GetAwaiter().GetResult();
 
             if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");
@@ -293,7 +295,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var result = await ReadCoreUnmanagedAsync<byte, AsyncReader>(
+            var result = await ReadCoreValueAsync<byte, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -323,7 +325,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            var result = await ReadCoreUnmanagedAsync<T, AsyncReader>(
+            var result = await ReadCoreValueAsync<T, AsyncReader>(
                 default,
                 default,
                 fileSelection,
@@ -354,7 +356,7 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default) where T : unmanaged
         {
-            return ReadCoreUnmanagedAsync<T, AsyncReader>(
+            return ReadCoreValueAsync<T, AsyncReader>(
                 default,
                 buffer,
                 fileSelection,
@@ -381,21 +383,22 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default) where T : struct
         {
-            var data = await ReadCoreUnmanagedAsync<byte, AsyncReader>(
+            getName ??= fieldInfo => fieldInfo.Name;
+
+            var result = await ReadCoreReferenceAsync<T, AsyncReader>(
                 default,
                 default,
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination, getName),
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
                 skipShuffle: false);
 
-            if (data is null)
+            if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            getName ??= fieldInfo => fieldInfo.Name;
-
-            return ReadUtils.ReadCompound<T>(Context, InternalDataType, data, getName);
+            return result;
         }
 
         /// <summary>
@@ -412,9 +415,10 @@ namespace PureHDF
            ulong[]? memoryDims = default,
            H5DatasetAccess datasetAccess = default)
         {
-            var data = await ReadCoreUnmanagedAsync<byte, AsyncReader>(
+            var data = await ReadCoreReferenceAsync<Dictionary<string, object?>, AsyncReader>(
                 default,
                 default,
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -424,7 +428,7 @@ namespace PureHDF
             if (data is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return ReadUtils.ReadCompound(Context, InternalDataType, data);
+            return data;
         }
 
         /// <summary>
@@ -441,22 +445,21 @@ namespace PureHDF
             ulong[]? memoryDims = default,
             H5DatasetAccess datasetAccess = default)
         {
-            var data = await ReadCoreUnmanagedAsync<byte, AsyncReader>(
+            var result = await ReadCoreReferenceAsync<string, AsyncReader>(
                 default,
                 default,
+                (source, destination) => ReadUtils.ReadString(Context, InternalDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
                 datasetAccess,
-                skipShuffle: false,
-                skipTypeCheck: true);
+                skipShuffle: false);
 
-            if (data is null)
+            if (result is null)
                 throw new Exception("The buffer is null. This should never happen.");
 
-            return ReadUtils.ReadString(Context, InternalDataType, data);
+            return result;
         }
-
 #endif
     }
 }

@@ -1,35 +1,34 @@
-﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-
-namespace PureHDF
+﻿namespace PureHDF
 {
-    internal class VirtualDatasetStream : Stream
+    internal delegate Task ReadVirtualDelegate<TResult>(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
+
+    internal class VirtualDatasetStream<TResult> : Stream
     {
         private record class DatasetInfo(H5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
 
         private long _position;
-        private readonly uint _typeSize;
         private readonly ulong[] _virtualDimensions;
-        private readonly byte[]? _fillValue;
+        private readonly TResult? _fillValue;
         private readonly H5File _file;
         private readonly H5DatasetAccess _datasetAccess;
         private readonly VdsDatasetEntry[] _entries;
         private readonly Dictionary<VdsDatasetEntry, DatasetInfo> _datasetInfoMap = new();
+        private readonly ReadVirtualDelegate<TResult> _readVirtual;
 
         public VirtualDatasetStream(
             H5File file,
             VdsDatasetEntry[] entries, 
             ulong[] dimensions, 
-            uint typeSize, 
-            byte[]? fillValue,
-            H5DatasetAccess datasetAccess)
+            TResult? fillValue,
+            H5DatasetAccess datasetAccess,
+            ReadVirtualDelegate<TResult> readVirtual)
         {
             _file = file;
             _entries = entries;
             _virtualDimensions = dimensions;
-            _typeSize = typeSize;
             _fillValue = fillValue;
             _datasetAccess = datasetAccess;
+            _readVirtual = readVirtual;
         }
 
         public override bool CanRead => true;
@@ -54,15 +53,12 @@ namespace PureHDF
 
 #region Methods
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#pragma warning disable CS1998
-        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useAsync)
-#pragma warning restore CS1998
+        public async ValueTask<int> ReadVirtualAsync(Memory<TResult> buffer)
         {
             var length = buffer.Length;
 
             // Overall algorithm:
-            // - We get a linear byte index, which needs to be scaled by the type size.
+            // - We get a linear index.
             // - That index is then converted into coordinates which identify the position in the multidimensional virtual dataset.
             // - Now, try to find the VDS dataset entry which covers the requested slice.
             // - If no entry is found, use the fill value.
@@ -76,7 +72,7 @@ namespace PureHDF
             while (buffer.Length > 0)
             {
                 // 1. Linear index to coordinates in virtual dataset
-                var virtualLinearIndex = (ulong)_position / _typeSize;
+                var virtualLinearIndex = (ulong)_position;
                 var virtualCoordinates = Utils.ToCoordinates(virtualLinearIndex, _virtualDimensions);
 
                 // 2. Calculate linear index and max count
@@ -105,20 +101,16 @@ namespace PureHDF
                 }
 
                 // 4. Find min count (request vs virtual selection)
-                var scaledBufferLength = (ulong)buffer.Length / _typeSize;
-
                 ulong virtualCount = virtualResult.MaxCount == 0
                     // MaxCount == 0: there is no block in the fastest changing dimension
-                    ? scaledBufferLength
+                    ? (ulong)buffer.Length
                     // MaxCount != 0: 
                     //  - block width (virtualResult.Success == true) or 
                     //  - distance until next block begins (virtualResult.Success == false)
-                    : Math.Min(scaledBufferLength, minimumMaxCount); // 
-
-                var virtualByteCount = (long)virtualCount * _typeSize;
+                    : Math.Min((ulong)buffer.Length, minimumMaxCount); // 
 
                 // 5. Read data
-                var slicedBuffer = buffer[..(int)virtualByteCount];
+                var slicedBuffer = buffer[..(int)virtualCount];
 
                 // From source dataset
                 var sourceDatasetInfo = default(DatasetInfo);
@@ -136,20 +128,11 @@ namespace PureHDF
                             sourceDimensions, 
                             foundEntry.SourceSelection));
 
-#if NET6_0_OR_GREATER
-                    if (useAsync)
-                        await sourceDatasetInfo.Dataset
-                            .ReadAsync(buffer: slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess)
-                            .ConfigureAwait(false);
-
-                    else
-                        sourceDatasetInfo.Dataset
-                            .Read(buffer: slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
-#else
-
-                    sourceDatasetInfo.Dataset
-                        .Read(buffer: slicedBuffer, fileSelection: selection, datasetAccess: sourceDatasetInfo.DatasetAccess);
-#endif
+                    await _readVirtual(
+                        dataset: sourceDatasetInfo.Dataset, 
+                        destination: slicedBuffer, 
+                        fileSelection: selection, 
+                        datasetAccess: sourceDatasetInfo.DatasetAccess);
                 }
 
                 // Fill value
@@ -163,8 +146,8 @@ namespace PureHDF
                 }
 
                 // Update state
-                _position += virtualByteCount;
-                buffer = buffer[(int)virtualByteCount..];
+                _position += (long)virtualCount;
+                buffer = buffer[(int)virtualCount..];
             }
 
             return length;
@@ -240,38 +223,10 @@ namespace PureHDF
             throw new NotImplementedException();
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        public override int Read(Span<byte> buffer)
-        {
-            // TODO: Avoidable? Just do not implement this Read overload?
-            using var memoryOwner = MemoryPool<byte>.Shared.Rent(buffer.Length);
-            var memory = memoryOwner.Memory[..buffer.Length];
-#pragma warning disable CA2012
-            var readCount = ReadCoreAsync(memory, useAsync: false).Result;
-#pragma warning restore CA2012
-
-            memory.Span.CopyTo(buffer);
-
-            return readCount;
-        }
-
         public override int Read(byte[] buffer, int offset, int count)
         {
             throw new NotImplementedException();
         }
-#else
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return ReadCoreAsync(buffer.AsMemory(offset, count), useAsync: false).Result;
-        }
-#endif
-
-#if NET6_0_OR_GREATER
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            return ReadCoreAsync(buffer, useAsync: true);
-        }
-#endif
 
         public override long Seek(long offset, SeekOrigin origin)
         {
