@@ -9,7 +9,6 @@ namespace PureHDF
     {
         private static void ValidateInputData<T>(T[] data, long[] dimensionSizes)
         {
-            // sanity checks
             var unspecifiedDimensions = dimensionSizes
                 .Where(size => size <= 0)
                 .Count();
@@ -18,6 +17,7 @@ namespace PureHDF
             {
                 throw new Exception("You may only provide a single unspecified dimension.");
             }
+
             else if (unspecifiedDimensions == 1)
             {
                 var index = Array.FindIndex(dimensionSizes, size => size <= 0);
@@ -32,6 +32,11 @@ namespace PureHDF
                 missingDimensionSize = data.Length / missingDimensionSize;
                 dimensionSizes[index] = missingDimensionSize;
             }
+
+            var totalSize = (long)Utils.CalculateSize(dimensionSizes.Select(value => (ulong)value).ToArray());
+
+            if (data.LongLength != totalSize)
+                throw new Exception("The total number of elements in all dimensions of the reshaped array must be equal to the total number of elements of the current array.");
         }
 
         private static unsafe void CopyData<T>(T[] source, void* target)
