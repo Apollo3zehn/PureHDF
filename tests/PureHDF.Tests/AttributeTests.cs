@@ -197,7 +197,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray(fileId, ContainerType.Attribute));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_value(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
@@ -206,7 +206,7 @@ namespace PureHDF.Tests.Reading
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);
 
-                var expected_casted = TestData.ArrayData.Cast<int>().ToArray();
+                var expected_casted = TestData.ArrayDataValue.Cast<int>().ToArray();
                 var actual_casted = actual.Cast<int>().ToArray();
 
                 // Assert

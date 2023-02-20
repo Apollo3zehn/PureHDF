@@ -163,26 +163,47 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void CanReadDataset_Array()
+        public void CanReadDataset_Array_value()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray(fileId, ContainerType.Dataset));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_value(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var dataset = root.Group("array").Dataset("array");
+                var dataset = root.Group("array").Dataset("value");
 
                 var actual = dataset
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);
 
-                var expected_casted = TestData.ArrayData.Cast<int>().ToArray();
+                var expected_casted = TestData.ArrayDataValue.Cast<int>().ToArray();
                 var actual_casted = actual.Cast<int>().ToArray();
 
-                var b = MemoryMarshal.AsBytes(expected_casted.AsSpan());
-                var c = MemoryMarshal.AsBytes(actual_casted.AsSpan());
+                // Assert
+                Assert.True(actual_casted.SequenceEqual(expected_casted));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Array_reference()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_reference(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var dataset = root.Group("array").Dataset("reference");
+
+                var actual = dataset
+                    .ReadString();
+                // .ToArray4D(2, 3, 4, 5);
+
+                var expected_casted = TestData.ArrayDataValue.Cast<int>().ToArray();
+                var actual_casted = actual.Cast<int>().ToArray();
 
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));

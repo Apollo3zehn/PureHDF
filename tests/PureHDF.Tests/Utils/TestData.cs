@@ -89,7 +89,7 @@
             BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
                                                          TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 };
 
-            ArrayData = new int[2, 3, 4, 5];
+            ArrayDataValue = new int[2, 3, 4, 5];
 
             for (int i = 0; i < 2; i++)
             {
@@ -99,7 +99,23 @@
                     {
                         for (int l = 0; l < 5; l++)
                         {
-                            ArrayData[i, j, k, l] = i * j * j * k * l;
+                            ArrayDataValue[i, j, k, l] = i * j * j * k * l;
+                        }
+                    }
+                }
+            }
+
+            ArrayDataReference = new string[2, 3, 4, 5];
+
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    for (int k = 0; k < 4; k++)
+                    {
+                        for (int l = 0; l < 5; l++)
+                        {
+                            ArrayDataReference[i, j, k, l] = (i * j * j * k * l).ToString();
                         }
                     }
                 }
@@ -152,7 +168,8 @@
 
         public static TestBitfield[] BitfieldData { get; }
 
-        public static int[,,,] ArrayData { get; }
+        public static int[,,,] ArrayDataValue { get; }
+        public static string[,,,] ArrayDataReference { get; }
 
         public static IList<object[]> NumericalData { get; }
 

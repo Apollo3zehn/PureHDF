@@ -327,9 +327,6 @@ namespace PureHDF
             var destinationSpan = destination.Span;
             var isFixed = datatype.Class == DatatypeMessageClass.String;
 
-            if (!isFixed && datatype.Class != DatatypeMessageClass.VariableLength)
-                throw new Exception($"Attribute data type class '{datatype.Class}' cannot be read as string.");
-
             if (isFixed)
             {
                 if (datatype.BitField is not StringBitFieldDescription bitField)
@@ -358,7 +355,8 @@ namespace PureHDF
                     position += size;
                 }
             }
-            else
+            
+            else if (datatype.Class == DatatypeMessageClass.VariableLength)
             {
                 /* String is always split after first \0 when writing data to file. 
                  * In other words, padding type only matters when reading data.
@@ -392,6 +390,11 @@ namespace PureHDF
                     value = trim(value);
                     destinationSpan[i] = value;
                 }
+            }
+
+            else
+            {
+                throw new Exception($"Attribute data type class '{datatype.Class}' cannot be read as string.");
             }
 
             return destination;

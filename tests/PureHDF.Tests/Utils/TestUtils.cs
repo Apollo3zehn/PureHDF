@@ -515,18 +515,61 @@ namespace PureHDF.Tests
             _ = H5T.close(typeId);
         }
 
-        public static unsafe void AddArray(long fileId, ContainerType container)
+        public static unsafe void AddArray_value(long fileId, ContainerType container)
         {
             long res;
 
             var typeId = H5T.array_create(H5T.NATIVE_INT32, 2, new ulong[] { 4, 5 });
             var dims = new ulong[] { 2, 3 };
 
-            fixed (void* dataPtr = TestData.ArrayData)
+            fixed (void* dataPtr = TestData.ArrayDataValue)
             {
-                Add(container, fileId, "array", "array", typeId, dataPtr, dims);
+                Add(container, fileId, "array", "value", typeId, dataPtr, dims);
             }
 
+            res = H5T.close(typeId);
+        }
+
+        public static unsafe void AddArray_reference(long fileId, ContainerType container)
+        {
+            long res;
+
+            // variable length string (ASCII)
+            var typeIdVar = H5T.copy(H5T.C_S1);
+            res = H5T.set_size(typeIdVar, H5T.VARIABLE);
+
+            var typeId = H5T.array_create(typeIdVar, 2, new ulong[] { 4, 5 });
+            var dims = new ulong[] { 2, 3 };
+
+            var offset = 0;
+            var offsets = new List<int>();
+
+            var dataVarChar = TestData.ArrayDataReference
+                .Cast<string>()
+                .SelectMany(value => 
+                {
+                    var bytes = Encoding.ASCII.GetBytes(value + '\0');
+                    offsets.Add(bytes.Length);
+                    offset += bytes.Length;
+                    return bytes;
+                })
+                .ToArray();
+
+            fixed (byte* dataVarPtr = dataVarChar)
+            {
+                var basePtr = new IntPtr(dataVarPtr);
+
+                var addresses = offsets
+                    .Select(offset => IntPtr.Add(basePtr, offset))
+                    .ToArray();
+
+                fixed (void* dataVarAddressesPtr = addresses)
+                {
+                    Add(container, fileId, "array", "reference", typeId, dataVarAddressesPtr, dims);
+                }
+            }
+
+            res = H5T.close(typeIdVar);
             res = H5T.close(typeId);
         }
 
