@@ -5,7 +5,7 @@
         #region Constructors
 
         public H5D_Compact(H5Dataset dataset, H5DatasetAccess datasetAccess) :
-            base(dataset, supportsBuffer: true, supportsStream: false, datasetAccess)
+            base(dataset, datasetAccess)
         {
             //
         }
@@ -23,7 +23,7 @@
             return Dataset.InternalDataspace.DimensionSizes;
         }
 
-        public override Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             byte[] buffer;
 
@@ -42,12 +42,9 @@
                 throw new Exception($"Data layout message type '{Dataset.InternalDataLayout.GetType().Name}' is not supported.");
             }
 
-            return Task.FromResult(buffer.AsMemory());
-        }
+            Stream stream = new MemorySpanStream(buffer);
 
-        public override Stream GetH5Stream(ulong[] chunkIndices)
-        {
-            throw new NotImplementedException();
+            return Task.FromResult(stream);
         }
 
         #endregion

@@ -201,7 +201,7 @@ namespace PureHDF.Tests.Reading
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var attribute = root.Group("array").Attribute("array");
+                var attribute = root.Group("array").Attribute("value");
                 var actual = attribute
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);

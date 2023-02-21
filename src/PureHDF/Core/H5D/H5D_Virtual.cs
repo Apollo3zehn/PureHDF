@@ -17,7 +17,7 @@
             H5DatasetAccess datasetAccess,
             TResult? fillValue,
             ReadVirtualDelegate<TResult> readVirtualDelegate) 
-            : base(dataset, supportsBuffer: false, supportsStream: true, datasetAccess)
+            : base(dataset, datasetAccess)
         {
             _fillValue = fillValue;
             _readVirtualDelegate = readVirtualDelegate;
@@ -57,14 +57,9 @@
             return Dataset.InternalDataspace.DimensionSizes;
         }
 
-        public override Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
-            throw new NotImplementedException();
-        }
-
-        public override Stream GetH5Stream(ulong[] chunkIndices)
-        {
-            return new VirtualDatasetStream<TResult>(
+            Stream stream = new VirtualDatasetStream<TResult>(
                 Dataset.File,
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.InternalDataspace.DimensionSizes,
@@ -72,6 +67,8 @@
                 DatasetAccess,
                 _readVirtualDelegate
             );
+
+            return Task.FromResult(stream);
         }
 
         #endregion

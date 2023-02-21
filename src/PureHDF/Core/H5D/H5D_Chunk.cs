@@ -23,7 +23,7 @@ namespace PureHDF
         #region Constructors
 
         public H5D_Chunk(H5Dataset dataset, H5DatasetAccess datasetAccess) :
-           base(dataset, supportsBuffer: true, supportsStream: false, datasetAccess)
+           base(dataset, datasetAccess)
         {
             // H5Dchunk.c (H5D__chunk_set_info_real)
 
@@ -148,14 +148,15 @@ namespace PureHDF
             return ChunkDims;
         }
 
-        public override Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override async Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
-            return _chunkCache.GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices));
-        }
+            var buffer = await _chunkCache
+                .GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices))
+                .ConfigureAwait(false);
 
-        public override Stream GetH5Stream(ulong[] chunkIndices)
-        {
-            throw new NotImplementedException();
+            var stream = new MemorySpanStream(buffer);
+
+            return stream;
         }
 
         protected abstract ulong[] GetRawChunkDims();

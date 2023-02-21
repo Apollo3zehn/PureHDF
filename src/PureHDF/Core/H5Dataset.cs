@@ -238,7 +238,7 @@ namespace PureHDF
             }
 
             /* buffer provider */
-            using H5D_Base bufferProvider = InternalDataLayout.LayoutClass switch
+            using H5D_Base h5d = InternalDataLayout.LayoutClass switch
             {
                 /* Compact: The array is stored in one contiguous block as part of
                  * this object header message. 
@@ -277,24 +277,13 @@ namespace PureHDF
                 _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
             };
 
-            bufferProvider.Initialize();
-
-            Func<ulong[], Task<Memory<byte>>>? getSourceBufferAsync = bufferProvider.SupportsBuffer
-               ? chunkIndices => bufferProvider.GetBufferAsync(reader, chunkIndices)
-               : null;
-
-            Func<ulong[], Stream>? getSourceStream = bufferProvider.SupportsStream
-                ? chunkIndices => bufferProvider.GetH5Stream(chunkIndices)!
-                : null;
-
-            if (getSourceBufferAsync is null && getSourceStream is null)
-                throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.");
+            h5d.Initialize();
 
             /* dataset dims */
             var datasetDims = GetDatasetDims();
 
             /* dataset chunk dims */
-            var datasetChunkDims = bufferProvider.GetChunkDims();
+            var datasetChunkDims = h5d.GetChunkDims();
 
             /* file selection */
             if (fileSelection is null)
@@ -343,8 +332,7 @@ namespace PureHDF
                 memoryDims,
                 fileSelection,
                 memorySelection,
-                GetSourceBufferAsync: getSourceBufferAsync,
-                GetSourceStream: getSourceStream,
+                GetSourceStreamAsync: chunkIndices => h5d.GetStreamAsync(reader, chunkIndices),
                 GetTargetBuffer: _ => destinationMemory,
                 Converter: converter,
                 SourceTypeSize: (int)InternalDataType.Size,

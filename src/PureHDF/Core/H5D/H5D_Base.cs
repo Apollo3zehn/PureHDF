@@ -4,11 +4,9 @@ namespace PureHDF
     {
         #region Constructors
 
-        public H5D_Base(H5Dataset dataset, bool supportsBuffer, bool supportsStream, H5DatasetAccess datasetAccess)
+        public H5D_Base(H5Dataset dataset, H5DatasetAccess datasetAccess)
         {
             Dataset = dataset;
-            SupportsBuffer = supportsBuffer;
-            SupportsStream = supportsStream;
             DatasetAccess = datasetAccess;
         }
 
@@ -17,10 +15,6 @@ namespace PureHDF
         #region Properties
 
         public H5Dataset Dataset { get; }
-
-        public bool SupportsBuffer { get; }
-
-        public bool SupportsStream { get; }
 
         public H5DatasetAccess DatasetAccess { get; }
 
@@ -35,9 +29,7 @@ namespace PureHDF
 
         public abstract ulong[] GetChunkDims();
 
-        public abstract Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
-
-        public abstract Stream GetH5Stream(ulong[] chunkIndices);
+        public abstract Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
 
         #endregion
 

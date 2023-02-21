@@ -11,7 +11,7 @@
         #region Constructors
 
         public H5D_Contiguous(H5Dataset dataset, H5DatasetAccess datasetAccess) :
-            base(dataset, supportsBuffer: false, supportsStream: true, datasetAccess)
+            base(dataset, datasetAccess)
         {
             //
         }
@@ -25,12 +25,7 @@
             return Dataset.GetDatasetDims();
         }
 
-        public override Task<Memory<byte>> GetBufferAsync<TReader>(TReader reader, ulong[] chunkIndices)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Stream GetH5Stream(ulong[] chunkIndices)
+        public override Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             var address = Dataset.InternalDataLayout.Address;
 
@@ -52,7 +47,7 @@
                 }
             }
 
-            return _stream;
+            return Task.FromResult(_stream);
         }
 
         #endregion

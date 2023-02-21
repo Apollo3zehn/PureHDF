@@ -58,7 +58,7 @@ namespace PureHDF.Tests.Reading
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Implicit(fileId));
+            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Implicit);
 
             // Act
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);

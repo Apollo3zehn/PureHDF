@@ -481,8 +481,7 @@ namespace PureHDF.Tests.Reading
                 default!,
                 sourceSelection,
                 targetSelection,
-                default,
-                default,
+                default!,
                 default!,
                 default!,
                 0,
@@ -533,7 +532,6 @@ namespace PureHDF.Tests.Reading
                 datasetSelection,
                 memorySelection,
                 indices => default!,
-                indices => default!,
                 indices => default,
                 Converter: default!,
                 SourceTypeSize: 4,
@@ -577,7 +575,6 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => default!,
                 indices => default!,
                 indices => default,
                 Converter: default!,
@@ -692,8 +689,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-                indices => default!,
+                indices => Task.FromResult((Stream)new MemorySpanStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)])),
                 indices => actual,
                 Converter,
                 SourceTypeSize: 4,
@@ -806,6 +802,9 @@ namespace PureHDF.Tests.Reading
             var actual = new int[5 * 6 * 11];
             var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
+            Stream getSourceStreamAsync(ulong[] indices) 
+                => new MemorySpanStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
+
             var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
@@ -813,8 +812,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 sourceSelection,
                 targetSelection,
-                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-                indices => default!,
+                indices => Task.FromResult(getSourceStreamAsync(indices)),
                 indices => actual,
                 Converter,
                 SourceTypeSize: 4,
@@ -939,6 +937,9 @@ namespace PureHDF.Tests.Reading
 
             var actual = new int[11 * 11 * 12];
 
+            Stream getSourceStreamAsync(ulong[] indices) 
+                => new MemorySpanStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
+
             var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
@@ -946,8 +947,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-                indices => default!,
+                indices => Task.FromResult(getSourceStreamAsync(indices)),
                 indices => actual,
                 Converter,
                 SourceTypeSize: 4,
@@ -1030,8 +1030,8 @@ namespace PureHDF.Tests.Reading
                 /* get intermediate data (only for Matlab visualization) */
                 var intermediate = new int[datasetDims[0] * datasetDims[1] * datasetDims[2]];
 
-                var chunkProviderIntermediate = H5D_Chunk.Create(dataset, default);
-                chunkProviderIntermediate.Initialize();
+                var h5dIntermediate = H5D_Chunk.Create(dataset, default);
+                h5dIntermediate.Initialize();
 
                 var copyInfoInterMediate = new CopyInfo<int>(
                     datasetDims,
@@ -1040,8 +1040,7 @@ namespace PureHDF.Tests.Reading
                     datasetDims,
                     datasetSelection,
                     datasetSelection,
-                    indices => chunkProviderIntermediate.GetBufferAsync(default(AsyncReader), indices),
-                    indices => default!,
+                    indices => h5dIntermediate.GetStreamAsync(default(SyncReader), indices),
                     indices => intermediate,
                     Converter,
                     SourceTypeSize: 4,
@@ -1056,8 +1055,8 @@ namespace PureHDF.Tests.Reading
                 /* get actual data */
                 var actual = new int[memoryDims[0] * memoryDims[1]];
 
-                var chunkProvider = H5D_Chunk.Create(dataset, default);
-                chunkProvider.Initialize();
+                var h5d = H5D_Chunk.Create(dataset, default);
+                h5d.Initialize();
 
                 var copyInfo = new CopyInfo<int>(
                     datasetDims,
@@ -1066,8 +1065,7 @@ namespace PureHDF.Tests.Reading
                     memoryDims,
                     datasetSelection,
                     memorySelection,
-                    indices => chunkProvider.GetBufferAsync(default(AsyncReader), indices),
-                    indices => default!,
+                    indices => h5d.GetStreamAsync(default(SyncReader), indices),
                     indices => actual,
                     Converter: default!,
                     SourceTypeSize: 4,
