@@ -200,13 +200,13 @@ namespace PureHDF.Tests.Reading
 
                 var actual = dataset
                     .ReadString();
-                // .ToArray4D(2, 3, 4, 5);
 
-                var expected_casted = TestData.ArrayDataValue.Cast<int>().ToArray();
-                var actual_casted = actual.Cast<int>().ToArray();
+                var expected = TestData.ArrayDataReference
+                    .Cast<string>()
+                    .ToArray();
 
                 // Assert
-                Assert.True(actual_casted.SequenceEqual(expected_casted));
+                Assert.True(actual.SequenceEqual(expected));
             });
         }
 

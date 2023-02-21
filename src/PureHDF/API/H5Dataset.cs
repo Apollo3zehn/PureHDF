@@ -202,7 +202,7 @@ namespace PureHDF
             var data = ReadCoreReferenceAsync<T, SyncReader>(
                 default,
                 default,
-                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination, getName),
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalElementDataType, source.Span, destination, getName),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -232,7 +232,7 @@ namespace PureHDF
             var data = ReadCoreReferenceAsync<Dictionary<string, object?>, SyncReader>(
                 default,
                 default,
-                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination),
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalElementDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -264,7 +264,7 @@ namespace PureHDF
             var result = ReadCoreReferenceAsync<string, SyncReader>(
                 default,
                 default,
-                (source, destination) => ReadUtils.ReadString(Context, InternalDataType, source.Span, destination),
+                (source, destination) => ReadUtils.ReadString(Context, InternalElementDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -388,7 +388,7 @@ namespace PureHDF
             var result = await ReadCoreReferenceAsync<T, AsyncReader>(
                 default,
                 default,
-                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination, getName),
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalElementDataType, source.Span, destination, getName),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -418,7 +418,7 @@ namespace PureHDF
             var data = await ReadCoreReferenceAsync<Dictionary<string, object?>, AsyncReader>(
                 default,
                 default,
-                (source, destination) => ReadUtils.ReadCompound(Context, InternalDataType, source.Span, destination),
+                (source, destination) => ReadUtils.ReadCompound(Context, InternalElementDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,
@@ -448,7 +448,7 @@ namespace PureHDF
             var result = await ReadCoreReferenceAsync<string, AsyncReader>(
                 default,
                 default,
-                (source, destination) => ReadUtils.ReadString(Context, InternalDataType, source.Span, destination),
+                (source, destination) => ReadUtils.ReadString(Context, InternalElementDataType, source.Span, destination),
                 fileSelection,
                 memorySelection,
                 memoryDims,

@@ -192,7 +192,7 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void CanReadAttribute_Array()
+        public void CanReadDataset_Array_value()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -202,6 +202,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("value");
+
                 var actual = attribute
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);
@@ -211,6 +212,30 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Array_reference()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_reference(fileId, ContainerType.Attribute));
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var attribute = root.Group("array").Attribute("reference");
+
+                var actual = attribute
+                    .ReadString();
+
+                var expected = TestData.ArrayDataReference
+                    .Cast<string>()
+                    .ToArray();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
             });
         }
 

@@ -549,7 +549,7 @@ namespace PureHDF.Tests
                 .SelectMany(value => 
                 {
                     var bytes = Encoding.ASCII.GetBytes(value + '\0');
-                    offsets.Add(bytes.Length);
+                    offsets.Add(offset);
                     offset += bytes.Length;
                     return bytes;
                 })

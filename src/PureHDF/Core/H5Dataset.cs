@@ -60,6 +60,12 @@ namespace PureHDF
             if (InternalDataType is null)
                 throw new Exception("The data type message is missing.");
 
+            InternalElementDataType = InternalDataType.Properties.FirstOrDefault() switch 
+            {
+                ArrayPropertyDescription array => array.BaseType,
+                _ => InternalDataType
+            };
+
             // https://github.com/Apollo3zehn/PureHDF/issues/25
             if (InternalFillValue is null)
             {
@@ -80,11 +86,13 @@ namespace PureHDF
 
         #region Properties
 
-        internal DataLayoutMessage InternalDataLayout { get; } = default!;
+        internal DataLayoutMessage InternalDataLayout { get; }
 
-        internal DataspaceMessage InternalDataspace { get; } = default!;
+        internal DataspaceMessage InternalDataspace { get; }
 
-        internal DatatypeMessage InternalDataType { get; } = default!;
+        internal DatatypeMessage InternalDataType { get; }
+
+        internal DatatypeMessage InternalElementDataType { get; }
 
         internal FillValueMessage InternalFillValue { get; } = default!;
 
@@ -170,6 +178,12 @@ namespace PureHDF
             bool skipShuffle = false)
                 where TReader : IReader
         {
+            var factor = InternalDataType.Properties.FirstOrDefault() switch 
+            {
+                ArrayPropertyDescription array => (int)Utils.CalculateSize(array.DimensionSizes),
+                _ => 1
+            };
+
             Task readVirtualDelegate(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
                 => dataset.ReadCoreReferenceAsync(
                     reader,
@@ -194,7 +208,7 @@ namespace PureHDF
                 converter,
                 readVirtualDelegate,
                 fillValue,
-                factor: 1,
+                factor,
                 fileSelection,
                 memorySelection,
                 memoryDims,

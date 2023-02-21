@@ -394,7 +394,7 @@ namespace PureHDF
 
             else
             {
-                throw new Exception($"Attribute data type class '{datatype.Class}' cannot be read as string.");
+                throw new Exception($"Data type class '{datatype.Class}' cannot be read as string.");
             }
 
             return destination;

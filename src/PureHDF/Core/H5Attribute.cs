@@ -19,6 +19,12 @@ namespace PureHDF
         {
             _context = context;
             Message = message;
+
+            InternalElementDataType = Message.Datatype.Properties.FirstOrDefault() switch
+            {
+                ArrayPropertyDescription array => array.BaseType,
+                _ => Message.Datatype
+            };
         }
 
         #endregion
@@ -26,6 +32,8 @@ namespace PureHDF
         #region Properties
 
         internal AttributeMessage Message { get; }
+        
+        internal DatatypeMessage InternalElementDataType { get; }
 
         #endregion
     }
