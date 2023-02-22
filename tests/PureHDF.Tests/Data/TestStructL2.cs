@@ -2,7 +2,7 @@
 
 namespace PureHDF.Tests
 {
-    [StructLayout(LayoutKind.Explicit, Size = 8)]
+    [StructLayout(LayoutKind.Explicit, Size = 5)]
     public unsafe struct TestStructL2
     {
         [FieldOffset(0)]
@@ -13,8 +13,5 @@ namespace PureHDF.Tests
 
         [FieldOffset(3)]
         public TestEnum EnumValue;
-
-        [FieldOffset(5)]
-        public fixed float FloatArray[3];
     }
 }

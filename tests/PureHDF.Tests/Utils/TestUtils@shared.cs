@@ -6,26 +6,6 @@ namespace PureHDF.Tests
 {
     public partial class TestUtils
     {
-        public static unsafe void AddDataspaceScalar(long fileId, ContainerType container)
-        {
-            var spaceId = H5S.create(H5S.class_t.SCALAR);
-            var data = new double[] { -1.2234234e-3 };
-
-            fixed (void* dataPtr = data)
-            {
-                Add(container, fileId, "dataspace", "scalar", H5T.NATIVE_DOUBLE, dataPtr, spaceId);
-            }
-
-            _ = H5S.close(spaceId);
-        }
-
-        public static unsafe void AddDataspaceNull(long fileId, ContainerType container)
-        {
-            var spaceId = H5S.create(H5S.class_t.NULL);
-            Add(container, fileId, "dataspace", "null", H5T.NATIVE_DOUBLE, null, spaceId);
-            _ = H5S.close(spaceId);
-        }
-
         public static unsafe void AddNumerical(long fileId, ContainerType container)
         {
             var dims = new ulong[] { 2, 2, 3 };
@@ -88,11 +68,10 @@ namespace PureHDF.Tests
             res = H5T.close(typeId);
         }
 
-        public static unsafe void AddArray_reference(long fileId, ContainerType container)
+        public static unsafe void AddArray_variable_length_string(long fileId, ContainerType container)
         {
             long res;
 
-            // variable length string (ASCII)
             var typeIdVar = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVar, H5T.VARIABLE);
 
@@ -102,7 +81,7 @@ namespace PureHDF.Tests
             var offset = 0;
             var offsets = new List<int>();
 
-            var dataVarChar = TestData.ArrayDataReference
+            var dataVarChar = TestData.ArrayDataVariableLengthString
                 .Cast<string>()
                 .SelectMany(value => 
                 {
@@ -123,12 +102,24 @@ namespace PureHDF.Tests
 
                 fixed (void* dataVarAddressesPtr = addresses)
                 {
-                    Add(container, fileId, "array", "reference", typeId, dataVarAddressesPtr, dims);
+                    Add(container, fileId, "array", "variable_length_string", typeId, dataVarAddressesPtr, dims);
                 }
             }
 
             res = H5T.close(typeIdVar);
             res = H5T.close(typeId);
+        }
+
+        public static unsafe void AddArray_nullable_struct(long fileId, ContainerType container)
+        {
+            var dims = new ulong[] { 2, 1 };
+
+            Prepare_nullable_struct((typeId, dataPtr) => 
+            {
+                var typeIdArray = H5T.array_create(typeId, 2, new ulong[] { 2, 3 });
+                Add(container, fileId, "array", "nullable_struct", typeIdArray, dataPtr.ToPointer(), dims);
+                _ = H5T.close(typeIdArray);
+            });
         }
 
         public static unsafe void AddObjectReference(long fileId, ContainerType container)
@@ -191,33 +182,8 @@ namespace PureHDF.Tests
             res = H5T.close(typeId);
 
             // nullable struct
-            var typeIdNullable = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
-            var dataNullable = TestData.StringStructData;
-
-            // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
-            // Is only relevant when Marshal.XX methods are replaced by other code.
-            var elementSize = Marshal.SizeOf<TestStructStringAndArray>();
-            var totalByteLength = elementSize * dataNullable.Length;
-            var dataNullablePtr = Marshal.AllocHGlobal(totalByteLength);
-            var counter = 0;
-
-            dataNullable.Cast<ValueType>().ToList().ForEach(x =>
-            {
-                var sourcePtr = Marshal.AllocHGlobal(elementSize);
-                Marshal.StructureToPtr(x, sourcePtr, false);
-
-                var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
-                var target = new Span<byte>(IntPtr.Add(dataNullablePtr, elementSize * counter).ToPointer(), elementSize);
-
-                source.CopyTo(target);
-                counter++;
-                Marshal.FreeHGlobal(sourcePtr);
-            });
-
-            Add(container, fileId, "struct", "nullable", typeIdNullable, dataNullablePtr.ToPointer(), dims);
-
-            Marshal.FreeHGlobal(dataNullablePtr);
-            res = H5T.close(typeIdNullable);
+            Prepare_nullable_struct((typeId, dataPtr) 
+                => Add(container, fileId, "struct", "nullable", typeId, dataPtr.ToPointer(), dims));
         }
 
         public static unsafe void AddString(long fileId, ContainerType container)
@@ -461,6 +427,44 @@ namespace PureHDF.Tests
             }
 
             if (H5I.is_valid(typeId) > 0) { _ = H5T.close(typeId); }
+        }
+
+        private static unsafe void Prepare_nullable_struct(Action<long, nint> action)
+        {
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
+            var data = TestData.NullableStructData;
+
+            // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
+            // Is only relevant when Marshal.XX methods are replaced by other code.
+            var elementSize = Marshal.SizeOf<TestStructStringAndArray>();
+            var totalByteLength = elementSize * data.Length;
+            var dataPtr = Marshal.AllocHGlobal(totalByteLength);
+            var ptrs = new List<nint>();
+            var counter = 0;
+
+            data.Cast<ValueType>().ToList().ForEach(x =>
+            {
+                var sourcePtr = Marshal.AllocHGlobal(elementSize);
+                Marshal.StructureToPtr(x, sourcePtr, false);
+
+                ptrs.Add(sourcePtr);
+                var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
+                var target = new Span<byte>(IntPtr.Add(dataPtr, elementSize * counter).ToPointer(), elementSize);
+
+                source.CopyTo(target);
+                counter++;
+            });
+
+            action(typeId, dataPtr);
+
+            Marshal.FreeHGlobal(dataPtr);
+
+            foreach (var srcPtr in ptrs)
+            {
+                Marshal.DestroyStructure<TestStructStringAndArray>(srcPtr);
+            }
+
+            _ = H5T.close(typeId);
         }
     }
 }

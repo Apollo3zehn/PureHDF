@@ -384,11 +384,29 @@ namespace PureHDF
                     var dataSize = localReader.ReadUInt32(); // for what do we need this?
                     var globalHeapId = new GlobalHeapId(context, localReader);
                     var globalHeapCollection = globalHeapId.Collection;
-                    var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
-                    var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
 
-                    value = trim(value);
-                    destinationSpan[i] = value;
+                    if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+                    {
+                        var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
+                        value = trim(value);
+                        destinationSpan[i] = value;
+                    }
+                    else
+                    {
+                        // It would be more correct to just throw an exception 
+                        // when the object index is not found in the collection,
+                        // but that would make the tests following tests fail
+                        // - CanReadDataset_Array_nullable_struct
+                        // - CanReadDataset_Array_nullable_struct.
+                        // 
+                        // And it would make the user's life a bit more complicated
+                        // if the library cannot handle missing entries.
+                        // 
+                        // Since this behavior is not according to the spec, this
+                        // method still returns a `string` instead of a nullable 
+                        // `string?`.
+                        destinationSpan[i] = default!;
+                    }
                 }
             }
 

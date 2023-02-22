@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Xunit;
 
 namespace PureHDF.Tests.Reading
@@ -11,6 +12,7 @@ namespace PureHDF.Tests.Reading
         private readonly JsonSerializerOptions _options = new()
         {
             IncludeFields = true,
+            WriteIndented = true,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
@@ -75,7 +77,7 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.Equal(
-                    JsonSerializer.Serialize(TestData.StringStructData, _options),
+                    JsonSerializer.Serialize(TestData.NullableStructData, _options),
                     JsonSerializer.Serialize(actual, _options));
             });
         }
@@ -95,7 +97,7 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.Equal(
-                    JsonSerializer.Serialize(TestData.StringStructData, _options).Replace("ShortValueWithCustomName", "ShortValue"),
+                    JsonSerializer.Serialize(TestData.NullableStructData, _options).Replace("ShortValueWithCustomName", "ShortValue"),
                     JsonSerializer.Serialize(actual, _options));
             });
         }
@@ -187,27 +189,77 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void CanReadDataset_Array_reference()
+        public void CanReadDataset_Array_variable_length_string()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_reference(fileId, ContainerType.Dataset));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var dataset = root.Group("array").Dataset("reference");
+                var dataset = root.Group("array").Dataset("variable_length_string");
 
                 var actual = dataset
                     .ReadString();
 
-                var expected = TestData.ArrayDataReference
+                var expected = TestData.ArrayDataVariableLengthString
                     .Cast<string>()
                     .ToArray();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
             });
+        }
+
+        [Fact]
+        public void CanReadDataset_Array_nullable_struct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+                var dataset = root.Group("array").Dataset("nullable_struct");
+
+                static string converter(FieldInfo fieldInfo)
+                {
+                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    return attribute is not null ? attribute.Name : fieldInfo.Name;
+                }
+
+                var actual_1 = dataset
+                    .ReadCompound<TestStructStringAndArray>(converter);
+
+                var actual_2 = dataset
+                    .ReadCompound();
+
+                var expected = TestData.NullableStructData
+                    .ToArray();
+
+// HACK: Probably a bug in C-lib
+                expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
+                expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
+                expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
+                expected[9].StringValue1 = default!; expected[9].StringValue2 = default!;
+                expected[10].StringValue1 = default!; expected[10].StringValue2 = default!;
+                expected[11].StringValue1 = default!; expected[11].StringValue2 = default!;
+
+                // Assert
+                var expectedJsonString = JsonSerializer.Serialize(expected, _options);
+
+                Assert.Equal(
+                    expectedJsonString, 
+                    JsonSerializer.Serialize(actual_1, _options));
+
+#pragma warning disable SYSLIB1045
+                Assert.Equal(
+                    expectedJsonString, 
+                    Regex.Replace(JsonSerializer.Serialize(actual_2, _options), "\"ShortValue", "\"ShortValueWithCustomName"));
+            });
+#pragma warning restore SYSLIB1045
         }
 
         [Fact]

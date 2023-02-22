@@ -61,7 +61,7 @@
             {
                 ByteValue = 15,
                 UShortValue = 20,
-                EnumValue = TestEnum.a,
+                EnumValue = TestEnum.a
             }
         };
 
@@ -105,7 +105,7 @@
                 }
             }
 
-            ArrayDataReference = new string[2, 3, 4, 5];
+            ArrayDataVariableLengthString = new string[2, 3, 4, 5];
 
             var counter = 0;
 
@@ -117,7 +117,7 @@
                     {
                         for (int l = 0; l < 5; l++)
                         {
-                            ArrayDataReference[i, j, k, l] = counter.ToString();
+                            ArrayDataVariableLengthString[i, j, k, l] = counter.ToString();
                             counter++;
                         }
                     }
@@ -140,26 +140,8 @@
             };
 
             NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
-
-            unsafe
-            {
-                var struct1 = NonNullableStructData[0].L2Struct1;
-                struct1.FloatArray[0] = 1.1f;
-                struct1.FloatArray[1] = 2.2f;
-                struct1.FloatArray[2] = 3.3f;
-                NonNullableStructData[0].L2Struct1 = struct1;
-
-                var struct2 = NonNullableStructData[0].L2Struct2;
-                struct2.FloatArray[0] = 2.1f;
-                struct2.FloatArray[1] = 3.2f;
-                struct2.FloatArray[2] = 4.3f;
-                NonNullableStructData[0].L2Struct2 = struct2;
-
-                NonNullableStructData[1].L2Struct1 = struct1;
-                NonNullableStructData[1].L2Struct2 = struct2;
-            }
-
-            StringStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+            NullableStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+            
             TinyData = new byte[] { 99 };
             SmallData = Enumerable.Range(0, 100).ToArray();
             MediumData = Enumerable.Range(0, 10_000).ToArray();
@@ -172,13 +154,13 @@
         public static TestBitfield[] BitfieldData { get; }
 
         public static int[,,,] ArrayDataValue { get; }
-        public static string[,,,] ArrayDataReference { get; }
+        public static string[,,,] ArrayDataVariableLengthString { get; }
 
         public static IList<object[]> NumericalData { get; }
 
         public static TestStructL1[] NonNullableStructData { get; }
 
-        public static TestStructStringAndArray[] StringStructData { get; }
+        public static TestStructStringAndArray[] NullableStructData { get; }
 
         public static byte[] TinyData { get; }
 
