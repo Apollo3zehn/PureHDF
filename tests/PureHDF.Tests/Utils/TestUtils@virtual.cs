@@ -6,7 +6,7 @@ namespace PureHDF.Tests
     {
         public static unsafe void AddVirtualDataset(long fileId, string datasetName)
         {
-            // see VirtualMapping.xlsx for a visualization
+            // see VirtualMapping.ods for a visualization
 
             var vspaceId = H5S.create_simple(1, new ulong[] { 20 }, new ulong[] { 20 });
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
