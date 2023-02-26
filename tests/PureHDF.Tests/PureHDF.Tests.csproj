@@ -9,6 +9,7 @@
   </PropertyGroup>
  
   <ItemGroup>
+    <PackageReference Include="AWSSDK.S3" Version="3.7.103.15" />
     <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update3.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
     <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />
