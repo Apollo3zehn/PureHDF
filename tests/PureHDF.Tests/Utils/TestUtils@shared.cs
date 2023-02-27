@@ -429,7 +429,7 @@ namespace PureHDF.Tests
             if (H5I.is_valid(typeId) > 0) { _ = H5T.close(typeId); }
         }
 
-        private static unsafe void Prepare_nullable_struct(Action<long, nint> action)
+        private static unsafe void Prepare_nullable_struct(Action<long, IntPtr> action)
         {
             var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
             var data = TestData.NullableStructData;

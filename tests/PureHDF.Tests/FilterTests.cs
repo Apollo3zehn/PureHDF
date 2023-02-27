@@ -307,7 +307,7 @@ namespace PureHDF.Tests.Reading
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
 #pragma warning disable IDE0060
-        public async Task CanUnshuffleGeneric<T>(T dummy, int length)
+        public void CanUnshuffleGeneric<T>(T dummy, int length)
 #pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
@@ -325,7 +325,11 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadCoreValueAsync<T, AsyncReader>(default, null, skipShuffle: true);
+
+            var actual_shuffled = dataset
+                .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
+                .GetAwaiter()
+                .GetResult();
 
             // Act
             var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
@@ -354,7 +358,7 @@ namespace PureHDF.Tests.Reading
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
 #pragma warning disable IDE0060
-        public async Task CanUnshuffleAvx2<T>(T dummy, int length)
+        public void CanUnshuffleAvx2<T>(T dummy, int length)
 #pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
@@ -372,7 +376,11 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadCoreValueAsync<T, AsyncReader>(default, null, skipShuffle: true);
+
+            var actual_shuffled = dataset
+                .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
+                .GetAwaiter()
+                .GetResult();
 
             // Act
             var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
@@ -400,7 +408,7 @@ namespace PureHDF.Tests.Reading
         [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
 #pragma warning disable IDE0060
-        public async Task CanUnshuffleSse2<T>(T dummy, int length)
+        public void CanUnshuffleSse2<T>(T dummy, int length)
 #pragma warning restore IDE0060
 #pragma warning restore xUnit1026
             where T : unmanaged
@@ -418,7 +426,11 @@ namespace PureHDF.Tests.Reading
             using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-            var actual_shuffled = await dataset.ReadCoreValueAsync<T, AsyncReader>(default, null, skipShuffle: true);
+
+            var actual_shuffled = dataset
+                .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
+                .GetAwaiter()
+                .GetResult();
 
             // Act
             var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];

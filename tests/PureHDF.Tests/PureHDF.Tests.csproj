@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>$(TargetFrameworkVersion)</TargetFrameworks>
+    <TargetFrameworks>net70;net50;</TargetFrameworks>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
 
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>

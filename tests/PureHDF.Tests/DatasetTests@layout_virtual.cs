@@ -25,6 +25,7 @@ namespace PureHDF.Tests.Reading
             Assert.True(actual.SequenceEqual(expected));
         }
 
+#if NET6_0_OR_GREATER
         [Fact]
         public async Task CanReadDataset_Virtual_async()
         {
@@ -43,6 +44,7 @@ namespace PureHDF.Tests.Reading
             // Assert
             Assert.True(actual.SequenceEqual(expected));
         }
+#endif
 
         [Fact]
         public void CanReadDataset_Virtual_source_point()

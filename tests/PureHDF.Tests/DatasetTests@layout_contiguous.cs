@@ -78,6 +78,7 @@ namespace PureHDF.Tests.Reading
             });
         }
 
+#if NET6_0_OR_GREATER
         [Fact]
         public async Task CanReadDataset_External_async()
         {
@@ -105,5 +106,6 @@ namespace PureHDF.Tests.Reading
                 Assert.True(actual.SequenceEqual(expected));
             });
         }
+#endif
     }
 }

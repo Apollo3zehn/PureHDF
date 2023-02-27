@@ -110,7 +110,7 @@ namespace PureHDF
             {
                 case SeekOrigin.Begin:
 
-                    if (offset > Length)
+                    if (offset < 0 || offset > Length)
                         throw new Exception("The offset exceeds the stream length.");
 
                     _stream = EnsureStream();
