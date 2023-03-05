@@ -73,63 +73,58 @@ namespace PureHDF.Tests
         {
             // TODO issue parallel requests
             // TODO do not cache dataset data
+            var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
+            var s3Remaining = Length - _position;
+            var s3ActualLength = (int)Math.Min(s3UpperLength, s3Remaining);
+            var s3Processed = 0;
+            var s3StartIndex = -1L;
             var remainingBuffer = buffer;
 
-            while (remainingBuffer.Length > 0)
+            bool loadFromS3;
+
+            while (s3Processed < s3ActualLength)
             {
-                var cacheSlotIndex = _position / _cacheSlotSize;
-                var actualPosition = cacheSlotIndex * _cacheSlotSize;
-                var actualLength = (int)Math.Min(Math.Max(_cacheSlotSize, remainingBuffer.Length), Length - _position);
+                var currentIndex = _position / _cacheSlotSize;
+                loadFromS3 = false;
 
-                // get cache entry
-                var data = _cache.GetOrAdd(cacheSlotIndex, _ => 
+                // determine if data is cached
+                var owner = _cache.GetOrAdd(currentIndex, currentIndex =>
                 {
-                    var owner = MemoryPool<byte>.Shared.Rent(actualLength);
-                    var memory = owner.Memory[..actualLength];
+                    var owner = MemoryPool<byte>.Shared.Rent(_cacheSlotSize);
 
-                    // TODO request should be as large as requested (minimum cache slot size)
-                    // And then distribute it to the cache slots
-                    var request = new GetObjectRequest()
-                    {
-                        BucketName = _bucketName,
-                        Key = _key,
-                        ByteRange = new ByteRange(actualPosition, actualPosition + actualLength)
-                    };
+                    // first index for which data will be requested
+                    if (s3StartIndex == -1)
+                        s3StartIndex = currentIndex;
 
-                    var response = _client
-                        .GetObjectAsync(request)
-                        .ConfigureAwait(false)
-                        .GetAwaiter()
-                        .GetResult();
+                    loadFromS3 = true;
 
-                    var stream = response.ResponseStream;
-
-#if NET7_0_OR_GREATER
-                    stream.ReadExactly(memory.Span);
-#else
-                    var slicedBuffer = memory.Span;
-
-                    while (slicedBuffer.Length > 0)
-                    {
-                        var readBytes = stream.Read(slicedBuffer);
-                        slicedBuffer = slicedBuffer[readBytes..];
-                    };
-#endif
                     return owner;
                 });
 
-                // copy data
-                var bufferLength = Math.Min(actualLength, remainingBuffer.Length);
-                
-                data
-                    .Memory.Span
-                    .Slice((int)(_position - actualPosition), bufferLength)
-                    .CopyTo(remainingBuffer);
+                if (!loadFromS3 /* i.e. data is in cache */)
+                {
+                    // is there a not yet loaded range of data?
+                    if (s3StartIndex != -1)
+                    {
+                        LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex: currentIndex, ref remainingBuffer);
+                        s3StartIndex = -1;
+                    }
 
-                remainingBuffer = remainingBuffer[Math.Min(actualLength, bufferLength)..];
+                    // copy from cache
+                    CopyFromCacheToBuffer(currentIndex, owner, ref remainingBuffer);
+                }
+
+                s3Processed += _cacheSlotSize;
             }
 
-            _position += buffer.Length;
+            // TODO code duplication
+            // is there a not yet loaded range of data?
+            if (s3StartIndex != -1)
+            {
+                var s3EndIndex = s3ActualLength / _cacheSlotSize;
+                LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex, ref remainingBuffer);
+                s3StartIndex = -1;
+            }
 
             return buffer.Length;
         }
@@ -180,6 +175,69 @@ namespace PureHDF.Tests
                     cacheEntry.Dispose();
                 }
             }
+        }
+    
+        private void LoadFromS3ToCacheAndBuffer(long s3StartIndex, long s3EndIndex, ref Span<byte> remainingBuffer)
+        {
+            // get S3 stream
+            var s3Start = s3StartIndex * _cacheSlotSize;
+            var s3Length = (s3EndIndex - s3StartIndex) * _cacheSlotSize;
+            var s3Remaining = Length - s3Start;
+            var s3ActualLength = Math.Min(s3Length, s3Remaining);
+
+            var request = new GetObjectRequest()
+            {
+                BucketName = _bucketName,
+                Key = _key,
+                ByteRange = new ByteRange(s3Start, s3ActualLength)
+            };
+
+            var response = _client
+                .GetObjectAsync(request)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+
+            var stream = response.ResponseStream;
+
+            // copy
+            for (long currentIndex = s3StartIndex; currentIndex < s3EndIndex; currentIndex++)
+            {
+                var owner = _cache.GetOrAdd(currentIndex, _ => throw new Exception("This should never happen."));
+
+                // copy to cache
+                var memory = owner.Memory.Slice(0, Math.Min(_cacheSlotSize, (int)(Length - Position)));
+
+#if NET7_0_OR_GREATER
+                stream.ReadExactly(memory.Span);
+#else
+                var slicedBuffer = memory.Span;
+
+                while (slicedBuffer.Length > 0)
+                {
+                    var readBytes = stream.Read(slicedBuffer);
+                    slicedBuffer = slicedBuffer[readBytes..];
+                };
+#endif
+
+                // copy to request buffer
+                CopyFromCacheToBuffer(currentIndex, owner, ref remainingBuffer);
+            }
+        }
+
+        private void CopyFromCacheToBuffer(long currentIndex, IMemoryOwner<byte> owner, ref Span<byte> remainingBuffer)
+        {
+            var s3Position = currentIndex * _cacheSlotSize;
+            var cacheSlotOffset = (int)(_position - s3Position);
+            var remainingCacheSlotSize = _cacheSlotSize - cacheSlotOffset;
+
+            var slicedMemory = owner.Memory
+                .Slice(cacheSlotOffset, Math.Min(remainingCacheSlotSize, remainingBuffer.Length));
+
+            slicedMemory.Span.CopyTo(remainingBuffer);
+
+            remainingBuffer = remainingBuffer[slicedMemory.Length..];
+            _position += slicedMemory.Length;
         }
     }
 }
