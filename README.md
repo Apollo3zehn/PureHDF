@@ -34,9 +34,10 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 6. [Reading Compound Data](#6-reading-compound-data)
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
-9. [Intellisense (.NET 5+)](#9-intellisense-net-5)
-10. [Unsupported Features](#10-unsupported-features)
-11. [Comparison Table](#11-comparison-table)
+9. [Amazon S3](#9-amazon-s3)
+10. [Intellisense (.NET 5+)](#10-intellisense-net-5)
+11. [Unsupported Features](#11-unsupported-features)
+12. [Comparison Table](#12-comparison-table)
 
 # 1 Objects
 
@@ -417,17 +418,17 @@ public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 ## 5.4 How to use Deflate (hardware accelerated)
 (1) Install the P/Invoke package:
 
-`dotnet package add Intrinsics.ISA-L.PInvoke`
+`dotnet add package Intrinsics.ISA-L.PInvoke`
 
-(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/DeflateHelper_Intel_ISA_L.cs) to your code.
+(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/DeflateHelper_Intel_ISA_L.cs) to your code.
 
 (3) Register Deflate:
 
 ```cs
- H5Filter.Register(
-     identifier: H5FilterID.Deflate, 
-     name: "deflate", 
-     filterFunc: DeflateHelper_Intel_ISA_L.FilterFunc);
+H5Filter.Register(
+    identifier: H5FilterID.Deflate, 
+    name: "deflate", 
+    filterFunc: DeflateHelper_Intel_ISA_L.FilterFunc);
 ```
 
 (4) Enable unsafe code blocks in `.csproj`:
@@ -440,33 +441,33 @@ public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 ## 5.5 How to use Blosc / Blosc2 (hardware accelerated)
 (1) Install the P/Invoke package:
 
-`dotnet package add Blosc2.PInvoke`
+`dotnet add package Blosc2.PInvoke`
 
-(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BloscHelper.cs) to your code.
+(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BloscHelper.cs) to your code.
 
 (3) Register Blosc:
 
 ```cs
- H5Filter.Register(
-     identifier: (H5FilterID)32001, 
-     name: "blosc2", 
-     filterFunc: BloscHelper.FilterFunc);
+H5Filter.Register(
+    identifier: (H5FilterID)32001, 
+    name: "blosc2", 
+    filterFunc: BloscHelper.FilterFunc);
 ```
 
 ## 5.6 How to use BZip2
 (1) Install the SharpZipLib package:
 
-`dotnet package add SharpZipLib`
+`dotnet add package SharpZipLib`
 
-(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Utils/Streams/MemorySpanStream.cs) implementation to your code.
+(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Utils/Streams/MemorySpanStream.cs) implementation to your code.
 
 (3) Register BZip2:
 
 ```cs
- H5Filter.Register(
-     identifier: (H5FilterID)307, 
-     name: "bzip2", 
-     filterFunc: BZip2Helper.FilterFunc);
+H5Filter.Register(
+    identifier: (H5FilterID)307, 
+    name: "bzip2", 
+    filterFunc: BZip2Helper.FilterFunc);
 ```
 
 # 6. Reading Compound Data
@@ -773,9 +774,30 @@ async Task LoadAndProcessDataAsynchronously()
 }
 ```
 
-# 9 Intellisense (.NET 5+)
+# 9 Amazon S3
 
-## 9.1 Introduction
+(1) Install the AWS SDK package for S3 access:
+
+`dotnet add package AWSSDK.S3`
+
+(2) Add the [AmazonS3Stream](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Cloud/AmazonS3Stream.cs) to your code.
+
+(3) Pass that stream to PureHDF:
+
+```cs
+// adapt to your needs
+var credentials = new AnonymousAWSCredentials();
+var region = RegionEndpoint.USWest2;
+var client = new AmazonS3Client(credentials, region);
+var s3Stream = new AmazonS3Stream(client, bucketName: "xxx", key: "yyy");
+
+using var file = H5File.Open(s3Stream);
+...
+```
+
+# 10 Intellisense (.NET 5+)
+
+## 10.1 Introduction
 
 Consider the following H5 file:
 
@@ -796,7 +818,7 @@ PureHDF utilizes the source generator feature introduced with .NET 5 which allow
 var dataset = bindings.group1.sub_dataset2;
 ```
 
-## 9.2 Getting Started
+## 10.2 Getting Started
 
 Run the following command:
 
@@ -840,13 +862,13 @@ var myGroup = bindings.group1.Get();
 
 > Note: Invalid characters like spaces will be replaced by underscores.
 
-# 10 Unsupported Features
+# 11 Unsupported Features
 
 The following features are not (yet) supported:
 
 - Virtual datasets with **unlimited dimensions**.
 
-# 11 Comparison Table
+# 12 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 

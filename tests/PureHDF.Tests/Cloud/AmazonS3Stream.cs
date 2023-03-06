@@ -6,7 +6,7 @@ using Amazon.S3.Model;
 
 namespace PureHDF.Tests
 {
-    public class AwsS3Stream : Stream, IDisposable
+    public class AmazonS3Stream : Stream, IDisposable
     {
         private readonly ConcurrentDictionary<long, IMemoryOwner<byte>> _cache = new();
         private readonly int _cacheSlotSize;
@@ -16,7 +16,7 @@ namespace PureHDF.Tests
 
         private readonly ThreadLocal<long> _position = new();
 
-        public AwsS3Stream(AmazonS3Client client, string bucketName, string key, int cacheSlotSize = 1 * 1024 * 1024)
+        public AmazonS3Stream(AmazonS3Client client, string bucketName, string key, int cacheSlotSize = 1 * 1024 * 1024)
         {
             if (cacheSlotSize <= 0)
                 throw new Exception("Cache slot size must be > 0");
