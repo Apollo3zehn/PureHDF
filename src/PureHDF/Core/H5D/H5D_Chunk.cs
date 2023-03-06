@@ -201,13 +201,13 @@ namespace PureHDF
         {
             if (Dataset.InternalFilterPipeline is null)
             {
-                await reader.ReadAsync(Dataset.Context.Reader, buffer, offset).ConfigureAwait(false);
+                await reader.ReadDatasetAsync(Dataset.Context.Reader, buffer, offset).ConfigureAwait(false);
             }
             else
             {
                 using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
                 var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-                await reader.ReadAsync(Dataset.Context.Reader, filterBuffer, offset).ConfigureAwait(false);
+                await reader.ReadDatasetAsync(Dataset.Context.Reader, filterBuffer, offset).ConfigureAwait(false);
 
                 H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
             }

@@ -7,13 +7,12 @@
 // but with the static abstract interface member approach of .NET 7, 
 // the dummy parameter can be removed which means more efficiency.
 
-
 namespace PureHDF
 {
     interface IReader
     {
         ValueTask<int> ReadAsync(H5BaseReader reader, Memory<byte> buffer, long offset);
-        ValueTask<int> ReadAsync(Stream stream, Memory<byte> buffer, long offset);
+        ValueTask<int> ReadDatasetAsync(Stream stream, Memory<byte> buffer, long offset);
     }
 
     struct SyncReader : IReader
@@ -24,10 +23,16 @@ namespace PureHDF
             return new ValueTask<int>(reader.Read(buffer.Span));
         }
 
-        public ValueTask<int> ReadAsync(Stream stream, Memory<byte> buffer, long offset)
+        public ValueTask<int> ReadDatasetAsync(Stream stream, Memory<byte> buffer, long offset)
         {
             stream.Seek(offset, SeekOrigin.Begin);
-            return new ValueTask<int>(stream.Read(buffer.Span));
+
+            #error Actual stream is wrapped
+            return new ValueTask<int>(stream switch 
+            {
+                IDatasetStream datasetStream => datasetStream.ReadDataset(buffer),
+                _ => stream.Read(buffer.Span)
+            });
         }
     }
 
@@ -39,10 +44,16 @@ namespace PureHDF
             return reader.ReadAsync(buffer, CancellationToken.None);
         }
 
-        public ValueTask<int> ReadAsync(Stream stream, Memory<byte> buffer, long offset)
+        public ValueTask<int> ReadDatasetAsync(Stream stream, Memory<byte> buffer, long offset)
         {
+            #error Actual stream is wrapped
             stream.Seek(offset, SeekOrigin.Begin);
-            return stream.ReadAsync(buffer);
+            
+            return stream switch 
+            {
+                IDatasetStream datasetStream => datasetStream.ReadDatasetAsync(buffer),
+                _ => stream.ReadAsync(buffer)
+            };
         }
     }
 }

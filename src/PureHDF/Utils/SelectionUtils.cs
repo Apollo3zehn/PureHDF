@@ -196,7 +196,7 @@ namespace PureHDF
                         using var rentedOwner = MemoryPool<byte>.Shared.Rent(sourceLength);
                         var rentedMemory = rentedOwner.Memory;
 
-                        await reader.ReadAsync(
+                        await reader.ReadDatasetAsync(
                             sourceStream,
                             rentedMemory[..sourceLength],
                             currentOffset * copyInfo.SourceTypeSize).ConfigureAwait(false);

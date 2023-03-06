@@ -795,6 +795,8 @@ using var file = H5File.Open(s3Stream);
 ...
 ```
 
+> Note: The `AmazonS3Stream` caches S3 responses in cache slots of 1 MB by default (use the constructor overload to customize this). Data read from datasets is not being cached to keep the cache small but still useful.
+
 # 10 Intellisense (.NET 5+)
 
 ## 10.1 Introduction

@@ -6,7 +6,7 @@ using Amazon.S3.Model;
 
 namespace PureHDF.Tests
 {
-    public class AmazonS3Stream : Stream, IDisposable
+    public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     {
         private readonly ConcurrentDictionary<long, IMemoryOwner<byte>> _cache = new();
         private readonly int _cacheSlotSize;
@@ -51,7 +51,19 @@ namespace PureHDF.Tests
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var valueTask = ReadCoreAsync(buffer.AsMemory(offset, count), useAsync: false);
+            var valueTask = ReadCoreAsync(buffer.AsMemory(offset, count), useCache: true, useAsync: false);
+
+            if (!valueTask.IsCompleted)
+                throw new Exception("This should never happen.");
+
+            return valueTask
+                .GetAwaiter()
+                .GetResult();
+        }
+
+        public int ReadDataset(Memory<byte> buffer)
+        {
+            var valueTask = ReadCoreAsync(buffer, useCache: false, useAsync: false);
 
             if (!valueTask.IsCompleted)
                 throw new Exception("This should never happen.");
@@ -63,7 +75,12 @@ namespace PureHDF.Tests
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return ReadCoreAsync(buffer, useAsync: true, cancellationToken);
+            return ReadCoreAsync(buffer, useCache: true, useAsync: true, cancellationToken);
+        }
+
+        public ValueTask<int> ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
+            return ReadCoreAsync(buffer, useCache: false, useAsync: true, cancellationToken);
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -110,8 +127,9 @@ namespace PureHDF.Tests
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken = default)
+        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useCache, bool useAsync, CancellationToken cancellationToken = default)
         {
+            #error make use of useCache
             // TODO issue parallel requests
             // TODO do not cache dataset data
             var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
