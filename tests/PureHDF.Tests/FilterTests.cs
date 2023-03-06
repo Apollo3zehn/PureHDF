@@ -502,6 +502,8 @@ namespace PureHDF.Tests.Reading
         }
 #endif
 
+// TODO: move to benchmark
+
         [Fact]
         public void ConvertEndiannessPerformanceTest()
         {

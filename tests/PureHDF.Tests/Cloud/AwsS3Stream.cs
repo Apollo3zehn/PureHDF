@@ -48,28 +48,17 @@ namespace PureHDF.Tests
             set => _position = value; 
         }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        public override int Read(Span<byte> buffer)
-        {
-            return ReadCore(buffer);
-        }
-
         public override int Read(byte[] buffer, int offset, int count)
         {
-            // TODO revert
-            return ReadCore(buffer.AsSpan().Slice(offset, count));
-            // throw new NotImplementedException();
+            return ReadCoreAsync(buffer.AsMemory(offset, count), useAsync: false)
+                .ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
         }
-#else
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return ReadCore(buffer.AsSpan(offset, count));
-        }
-#endif
 
         // TODO revert
         // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ReadCore(Span<byte> buffer)
+        public async Task<int> ReadCoreAsync(Memory<byte> buffer, bool useAsync)
         {
             // TODO issue parallel requests
             // TODO do not cache dataset data
@@ -106,12 +95,12 @@ namespace PureHDF.Tests
                     // is there a not yet loaded range of data?
                     if (s3StartIndex != -1)
                     {
-                        LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex: currentIndex, ref remainingBuffer);
+                        remainingBuffer = await LoadFromS3ToCacheAndBufferAsync(s3StartIndex, s3EndIndex: currentIndex, remainingBuffer, useAsync: useAsync);
                         s3StartIndex = -1;
                     }
 
                     // copy from cache
-                    CopyFromCacheToBuffer(currentIndex, owner, ref remainingBuffer);
+                    remainingBuffer = CopyFromCacheToBuffer(currentIndex, owner, remainingBuffer);
                 }
 
                 s3Processed += _cacheSlotSize;
@@ -122,7 +111,7 @@ namespace PureHDF.Tests
             if (s3StartIndex != -1)
             {
                 var s3EndIndex = s3ActualLength / _cacheSlotSize;
-                LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex, ref remainingBuffer);
+                remainingBuffer = await LoadFromS3ToCacheAndBufferAsync(s3StartIndex, s3EndIndex, remainingBuffer, useAsync: useAsync);
                 s3StartIndex = -1;
             }
 
@@ -177,7 +166,7 @@ namespace PureHDF.Tests
             }
         }
     
-        private void LoadFromS3ToCacheAndBuffer(long s3StartIndex, long s3EndIndex, ref Span<byte> remainingBuffer)
+        private async Task<Memory<byte>> LoadFromS3ToCacheAndBufferAsync(long s3StartIndex, long s3EndIndex, Memory<byte> remainingBuffer, bool useAsync)
         {
             // get S3 stream
             var s3Start = s3StartIndex * _cacheSlotSize;
@@ -192,11 +181,13 @@ namespace PureHDF.Tests
                 ByteRange = new ByteRange(s3Start, s3ActualLength)
             };
 
-            var response = _client
+            var task = _client
                 .GetObjectAsync(request)
-                .ConfigureAwait(false)
-                .GetAwaiter()
-                .GetResult();
+                .ConfigureAwait(false);
+
+            var response = useAsync
+                ? await task
+                : task.GetAwaiter().GetResult();
 
             var stream = response.ResponseStream;
 
@@ -206,26 +197,35 @@ namespace PureHDF.Tests
                 var owner = _cache.GetOrAdd(currentIndex, _ => throw new Exception("This should never happen."));
 
                 // copy to cache
-                var memory = owner.Memory.Slice(0, Math.Min(_cacheSlotSize, (int)(Length - Position)));
+                var memory = owner.Memory[..Math.Min(_cacheSlotSize, (int)(Length - Position))];
 
-#if NET7_0_OR_GREATER
-                stream.ReadExactly(memory.Span);
-#else
-                var slicedBuffer = memory.Span;
+// #if NET7_0_OR_GREATER
+//                 if (useAsync)
+//                     stream.ReadExactly(memory.Span);
+
+//                 else
+//                     await stream.ReadExactlyAsync(memory);
+// #else
+                var slicedBuffer = memory;
 
                 while (slicedBuffer.Length > 0)
                 {
-                    var readBytes = stream.Read(slicedBuffer);
+                    var readBytes = useAsync
+                        ? await stream.ReadAsync(slicedBuffer)
+                        : stream.Read(slicedBuffer.Span);
+
                     slicedBuffer = slicedBuffer[readBytes..];
                 };
-#endif
+// #endif
 
                 // copy to request buffer
-                CopyFromCacheToBuffer(currentIndex, owner, ref remainingBuffer);
+                remainingBuffer = CopyFromCacheToBuffer(currentIndex, owner, remainingBuffer);
             }
+
+            return remainingBuffer;
         }
 
-        private void CopyFromCacheToBuffer(long currentIndex, IMemoryOwner<byte> owner, ref Span<byte> remainingBuffer)
+        private Memory<byte> CopyFromCacheToBuffer(long currentIndex, IMemoryOwner<byte> owner, Memory<byte> remainingBuffer)
         {
             var s3Position = currentIndex * _cacheSlotSize;
             var cacheSlotOffset = (int)(_position - s3Position);
@@ -234,10 +234,12 @@ namespace PureHDF.Tests
             var slicedMemory = owner.Memory
                 .Slice(cacheSlotOffset, Math.Min(remainingCacheSlotSize, remainingBuffer.Length));
 
-            slicedMemory.Span.CopyTo(remainingBuffer);
+            slicedMemory.Span.CopyTo(remainingBuffer.Span);
 
             remainingBuffer = remainingBuffer[slicedMemory.Length..];
             _position += slicedMemory.Length;
+
+            return remainingBuffer;
         }
     }
 }

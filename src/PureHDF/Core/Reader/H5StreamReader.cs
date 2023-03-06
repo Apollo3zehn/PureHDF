@@ -48,7 +48,7 @@ namespace PureHDF
 
         public override byte ReadByte()
         {
-            return (byte)_stream.ReadByte();
+            return Read<byte>();
         }
 
         public override byte[] ReadBytes(int count)
