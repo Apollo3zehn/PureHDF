@@ -21,7 +21,7 @@ namespace PureHDF
 
             // signature
             var signature = reader.ReadBytes(4);
-            Utils.ValidateSignature(signature, LocalHeap.Signature);
+            Utils.ValidateSignature(signature, Signature);
 
             // version
             Version = reader.ReadByte();

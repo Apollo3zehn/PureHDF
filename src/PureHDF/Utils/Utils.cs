@@ -124,11 +124,13 @@ namespace PureHDF
 
         public static void ValidateSignature(byte[] actual, byte[] expected)
         {
-            var actualString = Encoding.ASCII.GetString(actual);
-            var expectedString = Encoding.ASCII.GetString(expected);
-
-            if (actualString != expectedString)
+            if (!expected.SequenceEqual(actual))
+            {
+                var actualString = Encoding.ASCII.GetString(actual);
+                var expectedString = Encoding.ASCII.GetString(expected);
+                
                 throw new Exception($"The actual signature '{actualString}' does not match the expected signature '{expectedString}'.");
+            }
         }
 
         public static bool IsPowerOfTwo(ulong x)

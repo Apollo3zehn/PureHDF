@@ -43,7 +43,7 @@ namespace PureHDF
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            throw new Exception($"The stream of type {_stream.GetType().FullName} is not thread-safe.");
+            return _stream.ReadAsync(buffer, cancellationToken);
         }
 
         public override byte ReadByte()
