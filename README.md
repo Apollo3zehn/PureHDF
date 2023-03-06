@@ -4,8 +4,8 @@
 | ------------------ |
 | [.NET Standard 2.0](https://apollo3zehn.github.io/PureHDF/api/netstandard2.0/PureHDF.html) |
 | [.NET Standard 2.1](https://apollo3zehn.github.io/PureHDF/api/netstandard2.1/PureHDF.html) |
-| [.NET 5](https://apollo3zehn.github.io/PureHDF/api/net50/PureHDF.html) |
-| [.NET 6](https://apollo3zehn.github.io/PureHDF/api/net60/PureHDF.html) |
+| [.NET 5](https://apollo3zehn.github.io/PureHDF/api/net5.0/PureHDF.html) |
+| [.NET 6](https://apollo3zehn.github.io/PureHDF/api/net6.0/PureHDF.html) |
 
 # PureHDF
 

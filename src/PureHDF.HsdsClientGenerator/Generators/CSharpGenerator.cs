@@ -282,7 +282,7 @@ $@"    /// <summary>
                 }
 
                 sourceTextBuilder.AppendLine();
-                sourceTextBuilder.AppendLine("        var __query = queryValues.Any() ? \"?\" + string.Join('&', queryValues.Select(entry => $\"{entry.Key}={entry.Value}\")) : default;");
+                sourceTextBuilder.AppendLine("        var __query = queryValues.Any() ? \"?\" + string.Join(\"&\", queryValues.Select(entry => $\"{entry.Key}={entry.Value}\")) : default;");
                 sourceTextBuilder.AppendLine("        urlBuilder.Append(__query);");
             }
 

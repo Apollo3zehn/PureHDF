@@ -164,7 +164,11 @@ public class HsdsClient : IHsdsClient, IDisposable
 
             else
             {
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+                var stream = await response.Content.ReadAsStreamAsync();
+#else
                 var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+#endif
 
                 try
                 {
@@ -183,8 +187,6 @@ public class HsdsClient : IHsdsClient, IDisposable
         }
     }
     
-    private static readonly HttpRequestOptionsKey<bool> WebAssemblyEnableStreamingResponseKey = new HttpRequestOptionsKey<bool>("WebAssemblyEnableStreamingResponse");
-
     private HttpRequestMessage BuildRequestMessage(string method, string relativeUrl, HttpContent? content, string? contentTypeHeaderValue, string? acceptHeaderValue)
     {
         var requestMessage = new HttpRequestMessage()
@@ -199,11 +201,6 @@ public class HsdsClient : IHsdsClient, IDisposable
 
         if (acceptHeaderValue is not null)
             requestMessage.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(acceptHeaderValue));
-
-        // For web assembly
-        // https://docs.microsoft.com/de-de/dotnet/api/microsoft.aspnetcore.components.webassembly.http.webassemblyhttprequestmessageextensions.setbrowserresponsestreamingenabled?view=aspnetcore-6.0
-        // https://github.com/dotnet/aspnetcore/blob/0ee742c53f2669fd7233df6da89db5e8ab944585/src/Components/WebAssembly/WebAssembly/src/Http/WebAssemblyHttpRequestMessageExtensions.cs
-        requestMessage.Options.Set(WebAssemblyEnableStreamingResponseKey, true);
 
         return requestMessage;
     }
@@ -327,7 +324,7 @@ public class DomainClient : IDomainClient
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
         if (folder is not null) queryValues.Add("folder", Uri.EscapeDataString(Convert.ToString(folder, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -343,7 +340,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -359,7 +356,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -375,7 +372,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -391,7 +388,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -407,7 +404,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -423,7 +420,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -439,7 +436,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -455,7 +452,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -472,7 +469,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -489,7 +486,7 @@ public class DomainClient : IDomainClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -605,7 +602,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -621,7 +618,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -639,7 +636,7 @@ public class GroupClient : IGroupClient
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
         if (getalias is not null) queryValues.Add("getalias", Uri.EscapeDataString(Convert.ToString(getalias, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -656,7 +653,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -676,7 +673,7 @@ public class GroupClient : IGroupClient
         if (Limit is not null) queryValues.Add("Limit", Uri.EscapeDataString(Convert.ToString(Limit, CultureInfo.InvariantCulture)!));
         if (Marker is not null) queryValues.Add("Marker", Uri.EscapeDataString(Convert.ToString(Marker, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -695,7 +692,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -714,7 +711,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -731,7 +728,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -749,7 +746,7 @@ public class GroupClient : IGroupClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -825,7 +822,7 @@ public class LinkClient : ILinkClient
         if (Limit is not null) queryValues.Add("Limit", Uri.EscapeDataString(Convert.ToString(Limit, CultureInfo.InvariantCulture)!));
         if (Marker is not null) queryValues.Add("Marker", Uri.EscapeDataString(Convert.ToString(Marker, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -843,7 +840,7 @@ public class LinkClient : ILinkClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -861,7 +858,7 @@ public class LinkClient : ILinkClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -879,7 +876,7 @@ public class LinkClient : ILinkClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1039,7 +1036,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1055,7 +1052,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1072,7 +1069,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1089,7 +1086,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1106,7 +1103,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1123,7 +1120,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1140,7 +1137,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1157,7 +1154,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1177,7 +1174,7 @@ public class DatasetClient : IDatasetClient
         if (query is not null) queryValues.Add("query", Uri.EscapeDataString(Convert.ToString(query, CultureInfo.InvariantCulture)!));
         if (Limit is not null) queryValues.Add("Limit", Uri.EscapeDataString(Convert.ToString(Limit, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1194,7 +1191,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1214,7 +1211,7 @@ public class DatasetClient : IDatasetClient
         if (Limit is not null) queryValues.Add("Limit", Uri.EscapeDataString(Convert.ToString(Limit, CultureInfo.InvariantCulture)!));
         if (Marker is not null) queryValues.Add("Marker", Uri.EscapeDataString(Convert.ToString(Marker, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1233,7 +1230,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1252,7 +1249,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1269,7 +1266,7 @@ public class DatasetClient : IDatasetClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1368,7 +1365,7 @@ public class DatatypeClient : IDatatypeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1385,7 +1382,7 @@ public class DatatypeClient : IDatatypeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1402,7 +1399,7 @@ public class DatatypeClient : IDatatypeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1422,7 +1419,7 @@ public class DatatypeClient : IDatatypeClient
         if (Limit is not null) queryValues.Add("Limit", Uri.EscapeDataString(Convert.ToString(Limit, CultureInfo.InvariantCulture)!));
         if (Marker is not null) queryValues.Add("Marker", Uri.EscapeDataString(Convert.ToString(Marker, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1441,7 +1438,7 @@ public class DatatypeClient : IDatatypeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1460,7 +1457,7 @@ public class DatatypeClient : IDatatypeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1477,7 +1474,7 @@ public class DatatypeClient : IDatatypeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1548,7 +1545,7 @@ public class AttributeClient : IAttributeClient
         if (Limit is not null) queryValues.Add("Limit", Uri.EscapeDataString(Convert.ToString(Limit, CultureInfo.InvariantCulture)!));
         if (Marker is not null) queryValues.Add("Marker", Uri.EscapeDataString(Convert.ToString(Marker, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1567,7 +1564,7 @@ public class AttributeClient : IAttributeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1586,7 +1583,7 @@ public class AttributeClient : IAttributeClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1678,7 +1675,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1695,7 +1692,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1712,7 +1709,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1729,7 +1726,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1747,7 +1744,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1764,7 +1761,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1781,7 +1778,7 @@ public class ACLSClient : IACLSClient
         var queryValues = new Dictionary<string, string>();
         if (domain is not null) queryValues.Add("domain", Uri.EscapeDataString(Convert.ToString(domain, CultureInfo.InvariantCulture)!));
 
-        var __query = queryValues.Any() ? "?" + string.Join('&', queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
+        var __query = queryValues.Any() ? "?" + string.Join("&", queryValues.Select(entry => $"{entry.Key}={entry.Value}")) : default;
         urlBuilder.Append(__query);
 
         var url = urlBuilder.ToString();
@@ -1822,7 +1819,11 @@ public class StreamResponse : IDisposable
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     public Task<Stream> GetStreamAsync(CancellationToken cancellationToken = default)
     {
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+        return _response.Content.ReadAsStreamAsync();
+#else
         return _response.Content.ReadAsStreamAsync(cancellationToken);
+#endif
     }
 
     /// <inheritdoc />

@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net70;net50;</TargetFrameworks>
+    <TargetFrameworks>net7.0;net5.0;</TargetFrameworks>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
 
     <!-- to make P/Invoke target file happy -->
@@ -10,14 +10,14 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.103.15" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.103.21" />
     <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update3.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
     <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-    <PackageReference Include="SharpZipLib" Version="1.3.3" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
+    <PackageReference Include="SharpZipLib" Version="1.4.2" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

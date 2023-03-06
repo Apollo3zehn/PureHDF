@@ -4,20 +4,15 @@
     <Description>A pure .NET library that makes reading of HDF5 files (groups, datasets, attributes, links, ...) very easy. </Description>
     <PackageTags>HDF HDF5 hierarchical data file H5</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFrameworks>net60;net50;netstandard21;netstandard20;</TargetFrameworks>
+    <TargetFrameworks>net6.0;net5.0;netstandard21;netstandard20;</TargetFrameworks>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard20'">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+  <ItemGroup Condition="'$(TargetFramework)'=='netstandard20' or '$(TargetFramework)'=='netstandard21'">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)'=='netstandard21'">
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageReference Include="System.Net.Http.Json" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

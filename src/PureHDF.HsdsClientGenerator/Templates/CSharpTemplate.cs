@@ -94,7 +94,11 @@ public class {{1}} : I{{1}}, IDisposable
 
             else
             {
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+                var stream = await response.Content.ReadAsStreamAsync();
+#else
                 var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+#endif
 
                 try
                 {
@@ -113,8 +117,6 @@ public class {{1}} : I{{1}}, IDisposable
         }
     }
     
-    private static readonly HttpRequestOptionsKey<bool> WebAssemblyEnableStreamingResponseKey = new HttpRequestOptionsKey<bool>("WebAssemblyEnableStreamingResponse");
-
     private HttpRequestMessage BuildRequestMessage(string method, string relativeUrl, HttpContent? content, string? contentTypeHeaderValue, string? acceptHeaderValue)
     {
         var requestMessage = new HttpRequestMessage()
@@ -129,11 +131,6 @@ public class {{1}} : I{{1}}, IDisposable
 
         if (acceptHeaderValue is not null)
             requestMessage.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse(acceptHeaderValue));
-
-        // For web assembly
-        // https://docs.microsoft.com/de-de/dotnet/api/microsoft.aspnetcore.components.webassembly.http.webassemblyhttprequestmessageextensions.setbrowserresponsestreamingenabled?view=aspnetcore-6.0
-        // https://github.com/dotnet/aspnetcore/blob/0ee742c53f2669fd7233df6da89db5e8ab944585/src/Components/WebAssembly/WebAssembly/src/Http/WebAssemblyHttpRequestMessageExtensions.cs
-        requestMessage.Options.Set(WebAssemblyEnableStreamingResponseKey, true);
 
         return requestMessage;
     }
