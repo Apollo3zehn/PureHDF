@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.SourceGenerator", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.SourceGenerator.Tests", "tests\PureHDF.SourceGenerator.Tests\PureHDF.SourceGenerator.Tests.csproj", "{0510852E-B154-422A-A1E2-2C9783119A45}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.HsdsClientGenerator", "src\PureHDF.HsdsClientGenerator\PureHDF.HsdsClientGenerator.csproj", "{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,6 +60,10 @@ Global
 		{0510852E-B154-422A-A1E2-2C9783119A45}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0510852E-B154-422A-A1E2-2C9783119A45}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0510852E-B154-422A-A1E2-2C9783119A45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,6 +75,7 @@ Global
 		{22382596-2C76-4F3A-A4DE-76C04EA3EDCE} = {57ADB402-16BE-4AD1-B628-A90B2B98110E}
 		{313D0B71-0F97-4867-B419-ABA333B11A54} = {4C09E841-1023-48F7-B290-734C029B0E78}
 		{0510852E-B154-422A-A1E2-2C9783119A45} = {9C8A732F-BE85-4461-A789-B19CD4B70C90}
+		{D7A7A923-CC32-48D9-A495-506DB5CE2BF6} = {4C09E841-1023-48F7-B290-734C029B0E78}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6278E75D-2E06-43AB-A275-270476503447}
