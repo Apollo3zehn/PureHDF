@@ -420,7 +420,7 @@ public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 
 `dotnet add package Intrinsics.ISA-L.PInvoke`
 
-(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/DeflateHelper_Intel_ISA_L.cs) to your code.
+(2) Add a copy of the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/DeflateHelper_Intel_ISA_L.cs) to your code.
 
 (3) Register Deflate:
 
@@ -443,7 +443,7 @@ H5Filter.Register(
 
 `dotnet add package Blosc2.PInvoke`
 
-(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BloscHelper.cs) to your code.
+(2) Add a copy of the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BloscHelper.cs) to your code.
 
 (3) Register Blosc:
 
@@ -459,7 +459,7 @@ H5Filter.Register(
 
 `dotnet add package SharpZipLib`
 
-(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Utils/Streams/MemorySpanStream.cs) implementation to your code.
+(2) Add a copy of the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Streams/MemorySpanStream.cs) implementation to your code.
 
 (3) Register BZip2:
 
@@ -776,11 +776,11 @@ async Task LoadAndProcessDataAsynchronously()
 
 # 9 Amazon S3
 
-(1) Install the AWS SDK package for S3 access:
+(1) Install the AWS SDK package for simple S3 access:
 
 `dotnet add package AWSSDK.S3`
 
-(2) Add the [AmazonS3Stream](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Cloud/AmazonS3Stream.cs) to your code.
+(2) Add a copy of the [AmazonS3Stream](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Cloud/AmazonS3Stream.cs) to your code.
 
 (3) Pass that stream to PureHDF:
 
