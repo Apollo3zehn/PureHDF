@@ -459,7 +459,7 @@ H5Filter.Register(
 
 `dotnet add package SharpZipLib`
 
-(2) Add a copy of the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Streams/MemorySpanStream.cs) implementation to your code.
+(2) Add a copy of the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Filters/MemorySpanStream.cs) implementation to your code.
 
 (3) Register BZip2:
 
