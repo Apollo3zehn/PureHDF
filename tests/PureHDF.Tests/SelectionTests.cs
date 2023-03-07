@@ -689,7 +689,7 @@ namespace PureHDF.Tests.Reading
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult((Stream)new MemorySpanStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)])),
+                indices => Task.FromResult((IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)])),
                 indices => actual,
                 Converter,
                 SourceTypeSize: 4,
@@ -802,8 +802,8 @@ namespace PureHDF.Tests.Reading
             var actual = new int[5 * 6 * 11];
             var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
-            Stream getSourceStreamAsync(ulong[] indices) 
-                => new MemorySpanStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
+            IH5ReadStream getSourceStreamAsync(ulong[] indices) 
+                => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
             var copyInfo = new CopyInfo<int>(
                 datasetDims,
@@ -937,8 +937,8 @@ namespace PureHDF.Tests.Reading
 
             var actual = new int[11 * 11 * 12];
 
-            Stream getSourceStreamAsync(ulong[] indices) 
-                => new MemorySpanStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
+            IH5ReadStream getSourceStreamAsync(ulong[] indices) 
+                => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
             var copyInfo = new CopyInfo<int>(
                 datasetDims,

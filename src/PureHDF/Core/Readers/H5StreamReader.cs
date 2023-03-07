@@ -20,30 +20,45 @@ namespace PureHDF
             _leaveOpen = leaveOpen;
         }
 
-        public override long Position
-        {
-            get => _stream.Position - (long)BaseAddress;
-            set => throw new NotImplementedException();
-        }
+        public override long Position { get => _stream.Position - (long)BaseAddress; }
 
-        public override long Seek(long offset, SeekOrigin seekOrigin)
+        public override void Seek(long offset, SeekOrigin seekOrigin)
         {
-            return seekOrigin switch
+            switch (seekOrigin)
             {
-                SeekOrigin.Begin => _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin),
-                SeekOrigin.Current => _stream.Seek(offset, SeekOrigin.Current),
-                _ => throw new Exception($"Seek origin '{seekOrigin}' is not supported."),
+                case SeekOrigin.Begin:
+                     _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin);
+                    break;
+
+                case SeekOrigin.Current:
+                    _stream.Seek(offset, SeekOrigin.Current);
+                    break;
+
+                default:
+                    throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
             };
         }
 
-        public override int Read(Span<byte> buffer)
+        public override void Read(Memory<byte> buffer)
         {
-            return _stream.Read(buffer);
+            var remainingBuffer = buffer;
+
+            while (remainingBuffer.Length > 0)
+            {
+                var count = _stream.Read(buffer.Span);
+                remainingBuffer = remainingBuffer[count..];
+            }
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return _stream.ReadAsync(buffer, cancellationToken);
+            var remainingBuffer = buffer;
+
+            while (remainingBuffer.Length > 0)
+            {
+                var count = await _stream.ReadAsync(buffer, cancellationToken);
+                remainingBuffer = remainingBuffer[count..];
+            }
         }
 
         public override byte ReadByte()

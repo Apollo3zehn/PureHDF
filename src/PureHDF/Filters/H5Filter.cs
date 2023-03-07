@@ -9,13 +9,13 @@ namespace PureHDF
 
         static H5Filter()
         {
-            H5Filter.Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
+            Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
 
-            H5Filter.Register(H5FilterID.Shuffle, "shuffle", H5Filter.ShuffleFilterFunc);
-            H5Filter.Register(H5FilterID.Fletcher32, "fletcher", H5Filter.Fletcher32FilterFunc);
-            H5Filter.Register(H5FilterID.Nbit, "nbit", H5Filter.NbitFilterFunc);
-            H5Filter.Register(H5FilterID.ScaleOffset, "scaleoffset", H5Filter.ScaleOffsetFilterFunc);
-            H5Filter.Register(H5FilterID.Deflate, "deflate", H5Filter.DeflateFilterFunc);
+            Register(H5FilterID.Shuffle, "shuffle", ShuffleFilterFunc);
+            Register(H5FilterID.Fletcher32, "fletcher", Fletcher32FilterFunc);
+            Register(H5FilterID.Nbit, "nbit", NbitFilterFunc);
+            Register(H5FilterID.ScaleOffset, "scaleoffset", ScaleOffsetFilterFunc);
+            Register(H5FilterID.Deflate, "deflate", DeflateFilterFunc);
         }
 
         #endregion
@@ -47,7 +47,7 @@ namespace PureHDF
 
                     var filter = pipeline[i - 1];
 
-                    if (!H5Filter.Registrations.TryGetValue(filter.Identifier, out var registration))
+                    if (!Registrations.TryGetValue(filter.Identifier, out var registration))
                     {
                         var filterName = string.IsNullOrWhiteSpace(filter.Name) ? "unnamed filter" : filter.Name;
                         throw new Exception($"Could not find filter '{filterName}' with ID '{filter.Identifier}'. Make sure the filter has been registered using H5Filter.Register(...).");
@@ -165,7 +165,7 @@ namespace PureHDF
                 using var sourceStream = new MemorySpanStream(buffer);
 
                 // skip ZLIB header to get only the DEFLATE stream
-                sourceStream.Position = 2;
+                sourceStream.Seek(2, SeekOrigin.Begin);
 
                 using var decompressedStream = new MemoryStream(buffer.Length /* minimum size to expect */);
                 using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);

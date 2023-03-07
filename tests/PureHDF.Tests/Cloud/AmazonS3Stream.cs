@@ -129,7 +129,7 @@ namespace PureHDF.Tests
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useCache, bool useAsync, CancellationToken cancellationToken = default)
         {
-            #error make use of useCache
+            // #error make use of useCache
             // TODO issue parallel requests
             // TODO do not cache dataset data
             var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);

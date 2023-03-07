@@ -9,7 +9,7 @@ namespace PureHDF
         ulong[] TargetChunkDims,
         Selection SourceSelection,
         Selection TargetSelection,
-        Func<ulong[], Task<Stream>> GetSourceStreamAsync,
+        Func<ulong[], Task<IH5ReadStream>> GetSourceStreamAsync,
         Func<ulong[], Memory<T>> GetTargetBuffer,
         Action<Memory<byte>, Memory<T>> Converter,
         int SourceTypeSize,
@@ -116,7 +116,7 @@ namespace PureHDF
             CopyInfo<TResult> copyInfo) where TReader : IReader
         {
             /* initialize source walker */
-            var sourceStream = default(Stream)!;
+            var sourceStream = default(IH5ReadStream)!;
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
@@ -167,6 +167,7 @@ namespace PureHDF
                     var length = Math.Min(currentLength, currentTarget.Length / copyInfo.TargetTypeFactor);
                     var targetLength = length * copyInfo.TargetTypeFactor;
 
+                    // specialization; virtual dataset (VirtualDatasetStream)
                     if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
                     {
                         virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
@@ -176,7 +177,8 @@ namespace PureHDF
                             .ConfigureAwait(false);
                     }
 
-                    else if (sourceStream is MemorySpanStream memorySpanStream)
+                    // optimization; chunked / compact dataset (MemorySpanStream)
+                    else if (sourceStream is SystemMemoryStream memorySpanStream)
                     {
                         memorySpanStream.Seek(currentOffset * copyInfo.SourceTypeSize, SeekOrigin.Begin);
 
@@ -188,6 +190,7 @@ namespace PureHDF
                             currentTarget[..targetLength]);
                     }
 
+                    // default; contiguous dataset (OffsetStream, ExternalFileListStream (wrapping a SlotStream), UnsafeFillValueStream)
                     else
                     {
                         var sourceLength = length * copyInfo.SourceTypeSize;

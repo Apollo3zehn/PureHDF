@@ -4,7 +4,7 @@
     {
         #region Fields
 
-        private Stream? _stream;
+        private IH5ReadStream? _stream;
 
         #endregion
 
@@ -25,7 +25,7 @@
             return Dataset.GetDatasetDims();
         }
 
-        public override Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             var address = Dataset.InternalDataLayout.Address;
 

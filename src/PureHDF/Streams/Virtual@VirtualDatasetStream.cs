@@ -2,7 +2,7 @@
 {
     internal delegate Task ReadVirtualDelegate<TResult>(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
 
-    internal class VirtualDatasetStream<TResult> : Stream
+    internal class VirtualDatasetStream<TResult> : IH5ReadStream
     {
         private record class DatasetInfo(H5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
 
@@ -31,32 +31,14 @@
             _readVirtual = readVirtual;
         }
 
-        public override bool CanRead => true;
+        public long Position { get => _position; }
 
-        public override bool CanSeek => true;
+        public void Read(Memory<byte> buffer) => throw new NotImplementedException();
 
-        public override bool CanWrite => false;
+        public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
-        public override long Length { get => throw new NotImplementedException(); }
-
-        public override long Position
+        public async ValueTask ReadVirtualAsync(Memory<TResult> buffer)
         {
-            get
-            {
-                return _position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-#region Methods
-
-        public async ValueTask<int> ReadVirtualAsync(Memory<TResult> buffer)
-        {
-            var length = buffer.Length;
-
             // Overall algorithm:
             // - We get a linear index.
             // - That index is then converted into coordinates which identify the position in the multidimensional virtual dataset.
@@ -101,7 +83,7 @@
                 }
 
                 // 4. Find min count (request vs virtual selection)
-                ulong virtualCount = virtualResult.MaxCount == 0
+                var virtualCount = virtualResult.MaxCount == 0
                     // MaxCount == 0: there is no block in the fastest changing dimension
                     ? (ulong)buffer.Length
                     // MaxCount != 0: 
@@ -149,8 +131,6 @@
                 _position += (long)virtualCount;
                 buffer = buffer[(int)virtualCount..];
             }
-
-            return length;
         }
 
         private static IEnumerable<Step> Walker(
@@ -214,60 +194,50 @@
             return info;
         }
 
-#endregion
-
-#region Stream
-
-        public override void Flush()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
+        public void Seek(long offset, SeekOrigin origin)
         {
             if (origin == SeekOrigin.Begin)
-            {
                 _position = offset;
-                return offset;
-            }
 
-            throw new NotImplementedException();
+            else
+                throw new NotImplementedException();
         }
 
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
+#region IDisposable
 
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
+        private bool _disposedValue;
 
-        protected override void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            foreach (var datasetInfo in _datasetInfoMap.Values)
+            if (!_disposedValue)
             {
-                try
+                if (disposing)
                 {
-                    // do not close this file 
-                    if (datasetInfo.File != _file)
-                        datasetInfo.File.Dispose();
+                    foreach (var datasetInfo in _datasetInfoMap.Values)
+                    {
+                        try
+                        {
+                            // do not close this file 
+                            if (datasetInfo.File != _file)
+                                datasetInfo.File.Dispose();
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
                 }
-                catch
-                {
-                    //
-                }
-            }
 
-            base.Dispose(disposing);
+                _disposedValue = true;
+            }
         }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+    }
 
 #endregion
-    }
 }

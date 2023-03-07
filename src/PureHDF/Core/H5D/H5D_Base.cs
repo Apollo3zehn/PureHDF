@@ -29,7 +29,7 @@ namespace PureHDF
 
         public abstract ulong[] GetChunkDims();
 
-        public abstract Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
+        public abstract Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
 
         #endregion
 

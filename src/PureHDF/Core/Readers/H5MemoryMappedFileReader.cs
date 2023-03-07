@@ -18,13 +18,9 @@ namespace PureHDF
             _accessor = accessor;
         }
 
-        public override long Position
-        {
-            get => _position.Value;
-            set => throw new NotImplementedException();
-        }
+        public override long Position { get => _position.Value; }
 
-        public override long Seek(long offset, SeekOrigin seekOrigin)
+        public override void Seek(long offset, SeekOrigin seekOrigin)
         {
             switch (seekOrigin)
             {
@@ -37,11 +33,9 @@ namespace PureHDF
                 default:
                     throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
             }
-
-            return offset;
         }
 
-        public override int Read(Span<byte> buffer)
+        public override void Read(Memory<byte> buffer)
         {
             unsafe
             {
@@ -52,7 +46,7 @@ namespace PureHDF
                     _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
                     var ptrSrc = _accessor.PointerOffset + ptr + _position.Value;
 
-                    fixed (byte* ptrDst = buffer)
+                    fixed (byte* ptrDst = buffer.Span)
                     {
                         Buffer.MemoryCopy(ptrSrc, ptrDst, buffer.Length, buffer.Length);
                     }
@@ -64,13 +58,11 @@ namespace PureHDF
             }
 
             _position.Value += buffer.Length;
-
-            return buffer.Length;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            throw new Exception($"Memory-mapped files cannot be accessed asynchronously.");
+            throw new Exception("Memory-mapped files cannot be accessed asynchronously.");
         }
 
         public override byte ReadByte()

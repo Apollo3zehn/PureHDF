@@ -635,10 +635,10 @@ No data are being copied and you can work with the array similar to a normal `Sp
 
 Reading data from a dataset is thread-safe in the following cases, depending on the type of `H5File` constructor method you used:
 
-|         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`) | 
-|---------|-----------|--------------------|---------------------|
-| .NET 4+ | x         | ✓                  | x                   |
-| .NET 6+ | ✓         | ✓                  | ✓ (if: `Stream` is `FileStream`) |
+|         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                    |
+| ------- | -------------- | -------------------------------- | --------------------------------- |
+| .NET 4+ | x              | ✓                               | x                                 |
+| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream`) |
 
 > The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
