@@ -18,7 +18,6 @@ internal class OffsetStream : IH5ReadStream
     }
 
 #if NET6_0_OR_GREATER
-    // required to avoid thread changes which would make the thread-local positions in derived classes useless
     public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         return _reader.ReadAsync(buffer, cancellationToken);

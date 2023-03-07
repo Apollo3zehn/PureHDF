@@ -167,7 +167,7 @@ namespace PureHDF
                     var length = Math.Min(currentLength, currentTarget.Length / copyInfo.TargetTypeFactor);
                     var targetLength = length * copyInfo.TargetTypeFactor;
 
-                    // virtual dataset (VirtualDatasetStream)
+                    // specialization; virtual dataset (VirtualDatasetStream)
                     if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
                     {
                         virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
@@ -177,7 +177,7 @@ namespace PureHDF
                             .ConfigureAwait(false);
                     }
 
-                    // chunked / compact dataset (MemorySpanStream)
+                    // optimization; chunked / compact dataset (MemorySpanStream)
                     else if (sourceStream is SystemMemoryStream memorySpanStream)
                     {
                         memorySpanStream.Seek(currentOffset * copyInfo.SourceTypeSize, SeekOrigin.Begin);
@@ -190,7 +190,7 @@ namespace PureHDF
                             currentTarget[..targetLength]);
                     }
 
-                    // contiguous dataset (OffsetStream, ExternalFileListStream (wrapping a SlotStream), UnsafeFillValueStream)
+                    // default; contiguous dataset (OffsetStream, ExternalFileListStream (wrapping a SlotStream), UnsafeFillValueStream)
                     else
                     {
                         var sourceLength = length * copyInfo.SourceTypeSize;

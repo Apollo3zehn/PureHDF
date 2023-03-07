@@ -51,6 +51,27 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
+        public async Task CanReadDataset_Contiguous_With_FillValue_And_AllocationLateAsync()
+        {
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var fillValue = 99;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddContiguousDatasetWithFillValueAndAllocationLate(fileId, fillValue));
+            var expected = Enumerable.Range(0, TestData.MediumData.Length)
+                .Select(value => fillValue)
+                .ToArray();
+
+            // Act
+            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            var group = root.Group("fillvalue");
+            var dataset = group.Dataset($"{LayoutClass.Contiguous}");
+            var actual = await dataset.ReadAsync<int>();
+
+            // Assert
+            Assert.Equal(expected, actual);
+        }
+
+        [Fact]
         public void CanReadDataset_External()
         {
             // INFO:

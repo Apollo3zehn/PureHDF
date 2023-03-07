@@ -26,6 +26,8 @@
             Seek(length, SeekOrigin.Current);
         }
 
+        public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        
         public void Seek(long offset, SeekOrigin origin)
         {
             switch (origin)

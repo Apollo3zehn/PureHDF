@@ -35,6 +35,8 @@
 
         public void Read(Memory<byte> buffer) => throw new NotImplementedException();
 
+        public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+
         public async ValueTask ReadVirtualAsync(Memory<TResult> buffer)
         {
             // Overall algorithm:
@@ -197,7 +199,8 @@
             if (origin == SeekOrigin.Begin)
                 _position = offset;
 
-            throw new NotImplementedException();
+            else
+                throw new NotImplementedException();
         }
 
 #region IDisposable
