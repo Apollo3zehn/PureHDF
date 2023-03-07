@@ -148,13 +148,13 @@ namespace PureHDF
             return ChunkDims;
         }
 
-        public override async Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override async Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             var buffer = await _chunkCache
                 .GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices))
                 .ConfigureAwait(false);
 
-            var stream = new MemorySpanStream(buffer);
+            var stream = new SystemMemoryStream(buffer);
 
             return stream;
         }

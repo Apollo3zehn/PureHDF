@@ -1,161 +1,125 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace PureHDF;
 
-namespace PureHDF
+internal class SlotStream : IH5ReadStream
 {
-    internal class SlotStream : Stream
+    private long _position;
+    private readonly H5File _file;
+    private readonly LocalHeap _heap;
+    private Stream? _stream;
+    private readonly ExternalFileListSlot _slot;
+    private readonly H5DatasetAccess _datasetAccess;
+
+    public SlotStream(H5File file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
     {
-        private long _position;
-        private readonly H5File _file;
-        private readonly LocalHeap _heap;
-        private Stream? _stream;
-        private readonly ExternalFileListSlot _slot;
-        private readonly H5DatasetAccess _datasetAccess;
+        _file = file;
+        _heap = heap;
+        _slot = slot;
+        Offset = offset;
+        _datasetAccess = datasetAccess;
 
-        public SlotStream(H5File file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
-        {
-            _file = file;
-            _heap = heap;
-            _slot = slot;
-            Offset = offset;
-            _datasetAccess = datasetAccess;
-        }
+        Length = (long)_slot.Size;
+    }
 
-        public long Offset { get; private set; }
+    public long Offset { get; private set; }
 
-        public override bool CanRead => true;
+    public long Position { get => _position; }
 
-        public override bool CanSeek => true;
+    public long Length { get; }
 
-        public override bool CanWrite => false;
+    public void Read(Memory<byte> buffer)
+    {
+        var length = (int)Math.Min(Length - Position, buffer.Length);
 
-        public override long Length => (long)_slot.Size;
+        _stream = EnsureStream();
 
-        public override long Position
-        {
-            get
-            {
-                return _position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
+        var actualLength = _stream.Read(buffer.Span[..length]);
 
-        public override void Flush()
-        {
-            throw new NotImplementedException();
-        }
+        // If file is shorter than slot: fill remaining buffer with zeros.
+        buffer[actualLength..length]
+            .Span
+            .Clear();
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-        public override int Read(Span<byte> buffer)
-        {
-            return ReadCore(buffer);
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-#else
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            return ReadCore(buffer.AsSpan(offset, count));
-        }
-#endif
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ReadCore(Span<byte> buffer)
-        {
-            var length = (int)Math.Min(Length - Position, buffer.Length);
-
-            _stream = EnsureStream();
-
-            var actualLength = _stream.Read(buffer[..length]);
-
-            // If file is shorter than slot: fill remaining buffer with zeros.
-            buffer[actualLength..length]
-                .Clear();
-
-            _position += length;
-
-            return length;
-        }
+        _position += length;
+    }
 
 #if NET6_0_OR_GREATER
-        public override async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-        {
-            var length = (int)Math.Min(Length - Position, buffer.Length);
+    public async ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    {
+        var length = (int)Math.Min(Length - Position, buffer.Length);
 
-            _stream = EnsureStream();
+        _stream = EnsureStream();
 
-            var actualLength = await _stream
-                .ReadAsync(buffer[..length], cancellationToken)
-                .ConfigureAwait(false);
+        var actualLength = await _stream
+            .ReadAsync(buffer[..length], cancellationToken)
+            .ConfigureAwait(false);
 
-            // If file is shorter than slot: fill remaining buffer with zeros.
-            buffer
-                .Span[actualLength..length]
-                .Fill(0);
+        // If file is shorter than slot: fill remaining buffer with zeros.
+        buffer
+            .Span[actualLength..length]
+            .Fill(0);
 
-            _position += length;
-
-            return length;
-        }
+        _position += length;
+    }
 #endif
 
-        public override long Seek(long offset, SeekOrigin origin)
+    public void Seek(long offset, SeekOrigin origin)
+    {
+        switch (origin)
         {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
+            case SeekOrigin.Begin:
 
-                    if (offset < 0 || offset > Length)
-                        throw new Exception("The offset exceeds the stream length.");
+                if (offset < 0 || offset > Length)
+                    throw new Exception("The offset exceeds the stream length.");
 
-                    _stream = EnsureStream();
-                    _stream.Seek(offset + (long)_slot.Offset, origin);
-                    _position = offset;
+                _stream = EnsureStream();
+                _stream.Seek(offset + (long)_slot.Offset, origin);
+                _position = offset;
 
-                    return _position;
-            }
+                break;
 
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            _stream?.Dispose();
-
-            base.Dispose(disposing);
-        }
-
-        // TODO File should be opened asynchronously if this file is also opened asynchronously.
-        private Stream EnsureStream()
-        {
-            if (_stream is null)
-            {
-                var name = _heap.GetObjectName(_slot.NameHeapOffset);
-                var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, name, _datasetAccess);
-
-                if (!File.Exists(filePath))
-                    throw new Exception($"External file '{filePath}' does not exist.");
-
-                _stream = File.OpenRead(filePath!);
-                _stream.Seek((long)_slot.Offset, SeekOrigin.Begin);
-            }
-
-            return _stream;
+            default:
+                throw new NotImplementedException();
         }
     }
+
+    // TODO File should be opened asynchronously if this file is also opened asynchronously.
+    private Stream EnsureStream()
+    {
+        if (_stream is null)
+        {
+            var name = _heap.GetObjectName(_slot.NameHeapOffset);
+            var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, name, _datasetAccess);
+
+            if (!File.Exists(filePath))
+                throw new Exception($"External file '{filePath}' does not exist.");
+
+            _stream = File.OpenRead(filePath!);
+            _stream.Seek((long)_slot.Offset, SeekOrigin.Begin);
+        }
+
+        return _stream;
+    }
+
+#region IDisposable
+
+    private bool _disposedValue;
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            _stream?.Dispose();
+            _disposedValue = true;
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+#endregion
+
 }
+

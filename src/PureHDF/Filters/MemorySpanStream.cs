@@ -3,11 +3,13 @@
     internal class MemorySpanStream : Stream
     {
         private long _position;
+        private readonly Memory<byte> _memory;
+        private Memory<byte> _sliced;
 
         public MemorySpanStream(Memory<byte> memory)
         {
-            OriginalMemory = memory;
-            SlicedMemory = memory;
+            _memory = memory;
+            _sliced = memory;
         }
 
         public override bool CanRead => true;
@@ -16,7 +18,7 @@
 
         public override bool CanWrite => false;
 
-        public override long Length => OriginalMemory.Length;
+        public override long Length => _memory.Length;
 
         public override long Position
         {
@@ -30,10 +32,6 @@
             }
         }
 
-        public Memory<byte> OriginalMemory { get; }
-        
-        public Memory<byte> SlicedMemory { get; private set; }
-
         public override void Flush()
         {
             throw new NotImplementedException();
@@ -41,9 +39,9 @@
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var length = Math.Min(SlicedMemory.Length, count);
+            var length = Math.Min(_sliced.Length, count);
 
-            SlicedMemory[..length]
+            _sliced[..length]
                 .CopyTo(buffer.AsMemory()[offset..]);
 
             Position += length;
@@ -57,31 +55,31 @@
             {
                 case SeekOrigin.Begin:
 
-                    if (offset > OriginalMemory.Length)
+                    if (offset > _memory.Length)
                         throw new NotSupportedException("Cannot seek behind the end of the array.");
 
-                    SlicedMemory = OriginalMemory[(int)offset..];
+                    _sliced = _memory[(int)offset..];
                     _position = offset;
 
                     break;
 
                 case SeekOrigin.Current:
 
-                    if (offset > SlicedMemory.Length)
+                    if (offset > _sliced.Length)
                         throw new NotSupportedException("Cannot seek behind the end of the array.");
 
-                    SlicedMemory = SlicedMemory[(int)offset..];
+                    _sliced = _sliced[(int)offset..];
                     _position += offset;
 
                     break;
 
                 case SeekOrigin.End:
 
-                    if (offset > SlicedMemory.Length)
+                    if (offset > _sliced.Length)
                         throw new NotSupportedException("Cannot seek before the start of the array.");
 
-                    SlicedMemory = OriginalMemory[^((int)offset)..];
-                    _position = OriginalMemory.Length - (int)offset;
+                    _sliced = _memory[^((int)offset)..];
+                    _position = _memory.Length - (int)offset;
 
                     break;
 

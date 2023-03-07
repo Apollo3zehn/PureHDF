@@ -1,92 +1,57 @@
-﻿namespace PureHDF
+﻿namespace PureHDF;
+
+internal class UnsafeFillValueStream : IH5ReadStream
 {
-    internal class UnsafeFillValueStream : Stream
+    private readonly byte[]? _fillValue;
+    private readonly int _length;
+    private long _position;
+
+    public UnsafeFillValueStream(byte[]? fillValue)
     {
-        private readonly byte[]? _fillValue;
-        private readonly int _length;
-        private long _position;
+        _fillValue = fillValue;
 
-        public UnsafeFillValueStream(byte[]? fillValue)
+        _length = _fillValue is null
+            ? 1
+            : _fillValue.Length;
+    }
+
+    public long Position { get => _position; }
+
+    public unsafe void Read(Memory<byte> buffer)
+    {
+        if (_fillValue is null)
         {
-            _fillValue = fillValue;
-
-            _length = _fillValue is null 
-                ? 1 
-                : _fillValue.Length;
+            buffer.Span.Clear();
         }
 
-        public override bool CanRead => true;
-
-        public override bool CanSeek => true;
-
-        public override bool CanWrite => false;
-
-        public override long Length => long.MaxValue;
-
-        public override long Position
+        else
         {
-            get
+            unsafe
             {
-                return _position;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public override void Flush()
-        {
-            throw new NotImplementedException();
-        }
-
-        // ReadAsync: https://devblogs.microsoft.com/pfxteam/overriding-stream-asynchrony/
-        // see "If you don’t override ..."
-        public override unsafe int Read(byte[] buffer, int offset, int count)
-        {
-            if (_fillValue is null)
-            {
-                buffer.AsSpan().Clear();
-            }
-
-            else
-            {
-                unsafe
+                fixed (byte* ptrSrc = _fillValue, ptrDst = buffer.Span)
                 {
-                    fixed (byte* ptrSrc = _fillValue, ptrDst = buffer)
+                    for (int i = 0; i < buffer.Length; i++)
                     {
-                        for (int i = 0; i < count; i++)
-                        {
-                            ptrDst[offset + i] = ptrSrc[(_position + i) % _length];
-                        }
+                        ptrDst[i] = ptrSrc[(_position + i) % _length];
                     }
                 }
-
-                _position += count;
             }
 
-            return count;
+            _position += buffer.Length;
         }
+    }
 
-        public override long Seek(long offset, SeekOrigin origin)
+    public void Seek(long offset, SeekOrigin origin)
+    {
+        _position += origin switch
         {
-            switch (origin)
-            {
-                case SeekOrigin.Begin:
-                    _position += offset; return _position;
-            }
+            SeekOrigin.Begin => offset,
+            _ => throw new NotImplementedException(),
+        };
+    }
 
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
+    public void Dispose()
+    {
+        // do nothing
     }
 }

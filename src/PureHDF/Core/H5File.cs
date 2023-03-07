@@ -97,7 +97,7 @@
                 _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
             });
 
-            reader.BaseAddress = superblock.BaseAddress;
+            reader.SetBaseAddress(superblock.BaseAddress);
 
             ulong address;
             var superblock01 = superblock as Superblock01;

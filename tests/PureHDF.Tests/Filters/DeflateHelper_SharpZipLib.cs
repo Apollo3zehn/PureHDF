@@ -14,7 +14,7 @@ namespace PureHDF.Tests
                 using var tar = new MemoryStream(buffer.Length /* minimum size to expect */);
 
                 // skip ZLIB header to get only the DEFLATE stream
-                sourceStream.Position = 2;
+                sourceStream.Seek(2, SeekOrigin.Begin);
 
                 using var decompressionStream = new InflaterInputStream(sourceStream, new Inflater(noHeader: true))
                 {

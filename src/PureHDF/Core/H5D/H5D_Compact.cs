@@ -23,7 +23,7 @@
             return Dataset.InternalDataspace.DimensionSizes;
         }
 
-        public override Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             byte[] buffer;
 
@@ -42,7 +42,7 @@
                 throw new Exception($"Data layout message type '{Dataset.InternalDataLayout.GetType().Name}' is not supported.");
             }
 
-            Stream stream = new MemorySpanStream(buffer);
+            IH5ReadStream stream = new SystemMemoryStream(buffer);
 
             return Task.FromResult(stream);
         }

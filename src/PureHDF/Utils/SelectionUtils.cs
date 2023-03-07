@@ -9,7 +9,7 @@ namespace PureHDF
         ulong[] TargetChunkDims,
         Selection SourceSelection,
         Selection TargetSelection,
-        Func<ulong[], Task<Stream>> GetSourceStreamAsync,
+        Func<ulong[], Task<IH5ReadStream>> GetSourceStreamAsync,
         Func<ulong[], Memory<T>> GetTargetBuffer,
         Action<Memory<byte>, Memory<T>> Converter,
         int SourceTypeSize,
@@ -116,7 +116,7 @@ namespace PureHDF
             CopyInfo<TResult> copyInfo) where TReader : IReader
         {
             /* initialize source walker */
-            var sourceStream = default(Stream)!;
+            var sourceStream = default(IH5ReadStream)!;
             var lastSourceChunk = default(ulong[]);
 
             /* initialize target walker */
@@ -178,7 +178,7 @@ namespace PureHDF
                     }
 
                     // chunked / compact dataset (MemorySpanStream)
-                    else if (sourceStream is MemorySpanStream memorySpanStream)
+                    else if (sourceStream is SystemMemoryStream memorySpanStream)
                     {
                         memorySpanStream.Seek(currentOffset * copyInfo.SourceTypeSize, SeekOrigin.Begin);
 

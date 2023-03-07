@@ -57,9 +57,9 @@
             return Dataset.InternalDataspace.DimensionSizes;
         }
 
-        public override Task<Stream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
-            Stream stream = new VirtualDatasetStream<TResult>(
+            IH5ReadStream stream = new VirtualDatasetStream<TResult>(
                 Dataset.File,
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.InternalDataspace.DimensionSizes,
