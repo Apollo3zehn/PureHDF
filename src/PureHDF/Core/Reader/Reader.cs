@@ -11,23 +11,16 @@ namespace PureHDF
 {
     interface IReader
     {
-        ValueTask<int> ReadAsync(H5BaseReader reader, Memory<byte> buffer, long offset);
         ValueTask<int> ReadDatasetAsync(Stream stream, Memory<byte> buffer, long offset);
     }
 
     struct SyncReader : IReader
     {
-        public ValueTask<int> ReadAsync(H5BaseReader reader, Memory<byte> buffer, long offset)
-        {
-            reader.Seek(offset, SeekOrigin.Begin);
-            return new ValueTask<int>(reader.Read(buffer.Span));
-        }
-
         public ValueTask<int> ReadDatasetAsync(Stream stream, Memory<byte> buffer, long offset)
         {
             stream.Seek(offset, SeekOrigin.Begin);
 
-            #error Actual stream is wrapped
+            // #error Actual stream is wrapped
             return new ValueTask<int>(stream switch 
             {
                 IDatasetStream datasetStream => datasetStream.ReadDataset(buffer),
@@ -38,15 +31,9 @@ namespace PureHDF
 
     struct AsyncReader : IReader
     {
-        public ValueTask<int> ReadAsync(H5BaseReader reader, Memory<byte> buffer, long offset)
-        {
-            reader.Seek(offset, SeekOrigin.Begin);
-            return reader.ReadAsync(buffer, CancellationToken.None);
-        }
-
         public ValueTask<int> ReadDatasetAsync(Stream stream, Memory<byte> buffer, long offset)
         {
-            #error Actual stream is wrapped
+            // #error Actual stream is wrapped
             stream.Seek(offset, SeekOrigin.Begin);
             
             return stream switch 

@@ -101,7 +101,7 @@
                 }
 
                 // 4. Find min count (request vs virtual selection)
-                ulong virtualCount = virtualResult.MaxCount == 0
+                var virtualCount = virtualResult.MaxCount == 0
                     // MaxCount == 0: there is no block in the fastest changing dimension
                     ? (ulong)buffer.Length
                     // MaxCount != 0: 
