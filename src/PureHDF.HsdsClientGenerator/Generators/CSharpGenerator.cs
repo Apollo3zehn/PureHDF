@@ -8,7 +8,14 @@ namespace PureHDF.HsdsClientGenerator
 {
     public class CSharpGenerator
     {
-        public string Generate(OpenApiDocument document, GeneratorSettings settings)
+        private readonly GeneratorSettings _settings;
+
+        public CSharpGenerator(GeneratorSettings settings)
+        {
+            _settings = settings;
+        }
+
+        public string Generate(OpenApiDocument document)
         {
             var sourceTextBuilder = new StringBuilder();
 
@@ -74,8 +81,7 @@ $@"    /// <summary>
                 AppendSubClientSourceText(
                     clientGroup.Key,
                     clientGroup.ToDictionary(entry => entry.path.Key, entry => entry.path.Value),
-                    sourceTextBuilder,
-                    settings);
+                    sourceTextBuilder);
 
                 sourceTextBuilder.AppendLine();
             }
@@ -126,8 +132,7 @@ $@"    /// <summary>
         private void AppendSubClientSourceText(
             string className,
             IDictionary<string, OpenApiPathItem> methodMap,
-            StringBuilder sourceTextBuilder,
-            GeneratorSettings settings)
+            StringBuilder sourceTextBuilder)
         {
             var augmentedClassName = className + "Client";
 
@@ -146,7 +151,12 @@ public interface I{augmentedClassName}
 
                 foreach (var operation in entry.Value.Operations)
                 {
-                    AppendInterfaceMethodSourceText(operation.Key, operation.Value, sourceTextBuilder);
+                    AppendInterfaceMethodSourceText(
+                        path: entry.Key,
+                        operation.Key, 
+                        operation.Value, 
+                        sourceTextBuilder);
+                        
                     sourceTextBuilder.AppendLine();
                 }
             }
@@ -161,9 +171,9 @@ public interface I{augmentedClassName}
             sourceTextBuilder.AppendLine(
 $@"public class {augmentedClassName} : I{augmentedClassName}
 {{
-    private {settings.ClientName} _client;
+    private {_settings.ClientName} _client;
     
-    internal {augmentedClassName}({settings.ClientName} client)
+    internal {augmentedClassName}({_settings.ClientName} client)
     {{
         _client = client;
     }}
@@ -190,11 +200,13 @@ $@"public class {augmentedClassName} : I{augmentedClassName}
         }
 
         private void AppendInterfaceMethodSourceText(
+            string path,
             OperationType operationType,
             OpenApiOperation operation,
             StringBuilder sourceTextBuilder)
         {
             var signature = GetMethodSignature(
+                path,
                 operationType,
                 operation,
                 out var returnType,
@@ -230,6 +242,7 @@ $@"    /// <summary>
             StringBuilder sourceTextBuilder)
         {
             var signature = GetMethodSignature(
+                path,
                 operationType,
                 operation,
                 out var returnType,
@@ -448,6 +461,7 @@ $@"    /// <summary>
         }
 
         private string GetMethodSignature(
+            string path,
             OperationType operationType,
             OpenApiOperation operation,
             out string returnType,
@@ -460,14 +474,10 @@ $@"    /// <summary>
                 operationType == OperationType.Delete))
                 throw new Exception("Only get, put, post or delete operations are supported.");
 
-            var methodName = string.Join("", operation.Summary
-                .Replace(".", "")
-                .Replace("`", "")
-                .Replace("-", "")
-                .Replace("'s", "")
-                .Replace("_", "")
-                .Split(" ")
-                .Select(part => Shared.FirstCharToUpper(part)));
+            if (!_settings.PathToMethodNameMap.TryGetValue($"{operationType}:{path}", out var methodName))
+                methodName = _settings.PathToMethodNameMap[path];
+
+            methodName = $"{operationType}{methodName}";
 
             var asyncMethodName = methodName + "Async";
 

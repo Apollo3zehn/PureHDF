@@ -3,5 +3,6 @@
     public record GeneratorSettings(
         string? Namespace,
         string ClientName,
-        string ExceptionType);
+        string ExceptionType,
+        Dictionary<string, string> PathToMethodNameMap);
 }

@@ -7,10 +7,11 @@ namespace PureHDF.Tests.Reading
         [Fact]
         public async Task Dummy()
         {
+            var domainName = "/shared/tall.h5";
             var hsdsClient = new HsdsClient(new Uri("http://hsdshdflab.hdfgroup.org"));
-            var domain = await hsdsClient.Domain.GetInformationAboutTheRequestedDomainAsync(domain: "/shared/tall.h5");
+            var domain = await hsdsClient.Domain.GetDomainAsync(domain: domainName);
             var rootId = domain["root"].GetString()!;
-            var links = await hsdsClient.Link.ListAllLinksInAGroupAsync(rootId, domain: "/shared/tall.h5");
+            var links = await hsdsClient.Link.GetLinkAsync(rootId, domain: domainName);
 
             var b = 1;
         }
