@@ -12,15 +12,15 @@ internal class OffsetStream : IH5ReadStream
 
     public long Position { get => _reader.Position - _baseAddress; }
 
-    public void Read(Memory<byte> buffer)
+    public void ReadDataset(Memory<byte> buffer)
     {
-        _reader.Read(buffer);
+        _reader.ReadDataset(buffer);
     }
 
 #if NET6_0_OR_GREATER
-    public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
-        return _reader.ReadAsync(buffer, cancellationToken);
+        return _reader.ReadDatasetAsync(buffer, cancellationToken);
     }
 #endif
 

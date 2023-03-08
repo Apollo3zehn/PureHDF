@@ -866,9 +866,10 @@ var myGroup = bindings.group1.Get();
 
 # 11 Unsupported Features
 
-The following features are not (yet) supported:
+The following features are **not** (yet) supported:
 
-- Virtual datasets with **unlimited dimensions**.
+- Virtual datasets with **unlimited dimensions**
+- Filters: `N-bit`, `SZIP`
 
 # 12 Comparison Table
 

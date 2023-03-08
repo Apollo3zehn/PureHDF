@@ -39,25 +39,41 @@ namespace PureHDF
             };
         }
 
-        public override void Read(Memory<byte> buffer)
+        public override void ReadDataset(Memory<byte> buffer)
         {
-            var remainingBuffer = buffer;
-
-            while (remainingBuffer.Length > 0)
+            if (_stream is IDatasetStream datasetStream)
             {
-                var count = _stream.Read(buffer.Span);
-                remainingBuffer = remainingBuffer[count..];
+                datasetStream.ReadDataset(buffer);
+            }
+
+            else
+            {
+                var remainingBuffer = buffer;
+
+                while (remainingBuffer.Length > 0)
+                {
+                    var count = _stream.Read(buffer.Span);
+                    remainingBuffer = remainingBuffer[count..];
+                }
             }
         }
 
-        public override async ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            var remainingBuffer = buffer;
-
-            while (remainingBuffer.Length > 0)
+            if (_stream is IDatasetStream datasetStream)
             {
-                var count = await _stream.ReadAsync(buffer, cancellationToken);
-                remainingBuffer = remainingBuffer[count..];
+                await datasetStream.ReadDatasetAsync(buffer, cancellationToken);
+            }
+
+            else
+            {
+                var remainingBuffer = buffer;
+
+                while (remainingBuffer.Length > 0)
+                {
+                    var count = await _stream.ReadAsync(buffer, cancellationToken);
+                    remainingBuffer = remainingBuffer[count..];
+                }
             }
         }
 

@@ -16,7 +16,7 @@
         
         public Memory<byte> SlicedMemory { get; private set; }
 
-        public void Read(Memory<byte> buffer)
+        public void ReadDataset(Memory<byte> buffer)
         {
             var length = Math.Min(SlicedMemory.Length, buffer.Length);
 
@@ -26,7 +26,7 @@
             Seek(length, SeekOrigin.Current);
         }
 
-        public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         
         public void Seek(long offset, SeekOrigin origin)
         {

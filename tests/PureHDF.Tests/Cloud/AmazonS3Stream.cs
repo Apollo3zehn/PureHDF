@@ -51,7 +51,7 @@ namespace PureHDF.Tests
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            var valueTask = ReadCoreAsync(buffer.AsMemory(offset, count), useCache: true, useAsync: false);
+            var valueTask = ReadCachedAsync(buffer.AsMemory(offset, count), useAsync: false);
 
             if (!valueTask.IsCompleted)
                 throw new Exception("This should never happen.");
@@ -61,26 +61,27 @@ namespace PureHDF.Tests
                 .GetResult();
         }
 
-        public int ReadDataset(Memory<byte> buffer)
+        public void ReadDataset(Memory<byte> buffer)
         {
-            var valueTask = ReadCoreAsync(buffer, useCache: false, useAsync: false);
+            var valueTask = ReadUncachedAsync(buffer, useAsync: false);
 
             if (!valueTask.IsCompleted)
                 throw new Exception("This should never happen.");
 
-            return valueTask
+            _ = valueTask
                 .GetAwaiter()
                 .GetResult();
         }
 
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return ReadCoreAsync(buffer, useCache: true, useAsync: true, cancellationToken);
+            return ReadCachedAsync(buffer, useAsync: true, cancellationToken);
         }
 
-        public ValueTask<int> ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
-            return ReadCoreAsync(buffer, useCache: false, useAsync: true, cancellationToken);
+            await ReadUncachedAsync(buffer, useAsync: true, cancellationToken);
+            return;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
@@ -127,11 +128,24 @@ namespace PureHDF.Tests
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, bool useCache, bool useAsync, CancellationToken cancellationToken = default)
+        private async ValueTask<int> ReadUncachedAsync(Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken = default)
         {
-            // #error make use of useCache
+            var stream = await ReadDataFromS3Async(
+                start: Position, 
+                end: Position + buffer.Length, 
+                useAsync, 
+                cancellationToken)
+                .ConfigureAwait(false);
+
+            await ReadExactlyAsync(stream, buffer, useAsync, cancellationToken);
+
+            return buffer.Length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async ValueTask<int> ReadCachedAsync(Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken = default)
+        {
             // TODO issue parallel requests
-            // TODO do not cache dataset data
             var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
             var s3Remaining = Length - _position.Value;
             var s3ActualLength = (int)Math.Min(s3UpperLength, s3Remaining);
@@ -200,20 +214,12 @@ namespace PureHDF.Tests
             var s3Start = s3StartIndex * _cacheSlotSize;
             var s3End = Math.Min(s3EndIndex * _cacheSlotSize, Length);
 
-            var request = new GetObjectRequest()
-            {
-                BucketName = _bucketName,
-                Key = _key,
-                ByteRange = new ByteRange(s3Start, s3End)
-            };
-
-            var task = _client.GetObjectAsync(request, cancellationToken);
-
-            var response = useAsync
-                ? await task.ConfigureAwait(false)
-                : task.GetAwaiter().GetResult();
-
-            var stream = response.ResponseStream;
+            var stream = await ReadDataFromS3Async(
+                start: s3Start, 
+                end: s3End, 
+                useAsync, 
+                cancellationToken)
+                .ConfigureAwait(false);
 
             // copy
             for (long currentIndex = s3StartIndex; currentIndex < s3EndIndex; currentIndex++)
@@ -221,26 +227,8 @@ namespace PureHDF.Tests
                 var owner = _cache.GetOrAdd(currentIndex, _ => throw new Exception("This should never happen."));
 
                 // copy to cache
-                var memory = owner.Memory[..(int)Math.Min(_cacheSlotSize, Length - Position)];
-
-#if NET7_0_OR_GREATER
-                if (useAsync)
-                    await stream.ReadExactlyAsync(memory, cancellationToken);
-
-                else
-                    stream.ReadExactly(memory.Span);
-#else
-                var slicedBuffer = memory;
-
-                while (slicedBuffer.Length > 0)
-                {
-                    var readBytes = useAsync
-                        ? await stream.ReadAsync(slicedBuffer, cancellationToken)
-                        : stream.Read(slicedBuffer.Span);
-
-                    slicedBuffer = slicedBuffer[readBytes..];
-                };
-#endif
+                var buffer = owner.Memory[..(int)Math.Min(_cacheSlotSize, Length - Position)];
+                await ReadExactlyAsync(stream, buffer, useAsync, cancellationToken);
 
                 // copy to request buffer
                 remainingBuffer = CopyFromCacheToBuffer(currentIndex, owner, remainingBuffer);
@@ -268,6 +256,54 @@ namespace PureHDF.Tests
             _position.Value += slicedMemory.Length;
 
             return remainingBuffer;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async ValueTask<Stream> ReadDataFromS3Async(long start, long end, bool useAsync, CancellationToken cancellationToken)
+        {
+            var request = new GetObjectRequest()
+            {
+                BucketName = _bucketName,
+                Key = _key,
+                ByteRange = new ByteRange(start, end)
+            };
+
+            var task = _client.GetObjectAsync(request, cancellationToken);
+
+            var response = useAsync
+                ? await task.ConfigureAwait(false)
+                : task.GetAwaiter().GetResult();
+
+            return response.ResponseStream;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task ReadExactlyAsync(Stream stream, Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken)
+        {
+#if NET7_0_OR_GREATER
+                if (useAsync)
+                    await stream
+                        .ReadExactlyAsync(buffer, cancellationToken)
+                        .ConfigureAwait(false);
+
+                else
+                    stream.ReadExactly(buffer.Span);
+#else
+                var slicedBuffer = buffer;
+
+                while (slicedBuffer.Length > 0)
+                {
+                    var readBytes = useAsync
+
+                        ? await stream
+                            .ReadAsync(slicedBuffer, cancellationToken)
+                            .ConfigureAwait(false)
+
+                        : stream.Read(slicedBuffer.Span);
+
+                    slicedBuffer = slicedBuffer[readBytes..];
+                };
+#endif
         }
     }
 }

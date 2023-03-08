@@ -17,7 +17,7 @@ internal class UnsafeFillValueStream : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public unsafe void Read(Memory<byte> buffer)
+    public unsafe void ReadDataset(Memory<byte> buffer)
     {
         if (_fillValue is null)
         {
@@ -41,9 +41,9 @@ internal class UnsafeFillValueStream : IH5ReadStream
         }
     }
 
-    public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
     {
-        Read(buffer);
+        ReadDataset(buffer);
 
 #if NET5_0_OR_GREATER
         return ValueTask.CompletedTask;

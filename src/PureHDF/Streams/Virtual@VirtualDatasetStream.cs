@@ -33,9 +33,9 @@
 
         public long Position { get => _position; }
 
-        public void Read(Memory<byte> buffer) => throw new NotImplementedException();
+        public void ReadDataset(Memory<byte> buffer) => throw new NotImplementedException();
 
-        public ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
         public async ValueTask ReadVirtualAsync(Memory<TResult> buffer)
         {

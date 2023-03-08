@@ -35,32 +35,12 @@ namespace PureHDF
             }
         }
 
-        public override void Read(Memory<byte> buffer)
+        public override void ReadDataset(Memory<byte> buffer)
         {
-            unsafe
-            {
-                byte* ptr = null;
-
-                try
-                {
-                    _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
-                    var ptrSrc = _accessor.PointerOffset + ptr + _position.Value;
-
-                    fixed (byte* ptrDst = buffer.Span)
-                    {
-                        Buffer.MemoryCopy(ptrSrc, ptrDst, buffer.Length, buffer.Length);
-                    }
-                }
-                finally
-                {
-                    _accessor.SafeMemoryMappedViewHandle.ReleasePointer();
-                }
-            }
-
-            _position.Value += buffer.Length;
+            ReadCore(buffer);
         }
 
-        public override ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        public override ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
         {
             throw new Exception("Memory-mapped files cannot be accessed asynchronously.");
         }
@@ -76,7 +56,7 @@ namespace PureHDF
         public override byte[] ReadBytes(int count)
         {
             var buffer = new byte[count];
-            Read(buffer);
+            ReadCore(buffer);
 
             return buffer;
         }
@@ -111,6 +91,31 @@ namespace PureHDF
             _position.Value += sizeof(ulong);
 
             return value;
+        }
+
+        private void ReadCore(Memory<byte> buffer)
+        {
+            unsafe
+            {
+                byte* ptr = null;
+
+                try
+                {
+                    _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
+                    var ptrSrc = _accessor.PointerOffset + ptr + _position.Value;
+
+                    fixed (byte* ptrDst = buffer.Span)
+                    {
+                        Buffer.MemoryCopy(ptrSrc, ptrDst, buffer.Length, buffer.Length);
+                    }
+                }
+                finally
+                {
+                    _accessor.SafeMemoryMappedViewHandle.ReleasePointer();
+                }
+            }
+
+            _position.Value += buffer.Length;
         }
 
         private bool _disposedValue;

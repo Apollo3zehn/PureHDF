@@ -19,7 +19,7 @@ namespace PureHDF
         public ValueTask ReadDatasetAsync(IH5ReadStream stream, Memory<byte> buffer, long offset)
         {
             stream.Seek(offset, SeekOrigin.Begin);
-            stream.Read(buffer);
+            stream.ReadDataset(buffer);
 
 #if NET5_0_OR_GREATER
             return ValueTask.CompletedTask;
@@ -35,7 +35,7 @@ namespace PureHDF
         {
 #if NET6_0_OR_GREATER
             stream.Seek(offset, SeekOrigin.Begin);
-            return stream.ReadAsync(buffer);
+            return stream.ReadDatasetAsync(buffer);
 #else
             throw new Exception("Async read operations are not supported on this runtime.");
 #endif

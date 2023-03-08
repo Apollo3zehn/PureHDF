@@ -42,17 +42,12 @@ internal class H5FileStreamReader : H5BaseReader
         }
     }
 
-    public override void Read(Memory<byte> buffer)
+    public override void ReadDataset(Memory<byte> buffer)
     {
-        var count = RandomAccess.Read(_handle, buffer.Span, Position);
-
-        if (count != buffer.Length)
-            throw new Exception("The file is too small");
-
-        _position.Value += count;
+        ReadCore(buffer);
     }
 
-    public override async ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+    public override async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         var count = await RandomAccess.ReadAsync(_handle, buffer, Position, cancellationToken);
 
@@ -70,7 +65,7 @@ internal class H5FileStreamReader : H5BaseReader
     public override byte[] ReadBytes(int count)
     {
         var buffer = new byte[count];
-        Read(buffer);
+        ReadCore(buffer);
 
         return buffer;
     }
@@ -93,6 +88,17 @@ internal class H5FileStreamReader : H5BaseReader
     public override ulong ReadUInt64()
     {
         return Read<ulong>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReadCore(Memory<byte> buffer)
+    {
+        var count = RandomAccess.Read(_handle, buffer.Span, Position);
+
+        if (count != buffer.Length)
+            throw new Exception("The file is too small");
+
+        _position.Value += count;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

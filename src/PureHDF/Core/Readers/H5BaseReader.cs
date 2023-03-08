@@ -14,8 +14,8 @@
         public abstract long Position { get; }
         public long Length { get; }
 
-        public abstract void Read(Memory<byte> buffer);
-        public abstract ValueTask ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken);
+        public abstract void ReadDataset(Memory<byte> buffer);
+        public abstract ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken);
         public abstract void Seek(long offset, SeekOrigin origin);
 
         public abstract byte ReadByte();

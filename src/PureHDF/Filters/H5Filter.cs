@@ -143,15 +143,11 @@ namespace PureHDF
         {
             // read
             if (flags.HasFlag(H5FilterFlags.Decompress))
-            {
                 return ScaleOffsetGeneric.Decompress(buffer, parameters);
-            }
 
             // write
             else
-            {
                 throw new Exception("Writing data chunks is not yet supported by PureHDF.");
-            }
         }
 
         private static Memory<byte> DeflateFilterFunc(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)

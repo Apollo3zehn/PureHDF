@@ -5,7 +5,9 @@ using Xunit;
 
 namespace PureHDF.Tests.Reading
 {
-    public class CloudTestsSync /* splitted into sync and async to run them in parallel */
+    /* Tests are splitted into sync and async to run them in parallel */
+
+    public class CloudTestsSync
     {
         [Fact]
         public void CanReadAwsFile()
