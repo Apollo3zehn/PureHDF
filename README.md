@@ -781,18 +781,14 @@ async Task LoadAndProcessDataAsynchronously()
 
 # 9 Amazon S3
 
-(1) Install the AWS SDK package for simple S3 access:
-
-`dotnet add package AWSSDK.S3`
-
-(2) Add a copy of the [AmazonS3Stream](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Cloud/AmazonS3Stream.cs) to your code.
-
-(3) Pass that stream to PureHDF:
+`dotnet add package PureHdf.VFD.AmazonS3`
 
 ```cs
+using PureHDF.VFD
+
 // adapt to your needs
 var credentials = new AnonymousAWSCredentials();
-var region = RegionEndpoint.USWest2;
+var region = RegionEndpoint.EUWest1;
 var client = new AmazonS3Client(credentials, region);
 var s3Stream = new AmazonS3Stream(client, bucketName: "xxx", key: "yyy");
 
