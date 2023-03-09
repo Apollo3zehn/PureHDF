@@ -15,23 +15,23 @@ namespace PureHDF
 
         public FreeSpaceSectionList(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, FreeSpaceSectionList.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // free space manager header address
-            FreeSpaceManagerHeaderAddress = superblock.ReadOffset(reader);
+            FreeSpaceManagerHeaderAddress = superblock.ReadOffset(driver);
 
             // TODO: implement everything
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion
@@ -70,7 +70,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
                 return new FreeSpaceManagerHeader(_context);
             }
         }

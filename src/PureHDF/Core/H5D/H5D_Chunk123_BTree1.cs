@@ -56,7 +56,7 @@ namespace PureHDF
             // load B-Tree 1
             if (_btree1 is null)
             {
-                Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
                 BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
@@ -86,7 +86,7 @@ namespace PureHDF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
         {
-            return new BTree1RawDataChunksKey(Dataset.Context.Reader, rank, rawChunkDims);
+            return new BTree1RawDataChunksKey(Dataset.Context.Driver, rank, rawChunkDims);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

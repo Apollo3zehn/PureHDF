@@ -4,20 +4,20 @@
     {
         #region Constructors
 
-        public FractalHeapIndirectSectionDataRecord(H5BaseReader reader)
+        public FractalHeapIndirectSectionDataRecord(H5DriverBase driver)
         {
             // fractal heap indirect block offset
             // TODO: implement this correctly
-            //FractalHeapIndirectBlockOffset = reader.ReadBytes(8);
+            //FractalHeapIndirectBlockOffset = driver.ReadBytes(8);
 
             // block start row
-            BlockStartRow = reader.ReadUInt16();
+            BlockStartRow = driver.ReadUInt16();
 
             // block start column
-            BlockStartColumn = reader.ReadUInt16();
+            BlockStartColumn = driver.ReadUInt16();
 
             // block count
-            BlockCount = reader.ReadUInt16();
+            BlockCount = driver.ReadUInt16();
         }
 
         #endregion

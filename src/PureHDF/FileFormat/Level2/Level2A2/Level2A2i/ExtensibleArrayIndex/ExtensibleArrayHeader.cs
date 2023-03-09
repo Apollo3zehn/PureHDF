@@ -14,39 +14,39 @@ namespace PureHDF
 
         public ExtensibleArrayHeader(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, ExtensibleArrayHeader.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)driver.ReadByte();
 
             // byte fields
-            ElementSize = reader.ReadByte();
-            ExtensibleArrayMaximumNumberOfElementsBits = reader.ReadByte();
-            IndexBlockElementsCount = reader.ReadByte();
-            DataBlockMininumElementsCount = reader.ReadByte();
-            SecondaryBlockMinimumDataBlockPointerCount = reader.ReadByte();
-            DataBlockPageMaximumNumberOfElementsBits = reader.ReadByte();
+            ElementSize = driver.ReadByte();
+            ExtensibleArrayMaximumNumberOfElementsBits = driver.ReadByte();
+            IndexBlockElementsCount = driver.ReadByte();
+            DataBlockMininumElementsCount = driver.ReadByte();
+            SecondaryBlockMinimumDataBlockPointerCount = driver.ReadByte();
+            DataBlockPageMaximumNumberOfElementsBits = driver.ReadByte();
 
             // length fields
-            SecondaryBlocksCount = superblock.ReadLength(reader);
-            SecondaryBlocksSize = superblock.ReadLength(reader);
-            DataBlocksCount = superblock.ReadLength(reader);
-            DataBlocksSize = superblock.ReadLength(reader);
-            MaximumIndexSet = superblock.ReadLength(reader);
-            ElementsCount = superblock.ReadLength(reader);
+            SecondaryBlocksCount = superblock.ReadLength(driver);
+            SecondaryBlocksSize = superblock.ReadLength(driver);
+            DataBlocksCount = superblock.ReadLength(driver);
+            DataBlocksSize = superblock.ReadLength(driver);
+            MaximumIndexSet = superblock.ReadLength(driver);
+            ElementsCount = superblock.ReadLength(driver);
 
             // index block address
-            IndexBlockAddress = superblock.ReadOffset(reader);
+            IndexBlockAddress = superblock.ReadOffset(driver);
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
 
             // initialize
             Initialize();

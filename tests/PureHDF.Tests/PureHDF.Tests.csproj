@@ -10,12 +10,8 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="AWSSDK.S3" Version="3.7.103.21" />
-    <PackageReference Include="Blosc2.PInvoke" Version="2.0.0-beta.5.update3.final" />
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />
-    <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.5.0" />
-    <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
       <PrivateAssets>all</PrivateAssets>
@@ -24,11 +20,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PureHDF\PureHDF.csproj" />
+    <ProjectReference Include="../../src/PureHDF/PureHDF.csproj" />
+    <ProjectReference Include="../../src/PureHDF.Filters.Blosc2/PureHDF.Filters.Blosc2.csproj" />
+    <ProjectReference Include="../../src/PureHDF.Filters.BZip2.SharpZipLib/PureHDF.Filters.BZip2.SharpZipLib.csproj" />
+    <ProjectReference Include="../../src/PureHDF.Filters.Deflate.ISA-L/PureHDF.Filters.Deflate.ISA-L.csproj" />
+    <ProjectReference Include="../../src/PureHDF.Filters.Deflate.SharpZipLib/PureHDF.Filters.Deflate.SharpZipLib.csproj" />
+    <ProjectReference Include="../../src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj" />
+    <ProjectReference Include="../../src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="testfiles/*.*">
+    <None Update="TestFiles/*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

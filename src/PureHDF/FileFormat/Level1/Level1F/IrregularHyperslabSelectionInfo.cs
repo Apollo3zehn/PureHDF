@@ -4,12 +4,12 @@
     {
         #region Constructors
 
-        public IrregularHyperslabSelectionInfo(H5BaseReader reader, uint rank, byte encodeSize)
+        public IrregularHyperslabSelectionInfo(H5DriverBase driver, uint rank, byte encodeSize)
         {
             Rank = rank;
 
             // block count
-            BlockCount = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+            BlockCount = H5S_SEL.ReadEncodedValue(driver, encodeSize);
 
             // block offsets / compact starts
             var totalOffsetGroups = BlockCount * Rank;
@@ -17,7 +17,7 @@
             BlockLinearIndices = new ulong[BlockCount];
 
             Initialize(
-                reader, 
+                driver, 
                 encodeSize, 
                 BlockOffsets, 
                 BlockLinearIndices);
@@ -36,7 +36,7 @@
         #region Methods
 
         private void Initialize(
-            H5BaseReader reader,
+            H5DriverBase driver,
             byte encodeSize, 
             ulong[] blockOffsets, 
             ulong[] blockLinearIndices)
@@ -78,7 +78,7 @@
                 // starts
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
-                    var start = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+                    var start = H5S_SEL.ReadEncodedValue(driver, encodeSize);
                     var dimensionIndex = (int)blockOffsetsIndex * 2 + 0 +  dimension;
                     blockOffsets[dimensionIndex] = start;
                     previousStarts[dimension] = start;
@@ -87,7 +87,7 @@
                 // ends
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
-                    var end = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+                    var end = H5S_SEL.ReadEncodedValue(driver, encodeSize);
                     var dimensionIndex = (int)blockOffsetsIndex * 2 + Rank + dimension;
                     blockOffsets[dimensionIndex] = end;
                     previousEnds[dimension] = end;

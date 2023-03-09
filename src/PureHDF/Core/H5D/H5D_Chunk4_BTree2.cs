@@ -28,7 +28,7 @@ namespace PureHDF
             {
                 if (_btree2_no_filter is null)
                 {
-                    Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                    Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
 
                     BTree2Record10 decodeKey
 () => DecodeRecord10(ChunkRank);
@@ -51,7 +51,7 @@ namespace PureHDF
             {
                 if (_btree2_filter is null)
                 {
-                    Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                    Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                     var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
                     BTree2Record11 decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);

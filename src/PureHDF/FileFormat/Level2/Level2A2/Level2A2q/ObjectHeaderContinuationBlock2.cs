@@ -10,7 +10,7 @@ namespace PureHDF
             : base(context)
         {
             // signature
-            var signature = context.Reader.ReadBytes(4);
+            var signature = context.Driver.ReadBytes(4);
             Utils.ValidateSignature(signature, ObjectHeaderContinuationBlock2.Signature);
 
             // header messages

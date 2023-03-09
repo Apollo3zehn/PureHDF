@@ -15,33 +15,33 @@ namespace PureHDF
 
         public FractalHeapDirectBlock(H5Context context, FractalHeapHeader header)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             var headerSize = 0UL;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             headerSize += 4;
             Utils.ValidateSignature(signature, FractalHeapDirectBlock.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
             headerSize += 1;
 
             // heap header address
-            HeapHeaderAddress = superblock.ReadOffset(reader);
+            HeapHeaderAddress = superblock.ReadOffset(driver);
             headerSize += superblock.OffsetsSize;
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            BlockOffset = Utils.ReadUlong(reader, (ulong)blockOffsetFieldSize);
+            BlockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
             headerSize += (ulong)blockOffsetFieldSize;
 
             // checksum
             if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
             {
-                Checksum = reader.ReadUInt32();
+                Checksum = driver.ReadUInt32();
                 headerSize += 4;
             }
 
@@ -80,7 +80,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(_context);
             }
         }

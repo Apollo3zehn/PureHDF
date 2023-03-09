@@ -17,46 +17,46 @@ namespace PureHDF
 
         public BTree2Header(H5Context context, Func<T> decodeKey)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             _decodeKey = decodeKey;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, BTree2Header<T>.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // type
-            Type = (BTree2Type)reader.ReadByte();
+            Type = (BTree2Type)driver.ReadByte();
 
             // node size
-            NodeSize = reader.ReadUInt32();
+            NodeSize = driver.ReadUInt32();
 
             // record size
-            RecordSize = reader.ReadUInt16();
+            RecordSize = driver.ReadUInt16();
 
             // depth
-            Depth = reader.ReadUInt16();
+            Depth = driver.ReadUInt16();
 
             // split percent
-            SplitPercent = reader.ReadByte();
+            SplitPercent = driver.ReadByte();
 
             // merge percent
-            MergePercent = reader.ReadByte();
+            MergePercent = driver.ReadByte();
 
             // root node address
             RootNodePointer = new BTree2NodePointer()
             {
-                Address = superblock.ReadOffset(reader),
-                RecordCount = reader.ReadUInt16(),
-                TotalRecordCount = superblock.ReadLength(reader)
+                Address = superblock.ReadOffset(driver),
+                RecordCount = driver.ReadUInt16(),
+                TotalRecordCount = superblock.ReadLength(driver)
             };
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
 
             // from H5B2hdr.c
             NodeInfos = new BTree2NodeInfo[Depth + 1];
@@ -133,11 +133,11 @@ namespace PureHDF
                 }
                 else
                 {
-                    _context.Reader.Seek((long)RootNodePointer.Address, SeekOrigin.Begin);
+                    _context.Driver.Seek((long)RootNodePointer.Address, SeekOrigin.Begin);
 
                     return Depth != 0
                         ? (BTree2Node<T>)new BTree2InternalNode<T>(_context, this, RootNodePointer.RecordCount, Depth, _decodeKey)
-                        : (BTree2Node<T>)new BTree2LeafNode<T>(_context.Reader, this, RootNodePointer.RecordCount, _decodeKey);
+                        : (BTree2Node<T>)new BTree2LeafNode<T>(_context.Driver, this, RootNodePointer.RecordCount, _decodeKey);
                 }
             }
         }
@@ -180,7 +180,7 @@ namespace PureHDF
 
             while (depth > 0)
             {
-                _context.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                _context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
                 var internalNode = new BTree2InternalNode<T>(_context, this, currentNodePointer.RecordCount, depth, _decodeKey);
 
                 if (internalNode is null)
@@ -233,8 +233,8 @@ namespace PureHDF
             }
 
             {
-                _context.Reader.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-                var leafNode = new BTree2LeafNode<T>(_context.Reader, this, currentNodePointer.RecordCount, _decodeKey);
+                _context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                var leafNode = new BTree2LeafNode<T>(_context.Driver, this, currentNodePointer.RecordCount, _decodeKey);
 
                 /* Locate record */
                 (index, cmp) = BTree2Header<T>.LocateRecord(leafNode.Records, compare);
@@ -284,7 +284,7 @@ namespace PureHDF
                         yield return records[i];
 
                     var nodePointer = nodePointers[i];
-                    _context.Reader.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+                    _context.Driver.Seek((long)nodePointer.Address, SeekOrigin.Begin);
                     var childNodeLevel = (ushort)(nodeLevel - 1);
 
                     IEnumerable<T> childRecords;
@@ -298,7 +298,7 @@ namespace PureHDF
                     // leaf node
                     else
                     {
-                        var childNode = new BTree2LeafNode<T>(_context.Reader, this, nodePointer.RecordCount, _decodeKey);
+                        var childNode = new BTree2LeafNode<T>(_context.Driver, this, nodePointer.RecordCount, _decodeKey);
                         childRecords = childNode.Records;
                     }
 

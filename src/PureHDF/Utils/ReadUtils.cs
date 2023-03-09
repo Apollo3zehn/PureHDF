@@ -369,7 +369,7 @@ namespace PureHDF
                     throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
-                using var localReader = new H5StreamReader(new MemoryStream(source.ToArray()), leaveOpen: false);
+                using var localDriver = new H5StreamDriver(new MemoryStream(source.ToArray()), leaveOpen: false);
 
                 Func<string, string> trim = bitField.PaddingType switch
                 {
@@ -381,8 +381,8 @@ namespace PureHDF
 
                 for (int i = 0; i < destination.Length; i++)
                 {
-                    var dataSize = localReader.ReadUInt32(); // for what do we need this?
-                    var globalHeapId = new GlobalHeapId(context, localReader);
+                    var dataSize = localDriver.ReadUInt32(); // for what do we need this?
+                    var globalHeapId = new GlobalHeapId(context, localDriver);
                     var globalHeapCollection = globalHeapId.Collection;
 
                     if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
@@ -437,9 +437,9 @@ namespace PureHDF
 #endif
         }
 
-        public static string ReadFixedLengthString(H5BaseReader reader, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        public static string ReadFixedLengthString(H5DriverBase driver, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
-            var data = reader.ReadBytes(length);
+            var data = driver.ReadBytes(length);
 
             return encoding switch
             {
@@ -449,15 +449,15 @@ namespace PureHDF
             };
         }
 
-        public static string ReadNullTerminatedString(H5BaseReader reader, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+        public static string ReadNullTerminatedString(H5DriverBase driver, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
         {
             var data = new List<byte>();
-            var byteValue = reader.ReadByte();
+            var byteValue = driver.ReadByte();
 
             while (byteValue != '\0')
             {
                 data.Add(byteValue);
-                byteValue = reader.ReadByte();
+                byteValue = driver.ReadByte();
             }
 
             var destination = encoding switch
@@ -471,7 +471,7 @@ namespace PureHDF
             {
                 // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
                 var paddingCount = (padSize - (destination.Length + 1) % padSize) % padSize;
-                reader.Seek(paddingCount, SeekOrigin.Current);
+                driver.Seek(paddingCount, SeekOrigin.Current);
             }
 
             return destination;

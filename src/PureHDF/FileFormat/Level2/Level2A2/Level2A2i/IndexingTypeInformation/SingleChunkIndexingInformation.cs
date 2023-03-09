@@ -8,13 +8,13 @@
         {
             if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
             {
-                var (reader, superblock) = context;
+                var (driver, superblock) = context;
 
                 // filtered chunk size
-                FilteredChunkSize = superblock.ReadLength(reader);
+                FilteredChunkSize = superblock.ReadLength(driver);
 
                 // chunk filters
-                ChunkFilters = reader.ReadUInt32();
+                ChunkFilters = driver.ReadUInt32();
             }
         }
 

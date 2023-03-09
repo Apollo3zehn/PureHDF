@@ -14,56 +14,56 @@ namespace PureHDF
 
         public FreeSpaceManagerHeader(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, FreeSpaceManagerHeader.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientId = (ClientId)reader.ReadByte();
+            ClientId = (ClientId)driver.ReadByte();
 
             // total space tracked
-            TotalSpaceTracked = superblock.ReadLength(reader);
+            TotalSpaceTracked = superblock.ReadLength(driver);
 
             // total sections count
-            TotalSectionsCount = superblock.ReadLength(reader);
+            TotalSectionsCount = superblock.ReadLength(driver);
 
             // serialized sections count
-            SerializedSectionsCount = superblock.ReadLength(reader);
+            SerializedSectionsCount = superblock.ReadLength(driver);
 
             // un-serialized sections count
-            UnSerializedSectionsCount = superblock.ReadLength(reader);
+            UnSerializedSectionsCount = superblock.ReadLength(driver);
 
             // section classes count
-            SectionClassesCount = reader.ReadUInt16();
+            SectionClassesCount = driver.ReadUInt16();
 
             // shrink percent
-            ShrinkPercent = reader.ReadUInt16();
+            ShrinkPercent = driver.ReadUInt16();
 
             // expand percent
-            ExpandPercent = reader.ReadUInt16();
+            ExpandPercent = driver.ReadUInt16();
 
             // address space size
-            AddressSpaceSize = reader.ReadUInt16();
+            AddressSpaceSize = driver.ReadUInt16();
 
             // maximum section size
-            MaximumSectionSize = superblock.ReadLength(reader);
+            MaximumSectionSize = superblock.ReadLength(driver);
 
             // serialized section list address
-            SerializedSectionListAddress = superblock.ReadOffset(reader);
+            SerializedSectionListAddress = superblock.ReadOffset(driver);
 
             // serialized section list used
-            SerializedSectionListUsed = superblock.ReadLength(reader);
+            SerializedSectionListUsed = superblock.ReadLength(driver);
 
             // serialized section list allocated size
-            SerializedSectionListAllocatedSize = superblock.ReadLength(reader);
+            SerializedSectionListAllocatedSize = superblock.ReadLength(driver);
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

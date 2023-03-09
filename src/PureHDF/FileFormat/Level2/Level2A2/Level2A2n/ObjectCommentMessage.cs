@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public ObjectCommentMessage(H5BaseReader reader)
+        public ObjectCommentMessage(H5DriverBase driver)
         {
             // comment
-            Comment = ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            Comment = ReadUtils.ReadNullTerminatedString(driver, pad: false);
         }
 
         #endregion

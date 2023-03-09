@@ -45,7 +45,7 @@ namespace PureHDF
 
         public static GlobalHeapCollection GetGlobalHeapObject(H5Context context, ulong address)
         {
-            var (reader, superblock) = context;
+            var (_, superblock) = context;
 
             if (!_globalHeapMap.TryGetValue(superblock, out var addressToCollectionMap))
             {
@@ -64,7 +64,7 @@ namespace PureHDF
 
         private static GlobalHeapCollection ReadGlobalHeapCollection(H5Context context, ulong address)
         {
-            context.Reader.Seek((long)address, SeekOrigin.Begin);
+            context.Driver.Seek((long)address, SeekOrigin.Begin);
             return new GlobalHeapCollection(context);
         }
 

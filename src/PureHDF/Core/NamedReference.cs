@@ -56,7 +56,7 @@ namespace PureHDF
             else
             {
                 var context = File.Context;
-                context.Reader.Seek((long)Value, SeekOrigin.Begin);
+                context.Driver.Seek((long)Value, SeekOrigin.Begin);
                 var objectHeader = ObjectHeader.Construct(context);
 
                 return objectHeader.ObjectType switch

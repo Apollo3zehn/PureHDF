@@ -14,7 +14,7 @@ namespace PureHDF
         {
             _context = context;
 
-            Address = (ulong)context.Reader.Position;
+            Address = (ulong)context.Driver.Position;
             HeaderMessages = new List<HeaderMessage>();
         }
 
@@ -66,14 +66,14 @@ namespace PureHDF
         internal static ObjectHeader Construct(H5Context context)
         {
             // get version
-            var version = context.Reader.ReadByte();
+            var version = context.Driver.ReadByte();
 
             // must be a version 2+ object header
             if (version != 1)
             {
-                var signature = new byte[] { version }.Concat(context.Reader.ReadBytes(3)).ToArray();
+                var signature = new byte[] { version }.Concat(context.Driver.ReadBytes(3)).ToArray();
                 Utils.ValidateSignature(signature, ObjectHeader2.Signature);
-                version = context.Reader.ReadByte();
+                version = context.Driver.ReadByte();
             }
 
             return version switch
@@ -125,7 +125,7 @@ namespace PureHDF
 
             foreach (var continuationMessage in continuationMessages)
             {
-                context.Reader.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+                context.Driver.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
 
                 if (version == 1)
                 {
@@ -203,13 +203,13 @@ namespace PureHDF
                     /* The shared message is in another object header */
 
                     // TODO: This would greatly benefit from a caching mechanism!
-                    var address = _context.Reader.Position;
-                    _context.Reader.Seek((long)message.Address, SeekOrigin.Begin);
+                    var address = _context.Driver.Position;
+                    _context.Driver.Seek((long)message.Address, SeekOrigin.Begin);
 
                     var header = ObjectHeader.Construct(_context);
                     var sharedMessage = header.GetMessage<T>();
 
-                    _context.Reader.Seek(address, SeekOrigin.Begin);
+                    _context.Driver.Seek(address, SeekOrigin.Begin);
 
                     return sharedMessage;
                 }

@@ -17,31 +17,31 @@
             _context = context;
 
             // version
-            Version = context.Reader.ReadByte();
+            Version = context.Driver.ReadByte();
 
             if (Version == 1)
-                context.Reader.ReadByte();
+                context.Driver.ReadByte();
             else
-                Flags = (AttributeMessageFlags)context.Reader.ReadByte();
+                Flags = (AttributeMessageFlags)context.Driver.ReadByte();
 
             // name size
-            var nameSize = context.Reader.ReadUInt16();
+            var nameSize = context.Driver.ReadUInt16();
 
             // datatype size
-            var datatypeSize = context.Reader.ReadUInt16();
+            var datatypeSize = context.Driver.ReadUInt16();
 
             // dataspace size
-            var dataspaceSize = context.Reader.ReadUInt16();
+            var dataspaceSize = context.Driver.ReadUInt16();
 
             // name character set encoding
             if (Version == 3)
-                _nameEncoding = (CharacterSetEncoding)context.Reader.ReadByte();
+                _nameEncoding = (CharacterSetEncoding)context.Driver.ReadByte();
 
             // name
             if (Version == 1)
-                Name = ReadUtils.ReadNullTerminatedString(context.Reader, pad: true, encoding: _nameEncoding);
+                Name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: true, encoding: _nameEncoding);
             else
-                Name = ReadUtils.ReadNullTerminatedString(context.Reader, pad: false, encoding: _nameEncoding);
+                Name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: false, encoding: _nameEncoding);
 
             // datatype
             var flags1 = Flags.HasFlag(AttributeMessageFlags.SharedDatatype)
@@ -49,13 +49,13 @@
                 : MessageFlags.NoFlags;
 
             Datatype = objectHeader.DecodeMessage(flags1,
-                () => new DatatypeMessage(context.Reader));
+                () => new DatatypeMessage(context.Driver));
 
             if (Version == 1)
             {
                 var paddedSize = (int)(Math.Ceiling(datatypeSize / 8.0) * 8);
                 var remainingSize = paddedSize - datatypeSize;
-                context.Reader.ReadBytes(remainingSize);
+                context.Driver.ReadBytes(remainingSize);
             }
 
             // dataspace 
@@ -70,12 +70,12 @@
             {
                 var paddedSize = (int)(Math.Ceiling(dataspaceSize / 8.0) * 8);
                 var remainingSize = paddedSize - dataspaceSize;
-                _context.Reader.Seek(remainingSize, SeekOrigin.Current);
+                _context.Driver.Seek(remainingSize, SeekOrigin.Current);
             }
 
             // data
             var byteSize = Utils.CalculateSize(Dataspace.DimensionSizes, Dataspace.Type) * Datatype.Size;
-            Data = context.Reader.ReadBytes((int)byteSize);
+            Data = context.Driver.ReadBytes((int)byteSize);
         }
 
         private DatatypeMessage? ReadSharedMessage(ObjectHeader objectHeader, SharedMessage sharedMessage)

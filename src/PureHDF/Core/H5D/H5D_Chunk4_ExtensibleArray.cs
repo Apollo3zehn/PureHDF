@@ -99,13 +99,13 @@
             {
                 var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
-                var element = GetElement(chunkIndex, reader =>
+                var element = GetElement(chunkIndex, driver =>
                 {
                     return new FilteredDataBlockElement()
                     {
-                        Address = Dataset.Context.Superblock.ReadOffset(reader),
-                        ChunkSize = (uint)Utils.ReadUlong(reader, chunkSizeLength),
-                        FilterMask = reader.ReadUInt32()
+                        Address = Dataset.Context.Superblock.ReadOffset(driver),
+                        ChunkSize = (uint)Utils.ReadUlong(driver, chunkSizeLength),
+                        FilterMask = driver.ReadUInt32()
                     };
                 });
 
@@ -115,11 +115,11 @@
             }
             else
             {
-                var element = GetElement(chunkIndex, reader =>
+                var element = GetElement(chunkIndex, driver =>
                 {
                     return new DataBlockElement()
                     {
-                        Address = Dataset.Context.Superblock.ReadOffset(reader)
+                        Address = Dataset.Context.Superblock.ReadOffset(driver)
                     };
                 });
 
@@ -129,11 +129,11 @@
             }
         }
 
-        private T? GetElement<T>(ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
+        private T? GetElement<T>(ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
         {
             if (_header is null)
             {
-                Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                 _header = new ExtensibleArrayHeader(Dataset.Context);
             }
 
@@ -152,7 +152,7 @@
             }
         }
 
-        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
             var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
@@ -164,10 +164,10 @@
             /* Protect index block */
             if (_indexBlock is null)
             {
-                Dataset.Context.Reader.Seek((long)header.IndexBlockAddress, SeekOrigin.Begin);
+                Dataset.Context.Driver.Seek((long)header.IndexBlockAddress, SeekOrigin.Begin);
 
                 _indexBlock = new ExtensibleArrayIndexBlock<T>(
-                    Dataset.Context.Reader,
+                    Dataset.Context.Driver,
                     Dataset.Context.Superblock,
                     header,
                     decode);
@@ -201,7 +201,7 @@
                         return null;
 
                     /* Protect data block */
-                    Dataset.Context.Reader.Seek((long)indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
+                    Dataset.Context.Driver.Seek((long)indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
                     var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     var dataBlock = new ExtensibleArrayDataBlock<T>(
@@ -226,7 +226,7 @@
                         return null;
 
                     /* Protect super block */
-                    Dataset.Context.Reader.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
+                    Dataset.Context.Driver.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
 
                     var secondaryBlock = new ExtensibleArraySecondaryBlock(
                         Dataset.Context,
@@ -276,10 +276,10 @@
                             return null;
 
                         /* Protect data block page */
-                        Dataset.Context.Reader.Seek((long)dataBlockPageAddress, SeekOrigin.Begin);
+                        Dataset.Context.Driver.Seek((long)dataBlockPageAddress, SeekOrigin.Begin);
 
                         var dataBlockPage = new DataBlockPage<T>(
-                            Dataset.Context.Reader,
+                            Dataset.Context.Driver,
                             header.DataBlockPageElementsCount,
                             decode);
 
@@ -289,7 +289,7 @@
                     else
                     {
                         /* Protect data block */
-                        Dataset.Context.Reader.Seek((long)secondaryBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
+                        Dataset.Context.Driver.Seek((long)secondaryBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
 
                         var dataBlock = new ExtensibleArrayDataBlock<T>(
                             Dataset.Context,

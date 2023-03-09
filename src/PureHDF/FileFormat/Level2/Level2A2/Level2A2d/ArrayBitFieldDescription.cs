@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public ArrayBitFieldDescription(H5BaseReader reader) : base(reader)
+        public ArrayBitFieldDescription(H5DriverBase driver) : base(driver)
         {
             //
         }

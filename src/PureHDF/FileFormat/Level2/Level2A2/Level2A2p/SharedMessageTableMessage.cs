@@ -5,7 +5,7 @@
         #region Fields
 
         private byte _version;
-        private readonly H5BaseReader _reader;
+        private readonly H5DriverBase _driver;
 
         #endregion
 
@@ -13,17 +13,17 @@
 
         public SharedMessageTableMessage(H5Context context)
         {
-            var (reader, superblock) = context;
-            _reader = context.Reader;
+            var (driver, superblock) = context;
+            _driver = context.Driver;
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // shared object header message table address
-            SharedObjectHeaderMessageTableAddress = superblock.ReadOffset(reader);
+            SharedObjectHeaderMessageTableAddress = superblock.ReadOffset(driver);
 
             // index count
-            IndexCount = reader.ReadByte();
+            IndexCount = driver.ReadByte();
         }
 
         #endregion
@@ -52,8 +52,8 @@
         {
             get
             {
-                _reader.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
-                return new SharedObjectHeaderMessageTable(_reader);
+                _driver.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
+                return new SharedObjectHeaderMessageTable(_driver);
             }
         }
 

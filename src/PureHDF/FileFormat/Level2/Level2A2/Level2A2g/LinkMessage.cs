@@ -12,46 +12,46 @@
 
         public LinkMessage(H5Context context)
         {
-            var (reader, _) = context;
+            var (driver, _) = context;
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // flags
-            Flags = reader.ReadByte();
+            Flags = driver.ReadByte();
 
             // link type
             var isLinkTypeFieldPresent = (Flags & (1 << 3)) > 0;
 
             if (isLinkTypeFieldPresent)
-                LinkType = (LinkType)reader.ReadByte();
+                LinkType = (LinkType)driver.ReadByte();
 
             // creation order
             var isCreationOrderFieldPresent = (Flags & (1 << 2)) > 0;
 
             if (isCreationOrderFieldPresent)
-                CreationOrder = reader.ReadUInt64();
+                CreationOrder = driver.ReadUInt64();
 
             // link name encoding
             var isLinkNameEncodingFieldPresent = (Flags & (1 << 4)) > 0;
 
             if (isLinkNameEncodingFieldPresent)
-                LinkNameEncoding = (CharacterSetEncoding)reader.ReadByte();
+                LinkNameEncoding = (CharacterSetEncoding)driver.ReadByte();
 
             // link length
             var linkLengthFieldLength = (ulong)(1 << (Flags & 0x03));
-            var linkNameLength = Utils.ReadUlong(reader, linkLengthFieldLength);
+            var linkNameLength = Utils.ReadUlong(driver, linkLengthFieldLength);
 
             // link name
-            LinkName = ReadUtils.ReadFixedLengthString(reader, (int)linkNameLength, LinkNameEncoding);
+            LinkName = ReadUtils.ReadFixedLengthString(driver, (int)linkNameLength, LinkNameEncoding);
 
             // link info
             LinkInfo = LinkType switch
             {
                 LinkType.Hard => new HardLinkInfo(context),
-                LinkType.Soft => new SoftLinkInfo(reader),
-                LinkType.External => new ExternalLinkInfo(reader),
-                _ when (65 <= (byte)LinkType && (byte)LinkType <= 255) => new UserDefinedLinkInfo(reader),
+                LinkType.Soft => new SoftLinkInfo(driver),
+                LinkType.External => new ExternalLinkInfo(driver),
+                _ when (65 <= (byte)LinkType && (byte)LinkType <= 255) => new UserDefinedLinkInfo(driver),
                 _ => throw new NotSupportedException($"The link message link type '{LinkType}' is not supported.")
             };
         }

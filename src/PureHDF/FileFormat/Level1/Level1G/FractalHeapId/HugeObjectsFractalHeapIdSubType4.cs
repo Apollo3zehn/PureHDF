@@ -6,19 +6,19 @@ namespace PureHDF
     {
         #region Constructors
 
-        public HugeObjectsFractalHeapIdSubType4(Superblock superblock, H5BaseReader localReader)
+        public HugeObjectsFractalHeapIdSubType4(Superblock superblock, H5DriverBase localDriver)
         {
             // address
-            Address = superblock.ReadOffset(localReader);
+            Address = superblock.ReadOffset(localDriver);
 
             // length
-            Length = superblock.ReadLength(localReader);
+            Length = superblock.ReadLength(localDriver);
 
             // filter mask
-            FilterMask = localReader.ReadUInt32();
+            FilterMask = localDriver.ReadUInt32();
 
             // de-filtered size
-            DeFilteredSize = superblock.ReadLength(localReader);
+            DeFilteredSize = superblock.ReadLength(localDriver);
         }
 
         #endregion
@@ -34,7 +34,7 @@ namespace PureHDF
 
         #region Methods
 
-        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5DriverBase, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
             throw new Exception("Filtered data is not yet supported.");
         }

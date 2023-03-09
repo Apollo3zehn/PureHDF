@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public OldFillValueMessage(H5BaseReader reader)
+        public OldFillValueMessage(H5DriverBase driver)
         {
-            Size = reader.ReadUInt32();
-            FillValue = reader.ReadBytes((int)Size);
+            Size = driver.ReadUInt32();
+            FillValue = driver.ReadBytes((int)Size);
         }
 
         #endregion

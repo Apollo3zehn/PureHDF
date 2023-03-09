@@ -56,7 +56,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-generator",
-            "program": "${workspaceFolder}/artifacts/bin/PureHDF.HsdsClientGenerator/net7.0/PureHDF.HsdsClientGenerator.dll",
+            "program": "${workspaceFolder}/artifacts/bin/PureHDF.VFD.Hsds.ClientGenerator/net7.0/PureHDF.VFD.Hsds.ClientGenerator.dll",
             "args": [
                 "./"
             ],

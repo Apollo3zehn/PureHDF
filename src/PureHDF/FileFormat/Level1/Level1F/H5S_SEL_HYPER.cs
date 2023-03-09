@@ -10,13 +10,13 @@
 
         #region Constructors
 
-        public H5S_SEL_HYPER(H5BaseReader reader)
+        public H5S_SEL_HYPER(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadUInt32();
+            Version = driver.ReadUInt32();
 
             // SelectionInfo
-            SelectionInfo = HyperslabSelectionInfo.Create(reader, Version);
+            SelectionInfo = HyperslabSelectionInfo.Create(driver, Version);
         }
 
         #endregion

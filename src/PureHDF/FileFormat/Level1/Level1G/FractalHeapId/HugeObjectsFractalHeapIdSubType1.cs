@@ -14,13 +14,13 @@ namespace PureHDF
 
         #region Constructors
 
-        internal HugeObjectsFractalHeapIdSubType1(H5Context context, H5BaseReader localReader, FractalHeapHeader header)
+        internal HugeObjectsFractalHeapIdSubType1(H5Context context, H5DriverBase localDriver, FractalHeapHeader header)
         {
             _context = context;
             _heapHeader = header;
 
             // BTree2 key
-            BTree2Key = Utils.ReadUlong(localReader, header.HugeIdsSize);
+            BTree2Key = Utils.ReadUlong(localDriver, header.HugeIdsSize);
         }
 
         #endregion
@@ -33,22 +33,22 @@ namespace PureHDF
 
         #region Methods
 
-        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5DriverBase, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
-            var reader = _context.Reader;
+            var driver = _context.Driver;
 
             // huge objects b-tree v2
             if (record01Cache is null)
             {
-                reader.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
+                driver.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
                 var hugeBtree2 = new BTree2Header<BTree2Record01>(_context, DecodeRecord01);
                 record01Cache = hugeBtree2.EnumerateRecords().ToList();
             }
 
             var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
-            reader.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
+            driver.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
 
-            return func(reader);
+            return func(driver);
         }
 
         #endregion

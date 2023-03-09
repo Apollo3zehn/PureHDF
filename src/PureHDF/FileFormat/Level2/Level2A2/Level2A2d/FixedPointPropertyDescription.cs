@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public FixedPointPropertyDescription(H5BaseReader reader)
+        public FixedPointPropertyDescription(H5DriverBase driver)
         {
-            BitOffset = reader.ReadUInt16();
-            BitPrecision = reader.ReadUInt16();
+            BitOffset = driver.ReadUInt16();
+            BitPrecision = driver.ReadUInt16();
         }
 
         #endregion

@@ -11,24 +11,24 @@
 
         #region Constructors
 
-        public FilterPipelineMessage(H5BaseReader reader)
+        public FilterPipelineMessage(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // filter count
-            FilterCount = reader.ReadByte();
+            FilterCount = driver.ReadByte();
 
             // reserved
             if (Version == 1)
-                reader.ReadBytes(6);
+                driver.ReadBytes(6);
 
             // filter descriptions
             FilterDescriptions = new List<FilterDescription>(FilterCount);
 
             for (int i = 0; i < FilterCount; i++)
             {
-                FilterDescriptions.Add(new FilterDescription(reader, Version));
+                FilterDescriptions.Add(new FilterDescription(driver, Version));
             }
         }
 

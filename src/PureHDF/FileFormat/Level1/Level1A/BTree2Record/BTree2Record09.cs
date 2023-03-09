@@ -4,11 +4,11 @@
     {
         #region Constructors
 
-        public BTree2Record09(H5BaseReader reader)
+        public BTree2Record09(H5DriverBase driver)
         {
-            HeapId = reader.ReadBytes(8);
-            MessageFlags = (MessageFlags)reader.ReadByte();
-            CreationOrder = reader.ReadUInt32();
+            HeapId = driver.ReadBytes(8);
+            MessageFlags = (MessageFlags)driver.ReadByte();
+            CreationOrder = driver.ReadUInt32();
         }
 
         #endregion

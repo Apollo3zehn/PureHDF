@@ -15,101 +15,101 @@ namespace PureHDF
 
         public FractalHeapHeader(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, FractalHeapHeader.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // heap ID length
-            HeapIdLength = reader.ReadUInt16();
+            HeapIdLength = driver.ReadUInt16();
 
             // I/O filter encoder length
-            IOFilterEncodedLength = reader.ReadUInt16();
+            IOFilterEncodedLength = driver.ReadUInt16();
 
             // flags
-            Flags = (FractalHeapHeaderFlags)reader.ReadByte();
+            Flags = (FractalHeapHeaderFlags)driver.ReadByte();
 
             /* next group */
 
             // managed objects maximum size
-            ManagedObjectsMaximumSize = reader.ReadUInt32();
+            ManagedObjectsMaximumSize = driver.ReadUInt32();
 
             // next huge object id
-            NextHugeObjectId = superblock.ReadLength(reader);
+            NextHugeObjectId = superblock.ReadLength(driver);
 
             // huge objects BTree2 address
-            HugeObjectsBTree2Address = superblock.ReadOffset(reader);
+            HugeObjectsBTree2Address = superblock.ReadOffset(driver);
 
             // managed blocks free space amount
-            ManagedBlocksFreeSpaceAmount = superblock.ReadLength(reader);
+            ManagedBlocksFreeSpaceAmount = superblock.ReadLength(driver);
 
             // managed block free space manager address
-            ManagedBlockFreeSpaceManagerAddress = superblock.ReadOffset(reader);
+            ManagedBlockFreeSpaceManagerAddress = superblock.ReadOffset(driver);
 
             // heap managed space amount
-            HeapManagedSpaceAmount = superblock.ReadLength(reader);
+            HeapManagedSpaceAmount = superblock.ReadLength(driver);
 
             // heap allocated managed space amount
-            HeapAllocatedManagedSpaceAmount = superblock.ReadLength(reader);
+            HeapAllocatedManagedSpaceAmount = superblock.ReadLength(driver);
 
             // managed space direct block allocation iterator offset
-            ManagedSpaceDirectBlockAllocationIteratorOffset = superblock.ReadLength(reader);
+            ManagedSpaceDirectBlockAllocationIteratorOffset = superblock.ReadLength(driver);
 
             // heap managed objects count
-            HeapManagedObjectsCount = superblock.ReadLength(reader);
+            HeapManagedObjectsCount = superblock.ReadLength(driver);
 
             // heap huge objects size
-            HeapHugeObjectsSize = superblock.ReadLength(reader);
+            HeapHugeObjectsSize = superblock.ReadLength(driver);
 
             // heap huge objects cound
-            HeapHugeObjectsCount = superblock.ReadLength(reader);
+            HeapHugeObjectsCount = superblock.ReadLength(driver);
 
             // heap tiny objects size
-            HeapTinyObjectsSize = superblock.ReadLength(reader);
+            HeapTinyObjectsSize = superblock.ReadLength(driver);
 
             // heap tiny objects count
-            HeapTinyObjectsCount = superblock.ReadLength(reader);
+            HeapTinyObjectsCount = superblock.ReadLength(driver);
 
             /* next group */
 
             // table width
-            TableWidth = reader.ReadUInt16();
+            TableWidth = driver.ReadUInt16();
 
             // starting block size
-            StartingBlockSize = superblock.ReadLength(reader);
+            StartingBlockSize = superblock.ReadLength(driver);
 
             // maximum direct block size
-            MaximumDirectBlockSize = superblock.ReadLength(reader);
+            MaximumDirectBlockSize = superblock.ReadLength(driver);
 
             // maximum heap size
-            MaximumHeapSize = reader.ReadUInt16();
+            MaximumHeapSize = driver.ReadUInt16();
 
             // root indirect block rows starting number
-            RootIndirectBlockRowsStartingNumber = reader.ReadUInt16();
+            RootIndirectBlockRowsStartingNumber = driver.ReadUInt16();
 
             // root block address
-            RootBlockAddress = superblock.ReadOffset(reader);
+            RootBlockAddress = superblock.ReadOffset(driver);
 
             // root indirect block rows count
-            RootIndirectBlockRowsCount = reader.ReadUInt16();
+            RootIndirectBlockRowsCount = driver.ReadUInt16();
 
             /* next group */
 
             // filtered root direct block size, I/O filter mask and I/O filter info
             if (IOFilterEncodedLength > 0)
             {
-                FilteredRootDirectBlockSize = superblock.ReadLength(reader);
-                IOFilterMask = reader.ReadUInt32();
-                IOFilterInfo = new FilterPipelineMessage(reader);
+                FilteredRootDirectBlockSize = superblock.ReadLength(driver);
+                IOFilterMask = driver.ReadUInt32();
+                IOFilterInfo = new FilterPipelineMessage(driver);
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
 
             // cache some values
             CalculateBlockSizeTables();
@@ -213,7 +213,7 @@ namespace PureHDF
                 directBlockAddress = indirectBlock.Entries[entry].Address;
             }
 
-            _context.Reader.Seek((long)directBlockAddress, SeekOrigin.Begin);
+            _context.Driver.Seek((long)directBlockAddress, SeekOrigin.Begin);
             directBlock = new FractalHeapDirectBlock(_context, this);
 
             /* Compute offset of object within block */
@@ -238,7 +238,7 @@ namespace PureHDF
         {
             var (row, column) = Lookup(offset);
 
-            _context.Reader.Seek((long)RootBlockAddress, SeekOrigin.Begin);
+            _context.Driver.Seek((long)RootBlockAddress, SeekOrigin.Begin);
             var indirectBlock = new FractalHeapIndirectBlock(_context, this, RootIndirectBlockRowsCount);
 
             uint entry;
@@ -258,7 +258,7 @@ namespace PureHDF
                 var indirectBlockEntry = indirectBlock.Entries[entry];
 
                 /* Use new indirect block */
-                _context.Reader.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
+                _context.Driver.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
                 indirectBlock = new FractalHeapIndirectBlock(_context, this, nrows);
 
                 /* Look up row & column in new indirect block for object */

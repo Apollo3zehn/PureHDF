@@ -29,7 +29,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = "testfiles/h5ex_d_compact.h5";
+                var filePath = "TestFiles/h5ex_d_compact.h5";
                 var expected = new int[4, 7];
 
                 for (int i = 0; i < 4; i++)

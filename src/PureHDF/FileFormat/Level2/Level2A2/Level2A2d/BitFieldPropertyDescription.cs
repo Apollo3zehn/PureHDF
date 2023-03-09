@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public BitFieldPropertyDescription(H5BaseReader reader)
+        public BitFieldPropertyDescription(H5DriverBase driver)
         {
-            BitOffset = reader.ReadUInt16();
-            BitPrecision = reader.ReadUInt16();
+            BitOffset = driver.ReadUInt16();
+            BitPrecision = driver.ReadUInt16();
         }
 
         #endregion

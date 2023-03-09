@@ -13,10 +13,10 @@ namespace PureHDF
         #region Constructors
 
         public ExtensibleArrayIndexBlock(
-            H5BaseReader reader,
+            H5DriverBase driver,
             Superblock superblock,
             ExtensibleArrayHeader header,
-            Func<H5BaseReader, T> decode)
+            Func<H5DriverBase, T> decode)
         {
             // H5EAiblock.c (H5EA__iblock_alloc)
             SecondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
@@ -24,22 +24,22 @@ namespace PureHDF
             ulong secondaryBlockPointerCount = header.SecondaryBlockCount - SecondaryBlockDataBlockAddressCount;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)driver.ReadByte();
 
             // header address
-            HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(driver);
 
             // elements
             Elements = Enumerable
                 .Range(0, header.IndexBlockElementsCount)
-                .Select(i => decode(reader))
+                .Select(i => decode(driver))
                 .ToArray();
 
             // data block addresses
@@ -47,7 +47,7 @@ namespace PureHDF
 
             for (ulong i = 0; i < dataBlockPointerCount; i++)
             {
-                DataBlockAddresses[i] = superblock.ReadOffset(reader);
+                DataBlockAddresses[i] = superblock.ReadOffset(driver);
             }
 
             // secondary block addresses
@@ -55,11 +55,11 @@ namespace PureHDF
 
             for (ulong i = 0; i < secondaryBlockPointerCount; i++)
             {
-                SecondaryBlockAddresses[i] = superblock.ReadOffset(reader);
+                SecondaryBlockAddresses[i] = superblock.ReadOffset(driver);
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

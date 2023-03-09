@@ -12,11 +12,11 @@
 
         public DataspaceMessage(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
-            Version = reader.ReadByte();
-            Rank = reader.ReadByte();
-            var flags = (DataspaceMessageFlags)reader.ReadByte();
+            Version = driver.ReadByte();
+            Rank = driver.ReadByte();
+            var flags = (DataspaceMessageFlags)driver.ReadByte();
 
             if (Version == 1)
             {
@@ -25,11 +25,11 @@
                 else
                     Type = DataspaceType.Scalar;
 
-                reader.ReadBytes(5);
+                driver.ReadBytes(5);
             }
             else
             {
-                Type = (DataspaceType)reader.ReadByte();
+                Type = (DataspaceType)driver.ReadByte();
             }
 
             DimensionSizes = new ulong[Rank];
@@ -39,7 +39,7 @@
 
             for (int i = 0; i < Rank; i++)
             {
-                DimensionSizes[i] = superblock.ReadLength(reader);
+                DimensionSizes[i] = superblock.ReadLength(driver);
             }
 
             if (dimensionMaxSizesArePresent)
@@ -48,7 +48,7 @@
 
                 for (int i = 0; i < Rank; i++)
                 {
-                    DimensionMaxSizes[i] = superblock.ReadLength(reader);
+                    DimensionMaxSizes[i] = superblock.ReadLength(driver);
                 }
             }
             else
@@ -62,7 +62,7 @@
 
                 for (int i = 0; i < Rank; i++)
                 {
-                    PermutationIndices[i] = superblock.ReadLength(reader);
+                    PermutationIndices[i] = superblock.ReadLength(driver);
                 }
             }
         }

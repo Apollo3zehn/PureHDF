@@ -14,33 +14,33 @@ namespace PureHDF
 
         internal ObjectHeader2(H5Context context, byte version) : base(context)
         {
-            var reader = context.Reader;
+            var driver = context.Driver;
 
             // version
             Version = version;
 
             // flags
-            Flags = (ObjectHeaderFlags)reader.ReadByte();
+            Flags = (ObjectHeaderFlags)driver.ReadByte();
 
             // access time, modification time, change time and birth time
             if (Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
             {
-                AccessTime = reader.ReadUInt32();
-                ModificationTime = reader.ReadUInt32();
-                ChangeTime = reader.ReadUInt32();
-                BirthTime = reader.ReadUInt32();
+                AccessTime = driver.ReadUInt32();
+                ModificationTime = driver.ReadUInt32();
+                ChangeTime = driver.ReadUInt32();
+                BirthTime = driver.ReadUInt32();
             }
 
             // maximum compact attributes count and minimum dense attributes count
             if (Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
             {
-                MaximumCompactAttributesCount = reader.ReadUInt16();
-                MinimumDenseAttributesCount = reader.ReadUInt16();
+                MaximumCompactAttributesCount = driver.ReadUInt16();
+                MinimumDenseAttributesCount = driver.ReadUInt16();
             }
 
             // size of chunk 0
             var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
-            SizeOfChunk0 = Utils.ReadUlong(reader, chunkFieldSize);
+            SizeOfChunk0 = Utils.ReadUlong(driver, chunkFieldSize);
 
             // header messages
             var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);

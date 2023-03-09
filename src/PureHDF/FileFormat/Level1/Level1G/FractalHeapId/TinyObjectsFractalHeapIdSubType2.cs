@@ -11,16 +11,16 @@
 
         #region Constructors
 
-        public TinyObjectsFractalHeapIdSubType2(H5BaseReader localReader, byte firstByte)
-            : base(localReader, firstByte)
+        public TinyObjectsFractalHeapIdSubType2(H5DriverBase localDriver, byte firstByte)
+            : base(localDriver, firstByte)
         {
             _firstByte = firstByte;
 
             // extendedLength
-            _extendedLength = localReader.ReadByte();
+            _extendedLength = localDriver.ReadByte();
 
             // data
-            Data = localReader.ReadBytes(Length);
+            Data = localDriver.ReadBytes(Length);
         }
 
         #endregion

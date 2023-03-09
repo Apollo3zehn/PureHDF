@@ -14,20 +14,20 @@ namespace PureHDF
 
         public SymbolTableNode(H5Context context)
         {
-            var reader = context.Reader;
+            var driver = context.Driver;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, SymbolTableNode.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reserved
-            reader.ReadByte();
+            driver.ReadByte();
 
             // symbol count
-            SymbolCount = reader.ReadUInt16();
+            SymbolCount = driver.ReadUInt16();
 
             // group entries
             GroupEntries = new List<SymbolTableEntry>();

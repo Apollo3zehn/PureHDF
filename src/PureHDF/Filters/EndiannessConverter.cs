@@ -5,29 +5,28 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 #endif
 
-namespace PureHDF
+namespace PureHDF.Filters;
+
+internal static class EndiannessConverter
 {
-    internal static class EndiannessConverter
+    public unsafe static void Convert<T>(Span<T> source, Span<T> destination)
+        where T : unmanaged
     {
-        public unsafe static void Convert<T>(Span<T> source, Span<T> destination)
-            where T : unmanaged
-        {
-            var bytesOfType = Unsafe.SizeOf<T>();
-            EndiannessConverter.Convert(bytesOfType, MemoryMarshal.AsBytes(source), MemoryMarshal.AsBytes(destination));
-        }
+        var bytesOfType = Unsafe.SizeOf<T>();
+        EndiannessConverter.Convert(bytesOfType, MemoryMarshal.AsBytes(source), MemoryMarshal.AsBytes(destination));
+    }
 
-        public static unsafe void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
-        {
+    public static unsafe void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
+    {
 #if NET5_0_OR_GREATER
-            if (Avx2.IsSupported)
-                EndiannessConverterAvx2.Convert(bytesOfType, source, destination);
+        if (Avx2.IsSupported)
+            EndiannessConverterAvx2.Convert(bytesOfType, source, destination);
 
-            //else if (Sse2.IsSupported)
-            //    EndiannessConverterSse2.Convert(bytesOfType, source, destination);
+        //else if (Sse2.IsSupported)
+        //    EndiannessConverterSse2.Convert(bytesOfType, source, destination);
 
-            else
+        else
 #endif
-                EndiannessConverterGeneric.Convert(bytesOfType, source, destination);
-        }
+            EndiannessConverterGeneric.Convert(bytesOfType, source, destination);
     }
 }

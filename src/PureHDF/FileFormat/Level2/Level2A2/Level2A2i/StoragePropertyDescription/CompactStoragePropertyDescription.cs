@@ -4,13 +4,13 @@
     {
         #region Constructors
 
-        public CompactStoragePropertyDescription(H5BaseReader reader)
+        public CompactStoragePropertyDescription(H5DriverBase driver)
         {
             // size
-            Size = reader.ReadUInt16();
+            Size = driver.ReadUInt16();
 
             // raw data
-            RawData = reader.ReadBytes(Size);
+            RawData = driver.ReadBytes(Size);
         }
 
         #endregion

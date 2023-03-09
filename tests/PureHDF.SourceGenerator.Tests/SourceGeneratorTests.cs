@@ -7,7 +7,7 @@ internal partial class MyGeneratedH5Bindings { };
 
 public class SourceGeneratorTests
 {
-    internal const string FILE_PATH = "testfiles/source_generator.h5";
+    internal const string FILE_PATH = "TestFiles/source_generator.h5";
 
     [Fact]
     public void CanGenerateSource()

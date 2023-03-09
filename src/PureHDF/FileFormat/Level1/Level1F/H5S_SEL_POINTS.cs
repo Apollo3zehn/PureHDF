@@ -10,10 +10,10 @@
 
         #region Constructors
 
-        public H5S_SEL_POINTS(H5BaseReader reader)
+        public H5S_SEL_POINTS(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadUInt32();
+            Version = driver.ReadUInt32();
 
             // encode size
             byte encodeSize;
@@ -25,16 +25,16 @@
                     encodeSize = 4;
 
                     // reserved
-                    _ = reader.ReadBytes(4);
+                    _ = driver.ReadBytes(4);
 
                     // length
-                    _ = reader.ReadUInt32();
+                    _ = driver.ReadUInt32();
 
                     break;
 
                 case 2:
                     // encode size
-                    encodeSize = reader.ReadByte();
+                    encodeSize = driver.ReadByte();
 
                     break;
                 
@@ -43,10 +43,10 @@
             }
 
             // rank
-            Rank = reader.ReadUInt32();
+            Rank = driver.ReadUInt32();
 
             // point count
-            var pointCount = ReadEncodedValue(reader, encodeSize);
+            var pointCount = ReadEncodedValue(driver, encodeSize);
 
             // point data
             PointData = new ulong[pointCount, Rank];
@@ -55,7 +55,7 @@
             {
                 for (int dimension = 0; dimension < Rank; dimension++)
                 {
-                    PointData[pointIndex, dimension] = ReadEncodedValue(reader, encodeSize);
+                    PointData[pointIndex, dimension] = ReadEncodedValue(driver, encodeSize);
                 }
             }
         }

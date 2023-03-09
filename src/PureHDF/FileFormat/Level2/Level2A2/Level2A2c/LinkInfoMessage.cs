@@ -17,27 +17,27 @@ namespace PureHDF
         {
             _context = context;
 
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // flags
-            Flags = (CreationOrderFlags)reader.ReadByte();
+            Flags = (CreationOrderFlags)driver.ReadByte();
 
             // maximum creation index
             if (Flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
-                MaximumCreationIndex = reader.ReadUInt64();
+                MaximumCreationIndex = driver.ReadUInt64();
 
             // fractal heap address
-            FractalHeapAddress = superblock.ReadOffset(reader);
+            FractalHeapAddress = superblock.ReadOffset(driver);
 
             // BTree2 name index address
-            BTree2NameIndexAddress = superblock.ReadOffset(reader);
+            BTree2NameIndexAddress = superblock.ReadOffset(driver);
 
             // BTree2 creation order index address
             if (Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-                BTree2CreationOrderIndexAddress = superblock.ReadOffset(reader);
+                BTree2CreationOrderIndexAddress = superblock.ReadOffset(driver);
         }
 
         #endregion
@@ -69,7 +69,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(_context);
             }
         }
@@ -78,7 +78,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
                 return new BTree2Header<BTree2Record05>(_context, DecodeRecord05);
             }
         }
@@ -87,7 +87,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
                 return new BTree2Header<BTree2Record06>(_context, DecodeRecord06);
             }
         }
@@ -97,10 +97,10 @@ namespace PureHDF
         #region Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record05 DecodeRecord05() => new(_context.Reader);
+        private BTree2Record05 DecodeRecord05() => new(_context.Driver);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private BTree2Record06 DecodeRecord06() => new(_context.Reader);
+        private BTree2Record06 DecodeRecord06() => new(_context.Driver);
 
         #endregion
     }

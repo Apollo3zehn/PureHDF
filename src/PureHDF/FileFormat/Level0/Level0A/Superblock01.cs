@@ -1,75 +1,74 @@
-﻿namespace PureHDF
+﻿namespace PureHDF;
+
+internal class Superblock01 : Superblock
 {
-    internal class Superblock01 : Superblock
+    #region Fields
+
+    readonly H5DriverBase _driver;
+
+    #endregion
+
+    #region Constructors
+
+    public Superblock01(H5DriverBase driver, byte version)
     {
-        #region Fields
+        _driver = driver;
 
-        readonly H5BaseReader _reader;
+        SuperBlockVersion = version;
+        FreeSpaceStorageVersion = driver.ReadByte();
+        RootGroupSymbolTableEntryVersion = driver.ReadByte();
+        driver.ReadByte();
 
-        #endregion
+        SharedHeaderMessageFormatVersion = driver.ReadByte();
+        OffsetsSize = driver.ReadByte();
+        LengthsSize = driver.ReadByte();
+        driver.ReadByte();
 
-        #region Constructors
+        GroupLeafNodeK = driver.ReadUInt16();
+        GroupInternalNodeK = driver.ReadUInt16();
 
-        public Superblock01(H5BaseReader reader, byte version)
+        FileConsistencyFlags = (FileConsistencyFlags)driver.ReadUInt32();
+
+        if (SuperBlockVersion == 1)
         {
-            _reader = reader;
-
-            SuperBlockVersion = version;
-            FreeSpaceStorageVersion = reader.ReadByte();
-            RootGroupSymbolTableEntryVersion = reader.ReadByte();
-            reader.ReadByte();
-
-            SharedHeaderMessageFormatVersion = reader.ReadByte();
-            OffsetsSize = reader.ReadByte();
-            LengthsSize = reader.ReadByte();
-            reader.ReadByte();
-
-            GroupLeafNodeK = reader.ReadUInt16();
-            GroupInternalNodeK = reader.ReadUInt16();
-
-            FileConsistencyFlags = (FileConsistencyFlags)reader.ReadUInt32();
-
-            if (SuperBlockVersion == 1)
-            {
-                IndexedStorageInternalNodeK = reader.ReadUInt16();
-                reader.ReadUInt16();
-            }
-
-            BaseAddress = ReadOffset(reader);
-            FreeSpaceInfoAddress = ReadOffset(reader);
-            EndOfFileAddress = ReadOffset(reader);
-            DriverInfoBlockAddress = ReadOffset(reader);
-
-            var context = new H5Context(reader, this);
-            RootGroupSymbolTableEntry = new SymbolTableEntry(context);
+            IndexedStorageInternalNodeK = driver.ReadUInt16();
+            driver.ReadUInt16();
         }
 
-        #endregion
+        BaseAddress = ReadOffset(driver);
+        FreeSpaceInfoAddress = ReadOffset(driver);
+        EndOfFileAddress = ReadOffset(driver);
+        DriverInfoBlockAddress = ReadOffset(driver);
 
-        #region Properties
-
-        public byte FreeSpaceStorageVersion { get; set; }
-        public byte RootGroupSymbolTableEntryVersion { get; set; }
-        public byte SharedHeaderMessageFormatVersion { get; set; }
-        public ushort GroupLeafNodeK { get; set; }
-        public ushort GroupInternalNodeK { get; set; }
-        public ushort IndexedStorageInternalNodeK { get; set; }
-        public ulong FreeSpaceInfoAddress { get; set; }
-        public ulong DriverInfoBlockAddress { get; set; }
-        public SymbolTableEntry RootGroupSymbolTableEntry { get; set; }
-
-        public DriverInfoBlock? DriverInfoBlock
-        {
-            get
-            {
-                if (IsUndefinedAddress(DriverInfoBlockAddress))
-                    return null;
-
-                else
-                    return new DriverInfoBlock(_reader);
-            }
-        }
-
-        #endregion
+        var context = new H5Context(driver, this);
+        RootGroupSymbolTableEntry = new SymbolTableEntry(context);
     }
+
+    #endregion
+
+    #region Properties
+
+    public byte FreeSpaceStorageVersion { get; set; }
+    public byte RootGroupSymbolTableEntryVersion { get; set; }
+    public byte SharedHeaderMessageFormatVersion { get; set; }
+    public ushort GroupLeafNodeK { get; set; }
+    public ushort GroupInternalNodeK { get; set; }
+    public ushort IndexedStorageInternalNodeK { get; set; }
+    public ulong FreeSpaceInfoAddress { get; set; }
+    public ulong DriverInfoBlockAddress { get; set; }
+    public SymbolTableEntry RootGroupSymbolTableEntry { get; set; }
+
+    public DriverInfoBlock? DriverInfoBlock
+    {
+        get
+        {
+            if (IsUndefinedAddress(DriverInfoBlockAddress))
+                return null;
+
+            else
+                return new DriverInfoBlock(_driver);
+        }
+    }
+
+    #endregion
 }

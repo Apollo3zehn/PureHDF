@@ -4,17 +4,17 @@
     {
         #region Constructors
 
-        public Superblock23(H5BaseReader reader, byte version)
+        public Superblock23(H5DriverBase driver, byte version)
         {
             SuperBlockVersion = version;
-            OffsetsSize = reader.ReadByte();
-            LengthsSize = reader.ReadByte();
-            FileConsistencyFlags = (FileConsistencyFlags)reader.ReadByte();
-            BaseAddress = ReadOffset(reader);
-            SuperblockExtensionAddress = ReadOffset(reader);
-            EndOfFileAddress = ReadOffset(reader);
-            RootGroupObjectHeaderAddress = ReadOffset(reader);
-            SuperblockChecksum = reader.ReadUInt32();
+            OffsetsSize = driver.ReadByte();
+            LengthsSize = driver.ReadByte();
+            FileConsistencyFlags = (FileConsistencyFlags)driver.ReadByte();
+            BaseAddress = ReadOffset(driver);
+            SuperblockExtensionAddress = ReadOffset(driver);
+            EndOfFileAddress = ReadOffset(driver);
+            RootGroupObjectHeaderAddress = ReadOffset(driver);
+            SuperblockChecksum = driver.ReadUInt32();
         }
 
         #endregion

@@ -6,18 +6,18 @@ namespace PureHDF
     {
         #region Constructors
 
-        public SharedMessageRecordList(H5BaseReader reader)
+        public SharedMessageRecordList(H5DriverBase driver)
         {
             // signature
-            var signature = reader.ReadBytes(4);
-            Utils.ValidateSignature(signature, SharedMessageRecordList.Signature);
+            var signature = driver.ReadBytes(4);
+            Utils.ValidateSignature(signature, Signature);
 
             // share message records
             SharedMessageRecords = new List<SharedMessageRecord>();
             // TODO: how to know how many?
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

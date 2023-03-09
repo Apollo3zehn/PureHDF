@@ -4,9 +4,9 @@
     {
         #region Constructors
 
-        public FamilyDriverInfo(H5BaseReader reader)
+        public FamilyDriverInfo(H5DriverBase driver)
         {
-            MemberFileSize = reader.ReadUInt64();
+            MemberFileSize = driver.ReadUInt64();
         }
 
         #endregion

@@ -4,16 +4,16 @@
     {
         #region Constructors
 
-        public FractalHeapSharedMessageRecord(H5BaseReader reader) : base(reader)
+        public FractalHeapSharedMessageRecord(H5DriverBase driver) : base(driver)
         {
             // hash value
-            HashValue = reader.ReadUInt32();
+            HashValue = driver.ReadUInt32();
 
             // reference count
-            ReferenceCount = reader.ReadUInt32();
+            ReferenceCount = driver.ReadUInt32();
 
             // fractal heap ID
-            FractalHeapId = reader.ReadUInt64();
+            FractalHeapId = driver.ReadUInt64();
         }
 
         #endregion

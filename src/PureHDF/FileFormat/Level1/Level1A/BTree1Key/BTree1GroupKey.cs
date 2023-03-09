@@ -6,8 +6,8 @@
 
         public BTree1GroupKey(H5Context context)
         {
-            var (reader, superblock) = context;
-            LocalHeapByteOffset = superblock.ReadLength(reader);
+            var (driver, superblock) = context;
+            LocalHeapByteOffset = superblock.ReadLength(driver);
         }
 
         #endregion

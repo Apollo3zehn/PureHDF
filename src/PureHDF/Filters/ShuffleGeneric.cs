@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace PureHDF
+namespace PureHDF.Filters
 {
     internal static class ShuffleGeneric
     {

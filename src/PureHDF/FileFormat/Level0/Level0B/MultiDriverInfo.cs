@@ -4,18 +4,18 @@
     {
         #region Constructors
 
-        public MultiDriverInfo(H5BaseReader reader)
+        public MultiDriverInfo(H5DriverBase driver)
         {
             // member mapping
-            MemberMapping1 = (MemberMapping)reader.ReadByte();
-            MemberMapping2 = (MemberMapping)reader.ReadByte();
-            MemberMapping3 = (MemberMapping)reader.ReadByte();
-            MemberMapping4 = (MemberMapping)reader.ReadByte();
-            MemberMapping5 = (MemberMapping)reader.ReadByte();
-            MemberMapping6 = (MemberMapping)reader.ReadByte();
+            MemberMapping1 = (MemberMapping)driver.ReadByte();
+            MemberMapping2 = (MemberMapping)driver.ReadByte();
+            MemberMapping3 = (MemberMapping)driver.ReadByte();
+            MemberMapping4 = (MemberMapping)driver.ReadByte();
+            MemberMapping5 = (MemberMapping)driver.ReadByte();
+            MemberMapping6 = (MemberMapping)driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(3);
+            driver.ReadBytes(3);
 
             // member count
             var memberCount = new MemberMapping[] { MemberMapping1, MemberMapping2, MemberMapping3,
@@ -27,8 +27,8 @@
 
             for (int i = 0; i < memberCount; i++)
             {
-                MemberFileStartAddresses[i] = reader.ReadUInt64();
-                MemberFileEndAddresses[i] = reader.ReadUInt64();
+                MemberFileStartAddresses[i] = driver.ReadUInt64();
+                MemberFileEndAddresses[i] = driver.ReadUInt64();
             }
 
             // member names
@@ -36,7 +36,7 @@
 
             for (int i = 0; i < memberCount; i++)
             {
-                MemberNames[i] = ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                MemberNames[i] = ReadUtils.ReadNullTerminatedString(driver, pad: true);
             }
         }
 

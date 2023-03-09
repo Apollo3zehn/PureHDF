@@ -4,13 +4,13 @@
     {
         #region Constructors
 
-        public SoftLinkInfo(H5BaseReader reader)
+        public SoftLinkInfo(H5DriverBase driver)
         {
             // value length
-            ValueLength = reader.ReadUInt16();
+            ValueLength = driver.ReadUInt16();
 
             // value
-            Value = ReadUtils.ReadFixedLengthString(reader, ValueLength);
+            Value = ReadUtils.ReadFixedLengthString(driver, ValueLength);
         }
 
         #endregion

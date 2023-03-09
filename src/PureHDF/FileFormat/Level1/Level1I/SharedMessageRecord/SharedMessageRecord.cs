@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public SharedMessageRecord(H5BaseReader reader)
+        public SharedMessageRecord(H5DriverBase driver)
         {
             // message location
-            MessageLocation = (MessageLocation)reader.ReadByte();
+            MessageLocation = (MessageLocation)driver.ReadByte();
         }
 
         #endregion

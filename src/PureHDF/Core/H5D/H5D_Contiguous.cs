@@ -41,9 +41,9 @@
                 }
                 else
                 {
-                    Dataset.Context.Reader.Seek((long)address, SeekOrigin.Begin);
+                    Dataset.Context.Driver.Seek((long)address, SeekOrigin.Begin);
 
-                    _stream = new OffsetStream(Dataset.Context.Reader);
+                    _stream = new OffsetStream(Dataset.Context.Driver);
                 }
             }
 

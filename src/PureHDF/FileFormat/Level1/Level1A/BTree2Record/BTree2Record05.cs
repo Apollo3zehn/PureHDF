@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public BTree2Record05(H5BaseReader reader)
+        public BTree2Record05(H5DriverBase driver)
         {
-            NameHash = reader.ReadUInt32();
-            HeapId = reader.ReadBytes(7);
+            NameHash = driver.ReadUInt32();
+            HeapId = driver.ReadBytes(7);
         }
 
         #endregion

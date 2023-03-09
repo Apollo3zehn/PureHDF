@@ -12,29 +12,29 @@
 
         public GlobalHeapObject(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // heap object index
-            HeapObjectIndex = reader.ReadUInt16();
+            HeapObjectIndex = driver.ReadUInt16();
 
             if (HeapObjectIndex == 0)
                 return;
 
             // reference count
-            ReferenceCount = reader.ReadUInt16();
+            ReferenceCount = driver.ReadUInt16();
 
             // reserved
-            reader.ReadBytes(4);
+            driver.ReadBytes(4);
 
             // object size
-            var objectSize = superblock.ReadLength(reader);
+            var objectSize = superblock.ReadLength(driver);
 
             // object data
-            ObjectData = reader.ReadBytes((int)objectSize);
+            ObjectData = driver.ReadBytes((int)objectSize);
 
             var paddedSize = (int)(Math.Ceiling(objectSize / 8.0) * 8);
             var remainingSize = paddedSize - (int)objectSize;
-            reader.ReadBytes(remainingSize);
+            driver.ReadBytes(remainingSize);
         }
 
         #endregion

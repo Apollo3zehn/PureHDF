@@ -15,20 +15,20 @@ namespace PureHDF
 
         public GlobalHeapCollection(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, GlobalHeapCollection.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(3);
+            driver.ReadBytes(3);
 
             // collection size
-            CollectionSize = superblock.ReadLength(reader);
+            CollectionSize = superblock.ReadLength(driver);
 
             // global heap objects
             GlobalHeapObjects = new Dictionary<int, GlobalHeapObject>();
@@ -38,7 +38,7 @@ namespace PureHDF
 
             while (remaining > headerSize)
             {
-                var before = reader.Position;
+                var before = driver.Position;
                 var globalHeapObject = new GlobalHeapObject(context);
 
                 // Global Heap Object 0 (free space) can appear at the end of the collection.
@@ -46,7 +46,7 @@ namespace PureHDF
                     break;
 
                 GlobalHeapObjects[globalHeapObject.HeapObjectIndex] = globalHeapObject;
-                var after = reader.Position;
+                var after = driver.Position;
                 var consumed = (ulong)(after - before);
 
                 remaining -= consumed;

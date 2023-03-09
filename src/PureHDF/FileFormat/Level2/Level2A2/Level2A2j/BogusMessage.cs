@@ -10,9 +10,9 @@
 
         #region Constructors
 
-        public BogusMessage(H5BaseReader reader)
+        public BogusMessage(H5DriverBase driver)
         {
-            BogusValue = reader.ReadUInt32();
+            BogusValue = driver.ReadUInt32();
         }
 
         #endregion

@@ -6,10 +6,10 @@
 
         public ContiguousStoragePropertyDescription(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
-            Address = superblock.ReadOffset(reader);
-            Size = superblock.ReadLength(reader);
+            Address = superblock.ReadOffset(driver);
+            Size = superblock.ReadLength(driver);
         }
 
         #endregion

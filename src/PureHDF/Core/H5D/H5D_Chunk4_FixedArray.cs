@@ -22,13 +22,13 @@
             {
                 var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
 
-                var element = GetElement(chunkIndex, reader =>
+                var element = GetElement(chunkIndex, driver =>
                 {
                     return new FilteredDataBlockElement()
                     {
-                        Address = Dataset.Context.Superblock.ReadOffset(reader),
-                        ChunkSize = (uint)Utils.ReadUlong(reader, chunkSizeLength),
-                        FilterMask = reader.ReadUInt32()
+                        Address = Dataset.Context.Superblock.ReadOffset(driver),
+                        ChunkSize = (uint)Utils.ReadUlong(driver, chunkSizeLength),
+                        FilterMask = driver.ReadUInt32()
                     };
                 });
 
@@ -38,11 +38,11 @@
             }
             else
             {
-                var element = GetElement(chunkIndex, reader =>
+                var element = GetElement(chunkIndex, driver =>
                 {
                     return new DataBlockElement()
                     {
-                        Address = Dataset.Context.Superblock.ReadOffset(reader)
+                        Address = Dataset.Context.Superblock.ReadOffset(driver)
                     };
                 });
 
@@ -52,11 +52,11 @@
             }
         }
 
-        private T? GetElement<T>(ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
+        private T? GetElement<T>(ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
         {
             if (_header is null)
             {
-                Dataset.Context.Reader.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
                 _header = new FixedArrayHeader(Dataset.Context);
             }
 
@@ -74,12 +74,12 @@
             }
         }
 
-        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5BaseReader, T> decode) where T : DataBlockElement
+        private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
         {
             // H5FA.c (H5FA_get)
 
             /* Get the data block */
-            Dataset.Context.Reader.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
+            Dataset.Context.Driver.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
 
             var dataBlock = new FixedArrayDataBlock<T>(
                 Dataset.Context,
@@ -102,7 +102,7 @@
 
                     /* Compute the address of the data block */
                     var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                    var pageAddress = Dataset.Context.Reader.Position + (long)(pageIndex * pageSize);
+                    var pageAddress = Dataset.Context.Driver.Position + (long)(pageIndex * pageSize);
 
                     /* Check for using last page, to set the number of elements on the page */
                     ulong elementCount;
@@ -114,10 +114,10 @@
                         elementCount = dataBlock.ElementsPerPage;
 
                     /* Protect the data block page */
-                    Dataset.Context.Reader.Seek(pageAddress, SeekOrigin.Begin);
+                    Dataset.Context.Driver.Seek(pageAddress, SeekOrigin.Begin);
 
                     var page = new DataBlockPage<T>(
-                        Dataset.Context.Reader,
+                        Dataset.Context.Driver,
                         elementCount,
                         decode);
 

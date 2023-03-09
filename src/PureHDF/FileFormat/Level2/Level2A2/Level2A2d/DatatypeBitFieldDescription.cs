@@ -6,9 +6,9 @@ namespace PureHDF
     {
         #region Constructors
 
-        public DatatypeBitFieldDescription(H5BaseReader reader)
+        public DatatypeBitFieldDescription(H5DriverBase driver)
         {
-            Data = reader.ReadBytes(3);
+            Data = driver.ReadBytes(3);
         }
 
         #endregion

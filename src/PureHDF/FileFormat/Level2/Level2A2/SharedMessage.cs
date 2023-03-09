@@ -12,32 +12,32 @@
 
         public SharedMessage(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // H5Oshared.c (H5O__shared_decode)
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // type
             if (Version == 3)
             {
-                Type = (SharedMessageLocation)reader.ReadByte();
+                Type = (SharedMessageLocation)driver.ReadByte();
             }
             else
             {
-                reader.ReadByte();
+                driver.ReadByte();
                 Type = SharedMessageLocation.AnotherObjectsHeader;
             }
 
             // reserved
             if (Version == 1)
-                reader.ReadBytes(6);
+                driver.ReadBytes(6);
 
             // address
             if (Version == 1)
             {
-                Address = superblock.ReadOffset(reader);
+                Address = superblock.ReadOffset(driver);
             }
             else
             {
@@ -52,7 +52,7 @@
                 }
                 else
                 {
-                    Address = superblock.ReadOffset(reader);
+                    Address = superblock.ReadOffset(driver);
                 }
             }
         }

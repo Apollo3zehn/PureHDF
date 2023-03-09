@@ -4,18 +4,18 @@
     {
         #region Constructors
 
-        public OldObjectModificationTimeMessage(H5BaseReader reader)
+        public OldObjectModificationTimeMessage(H5DriverBase driver)
         {
             // date / time
-            Year = int.Parse(ReadUtils.ReadFixedLengthString(reader, 4));
-            Month = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
-            DayOfMonth = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
-            Hour = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
-            Minute = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
-            Second = int.Parse(ReadUtils.ReadFixedLengthString(reader, 2));
+            Year = int.Parse(ReadUtils.ReadFixedLengthString(driver, 4));
+            Month = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
+            DayOfMonth = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
+            Hour = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
+            Minute = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
+            Second = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
 
             // reserved
-            reader.ReadBytes(2);
+            driver.ReadBytes(2);
         }
 
         #endregion

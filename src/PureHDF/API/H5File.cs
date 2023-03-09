@@ -74,17 +74,17 @@ namespace PureHDF
         /// <returns></returns>
         public static H5File Open(Stream stream, bool leaveOpen = false)
         {
-            H5BaseReader reader;
+            H5DriverBase driver;
 
 #if NET6_0_OR_GREATER
             if (stream is FileStream fileStream)
-                reader = new H5FileStreamReader(fileStream, leaveOpen: leaveOpen);
+                driver = new H5FileStreamDriver(fileStream, leaveOpen: leaveOpen);
 
             else
 #endif
-                reader = new H5StreamReader(stream, leaveOpen: leaveOpen);
+                driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
-            return OpenCore(reader, string.Empty);
+            return OpenCore(driver, string.Empty);
         }
 
         /// <summary>
@@ -94,15 +94,15 @@ namespace PureHDF
         /// <returns></returns>
         public static H5File Open(MemoryMappedViewAccessor accessor)
         {
-            var reader = new H5MemoryMappedFileReader(accessor);
-            return OpenCore(reader, string.Empty);
+            var driver = new H5MemoryMappedFileDriver(accessor);
+            return OpenCore(driver, string.Empty);
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
             H5Cache.Clear(Context.Superblock);
-            Context.Reader.Dispose();
+            Context.Driver.Dispose();
 
             if (_deleteOnClose && System.IO.File.Exists(Path))
             {

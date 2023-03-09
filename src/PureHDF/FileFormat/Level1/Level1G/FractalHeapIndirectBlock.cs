@@ -15,24 +15,24 @@ namespace PureHDF
 
         public FractalHeapIndirectBlock(H5Context context, FractalHeapHeader header, uint rowCount)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             RowCount = rowCount;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, FractalHeapIndirectBlock.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // heap header address
-            HeapHeaderAddress = superblock.ReadOffset(reader);
+            HeapHeaderAddress = superblock.ReadOffset(driver);
 
             // block offset
             var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-            BlockOffset = Utils.ReadUlong(reader, (ulong)blockOffsetFieldSize);
+            BlockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
 
             // H5HFcache.c (H5HF__cache_iblock_deserialize)
             var length = rowCount * header.TableWidth;
@@ -41,7 +41,7 @@ namespace PureHDF
             for (uint i = 0; i < Entries.Length; i++)
             {
                 /* Decode child block address */
-                Entries[i].Address = superblock.ReadOffset(reader);
+                Entries[i].Address = superblock.ReadOffset(driver);
 
                 /* Check for heap with I/O filters */
                 if (header.IOFilterEncodedLength > 0)
@@ -50,10 +50,10 @@ namespace PureHDF
                     if (i < (header.MaxDirectRows * header.TableWidth))
                     {
                         /* Size of filtered direct block */
-                        Entries[i].FilteredSize = superblock.ReadLength(reader);
+                        Entries[i].FilteredSize = superblock.ReadLength(driver);
 
                         /* I/O filter mask for filtered direct block */
-                        Entries[i].FilterMask = reader.ReadUInt32();
+                        Entries[i].FilterMask = driver.ReadUInt32();
                     }
                 }
 
@@ -67,7 +67,7 @@ namespace PureHDF
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion
@@ -99,7 +99,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
                 return new FractalHeapHeader(_context);
             }
         }

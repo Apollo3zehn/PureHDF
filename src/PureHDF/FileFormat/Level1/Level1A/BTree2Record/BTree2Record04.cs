@@ -6,12 +6,12 @@
 
         public BTree2Record04(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
-            FilteredHugeObjectAddress = superblock.ReadOffset(reader);
-            FilteredHugeObjectLength = superblock.ReadLength(reader);
-            FilterMask = reader.ReadUInt32();
-            FilteredHugeObjectMemorySize = superblock.ReadLength(reader);
+            FilteredHugeObjectAddress = superblock.ReadOffset(driver);
+            FilteredHugeObjectLength = superblock.ReadLength(driver);
+            FilterMask = driver.ReadUInt32();
+            FilteredHugeObjectMemorySize = superblock.ReadLength(driver);
         }
 
         #endregion

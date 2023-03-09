@@ -10,26 +10,26 @@
 
         #region Constructors
 
-        public GroupInfoMessage(H5BaseReader reader)
+        public GroupInfoMessage(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // flags
-            Flags = (GroupInfoMessageFlags)reader.ReadByte();
+            Flags = (GroupInfoMessageFlags)driver.ReadByte();
 
             // maximum compact value and minimum dense value
             if (Flags.HasFlag(GroupInfoMessageFlags.StoreLinkPhaseChangeValues))
             {
-                MaximumCompactValue = reader.ReadUInt16();
-                MinimumDenseValue = reader.ReadUInt16();
+                MaximumCompactValue = driver.ReadUInt16();
+                MinimumDenseValue = driver.ReadUInt16();
             }
 
             // estimated entry count and estimated entry link name length
             if (Flags.HasFlag(GroupInfoMessageFlags.StoreNonDefaultEntryInformation))
             {
-                EstimatedEntryCount = reader.ReadUInt16();
-                EstimatedEntryLinkNameLength = reader.ReadUInt16();
+                EstimatedEntryCount = driver.ReadUInt16();
+                EstimatedEntryLinkNameLength = driver.ReadUInt16();
             }
         }
 

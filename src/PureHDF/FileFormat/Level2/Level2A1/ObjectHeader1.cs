@@ -16,22 +16,22 @@
             Version = version;
 
             // reserved
-            context.Reader.ReadByte();
+            context.Driver.ReadByte();
 
             // header messages count
-            HeaderMessagesCount = context.Reader.ReadUInt16();
+            HeaderMessagesCount = context.Driver.ReadUInt16();
 
             // object reference count
-            ObjectReferenceCount = context.Reader.ReadUInt32();
+            ObjectReferenceCount = context.Driver.ReadUInt32();
 
             // object header size
-            ObjectHeaderSize = context.Reader.ReadUInt32();
+            ObjectHeaderSize = context.Driver.ReadUInt32();
 
             // header messages
 
             // read padding bytes that align the following message to an 8 byte boundary
             if (ObjectHeaderSize > 0)
-                context.Reader.ReadBytes(4);
+                context.Driver.ReadBytes(4);
 
             var messages = ReadHeaderMessages(context, ObjectHeaderSize, 1);
             HeaderMessages.AddRange(messages);

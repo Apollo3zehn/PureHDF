@@ -52,7 +52,7 @@
             {
                 if (_header is null)
                 {
-                    Context.Reader.Seek((long)Reference.Value, SeekOrigin.Begin);
+                    Context.Driver.Seek((long)Reference.Value, SeekOrigin.Begin);
                     _header = ObjectHeader.Construct(Context);
                 }
 

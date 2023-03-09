@@ -15,34 +15,34 @@ namespace PureHDF
 
         public FixedArrayHeader(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             _superblock = superblock;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, FixedArrayHeader.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)driver.ReadByte();
 
             // entry size
-            EntrySize = reader.ReadByte();
+            EntrySize = driver.ReadByte();
 
             // page bits
-            PageBits = reader.ReadByte();
+            PageBits = driver.ReadByte();
 
             // entries count
-            EntriesCount = superblock.ReadLength(reader);
+            EntriesCount = superblock.ReadLength(driver);
 
             // data block address
-            DataBlockAddress = superblock.ReadOffset(reader);
+            DataBlockAddress = superblock.ReadOffset(driver);
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

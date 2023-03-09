@@ -23,12 +23,12 @@
 
 //        public static BTree2Record07 Construct(H5Context context)
 //        {
-//            var messageLocation = (MessageLocation)reader.ReadByte();
+//            var messageLocation = (MessageLocation)driver.ReadByte();
 
 //            return messageLocation switch
 //            {
-//                MessageLocation.Heap            => new BTree2Record07_0(reader, messageLocation),
-//                MessageLocation.ObjectHeader    => new BTree2Record07_1(reader, superblock, messageLocation),
+//                MessageLocation.Heap            => new BTree2Record07_0(driver, messageLocation),
+//                MessageLocation.ObjectHeader    => new BTree2Record07_1(driver, superblock, messageLocation),
 //                _                               => throw new Exception($"Unknown message location '{MessageLocation.Heap}'.")
 //            };
 //        }

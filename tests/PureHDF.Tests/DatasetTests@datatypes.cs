@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using PureHDF.VFD;
 using Xunit;
 
 namespace PureHDF.Tests.Reading
@@ -309,7 +310,7 @@ namespace PureHDF.Tests.Reading
                 var references = dataset_references.Read<H5RegionReference>();
 
                 var reference = references[0];
-                root.Context.Reader.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+                root.Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
 
                 // H5Rint.c (H5R__get_region)
                 // TODO: use more structs?
@@ -321,9 +322,9 @@ namespace PureHDF.Tests.Reading
 
                 var globalHeapCollection = globalHeapId.Collection;
                 var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
-                using var localReader = new H5StreamReader(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-                var address = root.Context.Superblock.ReadOffset(localReader);
-                var selection = new DataspaceSelection(localReader);
+                using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
+                var address = root.Context.Superblock.ReadOffset(localDriver);
+                var selection = new DataspaceSelection(localDriver);
 
                 throw new NotImplementedException();
             });

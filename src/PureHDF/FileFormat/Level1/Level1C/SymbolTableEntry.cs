@@ -6,36 +6,36 @@
 
         public SymbolTableEntry(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // link name offset
-            LinkNameOffset = superblock.ReadOffset(reader);
+            LinkNameOffset = superblock.ReadOffset(driver);
 
             // object header address
-            HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(driver);
 
             // cache type
-            CacheType = (CacheType)reader.ReadUInt32();
+            CacheType = (CacheType)driver.ReadUInt32();
 
             // reserved
-            reader.ReadUInt32();
+            driver.ReadUInt32();
 
             // scratch pad
-            var before = reader.Position;
+            var before = driver.Position;
 
             ScratchPad = CacheType switch
             {
                 CacheType.NoCache => null,
                 CacheType.ObjectHeader => new ObjectHeaderScratchPad(context),
-                CacheType.SymbolicLink => new SymbolicLinkScratchPad(reader),
+                CacheType.SymbolicLink => new SymbolicLinkScratchPad(driver),
                 _ => throw new NotSupportedException()
             };
 
-            var after = reader.Position;
+            var after = driver.Position;
             var length = after - before;
 
             // read as many bytes as needed to read a total of 16 bytes, even if the scratch pad is not used
-            reader.ReadBytes((int)(16 - length));
+            driver.ReadBytes((int)(16 - length));
         }
 
         #endregion

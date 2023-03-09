@@ -12,9 +12,9 @@ namespace PureHDF
 
         #region Constructors
 
-        public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5BaseReader, T> decode)
+        public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5DriverBase, T> decode)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // H5EAdblock.c (H5EA__dblock_alloc)
             PageCount = 0UL;
@@ -28,27 +28,27 @@ namespace PureHDF
             // H5EAcache.c (H5EA__cache_dblock_deserialize)
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, ExtensibleArrayDataBlock<T>.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)driver.ReadByte();
 
             // header address
-            HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(driver);
 
             // block offset
-            BlockOffset = Utils.ReadUlong(reader, header.ArrayOffsetsSize);
+            BlockOffset = Utils.ReadUlong(driver, header.ArrayOffsetsSize);
 
             // elements
             if (PageCount == 0)
             {
                 Elements = Enumerable
                     .Range(0, (int)elementCount)
-                    .Select(i => decode(reader))
+                    .Select(i => decode(driver))
                     .ToArray();
             }
             else
@@ -57,7 +57,7 @@ namespace PureHDF
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

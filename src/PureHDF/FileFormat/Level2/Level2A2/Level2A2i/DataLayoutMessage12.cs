@@ -12,26 +12,26 @@
 
         internal DataLayoutMessage12(H5Context context, byte version)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // version
             Version = version;
 
             // rank
-            Rank = reader.ReadByte();
+            Rank = driver.ReadByte();
 
             // layout class
-            LayoutClass = (LayoutClass)reader.ReadByte();
+            LayoutClass = (LayoutClass)driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(5);
+            driver.ReadBytes(5);
 
             // data address
             Address = LayoutClass switch
             {
                 LayoutClass.Compact => ulong.MaxValue, // invalid address
-                LayoutClass.Contiguous => superblock.ReadOffset(reader),
-                LayoutClass.Chunked => superblock.ReadOffset(reader),
+                LayoutClass.Contiguous => superblock.ReadOffset(driver),
+                LayoutClass.Chunked => superblock.ReadOffset(driver),
                 _ => throw new NotSupportedException($"The layout class '{LayoutClass}' is not supported.")
             };
 
@@ -40,18 +40,18 @@
 
             for (int i = 0; i < Rank; i++)
             {
-                DimensionSizes[i] = reader.ReadUInt32();
+                DimensionSizes[i] = driver.ReadUInt32();
             }
 
             // dataset element size
             if (LayoutClass == LayoutClass.Chunked)
-                DatasetElementSize = reader.ReadUInt32();
+                DatasetElementSize = driver.ReadUInt32();
 
             // compact data size
             if (LayoutClass == LayoutClass.Compact)
             {
-                var compactDataSize = reader.ReadUInt32();
-                CompactData = reader.ReadBytes((int)compactDataSize);
+                var compactDataSize = driver.ReadUInt32();
+                CompactData = driver.ReadBytes((int)compactDataSize);
             }
             else
             {

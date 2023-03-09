@@ -4,9 +4,9 @@
     {
         #region Constructors
 
-        public TimePropertyDescription(H5BaseReader reader)
+        public TimePropertyDescription(H5DriverBase driver)
         {
-            BitPrecision = reader.ReadUInt16();
+            BitPrecision = driver.ReadUInt16();
         }
 
         #endregion

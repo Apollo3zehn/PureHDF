@@ -26,9 +26,9 @@
             var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
             var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
-            using var localReader = new H5StreamReader(new MemoryStream(objectData), leaveOpen: false);
+            using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
 
-            _block = new VdsGlobalHeapBlock(localReader, dataset.Context.Superblock);
+            _block = new VdsGlobalHeapBlock(localDriver, dataset.Context.Superblock);
 
             // https://docs.hdfgroup.org/archive/support/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
             // "A source dataset may have different rank and dimension sizes than the VDS. However, if a

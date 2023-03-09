@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public OpaquePropertyDescription(H5BaseReader reader, byte tagByteLength)
+        public OpaquePropertyDescription(H5DriverBase driver, byte tagByteLength)
         {
             Tag = ReadUtils
-                .ReadFixedLengthString(reader, tagByteLength)
+                .ReadFixedLengthString(driver, tagByteLength)
                 .TrimEnd('\0');
 
             // TODO: How to avoid the appended '\0'? Is this caused by C# string passed to HDF5 lib?

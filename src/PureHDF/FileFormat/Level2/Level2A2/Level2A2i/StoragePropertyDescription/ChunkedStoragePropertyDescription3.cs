@@ -6,20 +6,20 @@
 
         public ChunkedStoragePropertyDescription3(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // rank
-            Rank = reader.ReadByte();
+            Rank = driver.ReadByte();
 
             // address
-            Address = superblock.ReadOffset(reader);
+            Address = superblock.ReadOffset(driver);
 
             // dimension sizes
             DimensionSizes = new uint[Rank];
 
             for (uint i = 0; i < Rank; i++)
             {
-                DimensionSizes[i] = reader.ReadUInt32();
+                DimensionSizes[i] = driver.ReadUInt32();
             }
         }
 

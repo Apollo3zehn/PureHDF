@@ -24,7 +24,7 @@
         public static DataLayoutMessage Construct(H5Context context)
         {
             // get version
-            var version = context.Reader.ReadByte();
+            var version = context.Driver.ReadByte();
 
             return version switch
             {

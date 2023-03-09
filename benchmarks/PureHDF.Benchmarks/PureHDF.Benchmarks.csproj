@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PureHDF\PureHDF.csproj" />
+    <ProjectReference Include="../../src/PureHDF/PureHDF.csproj" />
   </ItemGroup>
 
 </Project>

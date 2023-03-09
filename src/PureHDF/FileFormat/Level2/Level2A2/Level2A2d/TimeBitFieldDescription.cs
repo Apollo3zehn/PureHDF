@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public TimeBitFieldDescription(H5BaseReader reader) : base(reader)
+        public TimeBitFieldDescription(H5DriverBase driver) : base(driver)
         {
             //
         }

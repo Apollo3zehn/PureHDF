@@ -4,16 +4,16 @@
     {
         #region Constructors
 
-        public DataBlockPage(H5BaseReader reader, ulong elementCount, Func<H5BaseReader, T> decode)
+        public DataBlockPage(H5DriverBase driver, ulong elementCount, Func<H5DriverBase, T> decode)
         {
             // elements
             Elements = Enumerable
                 .Range(0, (int)elementCount)
-                .Select(i => decode(reader))
+                .Select(i => decode(driver))
                 .ToArray();
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

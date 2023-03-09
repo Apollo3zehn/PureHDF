@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public CompoundBitFieldDescription(H5BaseReader reader) : base(reader)
+        public CompoundBitFieldDescription(H5DriverBase driver) : base(driver)
         {
             //
         }

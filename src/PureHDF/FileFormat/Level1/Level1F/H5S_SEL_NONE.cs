@@ -10,13 +10,13 @@
 
         #region Constructors
 
-        public H5S_SEL_NONE(H5BaseReader reader)
+        public H5S_SEL_NONE(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadUInt32();
+            Version = driver.ReadUInt32();
 
             // reserved
-            reader.ReadBytes(8);
+            driver.ReadBytes(8);
         }
 
         #endregion

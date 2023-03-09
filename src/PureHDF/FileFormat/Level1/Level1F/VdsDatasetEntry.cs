@@ -4,19 +4,19 @@
     {
         #region Constructors
 
-        public VdsDatasetEntry(H5BaseReader reader)
+        public VdsDatasetEntry(H5DriverBase driver)
         {
             // source file name
-            SourceFileName = ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            SourceFileName = ReadUtils.ReadNullTerminatedString(driver, pad: false);
 
             // source dataset
-            SourceDataset = ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            SourceDataset = ReadUtils.ReadNullTerminatedString(driver, pad: false);
 
             // source selection
-            SourceSelection = new DataspaceSelection(reader);
+            SourceSelection = new DataspaceSelection(driver);
 
             // virtual selection
-            VirtualSelection = new DataspaceSelection(reader);
+            VirtualSelection = new DataspaceSelection(driver);
         }
 
         #endregion

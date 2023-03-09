@@ -11,21 +11,21 @@
 
         #region Constructors
 
-        public ExternalLinkInfo(H5BaseReader reader)
+        public ExternalLinkInfo(H5DriverBase driver)
         {
             // value length
-            ValueLength = reader.ReadUInt16();
+            ValueLength = driver.ReadUInt16();
 
             // version and flags
-            var data = reader.ReadByte();
+            var data = driver.ReadByte();
             Version = (byte)((data & 0xF0) >> 4); // take only upper 4 bits
             Flags = (byte)((data & 0x0F) >> 0); // take only lower 4 bits
 
             // file name
-            FilePath = ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            FilePath = ReadUtils.ReadNullTerminatedString(driver, pad: false);
 
             // full object path
-            FullObjectPath = ReadUtils.ReadNullTerminatedString(reader, pad: false);
+            FullObjectPath = ReadUtils.ReadNullTerminatedString(driver, pad: false);
         }
 
         #endregion

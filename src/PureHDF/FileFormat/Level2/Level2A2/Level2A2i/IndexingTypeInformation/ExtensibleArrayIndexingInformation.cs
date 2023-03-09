@@ -4,34 +4,34 @@
     {
         #region Constructors
 
-        public ExtensibleArrayIndexingInformation(H5BaseReader reader)
+        public ExtensibleArrayIndexingInformation(H5DriverBase driver)
         {
             // max bit count
-            MaxBitCount = reader.ReadByte();
+            MaxBitCount = driver.ReadByte();
 
             if (MaxBitCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // index element count
-            IndexElementsCount = reader.ReadByte();
+            IndexElementsCount = driver.ReadByte();
 
             if (IndexElementsCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // min pointer count
-            MinPointerCount = reader.ReadByte();
+            MinPointerCount = driver.ReadByte();
 
             if (MinPointerCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // min element count
-            MinElementsCount = reader.ReadByte();
+            MinElementsCount = driver.ReadByte();
 
             if (MinElementsCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");
 
             // page bit count
-            PageBitCount = reader.ReadByte();
+            PageBitCount = driver.ReadByte();
 
             if (PageBitCount == 0)
                 throw new Exception("Invalid extensible array creation parameter.");

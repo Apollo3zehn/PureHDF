@@ -7,9 +7,9 @@ namespace PureHDF
         #region Constructors
 
         public BTree2InternalNode(H5Context context, BTree2Header<T> header, ushort recordCount, int nodeLevel, Func<T> decodeKey)
-            : base(context.Reader, header, recordCount, BTree2InternalNode<T>.Signature, decodeKey)
+            : base(context.Driver, header, recordCount, BTree2InternalNode<T>.Signature, decodeKey)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             NodePointers = new BTree2NodePointer[recordCount + 1];
 
@@ -17,16 +17,16 @@ namespace PureHDF
             for (int i = 0; i < recordCount + 1; i++)
             {
                 // address
-                NodePointers[i].Address = superblock.ReadOffset(reader);
+                NodePointers[i].Address = superblock.ReadOffset(driver);
 
                 // record count
-                var childRecordCount = Utils.ReadUlong(reader, header.MaxRecordCountSize);
+                var childRecordCount = Utils.ReadUlong(driver, header.MaxRecordCountSize);
                 NodePointers[i].RecordCount = (ushort)childRecordCount;
 
                 // total record count
                 if (nodeLevel > 1)
                 {
-                    var totalChildRecordCount = Utils.ReadUlong(reader, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
+                    var totalChildRecordCount = Utils.ReadUlong(driver, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
                     NodePointers[i].TotalRecordCount = totalChildRecordCount;
                 }
                 else
@@ -36,7 +36,7 @@ namespace PureHDF
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

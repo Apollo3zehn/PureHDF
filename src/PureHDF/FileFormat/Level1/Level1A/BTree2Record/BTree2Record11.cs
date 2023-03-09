@@ -6,23 +6,23 @@
 
         public BTree2Record11(H5Context context, byte rank, uint chunkSizeLength)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // address
-            Address = superblock.ReadOffset(reader);
+            Address = superblock.ReadOffset(driver);
 
             // chunk size
-            ChunkSize = Utils.ReadUlong(reader, chunkSizeLength);
+            ChunkSize = Utils.ReadUlong(driver, chunkSizeLength);
 
             // filter mask
-            FilterMask = reader.ReadUInt32();
+            FilterMask = driver.ReadUInt32();
 
             // scaled offsets
             ScaledOffsets = new ulong[rank];
 
             for (int i = 0; i < rank; i++)
             {
-                ScaledOffsets[i] = reader.ReadUInt64();
+                ScaledOffsets[i] = driver.ReadUInt64();
             }
         }
 

@@ -6,11 +6,11 @@
 
         public BTree2Record01(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
-            HugeObjectAddress = superblock.ReadOffset(reader);
-            HugeObjectLength = superblock.ReadLength(reader);
-            HugeObjectId = superblock.ReadLength(reader);
+            HugeObjectAddress = superblock.ReadOffset(driver);
+            HugeObjectLength = superblock.ReadLength(driver);
+            HugeObjectId = superblock.ReadLength(driver);
         }
 
         #endregion

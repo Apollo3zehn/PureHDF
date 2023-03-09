@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        public FixedArrayIndexingInformation(H5BaseReader reader)
+        public FixedArrayIndexingInformation(H5DriverBase driver)
         {
             // page bits
-            PageBits = reader.ReadByte();
+            PageBits = driver.ReadByte();
 
             if (PageBits == 0)
                 throw new Exception("Invalid fixed array creation parameter.");

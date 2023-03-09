@@ -12,18 +12,18 @@
 
         internal DataLayoutMessage3(H5Context context, byte version)
         {
-            var (reader, _) = context;
+            var (driver, _) = context;
 
             // version
             Version = version;
 
             // layout class
-            LayoutClass = (LayoutClass)reader.ReadByte();
+            LayoutClass = (LayoutClass)driver.ReadByte();
 
             // storage property description
             Properties = (Version, LayoutClass) switch
             {
-                (_, LayoutClass.Compact) => new CompactStoragePropertyDescription(reader),
+                (_, LayoutClass.Compact) => new CompactStoragePropertyDescription(driver),
                 (_, LayoutClass.Contiguous) => new ContiguousStoragePropertyDescription(context),
                 (3, LayoutClass.Chunked) => new ChunkedStoragePropertyDescription3(context),
                 (4, LayoutClass.Chunked) => new ChunkedStoragePropertyDescription4(context),

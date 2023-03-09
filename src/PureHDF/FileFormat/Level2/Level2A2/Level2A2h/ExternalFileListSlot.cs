@@ -6,16 +6,16 @@
 
         public ExternalFileListSlot(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // name heap offset
-            NameHeapOffset = superblock.ReadLength(reader);
+            NameHeapOffset = superblock.ReadLength(driver);
 
             // offset
-            Offset = superblock.ReadLength(reader);
+            Offset = superblock.ReadLength(driver);
 
             // size
-            Size = superblock.ReadLength(reader);
+            Size = superblock.ReadLength(driver);
         }
 
         #endregion

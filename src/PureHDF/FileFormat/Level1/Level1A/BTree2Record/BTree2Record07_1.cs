@@ -6,30 +6,30 @@
 //    {
 //        #region Fields
 
-//        private H5BinaryReader _reader;
+//        private H5DriverBase _driver;
 //        private Superblock _superblock;
 
 //        #endregion
 
 //        #region Constructors
 
-//        public BTree2Record07_1(H5BinaryReader reader, MessageLocation messageLocation) 
+//        public BTree2Record07_1(H5DriverBase driver, MessageLocation messageLocation) 
 //            : base(messageLocation)
 //        {
 //            // hash
-//            Hash = reader.ReadBytes(4);
+//            Hash = driver.ReadBytes(4);
 
 //            // reserved
-//            reader.ReadByte();
+//            driver.ReadByte();
 
 //            // message type
-//            MessageType = (HeaderMessageType)reader.ReadByte();
+//            MessageType = (HeaderMessageType)driver.ReadByte();
 
 //            // object header index
-//            HeaderIndex = reader.ReadUInt16();
+//            HeaderIndex = driver.ReadUInt16();
 
 //            // object header address
-//            HeaderAddress = superblock.ReadOffset(reader);
+//            HeaderAddress = superblock.ReadOffset(driver);
 //        }
 
 //        #endregion

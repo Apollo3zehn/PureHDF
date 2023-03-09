@@ -108,9 +108,9 @@ namespace PureHDF
             foreach (var record in records)
             {
                 // TODO: duplicate1_of_3
-                using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
-                var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
-                var message = heapId.Read(reader => new AttributeMessage(Context, Header), ref record01Cache);
+                using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
+                var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
+                var message = heapId.Read(driver => new AttributeMessage(Context, Header), ref record01Cache);
 
                 yield return message;
             }
@@ -142,9 +142,9 @@ namespace PureHDF
                 else
                 {
                     // TODO: duplicate2_of_3
-                    using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
-                    var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new AttributeMessage(Context, Header));
+                    using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
+                    var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
+                    candidate = heapId.Read(driver => new AttributeMessage(Context, Header));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison

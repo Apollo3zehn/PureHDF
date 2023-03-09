@@ -10,25 +10,25 @@
 
         #region Constructors
 
-        public DriverInfoBlock(H5BaseReader reader)
+        public DriverInfoBlock(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(3);
+            driver.ReadBytes(3);
 
             // driver info size
-            DriverInfoSize = reader.ReadUInt32();
+            DriverInfoSize = driver.ReadUInt32();
 
             // driver id
-            DriverId = ReadUtils.ReadFixedLengthString(reader, 8);
+            DriverId = ReadUtils.ReadFixedLengthString(driver, 8);
 
             // driver info
             DriverInfo = DriverId switch
             {
-                "NCSAmulti" => new MultiDriverInfo(reader),
-                "NCSAfami" => new FamilyDriverInfo(reader),
+                "NCSAmulti" => new MultiDriverInfo(driver),
+                "NCSAfami" => new FamilyDriverInfo(driver),
                 _ => throw new NotSupportedException($"The driver ID '{DriverId}' is not supported.")
             };
         }

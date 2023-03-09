@@ -4,13 +4,13 @@
     {
         #region Constructors
 
-        public UserDefinedLinkInfo(H5BaseReader reader)
+        public UserDefinedLinkInfo(H5DriverBase driver)
         {
             // data length
-            DataLength = reader.ReadUInt16();
+            DataLength = driver.ReadUInt16();
 
             // data
-            Data = reader.ReadBytes(DataLength);
+            Data = driver.ReadBytes(DataLength);
         }
 
         #endregion

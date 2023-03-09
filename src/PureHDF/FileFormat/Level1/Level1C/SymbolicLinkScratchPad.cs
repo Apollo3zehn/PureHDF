@@ -1,20 +1,19 @@
-﻿namespace PureHDF
+﻿namespace PureHDF;
+
+internal class SymbolicLinkScratchPad : ScratchPad
 {
-    internal class SymbolicLinkScratchPad : ScratchPad
+    #region Constructors
+
+    public SymbolicLinkScratchPad(H5DriverBase driver)
     {
-        #region Constructors
-
-        public SymbolicLinkScratchPad(H5BaseReader reader)
-        {
-            LinkValueOffset = reader.ReadUInt32();
-        }
-
-        #endregion
-
-        #region Properties
-
-        public uint LinkValueOffset { get; set; }
-
-        #endregion
+        LinkValueOffset = driver.ReadUInt32();
     }
+
+    #endregion
+
+    #region Properties
+
+    public uint LinkValueOffset { get; set; }
+
+    #endregion
 }

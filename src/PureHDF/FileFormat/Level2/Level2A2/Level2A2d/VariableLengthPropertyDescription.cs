@@ -4,9 +4,9 @@
     {
         #region Constructors
 
-        public VariableLengthPropertyDescription(H5BaseReader reader)
+        public VariableLengthPropertyDescription(H5DriverBase driver)
         {
-            BaseType = new DatatypeMessage(reader);
+            BaseType = new DatatypeMessage(driver);
         }
 
         #endregion

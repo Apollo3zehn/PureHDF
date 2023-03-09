@@ -6,17 +6,17 @@
 
         public BTree2Record10(H5Context context, byte rank)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // address
-            Address = superblock.ReadOffset(reader);
+            Address = superblock.ReadOffset(driver);
 
             // scaled offsets
             ScaledOffsets = new ulong[rank];
 
             for (int i = 0; i < rank; i++)
             {
-                ScaledOffsets[i] = reader.ReadUInt64();
+                ScaledOffsets[i] = driver.ReadUInt64();
             }
         }
 

@@ -6,20 +6,20 @@ namespace PureHDF
     {
         #region Fields
 
-        private readonly H5BaseReader _reader;
+        private readonly H5DriverBase _driver;
         private readonly FractalHeapHeader _header;
 
         #endregion
 
         #region Constructors
 
-        public ManagedObjectsFractalHeapId(H5BaseReader reader, H5BaseReader localReader, FractalHeapHeader header, ulong offsetByteCount, ulong lengthByteCount)
+        public ManagedObjectsFractalHeapId(H5DriverBase driver, H5DriverBase localDriver, FractalHeapHeader header, ulong offsetByteCount, ulong lengthByteCount)
         {
-            _reader = reader;
+            _driver = driver;
             _header = header;
 
-            Offset = Utils.ReadUlong(localReader, offsetByteCount);
-            Length = Utils.ReadUlong(localReader, lengthByteCount);
+            Offset = Utils.ReadUlong(localDriver, offsetByteCount);
+            Length = Utils.ReadUlong(localDriver, lengthByteCount);
         }
 
         #endregion
@@ -33,12 +33,12 @@ namespace PureHDF
 
         #region Methods
 
-        public override T Read<T>(Func<H5BaseReader, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
+        public override T Read<T>(Func<H5DriverBase, T> func, [AllowNull] ref List<BTree2Record01> record01Cache)
         {
             var address = _header.GetAddress(this);
 
-            _reader.Seek((long)address, SeekOrigin.Begin);
-            return func(_reader);
+            _driver.Seek((long)address, SeekOrigin.Begin);
+            return func(_driver);
         }
 
         #endregion

@@ -13,24 +13,24 @@
 
         public ExternalFileListMessage(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(3);
+            driver.ReadBytes(3);
 
             // TODO: Its value must be at least as large as the value contained in the Used Slots field.
             // allocated slot count
-            AllocatedSlotCount = reader.ReadUInt16();
+            AllocatedSlotCount = driver.ReadUInt16();
 
             // used slot count
-            UsedSlotCount = reader.ReadUInt16();
+            UsedSlotCount = driver.ReadUInt16();
 
             // heap address
-            HeapAddress = superblock.ReadOffset(reader);
+            HeapAddress = superblock.ReadOffset(driver);
 
             // slot definitions
             SlotDefinitions = new ExternalFileListSlot[UsedSlotCount];
@@ -69,7 +69,7 @@
         {
             get
             {
-                _context.Reader.Seek((long)HeapAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)HeapAddress, SeekOrigin.Begin);
                 return new LocalHeap(_context);
             }
         }

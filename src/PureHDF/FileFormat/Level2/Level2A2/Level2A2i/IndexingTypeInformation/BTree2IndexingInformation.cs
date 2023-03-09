@@ -4,16 +4,16 @@
     {
         #region Constructors
 
-        public BTree2IndexingInformation(H5BaseReader reader)
+        public BTree2IndexingInformation(H5DriverBase driver)
         {
             // node size
-            NodeSize = reader.ReadUInt32();
+            NodeSize = driver.ReadUInt32();
 
             // split percent
-            SplitPercent = reader.ReadByte();
+            SplitPercent = driver.ReadByte();
 
             // merge percent
-            MergePercent = reader.ReadByte();
+            MergePercent = driver.ReadByte();
         }
 
         #endregion

@@ -4,7 +4,7 @@
     {
         public uint Rank { get; set; }
 
-        public static HyperslabSelectionInfo Create(H5BaseReader reader, uint version)
+        public static HyperslabSelectionInfo Create(H5DriverBase driver, uint version)
         {
             uint rank;
 
@@ -12,42 +12,42 @@
             {
                 case 1:
                     // reserved
-                    _ = reader.ReadBytes(4);
+                    _ = driver.ReadBytes(4);
 
                     // length
-                    _ = reader.ReadUInt32();
+                    _ = driver.ReadUInt32();
 
                     // rank
-                    rank = reader.ReadUInt32();
+                    rank = driver.ReadUInt32();
 
-                    return new IrregularHyperslabSelectionInfo(reader, rank, encodeSize: 4);
+                    return new IrregularHyperslabSelectionInfo(driver, rank, encodeSize: 4);
 
                 case 2:
                     // flags
-                    _ = reader.ReadByte();
+                    _ = driver.ReadByte();
 
                     // length
-                    _ = reader.ReadUInt32();
+                    _ = driver.ReadUInt32();
 
                     // rank
-                    rank = reader.ReadUInt32();
+                    rank = driver.ReadUInt32();
                     
-                    return new RegularHyperslabSelectionInfo(reader, rank, encodeSize: 8);
+                    return new RegularHyperslabSelectionInfo(driver, rank, encodeSize: 8);
 
                 case 3:
                     // flags
-                    var flags = reader.ReadByte();
+                    var flags = driver.ReadByte();
 
                     // encode size
-                    var encodeSize = reader.ReadByte();
+                    var encodeSize = driver.ReadByte();
 
                     // rank
-                    rank = reader.ReadUInt32();
+                    rank = driver.ReadUInt32();
 
                     if ((flags & 0x01) == 1)
-                        return new RegularHyperslabSelectionInfo(reader, rank, encodeSize);
+                        return new RegularHyperslabSelectionInfo(driver, rank, encodeSize);
                     else
-                        return new IrregularHyperslabSelectionInfo(reader, rank, encodeSize);
+                        return new IrregularHyperslabSelectionInfo(driver, rank, encodeSize);
 
                 default:
                     throw new NotSupportedException($"Only {nameof(H5S_SEL_HYPER)} of version 1, 2 or 3 are supported.");

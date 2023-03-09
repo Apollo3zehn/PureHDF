@@ -4,60 +4,60 @@
     {
         #region Constructors
 
-        public CompoundPropertyDescription(H5BaseReader reader, byte version, uint valueSize)
+        public CompoundPropertyDescription(H5DriverBase driver, byte version, uint valueSize)
         {
             switch (version)
             {
                 case 1:
 
                     // name
-                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                    Name = ReadUtils.ReadNullTerminatedString(driver, pad: true);
 
                     // member byte offset
-                    MemberByteOffset = reader.ReadUInt32();
+                    MemberByteOffset = driver.ReadUInt32();
 
                     // rank
-                    _ = reader.ReadByte();
+                    _ = driver.ReadByte();
 
                     // padding bytes
-                    reader.ReadBytes(3);
+                    driver.ReadBytes(3);
 
                     // dimension permutation
-                    _ = reader.ReadUInt32();
+                    _ = driver.ReadUInt32();
 
                     // padding byte
-                    reader.ReadBytes(4);
+                    driver.ReadBytes(4);
 
                     // dimension sizes
                     var dimensionSizes = new uint[4];
 
                     for (int i = 0; i < 4; i++)
                     {
-                        dimensionSizes[i] = reader.ReadUInt32();
+                        dimensionSizes[i] = driver.ReadUInt32();
                     }
 
                     // member type message
-                    MemberTypeMessage = new DatatypeMessage(reader);
+                    MemberTypeMessage = new DatatypeMessage(driver);
 
                     break;
 
                 case 2:
 
                     // name
-                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: true);
+                    Name = ReadUtils.ReadNullTerminatedString(driver, pad: true);
 
                     // member byte offset
-                    MemberByteOffset = reader.ReadUInt32();
+                    MemberByteOffset = driver.ReadUInt32();
 
                     // member type message
-                    MemberTypeMessage = new DatatypeMessage(reader);
+                    MemberTypeMessage = new DatatypeMessage(driver);
 
                     break;
 
                 case 3:
 
                     // name
-                    Name = ReadUtils.ReadNullTerminatedString(reader, pad: false);
+                    Name = ReadUtils.ReadNullTerminatedString(driver, pad: false);
 
                     // member byte offset
                     var byteCount = Utils.FindMinByteCount(valueSize);
@@ -69,13 +69,13 @@
 
                     for (ulong i = 0; i < byteCount; i++)
                     {
-                        buffer[i] = reader.ReadByte();
+                        buffer[i] = driver.ReadByte();
                     }
 
                     MemberByteOffset = BitConverter.ToUInt64(buffer, 0);
 
                     // member type message
-                    MemberTypeMessage = new DatatypeMessage(reader);
+                    MemberTypeMessage = new DatatypeMessage(driver);
 
                     break;
 

@@ -18,20 +18,20 @@ namespace PureHDF
 
         public BTree1Node(H5Context context, Func<T> decodeKey)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
             _context = context;
 
             _decodeKey = decodeKey;
 
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
 
-            NodeType = (BTree1NodeType)reader.ReadByte();
-            NodeLevel = reader.ReadByte();
-            EntriesUsed = reader.ReadUInt16();
+            NodeType = (BTree1NodeType)driver.ReadByte();
+            NodeLevel = driver.ReadByte();
+            EntriesUsed = driver.ReadUInt16();
 
-            LeftSiblingAddress = superblock.ReadOffset(reader);
-            RightSiblingAddress = superblock.ReadOffset(reader);
+            LeftSiblingAddress = superblock.ReadOffset(driver);
+            RightSiblingAddress = superblock.ReadOffset(driver);
 
             Keys = new T[EntriesUsed + 1];
             ChildAddresses = new ulong[EntriesUsed];
@@ -39,7 +39,7 @@ namespace PureHDF
             for (int i = 0; i < EntriesUsed; i++)
             {
                 Keys[i] = decodeKey();
-                ChildAddresses[i] = superblock.ReadOffset(reader);
+                ChildAddresses[i] = superblock.ReadOffset(driver);
             }
 
             Keys[EntriesUsed] = decodeKey();
@@ -63,7 +63,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node<T>(_context, _decodeKey);
             }
         }
@@ -72,7 +72,7 @@ namespace PureHDF
         {
             get
             {
-                _context.Reader.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
                 return new BTree1Node<T>(_context, _decodeKey);
             }
         }
@@ -108,7 +108,7 @@ namespace PureHDF
 
             if (NodeLevel > 0)
             {
-                _context.Reader.Seek((long)childAddress, SeekOrigin.Begin);
+                _context.Driver.Seek((long)childAddress, SeekOrigin.Begin);
                 var subtree = new BTree1Node<T>(_context, _decodeKey);
 
                 if (subtree.TryFindUserData(out userData, compare3, found))
@@ -135,7 +135,7 @@ namespace PureHDF
             {
                 foreach (var address in node.ChildAddresses)
                 {
-                    _context.Reader.Seek((long)address, SeekOrigin.Begin);
+                    _context.Driver.Seek((long)address, SeekOrigin.Begin);
 
                     var childNode = new BTree1Node<T>(_context, _decodeKey);
 

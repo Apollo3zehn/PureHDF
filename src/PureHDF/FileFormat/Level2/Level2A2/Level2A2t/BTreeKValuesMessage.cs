@@ -10,19 +10,19 @@
 
         #region Constructors
 
-        public BTreeKValuesMessage(H5BaseReader reader)
+        public BTreeKValuesMessage(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // indexed stroage internal node k
-            IndexedStorageInternalNodeK = reader.ReadUInt16();
+            IndexedStorageInternalNodeK = driver.ReadUInt16();
 
             // group internal node k
-            GroupInternalNodeK = reader.ReadUInt16();
+            GroupInternalNodeK = driver.ReadUInt16();
 
             // group leaf node k
-            GroupLeafNodeK = reader.ReadUInt16();
+            GroupLeafNodeK = driver.ReadUInt16();
         }
 
         #endregion

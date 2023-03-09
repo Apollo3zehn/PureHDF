@@ -410,64 +410,69 @@ public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 
 ```
 
-## 5.3 Tested External Filters
-- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md))
-- c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
-- bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
+## 5.3 Supported External Filters
 
-## 5.4 How to use Deflate (hardware accelerated)
-(1) Install the P/Invoke package:
+**Deflate (Intel ISA-L)**
 
-`dotnet add package Intrinsics.ISA-L.PInvoke`
+- based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/)
+- hardware accelerated: `SSE2` / `AVX2` / `AVX512`
+- [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md)
 
-(2) Add a copy of the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/DeflateHelper_Intel_ISA_L.cs) to your code.
-
-(3) Register Deflate:
+`dotnet add package PureHDF.Filters.Deflate.ISA-L`
 
 ```cs
+using PureHDF.Filters;
+
 H5Filter.Register(
     identifier: H5FilterID.Deflate, 
     name: "deflate", 
-    filterFunc: DeflateHelper_Intel_ISA_L.FilterFunc);
+    filterFunc: H5DeflateISAL.FilterFunction);
 ```
 
-(4) Enable unsafe code blocks in `.csproj`:
-```xml
-<PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-</PropertyGroup>
-```
+**Deflate (SharpZipLib)**
 
-## 5.5 How to use Blosc / Blosc2 (hardware accelerated)
-(1) Install the P/Invoke package:
+- based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib)
 
-`dotnet add package Blosc2.PInvoke`
-
-(2) Add a copy of the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BloscHelper.cs) to your code.
-
-(3) Register Blosc:
+`dotnet add package PureHDF.Filters.Deflate.SharpZipLib`
 
 ```cs
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: H5FilterID.Deflate, 
+    name: "deflate", 
+    filterFunc: H5DeflateSharpZipLib.FilterFunction);
+```
+
+**Blosc / Blosc2**
+
+- based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke)
+- hardware accelerated: `SSE2` / `AVX2`
+
+`dotnet add package PureHDF.Filters.Blosc2`
+
+```cs
+using PureHDF.Filters;
+
 H5Filter.Register(
     identifier: (H5FilterID)32001, 
     name: "blosc2", 
-    filterFunc: BloscHelper.FilterFunc);
+    filterFunc: H5Blosc2.FilterFunction);
 ```
 
-## 5.6 How to use BZip2
-(1) Install the SharpZipLib package:
+**BZip2 (SharpZipLib)**
 
-`dotnet add package SharpZipLib`
+- based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib)
 
-(2) Add a copy of the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Filters/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Filters/MemorySpanStream.cs) implementation to your code.
-
-(3) Register BZip2:
+`dotnet add package PureHDF.Filters.BZip2.SharpZipLib`
 
 ```cs
+using PureHDF.Filters;
+
 H5Filter.Register(
     identifier: (H5FilterID)307, 
     name: "bzip2", 
-    filterFunc: BZip2Helper.FilterFunc);
+    filterFunc: H5BZip2SharpZipLib.FilterFunc);
 ```
 
 # 6. Reading Compound Data

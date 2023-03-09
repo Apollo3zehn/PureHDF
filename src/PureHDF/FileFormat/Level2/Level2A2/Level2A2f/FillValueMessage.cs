@@ -12,14 +12,14 @@
 
         #region Constructors
 
-        public FillValueMessage(H5BaseReader reader)
+        public FillValueMessage(H5DriverBase driver)
         {
             // see also H5dcpl.c (H5P_is_fill_value_defined) and H5Dint.c (H5D__update_oh_info):
             // if size = 0 then default value should be applied
             // if size = -1 then fill value is explicitly undefined
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             uint size;
 
@@ -27,36 +27,36 @@
             {
                 case 1:
 
-                    AllocationTime = (SpaceAllocationTime)reader.ReadByte();
-                    FillTime = (FillValueWriteTime)reader.ReadByte();
+                    AllocationTime = (SpaceAllocationTime)driver.ReadByte();
+                    FillTime = (FillValueWriteTime)driver.ReadByte();
 
-                    var isDefined1 = reader.ReadByte() == 1;
+                    var isDefined1 = driver.ReadByte() == 1;
 
                     if (isDefined1)
                     {
-                        size = reader.ReadUInt32();
-                        Value = reader.ReadBytes((int)size);
+                        size = driver.ReadUInt32();
+                        Value = driver.ReadBytes((int)size);
                     }
 
                     break;
 
                 case 2:
 
-                    AllocationTime = (SpaceAllocationTime)reader.ReadByte();
-                    FillTime = (FillValueWriteTime)reader.ReadByte();
-                    var isDefined2 = reader.ReadByte() == 1;
+                    AllocationTime = (SpaceAllocationTime)driver.ReadByte();
+                    FillTime = (FillValueWriteTime)driver.ReadByte();
+                    var isDefined2 = driver.ReadByte() == 1;
 
                     if (isDefined2)
                     {
-                        size = reader.ReadUInt32();
-                        Value = reader.ReadBytes((int)size);
+                        size = driver.ReadUInt32();
+                        Value = driver.ReadBytes((int)size);
                     }
 
                     break;
 
                 case 3:
 
-                    var flags = reader.ReadByte();
+                    var flags = driver.ReadByte();
                     AllocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);   // take only bits 0 and 1
                     FillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);          // take only bits 2 and 3
                     var isUndefined = (flags & (1 << 4)) > 0;                           // take only bit 4
@@ -70,8 +70,8 @@
                     // defined
                     else if (isDefined3)
                     {
-                        size = reader.ReadUInt32();
-                        Value = reader.ReadBytes((int)size);
+                        size = driver.ReadUInt32();
+                        Value = driver.ReadBytes((int)size);
                     }
                     // default
                     else

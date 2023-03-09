@@ -4,21 +4,21 @@
     {
         #region Constructors
 
-        public ArrayPropertyDescription(H5BaseReader reader, byte version)
+        public ArrayPropertyDescription(H5DriverBase driver, byte version)
         {
             // rank
-            Rank = reader.ReadByte();
+            Rank = driver.ReadByte();
 
             // reserved
             if (version == 2)
-                reader.ReadBytes(3);
+                driver.ReadBytes(3);
 
             // dimension sizes
             DimensionSizes = new uint[Rank];
 
             for (int i = 0; i < Rank; i++)
             {
-                DimensionSizes[i] = reader.ReadUInt32();
+                DimensionSizes[i] = driver.ReadUInt32();
             }
 
             // permutation indices
@@ -28,12 +28,12 @@
             {
                 for (int i = 0; i < Rank; i++)
                 {
-                    PermutationIndices[i] = reader.ReadUInt32();
+                    PermutationIndices[i] = driver.ReadUInt32();
                 }
             }
 
             // base type
-            BaseType = new DatatypeMessage(reader);
+            BaseType = new DatatypeMessage(driver);
         }
 
         #endregion

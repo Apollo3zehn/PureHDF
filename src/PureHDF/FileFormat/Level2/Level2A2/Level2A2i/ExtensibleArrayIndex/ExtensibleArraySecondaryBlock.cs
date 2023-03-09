@@ -14,7 +14,7 @@ namespace PureHDF
 
         public ExtensibleArraySecondaryBlock(H5Context context, ExtensibleArrayHeader header, uint index)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // H5EAsblock.c (H5EA__sblock_alloc)
 
@@ -42,20 +42,20 @@ namespace PureHDF
             }
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, ExtensibleArraySecondaryBlock.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)driver.ReadByte();
 
             // header address
-            HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(driver);
 
             // block offset
-            BlockOffset = Utils.ReadUlong(reader, header.ArrayOffsetsSize);
+            BlockOffset = Utils.ReadUlong(driver, header.ArrayOffsetsSize);
 
             // page bitmap
             // H5EAcache.c (H5EA__cache_sblock_deserialize)
@@ -67,7 +67,7 @@ namespace PureHDF
                 var totalPageInitSize = dataBlocksCount * dataBlockPageInitBitMaskSize;
 
                 /* Retrieve the 'page init' bitmasks */
-                PageBitmap = reader.ReadBytes((int)totalPageInitSize);
+                PageBitmap = driver.ReadBytes((int)totalPageInitSize);
             }
             else
             {
@@ -79,11 +79,11 @@ namespace PureHDF
 
             for (ulong i = 0; i < dataBlocksCount; i++)
             {
-                DataBlockAddresses[i] = superblock.ReadOffset(reader);
+                DataBlockAddresses[i] = superblock.ReadOffset(driver);
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

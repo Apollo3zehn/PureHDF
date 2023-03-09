@@ -10,24 +10,24 @@
 
         #region Constructors
 
-        public VdsGlobalHeapBlock(H5BaseReader localReader, Superblock superblock)
+        public VdsGlobalHeapBlock(H5DriverBase localDriver, Superblock superblock)
         {
             // version
-            Version = localReader.ReadByte();
+            Version = localDriver.ReadByte();
 
             // entry count
-            var entryCount = superblock.ReadLength(localReader);
+            var entryCount = superblock.ReadLength(localDriver);
 
             // vds dataset entries
             VdsDatasetEntries = new VdsDatasetEntry[(int)entryCount];
 
             for (ulong i = 0; i < entryCount; i++)
             {
-                VdsDatasetEntries[i] = new VdsDatasetEntry(localReader);
+                VdsDatasetEntries[i] = new VdsDatasetEntry(localDriver);
             }
 
             // checksum
-            Checksum = localReader.ReadUInt32();
+            Checksum = localDriver.ReadUInt32();
         }
 
         #endregion

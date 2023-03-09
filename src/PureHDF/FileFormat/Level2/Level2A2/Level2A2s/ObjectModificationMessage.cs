@@ -10,16 +10,16 @@
 
         #region Constructors
 
-        public ObjectModificationMessage(H5BaseReader reader)
+        public ObjectModificationMessage(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(3);
+            driver.ReadBytes(3);
 
             // seconds after unix epoch
-            SecondsAfterUnixEpoch = reader.ReadUInt32();
+            SecondsAfterUnixEpoch = driver.ReadUInt32();
         }
 
         public ObjectModificationMessage(uint secondsAfterUnixEpoch)

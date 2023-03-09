@@ -4,10 +4,10 @@
     {
         #region Constructors
 
-        internal EnumerationPropertyDescription(H5BaseReader reader, byte version, uint valueSize, ushort memberCount)
+        internal EnumerationPropertyDescription(H5DriverBase driver, byte version, uint valueSize, ushort memberCount)
         {
             // base type
-            BaseType = new DatatypeMessage(reader);
+            BaseType = new DatatypeMessage(driver);
 
             // names
             Names = new List<string>(memberCount);
@@ -15,9 +15,9 @@
             for (int i = 0; i < memberCount; i++)
             {
                 if (version <= 2)
-                    Names.Add(ReadUtils.ReadNullTerminatedString(reader, pad: true));
+                    Names.Add(ReadUtils.ReadNullTerminatedString(driver, pad: true));
                 else
-                    Names.Add(ReadUtils.ReadNullTerminatedString(reader, pad: false));
+                    Names.Add(ReadUtils.ReadNullTerminatedString(driver, pad: false));
             }
 
             // values
@@ -25,7 +25,7 @@
 
             for (int i = 0; i < memberCount; i++)
             {
-                Values.Add(reader.ReadBytes((int)valueSize));
+                Values.Add(driver.ReadBytes((int)valueSize));
             }
         }
 

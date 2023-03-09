@@ -4,27 +4,27 @@
     {
         #region Constructors
 
-        public DatatypeMessage(H5BaseReader reader)
+        public DatatypeMessage(H5DriverBase driver)
         {
-            ClassVersion = reader.ReadByte();
+            ClassVersion = driver.ReadByte();
 
             BitField = Class switch
             {
-                DatatypeMessageClass.FixedPoint => new FixedPointBitFieldDescription(reader),
-                DatatypeMessageClass.FloatingPoint => new FloatingPointBitFieldDescription(reader),
-                DatatypeMessageClass.Time => new TimeBitFieldDescription(reader),
-                DatatypeMessageClass.String => new StringBitFieldDescription(reader),
-                DatatypeMessageClass.BitField => new BitFieldBitFieldDescription(reader),
-                DatatypeMessageClass.Opaque => new OpaqueBitFieldDescription(reader),
-                DatatypeMessageClass.Compound => new CompoundBitFieldDescription(reader),
-                DatatypeMessageClass.Reference => new ReferenceBitFieldDescription(reader),
-                DatatypeMessageClass.Enumerated => new EnumerationBitFieldDescription(reader),
-                DatatypeMessageClass.VariableLength => new VariableLengthBitFieldDescription(reader),
-                DatatypeMessageClass.Array => new ArrayBitFieldDescription(reader),
+                DatatypeMessageClass.FixedPoint => new FixedPointBitFieldDescription(driver),
+                DatatypeMessageClass.FloatingPoint => new FloatingPointBitFieldDescription(driver),
+                DatatypeMessageClass.Time => new TimeBitFieldDescription(driver),
+                DatatypeMessageClass.String => new StringBitFieldDescription(driver),
+                DatatypeMessageClass.BitField => new BitFieldBitFieldDescription(driver),
+                DatatypeMessageClass.Opaque => new OpaqueBitFieldDescription(driver),
+                DatatypeMessageClass.Compound => new CompoundBitFieldDescription(driver),
+                DatatypeMessageClass.Reference => new ReferenceBitFieldDescription(driver),
+                DatatypeMessageClass.Enumerated => new EnumerationBitFieldDescription(driver),
+                DatatypeMessageClass.VariableLength => new VariableLengthBitFieldDescription(driver),
+                DatatypeMessageClass.Array => new ArrayBitFieldDescription(driver),
                 _ => throw new NotSupportedException($"The data type message class '{Class}' is not supported.")
             };
 
-            Size = reader.ReadUInt32();
+            Size = driver.ReadUInt32();
 
             var memberCount = Class switch
             {
@@ -40,15 +40,15 @@
             {
                 DatatypePropertyDescription properties = Class switch
                 {
-                    DatatypeMessageClass.FixedPoint => new FixedPointPropertyDescription(reader),
-                    DatatypeMessageClass.FloatingPoint => new FloatingPointPropertyDescription(reader),
-                    DatatypeMessageClass.Time => new TimePropertyDescription(reader),
-                    DatatypeMessageClass.BitField => new BitFieldPropertyDescription(reader),
-                    DatatypeMessageClass.Opaque => new OpaquePropertyDescription(reader, GetOpaqueTagByteLength()),
-                    DatatypeMessageClass.Compound => new CompoundPropertyDescription(reader, Version, Size),
-                    DatatypeMessageClass.Enumerated => new EnumerationPropertyDescription(reader, Version, Size, GetEnumMemberCount()),
-                    DatatypeMessageClass.VariableLength => new VariableLengthPropertyDescription(reader),
-                    DatatypeMessageClass.Array => new ArrayPropertyDescription(reader, Version),
+                    DatatypeMessageClass.FixedPoint => new FixedPointPropertyDescription(driver),
+                    DatatypeMessageClass.FloatingPoint => new FloatingPointPropertyDescription(driver),
+                    DatatypeMessageClass.Time => new TimePropertyDescription(driver),
+                    DatatypeMessageClass.BitField => new BitFieldPropertyDescription(driver),
+                    DatatypeMessageClass.Opaque => new OpaquePropertyDescription(driver, GetOpaqueTagByteLength()),
+                    DatatypeMessageClass.Compound => new CompoundPropertyDescription(driver, Version, Size),
+                    DatatypeMessageClass.Enumerated => new EnumerationPropertyDescription(driver, Version, Size, GetEnumMemberCount()),
+                    DatatypeMessageClass.VariableLength => new VariableLengthPropertyDescription(driver),
+                    DatatypeMessageClass.Array => new ArrayPropertyDescription(driver, Version),
                     _ => throw new NotSupportedException($"The class '{Class}' is not supported on data type messages of version {Version}.")
                 };
 

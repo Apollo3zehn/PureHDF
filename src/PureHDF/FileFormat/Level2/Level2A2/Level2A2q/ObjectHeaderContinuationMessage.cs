@@ -6,10 +6,10 @@
 
         public ObjectHeaderContinuationMessage(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
-            Offset = superblock.ReadOffset(reader);
-            Length = superblock.ReadLength(reader);
+            Offset = superblock.ReadOffset(driver);
+            Length = superblock.ReadLength(driver);
         }
 
         #endregion

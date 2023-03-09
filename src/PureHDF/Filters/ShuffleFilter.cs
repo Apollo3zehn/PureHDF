@@ -2,7 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 #endif
 
-namespace PureHDF
+namespace PureHDF.Filters
 {
     internal static class ShuffleFilter
     {

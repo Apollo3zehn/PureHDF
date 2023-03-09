@@ -383,10 +383,10 @@ namespace PureHDF
 
             foreach (var record in records)
             {
-                using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
-                var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
+                using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
+                var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
 
-                yield return heapId.Read(reader =>
+                yield return heapId.Read(driver =>
                 {
                     var message = new LinkMessage(Context);
                     return message;
@@ -420,9 +420,9 @@ namespace PureHDF
                 else
                 {
                     // TODO: duplicate3_of_3
-                    using var localReader = new H5StreamReader(new MemoryStream(record.HeapId), leaveOpen: false);
-                    var heapId = FractalHeapId.Construct(Context, localReader, fractalHeap);
-                    candidate = heapId.Read(reader => new LinkMessage(Context));
+                    using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
+                    var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
+                    candidate = heapId.Read(driver => new LinkMessage(Context));
 
                     // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                     // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
@@ -452,7 +452,7 @@ namespace PureHDF
                     .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                    .GetTarget(linkAccess, useAsync: Context.Reader is H5FileStreamReader reader && reader.IsAsync),
+                    .GetTarget(linkAccess, useAsync: Context.Driver is H5FileStreamDriver driver && driver.IsAsync),
 #else
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
                     .GetTarget(linkAccess, useAsync: default),
@@ -494,7 +494,7 @@ namespace PureHDF
             {
                 return node.ChildAddresses.Select(address =>
                 {
-                    Context.Reader.Seek((long)address, SeekOrigin.Begin);
+                    Context.Driver.Seek((long)address, SeekOrigin.Begin);
                     return new SymbolTableNode(Context);
                 });
             });
@@ -542,7 +542,7 @@ namespace PureHDF
             /*
              * Load the symbol table node for exclusive access.
              */
-            Context.Reader.Seek((long)address, SeekOrigin.Begin);
+            Context.Driver.Seek((long)address, SeekOrigin.Begin);
             var symbolTableNode = new SymbolTableNode(Context);
 
             /*

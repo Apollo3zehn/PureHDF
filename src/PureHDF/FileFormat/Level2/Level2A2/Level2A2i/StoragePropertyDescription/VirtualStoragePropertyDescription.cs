@@ -6,13 +6,13 @@
 
         public VirtualStoragePropertyDescription(H5Context context)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // address
-            Address = superblock.ReadOffset(reader);
+            Address = superblock.ReadOffset(driver);
 
             // index
-            Index = reader.ReadUInt32();
+            Index = driver.ReadUInt32();
         }
 
         #endregion

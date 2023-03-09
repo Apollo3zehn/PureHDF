@@ -4,24 +4,24 @@
     {
         #region Constructors
 
-        public ObjectHeaderSharedMessageRecord(H5Context context) : base(context.Reader)
+        public ObjectHeaderSharedMessageRecord(H5Context context) : base(context.Driver)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // hash value
-            HashValue = reader.ReadUInt32();
+            HashValue = driver.ReadUInt32();
 
             // reserved
-            reader.ReadByte();
+            driver.ReadByte();
 
             // message type
-            MessageType = (MessageType)reader.ReadByte();
+            MessageType = (MessageType)driver.ReadByte();
 
             // creation index
-            CreationIndex = reader.ReadUInt16();
+            CreationIndex = driver.ReadUInt16();
 
             // object header address
-            ObjectHeaderAddress = superblock.ReadOffset(reader);
+            ObjectHeaderAddress = superblock.ReadOffset(driver);
         }
 
         #endregion

@@ -4,12 +4,12 @@
 //    {
 //        #region Constructors
 
-//        internal BTree2Record07_0(H5BinaryReader reader, MessageLocation messageLocation)
+//        internal BTree2Record07_0(H5DriverBase driver, MessageLocation messageLocation)
 //            : base(messageLocation)
 //        {
-//            Hash = reader.ReadBytes(4);
-//            ReferenceCount = reader.ReadUInt32();
-//            HeapId = reader.ReadBytes(8);
+//            Hash = driver.ReadBytes(4);
+//            ReferenceCount = driver.ReadUInt32();
+//            HeapId = driver.ReadBytes(8);
 //        }
 
 //        #endregion

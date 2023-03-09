@@ -10,13 +10,13 @@
 
         #region Constructors
 
-        public ObjectReferenceCountMessage(H5BaseReader reader)
+        public ObjectReferenceCountMessage(H5DriverBase driver)
         {
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reference count
-            ReferenceCount = reader.ReadUInt32();
+            ReferenceCount = driver.ReadUInt32();
         }
 
         #endregion

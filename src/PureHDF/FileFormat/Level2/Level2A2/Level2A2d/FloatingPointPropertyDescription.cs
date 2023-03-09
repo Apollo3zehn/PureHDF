@@ -4,15 +4,15 @@
     {
         #region Constructors
 
-        public FloatingPointPropertyDescription(H5BaseReader reader)
+        public FloatingPointPropertyDescription(H5DriverBase driver)
         {
-            BitOffset = reader.ReadUInt16();
-            BitPrecision = reader.ReadUInt16();
-            ExponentLocation = reader.ReadByte();
-            ExponentSize = reader.ReadByte();
-            MantissaLocation = reader.ReadByte();
-            MantissaSize = reader.ReadByte();
-            ExponentBias = reader.ReadUInt32();
+            BitOffset = driver.ReadUInt16();
+            BitPrecision = driver.ReadUInt16();
+            ExponentLocation = driver.ReadByte();
+            ExponentSize = driver.ReadByte();
+            MantissaLocation = driver.ReadByte();
+            MantissaSize = driver.ReadByte();
+            ExponentBias = driver.ReadUInt32();
         }
 
         #endregion

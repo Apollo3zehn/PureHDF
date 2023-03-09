@@ -12,9 +12,9 @@ namespace PureHDF
 
         #region Constructors
 
-        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5BaseReader, T> decode)
+        public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5DriverBase, T> decode)
         {
-            var (reader, superblock) = context;
+            var (driver, superblock) = context;
 
             // H5FAdblock.c (H5FA__dblock_alloc)
             ElementsPerPage = 1UL << header.PageBits;
@@ -32,22 +32,22 @@ namespace PureHDF
             }
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, FixedArrayDataBlock<T>.Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // client ID
-            ClientID = (ClientID)reader.ReadByte();
+            ClientID = (ClientID)driver.ReadByte();
 
             // header address
-            HeaderAddress = superblock.ReadOffset(reader);
+            HeaderAddress = superblock.ReadOffset(driver);
 
             // page bitmap
             if (PageCount > 0)
             {
-                PageBitmap = reader.ReadBytes((int)pageBitmapSize);
+                PageBitmap = driver.ReadBytes((int)pageBitmapSize);
                 Elements = Array.Empty<T>();
             }
             // elements
@@ -57,12 +57,12 @@ namespace PureHDF
 
                 Elements = Enumerable
                     .Range(0, (int)header.EntriesCount)
-                    .Select(i => decode(reader))
+                    .Select(i => decode(driver))
                     .ToArray();
             }
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
 
             // last page element count
             if (header.EntriesCount % ElementsPerPage == 0)

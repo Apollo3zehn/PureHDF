@@ -8,7 +8,7 @@ namespace PureHDF
 
         private byte _version;
         private byte[]? _data;
-        private readonly H5BaseReader _reader;
+        private readonly H5DriverBase _driver;
 
         #endregion
 
@@ -16,27 +16,27 @@ namespace PureHDF
 
         public LocalHeap(H5Context context)
         {
-            var (reader, superblock) = context;
-            _reader = reader;
+            var (driver, superblock) = context;
+            _driver = driver;
 
             // signature
-            var signature = reader.ReadBytes(4);
+            var signature = driver.ReadBytes(4);
             Utils.ValidateSignature(signature, Signature);
 
             // version
-            Version = reader.ReadByte();
+            Version = driver.ReadByte();
 
             // reserved
-            reader.ReadBytes(3);
+            driver.ReadBytes(3);
 
             // data segment size
-            DataSegmentSize = superblock.ReadLength(reader);
+            DataSegmentSize = superblock.ReadLength(driver);
 
             // free list head offset
-            FreeListHeadOffset = superblock.ReadLength(reader);
+            FreeListHeadOffset = superblock.ReadLength(driver);
 
             // data segment address
-            DataSegmentAddress = superblock.ReadOffset(reader);
+            DataSegmentAddress = superblock.ReadOffset(driver);
         }
 
         #endregion
@@ -70,8 +70,8 @@ namespace PureHDF
             {
                 if (_data is null)
                 {
-                    _reader.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
-                    _data = _reader.ReadBytes((int)DataSegmentSize);
+                    _driver.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
+                    _data = _driver.ReadBytes((int)DataSegmentSize);
                 }
 
                 return _data;

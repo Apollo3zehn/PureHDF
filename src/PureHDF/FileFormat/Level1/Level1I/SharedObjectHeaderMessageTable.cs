@@ -6,17 +6,17 @@ namespace PureHDF
     {
         #region Constructors
 
-        public SharedObjectHeaderMessageTable(H5BaseReader reader)
+        public SharedObjectHeaderMessageTable(H5DriverBase driver)
         {
             // signature
-            var signature = reader.ReadBytes(4);
-            Utils.ValidateSignature(signature, SharedObjectHeaderMessageTable.Signature);
+            var signature = driver.ReadBytes(4);
+            Utils.ValidateSignature(signature, Signature);
 
             //
             // TODO: implement this correctly
 
             // checksum
-            Checksum = reader.ReadUInt32();
+            Checksum = driver.ReadUInt32();
         }
 
         #endregion

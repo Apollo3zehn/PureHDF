@@ -21,25 +21,25 @@ namespace PureHDF
 
             // version
             if (version == 1)
-                Type = (MessageType)context.Reader.ReadUInt16();
+                Type = (MessageType)context.Driver.ReadUInt16();
             else if (version == 2)
-                Type = (MessageType)context.Reader.ReadByte();
+                Type = (MessageType)context.Driver.ReadByte();
 
             // data size
-            DataSize = context.Reader.ReadUInt16();
+            DataSize = context.Driver.ReadUInt16();
 
             // flags
-            Flags = (MessageFlags)context.Reader.ReadByte();
+            Flags = (MessageFlags)context.Driver.ReadByte();
 
             // reserved / creation order
             if (version == 1)
-                context.Reader.ReadBytes(3);
+                context.Driver.ReadBytes(3);
 
             else if (version == 2 && withCreationOrder)
-                CreationOrder = context.Reader.ReadUInt16();
+                CreationOrder = context.Driver.ReadUInt16();
 
             // data
-            var readerPosition1 = context.Reader.Position;
+            var driverPosition1 = context.Driver.Position;
 
             /* Search for "H5O_SHARED_DECODE_REAL" in C-code to find all shareable messages */
 
@@ -48,33 +48,33 @@ namespace PureHDF
                 MessageType.NIL => new NilMessage(),
                 MessageType.Dataspace => objectHeader.DecodeMessage(Flags, () => new DataspaceMessage(context)),
                 MessageType.LinkInfo => new LinkInfoMessage(context),
-                MessageType.Datatype => objectHeader.DecodeMessage(Flags, () => new DatatypeMessage(context.Reader)),
-                MessageType.OldFillValue => objectHeader.DecodeMessage(Flags, () => new OldFillValueMessage(context.Reader)),
-                MessageType.FillValue => objectHeader.DecodeMessage(Flags, () => new FillValueMessage(context.Reader)),
+                MessageType.Datatype => objectHeader.DecodeMessage(Flags, () => new DatatypeMessage(context.Driver)),
+                MessageType.OldFillValue => objectHeader.DecodeMessage(Flags, () => new OldFillValueMessage(context.Driver)),
+                MessageType.FillValue => objectHeader.DecodeMessage(Flags, () => new FillValueMessage(context.Driver)),
                 MessageType.Link => new LinkMessage(context),
                 MessageType.ExternalDataFiles => new ExternalFileListMessage(context),
                 MessageType.DataLayout => DataLayoutMessage.Construct(context),
-                MessageType.Bogus => new BogusMessage(context.Reader),
-                MessageType.GroupInfo => new GroupInfoMessage(context.Reader),
-                MessageType.FilterPipeline => objectHeader.DecodeMessage(Flags, () => new FilterPipelineMessage(context.Reader)),
+                MessageType.Bogus => new BogusMessage(context.Driver),
+                MessageType.GroupInfo => new GroupInfoMessage(context.Driver),
+                MessageType.FilterPipeline => objectHeader.DecodeMessage(Flags, () => new FilterPipelineMessage(context.Driver)),
                 MessageType.Attribute => objectHeader.DecodeMessage(Flags, () => new AttributeMessage(context, objectHeader)),
-                MessageType.ObjectComment => new ObjectCommentMessage(context.Reader),
-                MessageType.OldObjectModificationTime => new OldObjectModificationTimeMessage(context.Reader).ToObjectModificationMessage(),
+                MessageType.ObjectComment => new ObjectCommentMessage(context.Driver),
+                MessageType.OldObjectModificationTime => new OldObjectModificationTimeMessage(context.Driver).ToObjectModificationMessage(),
                 MessageType.SharedMessageTable => new SharedMessageTableMessage(context),
                 MessageType.ObjectHeaderContinuation => new ObjectHeaderContinuationMessage(context),
                 MessageType.SymbolTable => new SymbolTableMessage(context),
-                MessageType.ObjectModification => new ObjectModificationMessage(context.Reader),
-                MessageType.BTreeKValues => new BTreeKValuesMessage(context.Reader),
-                MessageType.DriverInfo => new DriverInfoMessage(context.Reader),
+                MessageType.ObjectModification => new ObjectModificationMessage(context.Driver),
+                MessageType.BTreeKValues => new BTreeKValuesMessage(context.Driver),
+                MessageType.DriverInfo => new DriverInfoMessage(context.Driver),
                 MessageType.AttributeInfo => new AttributeInfoMessage(context),
-                MessageType.ObjectReferenceCount => new ObjectReferenceCountMessage(context.Reader),
+                MessageType.ObjectReferenceCount => new ObjectReferenceCountMessage(context.Driver),
                 _ => throw new NotSupportedException($"The message type '{Type}' is not supported.")
             };
 
-            var readerPosition2 = context.Reader.Position;
-            var paddingBytes = DataSize - (readerPosition2 - readerPosition1);
+            var driverPosition2 = context.Driver.Position;
+            var paddingBytes = DataSize - (driverPosition2 - driverPosition1);
 
-            context.Reader.ReadBytes((int)paddingBytes);
+            context.Driver.ReadBytes((int)paddingBytes);
         }
 
         #endregion

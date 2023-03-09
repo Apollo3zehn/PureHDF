@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public RegularHyperslabSelectionInfo(H5BaseReader reader, uint rank, byte encodeSize)
+        public RegularHyperslabSelectionInfo(H5DriverBase driver, uint rank, byte encodeSize)
         {
             Rank = rank;
 
@@ -17,10 +17,10 @@
 
             for (int i = 0; i < Rank; i++)
             {
-                Starts[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
-                Strides[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
-                Counts[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
-                Blocks[i] = H5S_SEL.ReadEncodedValue(reader, encodeSize);
+                Starts[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+                Strides[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+                Counts[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+                Blocks[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
 
                 CompactDimensions[i] = Blocks[i] * Counts[i];
             }
