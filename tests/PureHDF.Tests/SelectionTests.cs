@@ -1024,7 +1024,7 @@ namespace PureHDF.Tests.Reading
                     _ = H5F.close(fileId);
                 }
 
-                using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
+                using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
                 var dataset = (H5Dataset)root.Dataset("/chunked/hyperslab");
 
                 /* get intermediate data (only for Matlab visualization) */

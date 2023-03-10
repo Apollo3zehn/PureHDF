@@ -14,7 +14,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddContiguousDataset(fileId));
 
                 // Act
-                using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
+                using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("contiguous");
                 var dataset = parent.Dataset("contiguous");
                 var actual = dataset.Read<int>();
@@ -41,7 +41,7 @@ namespace PureHDF.Tests.Reading
                 .ToArray();
 
             // Act
-            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
             var group = root.Group("fillvalue");
             var dataset = group.Dataset($"{LayoutClass.Contiguous}");
             var actual = dataset.Read<int>();
@@ -62,7 +62,7 @@ namespace PureHDF.Tests.Reading
                 .ToArray();
 
             // Act
-            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
             var group = root.Group("fillvalue");
             var dataset = group.Dataset($"{LayoutClass.Contiguous}");
             var actual = await dataset.ReadAsync<int>();
@@ -89,7 +89,7 @@ namespace PureHDF.Tests.Reading
                 }
 
                 // Act
-                using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
+                using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("external");
                 var dataset = parent.Dataset("external_file");
                 var actual = dataset.Read<int>();
@@ -118,7 +118,7 @@ namespace PureHDF.Tests.Reading
                 }
 
                 // Act
-                using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
+                using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("external");
                 var dataset = parent.Dataset("external_file");
                 var actual = await dataset.ReadAsync<int>();

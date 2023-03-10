@@ -1,11 +1,10 @@
-﻿namespace PureHDF
+﻿namespace PureHDF;
+
+// I. Introduction
+internal enum ObjectType
 {
-    // I. Introduction
-    internal enum ObjectType
-    {
-        Undefined,
-        Group,
-        Dataset,
-        CommitedDatatype
-    }
+    Undefined,
+    Group,
+    Dataset,
+    CommitedDatatype
 }

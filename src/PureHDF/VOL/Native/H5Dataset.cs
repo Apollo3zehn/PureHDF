@@ -20,7 +20,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
 
     #region Constructors
 
-    internal H5Dataset(InternalH5File file, H5Context context, NamedReference reference, ObjectHeader header)
+    internal H5Dataset(NativeH5File file, H5Context context, NamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         File = file;
@@ -87,7 +87,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
 
     #region Properties
 
-    public IH5NativeFile File { get; }
+    public IH5File File { get; }
 
     public IH5Dataspace Space
     {

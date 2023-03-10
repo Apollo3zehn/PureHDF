@@ -1,10 +1,9 @@
 ﻿using System.Reflection;
 
-namespace PureHDF
+namespace PureHDF;
+
+struct FieldProperties
 {
-    struct FieldProperties
-    {
-        public FieldInfo FieldInfo { get; set; }
-        public IntPtr Offset { get; set; }
-    }
+    public FieldInfo FieldInfo { get; set; }
+    public IntPtr Offset { get; set; }
 }

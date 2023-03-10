@@ -60,7 +60,7 @@
         public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             IH5ReadStream stream = new VirtualDatasetStream<TResult>(
-                (InternalH5File)Dataset.File,
+                (NativeH5File)Dataset.File,
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.DataspaceMessage.DimensionSizes,
                 fillValue: _fillValue,

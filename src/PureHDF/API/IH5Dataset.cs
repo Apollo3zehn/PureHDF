@@ -10,7 +10,7 @@ public interface IH5Dataset : IH5AttributableObject
     /// <summary>
     /// A reference to the <see cref="H5File"/> that this dataset belongs to.
     /// </summary>
-    IH5NativeFile File { get; }
+    IH5File File { get; }
 
     /// <summary>
     /// Gets the data space.
