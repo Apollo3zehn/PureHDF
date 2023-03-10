@@ -5,7 +5,7 @@
     <PackageTags>HDF HDF5 hierarchical data file H5 Blosc Blosc2</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../../doc/images/icon.png" Pack="true" PackagePath="/" />
+    <None Include="../../doc/images/nuget.png" Pack="true" PackagePath="/" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 

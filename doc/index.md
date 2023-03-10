@@ -1,12 +1,5 @@
 **See https://github.com/Apollo3zehn/PureHDF/issues/4 for not yet implemented features.**
 
-| API Documentation |
-| ------------------ |
-| [.NET Standard 2.0](https://apollo3zehn.github.io/PureHDF/api/netstandard2.0/PureHDF.html) |
-| [.NET Standard 2.1](https://apollo3zehn.github.io/PureHDF/api/netstandard2.1/PureHDF.html) |
-| [.NET 5](https://apollo3zehn.github.io/PureHDF/api/net5.0/PureHDF.html) |
-| [.NET 6](https://apollo3zehn.github.io/PureHDF/api/net6.0/PureHDF.html) |
-
 # PureHDF
 
 [![GitHub Actions](https://github.com/Apollo3zehn/PureHDF/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/PureHDF/actions) [![NuGet](https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget)](https://www.nuget.org/packages/PureHDF)

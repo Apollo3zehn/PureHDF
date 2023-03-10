@@ -3,13 +3,12 @@
     {
       "src": [
         {
-          "src": "../",
           "files": [
             "src/**.csproj"
           ]
         }
       ],
-      "dest": "api",
+      "dest": "artifacts/_api",
       "filter": "filterConfig.yml",
       "properties": {
         "TargetFramework": "net70"
@@ -20,30 +19,30 @@
     "content": [
       {
         "files": [
-          "*.md",
-          "toc.yml"
+          "doc/*.md",
+          "doc/toc.yml"
         ]
       },
       {
         "files": [
-          "api/**.yml",
-          "api/index.md"
+          "artifacts/_api/**.yml",
+          "artifacts/_api/index.md"
         ]
       }
     ],
     "resource": [
       {
         "files": [
-          "images/**"
+          "doc/images/**"
         ]
       }
     ],
-    "dest": "_site",
+    "dest": "artifacts/docfx",
     "globalMetadata": {
       "_appTitle": "PureHDF",
       "_appFooter": "Copyright © 2023 Vincent Wilms",
-      "_appFaviconPath": "images/icon.svg",
-      "_appLogoPath": "images/icon.svg"
+      "_appFaviconPath": "doc/images/icon.ico",
+      "_appLogoPath": "doc/images/logo.svg"
     },
     "fileMetadataFiles": [],
     "template":["default","templates/material"],
