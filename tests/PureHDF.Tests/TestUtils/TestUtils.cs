@@ -136,7 +136,7 @@ namespace PureHDF.Tests
             _ = H5G.close(groupId);
         }
 
-        public static bool ReadAndCompare<T>(H5Dataset dataset, T[] expected)
+        public static bool ReadAndCompare<T>(IH5Dataset dataset, T[] expected)
             where T : unmanaged
         {
             var actual = dataset.Read<T>();

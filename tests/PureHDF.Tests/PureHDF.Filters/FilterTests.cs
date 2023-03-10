@@ -228,7 +228,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Fletcher(fileId));
 
             // Act
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("fletcher");
             var actual = dataset.Read<int>();
@@ -263,7 +263,7 @@ namespace PureHDF.Tests.Reading.Filters
                 H5Filter.Register(H5FilterID.Deflate, "deflate", func);
 
             // Act
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("deflate");
             var actual = dataset.Read<int>();
@@ -280,7 +280,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Multi(fileId));
 
             // Act
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("multi");
             var actual = dataset.Read<int>();
@@ -323,9 +323,9 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
-            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
+            var dataset = (H5Dataset)parent.Dataset($"shuffle_{bytesOfType}");
 
             var actual_shuffled = dataset
                 .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
@@ -374,9 +374,9 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
-            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
+            var dataset = (H5Dataset)parent.Dataset($"shuffle_{bytesOfType}");
 
             var actual_shuffled = dataset
                 .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
@@ -424,9 +424,9 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
-            var dataset = parent.Dataset($"shuffle_{bytesOfType}");
+            var dataset = (H5Dataset)parent.Dataset($"shuffle_{bytesOfType}");
 
             var actual_shuffled = dataset
                 .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
@@ -589,7 +589,7 @@ namespace PureHDF.Tests.Reading.Filters
             };
 
             /* continue */
-            using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
+            using var root = InternalH5File.OpenRead(filePath, deleteOnClose: true);
 
             var attribute = root
                 .Group("small")

@@ -110,7 +110,7 @@ public class SourceGenerator : ISourceGenerator
         return output;
     }
 
-    private static string GenerateSource(string className, string classNamespace, string accessibilityString, H5File root)
+    private static string GenerateSource(string className, string classNamespace, string accessibilityString, IH5NativeFile root)
     {
         var classDefinitions = new List<string>();
 
@@ -165,7 +165,7 @@ public class SourceGenerator : ISourceGenerator
 
     private static void ProcessGroup(
         string path,
-        H5Group group,
+        IH5Group group,
         string accessibilityString,
         List<string> classDefinitions)
     {
@@ -200,22 +200,25 @@ public class SourceGenerator : ISourceGenerator
 
             var constructor = link switch
             {
-                H5Group subGroup => $"""            {propertyName} = new {GetPath(path, group, subGroup).Replace('/', '_')}(_parent.Group("{link.Name}"));""",
-                _ => $"""            {propertyName} = _parent.Get<{link.GetType().Name}>("{link.Name}");"""
+                IH5Group subGroup => $"""            {propertyName} = new {GetPath(path, group, subGroup).Replace('/', '_')}(_parent.Group("{link.Name}"));""",
+                IH5Dataset => $"""            {propertyName} = _parent.Get<IH5Dataset>("{link.Name}");""",
+                IH5CommitedDatatype => $"""            {propertyName} = _parent.Get<IH5CommitedDatatype>("{link.Name}");""",
+                IH5UnresolvedLink => $"""            {propertyName} = _parent.Get<IH5UnresolvedLink>("{link.Name}");""",
+                _ => throw new Exception("Unknown link type")
             };
 
             constructorBuilder.AppendLine(constructor);
 
             var propertyDefinition = link switch
             {
-                H5Group subGroup => $$"""public {{GetPath(path, group, subGroup).Replace('/', '_')}} {{NormalizeName(subGroup.Name)}} { get; }""",
-                H5Dataset => $$"""public H5Dataset {{propertyName}} { get; }""",
-                H5CommitedDatatype => $$"""public H5CommitedDatatype {{propertyName}} { get; }""",
-                H5UnresolvedLink => $$"""public H5UnresolvedLink {{propertyName}} { get; }""",
+                IH5Group subGroup => $$"""public {{GetPath(path, group, subGroup).Replace('/', '_')}} {{NormalizeName(subGroup.Name)}} { get; }""",
+                IH5Dataset => $$"""public IH5Dataset {{propertyName}} { get; }""",
+                IH5CommitedDatatype => $$"""public IH5CommitedDatatype {{propertyName}} { get; }""",
+                IH5UnresolvedLink => $$"""public IH5UnresolvedLink {{propertyName}} { get; }""",
                 _ => throw new Exception("Unknown link type")
             };
 
-            if (link is H5Group subGroup2)
+            if (link is IH5Group subGroup2)
                 ProcessGroup(
                 path: GetPath(path, group, subGroup2),
                 subGroup2,
@@ -253,7 +256,7 @@ public class SourceGenerator : ISourceGenerator
 
             constructorAccessibilityString = "public ";
             partialString = "partial ";
-            parentGroupString = "H5File file";
+            parentGroupString = "IH5NativeFile file";
         }
 
         else
@@ -261,7 +264,7 @@ public class SourceGenerator : ISourceGenerator
             constructorDocString = "";
             constructorAccessibilityString = "internal ";
             partialString = "";
-            parentGroupString = "H5Group parent";
+            parentGroupString = "IH5Group parent";
         }
 
         var classSource =
@@ -271,7 +274,7 @@ public class SourceGenerator : ISourceGenerator
             /// </summary>
             {{accessibilityString}} {{partialString}}class {{className}}
             {
-                private H5Group _parent;
+                private IH5Group _parent;
 
         {{constructorDocString}}
                 {{constructorAccessibilityString}} {{className}}({{parentGroupString}})
@@ -283,14 +286,14 @@ public class SourceGenerator : ISourceGenerator
                 /// <summary>
                 /// Gets the current group.
                 /// </summary>
-                public H5Group Get() => _parent;
+                public IH5Group Get() => _parent;
             }
         """;
 
         classDefinitions.Add(classSource);
     }
 
-    private static string GetPath(string path, H5Group group, H5Group subGroup)
+    private static string GetPath(string path, IH5Group group, IH5Group subGroup)
     {
         return group.Name == "/"
             ? subGroup.Name

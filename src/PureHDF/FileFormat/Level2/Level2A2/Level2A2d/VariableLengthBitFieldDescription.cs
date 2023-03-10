@@ -13,11 +13,11 @@
 
         #region Properties
 
-        public VariableLengthType Type
+        public InternalVariableLengthType Type
         {
             get
             {
-                return (VariableLengthType)(Data[0] & 0x0F);
+                return (InternalVariableLengthType)(Data[0] & 0x0F);
             }
             set
             {

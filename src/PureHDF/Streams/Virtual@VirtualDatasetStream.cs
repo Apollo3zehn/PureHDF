@@ -4,19 +4,19 @@
 
     internal class VirtualDatasetStream<TResult> : IH5ReadStream
     {
-        private record class DatasetInfo(H5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
+        private record class DatasetInfo(InternalH5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
 
         private long _position;
         private readonly ulong[] _virtualDimensions;
         private readonly TResult? _fillValue;
-        private readonly H5File _file;
+        private readonly InternalH5File _file;
         private readonly H5DatasetAccess _datasetAccess;
         private readonly VdsDatasetEntry[] _entries;
         private readonly Dictionary<VdsDatasetEntry, DatasetInfo> _datasetInfoMap = new();
         private readonly ReadVirtualDelegate<TResult> _readVirtual;
 
         public VirtualDatasetStream(
-            H5File file,
+            InternalH5File file,
             VdsDatasetEntry[] entries, 
             ulong[] dimensions, 
             TResult? fillValue,
@@ -173,7 +173,7 @@
                         // this file
                         ? _file
                         // external file
-                        : H5File.OpenRead(filePath);
+                        : (InternalH5File)H5File.OpenRead(filePath);
 
                     if (file.LinkExists(entry.SourceDataset, linkAccess: default /* no link access available */))
                     {
@@ -183,7 +183,7 @@
                         if (_datasetAccess.ChunkCacheFactory is null)
                             datasetAccess = _datasetAccess with { ChunkCacheFactory = () => chunkCache };
 
-                        var dataset = file.Dataset(entry.SourceDataset);
+                        var dataset = (H5Dataset)file.Dataset(entry.SourceDataset);
 
                         info = new DatasetInfo(file, dataset, datasetAccess);
                         _datasetInfoMap[entry] = info;

@@ -56,7 +56,7 @@
         {
             if (_header is null)
             {
-                Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
                 _header = new FixedArrayHeader(Dataset.Context);
             }
 

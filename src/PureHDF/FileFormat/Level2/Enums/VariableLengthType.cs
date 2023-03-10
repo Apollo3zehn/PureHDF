@@ -1,6 +1,6 @@
 ﻿namespace PureHDF
 {
-    internal enum VariableLengthType
+    internal enum InternalVariableLengthType
     {
         Sequence = 0,
         String = 1

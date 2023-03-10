@@ -84,10 +84,10 @@ foreach (var link in group.Children)
 {
     var message = link switch
     {
-        H5Group group               => $"I am a group and my name is '{group.Name}'.",
-        H5Dataset dataset           => $"I am a dataset, call me '{dataset.Name}'.",
-        H5CommitedDatatype datatype => $"I am the data type '{datatype.Name}'.",
-        H5UnresolvedLink lostLink   => $"I cannot find my link target =( shame on '{lostLink.Name}'."
+        IH5Group group               => $"I am a group and my name is '{group.Name}'.",
+        IH5Dataset dataset           => $"I am a dataset, call me '{dataset.Name}'.",
+        IH5CommitedDatatype datatype => $"I am the data type '{datatype.Name}'.",
+        IH5UnresolvedLink lostLink   => $"I cannot find my link target =( shame on '{lostLink.Name}'."
         _                           => throw new Exception("Unknown link type")
     };
 
@@ -95,7 +95,7 @@ foreach (var link in group.Children)
 }
 ```
 
-An `H5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
+An `IH5UnresolvedLink` becomes part of the `Children` collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.
 
 ### External Files
 

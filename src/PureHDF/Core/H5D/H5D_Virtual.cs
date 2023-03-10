@@ -22,7 +22,7 @@
             _fillValue = fillValue;
             _readVirtualDelegate = readVirtualDelegate;
 
-            var layoutMessage = (DataLayoutMessage4)dataset.InternalDataLayout;
+            var layoutMessage = (DataLayoutMessage4)dataset.DataLayoutMessage;
             var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
             var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
@@ -37,7 +37,7 @@
 
             // -> for now unlimited dimensions will not be supported
 
-            foreach (var dimension in Dataset.InternalDataspace.DimensionSizes)
+            foreach (var dimension in Dataset.DataspaceMessage.DimensionSizes)
             {
                 if (dimension == H5Constants.Unlimited)
                     throw new Exception("Virtual datasets with unlimited dimensions are not supported.");
@@ -54,15 +54,15 @@
 
         public override ulong[] GetChunkDims()
         {
-            return Dataset.InternalDataspace.DimensionSizes;
+            return Dataset.DataspaceMessage.DimensionSizes;
         }
 
         public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             IH5ReadStream stream = new VirtualDatasetStream<TResult>(
-                Dataset.File,
+                (InternalH5File)Dataset.File,
                 _block.VdsDatasetEntries, 
-                dimensions: Dataset.InternalDataspace.DimensionSizes,
+                dimensions: Dataset.DataspaceMessage.DimensionSizes,
                 fillValue: _fillValue,
                 DatasetAccess,
                 _readVirtualDelegate

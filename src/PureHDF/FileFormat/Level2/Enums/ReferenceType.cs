@@ -1,6 +1,6 @@
 ﻿namespace PureHDF
 {
-    internal enum ReferenceType
+    internal enum InternalReferenceType
     {
         ObjectReference = 0,
         DatasetRegionReference = 1

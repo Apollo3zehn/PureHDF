@@ -27,17 +27,17 @@
 
         public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
-            var address = Dataset.InternalDataLayout.Address;
+            var address = Dataset.DataLayoutMessage.Address;
 
             if (_stream is null)
             {
                 if (Dataset.Context.Superblock.IsUndefinedAddress(address))
                 {
                     if (Dataset.InternalExternalFileList is not null)
-                        _stream = new ExternalFileListStream(Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
+                        _stream = new ExternalFileListStream((InternalH5File)Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
 
                     else
-                        _stream = new UnsafeFillValueStream(Dataset.InternalFillValue.Value ?? new byte[] { 0 });
+                        _stream = new UnsafeFillValueStream(Dataset.FillValueMessage.Value ?? new byte[] { 0 });
                 }
                 else
                 {

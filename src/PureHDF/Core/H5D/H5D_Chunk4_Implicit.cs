@@ -13,7 +13,7 @@
             var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
             var chunkOffset = chunkIndex * ChunkByteSize;
 
-            return new ChunkInfo(Dataset.InternalDataLayout.Address + chunkOffset, ChunkByteSize, 0);
+            return new ChunkInfo(Dataset.DataLayoutMessage.Address + chunkOffset, ChunkByteSize, 0);
         }
     }
 }

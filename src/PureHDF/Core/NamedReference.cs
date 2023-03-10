@@ -6,7 +6,7 @@ namespace PureHDF
     {
         #region Constructors
 
-        public NamedReference(string name, ulong value, H5File file)
+        public NamedReference(string name, ulong value, InternalH5File file)
         {
             Name = name;
             Value = value;
@@ -32,7 +32,7 @@ namespace PureHDF
 
         public ulong Value { get; }
 
-        public H5File? File { get; }
+        public InternalH5File? File { get; }
 
         public ObjectHeaderScratchPad? ScratchPad { get; set; }
 

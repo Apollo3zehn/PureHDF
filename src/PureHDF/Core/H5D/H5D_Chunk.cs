@@ -33,7 +33,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
         _chunkCache = chunkCacheFactory();
 
-        _indexAddressIsUndefined = dataset.Context.Superblock.IsUndefinedAddress(dataset.InternalDataLayout.Address);
+        _indexAddressIsUndefined = dataset.Context.Superblock.IsUndefinedAddress(dataset.DataLayoutMessage.Address);
     }
 
     #endregion
@@ -72,7 +72,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     public static H5D_Chunk Create(H5Dataset dataset, H5DatasetAccess datasetAccess)
     {
-        return dataset.InternalDataLayout switch
+        return dataset.DataLayoutMessage switch
         {
             DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(dataset, layout12, datasetAccess),
 
@@ -99,7 +99,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
             DataLayoutMessage3 layout3 => new H5D_Chunk123_BTree1(dataset, layout3, datasetAccess),
 
-            _ => throw new Exception($"Data layout message type '{dataset.InternalDataLayout.GetType().Name}' is not supported.")
+            _ => throw new Exception($"Data layout message type '{dataset.DataLayoutMessage.GetType().Name}' is not supported.")
         };
     }
 
@@ -110,9 +110,9 @@ internal abstract class H5D_Chunk : H5D_Base
         RawChunkDims = GetRawChunkDims();
         ChunkDims = RawChunkDims[..^1].ToArray();
         ChunkRank = (byte)ChunkDims.Length;
-        ChunkByteSize = Utils.CalculateSize(ChunkDims) * Dataset.InternalDataType.Size;
-        Dims = Dataset.InternalDataspace.DimensionSizes;
-        MaxDims = Dataset.InternalDataspace.DimensionMaxSizes;
+        ChunkByteSize = Utils.CalculateSize(ChunkDims) * Dataset.DataTypeMessage.Size;
+        Dims = Dataset.DataspaceMessage.DimensionSizes;
+        MaxDims = Dataset.DataspaceMessage.DimensionMaxSizes;
         TotalChunkCount = 1;
         TotalMaxChunkCount = 1;
 
@@ -170,8 +170,8 @@ internal abstract class H5D_Chunk : H5D_Base
         // TODO: This way, fill values will become part of the cache
         if (_indexAddressIsUndefined)
         {
-            if (Dataset.InternalFillValue.Value is not null)
-                buffer.AsSpan().Fill(Dataset.InternalFillValue.Value);
+            if (Dataset.FillValueMessage.Value is not null)
+                buffer.AsSpan().Fill(Dataset.FillValueMessage.Value);
         }
         else
         {
@@ -179,8 +179,8 @@ internal abstract class H5D_Chunk : H5D_Base
 
             if (Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
-                if (Dataset.InternalFillValue.Value is not null)
-                    buffer.AsSpan().Fill(Dataset.InternalFillValue.Value);
+                if (Dataset.FillValueMessage.Value is not null)
+                    buffer.AsSpan().Fill(Dataset.FillValueMessage.Value);
             }
 
             else

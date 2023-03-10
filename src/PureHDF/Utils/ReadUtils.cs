@@ -208,7 +208,7 @@ namespace PureHDF
                         (DatatypeMessageClass.Enumerated, _)
                             => (ReadEnumerated(context, memberType, slicedData) ?? new object[1]).GetValue(0),
 
-                        (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String
+                        (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == InternalVariableLengthType.String
                             => ReadString(context, memberType, slicedData, oneElementStringArray).Span[0],
 
                         (DatatypeMessageClass.Array, _)
@@ -266,7 +266,7 @@ namespace PureHDF
                 (DatatypeMessageClass.Enumerated, _)
                     => ReadEnumerated(context, baseType, slicedData),
 
-                (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == VariableLengthType.String
+                (DatatypeMessageClass.VariableLength, _) when variableLengthBitfield!.Type == InternalVariableLengthType.String
                     => ReadString(context, baseType, slicedData),
 
                 (DatatypeMessageClass.Array, _)
@@ -365,8 +365,8 @@ namespace PureHDF
                 if (datatype.BitField is not VariableLengthBitFieldDescription bitField)
                     throw new Exception("Variable-length bit field description must not be null.");
 
-                if (bitField.Type != VariableLengthType.String)
-                    throw new Exception($"Variable-length type must be '{VariableLengthType.String}'.");
+                if (bitField.Type != InternalVariableLengthType.String)
+                    throw new Exception($"Variable-length type must be '{InternalVariableLengthType.String}'.");
 
                 // see IV.B. Disk Format: Level 2B - Data Object Data Storage
                 using var localDriver = new H5StreamDriver(new MemoryStream(source.ToArray()), leaveOpen: false);

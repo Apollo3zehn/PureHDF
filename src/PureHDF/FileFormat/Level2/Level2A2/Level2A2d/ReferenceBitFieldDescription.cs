@@ -13,11 +13,11 @@
 
         #region Properties
 
-        public ReferenceType Type
+        public InternalReferenceType Type
         {
             get
             {
-                return (ReferenceType)(Data[0] & 0x0F);
+                return (InternalReferenceType)(Data[0] & 0x0F);
             }
             set
             {

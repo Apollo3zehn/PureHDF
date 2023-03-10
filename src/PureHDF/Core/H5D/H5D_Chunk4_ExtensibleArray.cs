@@ -33,7 +33,7 @@
         {
             base.Initialize();
 
-            _unlimitedDim = Dataset.InternalDataspace.DimensionMaxSizes
+            _unlimitedDim = Dataset.DataspaceMessage.DimensionMaxSizes
                .ToList()
                .FindLastIndex(value => value == H5Constants.Unlimited);
 
@@ -133,7 +133,7 @@
         {
             if (_header is null)
             {
-                Dataset.Context.Driver.Seek((long)Dataset.InternalDataLayout.Address, SeekOrigin.Begin);
+                Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
                 _header = new ExtensibleArrayHeader(Dataset.Context);
             }
 
