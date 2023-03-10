@@ -44,7 +44,7 @@ internal class InternalHsdsConnector : H5Group, IDisposable, IHsdsConnector
         {
             if (disposing)
             {
-                // TODO: Verwalteten Zustand (verwaltete Objekte) bereinigen
+                Client.Dispose();
             }
 
             _disposedValue = true;
@@ -54,7 +54,6 @@ internal class InternalHsdsConnector : H5Group, IDisposable, IHsdsConnector
     /// <inheritdoc />
     public void Dispose()
     {
-        // Ändern Sie diesen Code nicht. Fügen Sie Bereinigungscode in der Methode "Dispose(bool disposing)" ein.
         Dispose(disposing: true);
         GC.SuppressFinalize(this);
     }
