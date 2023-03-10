@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 using PureHDF;
+using PureHDF.Filters;
 
 namespace Benchmark
 {

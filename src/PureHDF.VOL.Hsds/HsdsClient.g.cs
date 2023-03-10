@@ -19,7 +19,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace PureHDF.VOL;
+namespace PureHDF.VOL.Hsds;
 
 /// <summary>
 /// A client for the HSDS system.

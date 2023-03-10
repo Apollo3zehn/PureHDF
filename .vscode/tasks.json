@@ -35,7 +35,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/src/PureHDF.VFD.Hsds.ClientGenerator/PureHDF.VFD.Hsds.ClientGenerator.csproj",
+                "${workspaceFolder}/src/PureHDF.VOL.HsdsClientGenerator/PureHDF.VOL.HsdsClientGenerator.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],

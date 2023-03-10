@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using Amazon.S3;
 using Amazon.S3.Model;
 
-namespace PureHDF.VFD.AmazonS3;
+namespace PureHDF.VFD;
 
 /// <summary>
 /// A stream reads data from Amazon S3.

@@ -1,6 +1,6 @@
 ﻿using Microsoft.OpenApi.Readers;
 
-namespace PureHDF.HsdsClientGenerator;
+namespace PureHDF.VOL.HsdsClientGenerator;
 
 public static class Program
 {
@@ -54,7 +54,7 @@ public static class Program
         };
 
         var csharpSettings = new GeneratorSettings(
-            Namespace: "PureHDF.VOL",
+            Namespace: "PureHDF.VOL.Hsds",
             ClientName: "HsdsClient",
             ExceptionType: "HsdsException",
             pathToMethodNameMap);

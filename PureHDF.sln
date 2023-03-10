@@ -28,7 +28,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.SourceGenerator", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.SourceGenerator.Tests", "tests\PureHDF.SourceGenerator.Tests\PureHDF.SourceGenerator.Tests.csproj", "{0510852E-B154-422A-A1E2-2C9783119A45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.VFD.Hsds.ClientGenerator", "src\PureHDF.VFD.Hsds.ClientGenerator\PureHDF.VFD.Hsds.ClientGenerator.csproj", "{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.VOL.HsdsClientGenerator", "src\PureHDF.VOL.HsdsClientGenerator\PureHDF.VOL.HsdsClientGenerator.csproj", "{D7A7A923-CC32-48D9-A495-506DB5CE2BF6}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.Filters.Blosc2", "src\PureHDF.Filters.Blosc2\PureHDF.Filters.Blosc2.csproj", "{03405FB3-AD2D-41E5-9861-14EFC0826064}"
 EndProject

@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace PureHDF.HsdsClientGenerator
+namespace PureHDF.VOL.HsdsClientGenerator
 {
     public class CSharpGenerator
     {

@@ -1,4 +1,4 @@
-﻿namespace PureHDF.HsdsClientGenerator
+﻿namespace PureHDF.VOL.HsdsClientGenerator
 {
     public record GeneratorSettings(
         string? Namespace,

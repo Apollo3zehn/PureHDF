@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace PureHDF.HsdsClientGenerator
+namespace PureHDF.VOL.HsdsClientGenerator
 {
     public partial class Shared
     {

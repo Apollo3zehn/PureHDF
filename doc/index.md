@@ -22,7 +22,7 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html).
 
-> Overwhelmed by the number of different HDF 5 libraries? [Here](#9-comparison-table) is a comparison table.
+> Overwhelmed by the number of different HDF 5 libraries? [Here](#12-comparison-table) is a comparison table.
 
 # Content
 
@@ -34,9 +34,10 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 6. [Reading Compound Data](#6-reading-compound-data)
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
-9. [Intellisense (.NET 5+)](#9-intellisense-net-5)
-10. [Unsupported Features](#10-unsupported-features)
-11. [Comparison Table](#11-comparison-table)
+9. [Amazon S3](#9-amazon-s3)
+10. [Intellisense (.NET 5+)](#10-intellisense-net-5)
+11. [Unsupported Features](#11-unsupported-features)
+12. [Comparison Table](#12-comparison-table)
 
 # 1 Objects
 
@@ -409,64 +410,69 @@ public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
 
 ```
 
-## 5.3 Tested External Filters
-- deflate (based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/), SSE2 / AVX2 / AVX512, [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md))
-- c-blosc2 (based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke), SSE2 / AVX2)
-- bzip2 (based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib))
+## 5.3 Supported External Filters
 
-## 5.4 How to use Deflate (hardware accelerated)
-(1) Install the P/Invoke package:
+**Deflate (Intel ISA-L)**
 
-`dotnet package add Intrinsics.ISA-L.PInvoke`
+- based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/)
+- hardware accelerated: `SSE2` / `AVX2` / `AVX512`
+- [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md)
 
-(2) Add the Deflate filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/DeflateHelper_Intel_ISA_L.cs) to your code.
-
-(3) Register Deflate:
+`dotnet add package PureHDF.Filters.Deflate.ISA-L`
 
 ```cs
- H5Filter.Register(
-     identifier: H5FilterID.Deflate, 
-     name: "deflate", 
-     filterFunc: DeflateHelper_Intel_ISA_L.FilterFunc);
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: H5FilterID.Deflate, 
+    name: "deflate", 
+    filterFunc: H5DeflateISAL.FilterFunction);
 ```
 
-(4) Enable unsafe code blocks in `.csproj`:
-```xml
-<PropertyGroup>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-</PropertyGroup>
-```
+**Deflate (SharpZipLib)**
 
-## 5.5 How to use Blosc / Blosc2 (hardware accelerated)
-(1) Install the P/Invoke package:
+- based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib)
 
-`dotnet package add Blosc2.PInvoke`
-
-(2) Add the Blosc filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BloscHelper.cs) to your code.
-
-(3) Register Blosc:
+`dotnet add package PureHDF.Filters.Deflate.SharpZipLib`
 
 ```cs
- H5Filter.Register(
-     identifier: (H5FilterID)32001, 
-     name: "blosc2", 
-     filterFunc: BloscHelper.FilterFunc);
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: H5FilterID.Deflate, 
+    name: "deflate", 
+    filterFunc: H5DeflateSharpZipLib.FilterFunction);
 ```
 
-## 5.6 How to use BZip2
-(1) Install the SharpZipLib package:
+**Blosc / Blosc2**
 
-`dotnet package add SharpZipLib`
+- based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke)
+- hardware accelerated: `SSE2` / `AVX2`
 
-(2) Add the BZip2 filter registration [helper function](https://github.com/Apollo3zehn/PureHDF/blob/master/tests/PureHDF.Tests/Utils/BZip2Helper.cs) and the [MemorySpanStream](https://github.com/Apollo3zehn/PureHDF/blob/master/src/PureHDF/Utils/Streams/MemorySpanStream.cs) implementation to your code.
-
-(3) Register BZip2:
+`dotnet add package PureHDF.Filters.Blosc2`
 
 ```cs
- H5Filter.Register(
-     identifier: (H5FilterID)307, 
-     name: "bzip2", 
-     filterFunc: BZip2Helper.FilterFunc);
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: (H5FilterID)32001, 
+    name: "blosc2", 
+    filterFunc: H5Blosc2.FilterFunction);
+```
+
+**BZip2 (SharpZipLib)**
+
+- based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib)
+
+`dotnet add package PureHDF.Filters.BZip2.SharpZipLib`
+
+```cs
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: (H5FilterID)307, 
+    name: "bzip2", 
+    filterFunc: H5BZip2SharpZipLib.FilterFunc);
 ```
 
 # 6. Reading Compound Data
@@ -634,10 +640,10 @@ No data are being copied and you can work with the array similar to a normal `Sp
 
 Reading data from a dataset is thread-safe in the following cases, depending on the type of `H5File` constructor method you used:
 
-|         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`) | 
-|---------|-----------|--------------------|---------------------|
-| .NET 4+ | x         | ✓                  | x                   |
-| .NET 6+ | ✓         | ✓                  | ✓ (if: `Stream` is `FileStream`) |
+|         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                    |
+| ------- | -------------- | -------------------------------- | --------------------------------- |
+| .NET 4+ | x              | ✓                               | x                                 |
+| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream`) |
 
 > The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
@@ -773,9 +779,28 @@ async Task LoadAndProcessDataAsynchronously()
 }
 ```
 
-# 9 Intellisense (.NET 5+)
+# 9 Amazon S3
 
-## 9.1 Introduction
+`dotnet add package PureHdf.VFD.AmazonS3`
+
+```cs
+using PureHDF.VFD
+
+// adapt to your needs
+var credentials = new AnonymousAWSCredentials();
+var region = RegionEndpoint.EUWest1;
+var client = new AmazonS3Client(credentials, region);
+var s3Stream = new AmazonS3Stream(client, bucketName: "xxx", key: "yyy");
+
+using var file = H5File.Open(s3Stream);
+...
+```
+
+> Note: The `AmazonS3Stream` caches S3 responses in cache slots of 1 MB by default (use the constructor overload to customize this). Data read from datasets is not being cached to keep the cache small but still useful.
+
+# 10 Intellisense (.NET 5+)
+
+## 10.1 Introduction
 
 Consider the following H5 file:
 
@@ -796,7 +821,7 @@ PureHDF utilizes the source generator feature introduced with .NET 5 which allow
 var dataset = bindings.group1.sub_dataset2;
 ```
 
-## 9.2 Getting Started
+## 10.2 Getting Started
 
 Run the following command:
 
@@ -840,13 +865,14 @@ var myGroup = bindings.group1.Get();
 
 > Note: Invalid characters like spaces will be replaced by underscores.
 
-# 10 Unsupported Features
+# 11 Unsupported Features
 
-The following features are not (yet) supported:
+The following features are **not** (yet) supported:
 
-- Virtual datasets with **unlimited dimensions**.
+- Virtual datasets with **unlimited dimensions**
+- Filters: `N-bit`, `SZIP`
 
-# 11 Comparison Table
+# 12 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 
