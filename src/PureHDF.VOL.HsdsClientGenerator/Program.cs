@@ -33,7 +33,7 @@ public static class Program
             ["Post:/groups"] = "Group",
             ["Get:/groups"] = "Groups",
             ["/groups/{id}"] = "Group",
-            ["/groups/{id}/links"] = "Link",
+            ["/groups/{id}/links"] = "Links",
             ["/groups/{id}/links/{linkname}"] = "Link",
             ["Post:/datasets"] = "Dataset",
             ["Get:/datasets"] = "Datasets",

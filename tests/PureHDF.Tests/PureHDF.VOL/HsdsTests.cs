@@ -1,3 +1,4 @@
+using PureHDF.VOL;
 using PureHDF.VOL.Hsds;
 using Xunit;
 
@@ -6,15 +7,21 @@ namespace PureHDF.Tests.Reading.VOL
     public class HsdsTests
     {
         [Fact]
-        public async Task Dummy()
+        public void CanGetGroup()
         {
+            // Arrange
             var domainName = "/shared/tall.h5";
-            var hsdsClient = new HsdsClient(new Uri("http://hsdshdflab.hdfgroup.org"));
-            var domain = await hsdsClient.Domain.GetDomainAsync(domain: domainName);
-            var rootId = domain["root"].GetString()!;
-            var links = await hsdsClient.Link.GetLinkAsync(rootId, domain: domainName);
+            var client = new HsdsClient(new Uri("http://hsdshdflab.hdfgroup.org"));
+            var connector = HsdsConnector.Create(domainName, client);
+            var expected = "g1";
 
-            var b = 1;
+            // Act
+            var actual = connector
+                .Group($"/{expected}")
+                .Name;
+
+            // Assert
+            Assert.Equal(expected, actual);
         }
     }
 }

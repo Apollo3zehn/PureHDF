@@ -49,6 +49,7 @@ internal class H5Group : H5AttributableObject, IH5Group
         {
             if (_file is null)
                 return (NativeH5File)this;
+                
             else
                 return _file;
         }

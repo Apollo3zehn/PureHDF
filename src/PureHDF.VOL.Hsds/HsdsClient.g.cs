@@ -141,7 +141,7 @@ public class HsdsClient : IHsdsClient, IDisposable
         if (!response.IsSuccessStatusCode)
         {
             var message = await response.Content.ReadAsStringAsync();
-            var statusCode = $"V00.{(int)response.StatusCode}";
+            var statusCode = $"H00.{(int)response.StatusCode}";
 
             if (string.IsNullOrWhiteSpace(message))
                 throw new HsdsException(statusCode, $"The HTTP request failed with status code {response.StatusCode}.");
@@ -176,7 +176,7 @@ public class HsdsClient : IHsdsClient, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    throw new HsdsException("V01", "Response data could not be deserialized.", ex);
+                    throw new HsdsException("H01", "Response data could not be deserialized.", ex);
                 }
             }
         }
@@ -768,7 +768,7 @@ public interface ILinkClient
     /// <param name="Limit">Cap the number of Links returned in list.</param>
     /// <param name="Marker">Title of a Link; the first Link name to list.</param>
     /// <param name="cancellationToken">The token to cancel the current operation.</param>
-    Task<IReadOnlyDictionary<string, JsonElement>> GetLinkAsync(string id, string? domain = default, double? Limit = default, string? Marker = default, CancellationToken cancellationToken = default);
+    Task<IReadOnlyDictionary<string, JsonElement>> GetLinksAsync(string id, string? domain = default, double? Limit = default, string? Marker = default, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Create a new Link in a Group.
@@ -811,7 +811,7 @@ public class LinkClient : ILinkClient
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyDictionary<string, JsonElement>> GetLinkAsync(string id, string? domain = default, double? Limit = default, string? Marker = default, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyDictionary<string, JsonElement>> GetLinksAsync(string id, string? domain = default, double? Limit = default, string? Marker = default, CancellationToken cancellationToken = default)
     {
         var urlBuilder = new StringBuilder();
         urlBuilder.Append("/groups/{id}/links");

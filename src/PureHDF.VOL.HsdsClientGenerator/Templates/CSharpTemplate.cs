@@ -71,7 +71,7 @@ public class {{1}} : I{{1}}, IDisposable
         if (!response.IsSuccessStatusCode)
         {
             var message = await response.Content.ReadAsStringAsync();
-            var statusCode = $"V00.{(int)response.StatusCode}";
+            var statusCode = $"H00.{(int)response.StatusCode}";
 
             if (string.IsNullOrWhiteSpace(message))
                 throw new {{8}}(statusCode, $"The HTTP request failed with status code {response.StatusCode}.");
@@ -106,7 +106,7 @@ public class {{1}} : I{{1}}, IDisposable
                 }
                 catch (Exception ex)
                 {
-                    throw new {{8}}("V01", "Response data could not be deserialized.", ex);
+                    throw new {{8}}("H01", "Response data could not be deserialized.", ex);
                 }
             }
         }
