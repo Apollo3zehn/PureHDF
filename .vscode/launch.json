@@ -50,19 +50,6 @@
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickRemoteProcess}"
-        },
-        {
-            "name": "HSDS Client generator",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-generator",
-            "program": "${workspaceFolder}/artifacts/bin/PureHDF.VOL.HsdsClientGenerator/net7.0/PureHDF.VOL.HsdsClientGenerator.dll",
-            "args": [
-                "./"
-            ],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
         }
     ]
 }
