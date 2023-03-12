@@ -18,7 +18,7 @@ public class H5File
     /// <param name="filePath">The file to open.</param>
     public static IH5File OpenRead(string filePath)
     {
-        return NativeH5File.OpenRead(filePath);
+        return H5NativeFile.OpenRead(filePath);
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public class H5File
     /// <param name="useAsync">A boolean which indicates if the file be opened with the <see cref="FileOptions.Asynchronous"/> flag.</param>
     public static IH5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool useAsync = false)
     {
-        return NativeH5File.Open(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
+        return H5NativeFile.Open(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public class H5File
     /// <param name="stream">The stream to use.</param>
     /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
     /// <returns></returns>
-    public static IH5File Open(Stream stream, bool leaveOpen = false)
+    public static IH5NativeFile Open(Stream stream, bool leaveOpen = false)
     {
         H5DriverBase driver;
 
@@ -52,7 +52,7 @@ public class H5File
 #endif
             driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
-        return NativeH5File.Open(driver, string.Empty);
+        return H5NativeFile.Open(driver, string.Empty);
     }
 
     /// <summary>
@@ -60,9 +60,9 @@ public class H5File
     /// </summary>
     /// <param name="accessor">The memory-mapped accessor to use.</param>
     /// <returns></returns>
-    public static IH5File Open(MemoryMappedViewAccessor accessor)
+    public static IH5NativeFile Open(MemoryMappedViewAccessor accessor)
     {
         var driver = new H5MemoryMappedFileDriver(accessor);
-        return NativeH5File.Open(driver, string.Empty);
+        return H5NativeFile.Open(driver, string.Empty);
     }
 }

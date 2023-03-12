@@ -4,19 +4,19 @@
 
     internal class VirtualDatasetStream<TResult> : IH5ReadStream
     {
-        private record class DatasetInfo(NativeH5File File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
+        private record class DatasetInfo(H5NativeFile File, H5Dataset Dataset, H5DatasetAccess DatasetAccess);
 
         private long _position;
         private readonly ulong[] _virtualDimensions;
         private readonly TResult? _fillValue;
-        private readonly NativeH5File _file;
+        private readonly H5NativeFile _file;
         private readonly H5DatasetAccess _datasetAccess;
         private readonly VdsDatasetEntry[] _entries;
         private readonly Dictionary<VdsDatasetEntry, DatasetInfo> _datasetInfoMap = new();
         private readonly ReadVirtualDelegate<TResult> _readVirtual;
 
         public VirtualDatasetStream(
-            NativeH5File file,
+            H5NativeFile file,
             VdsDatasetEntry[] entries, 
             ulong[] dimensions, 
             TResult? fillValue,
@@ -173,7 +173,7 @@
                         // this file
                         ? _file
                         // external file
-                        : (NativeH5File)H5File.OpenRead(filePath);
+                        : (H5NativeFile)H5File.OpenRead(filePath);
 
                     if (file.LinkExists(entry.SourceDataset, linkAccess: default /* no link access available */))
                     {

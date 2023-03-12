@@ -9,7 +9,7 @@ internal class ExternalFileListStream : IH5ReadStream
     private readonly SlotStream[] _slotStreams;
 
     public ExternalFileListStream(
-        NativeH5File file,
+        H5NativeFile file,
         ExternalFileListMessage externalFileList,
         H5DatasetAccess datasetAccess)
     {

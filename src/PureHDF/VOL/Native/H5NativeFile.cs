@@ -1,6 +1,6 @@
 ﻿namespace PureHDF;
 
-internal class NativeH5File : H5Group, IH5File
+internal class H5NativeFile : H5Group, IH5NativeFile
 {
     // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
     #region Fields
@@ -12,7 +12,7 @@ internal class NativeH5File : H5Group, IH5File
 
     #region Constructors
 
-    private NativeH5File(
+    private H5NativeFile(
         H5Context context,
         NamedReference reference,
         ObjectHeader header,
@@ -52,7 +52,7 @@ internal class NativeH5File : H5Group, IH5File
 
     #region Methods
 
-    internal static NativeH5File OpenRead(string filePath, bool deleteOnClose = false)
+    internal static H5NativeFile OpenRead(string filePath, bool deleteOnClose = false)
     {
         return Open(
             filePath,
@@ -63,7 +63,7 @@ internal class NativeH5File : H5Group, IH5File
             deleteOnClose: deleteOnClose);
     }
 
-    internal static NativeH5File Open(
+    internal static H5NativeFile Open(
         string filePath,
         FileMode fileMode,
         FileAccess fileAccess,
@@ -90,7 +90,7 @@ internal class NativeH5File : H5Group, IH5File
         return Open(driver, absoluteFilePath, deleteOnClose);
     }
 
-    internal static NativeH5File Open(H5DriverBase driver, string absoluteFilePath, bool deleteOnClose = false)
+    internal static H5NativeFile Open(H5DriverBase driver, string absoluteFilePath, bool deleteOnClose = false)
     {
         if (!BitConverter.IsLittleEndian)
             throw new Exception("This library only works on little endian systems.");
@@ -144,7 +144,7 @@ internal class NativeH5File : H5Group, IH5File
         var context = new H5Context(driver, superblock);
         var header = ObjectHeader.Construct(context);
 
-        var file = new NativeH5File(context, default, header, absoluteFilePath, deleteOnClose);
+        var file = new H5NativeFile(context, default, header, absoluteFilePath, deleteOnClose);
         var reference = new NamedReference("/", address, file);
         file.Reference = reference;
 

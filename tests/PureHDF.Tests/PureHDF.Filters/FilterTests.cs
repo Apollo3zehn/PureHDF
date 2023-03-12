@@ -228,7 +228,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Fletcher(fileId));
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("fletcher");
             var actual = dataset.Read<int>();
@@ -263,7 +263,7 @@ namespace PureHDF.Tests.Reading.Filters
                 H5Filter.Register(H5FilterID.Deflate, "deflate", func);
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("deflate");
             var actual = dataset.Read<int>();
@@ -280,7 +280,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Multi(fileId));
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = parent.Dataset("multi");
             var actual = dataset.Read<int>();
@@ -323,7 +323,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = (H5Dataset)parent.Dataset($"shuffle_{bytesOfType}");
 
@@ -374,7 +374,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = (H5Dataset)parent.Dataset($"shuffle_{bytesOfType}");
 
@@ -424,7 +424,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
 
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("filtered");
             var dataset = (H5Dataset)parent.Dataset($"shuffle_{bytesOfType}");
 
@@ -589,7 +589,7 @@ namespace PureHDF.Tests.Reading.Filters
             };
 
             /* continue */
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
 
             var attribute = root
                 .Group("small")

@@ -2,15 +2,6 @@ using PureHDF.VOL.Hsds;
 
 namespace PureHDF.VOL;
 
-/// <summary>
-/// Represents an HDF5 file object stored in the Highly Scalable Data Service (HSDS).
-/// </summary>
-public interface IHsdsConnector : IH5Group
-{
-    /// <inheritdoc />
-    void Dispose();
-}
-
 /// <inheritdoc />
 public static class HsdsConnector
 {
@@ -25,9 +16,8 @@ public static class HsdsConnector
     }
 }
 
-internal class InternalHsdsConnector : H5Group, IDisposable, IHsdsConnector
-{
-    
+internal class InternalHsdsConnector : H5Group, IHsdsConnector
+{   
     public InternalHsdsConnector(string domainName, HsdsClient client) : base(domainName, client)
     {
         //
@@ -59,5 +49,4 @@ internal class InternalHsdsConnector : H5Group, IDisposable, IHsdsConnector
     }
 
     #endregion
-
 }

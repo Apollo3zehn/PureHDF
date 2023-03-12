@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading
             var expected = new int[] { 5, 6, 7, 10, 11, 12 };
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/small/small");
 
             var actual = dataset.AsQueryable<int>()
@@ -35,7 +35,7 @@ namespace PureHDF.Tests.Reading
             var expected = new int[] { 5, 6, 7 };
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/small/small");
 
             var actual = dataset.AsQueryable<int>()
@@ -55,7 +55,7 @@ namespace PureHDF.Tests.Reading
             var expected = Enumerable.Empty<int>();
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/small/small");
 
             var actual = dataset.AsQueryable<int>()
@@ -78,7 +78,7 @@ namespace PureHDF.Tests.Reading
                 .Select(value => value);
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/small/small");
 
             var actual = dataset.AsQueryable<int>()
@@ -100,7 +100,7 @@ namespace PureHDF.Tests.Reading
                 .Select(value => value);
 
             // Act
-            using var root = NativeH5File.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/small/small");
 
             var actual = dataset.AsQueryable<int>()

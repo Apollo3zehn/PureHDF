@@ -9,7 +9,7 @@ internal class H5Group : H5AttributableObject, IH5Group
 {
     #region Fields
 
-    private readonly NativeH5File? _file;
+    private readonly H5NativeFile? _file;
     private readonly ObjectHeaderScratchPad? _scratchPad;
 
     #endregion
@@ -23,14 +23,14 @@ internal class H5Group : H5AttributableObject, IH5Group
         //
     }
 
-    internal H5Group(NativeH5File file, H5Context context, NamedReference reference)
+    internal H5Group(H5NativeFile file, H5Context context, NamedReference reference)
        : base(context, reference)
     {
         _file = file;
         _scratchPad = reference.ScratchPad;
     }
 
-    internal H5Group(NativeH5File file, H5Context context, NamedReference reference, ObjectHeader header)
+    internal H5Group(H5NativeFile file, H5Context context, NamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         _file = file;
@@ -43,12 +43,12 @@ internal class H5Group : H5AttributableObject, IH5Group
     public IEnumerable<IH5Object> Children
         => GetChildren(new H5LinkAccess());
 
-    internal NativeH5File File
+    internal H5NativeFile File
     {
         get
         {
             if (_file is null)
-                return (NativeH5File)this;
+                return (H5NativeFile)this;
                 
             else
                 return _file;

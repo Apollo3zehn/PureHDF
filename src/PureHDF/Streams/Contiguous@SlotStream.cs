@@ -3,13 +3,13 @@
 internal class SlotStream : IH5ReadStream
 {
     private long _position;
-    private readonly NativeH5File _file;
+    private readonly H5NativeFile _file;
     private readonly LocalHeap _heap;
     private Stream? _stream;
     private readonly ExternalFileListSlot _slot;
     private readonly H5DatasetAccess _datasetAccess;
 
-    public SlotStream(NativeH5File file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
+    public SlotStream(H5NativeFile file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
     {
         _file = file;
         _heap = heap;

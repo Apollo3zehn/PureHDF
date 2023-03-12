@@ -17,7 +17,7 @@ namespace PureHDF.Tests.Reading
             var tasks = new List<Task>();
 
             // Act
-            using var root = NativeH5File.Open(
+            using var root = H5NativeFile.Open(
                 filePath,
                 FileMode.Open,
                 FileAccess.Read,
@@ -62,7 +62,7 @@ namespace PureHDF.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Huge);
 
             // Act
-            using var root = NativeH5File.Open(
+            using var root = H5NativeFile.Open(
                 filePath,
                 FileMode.Open,
                 FileAccess.Read,
