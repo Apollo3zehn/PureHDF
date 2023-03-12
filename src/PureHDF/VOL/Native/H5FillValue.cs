@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal class H5FillValue : IH5FillValue
 {

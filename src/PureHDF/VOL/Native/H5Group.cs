@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}")]
 internal class H5Group : H5AttributableObject, IH5Group

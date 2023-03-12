@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}: Class = '{InternalDataType.Class}'")]
 internal class H5Dataset : H5AttributableObject, IH5Dataset

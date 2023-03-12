@@ -1,6 +1,6 @@
 ﻿using static PureHDF.IH5DataType;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal class H5DataType : IH5DataType
 {

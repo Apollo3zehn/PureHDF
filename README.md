@@ -777,7 +777,7 @@ async Task LoadAndProcessDataAsynchronously()
 `dotnet add package PureHdf.VFD.AmazonS3`
 
 ```cs
-using PureHDF.VFD
+using PureHDF.VFD.AmazonS3
 
 // adapt to your needs
 var credentials = new AnonymousAWSCredentials();

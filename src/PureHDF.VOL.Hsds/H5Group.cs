@@ -2,9 +2,8 @@
 // domain ist not optional?! ask gheber
 
 using System.Text.Json;
-using PureHDF.VOL.Hsds;
 
-namespace PureHDF.VOL;
+namespace PureHDF.VOL.Hsds;
 
 internal class H5Group : H5AttributableObject, IH5Group
 {

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}")]
 internal class H5UnresolvedLink : H5Object, IH5UnresolvedLink

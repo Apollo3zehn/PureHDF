@@ -2,7 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
 internal class H5Attribute : IH5Attribute

@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
 {

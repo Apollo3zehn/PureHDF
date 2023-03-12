@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
 internal class H5CommitedDatatype : H5AttributableObject, IH5CommitedDatatype

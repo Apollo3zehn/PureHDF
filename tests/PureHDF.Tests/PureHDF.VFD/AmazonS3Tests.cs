@@ -1,7 +1,7 @@
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
-using PureHDF.VFD;
+using PureHDF.VFD.AmazonS3;
 using Xunit;
 
 namespace PureHDF.Tests.Reading.VFD;

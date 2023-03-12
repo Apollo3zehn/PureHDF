@@ -1,4 +1,4 @@
-namespace PureHDF.VOL;
+namespace PureHDF.VOL.Hsds;
 
 internal class H5Object : IH5Object
 {

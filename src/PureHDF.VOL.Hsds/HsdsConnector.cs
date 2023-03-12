@@ -1,6 +1,4 @@
-using PureHDF.VOL.Hsds;
-
-namespace PureHDF.VOL;
+namespace PureHDF.VOL.Hsds;
 
 /// <inheritdoc />
 public static class HsdsConnector
