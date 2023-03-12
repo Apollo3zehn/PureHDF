@@ -46,7 +46,7 @@ public class H5File
 
 #if NET6_0_OR_GREATER
         if (stream is FileStream fileStream)
-            driver = new H5FileStreamDriver(fileStream, leaveOpen: leaveOpen);
+            driver = new H5FileHandleDriver(fileStream, leaveOpen: leaveOpen);
 
         else
 #endif

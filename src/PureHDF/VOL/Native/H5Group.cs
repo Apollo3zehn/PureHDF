@@ -523,7 +523,7 @@ internal class H5Group : H5AttributableObject, IH5Group
                 .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
             ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                .GetTarget(linkAccess, useAsync: Context.Driver is H5FileStreamDriver driver && driver.IsAsync),
+                .GetTarget(linkAccess, useAsync: Context.Driver is H5FileHandleDriver driver && driver.IsAsync),
 #else
                 ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
                     .GetTarget(linkAccess, useAsync: default),

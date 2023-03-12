@@ -294,8 +294,6 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
         return result;
     }
 
-#if NET6_0_OR_GREATER
-
     public async Task<byte[]> ReadAsync(
         Selection? fileSelection = default,
         Selection? memorySelection = default,
@@ -423,7 +421,6 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
 
         return result;
     }
-#endif
 
     internal async Task<TResult[]?> ReadCoreValueAsync<TResult, TReader>(
         TReader reader,

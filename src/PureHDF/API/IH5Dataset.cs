@@ -108,8 +108,6 @@ public interface IH5Dataset : IH5AttributableObject
     /// <returns>The read data as array of <see cref="string"/>.</returns>
     string?[] ReadString(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, H5DatasetAccess datasetAccess = default);
 
-#if NET6_0_OR_GREATER
-
     /// <summary>
     /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
     /// </summary>
@@ -173,7 +171,5 @@ public interface IH5Dataset : IH5AttributableObject
     /// <param name="datasetAccess">The dataset access properties.</param>
     /// <returns>A task which returns the read data as array of <see cref="string"/>.</returns>
     Task<string?[]> ReadStringAsync(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, H5DatasetAccess datasetAccess = default);
-
-#endif
 
 }

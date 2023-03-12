@@ -6,14 +6,14 @@ using Microsoft.Win32.SafeHandles;
 
 namespace PureHDF.VFD;
 
-internal class H5FileStreamDriver : H5DriverBase
+internal class H5FileHandleDriver : H5DriverBase
 {
     private readonly ThreadLocal<long> _position = new();
     private readonly FileStream _stream; // it is important to keep a reference, otherwise the SafeFileHandle gets closed during the next GC
     private readonly SafeFileHandle _handle;
     private readonly bool _leaveOpen;
 
-    public H5FileStreamDriver(FileStream stream, bool leaveOpen) : base(stream.Length)
+    public H5FileHandleDriver(FileStream stream, bool leaveOpen) : base(stream.Length)
     {
         _stream = stream;
         _handle = _stream.SafeFileHandle;

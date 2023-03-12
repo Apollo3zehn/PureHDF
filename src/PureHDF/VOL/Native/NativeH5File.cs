@@ -82,9 +82,9 @@ internal class NativeH5File : H5Group, IH5File
             useAsync);
 
 #if NET6_0_OR_GREATER
-        var driver = new H5FileStreamDriver(stream, leaveOpen: false);
+        var driver = new H5FileHandleDriver(stream, leaveOpen: false);
 #else
-            var driver = new H5StreamDriver(stream, leaveOpen: false);
+        var driver = new H5StreamDriver(stream, leaveOpen: false);
 #endif
 
         return Open(driver, absoluteFilePath, deleteOnClose);
