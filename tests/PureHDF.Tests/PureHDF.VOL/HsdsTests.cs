@@ -1,5 +1,5 @@
+using Hsds.Api;
 using PureHDF.VOL;
-using PureHDF.VOL.Hsds;
 using Xunit;
 
 namespace PureHDF.Tests.Reading.VOL
@@ -12,11 +12,11 @@ namespace PureHDF.Tests.Reading.VOL
             // Arrange
             var domainName = "/shared/tall.h5";
             var client = new HsdsClient(new Uri("http://hsdshdflab.hdfgroup.org"));
-            var connector = HsdsConnector.Create(domainName, client);
+            var root = HsdsConnector.Create(domainName, client);
             var expected = "g1";
 
             // Act
-            var actual = connector
+            var actual = root
                 .Group($"/{expected}")
                 .Name;
 

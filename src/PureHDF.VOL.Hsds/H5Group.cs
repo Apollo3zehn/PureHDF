@@ -1,7 +1,4 @@
-// TODO: HSDS sync client
-// domain ist not optional?! ask gheber
-
-using System.Text.Json;
+using Hsds.Api;
 
 namespace PureHDF.VOL.Hsds;
 
@@ -10,27 +7,23 @@ internal class H5Group : H5AttributableObject, IH5Group
     private readonly IHsdsConnector? _connector;
     private readonly string _id;
 
-    public H5Group(string domainName, HsdsClient client, IReadOnlyDictionary<string, JsonElement>? group = default) 
-        : base(name: group is null ? "/" : group["link"].GetProperty("title")!.GetString()!)
+    public H5Group(string domainName, HsdsClient client, GetLinkResponse? group = default) 
+        : base(name: group is null ? "/" : group.Link.Title)
     {
         if (group is null)
         {
-            var domain = client.Domain
-                .GetDomainAsync(domain: domainName)
-                .GetAwaiter()
-                .GetResult();
-
-            _id = domain["root"].GetString()!;
+            var domain = client.Domain.GetDomain(domain: domainName);
+            _id = domain.Root;
         }
 
         else
         {
-            var link = group["link"];
+            var link = group.Link;
 
-            if (link.GetProperty("collection")!.GetString()! != "groups")
+            if (link.Collection != "groups")
                 throw new Exception($"The provided object is not a group.");
 
-            _id = link.GetProperty("id")!.GetString()!;
+            _id = link.Id;
         }
 
         DomainName = domainName;
@@ -61,7 +54,7 @@ internal class H5Group : H5AttributableObject, IH5Group
 
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-        var current = isRooted ?  (IH5Group)Connector : this;
+        var current = isRooted ? (IH5Group)Connector : this;
 
         for (int i = 0; i < segments.Length; i++)
         {
