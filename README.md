@@ -28,7 +28,7 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
 9. [Amazon S3](#9-amazon-s3)
-10. [Highly Scalable Data Service (HSDS)](#10-highly-scalable-data-service-HSDS)
+10. [Highly Scalable Data Service (HSDS) (.NET 6+)](#10-highly-scalable-data-service-HSDS-net-6)
 11. [Intellisense (.NET 5+)](#11-intellisense-net-5)
 12. [Unsupported Features](#12-unsupported-features)
 13. [Comparison Table](#13-comparison-table)
@@ -792,7 +792,7 @@ using var file = H5File.Open(s3Stream);
 
 > Note: The `AmazonS3Stream` caches S3 responses in cache slots of 1 MB by default (use the constructor overload to customize this). Data read from datasets is not being cached to keep the cache small but still useful.
 
-# 10 Highly Scalable Data Service (HSDS)
+# 10 Highly Scalable Data Service (HSDS) (.NET 6+)
 
 This `HsdsConnector` shown below uses the `HsdsClient` from [this](https://github.com/Apollo3zehn/hsds-api) project. Please follow that link for information about authentication.
 
