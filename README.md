@@ -13,7 +13,7 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html).
 
-> Overwhelmed by the number of different HDF 5 libraries? [Here](#12-comparison-table) is a comparison table.
+> Overwhelmed by the number of different HDF 5 libraries? [Here](#13-comparison-table) is a comparison table.
 
 # Content
 1. [Objects](#1-objects)
