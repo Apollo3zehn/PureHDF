@@ -1,5 +1,3 @@
-**See https://github.com/Apollo3zehn/PureHDF/issues/4 for not yet implemented features.**
-
 # PureHDF
 
 [![GitHub Actions](https://github.com/Apollo3zehn/PureHDF/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/PureHDF/actions) [![NuGet](https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget)](https://www.nuget.org/packages/PureHDF)
@@ -18,7 +16,6 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 > Overwhelmed by the number of different HDF 5 libraries? [Here](#12-comparison-table) is a comparison table.
 
 # Content
-
 1. [Objects](#1-objects)
 2. [Attributes](#2-attributes)
 3. [Data](#3-data)
@@ -28,8 +25,8 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
 9. [Amazon S3](#9-amazon-s3)
-10. [Highly Scalable Data Service (HSDS) (.NET 6+)](#10-highly-scalable-data-service-HSDS-net-6)
-11. [Intellisense (.NET 5+)](#11-intellisense-net-5)
+10. [Highly Scalable Data Service (HSDS)](#10-highly-scalable-data-service-HSDS)
+11. [Intellisense](#11-intellisense)
 12. [Unsupported Features](#12-unsupported-features)
 13. [Comparison Table](#13-comparison-table)
 
@@ -637,7 +634,7 @@ Reading data from a dataset is thread-safe in the following cases, depending on 
 |         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                    |
 | ------- | -------------- | -------------------------------- | --------------------------------- |
 | .NET 4+ | x              | ✓                               | x                                 |
-| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream`) |
+| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
 
 > The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
@@ -774,6 +771,9 @@ async Task LoadAndProcessDataAsynchronously()
 ```
 
 # 9 Amazon S3
+| Requires             |
+| -------------------- |
+| `.NET Standard 2.1+` |
 
 `dotnet add package PureHdf.VFD.AmazonS3`
 
@@ -792,7 +792,10 @@ using var file = H5File.Open(s3Stream);
 
 > Note: The `AmazonS3Stream` caches S3 responses in cache slots of 1 MB by default (use the constructor overload to customize this). Data read from datasets is not being cached to keep the cache small but still useful.
 
-# 10 Highly Scalable Data Service (HSDS) (.NET 6+)
+# 10 Highly Scalable Data Service (HSDS)
+| Requires  |
+| --------- |
+| `.NET 6+` |
 
 This `HsdsConnector` shown below uses the `HsdsClient` from [this](https://github.com/Apollo3zehn/hsds-api) project. Please follow that link for information about authentication.
 
@@ -806,7 +809,11 @@ var group = root.Group("/my-group");
 
 For authentication
 
-# 11 Intellisense (.NET 5+)
+# 11 Intellisense
+
+| Requires  |
+| --------- |
+| `.NET 5+` |
 
 ## 11.1 Introduction
 

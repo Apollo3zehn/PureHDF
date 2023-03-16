@@ -1,5 +1,3 @@
-**See https://github.com/Apollo3zehn/PureHDF/issues/4 for not yet implemented features.**
-
 # PureHDF
 
 [![GitHub Actions](https://github.com/Apollo3zehn/PureHDF/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/PureHDF/actions) [![NuGet](https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget)](https://www.nuget.org/packages/PureHDF)
@@ -18,7 +16,6 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 > Overwhelmed by the number of different HDF 5 libraries? [Here](#12-comparison-table) is a comparison table.
 
 # Content
-
 1. [Objects](#1-objects)
 2. [Attributes](#2-attributes)
 3. [Data](#3-data)
@@ -28,9 +25,10 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
 9. [Amazon S3](#9-amazon-s3)
-10. [Intellisense (.NET 5+)](#10-intellisense-net-5)
-11. [Unsupported Features](#11-unsupported-features)
-12. [Comparison Table](#12-comparison-table)
+10. [Highly Scalable Data Service (HSDS)](#10-highly-scalable-data-service-HSDS)
+11. [Intellisense](#11-intellisense)
+12. [Unsupported Features](#12-unsupported-features)
+13. [Comparison Table](#13-comparison-table)
 
 # 1 Objects
 
@@ -603,7 +601,7 @@ Not supported data types like `time` and `variable length type = sequence` will 
 
 ### 7.1 Generic Method
 
-Sometimes you want to read the data as multidimensional arrays. In that case use one of the `byte[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
+Sometimes you want to read the data as multidimensional arrays. In that case use one of the `T[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
 
 ```cs
 var data3D = dataset
@@ -627,7 +625,7 @@ data2D = dataset
     .AsSpan2D(height: 20, width: 10);
 ```
 
-No data are being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
+No data is being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
 
 # 8 Concurrency
 
@@ -636,7 +634,7 @@ Reading data from a dataset is thread-safe in the following cases, depending on 
 |         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                    |
 | ------- | -------------- | -------------------------------- | --------------------------------- |
 | .NET 4+ | x              | ✓                               | x                                 |
-| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream`) |
+| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
 
 > The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
@@ -773,11 +771,14 @@ async Task LoadAndProcessDataAsynchronously()
 ```
 
 # 9 Amazon S3
+| Requires             |
+| -------------------- |
+| `.NET Standard 2.1+` |
 
 `dotnet add package PureHdf.VFD.AmazonS3`
 
 ```cs
-using PureHDF.VFD
+using PureHDF.VFD.AmazonS3
 
 // adapt to your needs
 var credentials = new AnonymousAWSCredentials();
@@ -791,9 +792,30 @@ using var file = H5File.Open(s3Stream);
 
 > Note: The `AmazonS3Stream` caches S3 responses in cache slots of 1 MB by default (use the constructor overload to customize this). Data read from datasets is not being cached to keep the cache small but still useful.
 
-# 10 Intellisense (.NET 5+)
+# 10 Highly Scalable Data Service (HSDS)
+| Requires  |
+| --------- |
+| `.NET 6+` |
 
-## 10.1 Introduction
+This `HsdsConnector` shown below uses the `HsdsClient` from [this](https://github.com/Apollo3zehn/hsds-api) project. Please follow that link for information about authentication.
+
+```cs
+var domainName = "/shared/tall.h5";
+var client = new HsdsClient(new Uri("http://hsdshdflab.hdfgroup.org"));
+var root = HsdsConnector.Create(domainName, client);
+var group = root.Group("/my-group");
+...
+```
+
+For authentication
+
+# 11 Intellisense
+
+| Requires  |
+| --------- |
+| `.NET 5+` |
+
+## 11.1 Introduction
 
 Consider the following H5 file:
 
@@ -814,7 +836,7 @@ PureHDF utilizes the source generator feature introduced with .NET 5 which allow
 var dataset = bindings.group1.sub_dataset2;
 ```
 
-## 10.2 Getting Started
+## 11.2 Getting Started
 
 Run the following command:
 
@@ -858,14 +880,14 @@ var myGroup = bindings.group1.Get();
 
 > Note: Invalid characters like spaces will be replaced by underscores.
 
-# 11 Unsupported Features
+# 12 Unsupported Features
 
 The following features are **not** (yet) supported:
 
 - Virtual datasets with **unlimited dimensions**
 - Filters: `N-bit`, `SZIP`
 
-# 12 Comparison Table
+# 13 Comparison Table
 
 The following table considers only projects listed on Nuget.org.
 
