@@ -4,47 +4,36 @@ namespace PureHDF.VOL.Hsds;
 
 internal class H5Group : H5AttributableObject, IH5Group
 {
-    private readonly IHsdsConnector? _connector;
     private readonly string _id;
 
-    public H5Group(string domainName, HsdsClient client, GetLinkResponse? group = default) 
-        : base(name: group is null ? "/" : group.Link.Title)
+    // only for HsdsConnector super class
+    public H5Group(string domainName, IHsdsClient client)
+        : base(name: "/")
     {
-        if (group is null)
-        {
-            var domain = client.Domain.GetDomain(domain: domainName);
-            _id = domain.Root;
-        }
-
-        else
-        {
-            var link = group.Link;
-
-            if (link.Collection != "groups")
-                throw new Exception($"The provided object is not a group.");
-
-            _id = link.Id;
-        }
+        var domain = client.Domain.GetDomain(domain: domainName);
+        _id = domain.Root;
 
         DomainName = domainName;
-        Client = client;
+        Connector = (InternalHsdsConnector)this;
+    }
+
+    public H5Group(string domainName, InternalHsdsConnector connector, GetLinkResponse group) 
+        : base(name: group.Link.Title)
+    {
+        var link = group.Link;
+
+        if (link.Collection != "groups")
+            throw new Exception($"The provided object is not a group.");
+
+        _id = link.Id;
+
+        DomainName = domainName;
+        Connector = connector;
     }
 
     public string DomainName { get; }
 
-    public HsdsClient Client { get; }
-
-    internal IHsdsConnector Connector
-    {
-        get
-        {
-            if (_connector is null)
-                return (IHsdsConnector)this;
-
-            else
-                return _connector;
-        }
-    }
+    internal InternalHsdsConnector Connector { get; }
 
     /// <inheritdoc />
     public IH5Group Group(string path, H5LinkAccess linkAccess = default)
@@ -60,12 +49,15 @@ internal class H5Group : H5AttributableObject, IH5Group
         {
             try
             {
-                var link = Client.Link
-                    .GetLinkAsync(id: _id, linkname: segments[i], domain: DomainName)
-                    .GetAwaiter()
-                    .GetResult();
+                var key = new CacheEntryKey(_id, segments[i]);
 
-                current = new H5Group(DomainName, Client, link);                
+                current = Connector.Cache.GetOrAdd(key, key =>
+                {
+                    var link = Connector.Client.Link
+                        .GetLink(id: key.ParentId, linkname: key.LinkName, domain: DomainName);
+
+                    return new H5Group(DomainName, Connector, link);
+                });
             }
             catch (HsdsException hsds) when (hsds.StatusCode == "H00.404")
             {
