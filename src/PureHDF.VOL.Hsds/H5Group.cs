@@ -4,14 +4,12 @@ namespace PureHDF.VOL.Hsds;
 
 internal class H5Group : H5AttributableObject, IH5Group
 {
-    private readonly string _id;
-
     // only for HsdsConnector super class
     public H5Group(string domainName, IHsdsClient client)
         : base(name: "/")
     {
         var domain = client.Domain.GetDomain(domain: domainName);
-        _id = domain.Root;
+        Id = domain.Root;
 
         DomainName = domainName;
         Connector = (InternalHsdsConnector)this;
@@ -25,13 +23,15 @@ internal class H5Group : H5AttributableObject, IH5Group
         if (link.Collection != "groups")
             throw new Exception($"The provided object is not a group.");
 
-        _id = link.Id;
+        Id = link.Id;
 
         DomainName = domainName;
         Connector = connector;
     }
 
     public string DomainName { get; }
+
+    public string Id { get; }
 
     internal InternalHsdsConnector Connector { get; }
 
@@ -43,13 +43,13 @@ internal class H5Group : H5AttributableObject, IH5Group
 
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-        var current = isRooted ? (IH5Group)Connector : this;
+        var current = isRooted ? (H5Group)Connector : this;
 
         for (int i = 0; i < segments.Length; i++)
         {
             try
             {
-                var key = new CacheEntryKey(_id, segments[i]);
+                var key = new CacheEntryKey(current.Id, segments[i]);
 
                 current = Connector.Cache.GetOrAdd(key, key =>
                 {
