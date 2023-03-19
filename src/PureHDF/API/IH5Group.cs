@@ -27,30 +27,12 @@ public interface IH5Group : IH5AttributableObject
     IH5Object Get(string path, H5LinkAccess linkAccess = default);
 
     /// <summary>
-    /// Gets the object that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <typeparam name="T">The return type of the object.</typeparam>
-    /// <param name="path">The path of the object.</param>
-    /// <param name="linkAccess">The link access properties.</param>
-    /// <returns>The requested object.</returns>
-    T Get<T>(string path, H5LinkAccess linkAccess = default) where T : IH5Object;
-
-    /// <summary>
     /// Gets the object that is at the given <paramref name="reference"/>.
     /// </summary>
     /// <param name="reference">The reference of the object.</param>
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
     IH5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default);
-
-    /// <summary>
-    /// Gets the object that is at the given <paramref name="reference"/>.
-    /// </summary>
-    /// <typeparam name="T">The return type of the object.</typeparam>
-    /// <param name="reference">The reference of the object.</param>
-    /// <param name="linkAccess">The link access properties.</param>
-    /// <returns>The requested object.</returns>
-    T Get<T>(H5ObjectReference reference, H5LinkAccess linkAccess = default) where T : IH5Object;
 
     /// <summary>
     /// Gets the group that is at the given <paramref name="path"/>.

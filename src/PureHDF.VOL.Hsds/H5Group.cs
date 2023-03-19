@@ -5,37 +5,57 @@ namespace PureHDF.VOL.Hsds;
 internal class H5Group : H5AttributableObject, IH5Group
 {
     // only for HsdsConnector super class
-    public H5Group(string domainName, IHsdsClient client)
+    public H5Group(IHsdsClient client)
         : base(name: "/")
     {
-        var domain = client.Domain.GetDomain(domain: domainName);
-        Id = domain.Root;
-
-        DomainName = domainName;
         Connector = (InternalHsdsConnector)this;
+
+        var domain = client.Domain.GetDomain(domain: Connector.DomainName);
+        Id = domain.Root;
     }
 
-    public H5Group(string domainName, InternalHsdsConnector connector, GetLinkResponse group) 
-        : base(name: group.Link.Title)
+    public H5Group(InternalHsdsConnector connector, GetLinkResponse response) 
+        : base(name: response.Link.Title)
     {
-        var link = group.Link;
+        Connector = connector;
+
+        var link = response.Link;
 
         if (link.Collection != "groups")
             throw new Exception($"The provided object is not a group.");
 
         Id = link.Id;
-
-        DomainName = domainName;
-        Connector = connector;
     }
 
-    public string DomainName { get; }
+    // TODO: This constructor is only required because the HDF Group's openapi.json 
+    // defines two differnt types for link responses.
+    public H5Group(InternalHsdsConnector connector, GetLinksResponseLinksType response) 
+        : base(name: response.Title)
+    {
+        Connector = connector;
+
+        var link = response;
+
+        if (link.Collection != "groups")
+            throw new Exception($"The provided object is not a group.");
+
+        Id = link.Id;
+    }
 
     public string Id { get; }
 
-    internal InternalHsdsConnector Connector { get; }
+    public InternalHsdsConnector Connector { get; }
 
-    /// <inheritdoc />
+    public IEnumerable<IH5Object> Children
+        => GetChildren();
+
+    // TODO: LinkAccess seems to be quite useless for the following methods
+    public bool LinkExists(string path, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
+
+    public IH5Object Get(string path, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
+
+    public IH5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
+
     public IH5Group Group(string path, H5LinkAccess linkAccess = default)
     {
         if (path == "/")
@@ -54,9 +74,9 @@ internal class H5Group : H5AttributableObject, IH5Group
                 current = Connector.Cache.GetOrAdd(key, key =>
                 {
                     var link = Connector.Client.Link
-                        .GetLink(id: key.ParentId, linkname: key.LinkName, domain: DomainName);
+                        .GetLink(id: key.ParentId, linkname: key.LinkName, domain: Connector.DomainName);
 
-                    return new H5Group(DomainName, Connector, link);
+                    return new H5Group(Connector, link);
                 });
             }
             catch (HsdsException hsds) when (hsds.StatusCode == "H00.404")
@@ -68,21 +88,23 @@ internal class H5Group : H5AttributableObject, IH5Group
         return current;
     }
         
-    public IEnumerable<IH5Object> Children { get => throw new NotImplementedException(); }
-
-    public bool LinkExists(string path, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
-
-    public IH5Object Get(string path, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
-
-    public T Get<T>(string path, H5LinkAccess linkAccess = default) where T : IH5Object => throw new NotImplementedException();
-
-    public IH5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
-
-    public T Get<T>(H5ObjectReference reference, H5LinkAccess linkAccess = default) where T : IH5Object => throw new NotImplementedException();
-
     public IH5Dataset Dataset(string path, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
 
     public IH5CommitedDatatype CommitedDatatype(string path, H5LinkAccess linkAccess = default) => throw new NotImplementedException();
 
-    public IEnumerable<IH5Object> GetChildren(H5LinkAccess linkAccess = default) => throw new NotImplementedException();
+    public IEnumerable<IH5Object> GetChildren(H5LinkAccess linkAccess = default)
+    {
+        var response = Connector.Client.Link.GetLinks(Id, Connector.DomainName);
+
+        return response.Links.Select(link =>
+        {
+            return (IH5Object)(link.Collection switch
+            {
+                "groups" => new H5Group(Connector, link),
+                "datasets" => new H5Dataset(),
+                // https://github.com/HDFGroup/hdf-rest-api/blob/e6f1a685c34ce4db68cdbdbcacacd053176a0136/openapi.yaml#L804-L805
+                _ => throw new Exception("The link collection type {} is not supported. Please contact the library maintainer to enable support for this type of collection.")
+            });
+        });
+    }
 }

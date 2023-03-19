@@ -18,10 +18,13 @@ public static class HsdsConnector
 
 internal class InternalHsdsConnector : H5Group, IHsdsConnector
 {   
-    public InternalHsdsConnector(string domainName, HsdsClient client) : base(domainName, client)
+    public InternalHsdsConnector(string domainName, HsdsClient client) : base(client)
     {
+        DomainName = domainName;
         Client = client;
     }
+
+    public string DomainName { get; }
 
     public HsdsClient Client { get; }
 

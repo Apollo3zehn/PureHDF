@@ -70,11 +70,6 @@ internal class H5Group : H5AttributableObject, IH5Group
             .Dereference();
     }
 
-    public T Get<T>(string path, H5LinkAccess linkAccess = default) where T : IH5Object
-    {
-        return (T)Get(path, linkAccess);
-    }
-
     public IH5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess = default)
     {
         if (Reference.Value == reference.Value)
@@ -82,12 +77,6 @@ internal class H5Group : H5AttributableObject, IH5Group
 
         return InternalGet(reference, linkAccess)
             .Dereference();
-    }
-
-    public T Get<T>(H5ObjectReference reference, H5LinkAccess linkAccess = default)
-        where T : IH5Object
-    {
-        return (T)Get(reference, linkAccess);
     }
 
     public IH5Group Group(string path, H5LinkAccess linkAccess = default)
