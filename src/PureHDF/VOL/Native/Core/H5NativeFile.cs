@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5NativeFile : H5Group, IH5NativeFile
+internal class H5NativeFile : H5NativeGroup, IH5NativeFile
 {
     // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
     #region Fields
@@ -52,7 +52,7 @@ internal class H5NativeFile : H5Group, IH5NativeFile
 
     #region Methods
 
-    internal static H5NativeFile OpenRead(string filePath, bool deleteOnClose = false)
+    internal static IH5NativeFile OpenRead(string filePath, bool deleteOnClose = false)
     {
         return Open(
             filePath,
@@ -63,7 +63,7 @@ internal class H5NativeFile : H5Group, IH5NativeFile
             deleteOnClose: deleteOnClose);
     }
 
-    internal static H5NativeFile Open(
+    internal static IH5NativeFile Open(
         string filePath,
         FileMode fileMode,
         FileAccess fileAccess,
@@ -90,7 +90,7 @@ internal class H5NativeFile : H5Group, IH5NativeFile
         return Open(driver, absoluteFilePath, deleteOnClose);
     }
 
-    internal static H5NativeFile Open(H5DriverBase driver, string absoluteFilePath, bool deleteOnClose = false)
+    internal static IH5NativeFile Open(H5DriverBase driver, string absoluteFilePath, bool deleteOnClose = false)
     {
         if (!BitConverter.IsLittleEndian)
             throw new Exception("This library only works on little endian systems.");

@@ -7,14 +7,14 @@ internal class SymbolicLink
 {
     #region Constructors
 
-    public SymbolicLink(string name, string linkValue, H5Group parent)
+    public SymbolicLink(string name, string linkValue, H5NativeGroup parent)
     {
         Name = name;
         Value = linkValue;
         Parent = parent;
     }
 
-    public SymbolicLink(LinkMessage linkMessage, H5Group parent)
+    public SymbolicLink(LinkMessage linkMessage, H5NativeGroup parent)
     {
         Name = linkMessage.LinkName;
 
@@ -38,7 +38,7 @@ internal class SymbolicLink
 
     public string? ObjectPath { get; }
 
-    public H5Group Parent { get; }
+    public H5NativeGroup Parent { get; }
 
     #endregion
 

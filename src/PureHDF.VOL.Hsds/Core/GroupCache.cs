@@ -8,8 +8,14 @@ internal class GroupCache
 {
     private readonly ConcurrentDictionary<CacheEntryKey, H5Group> _groupMap = new();
 
-    public H5Group GetOrAdd(CacheEntryKey key, Func<CacheEntryKey, H5Group> valueFactory)
+    public async Task<H5Group> GetOrAddAsync(CacheEntryKey key, Func<Task<H5Group>> valueFactory)
     {
-        return _groupMap.GetOrAdd(key, valueFactory);
+        if (!_groupMap.TryGetValue(key, out var group))
+        {
+            group = await valueFactory().ConfigureAwait(false);
+            _groupMap.TryAdd(key, group);
+        }
+
+        return group;
     }
 }

@@ -51,7 +51,7 @@ internal struct NamedReference
         }
         else if (ScratchPad is not null)
         {
-            return new H5Group(File, File.Context, this);
+            return new H5NativeGroup(File, File.Context, this);
         }
         else
         {
@@ -61,7 +61,7 @@ internal struct NamedReference
 
             return objectHeader.ObjectType switch
             {
-                ObjectType.Group => new H5Group(File, context, this, objectHeader),
+                ObjectType.Group => new H5NativeGroup(File, context, this, objectHeader),
                 ObjectType.Dataset => new H5Dataset(File, context, this, objectHeader),
                 ObjectType.CommitedDatatype => new H5CommitedDatatype(context, this, objectHeader),
                 _ => throw new Exception("Unknown object type.")

@@ -305,7 +305,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = (H5NativeFile)H5NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var dataset_references = root.Group("reference").Dataset("region_reference");
                 var references = dataset_references.Read<H5RegionReference>();
 

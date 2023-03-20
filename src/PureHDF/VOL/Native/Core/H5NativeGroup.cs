@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}")]
-internal class H5Group : H5AttributableObject, IH5NativeGroup
+internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
 {
     #region Fields
 
@@ -17,20 +17,20 @@ internal class H5Group : H5AttributableObject, IH5NativeGroup
     #region Constructors
 
     // Only for H5File constructor
-    internal H5Group(H5Context context, NamedReference reference, ObjectHeader header)
+    internal H5NativeGroup(H5Context context, NamedReference reference, ObjectHeader header)
        : base(context, reference, header)
     {
         //
     }
 
-    internal H5Group(H5NativeFile file, H5Context context, NamedReference reference)
+    internal H5NativeGroup(H5NativeFile file, H5Context context, NamedReference reference)
        : base(context, reference)
     {
         _file = file;
         _scratchPad = reference.ScratchPad;
     }
 
-    internal H5Group(H5NativeFile file, H5Context context, NamedReference reference, ObjectHeader header)
+    internal H5NativeGroup(H5NativeFile file, H5Context context, NamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         _file = file;
@@ -229,7 +229,7 @@ internal class H5Group : H5AttributableObject, IH5NativeGroup
 
         for (int i = 0; i < segments.Length; i++)
         {
-            if (current.Dereference() is not H5Group group)
+            if (current.Dereference() is not H5NativeGroup group)
                 return false;
 
             if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -252,7 +252,7 @@ internal class H5Group : H5AttributableObject, IH5NativeGroup
 
         for (int i = 0; i < segments.Length; i++)
         {
-            if (current.Dereference() is not H5Group group)
+            if (current.Dereference() is not H5NativeGroup group)
                 throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
 
             if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -421,7 +421,7 @@ internal class H5Group : H5AttributableObject, IH5NativeGroup
                 // search childs for reference
                 foreach (var childReference in references)
                 {
-                    var group = childReference.Dereference() as H5Group;
+                    var group = childReference.Dereference() as H5NativeGroup;
 
                     if (group is not null)
                     {

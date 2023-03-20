@@ -5,8 +5,6 @@ namespace PureHDF.VOL.Hsds
 {
     internal class H5Dataset : IH5Dataset
     {
-        public IH5File File => throw new NotImplementedException();
-
         public IH5Dataspace Space => throw new NotImplementedException();
 
         public IH5DataType Type => throw new NotImplementedException();

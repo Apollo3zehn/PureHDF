@@ -8,11 +8,6 @@ namespace PureHDF;
 public interface IH5Dataset : IH5AttributableObject
 {
     /// <summary>
-    /// A reference to the <see cref="H5File"/> that this dataset belongs to.
-    /// </summary>
-    IH5File File { get; }
-
-    /// <summary>
     /// Gets the data space.
     /// </summary>
     IH5Dataspace Space { get; }

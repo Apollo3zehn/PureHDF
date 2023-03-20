@@ -87,7 +87,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
 
     #region Properties
 
-    public IH5File File { get; }
+    internal IH5NativeFile File { get; }
 
     public IH5Dataspace Space
     {
