@@ -172,7 +172,7 @@ public class SourceGenerator : ISourceGenerator
         var propertyNameMap = new Dictionary<string, string>();
 
         // ensure unique property names
-        foreach (var link in group.Children)
+        foreach (var link in group.Children())
         {
             var propertyName = NormalizeName(link.Name);
             var modifiedPropertyName = propertyName;
@@ -194,7 +194,7 @@ public class SourceGenerator : ISourceGenerator
         var constructorBuilder = new StringBuilder();
         var properties = new List<string>();
 
-        foreach (var link in group.Children)
+        foreach (var link in group.Children())
         {
             var propertyName = propertyNameMap.First(entry => entry.Value == link.Name).Key;
 

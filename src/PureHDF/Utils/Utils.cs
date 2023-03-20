@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Text;
-using PureHDF.VFD;
 
 namespace PureHDF;
 

@@ -78,7 +78,7 @@ var myH5Object = group.Get("/path/to/unknown/object");
 Iterate through all links in a group:
 
 ```cs
-foreach (var link in group.Children)
+foreach (var link in group.Children())
 {
     var message = link switch
     {

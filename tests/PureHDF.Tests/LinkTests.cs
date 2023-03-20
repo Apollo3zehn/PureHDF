@@ -94,7 +94,7 @@ namespace PureHDF.Tests.Reading
                 var group = root.Group("mass_links");
 
                 // Assert
-                var actual = group.Children.Count();
+                var actual = group.Children().Count();
                 Assert.Equal(expected, actual);
             });
         }

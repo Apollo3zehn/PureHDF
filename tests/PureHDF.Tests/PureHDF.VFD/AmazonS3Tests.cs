@@ -25,7 +25,7 @@ public class AmazonS3TestsSync
 
         // Act
         using var file = H5File.Open(stream);
-        var children = file.Children.ToArray();
+        var children = file.Children().ToArray();
 
         var dataset = file.Dataset("speed100m");
         var fileSelection = new HyperslabSelection(rank: 2, starts: new ulong[] { 0, 0 }, blocks: new ulong[] { 10, 1 });
@@ -59,7 +59,7 @@ public class AmazonS3TestsAsync
 
         // Act
         using var file = H5File.Open(stream);
-        var children = file.Children.ToArray();
+        var children = file.Children().ToArray();
 
         var dataset = file.Dataset("speed100m");
         var fileSelection = new HyperslabSelection(rank: 2, starts: new ulong[] { 0, 0 }, blocks: new ulong[] { 10, 1 });
