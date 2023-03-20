@@ -2,9 +2,9 @@ using Hsds.Api;
 
 namespace PureHDF.VOL.Hsds;
 
-internal class InternalHsdsConnector : H5Group, IHsdsConnector
+internal class InternalHsdsConnector : HsdsGroup, IHsdsConnector
 {   
-    public InternalHsdsConnector(string domainName, HsdsClient client) : base(domainName, client)
+    public InternalHsdsConnector(string domainName, string id, HsdsClient client) : base("/", id)
     {
         DomainName = domainName;
         Client = client;
@@ -14,7 +14,7 @@ internal class InternalHsdsConnector : H5Group, IHsdsConnector
 
     public HsdsClient Client { get; }
 
-    public GroupCache Cache { get; } = new();
+    public ObjectCache Cache { get; } = new();
 
     #region IDisposable
 

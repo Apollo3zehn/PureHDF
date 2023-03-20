@@ -3,8 +3,13 @@ using PureHDF.VOL.Native;
 
 namespace PureHDF.VOL.Hsds
 {
-    internal class H5Dataset : IH5Dataset
+    internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
     {
+        public HsdsDataset(string name, string id) : base(name, id)
+        {
+            //
+        }
+
         public IH5Dataspace Space => throw new NotImplementedException();
 
         public IH5DataType Type => throw new NotImplementedException();
@@ -13,21 +18,7 @@ namespace PureHDF.VOL.Hsds
 
         public IH5FillValue FillValue => throw new NotImplementedException();
 
-        public IEnumerable<IH5Attribute> Attributes => throw new NotImplementedException();
-
-        public string Name => throw new NotImplementedException();
-
         public IQueryable<T> AsQueryable<T>(Selection? memorySelection = null, ulong[]? memoryDims = null, H5DatasetAccess datasetAccess = default) where T : unmanaged
-        {
-            throw new NotImplementedException();
-        }
-
-        public IH5Attribute Attribute(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool AttributeExists(string name)
         {
             throw new NotImplementedException();
         }

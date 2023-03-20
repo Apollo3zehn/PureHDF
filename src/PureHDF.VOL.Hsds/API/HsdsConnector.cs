@@ -12,6 +12,7 @@ public static class HsdsConnector
     /// <param name="client">The HsdsClient used to communicate with HSDS.</param>
     public static IHsdsConnector Create(string domainName, HsdsClient client)
     {
-        return new InternalHsdsConnector(domainName, client);
+        var domain = client.Domain.GetDomain(domainName);
+        return new InternalHsdsConnector(domainName, domain.Root, client);
     }
 }

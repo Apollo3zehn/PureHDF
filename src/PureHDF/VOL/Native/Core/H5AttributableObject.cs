@@ -20,17 +20,16 @@ internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
 
     #endregion
 
-    #region Properties
-
-    public IEnumerable<IH5Attribute> Attributes => EnumerateAttributes();
-
-    #endregion
-
     #region Methods
 
-    public bool AttributeExists(string name)
+    public IEnumerable<IH5Attribute> Attributes()
     {
-        return TryGetAttributeMessage(name, out var _);
+        return EnumerateAttributes();
+    }
+
+    public Task<IEnumerable<IH5Attribute>> AttributesAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(EnumerateAttributes());
     }
 
     public IH5Attribute Attribute(string name)
@@ -39,6 +38,21 @@ internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
             throw new Exception($"Could not find attribute '{name}'.");
 
         return new H5Attribute(Context, attributeMessage);
+    }
+
+    public Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(Attribute(name));
+    }
+
+    public bool AttributeExists(string name)
+    {
+        return TryGetAttributeMessage(name, out var _);
+    }
+
+    public Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(AttributeExists(name));
     }
 
     private bool TryGetAttributeMessage(string name, [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)
@@ -75,7 +89,7 @@ internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
         return false;
     }
 
-    private IEnumerable<H5Attribute> EnumerateAttributes()
+    private IEnumerable<IH5Attribute> EnumerateAttributes()
     {
         // AttributeInfoMessage is optional
         // AttributeMessage is optional

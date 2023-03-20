@@ -4,11 +4,11 @@ namespace PureHDF.VOL.Hsds;
 
 internal record struct CacheEntryKey(string ParentId, string LinkName);
 
-internal class GroupCache
+internal class ObjectCache
 {
-    private readonly ConcurrentDictionary<CacheEntryKey, H5Group> _groupMap = new();
+    private readonly ConcurrentDictionary<CacheEntryKey, HsdsObject> _groupMap = new();
 
-    public async Task<H5Group> GetOrAddAsync(CacheEntryKey key, Func<Task<H5Group>> valueFactory)
+    public async Task<HsdsObject> GetOrAddAsync(CacheEntryKey key, Func<Task<HsdsObject>> valueFactory)
     {
         if (!_groupMap.TryGetValue(key, out var group))
         {

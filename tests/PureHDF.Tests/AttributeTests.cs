@@ -373,7 +373,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("tiny");
-                var attribute = parent.Attributes.First();
+                var attribute = parent.Attributes().First();
                 var actual = attribute.Read<byte>();
 
                 // Assert
@@ -392,7 +392,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("huge");
-                var attribute = parent.Attributes.First();
+                var attribute = parent.Attributes().First();
                 var actual = attribute.Read<int>();
 
                 // Assert
@@ -412,7 +412,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("mass_attributes");
-                var attributes = parent.Attributes.ToList();
+                var attributes = parent.Attributes().ToList();
 
                 foreach (var attribute in attributes)
                 {

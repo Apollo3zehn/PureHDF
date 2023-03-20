@@ -51,51 +51,6 @@ public interface IH5Group : IH5AttributableObject
     Task<IH5Object> GetAsync(H5ObjectReference reference, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Gets the group that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <returns>The requested group.</returns>
-    IH5Group Group(string path);
-
-    /// <summary>
-    /// Gets the group that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>The requested group.</returns>
-    Task<IH5Group> GroupAsync(string path, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the dataset that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <returns>The requested dataset.</returns>
-    IH5Dataset Dataset(string path);
-
-    /// <summary>
-    /// Gets the dataset that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>The requested dataset.</returns>
-    Task<IH5Dataset> DatasetAsync(string path, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the commited data type that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <returns>The requested commited data type.</returns>
-    IH5CommitedDatatype CommitedDatatype(string path);
-
-    /// <summary>
-    /// Gets the commited data type that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>The requested commited data type.</returns>
-    Task<IH5CommitedDatatype> CommitedDatatypeAsync(string path, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Gets an enumerable of the available children.
     /// </summary>
     /// <returns>An enumerable of the available children.</returns>
