@@ -157,7 +157,7 @@ public interface IH5DataType
                 .Select(property => new CompoundMember(
                     property.Name,
                     (int)property.MemberByteOffset,
-                    new H5DataType(property.MemberTypeMessage)))
+                    new NativeDataType(property.MemberTypeMessage)))
                 .ToArray();
         }
 
@@ -203,7 +203,7 @@ public interface IH5DataType
         {
             _property = property;
 
-            BaseType = new H5DataType(_property.BaseType);
+            BaseType = new NativeDataType(_property.BaseType);
         }
 
         /// <summary>

@@ -12,7 +12,7 @@ internal class ObjectHeader2 : ObjectHeader
 
     #region Constructors
 
-    internal ObjectHeader2(H5Context context, byte version) : base(context)
+    internal ObjectHeader2(NativeContext context, byte version) : base(context)
     {
         var driver = context.Driver;
 

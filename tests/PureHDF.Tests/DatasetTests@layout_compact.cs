@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCompactDataset(fileId));
 
                 // Act
-                using var root = H5NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("compact");
                 var dataset = parent.Dataset("compact");
                 var actual = dataset.Read<int>();

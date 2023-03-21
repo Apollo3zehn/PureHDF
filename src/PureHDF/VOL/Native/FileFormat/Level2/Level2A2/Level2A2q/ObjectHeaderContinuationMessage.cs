@@ -4,7 +4,7 @@ internal class ObjectHeaderContinuationMessage : Message
 {
     #region Constructors
 
-    public ObjectHeaderContinuationMessage(H5Context context)
+    public ObjectHeaderContinuationMessage(NativeContext context)
     {
         var (driver, superblock) = context;
 

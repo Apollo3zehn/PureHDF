@@ -22,14 +22,14 @@ internal abstract class H5D_Chunk : H5D_Base
 
     #region Constructors
 
-    public H5D_Chunk(H5Dataset dataset, H5DatasetAccess datasetAccess) :
+    public H5D_Chunk(NativeDataset dataset, H5DatasetAccess datasetAccess) :
        base(dataset, datasetAccess)
     {
         // H5Dchunk.c (H5D__chunk_set_info_real)
 
         var chunkCacheFactory = datasetAccess.ChunkCacheFactory;
 
-        chunkCacheFactory ??= ((H5NativeFile)Dataset.File).ChunkCacheFactory;
+        chunkCacheFactory ??= ((NativeFile)Dataset.File).ChunkCacheFactory;
 
         _chunkCache = chunkCacheFactory();
 
@@ -70,7 +70,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     #region Methods
 
-    public static H5D_Chunk Create(H5Dataset dataset, H5DatasetAccess datasetAccess)
+    public static H5D_Chunk Create(NativeDataset dataset, H5DatasetAccess datasetAccess)
     {
         return dataset.DataLayoutMessage switch
         {

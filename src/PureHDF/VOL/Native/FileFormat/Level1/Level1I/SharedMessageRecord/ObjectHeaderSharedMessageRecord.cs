@@ -4,7 +4,7 @@ internal class ObjectHeaderSharedMessageRecord : SharedMessageRecord
 {
     #region Constructors
 
-    public ObjectHeaderSharedMessageRecord(H5Context context) : base(context.Driver)
+    public ObjectHeaderSharedMessageRecord(NativeContext context) : base(context.Driver)
     {
         var (driver, superblock) = context;
 

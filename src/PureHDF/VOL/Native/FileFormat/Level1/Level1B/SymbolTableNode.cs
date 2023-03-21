@@ -12,7 +12,7 @@ internal class SymbolTableNode
 
     #region Constructors
 
-    public SymbolTableNode(H5Context context)
+    public SymbolTableNode(NativeContext context)
     {
         var driver = context.Driver;
 

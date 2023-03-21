@@ -6,13 +6,13 @@ internal class AttributeMessage : Message
 
     private byte _version;
     private readonly CharacterSetEncoding _nameEncoding;
-    private H5Context _context;
+    private NativeContext _context;
 
     #endregion
 
     #region Constructors
 
-    public AttributeMessage(H5Context context, ObjectHeader objectHeader)
+    public AttributeMessage(NativeContext context, ObjectHeader objectHeader)
     {
         _context = context;
 

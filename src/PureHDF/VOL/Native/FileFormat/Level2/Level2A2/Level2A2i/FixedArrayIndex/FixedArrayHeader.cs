@@ -13,7 +13,7 @@ internal class FixedArrayHeader
 
     #region Constructors
 
-    public FixedArrayHeader(H5Context context)
+    public FixedArrayHeader(NativeContext context)
     {
         var (driver, superblock) = context;
 

@@ -4,7 +4,7 @@ internal class ExternalFileListSlot
 {
     #region Constructors
 
-    public ExternalFileListSlot(H5Context context)
+    public ExternalFileListSlot(NativeContext context)
     {
         var (driver, superblock) = context;
 

@@ -3,7 +3,7 @@
 /// <summary>
 /// An HDF5 group.
 /// </summary>
-public interface IH5NativeGroup : IH5Group
+public interface INativeGroup : IH5Group
 {
     /// <summary>
     /// Checks if the link with the specified <paramref name="path"/> exist.

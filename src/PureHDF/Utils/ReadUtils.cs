@@ -9,7 +9,7 @@ namespace PureHDF;
 internal static class ReadUtils
 {
     public static unsafe Memory<T> ReadCompound<T>(
-        H5Context context,
+        NativeContext context,
         DatatypeMessage datatype,
         Span<byte> data,
         Memory<T> destination,
@@ -122,7 +122,7 @@ internal static class ReadUtils
     }
 
     public static Dictionary<string, object?>[] ReadCompound(
-        H5Context context,
+        NativeContext context,
         DatatypeMessage datatype,
         Span<byte> data)
     {
@@ -136,7 +136,7 @@ internal static class ReadUtils
     }
 
     public static unsafe Memory<Dictionary<string, object?>> ReadCompound(
-        H5Context context,
+        NativeContext context,
         DatatypeMessage datatype,
         Span<byte> data,
         Memory<Dictionary<string, object?>> destination)
@@ -225,7 +225,7 @@ internal static class ReadUtils
         return destination;
     }
 
-    private static Array? ReadRawArray(H5Context context, DatatypeMessage baseType, Span<byte> slicedData)
+    private static Array? ReadRawArray(NativeContext context, DatatypeMessage baseType, Span<byte> slicedData)
     {
         _ = context.Superblock;
 
@@ -276,7 +276,7 @@ internal static class ReadUtils
         };
     }
 
-    private static Array? ReadArray(H5Context context, DatatypeMessage type, Span<byte> slicedData)
+    private static Array? ReadArray(NativeContext context, DatatypeMessage type, Span<byte> slicedData)
     {
         if (type.Class != DatatypeMessageClass.Array)
             throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Array}'.");
@@ -287,7 +287,7 @@ internal static class ReadUtils
         return ReadRawArray(context, baseType, slicedData);
     }
 
-    private static Array? ReadEnumerated(H5Context context, DatatypeMessage type, Span<byte> slicedData)
+    private static Array? ReadEnumerated(NativeContext context, DatatypeMessage type, Span<byte> slicedData)
     {
         if (type.Class != DatatypeMessageClass.Enumerated)
             throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Enumerated}'.");
@@ -299,7 +299,7 @@ internal static class ReadUtils
     }
 
     public static string[] ReadString(
-        H5Context context,
+        NativeContext context,
         DatatypeMessage datatype,
         Span<byte> data)
     {
@@ -313,7 +313,7 @@ internal static class ReadUtils
     }
 
     public static Memory<string> ReadString(
-        H5Context context,
+        NativeContext context,
         DatatypeMessage datatype,
         Span<byte> source,
         Memory<string> destination)

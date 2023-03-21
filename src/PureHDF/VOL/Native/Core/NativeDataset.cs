@@ -7,20 +7,20 @@ using System.Runtime.InteropServices;
 namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}: Class = '{InternalDataType.Class}'")]
-internal class H5Dataset : H5AttributableObject, IH5Dataset
+internal class NativeDataset : NativeAttributableObject, IH5Dataset
 {
     #region Fields
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
     private IH5DataLayout? _layout;
-    private H5FillValue? _fillValue;
+    private NativeFillValue? _fillValue;
 
     #endregion
 
     #region Constructors
 
-    internal H5Dataset(H5NativeFile file, H5Context context, NamedReference reference, ObjectHeader header)
+    internal NativeDataset(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         File = file;
@@ -87,13 +87,13 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
 
     #region Properties
 
-    internal IH5NativeFile File { get; }
+    internal INativeFile File { get; }
 
     public IH5Dataspace Space
     {
         get
         {
-            _space ??= new H5Dataspace(DataspaceMessage);
+            _space ??= new NativeDataspace(DataspaceMessage);
 
             return _space;
         }
@@ -103,7 +103,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
     {
         get
         {
-            _type ??= new H5DataType(DataTypeMessage);
+            _type ??= new NativeDataType(DataTypeMessage);
 
             return _type;
         }
@@ -113,7 +113,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
     {
         get
         {
-            _layout ??= new H5DataLayout(DataLayoutMessage);
+            _layout ??= new NativeDataLayout(DataLayoutMessage);
 
             return _layout;
         }
@@ -123,7 +123,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
     {
         get
         {
-            _fillValue ??= new H5FillValue(FillValueMessage);
+            _fillValue ??= new NativeFillValue(FillValueMessage);
 
             return _fillValue;
         }
@@ -445,7 +445,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
         static void converter(Memory<byte> source, Memory<TResult> target)
             => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
 
-        Task readVirtualDelegate(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+        Task readVirtualDelegate(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
             => dataset.ReadCoreValueAsync(
                 reader,
                 destination,
@@ -500,7 +500,7 @@ internal class H5Dataset : H5AttributableObject, IH5Dataset
             _ => 1
         };
 
-        Task readVirtualDelegate(H5Dataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+        Task readVirtualDelegate(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
             => dataset.ReadCoreReferenceAsync(
                 reader,
                 destination,

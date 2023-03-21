@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5NativeFile : H5NativeGroup, IH5NativeFile
+internal class NativeFile : NativeGroup, INativeFile
 {
     // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
     #region Fields
@@ -12,9 +12,9 @@ internal class H5NativeFile : H5NativeGroup, IH5NativeFile
 
     #region Constructors
 
-    private H5NativeFile(
-        H5Context context,
-        NamedReference reference,
+    private NativeFile(
+        NativeContext context,
+        NativeNamedReference reference,
         ObjectHeader header,
         string absoluteFilePath,
         bool deleteOnClose) : base(context, reference, header)
@@ -52,7 +52,7 @@ internal class H5NativeFile : H5NativeGroup, IH5NativeFile
 
     #region Methods
 
-    internal static IH5NativeFile OpenRead(string filePath, bool deleteOnClose = false)
+    internal static INativeFile OpenRead(string filePath, bool deleteOnClose = false)
     {
         return Open(
             filePath,
@@ -63,7 +63,7 @@ internal class H5NativeFile : H5NativeGroup, IH5NativeFile
             deleteOnClose: deleteOnClose);
     }
 
-    internal static IH5NativeFile Open(
+    internal static INativeFile Open(
         string filePath,
         FileMode fileMode,
         FileAccess fileAccess,
@@ -90,7 +90,7 @@ internal class H5NativeFile : H5NativeGroup, IH5NativeFile
         return Open(driver, absoluteFilePath, deleteOnClose);
     }
 
-    internal static IH5NativeFile Open(H5DriverBase driver, string absoluteFilePath, bool deleteOnClose = false)
+    internal static INativeFile Open(H5DriverBase driver, string absoluteFilePath, bool deleteOnClose = false)
     {
         if (!BitConverter.IsLittleEndian)
             throw new Exception("This library only works on little endian systems.");
@@ -141,11 +141,11 @@ internal class H5NativeFile : H5NativeGroup, IH5NativeFile
         }
 
         driver.Seek((long)address, SeekOrigin.Begin);
-        var context = new H5Context(driver, superblock);
+        var context = new NativeContext(driver, superblock);
         var header = ObjectHeader.Construct(context);
 
-        var file = new H5NativeFile(context, default, header, absoluteFilePath, deleteOnClose);
-        var reference = new NamedReference("/", address, file);
+        var file = new NativeFile(context, default, header, absoluteFilePath, deleteOnClose);
+        var reference = new NativeNamedReference("/", address, file);
         file.Reference = reference;
 
         return file;
@@ -177,7 +177,7 @@ internal class H5NativeFile : H5NativeGroup, IH5NativeFile
         {
             if (disposing)
             {
-                H5Cache.Clear(Context.Superblock);
+                NativeCache.Clear(Context.Superblock);
                 Context.Driver.Dispose();
 
                 if (_deleteOnClose && System.IO.File.Exists(Path))

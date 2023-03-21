@@ -3,11 +3,11 @@
 namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
-internal class H5CommitedDatatype : H5AttributableObject, IH5CommitedDatatype
+internal class NativeCommitedDatatype : NativeAttributableObject, IH5CommitedDatatype
 {
     #region Constructors
 
-    internal H5CommitedDatatype(H5Context context, NamedReference reference, ObjectHeader header)
+    internal NativeCommitedDatatype(NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         Datatype = header.GetMessage<DatatypeMessage>();

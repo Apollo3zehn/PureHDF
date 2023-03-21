@@ -12,7 +12,7 @@ internal class ExtensibleArrayHeader
 
     #region Constructors
 
-    public ExtensibleArrayHeader(H5Context context)
+    public ExtensibleArrayHeader(NativeContext context)
     {
         var (driver, superblock) = context;
 

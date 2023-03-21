@@ -4,13 +4,13 @@ internal class SymbolTableMessage : Message
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
 
     #endregion
 
     #region Constructors
 
-    public SymbolTableMessage(H5Context context)
+    public SymbolTableMessage(NativeContext context)
     {
         var (driver, superblock) = context;
         _context = context;

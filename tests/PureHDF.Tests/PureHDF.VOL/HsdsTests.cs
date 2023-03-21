@@ -106,4 +106,18 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
             attribute => Assert.Equal("attr1", attribute.Name),
             attribute => Assert.Equal("attr2", attribute.Name));
     }
+
+    [Fact]
+    public void CanGetDataset()
+    {
+        // Arrange
+        var expected = "dset1.1.1";
+
+        // Act
+        var actual = _connector
+            .Dataset($"/g1/g1.1/{expected}");
+
+        // Assert
+        Assert.Equal(expected, actual.Name);
+    }
 }

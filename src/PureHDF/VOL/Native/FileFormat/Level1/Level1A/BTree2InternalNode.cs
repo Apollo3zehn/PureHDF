@@ -6,7 +6,7 @@ internal class BTree2InternalNode<T> : BTree2Node<T> where T : struct, IBTree2Re
 {
     #region Constructors
 
-    public BTree2InternalNode(H5Context context, BTree2Header<T> header, ushort recordCount, int nodeLevel, Func<T> decodeKey)
+    public BTree2InternalNode(NativeContext context, BTree2Header<T> header, ushort recordCount, int nodeLevel, Func<T> decodeKey)
         : base(context.Driver, header, recordCount, BTree2InternalNode<T>.Signature, decodeKey)
     {
         var (driver, superblock) = context;

@@ -13,7 +13,7 @@
         #region Constructors
 
         public H5D_Virtual(
-            H5Dataset dataset, 
+            NativeDataset dataset, 
             H5DatasetAccess datasetAccess,
             TResult? fillValue,
             ReadVirtualDelegate<TResult> readVirtualDelegate) 
@@ -23,7 +23,7 @@
             _readVirtualDelegate = readVirtualDelegate;
 
             var layoutMessage = (DataLayoutMessage4)dataset.DataLayoutMessage;
-            var collection = H5Cache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
+            var collection = NativeCache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
             var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
             using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
@@ -60,7 +60,7 @@
         public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             IH5ReadStream stream = new VirtualDatasetStream<TResult>(
-                (H5NativeFile)Dataset.File,
+                (NativeFile)Dataset.File,
                 _block.VdsDatasetEntries, 
                 dimensions: Dataset.DataspaceMessage.DimensionSizes,
                 fillValue: _fillValue,

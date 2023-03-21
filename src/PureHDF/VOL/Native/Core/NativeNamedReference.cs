@@ -1,12 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿namespace PureHDF;
 
-namespace PureHDF;
-
-internal struct NamedReference
+internal struct NativeNamedReference
 {
     #region Constructors
 
-    public NamedReference(string name, ulong value, H5NativeFile file)
+    public NativeNamedReference(string name, ulong value, NativeFile file)
     {
         Name = name;
         Value = value;
@@ -15,7 +13,7 @@ internal struct NamedReference
         Exception = null;
     }
 
-    public NamedReference(string name, ulong value)
+    public NativeNamedReference(string name, ulong value)
     {
         Name = name;
         Value = value;
@@ -32,7 +30,7 @@ internal struct NamedReference
 
     public ulong Value { get; }
 
-    public H5NativeFile? File { get; }
+    public NativeFile? File { get; }
 
     public ObjectHeaderScratchPad? ScratchPad { get; set; }
 
@@ -42,16 +40,15 @@ internal struct NamedReference
 
     #region Methods
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public H5Object Dereference()
+    public NativeObject Dereference()
     {
         if (File is null)
         {
-            return new H5UnresolvedLink(this);
+            return new NativeUnresolvedLink(this);
         }
         else if (ScratchPad is not null)
         {
-            return new H5NativeGroup(File, File.Context, this);
+            return new NativeGroup(File, File.Context, this);
         }
         else
         {
@@ -61,9 +58,9 @@ internal struct NamedReference
 
             return objectHeader.ObjectType switch
             {
-                ObjectType.Group => new H5NativeGroup(File, context, this, objectHeader),
-                ObjectType.Dataset => new H5Dataset(File, context, this, objectHeader),
-                ObjectType.CommitedDatatype => new H5CommitedDatatype(context, this, objectHeader),
+                ObjectType.Group => new NativeGroup(File, context, this, objectHeader),
+                ObjectType.Dataset => new NativeDataset(File, context, this, objectHeader),
+                ObjectType.CommitedDatatype => new NativeCommitedDatatype(context, this, objectHeader),
                 _ => throw new Exception("Unknown object type.")
             };
         }

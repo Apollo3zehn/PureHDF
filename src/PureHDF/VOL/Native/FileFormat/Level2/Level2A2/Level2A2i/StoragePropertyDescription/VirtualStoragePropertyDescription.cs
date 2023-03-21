@@ -4,7 +4,7 @@ internal class VirtualStoragePropertyDescription : StoragePropertyDescription
 {
     #region Constructors
 
-    public VirtualStoragePropertyDescription(H5Context context)
+    public VirtualStoragePropertyDescription(NativeContext context)
     {
         var (driver, superblock) = context;
 

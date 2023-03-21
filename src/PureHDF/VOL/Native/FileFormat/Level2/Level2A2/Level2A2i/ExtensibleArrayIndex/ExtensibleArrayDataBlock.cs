@@ -12,7 +12,7 @@ internal class ExtensibleArrayDataBlock<T>
 
     #region Constructors
 
-    public ExtensibleArrayDataBlock(H5Context context, ExtensibleArrayHeader header, ulong elementCount, Func<H5DriverBase, T> decode)
+    public ExtensibleArrayDataBlock(NativeContext context, ExtensibleArrayHeader header, ulong elementCount, Func<H5DriverBase, T> decode)
     {
         var (driver, superblock) = context;
 

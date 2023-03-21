@@ -10,7 +10,7 @@ internal class SharedMessage
 
     #region Constructors
 
-    public SharedMessage(H5Context context)
+    public SharedMessage(NativeContext context)
     {
         var (driver, superblock) = context;
 

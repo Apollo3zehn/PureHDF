@@ -11,7 +11,7 @@ internal class SharedMessageTableMessage : Message
 
     #region Constructors
 
-    public SharedMessageTableMessage(H5Context context)
+    public SharedMessageTableMessage(NativeContext context)
     {
         var (driver, superblock) = context;
         _driver = context.Driver;

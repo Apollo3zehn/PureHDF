@@ -8,14 +8,14 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
 
     private readonly Func<T> _decodeKey;
 
-    private H5Context _context;
+    private NativeContext _context;
     private byte _version;
 
     #endregion
 
     #region Constructors
 
-    public BTree2Header(H5Context context, Func<T> decodeKey)
+    public BTree2Header(NativeContext context, Func<T> decodeKey)
     {
         var (driver, superblock) = context;
         _context = context;

@@ -4,7 +4,7 @@ internal class HardLinkInfo : LinkInfo
 {
     #region Constructors
 
-    public HardLinkInfo(H5Context context)
+    public HardLinkInfo(NativeContext context)
     {
         var (driver, superblock) = context;
 

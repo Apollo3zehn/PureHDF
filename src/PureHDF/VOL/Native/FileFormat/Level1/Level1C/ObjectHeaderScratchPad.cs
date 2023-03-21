@@ -4,13 +4,13 @@ internal class ObjectHeaderScratchPad : ScratchPad
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
 
     #endregion
 
     #region Constructors
 
-    public ObjectHeaderScratchPad(H5Context context)
+    public ObjectHeaderScratchPad(NativeContext context)
     {
         var (driver, superblock) = context;
         _context = context;

@@ -12,7 +12,7 @@ internal class FreeSpaceManagerHeader
 
     #region Constructors
 
-    public FreeSpaceManagerHeader(H5Context context)
+    public FreeSpaceManagerHeader(NativeContext context)
     {
         var (driver, superblock) = context;
 

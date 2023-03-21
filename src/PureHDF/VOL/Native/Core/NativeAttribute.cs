@@ -5,19 +5,19 @@ using System.Runtime.InteropServices;
 namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
-internal class H5Attribute : IH5Attribute
+internal class NativeAttribute : IH5Attribute
 {
     #region Fields
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
-    private H5Context _context;
+    private NativeContext _context;
 
     #endregion
 
     #region Constructors
 
-    internal H5Attribute(H5Context context, AttributeMessage message)
+    internal NativeAttribute(NativeContext context, AttributeMessage message)
     {
         _context = context;
         Message = message;
@@ -39,7 +39,7 @@ internal class H5Attribute : IH5Attribute
     {
         get
         {
-            _space ??= new H5Dataspace(Message.Dataspace);
+            _space ??= new NativeDataspace(Message.Dataspace);
 
             return _space;
         }
@@ -49,7 +49,7 @@ internal class H5Attribute : IH5Attribute
     {
         get
         {
-            _type ??= new H5DataType(Message.Datatype);
+            _type ??= new NativeDataType(Message.Datatype);
 
             return _type;
         }

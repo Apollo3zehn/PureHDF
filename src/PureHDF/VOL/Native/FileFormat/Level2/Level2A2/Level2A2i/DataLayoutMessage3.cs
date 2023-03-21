@@ -10,7 +10,7 @@ internal class DataLayoutMessage3 : DataLayoutMessage
 
     #region Constructors
 
-    internal DataLayoutMessage3(H5Context context, byte version)
+    internal DataLayoutMessage3(NativeContext context, byte version)
     {
         var (driver, _) = context;
 

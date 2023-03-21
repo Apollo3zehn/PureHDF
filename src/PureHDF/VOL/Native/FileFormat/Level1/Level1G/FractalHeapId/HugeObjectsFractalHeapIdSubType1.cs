@@ -7,14 +7,14 @@ internal class HugeObjectsFractalHeapIdSubType1 : FractalHeapId
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
     private readonly FractalHeapHeader _heapHeader;
 
     #endregion
 
     #region Constructors
 
-    internal HugeObjectsFractalHeapIdSubType1(H5Context context, H5DriverBase localDriver, FractalHeapHeader header)
+    internal HugeObjectsFractalHeapIdSubType1(NativeContext context, H5DriverBase localDriver, FractalHeapHeader header)
     {
         _context = context;
         _heapHeader = header;

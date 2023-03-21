@@ -12,7 +12,7 @@ internal class ExtensibleArraySecondaryBlock
 
     #region Constructors
 
-    public ExtensibleArraySecondaryBlock(H5Context context, ExtensibleArrayHeader header, uint index)
+    public ExtensibleArraySecondaryBlock(NativeContext context, ExtensibleArrayHeader header, uint index)
     {
         var (driver, superblock) = context;
 

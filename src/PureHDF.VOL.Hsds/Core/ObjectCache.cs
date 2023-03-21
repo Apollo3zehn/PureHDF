@@ -6,16 +6,16 @@ internal record struct CacheEntryKey(string ParentId, string LinkName);
 
 internal class ObjectCache
 {
-    private readonly ConcurrentDictionary<CacheEntryKey, HsdsObject> _groupMap = new();
+    private readonly ConcurrentDictionary<CacheEntryKey, HsdsNamedReference> _referenceMap = new();
 
-    public async Task<HsdsObject> GetOrAddAsync(CacheEntryKey key, Func<Task<HsdsObject>> valueFactory)
+    public async Task<HsdsNamedReference> GetOrAddAsync(CacheEntryKey key, Func<Task<HsdsNamedReference>> valueFactory)
     {
-        if (!_groupMap.TryGetValue(key, out var group))
+        if (!_referenceMap.TryGetValue(key, out var reference))
         {
-            group = await valueFactory().ConfigureAwait(false);
-            _groupMap.TryAdd(key, group);
+            reference = await valueFactory().ConfigureAwait(false);
+            _referenceMap.TryAdd(key, reference);
         }
 
-        return group;
+        return reference;
     }
 }

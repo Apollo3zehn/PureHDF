@@ -6,14 +6,14 @@ internal class LinkInfoMessage : Message
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
     private byte _version;
 
     #endregion
 
     #region Constructors
 
-    public LinkInfoMessage(H5Context context)
+    public LinkInfoMessage(NativeContext context)
     {
         _context = context;
 

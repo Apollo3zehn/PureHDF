@@ -7,14 +7,14 @@ internal class SymbolicLink
 {
     #region Constructors
 
-    public SymbolicLink(string name, string linkValue, H5NativeGroup parent)
+    public SymbolicLink(string name, string linkValue, NativeGroup parent)
     {
         Name = name;
         Value = linkValue;
         Parent = parent;
     }
 
-    public SymbolicLink(LinkMessage linkMessage, H5NativeGroup parent)
+    public SymbolicLink(LinkMessage linkMessage, NativeGroup parent)
     {
         Name = linkMessage.LinkName;
 
@@ -38,13 +38,13 @@ internal class SymbolicLink
 
     public string? ObjectPath { get; }
 
-    public H5NativeGroup Parent { get; }
+    public NativeGroup Parent { get; }
 
     #endregion
 
     #region Methods
 
-    public NamedReference GetTarget(H5LinkAccess linkAccess, bool useAsync)
+    public NativeNamedReference GetTarget(H5LinkAccess linkAccess, bool useAsync)
     {
         // this file
         if (string.IsNullOrWhiteSpace(ObjectPath))
@@ -57,7 +57,7 @@ internal class SymbolicLink
             }
             catch (Exception ex)
             {
-                return new NamedReference(Name, Superblock.UndefinedAddress)
+                return new NativeNamedReference(Name, Superblock.UndefinedAddress)
                 {
                     Exception = ex
                 };
@@ -74,7 +74,7 @@ internal class SymbolicLink
                 if (absoluteFilePath is null)
                     throw new Exception($"Could not find file {Value}.");
 
-                var externalFile = H5Cache.GetH5File(Parent.Context.Superblock, absoluteFilePath, useAsync: useAsync);
+                var externalFile = NativeCache.GetH5File(Parent.Context.Superblock, absoluteFilePath, useAsync: useAsync);
 
 #if NETSTANDARD2_0
                     return externalFile.InternalGet(ObjectPath!, linkAccess);
@@ -84,7 +84,7 @@ internal class SymbolicLink
             }
             catch (Exception ex)
             {
-                return new NamedReference(Name, Superblock.UndefinedAddress)
+                return new NativeNamedReference(Name, Superblock.UndefinedAddress)
                 {
                     Exception = ex
                 };

@@ -1,18 +1,20 @@
+using System.Diagnostics;
 using Hsds.Api;
 
 namespace PureHDF.VOL.Hsds;
 
+[DebuggerDisplay("{Name}")]
 internal class HsdsGroup : HsdsAttributableObject, IH5Group
 {
     // this constructor is only for the derived InternalHsdsConnector class
-    public HsdsGroup(string name, string id) 
-        : base(name, id)
+    public HsdsGroup(HsdsNamedReference reference) 
+        : base(reference)
     {
         //
     }
 
-    public HsdsGroup(string name, string id, InternalHsdsConnector connector)
-        : base(name, id, connector)
+    public HsdsGroup(InternalHsdsConnector connector, HsdsNamedReference reference)
+        : base(connector, reference)
     {
         //
     }
@@ -35,12 +37,14 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
     {
         return InternalGetAsync(path, useAsync: false, default)
             .GetAwaiter()
-            .GetResult();
+            .GetResult()
+            .Dereference();
     }
 
-    public Task<IH5Object> GetAsync(string path, CancellationToken cancellationToken = default)
+    public async Task<IH5Object> GetAsync(string path, CancellationToken cancellationToken = default)
     {
-        return InternalGetAsync(path, useAsync: true, cancellationToken);
+        return (await InternalGetAsync(path, useAsync: true, cancellationToken))
+            .Dereference();
     }
 
     // TODO: H5ObjectReference is probably a native only datatype
@@ -52,12 +56,14 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
     {
         return EnumerateReferencesAsync(useAsync: false, default)
             .GetAwaiter()
-            .GetResult();
+            .GetResult()
+            .Select(reference => reference.Dereference());
     }
 
-    public Task<IEnumerable<IH5Object>> ChildrenAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<IH5Object>> ChildrenAsync(CancellationToken cancellationToken = default)
     {
-        return EnumerateReferencesAsync(useAsync: true, cancellationToken);
+        return (await EnumerateReferencesAsync(useAsync: true, cancellationToken))
+            .Select(reference => reference.Dereference());
     }
 
     private async Task<bool> InternaLinkExists(string path, bool useAsync, CancellationToken cancellationToken)
@@ -75,32 +81,24 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
         }
     }
 
-    private async Task<IEnumerable<IH5Object>> EnumerateReferencesAsync(bool useAsync, CancellationToken cancellationToken)
+    private async Task<IEnumerable<HsdsNamedReference>> EnumerateReferencesAsync(bool useAsync, CancellationToken cancellationToken)
     {
         var response = useAsync
             ? await Connector.Client.Link.GetLinksAsync(Id, Connector.DomainName, cancellationToken: cancellationToken).ConfigureAwait(false)
             : Connector.Client.Link.GetLinks(Id, Connector.DomainName);
 
-        return response.Links.Select(link =>
-        {
-            return (IH5Object)(link.Collection switch
-            {
-                "groups" => new HsdsGroup(link.Title, link.Id, Connector),
-                "datasets" => new HsdsDataset(link.Title, link.Id),
-                // https://github.com/HDFGroup/hdf-rest-api/blob/e6f1a685c34ce4db68cdbdbcacacd053176a0136/openapi.yaml#L804-L805
-                _ => throw new Exception($"The link collection type {link.Collection} is not supported. Please contact the library maintainer to enable support for this type of collection.")
-            });
-        });
+        return response.Links
+            .Select(link => new HsdsNamedReference(link.Collection, link.Title, link.Id, Connector));
     }
 
-    private async Task<IH5Object> InternalGetAsync(string path, bool useAsync, CancellationToken cancellationToken)
+    private async Task<HsdsNamedReference> InternalGetAsync(string path, bool useAsync, CancellationToken cancellationToken)
     {
         if (path == "/")
-            return Connector;
+            return Connector.Reference;
 
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-        HsdsObject current = isRooted ? Connector : this;
+        var current = isRooted ? Connector.Reference : Reference;
 
         for (int i = 0; i < segments.Length; i++)
         {
@@ -124,13 +122,8 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
                             .GetLink(id: key.ParentId, linkname: key.LinkName, domain: Connector.DomainName);
                     }
 
-                    return linkResponse.Link.Collection switch
-                    {
-                        "groups" => new HsdsGroup(linkResponse.Link.Title, linkResponse.Link.Id, Connector),
-                        "datasets" => new HsdsDataset(linkResponse.Link.Title, linkResponse.Link.Id),
-                        // https://github.com/HDFGroup/hdf-rest-api/blob/e6f1a685c34ce4db68cdbdbcacacd053176a0136/openapi.yaml#L804-L805
-                        _ => throw new Exception($"The link collection type {linkResponse.Link.Collection} is not supported. Please contact the library maintainer to enable support for this type of collection.")
-                    };
+                    var link = linkResponse.Link;
+                    return new HsdsNamedReference(link.Collection, link.Title, link.Id, Connector);
                 }).ConfigureAwait(false);
             }
             catch (HsdsException hsds) when (hsds.StatusCode == "H00.404")

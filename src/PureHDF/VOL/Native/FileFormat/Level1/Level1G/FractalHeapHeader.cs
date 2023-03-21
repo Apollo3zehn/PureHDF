@@ -7,13 +7,13 @@ internal class FractalHeapHeader
     #region Fields
 
     private byte _version;
-    private H5Context _context;
+    private NativeContext _context;
 
     #endregion
 
     #region Constructors
 
-    public FractalHeapHeader(H5Context context)
+    public FractalHeapHeader(NativeContext context)
     {
         var (driver, superblock) = context;
         _context = context;

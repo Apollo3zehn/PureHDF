@@ -6,7 +6,7 @@ internal class ObjectHeaderContinuationBlock2 : ObjectHeader
 {
     #region Constructors
 
-    internal ObjectHeaderContinuationBlock2(H5Context context, ulong objectHeaderSize, byte version, bool withCreationOrder)
+    internal ObjectHeaderContinuationBlock2(NativeContext context, ulong objectHeaderSize, byte version, bool withCreationOrder)
         : base(context)
     {
         // signature

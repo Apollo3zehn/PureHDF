@@ -3,11 +3,11 @@
 namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}")]
-internal class H5UnresolvedLink : H5Object, IH5UnresolvedLink
+internal class NativeUnresolvedLink : NativeObject, IH5UnresolvedLink
 {
     #region Constructors
 
-    internal H5UnresolvedLink(NamedReference reference)
+    internal NativeUnresolvedLink(NativeNamedReference reference)
         : base(default, reference)
     {
         Reason = reference.Exception;

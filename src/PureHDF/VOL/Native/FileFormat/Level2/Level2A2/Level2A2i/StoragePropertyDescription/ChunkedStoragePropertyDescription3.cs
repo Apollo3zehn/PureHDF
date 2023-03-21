@@ -4,7 +4,7 @@ internal class ChunkedStoragePropertyDescription3 : ChunkedStoragePropertyDescri
 {
     #region Constructors
 
-    public ChunkedStoragePropertyDescription3(H5Context context)
+    public ChunkedStoragePropertyDescription3(NativeContext context)
     {
         var (driver, superblock) = context;
 

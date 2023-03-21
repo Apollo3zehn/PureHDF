@@ -10,7 +10,7 @@ internal class DataspaceMessage : Message
 
     #region Constructors
 
-    public DataspaceMessage(H5Context context)
+    public DataspaceMessage(NativeContext context)
     {
         var (driver, superblock) = context;
 

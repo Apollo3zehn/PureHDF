@@ -4,14 +4,14 @@ internal class ExternalFileListMessage : Message
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
     private byte _version;
 
     #endregion
 
     #region Constructors
 
-    public ExternalFileListMessage(H5Context context)
+    public ExternalFileListMessage(NativeContext context)
     {
         var (driver, superblock) = context;
         _context = context;

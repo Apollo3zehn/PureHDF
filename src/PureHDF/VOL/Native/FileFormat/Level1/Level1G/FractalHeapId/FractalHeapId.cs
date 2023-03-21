@@ -6,7 +6,7 @@ internal abstract class FractalHeapId
 {
     #region Methods
 
-    internal static FractalHeapId Construct(H5Context context, H5DriverBase localDriver, FractalHeapHeader header)
+    internal static FractalHeapId Construct(NativeContext context, H5DriverBase localDriver, FractalHeapHeader header)
     {
         var firstByte = localDriver.ReadByte();
 

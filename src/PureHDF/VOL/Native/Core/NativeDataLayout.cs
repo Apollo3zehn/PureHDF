@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5DataLayout : IH5DataLayout
+internal class NativeDataLayout : IH5DataLayout
 {
     #region Fields
 
@@ -42,7 +42,7 @@ internal class H5DataLayout : IH5DataLayout
 
     #region Constructors
 
-    internal H5DataLayout(DataLayoutMessage dataLayout)
+    internal NativeDataLayout(DataLayoutMessage dataLayout)
     {
         _dataLayout = dataLayout;
     }

@@ -4,7 +4,7 @@ namespace PureHDF
     {
         #region Constructors
 
-        public H5D_Base(H5Dataset dataset, H5DatasetAccess datasetAccess)
+        public H5D_Base(NativeDataset dataset, H5DatasetAccess datasetAccess)
         {
             Dataset = dataset;
             DatasetAccess = datasetAccess;
@@ -14,7 +14,7 @@ namespace PureHDF
 
         #region Properties
 
-        public H5Dataset Dataset { get; }
+        public NativeDataset Dataset { get; }
 
         public H5DatasetAccess DatasetAccess { get; }
 

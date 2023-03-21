@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal class H5DataType : IH5DataType
+internal class NativeDataType : IH5DataType
 {
     #region Fields
 
@@ -23,7 +23,7 @@ internal class H5DataType : IH5DataType
 
     #region Constructors
 
-    internal H5DataType(DatatypeMessage datatype)
+    internal NativeDataType(DatatypeMessage datatype)
     {
         _dataType = datatype;
     }

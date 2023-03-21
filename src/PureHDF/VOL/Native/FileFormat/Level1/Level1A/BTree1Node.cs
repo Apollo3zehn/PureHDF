@@ -9,14 +9,14 @@ internal class BTree1Node<T> where T : struct, IBTree1Key
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
     private readonly Func<T> _decodeKey;
 
     #endregion
 
     #region Constructors
 
-    public BTree1Node(H5Context context, Func<T> decodeKey)
+    public BTree1Node(NativeContext context, Func<T> decodeKey)
     {
         var (driver, superblock) = context;
         _context = context;

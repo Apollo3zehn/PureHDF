@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract class H5Object : IH5Object
+internal abstract class NativeObject : IH5Object
 {
     #region Fields
 
@@ -11,13 +11,13 @@ internal abstract class H5Object : IH5Object
 
     #region Constructors
 
-    internal H5Object(H5Context context, NamedReference reference)
+    internal NativeObject(NativeContext context, NativeNamedReference reference)
     {
         Context = context;
         Reference = reference;
     }
 
-    internal H5Object(H5Context context, NamedReference reference, ObjectHeader header)
+    internal NativeObject(NativeContext context, NativeNamedReference reference, ObjectHeader header)
     {
         Context = context;
         Reference = reference;
@@ -30,11 +30,11 @@ internal abstract class H5Object : IH5Object
         
     public string Name => Reference.Name;
 
-    internal H5Context Context { get; }
+    internal NativeContext Context { get; }
 
     internal uint ReferenceCount => GetReferenceCount();
 
-    internal NamedReference Reference { get; set; }
+    internal NativeNamedReference Reference { get; set; }
 
     private ObjectReferenceCountMessage? ObjectReferenceCount
     {

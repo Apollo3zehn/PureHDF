@@ -4,7 +4,7 @@ internal class SingleChunkIndexingInformation : IndexingInformation
 {
     #region Constructors
 
-    public SingleChunkIndexingInformation(H5Context context, ChunkedStoragePropertyFlags flags)
+    public SingleChunkIndexingInformation(NativeContext context, ChunkedStoragePropertyFlags flags)
     {
         if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
         {

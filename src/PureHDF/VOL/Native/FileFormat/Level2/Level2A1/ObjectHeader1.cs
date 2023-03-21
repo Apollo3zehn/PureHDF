@@ -10,7 +10,7 @@ internal class ObjectHeader1 : ObjectHeader
 
     #region Constructors
 
-    internal ObjectHeader1(H5Context context, byte version) : base(context)
+    internal ObjectHeader1(NativeContext context, byte version) : base(context)
     {
         // version
         Version = version;

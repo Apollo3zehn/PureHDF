@@ -12,7 +12,7 @@ internal class FixedArrayDataBlock<T>
 
     #region Constructors
 
-    public FixedArrayDataBlock(H5Context context, FixedArrayHeader header, Func<H5DriverBase, T> decode)
+    public FixedArrayDataBlock(NativeContext context, FixedArrayHeader header, Func<H5DriverBase, T> decode)
     {
         var (driver, superblock) = context;
 

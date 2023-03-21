@@ -4,7 +4,7 @@ internal class ContiguousStoragePropertyDescription : StoragePropertyDescription
 {
     #region Constructors
 
-    public ContiguousStoragePropertyDescription(H5Context context)
+    public ContiguousStoragePropertyDescription(NativeContext context)
     {
         var (driver, superblock) = context;
 

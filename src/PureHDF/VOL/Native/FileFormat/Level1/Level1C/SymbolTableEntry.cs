@@ -4,7 +4,7 @@ internal class SymbolTableEntry
 {
     #region Constructors
 
-    public SymbolTableEntry(H5Context context)
+    public SymbolTableEntry(NativeContext context)
     {
         var (driver, superblock) = context;
 

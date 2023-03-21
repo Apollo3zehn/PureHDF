@@ -1,16 +1,27 @@
 using System.Reflection;
+using Hsds.Api;
 using PureHDF.VOL.Native;
 
 namespace PureHDF.VOL.Hsds
 {
     internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
     {
-        public HsdsDataset(string name, string id) : base(name, id)
+        private IH5Dataspace? _space;
+        private readonly GetDatasetResponse _dataset;
+
+        public HsdsDataset(InternalHsdsConnector connector, HsdsNamedReference reference) : base(connector, reference)
         {
-            //
+            _dataset = connector.Client.Dataset.GetDataset(Id, connector.DomainName);
         }
 
-        public IH5Dataspace Space => throw new NotImplementedException();
+        public IH5Dataspace Space
+        {
+            get 
+            {
+                _space ??= HsdsDataspace.FromGetDatasetResponseShapeType(_dataset.Shape);
+                return _space;
+            }
+        }
 
         public IH5DataType Type => throw new NotImplementedException();
 

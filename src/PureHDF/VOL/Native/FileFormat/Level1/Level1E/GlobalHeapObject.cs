@@ -10,7 +10,7 @@ internal class GlobalHeapObject
 
     #region Constructors
 
-    public GlobalHeapObject(H5Context context)
+    public GlobalHeapObject(NativeContext context)
     {
         var (driver, superblock) = context;
 

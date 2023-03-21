@@ -40,7 +40,7 @@ internal class Superblock01 : Superblock
         EndOfFileAddress = ReadOffset(driver);
         DriverInfoBlockAddress = ReadOffset(driver);
 
-        var context = new H5Context(driver, this);
+        var context = new NativeContext(driver, this);
         RootGroupSymbolTableEntry = new SymbolTableEntry(context);
     }
 

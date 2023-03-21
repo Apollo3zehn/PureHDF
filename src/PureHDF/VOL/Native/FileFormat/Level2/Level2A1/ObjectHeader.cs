@@ -4,13 +4,13 @@ internal abstract class ObjectHeader
 {
     #region Fields
 
-    H5Context _context;
+    NativeContext _context;
 
     #endregion
 
     #region Constructors
 
-    public ObjectHeader(H5Context context)
+    public ObjectHeader(NativeContext context)
     {
         _context = context;
 
@@ -63,7 +63,7 @@ internal abstract class ObjectHeader
             .Cast<T>();
     }
 
-    internal static ObjectHeader Construct(H5Context context)
+    internal static ObjectHeader Construct(NativeContext context)
     {
         // get version
         var version = context.Driver.ReadByte();
@@ -84,7 +84,7 @@ internal abstract class ObjectHeader
         };
     }
 
-    private protected List<HeaderMessage> ReadHeaderMessages(H5Context context,
+    private protected List<HeaderMessage> ReadHeaderMessages(NativeContext context,
                                                              ulong objectHeaderSize,
                                                              byte version,
                                                              bool withCreationOrder = false)

@@ -14,7 +14,7 @@ internal class HeaderMessage
 
     #region Constructors
 
-    internal HeaderMessage(H5Context context, byte version, ObjectHeader objectHeader, bool withCreationOrder = false)
+    internal HeaderMessage(NativeContext context, byte version, ObjectHeader objectHeader, bool withCreationOrder = false)
     {
         Version = version;
         WithCreationOrder = withCreationOrder;

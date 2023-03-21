@@ -4,7 +4,7 @@
     {
         #region Constructors
 
-        public H5D_Compact(H5Dataset dataset, H5DatasetAccess datasetAccess) :
+        public H5D_Compact(NativeDataset dataset, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             //

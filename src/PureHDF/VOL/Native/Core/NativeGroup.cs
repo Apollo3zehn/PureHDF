@@ -5,11 +5,11 @@ using System.Runtime.CompilerServices;
 namespace PureHDF.VOL.Native;
 
 [DebuggerDisplay("{Name}")]
-internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
+internal class NativeGroup : NativeAttributableObject, INativeGroup
 {
     #region Fields
 
-    private readonly H5NativeFile? _file;
+    private readonly NativeFile? _file;
     private readonly ObjectHeaderScratchPad? _scratchPad;
 
     #endregion
@@ -17,20 +17,20 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
     #region Constructors
 
     // Only for H5File constructor
-    internal H5NativeGroup(H5Context context, NamedReference reference, ObjectHeader header)
+    internal NativeGroup(NativeContext context, NativeNamedReference reference, ObjectHeader header)
        : base(context, reference, header)
     {
         //
     }
 
-    internal H5NativeGroup(H5NativeFile file, H5Context context, NamedReference reference)
+    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference)
        : base(context, reference)
     {
         _file = file;
         _scratchPad = reference.ScratchPad;
     }
 
-    internal H5NativeGroup(H5NativeFile file, H5Context context, NamedReference reference, ObjectHeader header)
+    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         _file = file;
@@ -40,12 +40,12 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
 
     #region Properties
 
-    internal H5NativeFile File
+    internal NativeFile File
     {
         get
         {
             if (_file is null)
-                return (H5NativeFile)this;
+                return (NativeFile)this;
                 
             else
                 return _file;
@@ -154,7 +154,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
 
         for (int i = 0; i < segments.Length; i++)
         {
-            if (current.Dereference() is not H5NativeGroup group)
+            if (current.Dereference() is not NativeGroup group)
                 return false;
 
             if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -166,7 +166,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
         return true;
     }
 
-    internal NamedReference InternalGet(string path, H5LinkAccess linkAccess)
+    internal NativeNamedReference InternalGet(string path, H5LinkAccess linkAccess)
     {
         if (path == "/")
             return File.Reference;
@@ -177,7 +177,8 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
 
         for (int i = 0; i < segments.Length; i++)
         {
-            if (current.Dereference() is not H5NativeGroup group)
+            // TODO: Use cache to store dereferenced objects (as it is done in HsdsGroup.cs)
+            if (current.Dereference() is not NativeGroup group)
                 throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
 
             if (!group.TryGetReference(segments[i], linkAccess, out var reference))
@@ -189,7 +190,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
         return current;
     }
 
-    internal NamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
+    internal NativeNamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
     {
         var alreadyVisted = new HashSet<ulong>();
 
@@ -199,7 +200,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
             throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
     }
 
-    private bool TryGetReference(string name, H5LinkAccess linkAccess, out NamedReference namedReference)
+    private bool TryGetReference(string name, H5LinkAccess linkAccess, out NativeNamedReference namedReference)
     {
         namedReference = default;
 
@@ -309,7 +310,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
         return false;
     }
 
-    internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NamedReference namedReference)
+    internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NativeNamedReference namedReference)
     {
         // similar to H5Gint.c (H5G_visit)
         if (recursionLevel >= 100)
@@ -346,7 +347,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
                 // search childs for reference
                 foreach (var childReference in references)
                 {
-                    var group = childReference.Dereference() as H5NativeGroup;
+                    var group = childReference.Dereference() as NativeGroup;
 
                     if (group is not null)
                     {
@@ -360,7 +361,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
         return false;
     }
 
-    private IEnumerable<NamedReference> EnumerateReferences(H5LinkAccess linkAccess)
+    private IEnumerable<NativeNamedReference> EnumerateReferences(H5LinkAccess linkAccess)
     {
         // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html 
         // section "Group implementations in HDF5"
@@ -531,11 +532,11 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
+    private NativeNamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
     {
         return linkMessage.LinkInfo switch
         {
-            HardLinkInfo hard => new NamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
+            HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
             SoftLinkInfo soft => new SymbolicLink(linkMessage, this)
                 .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
@@ -555,10 +556,10 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
     #region Symbol Table
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
+    private NativeNamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
     {
         var name = heap.GetObjectName(entry.LinkNameOffset);
-        var reference = new NamedReference(name, entry.HeaderAddress, File);
+        var reference = new NativeNamedReference(name, entry.HeaderAddress, File);
 
         return entry.ScratchPad switch
         {
@@ -570,7 +571,7 @@ internal class H5NativeGroup : H5AttributableObject, IH5NativeGroup
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NamedReference AddScratchPad(NamedReference reference, ObjectHeaderScratchPad scratchPad)
+    private static NativeNamedReference AddScratchPad(NativeNamedReference reference, ObjectHeaderScratchPad scratchPad)
     {
         reference.ScratchPad = scratchPad;
         return reference;

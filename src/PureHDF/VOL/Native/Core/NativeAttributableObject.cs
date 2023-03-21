@@ -2,17 +2,17 @@
 
 namespace PureHDF.VOL.Native;
 
-internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
+internal abstract class NativeAttributableObject : NativeObject, IH5AttributableObject
 {
     #region Constructors
 
-    internal H5AttributableObject(H5Context context, NamedReference reference, ObjectHeader header)
+    internal NativeAttributableObject(NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         //
     }
 
-    internal H5AttributableObject(H5Context context, NamedReference reference)
+    internal NativeAttributableObject(NativeContext context, NativeNamedReference reference)
         : base(context, reference)
     {
         //
@@ -37,7 +37,7 @@ internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
         if (!TryGetAttributeMessage(name, out var attributeMessage))
             throw new Exception($"Could not find attribute '{name}'.");
 
-        return new H5Attribute(Context, attributeMessage);
+        return new NativeAttribute(Context, attributeMessage);
     }
 
     public Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default)
@@ -101,7 +101,7 @@ internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
 
         foreach (var attributeMessage in attributeMessages1)
         {
-            yield return new H5Attribute(Context, attributeMessage);
+            yield return new NativeAttribute(Context, attributeMessage);
         }
 
         // attributes are stored densely
@@ -120,7 +120,7 @@ internal abstract class H5AttributableObject : H5Object, IH5AttributableObject
 
                 foreach (var attributeMessage in attributeMessages2)
                 {
-                    yield return new H5Attribute(Context, attributeMessage);
+                    yield return new NativeAttribute(Context, attributeMessage);
                 }
             }
         }

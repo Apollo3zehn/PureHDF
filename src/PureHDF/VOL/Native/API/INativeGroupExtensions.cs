@@ -3,7 +3,7 @@ namespace PureHDF;
 /// <summary>
 /// Defines extensions methods for the <see cref="IH5Group" /> type.
 /// </summary>
-public static class IH5NativeGroupExtensions
+public static class INativeGroupExtensions
 {
     /// <summary>
     /// Gets the object that is at the given <paramref name="path"/>.
@@ -14,7 +14,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
     public static T Get<T>(
-        this IH5NativeGroup group, 
+        this INativeGroup group, 
         string path, 
         H5LinkAccess linkAccess = default) where T : IH5Object
     {
@@ -31,7 +31,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested object.</returns>
     public static async Task<T> GetAsync<T>(
-        this IH5NativeGroup group,
+        this INativeGroup group,
         string path, 
         H5LinkAccess linkAccess = default, 
         CancellationToken cancellationToken = default) where T : IH5Object
@@ -50,7 +50,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
     public static T Get<T>(
-        this IH5NativeGroup group, 
+        this INativeGroup group, 
         H5ObjectReference reference, 
         H5LinkAccess linkAccess = default)
         where T : IH5Object
@@ -68,7 +68,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested object.</returns>
     public static async Task<T> GetAsync<T>(
-        this IH5NativeGroup group, 
+        this INativeGroup group, 
         H5ObjectReference reference, 
         H5LinkAccess linkAccess = default, 
         CancellationToken cancellationToken = default)
@@ -86,12 +86,12 @@ public static class IH5NativeGroupExtensions
     /// <param name="path">The path of the object.</param>
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested group.</returns>
-    public static IH5NativeGroup Group(this IH5NativeGroup group, string path, H5LinkAccess linkAccess)
+    public static INativeGroup Group(this INativeGroup group, string path, H5LinkAccess linkAccess)
     {
         var link = group.Get(path, linkAccess);
 
-        if (link is not IH5NativeGroup linkedGroup)
-            throw new Exception($"The requested link exists but cannot be casted to {nameof(IH5NativeGroup)} because it is of type {link.GetType().Name}.");
+        if (link is not INativeGroup linkedGroup)
+            throw new Exception($"The requested link exists but cannot be casted to {nameof(INativeGroup)} because it is of type {link.GetType().Name}.");
 
         return linkedGroup;
     }
@@ -104,7 +104,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested group.</returns>
-    public static Task<IH5NativeGroup> GroupAsync(this IH5NativeGroup group, string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    public static Task<INativeGroup> GroupAsync(this INativeGroup group, string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(group.Group(path, linkAccess));
     }
@@ -116,7 +116,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="path">The path of the object.</param>
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested dataset.</returns>
-    public static IH5Dataset Dataset(this IH5NativeGroup group, string path, H5LinkAccess linkAccess)
+    public static IH5Dataset Dataset(this INativeGroup group, string path, H5LinkAccess linkAccess)
     {
         var link = group.Get(path, linkAccess);
 
@@ -134,7 +134,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested dataset.</returns>
-    public static Task<IH5Dataset> DatasetAsync(this IH5NativeGroup group, string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    public static Task<IH5Dataset> DatasetAsync(this INativeGroup group, string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(group.Dataset(path, linkAccess));
     }
@@ -146,7 +146,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="path">The path of the object.</param>
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested commited data type.</returns>
-    public static IH5CommitedDatatype CommitedDatatype(this IH5NativeGroup group, string path, H5LinkAccess linkAccess)
+    public static IH5CommitedDatatype CommitedDatatype(this INativeGroup group, string path, H5LinkAccess linkAccess)
     {
         var link = group.Get(path, linkAccess);
 
@@ -164,7 +164,7 @@ public static class IH5NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested commited data type.</returns>
-    public static Task<IH5CommitedDatatype> CommitedDatatypeAsync(this IH5NativeGroup group, string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    public static Task<IH5CommitedDatatype> CommitedDatatypeAsync(this INativeGroup group, string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(group.CommitedDatatype(path, linkAccess));
     }

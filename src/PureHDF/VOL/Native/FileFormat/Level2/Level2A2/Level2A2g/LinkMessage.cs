@@ -10,7 +10,7 @@ internal class LinkMessage : Message
 
     #region Constructors
 
-    public LinkMessage(H5Context context)
+    public LinkMessage(NativeContext context)
     {
         var (driver, _) = context;
 

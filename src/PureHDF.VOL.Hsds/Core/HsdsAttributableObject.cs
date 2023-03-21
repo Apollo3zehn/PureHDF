@@ -3,14 +3,14 @@ namespace PureHDF.VOL.Hsds;
 internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
 {
     // this constructor is only for the derived InternalHsdsConnector class
-    public HsdsAttributableObject(string name, string id) 
-        : base(name, id)
+    public HsdsAttributableObject(HsdsNamedReference reference) 
+        : base(reference)
     {
         Connector = (InternalHsdsConnector)this;
     }
 
-    public HsdsAttributableObject(string name, string id, InternalHsdsConnector connector) 
-        : base(name, id)
+    public HsdsAttributableObject(InternalHsdsConnector connector, HsdsNamedReference reference) 
+        : base(reference)
     {
         Connector = connector;
     }

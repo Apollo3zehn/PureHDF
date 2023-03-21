@@ -3,7 +3,7 @@
 /// <summary>
 /// A native HDF5 file object. This is the entry-point to work with HDF5 files.
 /// </summary>
-public interface IH5NativeFile : IH5NativeGroup, IDisposable
+public interface INativeFile : INativeGroup, IDisposable
 {
     /// <summary>
     /// Gets the path of the opened HDF5 file if loaded from the file system.

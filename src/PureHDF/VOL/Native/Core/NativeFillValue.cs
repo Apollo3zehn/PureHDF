@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal class H5FillValue : IH5FillValue
+internal class NativeFillValue : IH5FillValue
 {
     #region Fields
 
@@ -12,7 +12,7 @@ internal class H5FillValue : IH5FillValue
 
     #region Constructors
 
-    internal H5FillValue(FillValueMessage fillValue)
+    internal NativeFillValue(FillValueMessage fillValue)
     {
         _fillValue = fillValue;
     }

@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5Dataspace : IH5Dataspace
+internal class NativeDataspace : IH5Dataspace
 {
     #region Fields
 
@@ -22,7 +22,7 @@ internal class H5Dataspace : IH5Dataspace
 
     #region Constructors
 
-    internal H5Dataspace(DataspaceMessage dataspace)
+    internal NativeDataspace(DataspaceMessage dataspace)
     {
         _dataspace = dataspace;
     }

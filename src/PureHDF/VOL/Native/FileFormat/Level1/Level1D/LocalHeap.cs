@@ -14,7 +14,7 @@ internal class LocalHeap
 
     #region Constructors
 
-    public LocalHeap(H5Context context)
+    public LocalHeap(NativeContext context)
     {
         var (driver, superblock) = context;
         _driver = driver;

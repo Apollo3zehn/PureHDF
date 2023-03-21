@@ -21,7 +21,7 @@ internal abstract class DataLayoutMessage : Message
 
     #region Methods
 
-    public static DataLayoutMessage Construct(H5Context context)
+    public static DataLayoutMessage Construct(NativeContext context)
     {
         // get version
         var version = context.Driver.ReadByte();

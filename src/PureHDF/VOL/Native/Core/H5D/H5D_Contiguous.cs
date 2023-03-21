@@ -10,7 +10,7 @@
 
         #region Constructors
 
-        public H5D_Contiguous(H5Dataset dataset, H5DatasetAccess datasetAccess) :
+        public H5D_Contiguous(NativeDataset dataset, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             //
@@ -34,7 +34,7 @@
                 if (Dataset.Context.Superblock.IsUndefinedAddress(address))
                 {
                     if (Dataset.InternalExternalFileList is not null)
-                        _stream = new ExternalFileListStream((H5NativeFile)Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
+                        _stream = new ExternalFileListStream((NativeFile)Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
 
                     else
                         _stream = new UnsafeFillValueStream(Dataset.FillValueMessage.Value ?? new byte[] { 0 });

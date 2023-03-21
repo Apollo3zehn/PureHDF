@@ -19,7 +19,7 @@
 
         #region Constructors
 
-        public H5D_Chunk4_ExtensibleArray(H5Dataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
+        public H5D_Chunk4_ExtensibleArray(NativeDataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
             base(dataset, layout, datasetAccess)
         {
             //

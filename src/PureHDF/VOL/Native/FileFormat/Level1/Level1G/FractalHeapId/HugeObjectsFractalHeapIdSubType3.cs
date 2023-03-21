@@ -12,7 +12,7 @@ internal class HugeObjectsFractalHeapIdSubType3 : FractalHeapId
 
     #region Constructors
 
-    public HugeObjectsFractalHeapIdSubType3(H5Context context, H5DriverBase localDriver)
+    public HugeObjectsFractalHeapIdSubType3(NativeContext context, H5DriverBase localDriver)
     {
         var (driver, superblock) = context;
         _driver = driver;

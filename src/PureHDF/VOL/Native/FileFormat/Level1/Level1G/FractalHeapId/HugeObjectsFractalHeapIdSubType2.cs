@@ -6,7 +6,7 @@ internal class HugeObjectsFractalHeapIdSubType2 : HugeObjectsFractalHeapIdSubTyp
 {
     #region Constructors
 
-    public HugeObjectsFractalHeapIdSubType2(H5Context context, H5DriverBase localDriver, FractalHeapHeader header)
+    public HugeObjectsFractalHeapIdSubType2(NativeContext context, H5DriverBase localDriver, FractalHeapHeader header)
         : base(context, localDriver, header)
     {
         //

@@ -4,7 +4,7 @@ internal struct BTree2Record01 : IBTree2Record
 {
     #region Constructors
 
-    public BTree2Record01(H5Context context)
+    public BTree2Record01(NativeContext context)
     {
         var (driver, superblock) = context;
 

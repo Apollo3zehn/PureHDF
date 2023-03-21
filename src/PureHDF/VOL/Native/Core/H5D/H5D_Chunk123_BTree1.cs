@@ -16,13 +16,13 @@ namespace PureHDF
 
         #region Constructors
 
-        public H5D_Chunk123_BTree1(H5Dataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
+        public H5D_Chunk123_BTree1(NativeDataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             _layout12 = layout;
         }
 
-        public H5D_Chunk123_BTree1(H5Dataset dataset, DataLayoutMessage3 layout, H5DatasetAccess datasetAccess) :
+        public H5D_Chunk123_BTree1(NativeDataset dataset, DataLayoutMessage3 layout, H5DatasetAccess datasetAccess) :
             base(dataset, datasetAccess)
         {
             _layout3 = layout;

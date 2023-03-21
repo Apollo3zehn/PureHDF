@@ -2,14 +2,14 @@
 
 namespace PureHDF;
 
-internal static class H5Cache
+internal static class NativeCache
 {
     #region Constructors
 
-    static H5Cache()
+    static NativeCache()
     {
         _globalHeapMap = new ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>>();
-        _fileMap = new ConcurrentDictionary<Superblock, Dictionary<string, H5NativeFile>>();
+        _fileMap = new ConcurrentDictionary<Superblock, Dictionary<string, NativeFile>>();
     }
 
     #endregion
@@ -43,7 +43,7 @@ internal static class H5Cache
 
     private static readonly ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
-    public static GlobalHeapCollection GetGlobalHeapObject(H5Context context, ulong address)
+    public static GlobalHeapCollection GetGlobalHeapObject(NativeContext context, ulong address)
     {
         var (_, superblock) = context;
 
@@ -62,7 +62,7 @@ internal static class H5Cache
         return collection;
     }
 
-    private static GlobalHeapCollection ReadGlobalHeapCollection(H5Context context, ulong address)
+    private static GlobalHeapCollection ReadGlobalHeapCollection(NativeContext context, ulong address)
     {
         context.Driver.Seek((long)address, SeekOrigin.Begin);
         return new GlobalHeapCollection(context);
@@ -72,9 +72,9 @@ internal static class H5Cache
 
     #region File Handles
 
-    private static readonly ConcurrentDictionary<Superblock, Dictionary<string, H5NativeFile>> _fileMap;
+    private static readonly ConcurrentDictionary<Superblock, Dictionary<string, NativeFile>> _fileMap;
 
-    public static H5NativeFile GetH5File(Superblock superblock, string absoluteFilePath, bool useAsync)
+    public static NativeFile GetH5File(Superblock superblock, string absoluteFilePath, bool useAsync)
     {
         if (!Uri.TryCreate(absoluteFilePath, UriKind.Absolute, out var uri))
             throw new Exception("The provided path is not absolute.");
@@ -84,14 +84,14 @@ internal static class H5Cache
 
         if (!_fileMap.TryGetValue(superblock, out var pathToH5FileMap))
         {
-            pathToH5FileMap = new Dictionary<string, H5NativeFile>();
+            pathToH5FileMap = new Dictionary<string, NativeFile>();
             _fileMap.AddOrUpdate(superblock, pathToH5FileMap, (_, oldPathToH5FileMap) => pathToH5FileMap);
         }
 
         if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
         {
             // TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
-            h5File = (H5NativeFile)H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
+            h5File = (NativeFile)H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
             pathToH5FileMap[uri.AbsoluteUri] = h5File;
         }
 

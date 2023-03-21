@@ -4,10 +4,10 @@ namespace PureHDF.VOL.Hsds;
 
 internal class InternalHsdsConnector : HsdsGroup, IHsdsConnector
 {   
-    public InternalHsdsConnector(string domainName, string id, HsdsClient client) : base("/", id)
+    public InternalHsdsConnector(HsdsClient client, HsdsNamedReference reference, string domainName) : base(reference)
     {
-        DomainName = domainName;
         Client = client;
+        DomainName = domainName;
     }
 
     public string DomainName { get; }

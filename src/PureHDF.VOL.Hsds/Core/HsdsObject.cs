@@ -2,13 +2,14 @@ namespace PureHDF.VOL.Hsds;
 
 internal class HsdsObject : IH5Object
 {
-    public HsdsObject(string name, string id)
+    public HsdsObject(HsdsNamedReference reference)
     {
-        Name = name;
-        Id = id;
+        Reference = reference;
     }
 
-    public string Name { get; }
+    public string Name => Reference.Title;
 
-    public string Id { get; }
+    public string Id => Reference.Id;
+
+    internal HsdsNamedReference Reference { get; set; }
 }

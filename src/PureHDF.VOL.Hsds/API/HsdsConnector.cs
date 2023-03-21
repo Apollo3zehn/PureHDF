@@ -13,6 +13,10 @@ public static class HsdsConnector
     public static IHsdsConnector Create(string domainName, HsdsClient client)
     {
         var domain = client.Domain.GetDomain(domainName);
-        return new InternalHsdsConnector(domainName, domain.Root, client);
+        var connector = new InternalHsdsConnector(client, default, domainName);
+        var reference = new HsdsNamedReference(collection: "groups", title: "/", id: domain.Root, connector);
+        connector.Reference = reference;
+
+        return connector;
     }
 }

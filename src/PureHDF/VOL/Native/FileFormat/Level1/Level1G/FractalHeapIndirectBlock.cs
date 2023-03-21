@@ -6,14 +6,14 @@ internal class FractalHeapIndirectBlock
 {
     #region Fields
 
-    private H5Context _context;
+    private NativeContext _context;
     private byte _version;
 
     #endregion
 
     #region Constructors
 
-    public FractalHeapIndirectBlock(H5Context context, FractalHeapHeader header, uint rowCount)
+    public FractalHeapIndirectBlock(NativeContext context, FractalHeapHeader header, uint rowCount)
     {
         var (driver, superblock) = context;
         _context = context;
