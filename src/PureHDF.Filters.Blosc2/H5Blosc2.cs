@@ -36,8 +36,8 @@ public static class H5Blosc2
 
             /* Check that we actually have support for the compressor code */
             var namePtr = IntPtr.Zero;
-            var compressorsPtr = Blosc.blosc_list_compressors();
-            var code = Blosc.blosc_compcode_to_compname(compcode, ref namePtr);
+            var compressorsPtr = Blosc.blosc2_list_compressors();
+            var code = Blosc.blosc2_compcode_to_compname(compcode, ref namePtr);
 
             if (code == -1)
                 throw new Exception($"This Blosc library does not have support for the '{Marshal.PtrToStringAnsi(namePtr)}' compressor, but only for: {Marshal.PtrToStringAnsi(compressorsPtr)}.");
@@ -56,13 +56,17 @@ public static class H5Blosc2
 
             fixed (byte* srcPtr = buffer.Span)
             {
-                Blosc.blosc_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
+                Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
 
                 resultBuffer = new byte[outbuf_size];
 
                 fixed (byte* destPtr = resultBuffer)
                 {
-                    status = Blosc.blosc_decompress(new IntPtr(srcPtr), new IntPtr(destPtr), outbuf_size);
+                    status = Blosc.blosc2_decompress(
+                        src: new IntPtr(srcPtr), 
+                        srcsize: buffer.Length, 
+                        dest: new IntPtr(destPtr), 
+                        destsize: (int)outbuf_size);
 
                     /* decompression failed */
                     if (status <= 0)
