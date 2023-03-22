@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
-[DebuggerDisplay("{Name}: Class = '{Message.Datatype.Class}'")]
 internal class NativeAttribute : IH5Attribute
 {
     #region Fields

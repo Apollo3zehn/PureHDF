@@ -5,3 +5,4 @@
 [assembly: InternalsVisibleTo("PureHDF.Filters.Deflate.SharpZipLib")]
 [assembly: InternalsVisibleTo("PureHDF.SourceGenerator")]
 [assembly: InternalsVisibleTo("PureHDF.Tests")]
+[assembly: InternalsVisibleTo("PureHDF.VOL.Hsds")]

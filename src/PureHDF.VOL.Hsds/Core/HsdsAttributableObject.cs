@@ -41,7 +41,6 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
         return GetAttributeAsync(name, useAsync: true, cancellationToken);
     }
 
-    // TODO: should this be a Native only method? Here it relies on try/catch which is not useful.
     public bool AttributeExists(string name)
     {
         return InternalAttributeExistsAsync(name, useAsync: false, default)
@@ -54,20 +53,10 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
         return InternalAttributeExistsAsync(name, useAsync: true, cancellationToken);
     }
 
-    private async Task<bool> InternalAttributeExistsAsync(
+    private Task<bool> InternalAttributeExistsAsync(
         string name, bool useAsync, CancellationToken cancellationToken)
     {
-        try
-        {
-            await GetAttributeAsync(name, useAsync, cancellationToken)
-                .ConfigureAwait(false);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
     }
 
     private async Task<IH5Attribute> GetAttributeAsync(string name, bool useAsync, CancellationToken cancellationToken)
@@ -80,19 +69,16 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
             _ => throw new Exception($"The collection of type {this.GetType().Name} is not supported.")
         };
 
-        var getAttributeResponse = useAsync
+        var attribute = useAsync
 
             ? await Connector.Client.Attribute
-                .GetAttributeAsync(collection, Id, name, Connector.DomainName, cancellationToken: cancellationToken)
+                .GetAttributeAsync(Connector.DomainName, collection, Id, name, cancellationToken: cancellationToken)
                 .ConfigureAwait(false)
                 
             : Connector.Client.Attribute
-                .GetAttribute(collection, Id, name, Connector.DomainName);
+                .GetAttribute(Connector.DomainName, collection, Id, name);
 
-        // TODO: Initialize space and type lazily. See H5AttributableObject.
-        // TODO: Fix this as soon as https://github.com/HDFGroup/hdf-rest-api/issues/12 is resolved
-        return new HsdsAttribute(
-            getAttributeResponse.Name, default!, default!);
+        return new HsdsAttribute(attribute, Connector.Client);
     }
 
     private async Task<IEnumerable<IH5Attribute>> GetAttributesAsync(bool useAsync, CancellationToken cancellationToken)
@@ -114,9 +100,7 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
             : Connector.Client.Attribute
                 .GetAttributes(collection, Id, Connector.DomainName);
 
-        // TODO: Initialize space and type lazily. See H5AttributableObject.
-        // TODO: Fix this as soon as https://github.com/HDFGroup/hdf-rest-api/issues/12 is resolved
         return getAttributesResponse.Attributes
-            .Select(attribute => new HsdsAttribute(attribute.Name, default!, default!));
+            .Select(attribute => new HsdsAttribute(attribute, Connector.Client));
     }
 }

@@ -1,6 +1,95 @@
-﻿using static PureHDF.IH5DataType;
+﻿namespace PureHDF.VOL.Native;
 
-namespace PureHDF.VOL.Native;
+internal class NativeFixedPointType : IFixedPointType
+{
+    private readonly FixedPointBitFieldDescription _bitField;
+
+    internal NativeFixedPointType(
+        FixedPointBitFieldDescription bitField)
+    {
+        _bitField = bitField;
+
+        IsSigned = _bitField.IsSigned;
+    }
+
+    public bool IsSigned { get; }
+}
+
+internal class NativeFloatingPointType : IFloatingPointType
+{
+    //
+}
+
+internal class NativeStringType : IStringType
+{
+    //
+}
+
+internal class NativeBitFieldType : IBitFieldType
+{
+    //
+}
+
+internal class NativeOpaqueType : IOpaqueType
+{
+    internal NativeOpaqueType(
+        OpaquePropertyDescription property)
+    {
+        Tag = property.Tag;
+    }
+
+    public string Tag { get; }
+}
+
+internal class NativeCompoundType : ICompoundType
+{
+    private readonly CompoundPropertyDescription[] _properties;
+
+    internal NativeCompoundType(
+        CompoundPropertyDescription[] properties)
+    {
+        _properties = properties;
+
+        Members = _properties
+            .Select(property => new CompoundMember(
+                property.Name,
+                (int)property.MemberByteOffset,
+                new NativeDataType(property.MemberTypeMessage)))
+            .ToArray();
+    }
+
+    public CompoundMember[] Members { get; }
+}
+
+internal class NativeReferenceType : IReferenceType
+{
+    //
+}
+
+internal class NativeEnumerationType : IEnumerationType
+{
+    //
+}
+
+internal class NativeVariableLengthType : IVariableLengthType
+{
+    //
+}
+
+internal class NativeArrayType : IArrayType
+{
+    private readonly ArrayPropertyDescription _property;
+
+    internal NativeArrayType(
+        ArrayPropertyDescription property)
+    {
+        _property = property;
+
+        BaseType = new NativeDataType(_property.BaseType);
+    }
+
+    public IH5DataType BaseType { get; }
+}
 
 internal class NativeDataType : IH5DataType
 {
@@ -8,16 +97,16 @@ internal class NativeDataType : IH5DataType
 
     private readonly DatatypeMessage _dataType;
 
-    private FixedPointType? _fixedPoint;
-    private FloatingPointType? _floatingPoint;
-    private StringType? _string;
-    private BitFieldType? _bitField;
-    private OpaqueType? _opaque;
-    private CompoundType? _compound;
-    private ReferenceType? _reference;
-    private EnumerationType? _enumeration;
-    private VariableLengthType? _variableLength;
-    private ArrayType? _array;
+    private IFixedPointType? _fixedPoint;
+    private IFloatingPointType? _floatingPoint;
+    private IStringType? _string;
+    private IBitFieldType? _bitField;
+    private IOpaqueType? _opaque;
+    private ICompoundType? _compound;
+    private IReferenceType? _reference;
+    private IEnumerationType? _enumeration;
+    private IVariableLengthType? _variableLength;
+    private IArrayType? _array;
 
     #endregion
 
@@ -36,14 +125,14 @@ internal class NativeDataType : IH5DataType
 
     public int Size => (int)_dataType.Size;
 
-    public FixedPointType FixedPoint
+    public IFixedPointType FixedPoint
     {
         get
         {
             if (_fixedPoint is null)
             {
                 if (Class == H5DataTypeClass.FixedPoint)
-                    _fixedPoint = new FixedPointType(
+                    _fixedPoint = new NativeFixedPointType(
                         (FixedPointBitFieldDescription)_dataType.BitField);
 
                 else
@@ -54,14 +143,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public FloatingPointType FloatingPoint
+    public IFloatingPointType FloatingPoint
     {
         get
         {
             if (_floatingPoint is null)
             {
                 if (Class == H5DataTypeClass.FloatingPoint)
-                    _floatingPoint = new FloatingPointType();
+                    _floatingPoint = new NativeFloatingPointType();
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FloatingPoint}.");
@@ -71,14 +160,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public StringType String
+    public IStringType String
     {
         get
         {
             if (_string is null)
             {
                 if (Class == H5DataTypeClass.String)
-                    _string = new StringType();
+                    _string = new NativeStringType();
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.String}.");
@@ -88,14 +177,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public BitFieldType BitField
+    public IBitFieldType BitField
     {
         get
         {
             if (_bitField is null)
             {
                 if (Class == H5DataTypeClass.BitField)
-                    _bitField = new BitFieldType();
+                    _bitField = new NativeBitFieldType();
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.BitField}.");
@@ -105,14 +194,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public OpaqueType Opaque
+    public IOpaqueType Opaque
     {
         get
         {
             if (_opaque is null)
             {
                 if (Class == H5DataTypeClass.Opaque)
-                    _opaque = new OpaqueType((OpaquePropertyDescription)_dataType.Properties[0]);
+                    _opaque = new NativeOpaqueType((OpaquePropertyDescription)_dataType.Properties[0]);
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Opaque}.");
@@ -122,14 +211,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public CompoundType Compound
+    public ICompoundType Compound
     {
         get
         {
             if (_compound is null)
             {
                 if (Class == H5DataTypeClass.Compound)
-                    _compound = new CompoundType(
+                    _compound = new NativeCompoundType(
                         _dataType.Properties.Cast<CompoundPropertyDescription>().ToArray());
 
                 else
@@ -140,14 +229,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public ReferenceType Reference
+    public IReferenceType Reference
     {
         get
         {
             if (_reference is null)
             {
                 if (Class == H5DataTypeClass.Reference)
-                    _reference = new ReferenceType();
+                    _reference = new NativeReferenceType();
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Reference}.");
@@ -157,14 +246,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public EnumerationType Enumeration
+    public IEnumerationType Enumeration
     {
         get
         {
             if (_enumeration is null)
             {
                 if (Class == H5DataTypeClass.Enumerated)
-                    _enumeration = new EnumerationType();
+                    _enumeration = new NativeEnumerationType();
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Enumerated}.");
@@ -174,14 +263,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public VariableLengthType VariableLength
+    public IVariableLengthType VariableLength
     {
         get
         {
             if (_variableLength is null)
             {
-                if (Class == H5DataTypeClass.Enumerated)
-                    _variableLength = new VariableLengthType();
+                if (Class == H5DataTypeClass.VariableLength)
+                    _variableLength = new NativeVariableLengthType();
 
                 else
                     throw new Exception($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
@@ -191,14 +280,14 @@ internal class NativeDataType : IH5DataType
         }
     }
 
-    public ArrayType Array
+    public IArrayType Array
     {
         get
         {
             if (_array is null)
             {
-                if (Class == H5DataTypeClass.Enumerated)
-                    _array = new ArrayType(
+                if (Class == H5DataTypeClass.Array)
+                    _array = new NativeArrayType(
                         (ArrayPropertyDescription)_dataType.Properties[0]);
 
                 else

@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
+﻿namespace PureHDF;
 
-namespace PureHDF;
-
-[DebuggerDisplay("{Name}: Target = '{Target}'")]
 internal class SymbolicLink
 {
     #region Constructors

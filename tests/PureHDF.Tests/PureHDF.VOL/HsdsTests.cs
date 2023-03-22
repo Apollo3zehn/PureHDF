@@ -12,22 +12,6 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
         _connector = fixture.Connector;
     }
 
-    [Theory]
-    [InlineData("/g1/g1.1/dset1.1.1", true)]
-    [InlineData("g1/g1.1/dset1.1.1", true)]
-    [InlineData("/g1/I do not exist", false)]
-    public void CanCheckLinkExists(string path, bool expected)
-    {
-        // Arrange
-
-        // Act
-        var actual = _connector
-            .LinkExists(path);
-
-        // Assert
-        Assert.Equal(expected, actual);
-    }
-
     [Fact]
     public void CanGetGroup()
     {
@@ -58,27 +42,7 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
             child => Assert.Equal("g2", child.Name));
     }
 
-    [Fact(Skip = "wait for https://github.com/HDFGroup/hdf-rest-api/issues/13")]
-    public void CanCheckAttributeExists()
-    {
-        //
-    }
-    // [Theory]
-    // [InlineData("attr1", true)]
-    // [InlineData("attr3", false)]
-    // public void CanCheckAttributeExists(string path, bool expected)
-    // {
-    //     // Arrange
-
-    //     // Act
-    //     var actual = _connector
-    //         .AttributeExists(path);
-
-    //     // Assert
-    //     Assert.Equal(expected, actual);
-    // }
-
-    [Fact(Skip = "wait for https://github.com/HDFGroup/hdf-rest-api/issues/13")]
+    [Fact]
     public void CanGetAttribute()
     {
         // Arrange
@@ -108,6 +72,21 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
     }
 
     [Fact]
+    public void CanReadAttribute()
+    {
+        // Arrange
+        var expected = new int[] { 97, 98, 99, 100, 101, 102, 103, 104, 105, 0 };
+
+        // Act
+        var actual = _connector
+            .Attribute("attr1")
+            .Read<int>();
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
+    [Fact]
     public void CanGetDataset()
     {
         // Arrange
@@ -119,5 +98,53 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
 
         // Assert
         Assert.Equal(expected, actual.Name);
+    }
+
+    [Fact]
+    public void CanReadDataset()
+    {
+        // Arrange
+        var expected = new int[100];
+
+        for (int i = 0; i < 10; i++)
+        {
+            for (int j = 0; j < 10; j++)
+            {
+                expected[i * 10 + j] = i * j;
+            }
+        }
+
+        // TODO: handle memory selections
+
+        // Act
+        var actual = _connector
+            .Dataset("/g1/g1.1/dset1.1.1")
+            .Read<int>();
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
+    [Fact]
+    public void CanReadDatasetWithFileSelection()
+    {
+        // Arrange
+        var expected = new int[] { 6, 10, 14, 15, 25, 35 };
+
+        var fileSelection = new HyperslabSelection(
+            rank: 2,
+            starts: new ulong[] { 2, 3 },
+            strides: new ulong[] { 3, 2 },
+            counts: new ulong[] { 2, 3 },
+            blocks: new ulong[] { 1, 1 }
+        );
+
+        // Act
+        var actual = _connector
+            .Dataset("/g1/g1.1/dset1.1.1")
+            .Read<int>(fileSelection);
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
     }
 }

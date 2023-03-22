@@ -13,7 +13,7 @@ internal static class EndiannessConverter
         where T : unmanaged
     {
         var bytesOfType = Unsafe.SizeOf<T>();
-        EndiannessConverter.Convert(bytesOfType, MemoryMarshal.AsBytes(source), MemoryMarshal.AsBytes(destination));
+        Convert(bytesOfType, MemoryMarshal.AsBytes(source), MemoryMarshal.AsBytes(destination));
     }
 
     public static unsafe void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)

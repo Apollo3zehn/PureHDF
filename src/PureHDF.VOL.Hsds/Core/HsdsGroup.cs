@@ -1,9 +1,7 @@
-using System.Diagnostics;
 using Hsds.Api;
 
 namespace PureHDF.VOL.Hsds;
 
-[DebuggerDisplay("{Name}")]
 internal class HsdsGroup : HsdsAttributableObject, IH5Group
 {
     // this constructor is only for the derived InternalHsdsConnector class
@@ -19,8 +17,6 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
         //
     }
 
-    // TODO: should LinkExists be a Native only method? Here it is implemented
-    // using try/catch which makes it quite useless.
     public bool LinkExists(string path)
     {
         return InternaLinkExists(path, useAsync: false, default)
@@ -66,19 +62,9 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
             .Select(reference => reference.Dereference());
     }
 
-    private async Task<bool> InternaLinkExists(string path, bool useAsync, CancellationToken cancellationToken)
+    private Task<bool> InternaLinkExists(string path, bool useAsync, CancellationToken cancellationToken)
     {
-        try
-        {
-            await InternalGetAsync(path, useAsync, cancellationToken)
-                .ConfigureAwait(false);
-
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
     }
 
     private async Task<IEnumerable<HsdsNamedReference>> EnumerateReferencesAsync(bool useAsync, CancellationToken cancellationToken)

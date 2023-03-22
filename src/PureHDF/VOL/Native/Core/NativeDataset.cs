@@ -1,13 +1,11 @@
 using System.Buffers;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
-[DebuggerDisplay("{Name}: Class = '{InternalDataType.Class}'")]
-internal class NativeDataset : NativeAttributableObject, IH5Dataset
+internal class NativeDataset : NativeAttributableObject, INativeDataset
 {
     #region Fields
 
@@ -149,11 +147,36 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Methods
 
+    public IQueryable<T> AsQueryable<T>(
+        H5DatasetAccess datasetAccess,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default) where T : unmanaged
+    {
+        if (Space.Rank != 1)
+            throw new Exception("Querying data only works for 1-dimensional datasets.");
+
+        var provider = new QueryProvider<T>(
+            datasetLength: Space.Dimensions[0],
+            executor: fileSelection => Read<T>(datasetAccess, fileSelection, memorySelection, memoryDims));
+
+        var queryable = new Queryable<T>(provider);
+
+        return queryable;
+    }
+
     public byte[] Read(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null)
+    {
+        return Read(default, fileSelection, memorySelection, memoryDims);
+    }
+
+    public byte[] Read(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        ulong[]? memoryDims = default)
     {
         var result = ReadCoreValueAsync<byte, SyncReader>(
             default,
@@ -171,10 +194,18 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
     }
 
     public T[] Read<T>(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null) where T : unmanaged
+    {
+        return Read<T>(default(H5DatasetAccess), fileSelection, memorySelection, memoryDims);
+    }
+
+    public T[] Read<T>(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default) where T : unmanaged
+        ulong[]? memoryDims = default) where T : unmanaged
     {
         var result = ReadCoreValueAsync<T, SyncReader>(
             default,
@@ -191,29 +222,21 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
         return result;
     }
 
-    public IQueryable<T> AsQueryable<T>(
-        Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default) where T : unmanaged
+    public void Read<T>(
+        Memory<T> buffer, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null) where T : unmanaged
     {
-        if (Space.Rank != 1)
-            throw new Exception("Querying data only works for 1-dimensional datasets.");
-
-        var provider = new QueryProvider<T>(
-            datasetLength: Space.Dimensions[0],
-            executor: fileSelection => Read<T>(fileSelection, memorySelection, memoryDims, datasetAccess));
-
-        var queryable = new Queryable<T>(provider);
-
-        return queryable;
+        Read(buffer, default, fileSelection, memorySelection, memoryDims);
     }
 
     public void Read<T>(
         Memory<T> buffer,
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default) where T : unmanaged
+        ulong[]? memoryDims = default) where T : unmanaged
     {
         ReadCoreValueAsync<T, SyncReader>(
             default,
@@ -226,11 +249,20 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
     }
 
     public T[] ReadCompound<T>(
-       Func<FieldInfo, string>? getName = default,
-       Selection? fileSelection = default,
-       Selection? memorySelection = default,
-       ulong[]? memoryDims = default,
-       H5DatasetAccess datasetAccess = default) where T : struct
+        Func<FieldInfo, string>? getName = null, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null) where T : struct
+    {
+        return ReadCompound<T>(default, getName, fileSelection, memorySelection, memoryDims);
+    }
+
+    public T[] ReadCompound<T>(
+        H5DatasetAccess datasetAccess,
+        Func<FieldInfo, string>? getName = default,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default) where T : struct
     {
         getName ??= fieldInfo => fieldInfo.Name;
 
@@ -251,10 +283,18 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
     }
 
     public Dictionary<string, object?>[] ReadCompound(
-       Selection? fileSelection = default,
-       Selection? memorySelection = default,
-       ulong[]? memoryDims = default,
-       H5DatasetAccess datasetAccess = default)
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null,
+        ulong[]? memoryDims = null)
+    {
+        return ReadCompound(default, fileSelection, memorySelection, memoryDims);
+    }
+
+    public Dictionary<string, object?>[] ReadCompound(
+        H5DatasetAccess datasetAccess,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default)
     {
         var data = ReadCoreReferenceAsync<Dictionary<string, object?>, SyncReader>(
             default,
@@ -273,10 +313,18 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
     }
 
     public string?[] ReadString(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null)
+    {
+        return ReadString(default, fileSelection, memorySelection, memoryDims);
+    }
+
+    public string?[] ReadString(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        ulong[]? memoryDims = default)
     {
         var result = ReadCoreReferenceAsync<string, SyncReader>(
             default,
@@ -294,11 +342,21 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
         return result;
     }
 
+    public Task<byte[]> ReadAsync(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null, 
+        CancellationToken cancellationToken = default)
+    {
+        return ReadAsync(default, fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
     public async Task<byte[]> ReadAsync(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        CancellationToken cancellationToken = default)
     {
         var result = await ReadCoreValueAsync<byte, AsyncReader>(
             default,
@@ -315,11 +373,21 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
         return result;
     }
 
+    public Task<T[]> ReadAsync<T>(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default) where T : unmanaged
+    {
+        return ReadAsync<T>(default(H5DatasetAccess), fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
     public async Task<T[]> ReadAsync<T>(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default) where T : unmanaged
+        CancellationToken cancellationToken = default) where T : unmanaged
     {
         var result = await ReadCoreValueAsync<T, AsyncReader>(
             default,
@@ -337,11 +405,22 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
     }
 
     public Task ReadAsync<T>(
+        Memory<T> buffer, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null, 
+        CancellationToken cancellationToken = default) where T : unmanaged
+    {
+        return ReadAsync(buffer, default, fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
+    public Task ReadAsync<T>(
         Memory<T> buffer,
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default) where T : unmanaged
+        CancellationToken cancellationToken = default) where T : unmanaged
     {
         return ReadCoreValueAsync<T, AsyncReader>(
             default,
@@ -353,12 +432,23 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
             skipShuffle: false);
     }
 
+    public Task<T[]> ReadCompoundAsync<T>(
+        Func<FieldInfo, string>? getName = null, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default) where T : struct
+    {
+        return ReadCompoundAsync<T>(default, getName, fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
     public async Task<T[]> ReadCompoundAsync<T>(
-       Func<FieldInfo, string>? getName = default,
-       Selection? fileSelection = default,
-       Selection? memorySelection = default,
-       ulong[]? memoryDims = default,
-       H5DatasetAccess datasetAccess = default) where T : struct
+        H5DatasetAccess datasetAccess,
+        Func<FieldInfo, string>? getName = default,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default,
+        CancellationToken cancellationToken = default) where T : struct
     {
         getName ??= fieldInfo => fieldInfo.Name;
 
@@ -378,11 +468,21 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
         return result;
     }
 
+    public Task<Dictionary<string, object?>[]> ReadCompoundAsync(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        return ReadCompoundAsync(default, fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
     public async Task<Dictionary<string, object?>[]> ReadCompoundAsync(
-       Selection? fileSelection = default,
-       Selection? memorySelection = default,
-       ulong[]? memoryDims = default,
-       H5DatasetAccess datasetAccess = default)
+        H5DatasetAccess datasetAccess,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default,
+        CancellationToken cancellationToken = default)
     {
         var data = await ReadCoreReferenceAsync<Dictionary<string, object?>, AsyncReader>(
             default,
@@ -400,11 +500,21 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
         return data;
     }
 
+    public Task<string?[]> ReadStringAsync(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null,
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        return ReadStringAsync(default, fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
     public async Task<string?[]> ReadStringAsync(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        CancellationToken cancellationToken = default)
     {
         var result = await ReadCoreReferenceAsync<string, AsyncReader>(
             default,
@@ -468,7 +578,7 @@ internal class NativeDataset : NativeAttributableObject, IH5Dataset
             memoryDims,
             datasetAccess,
             skipShuffle: skipShuffle
-        );
+        ).ConfigureAwait(false);
 
         /* ensure correct endianness */
         if (DataTypeMessage.BitField is IByteOrderAware byteOrderAware)

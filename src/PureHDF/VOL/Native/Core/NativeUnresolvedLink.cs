@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
+﻿namespace PureHDF.VOL.Native;
 
-namespace PureHDF.VOL.Native;
-
-[DebuggerDisplay("{Name}")]
 internal class NativeUnresolvedLink : NativeObject, IH5UnresolvedLink
 {
     #region Constructors

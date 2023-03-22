@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
+﻿namespace PureHDF.VOL.Native;
 
-namespace PureHDF.VOL.Native;
-
-[DebuggerDisplay("{Name}: Class = '{Datatype.Class}'")]
 internal class NativeCommitedDatatype : NativeAttributableObject, IH5CommitedDatatype
 {
     #region Constructors

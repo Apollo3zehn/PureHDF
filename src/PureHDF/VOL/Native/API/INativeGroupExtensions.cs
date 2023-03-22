@@ -1,7 +1,7 @@
 namespace PureHDF.VOL.Native;
 
 /// <summary>
-/// Defines extensions methods for the <see cref="IH5Group" /> type.
+/// Defines extensions methods for the <see cref="INativeGroup" /> type.
 /// </summary>
 public static class INativeGroupExtensions
 {
@@ -16,7 +16,7 @@ public static class INativeGroupExtensions
     public static T Get<T>(
         this INativeGroup group, 
         string path, 
-        H5LinkAccess linkAccess = default) where T : IH5Object
+        H5LinkAccess linkAccess) where T : IH5Object
     {
         return (T)group.Get(path, linkAccess);
     }
@@ -33,7 +33,7 @@ public static class INativeGroupExtensions
     public static async Task<T> GetAsync<T>(
         this INativeGroup group,
         string path, 
-        H5LinkAccess linkAccess = default, 
+        H5LinkAccess linkAccess, 
         CancellationToken cancellationToken = default) where T : IH5Object
     {
         return (T)await group
@@ -52,7 +52,7 @@ public static class INativeGroupExtensions
     public static T Get<T>(
         this INativeGroup group, 
         H5ObjectReference reference, 
-        H5LinkAccess linkAccess = default)
+        H5LinkAccess linkAccess)
         where T : IH5Object
     {
         return (T)group.Get(reference, linkAccess);
@@ -70,7 +70,7 @@ public static class INativeGroupExtensions
     public static async Task<T> GetAsync<T>(
         this INativeGroup group, 
         H5ObjectReference reference, 
-        H5LinkAccess linkAccess = default, 
+        H5LinkAccess linkAccess, 
         CancellationToken cancellationToken = default)
         where T : IH5Object
     {

@@ -1,8 +1,5 @@
-﻿using System.Diagnostics;
+﻿namespace PureHDF.VOL.Native;
 
-namespace PureHDF.VOL.Native;
-
-[DebuggerDisplay("{Type}")]
 internal class HeaderMessage
 {
     #region Fields

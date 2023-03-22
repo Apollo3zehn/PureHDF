@@ -112,7 +112,7 @@ Usage:
 ```cs
 using PureHDF.VOL.Native;
 
-var group = (IH5NativeGroup)root.Group(...);
+var group = (INativeGroup)root.Group(...);
 
 var linkAccess = new H5LinkAccess(
     ExternalLinkPrefix: prefix 
@@ -126,7 +126,7 @@ var dataset = group.Dataset(path, linkAccess);
 ```cs
 using PureHDF.VOL.Native;
 
-var dataset = (IH5NativeDataset)root.Dataset(...);
+var dataset = (INativeDataset)root.Dataset(...);
 
 var datasetAccess = new H5DatasetAccess(
     ExternalFilePrefix: prefix 
@@ -140,7 +140,7 @@ var data = dataset.Read<float>(..., datasetAccess: datasetAccess);
 ```cs
 using PureHDF.VOL.Native;
 
-var dataset = (IH5NativeDataset)root.Dataset(...);
+var dataset = (INativeDataset)root.Dataset(...);
 
 var datasetAccess = new H5DatasetAccess(
     VirtualPrefix: prefix 
@@ -816,10 +816,23 @@ var domainName = "/shared/tall.h5";
 var client = new HsdsClient(new Uri("http://hsdshdflab.hdfgroup.org"));
 var root = HsdsConnector.Create(domainName, client);
 var group = root.Group("/my-group");
+// continue here as usual
 ...
 ```
 
-For authentication
+> Note: The following features are not (yet) implemented:
+- `IH5Attribute`
+  - Read compounds
+  - Read strings and other variable-length data types
+- `IH5Dataset`:
+  - Read compounds
+  - Read strings and other variable-length data types
+  - Memory selections
+- `IH5DataType`:
+  - `Size` property (the HSDS REST API does not seem to provide that information)
+  - data type properties other than `integer`, `float` and `compound`
+
+**Please file a new issue if you encounter any problems.**
 
 # 11 Intellisense
 

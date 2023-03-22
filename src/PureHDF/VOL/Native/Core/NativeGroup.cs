@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace PureHDF.VOL.Native;
 
-[DebuggerDisplay("{Name}")]
 internal class NativeGroup : NativeAttributableObject, INativeGroup
 {
     #region Fields
