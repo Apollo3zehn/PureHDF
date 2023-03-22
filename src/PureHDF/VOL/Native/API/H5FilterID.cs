@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.Filters;
 
 /// <summary>
 /// Specifies the filter identifier.
