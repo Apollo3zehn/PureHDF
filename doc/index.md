@@ -831,6 +831,7 @@ var group = root.Group("/my-group");
 - `IH5DataType`:
   - `Size` property (the HSDS REST API does not seem to provide that information)
   - data type properties other than `integer`, `float` and `compound`
+- `IH5FillValue`
 
 **Please file a new issue if you encounter any problems.**
 
