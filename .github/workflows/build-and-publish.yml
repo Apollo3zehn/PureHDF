@@ -42,6 +42,7 @@ jobs:
           dotnet build -c Release src/PureHDF.Filters.BZip2.SharpZipLib/PureHDF.Filters.BZip2.SharpZipLib.csproj
           dotnet build -c Release src/PureHDF.Filters.Deflate.ISA-L/PureHDF.Filters.Deflate.ISA-L.csproj
           dotnet build -c Release src/PureHDF.Filters.Deflate.SharpZipLib/PureHDF.Filters.Deflate.SharpZipLib.csproj
+          dotnet build -c Release src/PureHDF.Filters.Lzf/PureHDF.Filters.Lzf.csproj
           dotnet build -c Release src/PureHDF.SourceGenerator/PureHDF.SourceGenerator.csproj
           dotnet build -c Release src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj
           dotnet build -c Release src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj
