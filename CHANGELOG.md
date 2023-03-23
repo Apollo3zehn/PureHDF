@@ -1,4 +1,4 @@
-## v1.0.0-alpha.24 - 2023-03-23
+## v1.0.0-alpha.25 - 2023-03-23
 
 ### Breaking Changes
 - The property `group.Children` does not exist anymore. Use `group.Children()` instead. The reason is that properties do not work well in combination with the async programming model.
