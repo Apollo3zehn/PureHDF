@@ -1,3 +1,19 @@
+## v1.0.0-alpha.24 - 2023-03-23
+
+### Breaking Changes
+- The property `group.Children` does not exist anymore. Use `group.Children()` instead. The reason is that properties do not work well in combination with the async programming model.
+
+### Features
+- Added support for the LZF filter.
+- Virtual Object Layer (VOL)
+  - There is now a VOL connector for native H5 files and a VOL connector for HSDS (see below).
+  - Added experimental support for the [Highly Scalable Data Service (HSDS)](https://github.com/Apollo3zehn/PureHDF/tree/a1c690f642235c6975f805cb5750d1c75cd1a837#10-highly-scalable-data-service-hsds)
+- Virtual File Driver (VFD)
+  - Added support for [Amazon S3](https://github.com/Apollo3zehn/PureHDF/tree/a1c690f642235c6975f805cb5750d1c75cd1a837#9-amazon-s3) hosted files
+- More async methods. 
+
+> Note: Asynchronous methods of the `native VOL connector` (like `group.AttributesAsync()`) are not yet implemented asynchronously but synchronously. **Exception**: read methods like `dataset.ReadAsync(...)` are implemented asynchronously. In future all async methods will be truly async.
+
 ## v1.0.0-alpha.24 - 2023-02-10
 
 ### Bugs fixed

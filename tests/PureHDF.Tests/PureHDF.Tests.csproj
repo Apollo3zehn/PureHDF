@@ -25,6 +25,7 @@
     <ProjectReference Include="../../src/PureHDF.Filters.BZip2.SharpZipLib/PureHDF.Filters.BZip2.SharpZipLib.csproj" />
     <ProjectReference Include="../../src/PureHDF.Filters.Deflate.ISA-L/PureHDF.Filters.Deflate.ISA-L.csproj" />
     <ProjectReference Include="../../src/PureHDF.Filters.Deflate.SharpZipLib/PureHDF.Filters.Deflate.SharpZipLib.csproj" />
+    <ProjectReference Include="../../src/PureHDF.Filters.Lzf/PureHDF.Filters.Lzf.csproj" />
     <ProjectReference Include="../../src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj" />
     <ProjectReference Include="../../src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj" />
   </ItemGroup>

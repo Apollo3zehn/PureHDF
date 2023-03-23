@@ -429,7 +429,7 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: H5FilterID.Deflate, 
     name: "deflate", 
-    filterFunc: H5DeflateISAL.FilterFunction);
+    filterFunction: H5DeflateISAL.FilterFunction);
 ```
 
 **Deflate (SharpZipLib)**
@@ -444,7 +444,7 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: H5FilterID.Deflate, 
     name: "deflate", 
-    filterFunc: H5DeflateSharpZipLib.FilterFunction);
+    filterFunction: H5DeflateSharpZipLib.FilterFunction);
 ```
 
 **Blosc / Blosc2**
@@ -460,7 +460,7 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: (H5FilterID)32001, 
     name: "blosc2", 
-    filterFunc: H5Blosc2.FilterFunction);
+    filterFunction: H5Blosc2.FilterFunction);
 ```
 
 **BZip2 (SharpZipLib)**
@@ -475,7 +475,20 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: (H5FilterID)307, 
     name: "bzip2", 
-    filterFunc: H5BZip2SharpZipLib.FilterFunc);
+    filterFunction: H5BZip2SharpZipLib.FilterFunction);
+```
+
+**LZF**
+
+`dotnet add package PureHDF.Filters.LZF`
+
+```cs
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: (H5FilterID)32000,
+    name: "lzf", 
+    filterFunction: H5Lzf.FilterFunction);
 ```
 
 # 6. Reading Compound Data

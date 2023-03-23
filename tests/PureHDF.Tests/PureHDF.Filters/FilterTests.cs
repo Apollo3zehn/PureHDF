@@ -187,12 +187,36 @@ namespace PureHDF.Tests.Reading.Filters
         }
 
         [Fact]
+        public void CanDefilterLZF()
+        {
+            // import h5py
+
+            // with h5py.File("lzf.h5", "w") as f:
+            //     data = list(range(0, 1000))
+            //     dataset = f.create_dataset(f"lzf", (len(data),), dtype=f"<i4", compression="lzf")
+            //     dataset[:] = data
+
+            // Arrange
+            var filePath = "./TestFiles/lzf.h5";
+            var expected = Enumerable.Range(0, 1000).ToArray();
+
+            H5Filter.Register(identifier: (H5FilterID)32000, name: "lzf", filterFunction: H5Lzf.FilterFunction);
+
+            // Act
+            using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var dataset = root.Dataset("/lzf");
+            var actual = dataset.Read<int>();
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        }
+
+        [Fact]
         public void CanDefilterBZip2()
         {
             // # Works only with Linux! On Windows, deflate is used instead.
             // import numpy
             // import tables
-
 
             // fileName = 'bzip2.h5'
             // shape = (1000,)
