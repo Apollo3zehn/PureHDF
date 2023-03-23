@@ -8,45 +8,49 @@ namespace PureHDF.Tests.Reading
         public void CanReadWrappedFile_Compact_sync()
         {
             // Arrange
-            var filePath = "testfiles/sine_compact.mat";
+            var filePath = "TestFiles/sine_compact.mat";
 
             // Act
             using var root = H5File.OpenRead(filePath);
             var result = root.Dataset("sine").Read<double>();
         }
 
+#if NET6_0_OR_GREATER
         [Fact]
         public async Task CanReadWrappedFile_Compact_async()
         {
             // Arrange
-            var filePath = "testfiles/sine_compact.mat";
+            var filePath = "TestFiles/sine_compact.mat";
 
             // Act
             using var root = H5File.OpenRead(filePath);
             var result = await root.Dataset("sine").ReadAsync<double>();
         }
+#endif
 
         [Fact]
         public void CanReadWrappedFile_Chunked_sync()
         {
             // Arrange
-            var filePath = "testfiles/sine_chunked.mat";
+            var filePath = "TestFiles/sine_chunked.mat";
 
             // Act
             using var root = H5File.OpenRead(filePath);
             var result = root.Dataset("sine").Read<double>();
         }
 
+#if NET6_0_OR_GREATER
         [Fact]
         public async Task CanReadWrappedFile_Chunked_async()
         {
             // Arrange
-            var filePath = "testfiles/sine_chunked.mat";
+            var filePath = "TestFiles/sine_chunked.mat";
 
             // Act
             using var root = H5File.OpenRead(filePath);
             var result = await root.Dataset("sine").ReadAsync<double>();
         }
+#endif
 
         [Theory]
         [InlineData("Deadbeef", 0x5c16ad42)]

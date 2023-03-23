@@ -1,8 +1,6 @@
 ﻿using HDF.PInvoke;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace PureHDF.Tests.Reading
 {
@@ -19,12 +17,8 @@ namespace PureHDF.Tests.Reading
         //   dataset consisting of a 5x4 fixed-size array cannot be defined with 10x10 chunks.
         // https://support.hdfgroup.org/images/tutr-subset2.png
 
-        private readonly ITestOutputHelper _logger;
-
-        public SelectionTests(ITestOutputHelper logger)
-        {
-            _logger = logger;
-        }
+        private static void Converter(Memory<byte> source, Memory<int> target) 
+            => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
 
         [Fact]
         /*    /                                         /
@@ -382,35 +376,6 @@ namespace PureHDF.Tests.Reading
             }
         }
 
-        [Fact(Skip = "Only for performance tests.")]
-        public void WalkPerformance()
-        {
-            // Arrange
-            var dims = new ulong[] { 1000, 200, 200 };
-            var chunkDims = new ulong[] { 1000, 200, 200 };
-
-            var selection = new HyperslabSelection(
-                rank: 3,
-                starts: new ulong[] { 1, 1, 1 },
-                strides: new ulong[] { 31, 31, 31 },
-                counts: new ulong[] { 30, 6, 6 },
-                blocks: new ulong[] { 25, 26, 27 }
-            );
-
-            var sw = Stopwatch.StartNew();
-
-            // Act
-            for (int i = 0; i < 10; i++)
-            {
-                _ = SelectionUtils
-                    .Walk(rank: 3, dims, chunkDims, selection)
-                    .ToArray();
-            }
-
-            // Assert
-            _logger.WriteLine($"Elapsed: {sw.Elapsed.TotalMilliseconds} ms");
-        }
-
         [Theory]
         [InlineData(new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
@@ -509,17 +474,18 @@ namespace PureHDF.Tests.Reading
             var sourceSelection = new HyperslabSelection(rank: 2, sourceStarts, sourceStrides, sourceCounts, sourceBlocks);
             var targetSelection = new HyperslabSelection(rank: 2, targetStarts, targetStrides, targetCounts, targetBlocks);
 
-            var copyInfo = new CopyInfo(
+            var copyInfo = new CopyInfo<int>(
                 default!,
                 default!,
                 default!,
                 default!,
                 sourceSelection,
                 targetSelection,
-                default,
-                default,
                 default!,
-                0
+                default!,
+                default!,
+                0,
+                1
             );
 
             // Act
@@ -558,7 +524,7 @@ namespace PureHDF.Tests.Reading
                 blocks: blocks
             );
 
-            var copyInfo = new CopyInfo(
+            var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -566,9 +532,10 @@ namespace PureHDF.Tests.Reading
                 datasetSelection,
                 memorySelection,
                 indices => default!,
-                indices => default!,
                 indices => default,
-                TypeSize: 4
+                Converter: default!,
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -601,7 +568,7 @@ namespace PureHDF.Tests.Reading
                 blocks: new ulong[] { 3, 2 }
             );
 
-            var copyInfo = new CopyInfo(
+            var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -609,9 +576,10 @@ namespace PureHDF.Tests.Reading
                 datasetSelection,
                 memorySelection,
                 indices => default!,
-                indices => default!,
                 indices => default,
-                TypeSize: 4
+                Converter: default!,
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -704,29 +672,28 @@ namespace PureHDF.Tests.Reading
                 sourceBuffer3
             };
 
-            var expectedBuffer = new byte[10 * 10 * sizeof(int)];
-            var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer);
+            var expected = new int[10 * 10];
 
             expected[11] = 1; expected[12] = 2; expected[13] = 3; expected[14] = 4; expected[15] = 5; expected[16] = 6;
             expected[21] = 7; expected[22] = 8; expected[23] = 9; expected[24] = 10; expected[25] = 11; expected[26] = 12;
             expected[51] = 13; expected[52] = 14; expected[53] = 15; expected[54] = 16; expected[55] = 17; expected[56] = 18;
             expected[61] = 19; expected[62] = 20; expected[63] = 21; expected[64] = 22; expected[65] = 23; expected[66] = 24;
 
-            var actualBuffer = new byte[10 * 10 * sizeof(int)];
-            var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+            var actual = new int[10 * 10];
             var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
-            var copyInfo = new CopyInfo(
+            var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-                indices => default!,
-                indices => actualBuffer,
-                TypeSize: 4
+                indices => Task.FromResult((IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)])),
+                indices => actual,
+                Converter,
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -823,8 +790,7 @@ namespace PureHDF.Tests.Reading
                 sourceBuffer8,
             };
 
-            var expectedBuffer = new byte[5 * 6 * 11 * sizeof(int)];
-            var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer);
+            var expected = new int[5 * 6 * 11];
 
             expected[78] = 7;
             expected[79] = 8;
@@ -833,21 +799,24 @@ namespace PureHDF.Tests.Reading
             expected[210] = 14;
             expected[211] = 15;
 
-            var actualBuffer = new byte[5 * 6 * 11 * sizeof(int)];
-            var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+            var actual = new int[5 * 6 * 11];
             var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
-            var copyInfo = new CopyInfo(
+            IH5ReadStream getSourceStreamAsync(ulong[] indices) 
+                => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
+
+            var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
                 memoryDims,
                 sourceSelection,
                 targetSelection,
-                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-                indices => default!,
-                indices => actualBuffer,
-                TypeSize: 4
+                indices => Task.FromResult(getSourceStreamAsync(indices)),
+                indices => actual,
+                Converter,
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -950,8 +919,7 @@ namespace PureHDF.Tests.Reading
                 sourceBuffer8, default, sourceBuffer10, default, sourceBuffer12, default, sourceBuffer14, default
             };
 
-            var expectedBuffer = new byte[11 * 11 * 12 * sizeof(int)];
-            var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer);
+            var expected = new int[11 * 11 * 12];
             var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             expected[277] = 1;
@@ -967,20 +935,23 @@ namespace PureHDF.Tests.Reading
             expected[712] = 11;
             expected[715] = 12;
 
-            var actualBuffer = new byte[11 * 11 * 12 * sizeof(int)];
-            var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+            var actual = new int[11 * 11 * 12];
 
-            var copyInfo = new CopyInfo(
+            IH5ReadStream getSourceStreamAsync(ulong[] indices) 
+                => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
+
+            var copyInfo = new CopyInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-                indices => default!,
-                indices => actualBuffer,
-                TypeSize: 4
+                indices => Task.FromResult(getSourceStreamAsync(indices)),
+                indices => actual,
+                Converter,
+                SourceTypeSize: 4,
+                TargetTypeFactor: 1
             );
 
             // Act
@@ -1020,8 +991,7 @@ namespace PureHDF.Tests.Reading
                 );
 
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetForHyperslab(fileId));
-                var expectedBuffer = new byte[memoryDims[0] * memoryDims[1] * 4];
-                var expected = MemoryMarshal.Cast<byte, int>(expectedBuffer.AsSpan());
+                var expected = new int[memoryDims[0] * memoryDims[1]];
 
                 {
                     var fileId = H5F.open(filePath, H5F.ACC_RDONLY);
@@ -1039,7 +1009,7 @@ namespace PureHDF.Tests.Reading
 
                     unsafe
                     {
-                        fixed (byte* ptr = expectedBuffer)
+                        fixed (int* ptr = expected)
                         {
                             var res3 = H5D.read(datasetId, H5T.NATIVE_INT32, memorySpaceId, datasetSpaceId, 0, new IntPtr(ptr));
 
@@ -1054,27 +1024,27 @@ namespace PureHDF.Tests.Reading
                     _ = H5F.close(fileId);
                 }
 
-                using var root = H5File.OpenReadCore(filePath, deleteOnClose: true);
-                var dataset = root.Dataset("/chunked/hyperslab");
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var dataset = (NativeDataset)root.Dataset("/chunked/hyperslab");
 
                 /* get intermediate data (only for Matlab visualization) */
-                var intermediateBuffer = new byte[datasetDims[0] * datasetDims[1] * datasetDims[2] * 4];
-                var intermediate = MemoryMarshal.Cast<byte, int>(intermediateBuffer);
+                var intermediate = new int[datasetDims[0] * datasetDims[1] * datasetDims[2]];
 
-                var chunkProviderIntermediate = H5D_Chunk.Create(dataset, default);
-                chunkProviderIntermediate.Initialize();
+                var h5dIntermediate = H5D_Chunk.Create(dataset, default);
+                h5dIntermediate.Initialize();
 
-                var copyInfoInterMediate = new CopyInfo(
+                var copyInfoInterMediate = new CopyInfo<int>(
                     datasetDims,
                     chunkDims,
                     datasetDims,
                     datasetDims,
                     datasetSelection,
                     datasetSelection,
-                    indices => chunkProviderIntermediate.GetBufferAsync(default(AsyncReader), indices),
-                    indices => default!,
-                    indices => intermediateBuffer,
-                    TypeSize: 4
+                    indices => h5dIntermediate.GetStreamAsync(default(SyncReader), indices),
+                    indices => intermediate,
+                    Converter,
+                    SourceTypeSize: 4,
+                    TargetTypeFactor: 1
                 );
 
                 SelectionUtils
@@ -1083,23 +1053,23 @@ namespace PureHDF.Tests.Reading
                     .GetResult();
 
                 /* get actual data */
-                var actualBuffer = new byte[memoryDims[0] * memoryDims[1] * 4];
-                var actual = MemoryMarshal.Cast<byte, int>(actualBuffer);
+                var actual = new int[memoryDims[0] * memoryDims[1]];
 
-                var chunkProvider = H5D_Chunk.Create(dataset, default);
-                chunkProvider.Initialize();
+                var h5d = H5D_Chunk.Create(dataset, default);
+                h5d.Initialize();
 
-                var copyInfo = new CopyInfo(
+                var copyInfo = new CopyInfo<int>(
                     datasetDims,
                     chunkDims,
                     memoryDims,
                     memoryDims,
                     datasetSelection,
                     memorySelection,
-                    indices => chunkProvider.GetBufferAsync(default(AsyncReader), indices),
-                    indices => default!,
-                    indices => actualBuffer,
-                    TypeSize: 4
+                    indices => h5d.GetStreamAsync(default(SyncReader), indices),
+                    indices => actual,
+                    Converter: default!,
+                    SourceTypeSize: 4,
+                    TargetTypeFactor: 1
                 );
 
                 // Act

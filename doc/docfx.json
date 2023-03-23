@@ -3,61 +3,16 @@
     {
       "src": [
         {
+          "src": "../",
           "files": [
-            "**/*.csproj"
-          ],
-          "src": "../src/PureHDF"
+            "src/**.csproj"
+          ]
         }
       ],
-      "dest": "api/netstandard2.0",
+      "dest": "api",
       "filter": "filterConfig.yml",
       "properties": {
-        "TargetFramework": "netstandard2.0"
-      }
-    },
-    {
-      "src": [
-        {
-          "files": [
-            "**/*.csproj"
-          ],
-          "src": "../src/PureHDF"
-        }
-      ],
-      "dest": "api/netstandard2.1",
-      "filter": "filterConfig.yml",
-      "properties": {
-        "TargetFramework": "netstandard2.1"
-      }
-    },
-    {
-      "src": [
-        {
-          "files": [
-            "**/*.csproj"
-          ],
-          "src": "../src/PureHDF"
-        }
-      ],
-      "dest": "api/net50",
-      "filter": "filterConfig.yml",
-      "properties": {
-        "TargetFramework": "net50"
-      }
-    },
-    {
-      "src": [
-        {
-          "files": [
-            "**/*.csproj"
-          ],
-          "src": "../src/PureHDF"
-        }
-      ],
-      "dest": "api/net60",
-      "filter": "filterConfig.yml",
-      "properties": {
-        "TargetFramework": "net60"
+        "TargetFramework": "net70"
       }
     }
   ],
@@ -65,32 +20,15 @@
     "content": [
       {
         "files": [
-          "*.md"
+          "*.md",
+          "toc.yml"
         ]
       },
       {
-        "files": "*.yml",
-        "src": "api/netstandard2.0",
-        "dest": "api/netstandard2.0",
-        "version": ".NET Standard 2.0"
-      },
-      {
-        "files": "*.yml",
-        "src": "api/netstandard2.1",
-        "dest": "api/netstandard2.1",
-        "version": ".NET Standard 2.1"
-      },
-      {
-        "files": "*.yml",
-        "src": "api/net50",
-        "dest": "api/net50",
-        "version": ".NET 5"
-      },
-      {
-        "files": "*.yml",
-        "src": "api/net60",
-        "dest": "api/net60",
-        "version": ".NET 6"
+        "files": [
+          "api/**.yml",
+          "api/index.md"
+        ]
       }
     ],
     "resource": [
@@ -104,8 +42,8 @@
     "globalMetadata": {
       "_appTitle": "PureHDF",
       "_appFooter": "Copyright © 2023 Vincent Wilms",
-      "_appFaviconPath": "images/icon.ico",
-      "_appLogoPath": "images/logo.svg"
+      "_appFaviconPath": "images/icon.svg",
+      "_appLogoPath": "images/icon.svg"
     },
     "fileMetadataFiles": [],
     "template":["default","templates/material"],

@@ -1,253 +1,218 @@
-namespace PureHDF
+using System.Buffers;
+
+namespace PureHDF;
+
+internal record CopyInfo<T>(
+    ulong[] SourceDims,
+    ulong[] SourceChunkDims,
+    ulong[] TargetDims,
+    ulong[] TargetChunkDims,
+    Selection SourceSelection,
+    Selection TargetSelection,
+    Func<ulong[], Task<IH5ReadStream>> GetSourceStreamAsync,
+    Func<ulong[], Memory<T>> GetTargetBuffer,
+    Action<Memory<byte>, Memory<T>> Converter,
+    int SourceTypeSize,
+    int TargetTypeFactor
+);
+
+internal readonly struct RelativeStep
 {
-    internal record CopyInfo(
-        ulong[] SourceDims,
-        ulong[] SourceChunkDims,
-        ulong[] TargetDims,
-        ulong[] TargetChunkDims,
-        Selection SourceSelection,
-        Selection TargetSelection,
-        Func<ulong[], Task<Memory<byte>>>? GetSourceBufferAsync,
-        Func<ulong[], Stream>? GetSourceStream,
-        Func<ulong[], Memory<byte>> GetTargetBuffer,
-        int TypeSize
-    );
+    public ulong[] Chunk { get; init; }
 
-    internal readonly struct RelativeStep
+    public ulong Offset { get; init; }
+
+    public ulong Length { get; init; }
+}
+
+internal static class SelectionUtils
+{
+    public static Task CopyAsync<TResult, TReader>(
+        TReader reader,
+        int sourceRank,
+        int targetRank,
+        CopyInfo<TResult> copyInfo) where TReader : IReader
     {
-        public ulong[] Chunk { get; init; }
+        /* validate selections */
+        if (copyInfo.SourceSelection.TotalElementCount != copyInfo.TargetSelection.TotalElementCount)
+            throw new ArgumentException("The lengths of the source selection and target selection are not equal.");
 
-        public ulong Offset { get; init; }
+        /* validate rank of dims */
+        if (copyInfo.SourceDims.Length != sourceRank ||
+            copyInfo.SourceChunkDims.Length != sourceRank ||
+            copyInfo.TargetDims.Length != targetRank ||
+            copyInfo.TargetChunkDims.Length != targetRank)
+            throw new RankException($"The length of each array parameter must match the rank parameter.");
 
-        public ulong Length { get; init; }
+        /* walkers */
+        var sourceWalker = Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
+            .GetEnumerator();
+
+        var targetWalker = Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
+            .GetEnumerator();
+
+        /* select method */
+        return CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
     }
 
-    internal static class SelectionUtils
+    public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
     {
-        public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
-        {
-            /* check if there is anything to do */
-            if (selection.TotalElementCount == 0)
-                yield break;
+        /* check if there is anything to do */
+        if (selection.TotalElementCount == 0)
+            yield break;
 
+        /* validate rank */
+        if (dims.Length != rank || chunkDims.Length != rank)
+            throw new RankException($"The length of each array parameter must match the rank parameter.");
+
+        /* prepare some useful arrays */
+        var lastDim = rank - 1;
+        var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
+
+        /* prepare last dimension variables */
+        var lastChunkDim = chunkDims[lastDim];
+
+        foreach (var step in selection.Walk(limits: dims))
+        {
             /* validate rank */
-            if (dims.Length != rank || chunkDims.Length != rank)
-                throw new RankException($"The length of each array parameter must match the rank parameter.");
+            if (step.Coordinates.Length != rank)
+                throw new RankException($"The length of the step coordinates array must match the rank parameter.");
 
-            /* prepare some useful arrays */
-            var lastDim = rank - 1;
-            var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
+            var remaining = step.ElementCount;
 
-            /* prepare last dimension variables */
-            var lastChunkDim = chunkDims[lastDim];
-
-            foreach (var step in selection.Walk(limits: dims))
+            /* process slice */
+            while (remaining > 0)
             {
-                /* validate rank */
-                if (step.Coordinates.Length != rank)
-                    throw new RankException($"The length of the step coordinates array must match the rank parameter.");
+                // TODO: Performance issue.
+                var scaledOffsets = new ulong[rank];
+                Span<ulong> chunkOffsets = stackalloc ulong[rank];
 
-                var remaining = step.ElementCount;
-
-                /* process slice */
-                while (remaining > 0)
+                for (int dimension = 0; dimension < rank; dimension++)
                 {
-                    // TODO: Performance issue.
-                    var scaledOffsets = new ulong[rank];
-                    Span<ulong> chunkOffsets = stackalloc ulong[rank];
-
-                    for (int dimension = 0; dimension < rank; dimension++)
-                    {
-                        scaledOffsets[dimension] = step.Coordinates[dimension] / chunkDims[dimension];
-                        chunkOffsets[dimension] = step.Coordinates[dimension] % chunkDims[dimension];
-                    }
-
-                    var offset = chunkOffsets.ToLinearIndex(chunkDims);
-                    var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
-
-                    yield return new RelativeStep()
-                    {
-                        Chunk = scaledOffsets,
-                        Offset = offset,
-                        Length = currentLength
-                    };
-
-                    remaining -= currentLength;
-                    step.Coordinates[lastDim] += currentLength;
+                    scaledOffsets[dimension] = step.Coordinates[dimension] / chunkDims[dimension];
+                    chunkOffsets[dimension] = step.Coordinates[dimension] % chunkDims[dimension];
                 }
+
+                var offset = chunkOffsets.ToLinearIndex(chunkDims);
+                var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
+
+                yield return new RelativeStep()
+                {
+                    Chunk = scaledOffsets,
+                    Offset = offset,
+                    Length = currentLength
+                };
+
+                remaining -= currentLength;
+                step.Coordinates[lastDim] += currentLength;
             }
         }
+    }
 
-        public static Task CopyAsync<TReader>(
-            TReader reader,
-            int sourceRank,
-            int targetRank,
-            CopyInfo copyInfo) where TReader : IReader
+    private async static Task CopyStreamAsync<TResult, TReader>(
+        TReader reader,
+        IEnumerator<RelativeStep> sourceWalker,
+        IEnumerator<RelativeStep> targetWalker,
+        CopyInfo<TResult> copyInfo) where TReader : IReader
+    {
+        /* initialize source walker */
+        var sourceStream = default(IH5ReadStream)!;
+        var lastSourceChunk = default(ulong[]);
+
+        /* initialize target walker */
+        var targetBuffer = default(Memory<TResult>);
+        var lastTargetChunk = default(ulong[]);
+        var currentTarget = default(Memory<TResult>);
+
+        /* walk until end */
+        while (sourceWalker.MoveNext())
         {
-            /* validate selections */
-            if (copyInfo.SourceSelection.TotalElementCount != copyInfo.TargetSelection.TotalElementCount)
-                throw new ArgumentException("The length of the source selection and target selection are not equal.");
+            /* load next source stream */
+            var sourceStep = sourceWalker.Current;
 
-            /* validate rank of dims */
-            if (copyInfo.SourceDims.Length != sourceRank ||
-                copyInfo.SourceChunkDims.Length != sourceRank ||
-                copyInfo.TargetDims.Length != targetRank ||
-                copyInfo.TargetChunkDims.Length != targetRank)
-                throw new RankException($"The length of each array parameter must match the rank parameter.");
-
-            /* walkers */
-            var sourceWalker = Walk(sourceRank, copyInfo.SourceDims, copyInfo.SourceChunkDims, copyInfo.SourceSelection)
-                .GetEnumerator();
-
-            var targetWalker = Walk(targetRank, copyInfo.TargetDims, copyInfo.TargetChunkDims, copyInfo.TargetSelection)
-                .GetEnumerator();
-
-            /* select method */
-            if (copyInfo.GetSourceBufferAsync is not null)
-                return CopyMemoryAsync(sourceWalker, targetWalker, copyInfo);
-
-            else if (copyInfo.GetSourceStream is not null)
-                return CopyStreamAsync(reader, sourceWalker, targetWalker, copyInfo);
-
-            else
-                throw new Exception($"Either GetSourceBuffer or GetSourceStream must be non-null.");
-        }
-
-        private async static Task CopyMemoryAsync(
-            IEnumerator<RelativeStep> sourceWalker,
-            IEnumerator<RelativeStep> targetWalker,
-            CopyInfo copyInfo)
-        {
-            /* initialize source walker */
-            var sourceBuffer = default(Memory<byte>);
-            var lastSourceChunk = default(ulong[]);
-
-            /* initialize target walker */
-            var targetBuffer = default(Memory<byte>);
-            var lastTargetChunk = default(ulong[]);
-            var currentTarget = default(Memory<byte>);
-
-            /* walk until end */
-            while (sourceWalker.MoveNext())
+            if (sourceStream is null /* if stream not assigned yet */ ||
+                !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
             {
-                /* load next source buffer */
-                var sourceStep = sourceWalker.Current;
-
-                if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
-                {
-                    sourceBuffer = await copyInfo.GetSourceBufferAsync!(sourceStep.Chunk).ConfigureAwait(false);
-                    lastSourceChunk = sourceStep.Chunk;
-                }
-
-                var currentSource = sourceBuffer.Slice(
-                    (int)sourceStep.Offset * copyInfo.TypeSize,
-                    (int)sourceStep.Length * copyInfo.TypeSize);
-
-                while (currentSource.Length > 0)
-                {
-                    /* load next target buffer */
-                    if (currentTarget.Length == 0)
-                    {
-                        var success = targetWalker.MoveNext();
-                        var targetStep = targetWalker.Current;
-
-                        if (!success || targetStep.Length == 0)
-                            throw new FormatException("The target walker stopped early.");
-
-                        if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                            !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
-                        {
-                            targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
-                            lastTargetChunk = targetStep.Chunk;
-                        }
-
-                        currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset * copyInfo.TypeSize,
-                            (int)targetStep.Length * copyInfo.TypeSize);
-                    }
-
-                    /* copy */
-                    var length = Math.Min(currentSource.Length, currentTarget.Length);
-
-                    currentSource[..length]
-                        .CopyTo(currentTarget);
-
-                    currentSource = currentSource[length..];
-                    currentTarget = currentTarget[length..];
-                }
+                sourceStream = await copyInfo.GetSourceStreamAsync(sourceStep.Chunk).ConfigureAwait(false);
+                lastSourceChunk = sourceStep.Chunk;
             }
-        }
 
-        private async static Task CopyStreamAsync<TReader>(
-            TReader reader,
-            IEnumerator<RelativeStep> sourceWalker,
-            IEnumerator<RelativeStep> targetWalker,
-            CopyInfo copyInfo) where TReader : IReader
-        {
-            /* initialize source walker */
-            var sourceStream = default(Stream)!;
-            var lastSourceChunk = default(ulong[]);
+            var currentOffset = (int)sourceStep.Offset;
+            var currentLength = (int)sourceStep.Length;
 
-            /* initialize target walker */
-            var targetBuffer = default(Memory<byte>);
-            var lastTargetChunk = default(ulong[]);
-            var currentTarget = default(Memory<byte>);
-
-            /* walk until end */
-            while (sourceWalker.MoveNext())
+            while (currentLength > 0)
             {
-                /* load next source stream */
-                var sourceStep = sourceWalker.Current;
-
-                if (sourceStream is null /* if stream not assigned yet */ ||
-                    !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
+                /* load next target buffer */
+                if (currentTarget.Length == 0)
                 {
-                    sourceStream = copyInfo.GetSourceStream!(sourceStep.Chunk);
-                    lastSourceChunk = sourceStep.Chunk;
-                }
+                    var success = targetWalker.MoveNext();
+                    var targetStep = targetWalker.Current;
 
-                var offset = (int)sourceStep.Offset * copyInfo.TypeSize;                                // corresponds to 
-                var currentLength = (int)sourceStep.Length * copyInfo.TypeSize;                         // sourceBuffer.Slice()
+                    if (!success || targetStep.Length == 0)
+                        throw new FormatException("The target walker stopped early.");
 
-                while (currentLength > 0)
-                {
-                    /* load next target buffer */
-                    if (currentTarget.Length == 0)
+                    if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
+                        !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
                     {
-                        var success = targetWalker.MoveNext();
-                        var targetStep = targetWalker.Current;
-
-                        if (!success || targetStep.Length == 0)
-                            throw new FormatException("The target walker stopped early.");
-
-                        if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                            !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
-                        {
-                            targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
-                            lastTargetChunk = targetStep.Chunk;
-                        }
-
-                        currentTarget = targetBuffer.Slice(
-                            (int)targetStep.Offset * copyInfo.TypeSize,
-                            (int)targetStep.Length * copyInfo.TypeSize);
+                        targetBuffer = copyInfo.GetTargetBuffer(targetStep.Chunk);
+                        lastTargetChunk = targetStep.Chunk;
                     }
 
-                    /* copy */
-                    var length = Math.Min(currentLength, currentTarget.Length);
+                    currentTarget = targetBuffer.Slice(
+                        (int)targetStep.Offset * copyInfo.TargetTypeFactor,
+                        (int)targetStep.Length * copyInfo.TargetTypeFactor);
+                }
 
-                    await reader.ReadAsync(                                             // corresponds to span.CopyTo
+                /* copy */
+                var length = Math.Min(currentLength, currentTarget.Length / copyInfo.TargetTypeFactor);
+                var targetLength = length * copyInfo.TargetTypeFactor;
+
+                // specialization; virtual dataset (VirtualDatasetStream)
+                if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
+                {
+                    virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
+
+                    await virtualDatasetStream
+                        .ReadVirtualAsync(currentTarget[..targetLength])
+                        .ConfigureAwait(false);
+                }
+
+                // optimization; chunked / compact dataset (MemorySpanStream)
+                else if (sourceStream is SystemMemoryStream memorySpanStream)
+                {
+                    memorySpanStream.Seek(currentOffset * copyInfo.SourceTypeSize, SeekOrigin.Begin);
+
+                    var currentSource = memorySpanStream.SlicedMemory;
+                    var sourceLength = length * copyInfo.SourceTypeSize;
+
+                    copyInfo.Converter(
+                        currentSource[..sourceLength],
+                        currentTarget[..targetLength]);
+                }
+
+                // default; contiguous dataset (OffsetStream, ExternalFileListStream (wrapping a SlotStream), UnsafeFillValueStream)
+                else
+                {
+                    var sourceLength = length * copyInfo.SourceTypeSize;
+
+                    // TODO: do not copy if not necessary
+                    using var rentedOwner = MemoryPool<byte>.Shared.Rent(sourceLength);
+                    var rentedMemory = rentedOwner.Memory;
+
+                    await reader.ReadDatasetAsync(
                         sourceStream,
-                        currentTarget[..length],
-                        offset).ConfigureAwait(false);
+                        rentedMemory[..sourceLength],
+                        currentOffset * copyInfo.SourceTypeSize).ConfigureAwait(false);
 
-                    offset += length;                                                   // corresponds to 
-                    currentLength -= length;                                            // sourceBuffer.Slice()
-
-                    currentTarget = currentTarget[length..];
+                    copyInfo.Converter(
+                        rentedMemory[..sourceLength],
+                        currentTarget[..targetLength]);
                 }
+
+                currentOffset += length;
+                currentLength -= length;
+                currentTarget = currentTarget[targetLength..];
             }
         }
     }
 }
-

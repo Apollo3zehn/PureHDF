@@ -1,10 +1,16 @@
-﻿namespace PureHDF
+﻿using System.Runtime.InteropServices;
+
+namespace PureHDF;
+
+/// <summary>
+/// An HDF5 region reference.
+/// </summary>
+[StructLayout(LayoutKind.Explicit, Size = 12)]
+public partial struct H5RegionReference
 {
-    /// <summary>
-    /// An HDF5 region reference.
-    /// </summary>
-    public partial struct H5RegionReference
-    {
-        //
-    }
+    [FieldOffset(0)]
+    internal ulong CollectionAddress;
+
+    [FieldOffset(8)]
+    internal uint ObjectIndex;
 }

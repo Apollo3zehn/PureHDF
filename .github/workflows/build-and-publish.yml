@@ -38,7 +38,14 @@ jobs:
       - name: Build
         run: |
           dotnet build -c Release src/PureHDF/PureHDF.csproj
+          dotnet build -c Release src/PureHDF.Filters.Blosc2/PureHDF.Filters.Blosc2.csproj
+          dotnet build -c Release src/PureHDF.Filters.BZip2.SharpZipLib/PureHDF.Filters.BZip2.SharpZipLib.csproj
+          dotnet build -c Release src/PureHDF.Filters.Deflate.ISA-L/PureHDF.Filters.Deflate.ISA-L.csproj
+          dotnet build -c Release src/PureHDF.Filters.Deflate.SharpZipLib/PureHDF.Filters.Deflate.SharpZipLib.csproj
+          dotnet build -c Release src/PureHDF.Filters.Lzf/PureHDF.Filters.Lzf.csproj
           dotnet build -c Release src/PureHDF.SourceGenerator/PureHDF.SourceGenerator.csproj
+          dotnet build -c Release src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj
+          dotnet build -c Release src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj
 
       - name: Test
         run: dotnet test -c Release /p:BuildProjectReferences=false
@@ -53,7 +60,7 @@ jobs:
 
       - name: Prepare GitHub Pages
         run: |
-          dotnet tool install -g docfx --version 2.60.0-preview.2
+          dotnet tool install -g docfx --version 2.61.0
           docfx doc/docfx.json 
           touch doc/_site/.nojekyll
         if: github.ref == 'refs/heads/master'

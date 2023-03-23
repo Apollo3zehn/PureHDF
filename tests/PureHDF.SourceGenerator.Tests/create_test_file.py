@@ -1,6 +1,6 @@
 import h5py
 
-file_path = "testfiles/source_generator.h5"
+file_path = "TestFiles/source_generator.h5"
 
 with h5py.File(file_path, "w") as h5_file:
 

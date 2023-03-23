@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Enables hardware accelerated Blosc filter support for PureHDF</Description>
+    <PackageTags>HDF HDF5 hierarchical data file H5 Blosc Blosc2</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageIcon>nuget.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/PureHDF/PureHDF.csproj" Version="$(Version)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blosc2.PInvoke" Version="2.7.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../doc/images/nuget.png" Pack="true" PackagePath="/" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
+</Project>
