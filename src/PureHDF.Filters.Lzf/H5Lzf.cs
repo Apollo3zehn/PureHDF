@@ -13,10 +13,23 @@ public static class H5Lzf
         /* We're decompressing */
         if (flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var target = new byte[parameters[2]];
-            Decompress(buffer.Span, target);
+            uint status = 0;
 
-            return target;
+            var targetSize = parameters[2];
+
+            while (status == 0)
+            {
+                var target = new byte[targetSize];
+                status = Decompress(buffer.Span, target);
+
+                if (status == 0)
+                    targetSize += (uint)buffer.Length;
+
+                else
+                    return target.AsMemory(0, (int)status);
+            }
+            
+            throw new Exception("This should never happen.");
         }
 
         /* We're compressing */
@@ -27,7 +40,7 @@ public static class H5Lzf
     };
 
     // https://github.com/h5py/h5py/blob/7e769ee3e229848e1fd74eb56382cb7b82c97ed0/lzf/lzf/lzf_d.c
-    private static unsafe void Decompress(Span<byte> input, Span<byte> output)
+    private static unsafe uint Decompress(Span<byte> input, Span<byte> output)
     {
         fixed (byte* _ip = input, _op = output)
         {
@@ -45,7 +58,7 @@ public static class H5Lzf
                     ctrl++;
 
                     if (op + ctrl > out_end)
-                        throw new Exception("E2BIG");
+                        return 0;
 
                     do
                     {
@@ -66,7 +79,7 @@ public static class H5Lzf
                     _ref -= *ip++;
 
                     if (op + len + 2 > out_end)
-                        throw new Exception("E2BIG");
+                        return 0;
 
                     if (_ref < _op)
                         throw new Exception("EINVAL");
@@ -80,6 +93,8 @@ public static class H5Lzf
                 }
             }
             while (ip < in_end);
+
+            return (uint)(op - _op);
         }
     }
 }

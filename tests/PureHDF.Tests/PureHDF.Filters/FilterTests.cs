@@ -200,7 +200,10 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = "./TestFiles/lzf.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
-            H5Filter.Register(identifier: (H5FilterID)32000, name: "lzf", filterFunction: H5Lzf.FilterFunction);
+            H5Filter.Register(
+                identifier: (H5FilterID)32000, 
+                name: "lzf", 
+                filterFunction: H5Lzf.FilterFunction);
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
