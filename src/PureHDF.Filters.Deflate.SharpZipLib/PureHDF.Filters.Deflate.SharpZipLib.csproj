@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Enables Deflate filter support for PureHDF (based on SharpZipLib)</Description>
+    <Description>Enables Deflate filter support for PureHDF (based on SharpZipLib).</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 Deflate SharpZipLib</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.0</TargetFramework>
