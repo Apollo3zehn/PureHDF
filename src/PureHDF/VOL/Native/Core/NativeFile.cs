@@ -130,12 +130,14 @@ internal class NativeFile : NativeGroup, INativeFile
         {
             address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
         }
+        
         else
         {
             var superblock23 = superblock as Superblock23;
 
             if (superblock23 is not null)
                 address = superblock23.RootGroupObjectHeaderAddress;
+
             else
                 throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
         }
