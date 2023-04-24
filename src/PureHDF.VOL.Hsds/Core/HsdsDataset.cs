@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Hsds.Api;
 using PureHDF.VOL.Native;
 
@@ -251,11 +252,12 @@ namespace PureHDF.VOL.Hsds
                 }
             }
 
-            string? select;
+            var hyperSlabSelectString = default(string?);
+            var pointSelectionJsonElement = default(JsonElement);
 
             if (fileSelection is HyperslabSelection hs)
             {
-                var selectionStrings = Enumerable
+                var selections = Enumerable
                     .Range(0, hs.Rank)
                     .Select(dimension =>
                     {
@@ -269,7 +271,31 @@ namespace PureHDF.VOL.Hsds
                         return $"{start}:{end}:{step}";
                     });
 
-                select = $"[{string.Join(',', selectionStrings)}]";
+                hyperSlabSelectString = $"[{string.Join(',', selections)}]";
+            }
+
+            else if (fileSelection is PointSelection ps)
+            {
+                var length = ps.PointsField.GetLength(0);
+                var rank = ps.PointsField.GetLength(1);
+                var jaggedArray = new ulong[length][];
+
+                for (int i = 0; i < length; i++)
+                {
+                    var points = new ulong[rank];
+
+                    for (int dim = 0; dim < rank; dim++)
+                    {
+                        points[dim] = ps.PointsField[i, dim];
+                    }
+
+                    jaggedArray[i] = points;
+                }
+
+                pointSelectionJsonElement = JsonSerializer.SerializeToElement(new 
+                { 
+                    points = jaggedArray 
+                });
             }
 
             else
@@ -277,7 +303,6 @@ namespace PureHDF.VOL.Hsds
                 throw new Exception($"The selection of type {fileSelection.GetType().Name} is not supported.");
             }
             
-
             /* memory dims */
             var sourceElementCount = fileSelection.TotalElementCount;
 
@@ -296,9 +321,17 @@ namespace PureHDF.VOL.Hsds
             var destinationMemory = optionalDestinationArray ?? destination;
 
             // TODO make use of selections
-            var streamResponse = useAsync
-                ? await Connector.Client.Dataset.GetValuesAsStreamAsync(_dataset.Id, Connector.DomainName, select: select, cancellationToken: cancellationToken)
-                : Connector.Client.Dataset.GetValuesAsStream(_dataset.Id, Connector.DomainName, select: select);
+            var streamResponse =
+
+                hyperSlabSelectString is null
+
+                    ? useAsync
+                        ? await Connector.Client.Dataset.PostValuesAsStreamAsync(_dataset.Id, Connector.DomainName, body: pointSelectionJsonElement, cancellationToken: cancellationToken)
+                        : Connector.Client.Dataset.PostValuesAsStream(_dataset.Id, Connector.DomainName, body: pointSelectionJsonElement)
+
+                    : useAsync
+                        ? await Connector.Client.Dataset.GetValuesAsStreamAsync(_dataset.Id, Connector.DomainName, select: hyperSlabSelectString, cancellationToken: cancellationToken)
+                        : Connector.Client.Dataset.GetValuesAsStream(_dataset.Id, Connector.DomainName, select: hyperSlabSelectString);
 
             var stream = useAsync
                 ? await streamResponse.Content.ReadAsStreamAsync(cancellationToken)

@@ -5,7 +5,7 @@
 /// </summary>
 public partial class PointSelection : Selection
 {
-    private readonly ulong[,] _points;
+    internal readonly ulong[,] PointsField;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PointSelection"/> class.
@@ -13,7 +13,7 @@ public partial class PointSelection : Selection
     /// <param name="points">The points to be selected.</param>
     public PointSelection(ulong[,] points)
     {
-        _points = points;
+        PointsField = points;
         TotalElementCount = (ulong)points.GetLength(0);
     }
 
@@ -23,14 +23,14 @@ public partial class PointSelection : Selection
     /// <inheritdoc />
     public override IEnumerable<Step> Walk(ulong[] limits)
     {
-        var rank = _points.GetLength(1);
+        var rank = PointsField.GetLength(1);
         var coordinates = new ulong[rank];
 
         for (ulong i = 0; i < TotalElementCount; i++)
         {
             for (int j = 0; j < rank; j++)
             {
-                coordinates[j] = _points[i, j];
+                coordinates[j] = PointsField[i, j];
             }
 
             var step = new Step()

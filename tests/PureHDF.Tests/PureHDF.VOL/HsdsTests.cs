@@ -126,7 +126,7 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
     }
 
     [Fact]
-    public void CanReadDatasetWithFileSelection()
+    public void CanReadDatasetWithFileSelection_Hyperslab()
     {
         // Arrange
         var expected = new int[] { 6, 10, 14, 15, 25, 35 };
@@ -138,6 +138,28 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
             counts: new ulong[] { 2, 3 },
             blocks: new ulong[] { 1, 1 }
         );
+
+        // Act
+        var actual = _connector
+            .Dataset("/g1/g1.1/dset1.1.1")
+            .Read<int>(fileSelection);
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
+    [Fact]
+    public void CanReadDatasetWithFileSelection_Point()
+    {
+        // Arrange
+        var expected = new int[] { 0, 2, 6, 12 };
+
+        var fileSelection = new PointSelection(new ulong[,] {
+            { 0, 1 },
+            { 1, 2 },
+            { 2, 3 },
+            { 3, 4 }
+        });
 
         // Act
         var actual = _connector
