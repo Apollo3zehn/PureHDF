@@ -582,7 +582,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
             return node.ChildAddresses.Select(address =>
             {
                 Context.Driver.Seek((long)address, SeekOrigin.Begin);
-                return new SymbolTableNode(Context);
+                return SymbolTableNode.Decode(Context);
             });
         });
     }
@@ -630,7 +630,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
          * Load the symbol table node for exclusive access.
          */
         Context.Driver.Seek((long)address, SeekOrigin.Begin);
-        var symbolTableNode = new SymbolTableNode(Context);
+        var symbolTableNode = SymbolTableNode.Decode(Context);
 
         /*
          * Binary search.
