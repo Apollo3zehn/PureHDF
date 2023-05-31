@@ -5,85 +5,79 @@ namespace PureHDF.VOL.Native;
 
 internal delegate bool FoundDelegate<T, TUserData>(ulong address, T leftNode, out TUserData userData);
 
-internal class BTree1Node<T> where T : struct, IBTree1Key
+internal readonly record struct BTree1Node<T>(
+    NativeContext Context,
+    Func<T> DecodeKey,
+    byte NodeLevel,
+    ushort EntriesUsed,
+    ulong LeftSiblingAddress,
+    ulong RightSiblingAddress,
+    T[] Keys,
+    ulong[] ChildAddresses
+) where T : struct, IBTree1Key
 {
-    #region Fields
+    public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
-    private NativeContext _context;
-    private readonly Func<T> _decodeKey;
-
-    #endregion
-
-    #region Constructors
-
-    public BTree1Node(NativeContext context, Func<T> decodeKey)
+    public static BTree1Node<T> Decode(NativeContext context, Func<T> decodeKey)
     {
         var (driver, superblock) = context;
-        _context = context;
-
-        _decodeKey = decodeKey;
 
         var signature = driver.ReadBytes(4);
         Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
 
-        NodeType = (BTree1NodeType)driver.ReadByte();
-        NodeLevel = driver.ReadByte();
-        EntriesUsed = driver.ReadUInt16();
+        var nodeType = (BTree1NodeType)driver.ReadByte();
+        var nodeLevel = driver.ReadByte();
+        var entriesUsed = driver.ReadUInt16();
 
-        LeftSiblingAddress = superblock.ReadOffset(driver);
-        RightSiblingAddress = superblock.ReadOffset(driver);
+        var leftSiblingAddress = superblock.ReadOffset(driver);
+        var rightSiblingAddress = superblock.ReadOffset(driver);
 
-        Keys = new T[EntriesUsed + 1];
-        ChildAddresses = new ulong[EntriesUsed];
+        var keys = new T[entriesUsed + 1];
+        var childAddresses = new ulong[entriesUsed];
 
-        for (int i = 0; i < EntriesUsed; i++)
+        for (int i = 0; i < entriesUsed; i++)
         {
-            Keys[i] = decodeKey();
-            ChildAddresses[i] = superblock.ReadOffset(driver);
+            keys[i] = decodeKey();
+            childAddresses[i] = superblock.ReadOffset(driver);
         }
 
-        Keys[EntriesUsed] = decodeKey();
+        keys[entriesUsed] = decodeKey();
+
+        return new BTree1Node<T>(
+            context, 
+            decodeKey,
+            nodeLevel,
+            entriesUsed,
+            leftSiblingAddress, 
+            rightSiblingAddress,
+            keys,
+            childAddresses
+        );
     }
 
-    #endregion
-
-    #region Properties
-
-    public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
-
-    public BTree1NodeType NodeType { get; }
-    public byte NodeLevel { get; }
-    public ushort EntriesUsed { get; }
-    public ulong LeftSiblingAddress { get; }
-    public ulong RightSiblingAddress { get; }
-    public T[] Keys { get; }
-    public ulong[] ChildAddresses { get; }
-
-    public BTree1Node<T> LeftSibling
+    public readonly BTree1Node<T> LeftSibling
     {
         get
         {
-            _context.Driver.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
-            return new BTree1Node<T>(_context, _decodeKey);
+            Context.Driver.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
+            return BTree1Node<T>.Decode(Context, DecodeKey);
         }
     }
 
-    public BTree1Node<T> RightSibling
+    public readonly BTree1Node<T> RightSibling
     {
         get
         {
-            _context.Driver.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
-            return new BTree1Node<T>(_context, _decodeKey);
+            Context.Driver.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
+            return BTree1Node<T>.Decode(Context, DecodeKey);
         }
     }
 
-    #endregion
-
-    #region Methods
-
-    public bool TryFindUserData<TUserData>([NotNullWhen(returnValue: true)] out TUserData userData,
-                                           Func<T, T, int> compare3,
-                                           FoundDelegate<T, TUserData> found)
+    public readonly bool TryFindUserData<TUserData>(
+        [NotNullWhen(returnValue: true)] out TUserData userData,
+        Func<T, T, int> compare3,
+        FoundDelegate<T, TUserData> found
+    )
         where TUserData : struct
     {
         userData = default;
@@ -108,8 +102,8 @@ internal class BTree1Node<T> where T : struct, IBTree1Key
 
         if (NodeLevel > 0)
         {
-            _context.Driver.Seek((long)childAddress, SeekOrigin.Begin);
-            var subtree = new BTree1Node<T>(_context, _decodeKey);
+            Context.Driver.Seek((long)childAddress, SeekOrigin.Begin);
+            var subtree = BTree1Node<T>.Decode(Context, DecodeKey);
 
             if (subtree.TryFindUserData(out userData, compare3, found))
                 return true;
@@ -123,21 +117,21 @@ internal class BTree1Node<T> where T : struct, IBTree1Key
         return false;
     }
 
-    public IEnumerable<BTree1Node<T>> EnumerateNodes()
+    public readonly IEnumerable<BTree1Node<T>> EnumerateNodes()
     {
         return EnumerateNodes(this);
     }
 
-    private IEnumerable<BTree1Node<T>> EnumerateNodes(BTree1Node<T> node)
+    private readonly IEnumerable<BTree1Node<T>> EnumerateNodes(BTree1Node<T> node)
     {
         // internal node
         if (node.NodeLevel > 0)
         {
             foreach (var address in node.ChildAddresses)
             {
-                _context.Driver.Seek((long)address, SeekOrigin.Begin);
+                Context.Driver.Seek((long)address, SeekOrigin.Begin);
 
-                var childNode = new BTree1Node<T>(_context, _decodeKey);
+                var childNode = BTree1Node<T>.Decode(Context, DecodeKey);
 
                 // internal node
                 if ((node.NodeLevel - 1) > 0)
@@ -163,7 +157,7 @@ internal class BTree1Node<T> where T : struct, IBTree1Key
         }
     }
 
-    private (uint index, int cmp) LocateRecord(Func<T, T, int> compare3)
+    private readonly (uint index, int cmp) LocateRecord(Func<T, T, int> compare3)
     {
         uint index = 0, low = 0, high;  /* Final, left & right key indices */
         int cmp = 1;                    /* Key comparison value */
@@ -185,6 +179,4 @@ internal class BTree1Node<T> where T : struct, IBTree1Key
 
         return (index, cmp);
     }
-
-    #endregion
 }

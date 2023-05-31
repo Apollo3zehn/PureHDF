@@ -42,7 +42,7 @@ internal class ObjectHeaderScratchPad : ScratchPad
     public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
     {
         _context.Driver.Seek((long)BTree1Address, SeekOrigin.Begin);
-        return new BTree1Node<BTree1GroupKey>(_context, decodeKey);
+        return BTree1Node<BTree1GroupKey>.Decode(_context, decodeKey);
     }
 
     #endregion

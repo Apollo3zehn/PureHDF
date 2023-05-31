@@ -2,110 +2,124 @@
 
 namespace PureHDF.VOL.Native;
 
-internal class BTree2Header<T> where T : struct, IBTree2Record
+internal record class BTree2Header<T>(
+    NativeContext Context,
+    Func<T> DecodeKey,
+    BTree2Type Type,
+    ushort Depth,
+    BTree2NodePointer RootNodePointer,
+    BTree2NodeInfo[] NodeInfos,
+    byte MaxRecordCountSize
+) where T : struct, IBTree2Record
 {
-    #region Fields
-
-    private readonly Func<T> _decodeKey;
-
-    private NativeContext _context;
     private byte _version;
 
-    #endregion
-
-    #region Constructors
-
-    public BTree2Header(NativeContext context, Func<T> decodeKey)
+    public static BTree2Header<T> Decode(
+        NativeContext context,
+        Func<T> decodeKey
+    )
     {
         var (driver, superblock) = context;
-        _context = context;
-
-        _decodeKey = decodeKey;
 
         // signature
         var signature = driver.ReadBytes(4);
         Utils.ValidateSignature(signature, BTree2Header<T>.Signature);
 
         // version
-        Version = driver.ReadByte();
+        var version = driver.ReadByte();
 
         // type
-        Type = (BTree2Type)driver.ReadByte();
+        var type = (BTree2Type)driver.ReadByte();
 
         // node size
-        NodeSize = driver.ReadUInt32();
+        var nodeSize = driver.ReadUInt32();
 
         // record size
-        RecordSize = driver.ReadUInt16();
+        var recordSize = driver.ReadUInt16();
 
         // depth
-        Depth = driver.ReadUInt16();
+        var depth = driver.ReadUInt16();
 
         // split percent
-        SplitPercent = driver.ReadByte();
+        var splitPercent = driver.ReadByte();
 
         // merge percent
-        MergePercent = driver.ReadByte();
+        var mergePercent = driver.ReadByte();
 
         // root node address
-        RootNodePointer = new BTree2NodePointer()
-        {
-            Address = superblock.ReadOffset(driver),
-            RecordCount = driver.ReadUInt16(),
-            TotalRecordCount = superblock.ReadLength(driver)
-        };
+        var rootNodePointer = new BTree2NodePointer(
+            Address: superblock.ReadOffset(driver),
+            RecordCount: driver.ReadUInt16(),
+            TotalRecordCount: superblock.ReadLength(driver)
+        );
 
         // checksum
-        Checksum = driver.ReadUInt32();
+        var checksum = driver.ReadUInt32();
 
         // from H5B2hdr.c
-        NodeInfos = new BTree2NodeInfo[Depth + 1];
+        var nodeInfos = new BTree2NodeInfo[depth + 1];
 
         /* Initialize leaf node info */
         var fixedSizeOverhead = 4U + 1U + 1U + 4U; // signature, version, type, checksum
-        var maxLeafRecordCount = (NodeSize - fixedSizeOverhead) / RecordSize;
-        NodeInfos[0].MaxRecordCount = maxLeafRecordCount;
-        NodeInfos[0].SplitRecordCount = (NodeInfos[0].MaxRecordCount * SplitPercent) / 100;
-        NodeInfos[0].MergeRecordCount = (NodeInfos[0].MaxRecordCount * MergePercent) / 100;
-        NodeInfos[0].CumulatedTotalRecordCount = NodeInfos[0].MaxRecordCount;
-        NodeInfos[0].CumulatedTotalRecordCountSize = 0;
+        var maxLeafRecordCount = (nodeSize - fixedSizeOverhead) / recordSize;
+
+        nodeInfos[0] = new BTree2NodeInfo(
+            MaxRecordCount: maxLeafRecordCount,
+            SplitRecordCount: nodeInfos[0].MaxRecordCount * splitPercent / 100,
+            MergeRecordCount: nodeInfos[0].MaxRecordCount * mergePercent / 100,
+            CumulatedTotalRecordCount: nodeInfos[0].MaxRecordCount,
+            CumulatedTotalRecordCountSize: 0
+        );
 
         /* Compute size to store # of records in each node */
         /* (uses leaf # of records because its the largest) */
-        MaxRecordCountSize = (byte)Utils.FindMinByteCount(NodeInfos[0].MaxRecordCount); ;
+        var maxRecordCountSize = (byte)Utils.FindMinByteCount(nodeInfos[0].MaxRecordCount);
 
         /* Initialize internal node info */
-        if (Depth > 0)
+        if (depth > 0)
         {
-            for (int i = 1; i < Depth + 1; i++)
+            for (int i = 1; i < depth + 1; i++)
             {
-                var pointerSize = (uint)(superblock.OffsetsSize + MaxRecordCountSize + NodeInfos[i - 1].CumulatedTotalRecordCountSize);
-                var maxInternalRecordCount = (NodeSize - (fixedSizeOverhead + pointerSize)) / RecordSize + pointerSize;
+                var pointerSize = (uint)(superblock.OffsetsSize + maxRecordCountSize + nodeInfos[i - 1].CumulatedTotalRecordCountSize);
+                var maxInternalRecordCount = (nodeSize - (fixedSizeOverhead + pointerSize)) / recordSize + pointerSize;
 
-                NodeInfos[i].MaxRecordCount = maxInternalRecordCount;
-                NodeInfos[i].SplitRecordCount = (NodeInfos[i].MaxRecordCount * SplitPercent) / 100;
-                NodeInfos[i].MergeRecordCount = (NodeInfos[i].MaxRecordCount * MergePercent) / 100;
-                NodeInfos[i].CumulatedTotalRecordCount =
-                    (NodeInfos[i].MaxRecordCount + 1) *
-                     NodeInfos[i - 1].MaxRecordCount + NodeInfos[i].MaxRecordCount;
-                NodeInfos[i].CumulatedTotalRecordCountSize = (byte)Utils.FindMinByteCount(NodeInfos[i].CumulatedTotalRecordCount);
+                var cumulatedTotalRecordCount = 
+                    (maxInternalRecordCount + 1) *
+                    nodeInfos[i - 1].MaxRecordCount + maxInternalRecordCount;
+
+                nodeInfos[i] = new BTree2NodeInfo(
+                    MaxRecordCount: maxInternalRecordCount,
+                    SplitRecordCount: maxInternalRecordCount * splitPercent / 100,
+                    MergeRecordCount: maxInternalRecordCount * mergePercent / 100,
+                    CumulatedTotalRecordCount: cumulatedTotalRecordCount,
+                    CumulatedTotalRecordCountSize: (byte)Utils.FindMinByteCount(cumulatedTotalRecordCount)
+                );
             }
         }
+
+        return new BTree2Header<T>(
+            context,
+            decodeKey,
+            type,
+            depth,
+            rootNodePointer,
+            nodeInfos,
+            maxRecordCountSize
+        )
+        {
+            Version = version
+        };
     }
 
-    #endregion
+    public static byte[] Signature = Encoding.ASCII.GetBytes("BTHD");
 
-    #region Properties
-
-    public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("BTHD");
-
-    public byte Version
+    public required byte Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (value != 0)
                 throw new FormatException($"Only version 0 instances of type {nameof(BTree2Header<T>)} are supported.");
@@ -114,45 +128,35 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
         }
     }
 
-    public BTree2Type Type { get; set; }
-    public uint NodeSize { get; set; }
-    public ushort RecordSize { get; set; }
-    public ushort Depth { get; set; }
-    public byte SplitPercent { get; set; }
-    public byte MergePercent { get; set; }
-    public BTree2NodePointer RootNodePointer { get; set; }
-    public uint Checksum { get; set; }
-
     public BTree2Node<T>? RootNode
     {
         get
         {
-            if (_context.Superblock.IsUndefinedAddress(RootNodePointer.Address))
+            if (Context.Superblock.IsUndefinedAddress(RootNodePointer.Address))
             {
                 return null;
             }
             else
             {
-                _context.Driver.Seek((long)RootNodePointer.Address, SeekOrigin.Begin);
+                Context.Driver.Seek((long)RootNodePointer.Address, SeekOrigin.Begin);
 
                 return Depth != 0
-                    ? (BTree2Node<T>)new BTree2InternalNode<T>(_context, this, RootNodePointer.RecordCount, Depth, _decodeKey)
-                    : (BTree2Node<T>)new BTree2LeafNode<T>(_context.Driver, this, RootNodePointer.RecordCount, _decodeKey);
+
+                    ? BTree2InternalNode<T>.Decode(
+                        Context, 
+                        this,
+                        RootNodePointer.RecordCount, 
+                        Depth, 
+                        DecodeKey)
+
+                    : BTree2LeafNode<T>.Decode(
+                        Context.Driver, 
+                        this, 
+                        RootNodePointer.RecordCount, 
+                        DecodeKey);
             }
         }
     }
-
-    internal BTree2NodeInfo[] NodeInfos { get; }
-
-    internal byte MaxRecordCountSize { get; }
-
-    internal T MinNativeRec { get; set; }
-
-    internal T MaxNativeRec { get; set; }
-
-    #endregion
-
-    #region Methods
 
     public bool TryFindRecord(out T result, Func<T, int> compare)
     {
@@ -180,9 +184,14 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
 
         while (depth > 0)
         {
-            _context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+            Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
             
-            var internalNode = new BTree2InternalNode<T>(_context, this, currentNodePointer.RecordCount, depth, _decodeKey) 
+            var internalNode = BTree2InternalNode<T>.Decode(
+                Context, 
+                this, 
+                currentNodePointer.RecordCount, 
+                depth, 
+                DecodeKey) 
                 ?? throw new Exception("Unable to load B-tree internal node.");
 
             /* Locate node pointer for child */
@@ -203,6 +212,7 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
                     {
                         if (curr_pos == BTree2NodePosition.Left || curr_pos == BTree2NodePosition.Root)
                             curr_pos = BTree2NodePosition.Left;
+
                         else
                             curr_pos = BTree2NodePosition.Middle;
                     }
@@ -210,6 +220,7 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
                     {
                         if (curr_pos == BTree2NodePosition.Right || curr_pos == BTree2NodePosition.Root)
                             curr_pos = BTree2NodePosition.Right;
+
                         else
                             curr_pos = BTree2NodePosition.Middle;
                     }
@@ -232,8 +243,13 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
         }
 
         {
-            _context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-            var leafNode = new BTree2LeafNode<T>(_context.Driver, this, currentNodePointer.RecordCount, _decodeKey);
+            Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+
+            var leafNode = BTree2LeafNode<T>.Decode(
+                Context.Driver,
+                this,
+                currentNodePointer.RecordCount,
+                DecodeKey);
 
             /* Locate record */
             (index, cmp) = BTree2Header<T>.LocateRecord(leafNode.Records, compare);
@@ -256,6 +272,7 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
 
         if (rootNode is not null)
             return EnumerateRecords(rootNode, Depth);
+            
         else
             return new List<T>();
     }
@@ -283,21 +300,31 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
                     yield return records[i];
 
                 var nodePointer = nodePointers[i];
-                _context.Driver.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+                Context.Driver.Seek((long)nodePointer.Address, SeekOrigin.Begin);
                 var childNodeLevel = (ushort)(nodeLevel - 1);
-
                 IEnumerable<T> childRecords;
 
                 // internal node
                 if (childNodeLevel > 0)
                 {
-                    var childNode = new BTree2InternalNode<T>(_context, this, nodePointer.RecordCount, childNodeLevel, _decodeKey);
+                    var childNode = BTree2InternalNode<T>.Decode(
+                        Context, 
+                        this, 
+                        nodePointer.RecordCount, 
+                        childNodeLevel, 
+                        DecodeKey);
+
                     childRecords = EnumerateRecords(childNode, childNodeLevel);
                 }
                 // leaf node
                 else
                 {
-                    var childNode = new BTree2LeafNode<T>(_context.Driver, this, nodePointer.RecordCount, _decodeKey);
+                    var childNode = BTree2LeafNode<T>.Decode(
+                        Context.Driver, 
+                        this, 
+                        nodePointer.RecordCount,
+                        DecodeKey);
+
                     childRecords = childNode.Records;
                 }
 
@@ -346,6 +373,4 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
 
         return (index, cmp);
     }
-
-    #endregion
 }

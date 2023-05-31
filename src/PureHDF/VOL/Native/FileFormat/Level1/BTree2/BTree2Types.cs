@@ -15,3 +15,25 @@ internal enum BTree2Type : byte
     IndexingChunksOfDatasets_WithoutFilters_WithMoreThanOneUnlimDim = 10,
     IndexingChunksOfDatasets_WithFilters_WithMoreThanOneUnlimDim = 11,
 }
+
+internal enum BTree2NodePosition
+{
+    Root,
+    Right,
+    Left,
+    Middle
+}
+
+internal readonly record struct BTree2NodePointer(
+    ulong Address,
+    ulong RecordCount,
+    ulong TotalRecordCount
+);
+
+internal readonly record struct BTree2NodeInfo(
+    uint MaxRecordCount,
+    uint SplitRecordCount,
+    uint MergeRecordCount,
+    uint CumulatedTotalRecordCount,
+    byte CumulatedTotalRecordCountSize
+);

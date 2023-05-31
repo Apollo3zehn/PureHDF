@@ -65,9 +65,9 @@ internal record class MultiDriverInfo() : DriverInfo
     }
 }
 
-internal record struct DriverInfoBlock()
+internal readonly record struct DriverInfoBlock()
 {
-    private byte _version;
+    private readonly byte _version;
 
     public required byte Version
     {
@@ -75,7 +75,7 @@ internal record struct DriverInfoBlock()
         {
             return _version;
         }
-        set
+        init
         {
             if (value != 0)
                 throw new FormatException($"Only version 0 instances of type {nameof(DriverInfoBlock)} are supported.");

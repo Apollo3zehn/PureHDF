@@ -30,10 +30,9 @@ namespace PureHDF
                 {
                     Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
 
-                    BTree2Record10 decodeKey
-() => DecodeRecord10(ChunkRank);
+                    BTree2Record10 decodeKey() => DecodeRecord10(ChunkRank);
 
-                    _btree2_no_filter = new BTree2Header<BTree2Record10>(Dataset.Context, decodeKey);
+                    _btree2_no_filter = BTree2Header<BTree2Record10>.Decode(Dataset.Context, decodeKey);
                 }
 
                 // get record
@@ -56,7 +55,7 @@ namespace PureHDF
 
                     BTree2Record11 decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);
 
-                    _btree2_filter = new BTree2Header<BTree2Record11>(Dataset.Context, decodeKey);
+                    _btree2_filter = BTree2Header<BTree2Record11>.Decode(Dataset.Context, decodeKey);
                 }
 
                 // get record

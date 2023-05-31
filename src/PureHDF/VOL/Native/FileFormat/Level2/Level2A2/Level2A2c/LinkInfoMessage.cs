@@ -79,7 +79,7 @@ internal class LinkInfoMessage : Message
         get
         {
             _context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
-            return new BTree2Header<BTree2Record05>(_context, DecodeRecord05);
+            return BTree2Header<BTree2Record05>.Decode(_context, DecodeRecord05);
         }
     }
 
@@ -88,7 +88,7 @@ internal class LinkInfoMessage : Message
         get
         {
             _context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
-            return new BTree2Header<BTree2Record06>(_context, DecodeRecord06);
+            return BTree2Header<BTree2Record06>.Decode(_context, DecodeRecord06);
         }
     }
 

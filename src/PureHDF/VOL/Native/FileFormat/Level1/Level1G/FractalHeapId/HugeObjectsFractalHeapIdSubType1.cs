@@ -41,7 +41,7 @@ internal class HugeObjectsFractalHeapIdSubType1 : FractalHeapId
         if (record01Cache is null)
         {
             driver.Seek((long)_heapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
-            var hugeBtree2 = new BTree2Header<BTree2Record01>(_context, DecodeRecord01);
+            var hugeBtree2 = BTree2Header<BTree2Record01>.Decode(_context, DecodeRecord01);
             record01Cache = hugeBtree2.EnumerateRecords().ToList();
         }
 

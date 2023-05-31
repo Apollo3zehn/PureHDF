@@ -78,7 +78,7 @@ internal class AttributeInfoMessage : Message
         get
         {
             _context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
-            return new BTree2Header<BTree2Record08>(_context, DecodeRecord08);
+            return BTree2Header<BTree2Record08>.Decode(_context, DecodeRecord08);
         }
     }
 
@@ -87,7 +87,7 @@ internal class AttributeInfoMessage : Message
         get
         {
             _context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
-            return new BTree2Header<BTree2Record09>(_context, DecodeRecord09);
+            return BTree2Header<BTree2Record09>.Decode(_context, DecodeRecord09);
         }
     }
 

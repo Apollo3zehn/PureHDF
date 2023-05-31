@@ -654,14 +654,17 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         if (cmp != 0)
             return false;
 
-        userData.SymbolTableEntry = symbolTableNode.GroupEntries[(int)index];
+        userData = new BTree1SymbolTableUserData(
+            SymbolTableEntry: symbolTableNode.GroupEntries[(int)index]
+        );
+        
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private BTree1GroupKey DecodeGroupKey()
     {
-        return new BTree1GroupKey(Context);
+        return BTree1GroupKey.Decode(Context);
     }
 
     #endregion
