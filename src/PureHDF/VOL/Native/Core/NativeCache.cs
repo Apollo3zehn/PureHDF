@@ -63,7 +63,7 @@ internal static class NativeCache
     private static GlobalHeapCollection ReadGlobalHeapCollection(NativeContext context, ulong address)
     {
         context.Driver.Seek((long)address, SeekOrigin.Begin);
-        return new GlobalHeapCollection(context);
+        return GlobalHeapCollection.Decode(context);
     }
 
     #endregion
