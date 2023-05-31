@@ -2,77 +2,18 @@
 
 namespace PureHDF.VOL.Native;
 
-internal class FractalHeapIndirectBlock
+internal record class FractalHeapIndirectBlock(
+    NativeContext Context,
+    ulong HeapHeaderAddress,
+    ulong BlockOffset,
+    FractalHeapEntry[] Entries,
+    uint RowCount,
+    uint ChildCount,
+    uint MaxChildIndex
+)
 {
-    #region Fields
-
-    private NativeContext _context;
     private byte _version;
-
-    #endregion
-
-    #region Constructors
-
-    public FractalHeapIndirectBlock(NativeContext context, FractalHeapHeader header, uint rowCount)
-    {
-        var (driver, superblock) = context;
-        _context = context;
-
-        RowCount = rowCount;
-
-        // signature
-        var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, FractalHeapIndirectBlock.Signature);
-
-        // version
-        Version = driver.ReadByte();
-
-        // heap header address
-        HeapHeaderAddress = superblock.ReadOffset(driver);
-
-        // block offset
-        var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-        BlockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
-
-        // H5HFcache.c (H5HF__cache_iblock_deserialize)
-        var length = rowCount * header.TableWidth;
-        Entries = new FractalHeapEntry[length];
-
-        for (uint i = 0; i < Entries.Length; i++)
-        {
-            /* Decode child block address */
-            Entries[i].Address = superblock.ReadOffset(driver);
-
-            /* Check for heap with I/O filters */
-            if (header.IOFilterEncodedLength > 0)
-            {
-                /* Decode extra information for direct blocks */
-                if (i < (header.MaxDirectRows * header.TableWidth))
-                {
-                    /* Size of filtered direct block */
-                    Entries[i].FilteredSize = superblock.ReadLength(driver);
-
-                    /* I/O filter mask for filtered direct block */
-                    Entries[i].FilterMask = driver.ReadUInt32();
-                }
-            }
-
-
-            /* Count child blocks */
-            if (!superblock.IsUndefinedAddress(Entries[i].Address))
-            {
-                ChildCount++;
-                MaxChildIndex = i;
-            }
-        }
-
-        // checksum
-        Checksum = driver.ReadUInt32();
-    }
-
-    #endregion
-
-    #region Properties
+    private FractalHeapHeader? _header;
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("FHIB");
 
@@ -91,23 +32,98 @@ internal class FractalHeapIndirectBlock
         }
     }
 
-    public ulong HeapHeaderAddress { get; set; }
-    public ulong BlockOffset { get; set; }
-    public uint Checksum { get; set; }
-
     public FractalHeapHeader HeapHeader
     {
         get
         {
-            _context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
-            return new FractalHeapHeader(_context);
+            if (_header is null)
+            {
+                Context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                _header = FractalHeapHeader.Decode(Context);
+            }
+
+            return _header;
         }
     }
 
-    public FractalHeapEntry[] Entries { get; private set; }
-    public uint RowCount { get; }
-    public uint ChildCount { get; }
-    public uint MaxChildIndex { get; }
+        public static FractalHeapIndirectBlock Decode(
+        NativeContext context, 
+        FractalHeapHeader header, 
+        uint rowCount)
+    {
+        var (driver, superblock) = context;
 
-    #endregion
+        // signature
+        var signature = driver.ReadBytes(4);
+        Utils.ValidateSignature(signature, Signature);
+
+        // version
+        var version = driver.ReadByte();
+
+        // heap header address
+        var heapHeaderAddress = superblock.ReadOffset(driver);
+
+        // block offset
+        var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
+        var blockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
+
+        // H5HFcache.c (H5HF__cache_iblock_deserialize)
+        var length = rowCount * header.TableWidth;
+        var entries = new FractalHeapEntry[length];
+
+        var childCount = default(uint);
+        var maxChildIndex = default(uint);
+
+        for (uint i = 0; i < entries.Length; i++)
+        {
+            /* Decode child block address */
+            var address = superblock.ReadOffset(driver);
+
+            /* Check for heap with I/O filters */
+            var filteredSize = default(ulong);
+            var filterMask = default(uint);
+
+            if (header.IOFilterEncodedLength > 0)
+            {
+                /* Decode extra information for direct blocks */
+                if (i < (header.MaxDirectRows * header.TableWidth))
+                {
+                    /* Size of filtered direct block */
+                    filteredSize = superblock.ReadLength(driver);
+
+                    /* I/O filter mask for filtered direct block */
+                    filterMask = driver.ReadUInt32();
+                }
+            }
+
+            entries[i] = new FractalHeapEntry(
+                Address: address,
+                FilteredSize: filteredSize,
+                FilterMask: filterMask
+            );
+
+            /* Count child blocks */
+            if (!superblock.IsUndefinedAddress(entries[i].Address))
+            {
+                childCount++;
+                maxChildIndex = i;
+            }
+        }
+
+        // checksum
+        var _ = driver.ReadUInt32();
+
+        return new FractalHeapIndirectBlock(
+            Context: context,
+            HeapHeaderAddress: heapHeaderAddress,
+            BlockOffset: blockOffset,
+            Entries: entries,
+            RowCount: rowCount,
+            ChildCount: childCount,
+            MaxChildIndex: maxChildIndex
+        )
+        {
+            Version = version
+        };
+    }
 }

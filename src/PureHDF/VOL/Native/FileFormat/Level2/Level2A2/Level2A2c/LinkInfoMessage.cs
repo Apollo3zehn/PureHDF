@@ -70,7 +70,7 @@ internal class LinkInfoMessage : Message
         get
         {
             _context.Driver.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
-            return new FractalHeapHeader(_context);
+            return FractalHeapHeader.Decode(_context);
         }
     }
 

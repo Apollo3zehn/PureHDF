@@ -2,65 +2,28 @@
 
 namespace PureHDF.VOL.Native;
 
-internal class FractalHeapDirectBlock
+// TODO: Implement this.
+// public byte[] ObjectData { get; set; }
+
+internal record class FractalHeapDirectBlock(
+    NativeContext Context,
+    ulong HeapHeaderAddress,
+    ulong BlockOffset,
+    ulong HeaderSize
+)
 {
-    #region Fields
-
-    private NativeContext _context;
     private byte _version;
-
-    #endregion
-
-    #region Constructors
-
-    public FractalHeapDirectBlock(NativeContext context, FractalHeapHeader header)
-    {
-        var (driver, superblock) = context;
-        _context = context;
-
-        var headerSize = 0UL;
-
-        // signature
-        var signature = driver.ReadBytes(4);
-        headerSize += 4;
-        Utils.ValidateSignature(signature, FractalHeapDirectBlock.Signature);
-
-        // version
-        Version = driver.ReadByte();
-        headerSize += 1;
-
-        // heap header address
-        HeapHeaderAddress = superblock.ReadOffset(driver);
-        headerSize += superblock.OffsetsSize;
-
-        // block offset
-        var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-        BlockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
-        headerSize += (ulong)blockOffsetFieldSize;
-
-        // checksum
-        if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
-        {
-            Checksum = driver.ReadUInt32();
-            headerSize += 4;
-        }
-
-        HeaderSize = headerSize;
-    }
-
-    #endregion
-
-    #region Properties
+    private FractalHeapHeader? _header;
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("FHDB");
 
-    public byte Version
+    public required byte Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (value != 0)
                 throw new FormatException($"Only version 0 instances of type {nameof(FractalHeapDirectBlock)} are supported.");
@@ -69,23 +32,59 @@ internal class FractalHeapDirectBlock
         }
     }
 
-    public ulong HeapHeaderAddress { get; set; }
-    public ulong BlockOffset { get; set; }
-    public uint Checksum { get; set; }
-
-    // TODO: Implement this.
-    // public byte[] ObjectData { get; set; }
-
     public FractalHeapHeader HeapHeader
     {
         get
         {
-            _context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
-            return new FractalHeapHeader(_context);
+            if (_header is null)
+            {
+                Context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                _header = FractalHeapHeader.Decode(Context);
+            }
+
+            return _header;
         }
     }
 
-    public ulong HeaderSize { get; }
+    public static FractalHeapDirectBlock Decode(NativeContext context, FractalHeapHeader header)
+    {
+        var (driver, superblock) = context;
 
-    #endregion
+        var headerSize = 0UL;
+
+        // signature
+        var signature = driver.ReadBytes(4);
+        headerSize += 4;
+        Utils.ValidateSignature(signature, Signature);
+
+        // version
+        var version = driver.ReadByte();
+        headerSize += 1;
+
+        // heap header address
+        var heapHeaderAddress = superblock.ReadOffset(driver);
+        headerSize += superblock.OffsetsSize;
+
+        // block offset
+        var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
+        var blockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
+        headerSize += (ulong)blockOffsetFieldSize;
+
+        // checksum
+        if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
+        {
+            var _ = driver.ReadUInt32();
+            headerSize += 4;
+        }
+
+        return new FractalHeapDirectBlock(
+            Context: context,
+            HeapHeaderAddress: heapHeaderAddress,
+            BlockOffset: blockOffset,
+            HeaderSize: headerSize
+        )
+        {
+            Version = version
+        };
+    }
 }
