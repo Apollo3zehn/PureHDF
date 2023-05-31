@@ -23,7 +23,7 @@ internal record class ObjectHeaderScratchPad(
     ulong NameHeapAddress
 ) : ScratchPad
 {
-    private LocalHeap? _localHeap;
+    private LocalHeap _localHeap;
     private BTree1Node<BTree1GroupKey> _btree1Node;
 
     public static ObjectHeaderScratchPad Decode(NativeContext context)
@@ -41,10 +41,10 @@ internal record class ObjectHeaderScratchPad(
     {
         get
         {
-            if (_localHeap is null)
+            if (_localHeap.Equals(default))
             {
                 Context.Driver.Seek((long)NameHeapAddress, SeekOrigin.Begin);
-                _localHeap = new LocalHeap(Context);
+                _localHeap = LocalHeap.Decode(Context);
             }
 
             return _localHeap;

@@ -4,7 +4,7 @@ internal class ExternalFileListMessage : Message
 {
     #region Fields
 
-    private NativeContext _context;
+    private readonly NativeContext _context;
     private byte _version;
 
     #endregion
@@ -70,7 +70,7 @@ internal class ExternalFileListMessage : Message
         get
         {
             _context.Driver.Seek((long)HeapAddress, SeekOrigin.Begin);
-            return new LocalHeap(_context);
+            return LocalHeap.Decode(_context);
         }
     }
 

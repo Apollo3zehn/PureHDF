@@ -4,7 +4,7 @@ internal class SymbolTableMessage : Message
 {
     #region Fields
 
-    private NativeContext _context;
+    private readonly NativeContext _context;
 
     #endregion
 
@@ -31,7 +31,7 @@ internal class SymbolTableMessage : Message
         get
         {
             _context.Driver.Seek((long)LocalHeapAddress, SeekOrigin.Begin);
-            return new LocalHeap(_context);
+            return LocalHeap.Decode(_context);
         }
     }
 
