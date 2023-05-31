@@ -78,13 +78,13 @@ namespace PureHDF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree2Record10 DecodeRecord10(byte rank)
         {
-            return new BTree2Record10(Dataset.Context, rank);
+            return BTree2Record10.Decode(Dataset.Context, rank);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree2Record11 DecodeRecord11(byte rank, uint chunkSizeLength)
         {
-            return new BTree2Record11(Dataset.Context, rank, chunkSizeLength);
+            return BTree2Record11.Decode(Dataset.Context, rank, chunkSizeLength);
         }
 
         #endregion

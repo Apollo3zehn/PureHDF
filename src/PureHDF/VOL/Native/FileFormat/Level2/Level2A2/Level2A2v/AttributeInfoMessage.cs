@@ -96,10 +96,10 @@ internal class AttributeInfoMessage : Message
     #region Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record08 DecodeRecord08() => new(_context.Driver);
+    private BTree2Record08 DecodeRecord08() => BTree2Record08.Decode(_context.Driver);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record09 DecodeRecord09() => new(_context.Driver);
+    private BTree2Record09 DecodeRecord09() => BTree2Record09.Decode(_context.Driver);
 
     #endregion
 }

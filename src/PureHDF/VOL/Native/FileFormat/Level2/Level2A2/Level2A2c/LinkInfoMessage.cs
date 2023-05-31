@@ -6,7 +6,7 @@ internal class LinkInfoMessage : Message
 {
     #region Fields
 
-    private NativeContext _context;
+    private readonly NativeContext _context;
     private byte _version;
 
     #endregion
@@ -97,10 +97,10 @@ internal class LinkInfoMessage : Message
     #region Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record05 DecodeRecord05() => new(_context.Driver);
+    private BTree2Record05 DecodeRecord05() => BTree2Record05.Decode(_context.Driver);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record06 DecodeRecord06() => new(_context.Driver);
+    private BTree2Record06 DecodeRecord06() => BTree2Record06.Decode(_context.Driver);
 
     #endregion
 }

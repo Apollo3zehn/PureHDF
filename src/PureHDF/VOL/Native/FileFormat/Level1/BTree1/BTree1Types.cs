@@ -18,9 +18,10 @@ internal readonly record struct BTree1GroupKey(
     public static BTree1GroupKey Decode(NativeContext context)
     {
         var (driver, superblock) = context;
-        var localHeapByteOffset = superblock.ReadLength(driver);
 
-        return new BTree1GroupKey(localHeapByteOffset);
+        return new BTree1GroupKey(
+            LocalHeapByteOffset: superblock.ReadLength(driver)
+        );
     }
 }
 

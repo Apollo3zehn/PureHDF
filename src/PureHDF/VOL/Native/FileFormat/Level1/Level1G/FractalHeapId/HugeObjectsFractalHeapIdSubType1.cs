@@ -56,7 +56,7 @@ internal class HugeObjectsFractalHeapIdSubType1 : FractalHeapId
     #region Methods
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record01 DecodeRecord01() => new(_context);
+    private BTree2Record01 DecodeRecord01() => BTree2Record01.Decode(_context);
 
     #endregion
 }
