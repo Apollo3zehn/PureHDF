@@ -2,11 +2,14 @@
 
 namespace PureHDF.VOL.Native;
 
-internal abstract class FractalHeapId
+internal abstract record class FractalHeapId(
+    //
+)
 {
-    #region Methods
-
-    internal static FractalHeapId Construct(NativeContext context, H5DriverBase localDriver, FractalHeapHeader header)
+    internal static FractalHeapId Construct(
+        NativeContext context, 
+        H5DriverBase localDriver,
+        in FractalHeapHeader header)
     {
         var firstByte = localDriver.ReadByte();
 
@@ -27,17 +30,17 @@ internal abstract class FractalHeapId
         // H5HF.c (H5HF_op)
         return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength, header.TinyObjectsAreExtended) switch
         {
-            (FractalHeapIdType.Managed, _, _, _) => new ManagedObjectsFractalHeapId(context.Driver, localDriver, header, offsetSize, lengthSize),
+            (FractalHeapIdType.Managed, _, _, _) => ManagedObjectsFractalHeapId.Decode(context.Driver, localDriver, header, offsetSize, lengthSize),
 
             // H5HFhuge.c (H5HF__huge_op_real)
-            (FractalHeapIdType.Huge, false, 0, _) => new HugeObjectsFractalHeapIdSubType1(context, localDriver, header),
-            (FractalHeapIdType.Huge, false, _, _) => new HugeObjectsFractalHeapIdSubType2(context, localDriver, header),
-            (FractalHeapIdType.Huge, true, 0, _) => new HugeObjectsFractalHeapIdSubType3(context, localDriver),
-            (FractalHeapIdType.Huge, true, _, _) => new HugeObjectsFractalHeapIdSubType4(context.Superblock, localDriver),
+            (FractalHeapIdType.Huge, false, 0, _) => HugeObjectsFractalHeapIdSubType1.Decode(context, localDriver, header),
+            (FractalHeapIdType.Huge, false, _, _) => HugeObjectsFractalHeapIdSubType2.Decode(context, localDriver, header),
+            (FractalHeapIdType.Huge, true, 0, _) => HugeObjectsFractalHeapIdSubType3.Decode(context, localDriver),
+            (FractalHeapIdType.Huge, true, _, _) => HugeObjectsFractalHeapIdSubType4.Decode(context.Superblock, localDriver),
 
             // H5HFtiny.c (H5HF_tiny_op_real)
-            (FractalHeapIdType.Tiny, _, _, false) => new TinyObjectsFractalHeapIdSubType1(localDriver, firstByte),
-            (FractalHeapIdType.Tiny, _, _, true) => new TinyObjectsFractalHeapIdSubType2(localDriver, firstByte),
+            (FractalHeapIdType.Tiny, _, _, false) => TinyObjectsFractalHeapIdSubType1.Decode(localDriver, firstByte),
+            (FractalHeapIdType.Tiny, _, _, true) => TinyObjectsFractalHeapIdSubType2.Decode(localDriver, firstByte),
 
             // default
             _ => throw new Exception($"Unknown heap ID type '{type}'.")
@@ -51,7 +54,7 @@ internal abstract class FractalHeapId
         return Read(func, ref cache);
     }
 
-    public abstract T Read<T>(Func<H5DriverBase, T> func, [AllowNull] ref List<BTree2Record01> record01Cache);
-
-    #endregion
+    public abstract T Read<T>(
+        Func<H5DriverBase, T> func, 
+        [AllowNull] ref List<BTree2Record01> record01Cache);
 }
