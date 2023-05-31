@@ -171,7 +171,7 @@ internal class NativeFile : NativeGroup, INativeFile
         {
             if (disposing)
             {
-                NativeCache.Clear(Context.Superblock);
+                NativeCache.Clear(Context.Driver);
                 Context.Driver.Dispose();
 
                 if (_deleteOnClose && System.IO.File.Exists(Path))

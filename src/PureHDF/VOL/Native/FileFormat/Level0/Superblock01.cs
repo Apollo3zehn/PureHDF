@@ -75,7 +75,7 @@ internal record class Superblock01(
         };
 
         var context = new NativeContext(driver, superblock);
-        var rootGroupSymbolTableEntry = new SymbolTableEntry(context);
+        var rootGroupSymbolTableEntry = SymbolTableEntry.Decode(context);
 
         superblock.RootGroupSymbolTableEntry = rootGroupSymbolTableEntry;
 

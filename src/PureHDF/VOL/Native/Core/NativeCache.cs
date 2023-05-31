@@ -8,32 +8,32 @@ internal static class NativeCache
 
     static NativeCache()
     {
-        _globalHeapMap = new ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>>();
-        _fileMap = new ConcurrentDictionary<Superblock, Dictionary<string, NativeFile>>();
+        _globalHeapMap = new ConcurrentDictionary<H5DriverBase, Dictionary<ulong, GlobalHeapCollection>>();
+        _fileMap = new ConcurrentDictionary<H5DriverBase, Dictionary<string, NativeFile>>();
     }
 
     #endregion
 
     #region Shared
 
-    public static void Clear(Superblock superblock)
+    public static void Clear(H5DriverBase driver)
     {
         // global heap
-        if (_globalHeapMap.ContainsKey(superblock))
-            _globalHeapMap.TryRemove(superblock, out var _);
+        if (_globalHeapMap.ContainsKey(driver))
+            _globalHeapMap.TryRemove(driver, out var _);
 
 
         // file map
-        if (_fileMap.ContainsKey(superblock))
+        if (_fileMap.ContainsKey(driver))
         {
-            var pathToH5FileMap = _fileMap[superblock];
+            var pathToH5FileMap = _fileMap[driver];
 
             foreach (var h5File in pathToH5FileMap.Values)
             {
                 h5File.Dispose();
             }
 
-            _fileMap.TryRemove(superblock, out var _);
+            _fileMap.TryRemove(driver, out var _);
         }
     }
 
@@ -41,16 +41,14 @@ internal static class NativeCache
 
     #region Global Heap
 
-    private static readonly ConcurrentDictionary<Superblock, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+    private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
     public static GlobalHeapCollection GetGlobalHeapObject(NativeContext context, ulong address)
     {
-        var (_, superblock) = context;
-
-        if (!_globalHeapMap.TryGetValue(superblock, out var addressToCollectionMap))
+        if (!_globalHeapMap.TryGetValue(context.Driver, out var addressToCollectionMap))
         {
             addressToCollectionMap = new Dictionary<ulong, GlobalHeapCollection>();
-            _globalHeapMap.AddOrUpdate(superblock, addressToCollectionMap, (_, oldAddressToCollectionMap) => addressToCollectionMap);
+            _globalHeapMap.AddOrUpdate(context.Driver, addressToCollectionMap, (_, oldAddressToCollectionMap) => addressToCollectionMap);
         }
 
         if (!addressToCollectionMap.TryGetValue(address, out var collection))
@@ -72,9 +70,9 @@ internal static class NativeCache
 
     #region File Handles
 
-    private static readonly ConcurrentDictionary<Superblock, Dictionary<string, NativeFile>> _fileMap;
+    private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<string, NativeFile>> _fileMap;
 
-    public static NativeFile GetH5File(Superblock superblock, string absoluteFilePath, bool useAsync)
+    public static NativeFile GetH5File(H5DriverBase driver, string absoluteFilePath, bool useAsync)
     {
         if (!Uri.TryCreate(absoluteFilePath, UriKind.Absolute, out var uri))
             throw new Exception("The provided path is not absolute.");
@@ -82,10 +80,10 @@ internal static class NativeCache
         if (!uri.IsFile && !uri.IsUnc)
             throw new Exception("The provided path is not a file path or a UNC path.");
 
-        if (!_fileMap.TryGetValue(superblock, out var pathToH5FileMap))
+        if (!_fileMap.TryGetValue(driver, out var pathToH5FileMap))
         {
             pathToH5FileMap = new Dictionary<string, NativeFile>();
-            _fileMap.AddOrUpdate(superblock, pathToH5FileMap, (_, oldPathToH5FileMap) => pathToH5FileMap);
+            _fileMap.AddOrUpdate(driver, pathToH5FileMap, (_, oldPathToH5FileMap) => pathToH5FileMap);
         }
 
         if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))

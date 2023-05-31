@@ -48,7 +48,7 @@ internal readonly record struct SymbolTableNode(
 
         for (int i = 0; i < symbolCount; i++)
         {
-            groupEntries.Add(new SymbolTableEntry(context));
+            groupEntries.Add(SymbolTableEntry.Decode(context));
         }
 
         return new SymbolTableNode(
