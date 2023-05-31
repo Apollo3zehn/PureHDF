@@ -53,7 +53,7 @@ internal class SharedMessageTableMessage : Message
         get
         {
             _driver.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
-            return new SharedObjectHeaderMessageTable(_driver);
+            return SharedObjectHeaderMessageTable.Decode(_driver);
         }
     }
 
