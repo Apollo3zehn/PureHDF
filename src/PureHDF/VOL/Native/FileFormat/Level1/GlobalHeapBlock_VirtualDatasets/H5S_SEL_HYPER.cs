@@ -1,35 +1,18 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5S_SEL_HYPER : H5S_SEL
+internal record class H5S_SEL_HYPER(
+    HyperslabSelectionInfo SelectionInfo
+) : H5S_SEL
 {
-    #region Fields
-
     private uint _version;
 
-    #endregion
-
-    #region Constructors
-
-    public H5S_SEL_HYPER(H5DriverBase driver)
-    {
-        // version
-        Version = driver.ReadUInt32();
-
-        // SelectionInfo
-        SelectionInfo = HyperslabSelectionInfo.Create(driver, Version);
-    }
-
-    #endregion
-
-    #region Properties
-
-    public uint Version
+    public required uint Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (!(1 <= value && value <= 3))
                 throw new FormatException($"Only version 1, version 2 and version 3 instances of type {nameof(H5S_SEL_HYPER)} are supported.");
@@ -38,7 +21,21 @@ internal class H5S_SEL_HYPER : H5S_SEL
         }
     }
 
-    public HyperslabSelectionInfo SelectionInfo { get; set; }
+    public static H5S_SEL_HYPER Decode(H5DriverBase driver)
+    {
+        // version
+        var version = driver.ReadUInt32();
+
+        // SelectionInfo
+        var selectionInfo = HyperslabSelectionInfo.Create(driver, version);
+
+        return new H5S_SEL_HYPER(
+            SelectionInfo: selectionInfo
+        )
+        {
+            Version = version
+        };
+    }
 
     public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
     {
@@ -283,6 +280,4 @@ internal class H5S_SEL_HYPER : H5S_SEL
         else
             throw new Exception("This should never happen.");
     }
-
-    #endregion
 }

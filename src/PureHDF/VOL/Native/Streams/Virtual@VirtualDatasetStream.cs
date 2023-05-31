@@ -97,10 +97,10 @@
                 // From source dataset
                 var sourceDatasetInfo = default(DatasetInfo);
 
-                if (foundEntry is not null)
+                if (!foundEntry.Equals(default))
                     sourceDatasetInfo = GetDatasetInfo(foundEntry);
 
-                if (sourceDatasetInfo is not null && foundEntry is not null)
+                if (sourceDatasetInfo is not null && !foundEntry.Equals(default))
                 {
                     var selection = new DelegateSelection(
                         virtualCount, 

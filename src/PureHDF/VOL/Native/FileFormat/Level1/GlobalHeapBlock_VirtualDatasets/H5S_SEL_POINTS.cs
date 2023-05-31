@@ -1,24 +1,36 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5S_SEL_POINTS : H5S_SEL
+internal record class H5S_SEL_POINTS(
+    uint Rank,
+    ulong[,] PointData
+) : H5S_SEL
 {
-    #region Fields
-
     private uint _version;
 
-    #endregion
+    public uint Version
+    {
+        get
+        {
+            return _version;
+        }
+        set
+        {
+            if (!(1 <= value && value <= 2))
+                throw new FormatException($"Only version 1 and version 2 instances of type {nameof(H5S_SEL_POINTS)} are supported.");
 
-    #region Constructors
+            _version = value;
+        }
+    }
 
-    public H5S_SEL_POINTS(H5DriverBase driver)
+    public static H5S_SEL_POINTS Decode(H5DriverBase driver)
     {
         // version
-        Version = driver.ReadUInt32();
+        var version = driver.ReadUInt32();
 
         // encode size
         byte encodeSize;
 
-        switch (Version)
+        switch (version)
         {
             case 1:
                 // encode size
@@ -43,44 +55,30 @@ internal class H5S_SEL_POINTS : H5S_SEL
         }
 
         // rank
-        Rank = driver.ReadUInt32();
+        var rank = driver.ReadUInt32();
 
         // point count
         var pointCount = ReadEncodedValue(driver, encodeSize);
 
         // point data
-        PointData = new ulong[pointCount, Rank];
+        var pointData = new ulong[pointCount, rank];
 
         for (ulong pointIndex = 0; pointIndex < pointCount; pointIndex++)
         {
-            for (int dimension = 0; dimension < Rank; dimension++)
+            for (int dimension = 0; dimension < rank; dimension++)
             {
-                PointData[pointIndex, dimension] = ReadEncodedValue(driver, encodeSize);
+                pointData[pointIndex, dimension] = ReadEncodedValue(driver, encodeSize);
             }
         }
-    }
 
-    #endregion
-
-    #region Properties
-
-    public uint Version
-    {
-        get
+        return new H5S_SEL_POINTS(
+            Rank: rank,
+            PointData: pointData
+        )
         {
-            return _version;
-        }
-        set
-        {
-            if (!(1 <= value && value <= 2))
-                throw new FormatException($"Only version 1 and version 2 instances of type {nameof(H5S_SEL_POINTS)} are supported.");
-
-            _version = value;
-        }
+            Version = version
+        };
     }
-
-    public uint Rank { get; set; }
-    public ulong[,] PointData { get; set; }
 
     public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
     {
@@ -147,6 +145,4 @@ internal class H5S_SEL_POINTS : H5S_SEL
             throw new Exception("This should never happen.");
         }
     }
-
-    #endregion
 }

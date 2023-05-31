@@ -1,41 +1,40 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5S_SEL_NONE : H5S_SEL
+internal record class H5S_SEL_NONE(
+    //
+) : H5S_SEL
 {
-    #region Fields
-
     private uint _version;
 
-    #endregion
-
-    #region Constructors
-
-    public H5S_SEL_NONE(H5DriverBase driver)
-    {
-        // version
-        Version = driver.ReadUInt32();
-
-        // reserved
-        driver.ReadBytes(8);
-    }
-
-    #endregion
-
-    #region Properties
-
-    public uint Version
+    public required uint Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (value != 1)
                 throw new FormatException($"Only version 1 instances of type {nameof(H5S_SEL_NONE)} are supported.");
 
             _version = value;
         }
+    }
+
+    public static H5S_SEL_NONE Decode(H5DriverBase driver)
+    {
+        // version
+        var version = driver.ReadUInt32();
+
+        // reserved
+        driver.ReadBytes(8);
+
+        return new H5S_SEL_NONE(
+            //
+        )
+        {
+            Version = version
+        };
     }
 
     public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
@@ -47,6 +46,4 @@ internal class H5S_SEL_NONE : H5S_SEL
     {
         throw new Exception("This should never happen.");
     }
-
-    #endregion
 }

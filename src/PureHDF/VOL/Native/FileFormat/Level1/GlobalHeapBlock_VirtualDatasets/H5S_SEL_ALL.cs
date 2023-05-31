@@ -1,35 +1,34 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class H5S_SEL_ALL : H5S_SEL
-{
-    #region Fields
+internal record class H5S_SEL_ALL(
 
+) : H5S_SEL
+{
     private uint _version;
 
-    #endregion
-
-    #region Constructors
-
-    public H5S_SEL_ALL(H5DriverBase driver)
+    public static H5S_SEL_ALL Decode(H5DriverBase driver)
     {
         // version
-        Version = driver.ReadUInt32();
+        var version = driver.ReadUInt32();
 
         // reserved
         driver.ReadBytes(8);
+
+        return new H5S_SEL_ALL(
+            //
+        )
+        {
+            Version = version
+        };
     }
 
-    #endregion
-
-    #region Properties
-
-    public uint Version
+    public required uint Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (value != 1)
                 throw new FormatException($"Only version 1 instances of type {nameof(H5S_SEL_ALL)} are supported.");
@@ -59,6 +58,4 @@ internal class H5S_SEL_ALL : H5S_SEL
             coordinates,
             maxCount);
     }
-
-    #endregion
 }
