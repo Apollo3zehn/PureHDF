@@ -185,10 +185,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false).GetAwaiter().GetResult();
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
+            skipShuffle: false).GetAwaiter().GetResult() 
+            ?? throw new Exception("The buffer is null. This should never happen.");
 
         return result;
     }
@@ -214,11 +212,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false).GetAwaiter().GetResult();
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
-
+            skipShuffle: false).GetAwaiter().GetResult() 
+                ?? throw new Exception("The buffer is null. This should never happen.");
         return result;
     }
 
@@ -274,11 +269,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false).GetAwaiter().GetResult();
-
-        if (data is null)
-            throw new Exception("The buffer is null. This should never happen.");
-
+            skipShuffle: false).GetAwaiter().GetResult() 
+                ?? throw new Exception("The buffer is null. This should never happen.");
         return data;
     }
 
@@ -304,11 +296,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false).GetAwaiter().GetResult();
-
-        if (data is null)
-            throw new Exception("The buffer is null. This should never happen.");
-
+            skipShuffle: false).GetAwaiter().GetResult() 
+                ?? throw new Exception("The buffer is null. This should never happen.");
         return data;
     }
 
@@ -334,11 +323,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false).GetAwaiter().GetResult();
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
-
+            skipShuffle: false).GetAwaiter().GetResult() 
+                ?? throw new Exception("The buffer is null. This should never happen.");
         return result;
     }
 
@@ -365,10 +351,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false);
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
+            skipShuffle: false) 
+                ?? throw new Exception("The buffer is null. This should never happen.");
 
         return result;
     }
@@ -396,10 +380,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false);
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
+            skipShuffle: false) 
+            ?? throw new Exception("The buffer is null. This should never happen.");
 
         return result;
     }
@@ -460,10 +442,8 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false);
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
+            skipShuffle: false) 
+            ?? throw new Exception("The buffer is null. This should never happen.");
 
         return result;
     }
@@ -492,11 +472,9 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false);
-
-        if (data is null)
-            throw new Exception("The buffer is null. This should never happen.");
-
+            skipShuffle: false)
+            ?? throw new Exception("The buffer is null. This should never happen.");
+            
         return data;
     }
 
@@ -524,11 +502,9 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false);
-
-        if (result is null)
-            throw new Exception("The buffer is null. This should never happen.");
-
+            skipShuffle: false) 
+            ?? throw new Exception("The buffer is null. This should never happen.");
+            
         return result;
     }
 

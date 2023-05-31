@@ -24,8 +24,8 @@ internal class DriverInfoMessage : Message
         // driver info
         DriverInfo = DriverId switch
         {
-            "NCSAmulti" => new MultiDriverInfo(driver),
-            "NCSAfami" => new FamilyDriverInfo(driver),
+            "NCSAmulti" => MultiDriverInfo.Decode(driver),
+            "NCSAfami" => FamilyDriverInfo.Decode(driver),
             _ => throw new NotSupportedException($"The driver ID '{DriverId}' is not supported.")
         };
     }

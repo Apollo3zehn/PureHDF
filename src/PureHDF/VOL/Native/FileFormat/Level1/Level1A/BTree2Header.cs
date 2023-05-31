@@ -181,10 +181,9 @@ internal class BTree2Header<T> where T : struct, IBTree2Record
         while (depth > 0)
         {
             _context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-            var internalNode = new BTree2InternalNode<T>(_context, this, currentNodePointer.RecordCount, depth, _decodeKey);
-
-            if (internalNode is null)
-                throw new Exception("Unable to load B-tree internal node.");
+            
+            var internalNode = new BTree2InternalNode<T>(_context, this, currentNodePointer.RecordCount, depth, _decodeKey) 
+                ?? throw new Exception("Unable to load B-tree internal node.");
 
             /* Locate node pointer for child */
             (index, cmp) = BTree2Header<T>.LocateRecord(internalNode.Records, compare);

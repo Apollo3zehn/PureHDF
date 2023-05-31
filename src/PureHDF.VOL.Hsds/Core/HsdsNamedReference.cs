@@ -30,7 +30,7 @@ internal struct HsdsNamedReference
 
     #region Methods
 
-    public HsdsObject Dereference()
+    public readonly HsdsObject Dereference()
     {
         return Collection switch
         {

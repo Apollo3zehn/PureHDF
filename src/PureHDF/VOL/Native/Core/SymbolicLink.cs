@@ -66,12 +66,11 @@ internal class SymbolicLink
         {
             try
             {
-                var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(Parent.File.FolderPath, Value, linkAccess);
+                var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(Parent.File.FolderPath, Value, linkAccess) 
+                    ?? throw new Exception($"Could not find file {Value}.");
 
-                if (absoluteFilePath is null)
-                    throw new Exception($"Could not find file {Value}.");
-
-                var externalFile = NativeCache.GetH5File(Parent.Context.Superblock, absoluteFilePath, useAsync: useAsync);
+                var externalFile = NativeCache
+                    .GetH5File(Parent.Context.Superblock, absoluteFilePath, useAsync: useAsync);
 
 #if NETSTANDARD2_0
                     return externalFile.InternalGet(ObjectPath!, linkAccess);

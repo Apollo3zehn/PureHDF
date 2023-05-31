@@ -1,21 +1,21 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract class Superblock
+internal abstract record class Superblock(
+    byte SuperBlockVersion,
+    FileConsistencyFlags FileConsistencyFlags,
+    ulong BaseAddress,
+    ulong EndOfFileAddress
+)
 {
-    #region Fields
+    public static byte[] FormatSignature { get; } = new byte[] { 0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a };
+
+    public static ulong UndefinedAddress { get; } = 0xFFFFFFFFFFFFFFFF;
 
     private byte _offsetsSize;
+
     private byte _lengthsSize;
 
-    #endregion
-
-    #region Properties
-
-    public static byte[] FormatSignature { get; set; } = new byte[] { 0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a };
-
-    public byte SuperBlockVersion { get; set; }
-
-    public byte OffsetsSize
+    public required byte OffsetsSize
     {
         get
         {
@@ -30,7 +30,7 @@ internal abstract class Superblock
         }
     }
 
-    public byte LengthsSize
+    public required byte LengthsSize
     {
         get
         {
@@ -44,16 +44,6 @@ internal abstract class Superblock
             _lengthsSize = value;
         }
     }
-
-    public FileConsistencyFlags FileConsistencyFlags { get; set; }
-    public ulong BaseAddress { get; set; }
-    public ulong EndOfFileAddress { get; set; }
-
-    public static ulong UndefinedAddress => 0xFFFFFFFFFFFFFFFF;
-
-    #endregion
-
-    #region Methods
 
     public bool IsUndefinedAddress(ulong address)
     {
@@ -80,6 +70,4 @@ internal abstract class Superblock
     {
         return Utils.ReadUlong(driver, LengthsSize);
     }
-
-    #endregion
 }

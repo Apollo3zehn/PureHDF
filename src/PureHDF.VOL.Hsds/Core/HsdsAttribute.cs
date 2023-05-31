@@ -48,11 +48,9 @@ internal class HsdsAttribute : IH5Attribute
         if (value.ValueKind != JsonValueKind.Array)
             throw new Exception($"Invalid value kind {value.ValueKind}.");
 
-        var data = JsonSerializer.Deserialize<T[]>(value);
-
-        if (data is null)
-            throw new Exception($"Unable to deserialize data.");
-
+        var data = JsonSerializer.Deserialize<T[]>(value) 
+            ?? throw new Exception($"Unable to deserialize data.");
+            
         return data;
     }
 
