@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class NilMessage : Message
+internal record class NilMessage : Message
 {
     //
 }
