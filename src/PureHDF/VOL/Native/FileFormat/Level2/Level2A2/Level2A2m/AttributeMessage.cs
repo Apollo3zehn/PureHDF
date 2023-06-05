@@ -48,7 +48,7 @@ internal class AttributeMessage : Message
             ? MessageFlags.Shared
             : MessageFlags.NoFlags;
 
-        Datatype = objectHeader.DecodeMessage(flags1,
+        Datatype = Decode(context, objectHeader.Address, flags1,
             () => new DatatypeMessage(context.Driver));
 
         if (Version == 1)
@@ -63,7 +63,7 @@ internal class AttributeMessage : Message
             ? MessageFlags.Shared
             : MessageFlags.NoFlags;
 
-        Dataspace = objectHeader.DecodeMessage(flags2,
+        Dataspace = Decode(context, objectHeader.Address, flags2,
             () => new DataspaceMessage(context));
 
         if (Version == 1)
