@@ -1,43 +1,47 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class SharedMessage
+internal record class SharedMessage(
+    SharedMessageLocation Type,
+    ulong Address
+    // TODO: implement this
+    // FractalHeapId FractalHeapId
+)
 {
-    #region Fields
-
     private byte _version;
 
-    #endregion
-
-    #region Constructors
-
-    public SharedMessage(NativeContext context)
+    public static SharedMessage Decode(NativeContext context)
     {
         var (driver, superblock) = context;
 
         // H5Oshared.c (H5O__shared_decode)
 
         // version
-        Version = driver.ReadByte();
+        var version = driver.ReadByte();
 
         // type
-        if (Version == 3)
+        SharedMessageLocation type;
+
+        if (version == 3)
         {
-            Type = (SharedMessageLocation)driver.ReadByte();
+            type = (SharedMessageLocation)driver.ReadByte();
         }
+
         else
         {
             driver.ReadByte();
-            Type = SharedMessageLocation.AnotherObjectsHeader;
+            type = SharedMessageLocation.AnotherObjectsHeader;
         }
 
         // reserved
-        if (Version == 1)
+        if (version == 1)
             driver.ReadBytes(6);
 
         // address
-        if (Version == 1)
+        ulong address;
+
+        if (version == 1)
         {
-            Address = superblock.ReadOffset(driver);
+            address = superblock.ReadOffset(driver);
         }
         else
         {
@@ -45,29 +49,34 @@ internal class SharedMessage
              * Otherwise, it is a named datatype, so copy an H5O_loc_t.
              */
 
-            if (Type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
+            if (type == SharedMessageLocation.SharedObjectHeaderMessageHeap)
             {
                 // TODO: implement this
                 throw new NotImplementedException("This code path is not yet implemented.");
             }
+
             else
             {
-                Address = superblock.ReadOffset(driver);
+                address = superblock.ReadOffset(driver);
             }
         }
+
+        return new SharedMessage(
+            Type: type,
+            Address: address
+        )
+        {
+            Version = version
+        };
     }
 
-    #endregion
-
-    #region Properties
-
-    public byte Version
+    public required byte Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (!(1 <= value && value <= 3))
                 throw new FormatException($"Only version 1 version 2 and version 3 instances of type {nameof(SharedMessage)} are supported.");
@@ -76,12 +85,4 @@ internal class SharedMessage
         }
     }
 
-    public SharedMessageLocation Type { get; set; }
-
-    public ulong Address { get; set; }
-
-    // TODO: implement this
-    // public FractalHeapId FractalHeapId { get; set; }
-
-    #endregion
 }

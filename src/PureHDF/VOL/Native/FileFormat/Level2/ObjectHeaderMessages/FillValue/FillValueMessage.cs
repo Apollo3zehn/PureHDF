@@ -91,12 +91,6 @@ internal record class FillValueMessage(
                     value = driver.ReadBytes((int)size);
                 }
 
-                // default
-                else
-                {
-                    value = Array.Empty<byte>();
-                }
-
                 break;
 
             default:
@@ -106,7 +100,9 @@ internal record class FillValueMessage(
         return new FillValueMessage(
             AllocationTime: allocationTime,
             FillTime: fillTime,
-            Value: value
+            Value: value?.Length > 0 
+                ? value 
+                : default
         )
         {
             Version = version

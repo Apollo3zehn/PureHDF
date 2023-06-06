@@ -7,15 +7,16 @@ internal record class DatatypeMessage(
 ) : Message
 {
     private byte _version;
+
     private DatatypeMessageClass _class;
 
-    public byte Version
+    public required byte Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (!(1 <= value && value <= 3))
                 throw new Exception("The version number must be in the range of 1..3.");
@@ -24,13 +25,13 @@ internal record class DatatypeMessage(
         }
     }
 
-    public DatatypeMessageClass Class
+    public required DatatypeMessageClass Class
     {
         get
         {
             return _class;
         }
-        set
+        init
         {
             if (!(0 <= (byte)value && (byte)value <= 10))
                 throw new Exception("The class number must be in the range of 0..10.");
@@ -39,7 +40,7 @@ internal record class DatatypeMessage(
         }
     }
 
-        public static DatatypeMessage Decode(H5DriverBase driver)
+    public static DatatypeMessage Decode(H5DriverBase driver)
     {
         var classVersion = driver.ReadByte();
         var version = (byte)(classVersion >> 4);
@@ -97,7 +98,11 @@ internal record class DatatypeMessage(
             Size: size,
             BitField: bitField,
             Properties: properties
-        );
+        )
+        {
+            Version = version,
+            Class = @class
+        };
     }
 
     private static byte GetOpaqueTagByteLength(DatatypeBitFieldDescription bitField)

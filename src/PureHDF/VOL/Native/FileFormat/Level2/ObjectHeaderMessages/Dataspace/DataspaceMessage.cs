@@ -10,13 +10,13 @@ internal record class DataspaceMessage(
 {
     private byte _version;
 
-    public byte Version
+    public required byte Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (!(1 <= value && value <= 2))
                 throw new NotSupportedException("The dataspace message version must be in the range of 1..2.");
@@ -94,6 +94,9 @@ internal record class DataspaceMessage(
             dimensionSizes,
             dimensionMaxSizes,
             permutationIndices
-        );
+        )
+        {
+            Version = version
+        };
     }
 }

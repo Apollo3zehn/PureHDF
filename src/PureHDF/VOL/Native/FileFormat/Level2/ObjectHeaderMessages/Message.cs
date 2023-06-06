@@ -11,7 +11,7 @@ internal abstract record class Message
         // H5OShared.h (H5O_SHARED_DECODE)
         if (messageFlags.HasFlag(MessageFlags.Shared))
         {
-            var sharedMessage = new SharedMessage(context);
+            var sharedMessage = SharedMessage.Decode(context);
             return DecodeSharedMessage<T>(context, address, sharedMessage);
         }
 

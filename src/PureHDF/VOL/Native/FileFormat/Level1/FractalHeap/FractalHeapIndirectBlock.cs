@@ -17,13 +17,13 @@ internal record class FractalHeapIndirectBlock(
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("FHIB");
 
-    public byte Version
+    public required byte Version
     {
         get
         {
             return _version;
         }
-        set
+        init
         {
             if (value != 0)
                 throw new FormatException($"Only version 0 instances of type {nameof(FractalHeapIndirectBlock)} are supported.");

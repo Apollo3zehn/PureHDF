@@ -36,8 +36,6 @@ internal record class DataLayoutMessage3(
             (_, LayoutClass.Compact) => CompactStoragePropertyDescription.Decode(driver),
             (_, LayoutClass.Contiguous) => ContiguousStoragePropertyDescription.Decode(context),
             (3, LayoutClass.Chunked) => ChunkedStoragePropertyDescription3.Decode(context),
-            (4, LayoutClass.Chunked) => ChunkedStoragePropertyDescription4.Decode(context),
-            (4, LayoutClass.VirtualStorage) => VirtualStoragePropertyDescription.Decode(context),
             _ => throw new NotSupportedException($"The layout class '{layoutClass}' is not supported for the data layout message version '{version}'.")
         };
 
