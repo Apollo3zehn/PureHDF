@@ -166,7 +166,7 @@ internal record class FractalHeapHeader(
         {
             filteredRootDirectBlockSize = superblock.ReadLength(driver);
             ioFilterMask = driver.ReadUInt32();
-            ioFilterInfo = new FilterPipelineMessage(driver);
+            ioFilterInfo = FilterPipelineMessage.Decode(driver);
         }
 
         // checksum

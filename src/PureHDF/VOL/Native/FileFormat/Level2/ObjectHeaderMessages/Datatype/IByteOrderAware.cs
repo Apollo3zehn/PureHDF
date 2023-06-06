@@ -2,5 +2,5 @@
 
 internal interface IByteOrderAware
 {
-    ByteOrder ByteOrder { get; set; }
+    ByteOrder ByteOrder { get; init; }
 }

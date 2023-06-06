@@ -77,7 +77,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
                 ? SpaceAllocationTime.Incremental
                 : SpaceAllocationTime.Late;
 
-            FillValueMessage = new FillValueMessage(allocationTime);
+            FillValueMessage = FillValueMessage.Decode(allocationTime);
         }
     }
 

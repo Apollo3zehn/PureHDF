@@ -5,6 +5,7 @@ namespace PureHDF.VOL.Native;
 
 internal delegate bool FoundDelegate<T, TUserData>(ulong address, T leftNode, out TUserData userData);
 
+// TODO: better use class here? Benchmark required
 internal readonly record struct BTree1Node<T>(
     NativeContext Context,
     Func<T> DecodeKey,

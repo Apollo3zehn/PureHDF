@@ -24,12 +24,11 @@
 
                 var element = GetElement(chunkIndex, driver =>
                 {
-                    return new FilteredDataBlockElement()
-                    {
-                        Address = Dataset.Context.Superblock.ReadOffset(driver),
-                        ChunkSize = (uint)Utils.ReadUlong(driver, chunkSizeLength),
-                        FilterMask = driver.ReadUInt32()
-                    };
+                    return new FilteredDataBlockElement(
+                        Address: Dataset.Context.Superblock.ReadOffset(driver),
+                        ChunkSize: (uint)Utils.ReadUlong(driver, chunkSizeLength),
+                        FilterMask: driver.ReadUInt32()
+                    );
                 });
 
                 return element is not null
@@ -40,10 +39,9 @@
             {
                 var element = GetElement(chunkIndex, driver =>
                 {
-                    return new DataBlockElement()
-                    {
-                        Address = Dataset.Context.Superblock.ReadOffset(driver)
-                    };
+                    return new DataBlockElement(
+                        Address: Dataset.Context.Superblock.ReadOffset(driver)
+                    );
                 });
 
                 return element is not null
@@ -57,7 +55,7 @@
             if (_header is null)
             {
                 Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
-                _header = new FixedArrayHeader(Dataset.Context);
+                _header = FixedArrayHeader.Decode(Dataset.Context);
             }
 
             // H5FA.c (H5FA_get)
@@ -81,7 +79,7 @@
             /* Get the data block */
             Dataset.Context.Driver.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
 
-            var dataBlock = new FixedArrayDataBlock<T>(
+            var dataBlock = FixedArrayDataBlock<T>.Decode(
                 Dataset.Context,
                 header,
                 decode);
@@ -116,7 +114,7 @@
                     /* Protect the data block page */
                     Dataset.Context.Driver.Seek(pageAddress, SeekOrigin.Begin);
 
-                    var page = new DataBlockPage<T>(
+                    var page = DataBlockPage<T>.Decode(
                         Dataset.Context.Driver,
                         elementCount,
                         decode);

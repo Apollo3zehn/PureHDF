@@ -41,7 +41,7 @@ internal record class ArrayPropertyDescription(
         }
 
         // base type
-        var baseType = new DatatypeMessage(driver);
+        var baseType = DatatypeMessage.Decode(driver);
 
         return new ArrayPropertyDescription(
             Rank: rank,
@@ -113,7 +113,7 @@ internal record class CompoundPropertyDescription(
                 }
 
                 // member type message
-                memberTypeMessage = new DatatypeMessage(driver);
+                memberTypeMessage = DatatypeMessage.Decode(driver);
 
                 break;
 
@@ -126,7 +126,7 @@ internal record class CompoundPropertyDescription(
                 memberByteOffset = driver.ReadUInt32();
 
                 // member type message
-                memberTypeMessage = new DatatypeMessage(driver);
+                memberTypeMessage = DatatypeMessage.Decode(driver);
 
                 break;
 
@@ -151,7 +151,7 @@ internal record class CompoundPropertyDescription(
                 memberByteOffset = BitConverter.ToUInt64(buffer, 0);
 
                 // member type message
-                memberTypeMessage = new DatatypeMessage(driver);
+                memberTypeMessage = DatatypeMessage.Decode(driver);
 
                 break;
 
@@ -180,7 +180,7 @@ internal record class EnumerationPropertyDescription(
         ushort memberCount)
     {
         // base type
-        var baseType = new DatatypeMessage(driver);
+        var baseType = DatatypeMessage.Decode(driver);
 
         // names
         var names = new List<string>(memberCount);
@@ -287,7 +287,7 @@ internal record class VariableLengthPropertyDescription(
         H5DriverBase driver)
     {
         return new VariableLengthPropertyDescription(
-            BaseType: new DatatypeMessage(driver)
+            BaseType: DatatypeMessage.Decode(driver)
         );
     }
 };

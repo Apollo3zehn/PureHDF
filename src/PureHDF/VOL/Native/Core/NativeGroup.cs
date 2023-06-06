@@ -475,7 +475,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
 
             yield return heapId.Read(driver =>
             {
-                var message = new LinkMessage(Context);
+                var message = LinkMessage.Decode(Context);
                 return message;
             }, ref record01Cache);
         }
@@ -509,7 +509,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
                 // TODO: duplicate3_of_3
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
                 var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-                candidate = heapId.Read(driver => new LinkMessage(Context));
+                candidate = heapId.Read(driver => LinkMessage.Decode(Context));
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
