@@ -382,7 +382,7 @@ internal static class ReadUtils
             for (int i = 0; i < destination.Length; i++)
             {
                 var dataSize = localDriver.ReadUInt32(); // for what do we need this?
-                var globalHeapId = new GlobalHeapId(context, localDriver);
+                var globalHeapId = GlobalHeapId.Decode(context, localDriver);
                 var globalHeapCollection = globalHeapId.Collection;
 
                 if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))

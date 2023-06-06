@@ -40,16 +40,18 @@ internal struct NativeNamedReference
 
     #region Methods
 
-    public NativeObject Dereference()
+    public readonly NativeObject Dereference()
     {
         if (File is null)
         {
             return new NativeUnresolvedLink(this);
         }
+
         else if (ScratchPad is not null)
         {
             return new NativeGroup(File, File.Context, this);
         }
+
         else
         {
             var context = File.Context;

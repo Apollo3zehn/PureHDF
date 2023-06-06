@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Runtime.CompilerServices;
+
+namespace PureHDF.VOL.Native;
 
 internal class NativeFile : NativeGroup, INativeFile
 {
@@ -114,10 +116,8 @@ internal class NativeFile : NativeGroup, INativeFile
 
         var superblock = (Superblock)(version switch
         {
-            0 => new Superblock01(driver, version),
-            1 => new Superblock01(driver, version),
-            2 => new Superblock23(driver, version),
-            3 => new Superblock23(driver, version),
+            >= 0 and < 2 => Superblock01.Decode(driver, version),
+            >= 2 and < 4 => Superblock23.Decode(driver, version),
             _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
         });
 
@@ -153,18 +153,10 @@ internal class NativeFile : NativeGroup, INativeFile
         return file;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool ValidateSignature(byte[] actual, byte[] expected)
     {
-        if (actual.Length == expected.Length)
-        {
-            if (actual[0] == expected[0] && actual[1] == expected[1] && actual[2] == expected[2] && actual[3] == expected[3]
-             && actual[4] == expected[4] && actual[5] == expected[5] && actual[6] == expected[6] && actual[7] == expected[7])
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return expected.SequenceEqual(actual);
     }
 
 #endregion
@@ -179,7 +171,7 @@ internal class NativeFile : NativeGroup, INativeFile
         {
             if (disposing)
             {
-                NativeCache.Clear(Context.Superblock);
+                NativeCache.Clear(Context.Driver);
                 Context.Driver.Dispose();
 
                 if (_deleteOnClose && System.IO.File.Exists(Path))

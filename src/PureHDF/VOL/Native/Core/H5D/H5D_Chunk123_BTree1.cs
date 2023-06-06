@@ -54,13 +54,13 @@ namespace PureHDF
         protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
         {
             // load B-Tree 1
-            if (_btree1 is null)
+            if (!_btree1.HasValue)
             {
                 Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
 
                 BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
-                _btree1 = new BTree1Node<BTree1RawDataChunksKey>(Dataset.Context, decodeKey);
+                _btree1 = BTree1Node<BTree1RawDataChunksKey>.Decode(Dataset.Context, decodeKey);
             }
 
             // get key and child address
@@ -68,11 +68,12 @@ namespace PureHDF
                 .Append(0UL)
                 .ToArray();
 
-            var success = _btree1
-                        .TryFindUserData(out var userData,
-                                        (leftKey, rightKey) => NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey),
-                                        (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
-                                            => NodeFound(ChunkRank, chunkIndices, address, leftKey, out userData));
+            var success = _btree1.Value.TryFindUserData(
+                out var userData,
+                (leftKey, rightKey) 
+                    => NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey),
+                (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
+                    => NodeFound(ChunkRank, chunkIndices, address, leftKey, out userData));
 
             return success
                 ? new ChunkInfo(userData.ChildAddress, userData.ChunkSize, userData.FilterMask)
@@ -86,7 +87,7 @@ namespace PureHDF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
         {
-            return new BTree1RawDataChunksKey(Dataset.Context.Driver, rank, rawChunkDims);
+            return BTree1RawDataChunksKey.Decode(Dataset.Context.Driver, rank, rawChunkDims);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,9 +139,10 @@ namespace PureHDF
                     return false;
             }
 
-            userData.ChildAddress = address;
-            userData.ChunkSize = leftKey.ChunkSize;
-            userData.FilterMask = leftKey.FilterMask;
+            userData = new BTree1RawDataChunkUserData(
+                ChildAddress: address,
+                ChunkSize: leftKey.ChunkSize,
+                FilterMask: leftKey.FilterMask);
 
             return true;
         }

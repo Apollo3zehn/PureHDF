@@ -16,7 +16,7 @@ namespace PureHDF
 
     struct SyncReader : IReader
     {
-        public ValueTask ReadDatasetAsync(IH5ReadStream stream, Memory<byte> buffer, long offset)
+        public readonly ValueTask ReadDatasetAsync(IH5ReadStream stream, Memory<byte> buffer, long offset)
         {
             stream.Seek(offset, SeekOrigin.Begin);
             stream.ReadDataset(buffer);
@@ -31,7 +31,7 @@ namespace PureHDF
 
     struct AsyncReader : IReader
     {
-        public ValueTask ReadDatasetAsync(IH5ReadStream stream, Memory<byte> buffer, long offset)
+        public readonly ValueTask ReadDatasetAsync(IH5ReadStream stream, Memory<byte> buffer, long offset)
         {
 #if NET6_0_OR_GREATER
             stream.Seek(offset, SeekOrigin.Begin);

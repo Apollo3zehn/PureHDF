@@ -143,7 +143,7 @@ internal abstract class NativeAttributableObject : NativeObject, IH5Attributable
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
             var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-            var message = heapId.Read(driver => new AttributeMessage(Context, Header), ref record01Cache);
+            var message = heapId.Read(driver => AttributeMessage.Decode(Context, Header), ref record01Cache);
 
             yield return message;
         }
@@ -177,7 +177,7 @@ internal abstract class NativeAttributableObject : NativeObject, IH5Attributable
                 // TODO: duplicate2_of_3
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
                 var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-                candidate = heapId.Read(driver => new AttributeMessage(Context, Header));
+                candidate = heapId.Read(driver => AttributeMessage.Decode(Context, Header));
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison

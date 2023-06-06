@@ -313,18 +313,17 @@ namespace PureHDF.Tests.Reading
                 root.Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
 
                 // H5Rint.c (H5R__get_region)
-                // TODO: use more structs?
-                var globalHeapId = new GlobalHeapId(root.Context)
-                {
-                    CollectionAddress = reference.CollectionAddress,
-                    ObjectIndex = reference.ObjectIndex
-                };
+                // var globalHeapId = new GlobalHeapId(root.Context)
+                // {
+                //     CollectionAddress = reference.CollectionAddress,
+                //     ObjectIndex = reference.ObjectIndex
+                // };
 
-                var globalHeapCollection = globalHeapId.Collection;
-                var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
-                using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-                var address = root.Context.Superblock.ReadOffset(localDriver);
-                var selection = new DataspaceSelection(localDriver);
+                // var globalHeapCollection = globalHeapId.Collection;
+                // var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
+                // using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
+                // var address = root.Context.Superblock.ReadOffset(localDriver);
+                // var selection = new DataspaceSelection(localDriver);
 
                 throw new NotImplementedException();
             });

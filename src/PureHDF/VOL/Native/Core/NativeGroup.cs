@@ -475,7 +475,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
 
             yield return heapId.Read(driver =>
             {
-                var message = new LinkMessage(Context);
+                var message = LinkMessage.Decode(Context);
                 return message;
             }, ref record01Cache);
         }
@@ -509,7 +509,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
                 // TODO: duplicate3_of_3
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
                 var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-                candidate = heapId.Read(driver => new LinkMessage(Context));
+                candidate = heapId.Read(driver => LinkMessage.Decode(Context));
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
@@ -582,7 +582,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
             return node.ChildAddresses.Select(address =>
             {
                 Context.Driver.Seek((long)address, SeekOrigin.Begin);
-                return new SymbolTableNode(Context);
+                return SymbolTableNode.Decode(Context);
             });
         });
     }
@@ -630,7 +630,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
          * Load the symbol table node for exclusive access.
          */
         Context.Driver.Seek((long)address, SeekOrigin.Begin);
-        var symbolTableNode = new SymbolTableNode(Context);
+        var symbolTableNode = SymbolTableNode.Decode(Context);
 
         /*
          * Binary search.
@@ -654,14 +654,17 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         if (cmp != 0)
             return false;
 
-        userData.SymbolTableEntry = symbolTableNode.GroupEntries[(int)index];
+        userData = new BTree1SymbolTableUserData(
+            SymbolTableEntry: symbolTableNode.GroupEntries[(int)index]
+        );
+        
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private BTree1GroupKey DecodeGroupKey()
     {
-        return new BTree1GroupKey(Context);
+        return BTree1GroupKey.Decode(Context);
     }
 
     #endregion
