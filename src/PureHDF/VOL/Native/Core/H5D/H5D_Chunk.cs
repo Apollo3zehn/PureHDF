@@ -16,6 +16,7 @@ internal abstract class H5D_Chunk : H5D_Base
     #region Fields
 
     private readonly IChunkCache _chunkCache;
+
     private readonly bool _indexAddressIsUndefined;
 
     #endregion
@@ -185,6 +186,10 @@ internal abstract class H5D_Chunk : H5D_Base
 
             else
             {
+                #if ANONYMIZE
+                    AnonymizeHelper.Append(Dataset.File.Path, (long)chunkInfo.Address, (long)chunkInfo.Size);
+                #endif
+
                 await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
             }
         }

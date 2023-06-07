@@ -39,9 +39,17 @@
                     else
                         _stream = new UnsafeFillValueStream(Dataset.FillValueMessage.Value ?? new byte[] { 0 });
                 }
+
                 else
                 {
                     Dataset.Context.Driver.Seek((long)address, SeekOrigin.Begin);
+
+                    #if ANONYMIZE
+                        AnonymizeHelper.Append(
+                            Dataset.File.Path, 
+                            Dataset.Context.Driver.Position, 
+                            (long)Utils.CalculateSize(Dataset.GetDatasetDims(), type: Dataset.DataspaceMessage.Type) * Dataset.Type.Size);
+                    #endif
 
                     _stream = new OffsetStream(Dataset.Context.Driver);
                 }

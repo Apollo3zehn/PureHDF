@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 /// <summary>
 /// A native HDF5 dataset.

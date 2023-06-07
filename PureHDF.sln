@@ -42,6 +42,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.VOL.Hsds", "src\Pur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.Filters.Lzf", "src\PureHDF.Filters.Lzf\PureHDF.Filters.Lzf.csproj", "{887C5A33-F8B2-49EF-8A8C-3A63204CD107}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PureHDF.Anonymizer", "src\PureHDF.Anonymizer\PureHDF.Anonymizer.csproj", "{E8EBA7BD-8574-41D7-ADAA-948934C8990A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -100,6 +102,10 @@ Global
 		{887C5A33-F8B2-49EF-8A8C-3A63204CD107}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{887C5A33-F8B2-49EF-8A8C-3A63204CD107}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{887C5A33-F8B2-49EF-8A8C-3A63204CD107}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8EBA7BD-8574-41D7-ADAA-948934C8990A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8EBA7BD-8574-41D7-ADAA-948934C8990A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8EBA7BD-8574-41D7-ADAA-948934C8990A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8EBA7BD-8574-41D7-ADAA-948934C8990A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -118,6 +124,7 @@ Global
 		{4D3DAA9D-6DF7-4002-8352-09430ACB67EF} = {4C09E841-1023-48F7-B290-734C029B0E78}
 		{56EF29B0-A1C7-4E58-AEC5-0E816B390119} = {4C09E841-1023-48F7-B290-734C029B0E78}
 		{887C5A33-F8B2-49EF-8A8C-3A63204CD107} = {4C09E841-1023-48F7-B290-734C029B0E78}
+		{E8EBA7BD-8574-41D7-ADAA-948934C8990A} = {4C09E841-1023-48F7-B290-734C029B0E78}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6278E75D-2E06-43AB-A275-270476503447}

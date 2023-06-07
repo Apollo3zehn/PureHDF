@@ -50,6 +50,17 @@
             "type": "coreclr",
             "request": "attach",
             "processId": "${command:pickRemoteProcess}"
+        },
+        {
+            "name": "Debug: Anonymizer",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-anonymizer",
+            "program": "${workspaceFolder}/artifacts/bin/PureHDF.Anonymizer/Debug/net7.0/PureHDF.Anonymizer.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
         }
     ]
 }

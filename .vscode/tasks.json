@@ -28,6 +28,21 @@
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-anonymizer",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "-c",
+                "Debug",
+                "${workspaceFolder}/src/PureHDF.Anonymizer/PureHDF.Anonymizer.csproj",
+                "/property:GenerateFullPaths=true",
+                "/property:Anonymize=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
