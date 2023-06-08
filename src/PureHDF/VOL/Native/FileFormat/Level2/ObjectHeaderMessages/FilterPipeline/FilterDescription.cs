@@ -7,8 +7,10 @@ internal readonly record struct FilterDescription(
     uint[] ClientData
 )
 {
-    public static FilterDescription Decode(H5DriverBase driver, byte version)
+    public static FilterDescription Decode(NativeContext context, byte version)
     {
+        var (driver, superblock) = context;
+
         // filter identifier
         var identifier = (FilterIdentifier)driver.ReadInt16();
 

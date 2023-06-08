@@ -60,7 +60,7 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-            "console": "internalConsole"
+            "console": "externalTerminal"
         }
     ]
 }

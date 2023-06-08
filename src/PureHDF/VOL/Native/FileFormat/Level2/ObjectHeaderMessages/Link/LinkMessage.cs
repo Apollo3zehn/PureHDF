@@ -61,6 +61,15 @@ internal record class LinkMessage(
         var linkNameLength = Utils.ReadUlong(driver, linkLengthFieldLength);
 
         // link name
+        #if ANONYMIZE
+            AnonymizeHelper.Append(
+                "link-message", 
+                context.Superblock.FilePath, 
+                driver.Position, 
+                (long)linkNameLength,
+                addBaseAddress: false);
+        #endif
+
         var linkName = ReadUtils.ReadFixedLengthString(driver, (int)linkNameLength, linkNameEncoding);
 
         // link info

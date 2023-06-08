@@ -90,7 +90,7 @@ internal readonly record struct HeaderMessage(
             MessageType.DataLayout => DataLayoutMessage.Construct(context),
             MessageType.Bogus => BogusMessage.Decode(context.Driver),
             MessageType.GroupInfo => GroupInfoMessage.Decode(context.Driver),
-            MessageType.FilterPipeline => Message.Decode(context, objectHeader.Address, flags, () => FilterPipelineMessage.Decode(context.Driver)),
+            MessageType.FilterPipeline => Message.Decode(context, objectHeader.Address, flags, () => FilterPipelineMessage.Decode(context)),
             MessageType.Attribute => Message.Decode(context, objectHeader.Address, flags, () => AttributeMessage.Decode(context, objectHeader)),
             MessageType.ObjectComment => ObjectCommentMessage.Decode(context.Driver),
             MessageType.OldObjectModificationTime => OldObjectModificationTimeMessage.Decode(context.Driver).ToObjectModificationMessage(),

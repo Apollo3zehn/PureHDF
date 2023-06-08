@@ -15,6 +15,8 @@ internal abstract record class Superblock(
 
     private byte _lengthsSize;
 
+    public string? FilePath { get; set; }
+
     public required byte OffsetsSize
     {
         get

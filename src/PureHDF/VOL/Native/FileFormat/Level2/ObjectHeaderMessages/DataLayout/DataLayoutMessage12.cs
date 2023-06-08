@@ -68,6 +68,16 @@ internal record class DataLayoutMessage12(
         if (layoutClass == LayoutClass.Compact)
         {
             var compactDataSize = driver.ReadUInt32();
+
+            #if ANONYMIZE
+                AnonymizeHelper.Append(
+                    "compact", 
+                    context.Superblock.FilePath, 
+                    driver.Position, 
+                    (long)compactDataSize,
+                    addBaseAddress: false);
+            #endif
+            
             compactData = driver.ReadBytes((int)compactDataSize);
         }
 

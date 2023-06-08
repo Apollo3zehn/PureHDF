@@ -187,7 +187,12 @@ internal abstract class H5D_Chunk : H5D_Base
             else
             {
                 #if ANONYMIZE
-                    AnonymizeHelper.Append(Dataset.File.Path, (long)chunkInfo.Address, (long)chunkInfo.Size);
+                    AnonymizeHelper.Append(
+                        "chunk", 
+                        Dataset.File.Path, 
+                        (long)chunkInfo.Address, 
+                        (long)chunkInfo.Size, 
+                        addBaseAddress: true);
                 #endif
 
                 await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
@@ -206,15 +211,25 @@ internal abstract class H5D_Chunk : H5D_Base
     {
         if (Dataset.InternalFilterPipeline is null)
         {
-            await reader.ReadDatasetAsync(Dataset.Context.Driver, buffer, offset).ConfigureAwait(false);
+            #if !ANONYMIZE
+                await reader.ReadDatasetAsync(Dataset.Context.Driver, buffer, offset).ConfigureAwait(false);
+            #endif
         }
+        
         else
         {
-            using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
-            var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-            await reader.ReadDatasetAsync(Dataset.Context.Driver, filterBuffer, offset).ConfigureAwait(false);
-
-            H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
+            #if !ANONYMIZE
+                using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
+                var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
+                await reader.ReadDatasetAsync(Dataset.Context.Driver, filterBuffer, offset).ConfigureAwait(false);
+            
+                H5Filter.ExecutePipeline(
+                    Dataset.InternalFilterPipeline.FilterDescriptions, 
+                    filterMask, 
+                    H5FilterFlags.Decompress, 
+                    filterBuffer, 
+                    buffer);
+            #endif
         }
     }
 

@@ -41,8 +41,8 @@ internal abstract class NativeObject : IH5Object
         get
         {
             _objectReferenceCount ??= Header
-                    .GetMessages<ObjectReferenceCountMessage>()
-                    .FirstOrDefault();
+                .GetMessages<ObjectReferenceCountMessage>()
+                .FirstOrDefault();
 
             return _objectReferenceCount;
         }

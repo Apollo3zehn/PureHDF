@@ -121,6 +121,12 @@ internal class NativeFile : NativeGroup, INativeFile
             _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
         });
 
+        #if ANONYMIZE
+            AnonymizeHelper.Append("offset", absoluteFilePath, (long)superblock.BaseAddress, 0, addBaseAddress: default);
+        #endif
+
+        superblock.FilePath = absoluteFilePath;
+
         driver.SetBaseAddress(superblock.BaseAddress);
 
         ulong address;

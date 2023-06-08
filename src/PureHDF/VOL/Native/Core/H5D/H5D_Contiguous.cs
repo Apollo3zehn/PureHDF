@@ -46,9 +46,11 @@
 
                     #if ANONYMIZE
                         AnonymizeHelper.Append(
+                            "contiguous",
                             Dataset.File.Path, 
                             Dataset.Context.Driver.Position, 
-                            (long)Utils.CalculateSize(Dataset.GetDatasetDims(), type: Dataset.DataspaceMessage.Type) * Dataset.Type.Size);
+                            (long)Utils.CalculateSize(Dataset.GetDatasetDims(), type: Dataset.DataspaceMessage.Type) * Dataset.Type.Size,
+                            addBaseAddress: false);
                     #endif
 
                     _stream = new OffsetStream(Dataset.Context.Driver);

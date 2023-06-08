@@ -38,8 +38,10 @@ internal record class FilterPipelineMessage(
         }
     }
 
-    public static FilterPipelineMessage Decode(H5DriverBase driver)
+    public static FilterPipelineMessage Decode(NativeContext context)
     {
+        var (driver, _) = context;
+
         // version
         var version = driver.ReadByte();
 
@@ -55,7 +57,7 @@ internal record class FilterPipelineMessage(
 
         for (int i = 0; i < filterCount; i++)
         {
-            filterDescriptions.Add(FilterDescription.Decode(driver, version));
+            filterDescriptions.Add(FilterDescription.Decode(context, version));
         }
 
         return new FilterPipelineMessage(

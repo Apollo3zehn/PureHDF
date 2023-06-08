@@ -1,34 +1,55 @@
-﻿using PureHDF;
+﻿using System.Buffers;
+using PureHDF;
 using PureHDF.VOL.Native;
 
-var sourceFilePath = "/home/vincent/Dokumente/Git/GitHub/PureHDF/tests/PureHDF.Tests/TestFiles/lzf.h5";
-// var sourceFilePath = default(string);
+var sourceFilePath = default(string);
 
-// while (!File.Exists(sourceFilePath))
-// {
-//     Console.WriteLine("Path of the HDF5 file to be anonymized (a copy will be created):");
-//     sourceFilePath = Console.ReadLine();
-// }
-
-// Console.WriteLine();
-// Console.WriteLine("Copy file ...");
+while (!File.Exists(sourceFilePath))
+{
+    Console.WriteLine("Path of the HDF5 file to be anonymized (a copy will be created):");
+    sourceFilePath = Console.ReadLine();
+}
 
 var targetFilePath = Path.ChangeExtension(sourceFilePath, ".anonymized.h5");
-var offsetsPath = Path.ChangeExtension(sourceFilePath, ".offsets");
+
+bool overwrite = false;
+
+while (!overwrite)
+{
+    if (File.Exists(targetFilePath))
+    {
+        Console.WriteLine($"The file {targetFilePath} already exists. Overwrite? (y/N)");
+        overwrite = Console.ReadLine() == "y";
+    }
+
+    else
+    {
+        break;
+    }
+}
+
+var offsetsPath = Path.ChangeExtension(targetFilePath, ".offsets");
 
 try
 {
+    Console.WriteLine();
+    Console.WriteLine("Copy file ...");
+
     File.Copy(sourceFilePath, targetFilePath, overwrite: true);
 
-    Console.WriteLine("Anonymize ...");
+    Console.WriteLine("Scanning ...");
 
     if (File.Exists(offsetsPath))
         File.Delete(offsetsPath);
 
-    using var targetFileStream = File.Open(targetFilePath, FileMode.Open, FileAccess.ReadWrite);
-    using var root = (NativeFile)H5File.Open(targetFileStream);
+    using var root = H5File.OpenRead(targetFilePath);
+    ScanGroup(root);
 
-    AnonymizeGroup(root);
+    root.Dispose();
+
+    Console.WriteLine("Anonymizing ...");
+    var random = new Random();
+    Anonymize(offsetsPath, targetFilePath, random);
 }
 catch
 {
@@ -57,38 +78,100 @@ catch
 
 Console.WriteLine($"The anonymized file has been created at {targetFilePath}");
 
-static void AnonymizeGroup(NativeGroup group)
+static void Anonymize(string offsetsPath, string targetFilePath, Random random)
 {
-    Console.WriteLine($"Anonymize group {group.Name}");
+    var processed = new HashSet<AnonymizeInfo>();
+
+    using var offsetsReader = new StreamReader(offsetsPath);
+    using var targetWriter = new BinaryWriter(File.OpenWrite(targetFilePath));
+    string? line;
+
+    var baseAddress = long.Parse(offsetsReader
+        .ReadLine()!
+        .Split(',')[1]);
+
+    while ((line = offsetsReader.ReadLine()) != null)
+    {
+        var parts = line.Split(',');
+        var category = parts[0];
+        var offset = long.Parse(parts[1]);
+        var length = long.Parse(parts[2]);
+        var addBaseAddress = parts[3] == "True";
+        var info = new AnonymizeInfo(offset, length);
+        var isNew = processed.Add(info);
+
+        if (isNew)
+        {
+            Console.WriteLine($"Anonymize category {category} @ offset {offset} and length {length}");
+
+            var actualBaseAddress = addBaseAddress
+                ? baseAddress
+                : 0;
+
+            targetWriter.BaseStream.Seek(actualBaseAddress + offset, SeekOrigin.Begin);
+
+            if (category == "local-heap")
+            {
+                var randomString = RandomStringAsCharArray((int)length, random);
+                targetWriter.Write(randomString);
+            }
+
+            else if (category == "attribute-name")
+            {
+                var randomString = RandomStringAsCharArray((int)(length - 1), random);
+                targetWriter.Write(randomString);
+            }
+
+            else
+            {
+                using var owner = MemoryPool<byte>.Shared.Rent((int)length);
+                owner.Memory.Span.Clear();
+
+                var span = owner.Memory.Span[..(int)length];
+                targetWriter.Write(span);
+            }
+        }
+    }
+}
+
+static void ScanGroup(INativeGroup group)
+{
+    Console.WriteLine($"Scan group {group.Name}");
 
     foreach (var child in group.Children().Cast<NativeObject>())
     {
-        if (child is NativeGroup childGroup)
-            AnonymizeGroup(childGroup);
+        if (child is INativeGroup childGroup)
+            ScanGroup(childGroup);
 
-        else if (child is NativeDataset dataset)
-            AnonymizeDataset(dataset);
-
-        AnonymizeLink(child);
+        else if (child is INativeDataset dataset)
+            ScanDataset(dataset);
     }
 
-    AnonymizeAttributes(group);
+    ScanAttributes(group);
 }
 
-static void AnonymizeAttributes(IH5AttributableObject @object)
+static void ScanAttributes(IH5AttributableObject @object)
 {
-    // throw new NotImplementedException();
+    var _ = @object
+        .Attributes()
+        .ToList();
 }
 
-static void AnonymizeDataset(NativeDataset dataset)
+static void ScanDataset(INativeDataset dataset)
 {
-    Console.WriteLine($"Anonymize dataset {dataset.Name}");
+    Console.WriteLine($"Scan dataset {dataset.Name}");
     dataset.Read();
-    AnonymizeAttributes(dataset);    
+
+    ScanAttributes(dataset);    
 }
 
-static void AnonymizeLink(NativeObject @object)
+static char[] RandomStringAsCharArray(int length, Random random)
 {
-    Console.WriteLine($"Anonymize link {@object.Name}");
-    // throw new NotImplementedException();
+    const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    return Enumerable.Repeat(chars, length)
+        .Select(value => value[random.Next(value.Length)])
+        .ToArray();
 }
+
+record AnonymizeInfo(long offset, long length);

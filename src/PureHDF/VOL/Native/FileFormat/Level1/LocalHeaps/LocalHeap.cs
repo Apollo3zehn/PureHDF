@@ -3,7 +3,7 @@
 namespace PureHDF.VOL.Native;
 
 internal record struct LocalHeap(
-    H5DriverBase Driver,
+    NativeContext Context,
     ulong DataSegmentSize,
     ulong FreeListHeadOffset,
     ulong DataSegmentAddress
@@ -36,8 +36,8 @@ internal record struct LocalHeap(
         {
             if (_data is null)
             {
-                Driver.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
-                _data = Driver.ReadBytes((int)DataSegmentSize);
+                Context.Driver.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
+                _data = Context.Driver.ReadBytes((int)DataSegmentSize);
             }
 
             return _data;
@@ -68,7 +68,7 @@ internal record struct LocalHeap(
         var dataSegmentAddress = superblock.ReadOffset(driver);
 
         return new LocalHeap(
-            Driver: driver,
+            Context: context,
             DataSegmentSize: dataSegmentSize,
             FreeListHeadOffset: freeListHeadOffset,
             DataSegmentAddress: dataSegmentAddress
@@ -82,6 +82,15 @@ internal record struct LocalHeap(
     {
         var end = Array.IndexOf(Data, (byte)0, (int)offset);
         var bytes = Data[(int)offset..end];
+
+        #if ANONYMIZE
+            AnonymizeHelper.Append(
+                "local-heap", 
+                Context.Superblock.FilePath, 
+                (long)(DataSegmentAddress + offset), 
+                (long)((ulong)end - offset),
+                addBaseAddress: true);
+        #endif
 
         return Encoding.ASCII.GetString(bytes);
     }

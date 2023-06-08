@@ -53,6 +53,10 @@ internal record class AttributeMessage(
             nameEncoding = (CharacterSetEncoding)context.Driver.ReadByte();
 
         // name
+        #if ANONYMIZE
+            var position1 = (long)context.Driver.Position;
+        #endif
+
         string name;
 
         if (version == 1)
@@ -60,6 +64,15 @@ internal record class AttributeMessage(
 
         else
             name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: false, encoding: nameEncoding);
+
+        #if ANONYMIZE
+            AnonymizeHelper.Append(
+                "attribute-name", 
+                context.Superblock.FilePath, 
+                position1, 
+                System.Text.Encoding.UTF8.GetBytes(name).Length,
+                addBaseAddress: false);
+        #endif
 
         // datatype
         var flags1 = flags.HasFlag(AttributeMessageFlags.SharedDatatype)
@@ -93,6 +106,16 @@ internal record class AttributeMessage(
 
         // data
         var byteSize = Utils.CalculateSize(dataspace.DimensionSizes, dataspace.Type) * datatype.Size;
+
+        #if ANONYMIZE
+            AnonymizeHelper.Append(
+                "attribute-data", 
+                context.Superblock.FilePath, 
+                (long)context.Driver.Position, 
+                (long)byteSize,
+                addBaseAddress: false);
+        #endif
+
         var data = context.Driver.ReadBytes((int)byteSize);
 
         return new AttributeMessage(
