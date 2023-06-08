@@ -90,6 +90,8 @@ static void Anonymize(string offsetsPath, string targetFilePath, Random random)
         .ReadLine()!
         .Split(',')[1]);
 
+    var counter = 0;
+
     while ((line = offsetsReader.ReadLine()) != null)
     {
         var parts = line.Split(',');
@@ -113,7 +115,11 @@ static void Anonymize(string offsetsPath, string targetFilePath, Random random)
             if (category == "local-heap")
             {
                 var randomString = RandomStringAsCharArray((int)length, random);
-                targetWriter.Write(randomString);
+
+                // randomString breaks HDF View ... why?
+                targetWriter.Write(65 + counter % (122 - 65));
+
+                counter++;
             }
 
             else if (category == "attribute-name")
