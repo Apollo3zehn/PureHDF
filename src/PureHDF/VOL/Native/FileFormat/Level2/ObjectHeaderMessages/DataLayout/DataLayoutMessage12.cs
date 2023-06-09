@@ -59,9 +59,6 @@ internal record class DataLayoutMessage12(
         // dataset element size
         var datasetElementSize = default(uint);
 
-        if (layoutClass == LayoutClass.Chunked)
-            datasetElementSize = driver.ReadUInt32();
-
         // compact data size
         byte[] compactData;
 
