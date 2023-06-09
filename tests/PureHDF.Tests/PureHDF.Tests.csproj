@@ -8,6 +8,10 @@
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <DefineConstants>CI</DefineConstants>
+  </PropertyGroup>
  
   <ItemGroup>
     <PackageReference Include="HDF.PInvoke.1.10" Version="1.10.612" />

@@ -206,7 +206,7 @@ The following code samples work for datasets as well as attributes.
 
 // class: reference
 
-    var data = dataset.Read<H5ObjectReference>();
+    var data = dataset.Read<H5ObjectReference1>();
     var firstRef = data.First();
 
     /* NOTE: Dereferencing would be quite fast if the object's name
@@ -595,7 +595,7 @@ var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(conve
 
 ## 6.3 Unknown structs
 
-You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `H5ObjectReference`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
+You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `H5ObjectReference1`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
 
 The type mapping is as follows:
 
@@ -614,8 +614,8 @@ The type mapping is as follows:
 | string                         | `string`                     |
 | bitfield                       | `byte[]`                     |
 | opaque                         | `byte[]`                     |
-| compound                       | `Dictionary<string, object?>` |
-| reference                      | `H5ObjectReference`          |
+| compound                       | `Dictionary<string, object?>`|
+| reference                      | `H5ObjectReference1`         |
 | enumerated                     | `<base type>`                |
 | variable length, type = string | `string`                     |
 | array                          | `<base type>[]`              |

@@ -1,3 +1,5 @@
+#if CI
+
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -75,3 +77,5 @@ public class AmazonS3TestsAsync
         Assert.True(expected.SequenceEqual(actual));
     }
 }
+
+#endif
