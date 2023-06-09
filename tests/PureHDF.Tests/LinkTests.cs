@@ -1,4 +1,5 @@
 using HDF.PInvoke;
+using PureHDF.VFD;
 using Xunit;
 
 namespace PureHDF.Tests.Reading
@@ -99,11 +100,48 @@ namespace PureHDF.Tests.Reading
             });
         }
 
+        [Fact]
+        public void CanOpenDataset_DataLayoutMessage12()
+        {
+            /* We use a simple binary file which encodes a data layout message because 
+             * it is VERY hard to generate a real h5 file with data layout 1 or 2 as 
+             * the C lib itself does not support it anymore 
+             */
+
+            // Arrange
+            var filePath = "TestFiles/data_layout_message_12.bin";
+            using var fileStream = File.OpenRead(filePath);
+            using var driver = new H5StreamDriver(fileStream, leaveOpen: false);
+
+            var superblock = new Superblock01(
+                default!, default, default, default, default, default, default, 
+                default, default, default, default, default, default)
+            {
+                OffsetsSize = 8,
+                LengthsSize  = 8
+            };
+
+            var context = new NativeContext(driver, superblock);
+
+            // Act
+            var layout = DataLayoutMessage12.Decode(context, version: 1);
+
+            // Assert
+            Assert.Equal(2, layout.Rank);
+            Assert.Equal(LayoutClass.Chunked, layout.LayoutClass);
+            Assert.Equal(0x3030UL, layout.Address);
+            Assert.Empty(layout.CompactData);
+
+            Assert.Collection(layout.DimensionSizes,
+                element => Assert.Equal(256u, element),
+                element => Assert.Equal(8u, element));
+        }
+
         [Theory]
         [InlineData("/D", "D")]
         [InlineData("/simple/D1", "D1")]
         [InlineData("/simple/sub/D1.1", "D1.1")]
-        public void CanOpenDataset(string path, string expected)
+        public void CanOpenDataset_DataLayoutMessage3(string path, string expected)
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -112,10 +150,10 @@ namespace PureHDF.Tests.Reading
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
-                var group = root.Dataset(path);
+                var dataset = root.Dataset(path);
 
                 // Assert
-                Assert.Equal(expected, group.Name);
+                Assert.Equal(expected, dataset.Name);
             });
         }
 

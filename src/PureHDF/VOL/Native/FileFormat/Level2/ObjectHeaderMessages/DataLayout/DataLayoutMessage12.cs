@@ -5,7 +5,6 @@ internal record class DataLayoutMessage12(
     ulong Address,
     byte Rank,
     uint[] DimensionSizes,
-    uint DatasetElementSize,
     byte[] CompactData
 ) : DataLayoutMessage(LayoutClass, Address)
 {
@@ -28,6 +27,8 @@ internal record class DataLayoutMessage12(
 
     public static DataLayoutMessage12 Decode(NativeContext context, byte version)
     {
+        /* H5Olayout.c (H5O__layout_decode) */
+
         var (driver, superblock) = context;
 
         // rank
@@ -48,19 +49,13 @@ internal record class DataLayoutMessage12(
             _ => throw new NotSupportedException($"The layout class '{layoutClass}' is not supported.")
         };
 
-        // dimension sizes
+        // dimension sizes (incl. dataset element size if chunked storage)
         var dimensionSizes = new uint[rank];
 
         for (int i = 0; i < rank; i++)
         {
             dimensionSizes[i] = driver.ReadUInt32();
         }
-
-        // dataset element size
-        var datasetElementSize = default(uint);
-
-        if (layoutClass == LayoutClass.Chunked)
-            datasetElementSize = driver.ReadUInt32();
 
         // compact data size
         byte[] compactData;
@@ -81,7 +76,6 @@ internal record class DataLayoutMessage12(
             Address: address,
             Rank: rank,
             DimensionSizes: dimensionSizes,
-            DatasetElementSize: datasetElementSize,
             CompactData: compactData
         )
         {
