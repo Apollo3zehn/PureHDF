@@ -42,10 +42,10 @@ try
     if (File.Exists(offsetsPath))
         File.Delete(offsetsPath);
 
-    using var root = H5File.OpenRead(targetFilePath);
-    ScanGroup(root);
-
-    root.Dispose();
+    using (var root = H5File.OpenRead(targetFilePath))
+    {
+        ScanGroup(root);
+    }
 
     Console.WriteLine("Anonymizing ...");
     var random = new Random();
@@ -90,8 +90,6 @@ static void Anonymize(string offsetsPath, string targetFilePath, Random random)
         .ReadLine()!
         .Split(',')[1]);
 
-    var counter = 0;
-
     while ((line = offsetsReader.ReadLine()) != null)
     {
         var parts = line.Split(',');
@@ -112,14 +110,15 @@ static void Anonymize(string offsetsPath, string targetFilePath, Random random)
 
             targetWriter.BaseStream.Seek(actualBaseAddress + offset, SeekOrigin.Begin);
 
+            /* Renaming links and attributes causes hashes to become invalid.
+             * This might be a problem when links/attributes are accessed directly,
+             * instead of enumerating them. Maybe this explains why HDF View sometimes
+             * fails to recognize the object types after running the anonymizer.
+             */
             if (category == "local-heap")
             {
                 var randomString = RandomStringAsCharArray((int)length, random);
-
-                // randomString breaks HDF View ... why?
-                targetWriter.Write(65 + counter % (122 - 65));
-
-                counter++;
+                targetWriter.Write(randomString);
             }
 
             else if (category == "attribute-name")
