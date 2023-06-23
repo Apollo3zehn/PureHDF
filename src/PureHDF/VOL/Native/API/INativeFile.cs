@@ -20,5 +20,5 @@ public interface INativeFile : INativeGroup, IDisposable
     /// </summary>
     /// <param name="reference">The reference of the region.</param>
     /// <returns>The requested selection.</returns>
-    Selection Get(NativeRegionReference reference);
+    Selection Get(NativeRegionReference1 reference);
 }

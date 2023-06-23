@@ -143,7 +143,9 @@ public class RegularHyperslabSelection : Selection
         var lastDimBlock = blocks[lastDim];
         var lastDimGap = gaps[lastDim];
         var supportsBulkCopy = lastDimGap == 0;
-        var step = new Step() { Coordinates = offsets.ToArray() };
+
+        /* prepare the step */
+        var step = new Step() { Coordinates = new ulong[Rank] };
 
         /* loop until all data have been processed */
         while (true)
@@ -158,11 +160,10 @@ public class RegularHyperslabSelection : Selection
                 totalLength = lastDimBlock;
 
             /* return next step */
-            for (int i = 0; i < offsets.Length; i++)
-            {
-                step.Coordinates[i] = offsets[i];
-            }
-
+            offsets
+                .AsSpan()
+                .CopyTo(step.Coordinates);
+                
             step.ElementCount = totalLength;
 
             yield return step;

@@ -43,9 +43,24 @@ public interface INativeGroup : IH5Group
     /// Gets the object that is at the given <paramref name="reference"/>.
     /// </summary>
     /// <param name="reference">The reference of the object.</param>
+    /// <returns>The requested object.</returns>
+    IH5Object Get(NativeObjectReference1 reference);
+
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the object.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The requested object.</returns>
+    Task<IH5Object> GetAsync(NativeObjectReference1 reference, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the object.</param>
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
-    IH5Object Get(NativeObjectReference reference, H5LinkAccess linkAccess);
+    IH5Object Get(NativeObjectReference1 reference, H5LinkAccess linkAccess);
 
     /// <summary>
     /// Gets the object that is at the given <paramref name="reference"/>.
@@ -54,7 +69,7 @@ public interface INativeGroup : IH5Group
     /// <param name="linkAccess">The link access properties.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested object.</returns>
-    Task<IH5Object> GetAsync(NativeObjectReference reference, H5LinkAccess linkAccess, CancellationToken cancellationToken = default);
+    Task<IH5Object> GetAsync(NativeObjectReference1 reference, H5LinkAccess linkAccess, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets an enumerable of the available children using the optionally specified <paramref name="linkAccess"/>.

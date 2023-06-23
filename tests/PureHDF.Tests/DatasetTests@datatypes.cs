@@ -284,7 +284,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var dataset_references = root.Group("reference").Dataset("object");
-                var references = dataset_references.Read<NativeObjectReference>();
+                var references = dataset_references.Read<NativeObjectReference1>();
 
                 var dereferenced = references
                     .Select(reference => root.Get(reference))
@@ -303,6 +303,8 @@ namespace PureHDF.Tests.Reading
 
                     Assert.True(result);
                 }
+
+                Assert.Throws<Exception>(() => root.Get(default(NativeObjectReference1)));
             });
         }
 
@@ -311,9 +313,7 @@ namespace PureHDF.Tests.Reading
         {
             TestUtils.RunForAllVersions(version =>
             {
-                /* it seems to be impossible to create a regular hyperslab - however, it should work even without this test */
-
-#warning what to do with null references? same question applies to object reference
+                /* it seems to be impossible to create a regular hyperslab but it should work even without this test */
 
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
@@ -322,9 +322,9 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var dataset_referenced = root.Group("reference").Dataset("referenced");
                 var dataset_region = root.Group("reference").Dataset("region");
-                var references = dataset_region.Read<NativeRegionReference>();
+                var references = dataset_region.Read<NativeRegionReference1>();
 
-                static int[] Read(INativeFile root, IH5Dataset referenced, NativeRegionReference reference)
+                static int[] Read(INativeFile root, IH5Dataset referenced, NativeRegionReference1 reference)
                 {
                     var selection = root.Get(reference);
                     var actual = referenced.Read<int>(fileSelection: selection);
@@ -349,6 +349,8 @@ namespace PureHDF.Tests.Reading
                 // Assert.True(expected_regular_hyperslab.SequenceEqual(actual_regular_hyperslab));
                 Assert.True(expected_irregular_hyperslab.SequenceEqual(actual_irregular_hyperslab));
                 Assert.True(expected_all.SequenceEqual(actual_all));
+
+                Assert.Throws<Exception>(() => root.Get(default(NativeRegionReference1)));
             });
         }
 

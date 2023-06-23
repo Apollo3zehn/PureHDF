@@ -51,7 +51,7 @@ public static class INativeGroupExtensions
     /// <returns>The requested object.</returns>
     public static T Get<T>(
         this INativeGroup group, 
-        NativeObjectReference reference, 
+        NativeObjectReference1 reference, 
         H5LinkAccess linkAccess)
         where T : IH5Object
     {
@@ -69,13 +69,47 @@ public static class INativeGroupExtensions
     /// <returns>The requested object.</returns>
     public static async Task<T> GetAsync<T>(
         this INativeGroup group, 
-        NativeObjectReference reference, 
+        NativeObjectReference1 reference, 
         H5LinkAccess linkAccess, 
         CancellationToken cancellationToken = default)
         where T : IH5Object
     {
         return (T)await group
             .GetAsync(reference, linkAccess, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <typeparam name="T">The return type of the object.</typeparam>
+    /// <param name="group">The group to operate on.</param>
+    /// <param name="reference">The reference of the object.</param>
+    /// <returns>The requested object.</returns>
+    public static T Get<T>(
+        this INativeGroup group, 
+        NativeObjectReference1 reference)
+        where T : IH5Object
+    {
+        return (T)group.Get(reference);
+    }
+
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <typeparam name="T">The return type of the object.</typeparam>
+    /// <param name="group">The group to operate on.</param>
+    /// <param name="reference">The reference of the object.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The requested object.</returns>
+    public static async Task<T> GetAsync<T>(
+        this INativeGroup group,
+        NativeObjectReference1 reference, 
+        CancellationToken cancellationToken = default)
+        where T : IH5Object
+    {
+        return (T)await group
+            .GetAsync(reference, cancellationToken)
             .ConfigureAwait(false);
     }
 

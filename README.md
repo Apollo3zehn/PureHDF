@@ -204,10 +204,10 @@ The following code samples work for datasets as well as attributes.
     /* option 2 (slower, for more info see the link below after this code block) */
     var data = dataset.ReadCompound<MyNullableStruct>();
 
-// class: reference
+// class: reference @ object reference
 
-    var data = dataset.Read<NativeObjectReference1>();
-    var firstRef = data.First();
+    var references = dataset.Read<NativeObjectReference1>();
+    var firstRef = references.First();
 
     /* NOTE: Dereferencing would be quite fast if the object's name
      * was known. Instead, the library searches recursively for the  
@@ -220,6 +220,13 @@ The following code samples work for datasets as well as attributes.
 
     /* option 1 (slower, use if you don't know the objects parent) */
     var firstObject = root.Get(firstRef);
+
+// class: reference @ region reference
+
+    var references = dataset.Read<NativeRegionReference1>();
+    var firstRef = references.First();
+    var selection = root.Get(firstRef);
+    var data = referencedDataset.Read(fileSelection: selection);
 
 // class: enumerated
 

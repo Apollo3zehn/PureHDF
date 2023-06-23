@@ -160,8 +160,11 @@ internal class NativeFile : NativeGroup, INativeFile
         return expected.SequenceEqual(actual);
     }
 
-    public Selection Get(NativeRegionReference reference)
+    public Selection Get(NativeRegionReference1 reference)
     {
+        if (reference.Equals(default))
+            throw new Exception("The reference is invalid");
+
         Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
 
         var globalHeapId = new GlobalHeapId(
@@ -182,7 +185,7 @@ internal class NativeFile : NativeGroup, INativeFile
             H5S_SEL_HYPER hyper => hyper.SelectionInfo switch
             {
                 RegularHyperslabSelectionInfo regular => new RegularHyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
-                IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection(irregular),
+                IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection((int)irregular.Rank, irregular.BlockOffsets),
                 _ => throw new NotSupportedException($"The hyperslab selection type '{hyper.SelectionInfo.GetType().FullName}' is not supported.")
             },
             H5S_SEL_ALL all => new AllSelection(),

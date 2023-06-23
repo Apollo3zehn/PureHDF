@@ -154,9 +154,9 @@ namespace PureHDF.Tests
             Add(container, fileId, "reference", "referenced", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), dims);
 
             var length = 5;
-            var data = new NativeRegionReference[length];
+            var data = new NativeRegionReference1[length];
 
-            fixed (NativeRegionReference* ptr = data)
+            fixed (NativeRegionReference1* ptr = data)
             {
                 var referenceGroupId = H5G.open(fileId, "reference");
                 var referencedDatasetId = H5D.open(referenceGroupId, "referenced");

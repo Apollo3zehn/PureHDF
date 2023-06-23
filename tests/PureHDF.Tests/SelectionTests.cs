@@ -183,7 +183,7 @@ namespace PureHDF.Tests.Reading
          * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|/
          *                    14
          */
-        public void CanWalk_Hyperslab()
+        public void CanWalk_RegularHyperslab()
         {
             // Arrange
             var dims = new ulong[] { 14, 14, 14 };
@@ -398,7 +398,7 @@ namespace PureHDF.Tests.Reading
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 })]
-        public void HyperslabSelectionThrowsForInvalidRank(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
+        public void RegularHyperslabSelectionThrowsForInvalidRank(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
         {
             // Arrange
 
@@ -412,7 +412,7 @@ namespace PureHDF.Tests.Reading
         [Theory]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 0 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 2 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
-        public void HyperslabSelectionThrowsForInvalidStride(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
+        public void RegularHyperslabSelectionThrowsForInvalidStride(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
         {
             // Arrange
 
@@ -424,7 +424,7 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void HyperslabWalkThrowsForInvalidLimitsRank()
+        public void RegularHyperslabWalkThrowsForInvalidLimitsRank()
         {
             // Arrange
             var selection = new RegularHyperslabSelection(
@@ -444,7 +444,7 @@ namespace PureHDF.Tests.Reading
         [Theory]
         [InlineData(new ulong[] { 14, 40 })]
         [InlineData(new ulong[] { 15, 39 })]
-        public void HyperslabWalkThrowsForExceedingLimits(ulong[] limits)
+        public void RegularHyperslabWalkThrowsForExceedingLimits(ulong[] limits)
         {
             // Arrange
             var selection = new RegularHyperslabSelection(
@@ -459,6 +459,79 @@ namespace PureHDF.Tests.Reading
 
             // Assert
             Assert.Throws<ArgumentException>(action);
+        }
+
+        [Fact]
+        /*    /                                         /
+         *   /  Dataset dimensions:  [14, 14, 14]      / 14
+         *  /     Chunk dimensions:  [3, 3, 3]        /
+         * /_  _  _  _  _  _  _  _  _  _  _  _  _  _ /
+         * |x  x/ /| /      |        |        |     |
+         * |x  x   |        |        |        |     |
+         * |x  x  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     |
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     | 14
+         * |       |        |        |        |     |
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|
+         * |       |        |        |        |     |
+         * |       |        |        |        |     |   /
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|  /
+         * |       |        |        |        |     | /
+         * |_  _  _| _  _  _| _  _  _| _  _  _| _  _|/
+         *                    14
+         */
+        public void CanWalk_IrregularHyperslab()
+        {
+            // Arrange
+            var dims = new ulong[] { 14, 14, 14 };
+            var chunkDims = new ulong[] { 3, 3, 3 };
+
+            var selection = new IrregularHyperslabSelection(
+                rank: 3,
+                blockOffsets: new ulong[]
+                {
+                 /* starts..|...ends */
+                    0, 0, 0, 0, 0, 2, // block 1
+                    0, 1, 0, 0, 1, 4, // block 2
+                    0, 2, 1, 0, 3, 4, // block 3
+                    1, 0, 0, 2, 1, 2  // block 4
+                }
+            );
+
+            var expected = new RelativeStep[]
+            {
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 0, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 3, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 1}, Offset = 3, Length = 2 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 7, Length = 2 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 1}, Offset = 6, Length = 2 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 0}, Offset = 1, Length = 2 },
+                new RelativeStep() { Chunk = new ulong[] {0, 1, 1}, Offset = 0, Length = 2 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 9, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 12, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 18, Length = 3 },
+                new RelativeStep() { Chunk = new ulong[] {0, 0, 0}, Offset = 21, Length = 3 }
+            };
+
+            // Act
+            var actual = SelectionUtils
+                .Walk(rank: 3, dims, chunkDims, selection)
+                .ToArray();
+
+            // Assert
+            for (int i = 0; i < actual.Length; i++)
+            {
+                var actual_current = actual[i];
+                var expected_current = expected[i];
+
+                Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
+                Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
+                Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
+                Assert.Equal(actual_current.Offset, expected_current.Offset);
+                Assert.Equal(actual_current.Length, expected_current.Length);
+            }
         }
 
         [Theory]
