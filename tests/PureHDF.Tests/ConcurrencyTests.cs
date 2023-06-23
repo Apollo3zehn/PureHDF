@@ -32,7 +32,7 @@ namespace PureHDF.Tests.Reading
 
             for (int i = 0; i < 10; i++)
             {
-                var fileSelection = new HyperslabSelection(
+                var fileSelection = new RegularHyperslabSelection(
                     start: (uint)i * CHUNK_SIZE,
                     block: CHUNK_SIZE
                 );
@@ -77,7 +77,7 @@ namespace PureHDF.Tests.Reading
 
             Parallel.For(0, 10, i =>
             {
-                var fileSelection = new HyperslabSelection(
+                var fileSelection = new RegularHyperslabSelection(
                     start: (uint)i * CHUNK_SIZE,
                     block: CHUNK_SIZE
                 );
@@ -109,7 +109,7 @@ namespace PureHDF.Tests.Reading
 
             Parallel.For(0, 10, i =>
             {
-                var fileSelection = new HyperslabSelection(
+                var fileSelection = new RegularHyperslabSelection(
                     start: (uint)i * CHUNK_SIZE,
                     block: CHUNK_SIZE
                 );

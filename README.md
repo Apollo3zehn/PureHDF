@@ -206,7 +206,7 @@ The following code samples work for datasets as well as attributes.
 
 // class: reference
 
-    var data = dataset.Read<H5ObjectReference1>();
+    var data = dataset.Read<NativeObjectReference1>();
     var firstRef = data.First();
 
     /* NOTE: Dereferencing would be quite fast if the object's name
@@ -260,7 +260,7 @@ PureHDF supports three types of selections. These are:
 
 | Type                 | Description                                                                                                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HyperslabSelection` | A hyperslab is a selection of elements from a hyper rectangle.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.1 Hyperslab Selection |
+| `RegularHyperslabSelection` | A hyperslab is a selection of elements from a hyper rectangle.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.1 Hyperslab Selection |
 | `PointSelection`     | Selects a collection of points.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.2 Select Points                                      |
 | `DelegateSelection`  | This selection accepts a custom walker which selects the user defined points or blocks.                                                                                          |
 
@@ -304,7 +304,7 @@ A hyperslab selection can be used to select a contiguous block of elements or to
 The simplest example is a selection for a 1-dimensional dataset at a certain offset (`start: 10`) and a certain length (`block: 50`):
 
 ```cs
-var fileSelection = new HyperslabSelection(start: 10, block: 50);
+var fileSelection = new RegularHyperslabSelection(start: 10, block: 50);
 ```
 
 The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
@@ -313,7 +313,7 @@ The following - more advanced - example shows selecions for a three-dimensional 
 var dataset = root.Dataset("myDataset");
 var memoryDims = new ulong[] { 75, 25 };
 
-var datasetSelection = new HyperslabSelection(
+var datasetSelection = new RegularHyperslabSelection(
     rank: 3,
     starts: new ulong[] { 2, 2, 0 },
     strides: new ulong[] { 5, 8, 2 },
@@ -321,7 +321,7 @@ var datasetSelection = new HyperslabSelection(
     blocks: new ulong[] { 3, 5, 2 }
 );
 
-var memorySelection = new HyperslabSelection(
+var memorySelection = new RegularHyperslabSelection(
     rank: 2,
     starts: new ulong[] { 2, 1 },
     strides: new ulong[] { 35, 17 },
@@ -595,30 +595,30 @@ var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(conve
 
 ## 6.3 Unknown structs
 
-You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `H5ObjectReference1`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
+You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `NativeObjectReference1`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
 
 The type mapping is as follows:
 
-| H5 type                        | .NET type                    |
-|--------------------------------|------------------------------|
-| fixed point, 1 byte,  unsigned | `byte`                       |
-| fixed point, 1 byte,    signed | `sbyte`                      |
-| fixed point, 2 bytes, unsigned | `ushort`                     |
-| fixed point, 2 bytes,   signed | `short`                      |
-| fixed point, 4 bytes, unsigned | `uint`                       |
-| fixed point, 4 bytes,   signed | `int`                        |
-| fixed point, 8 bytes, unsigned | `ulong`                      |
-| fixed point, 8 bytes,   signed | `long`                       |
-| floating point, 4 bytes        | `float `                     |
-| floating point, 8 bytes,       | `double`                     |
-| string                         | `string`                     |
-| bitfield                       | `byte[]`                     |
-| opaque                         | `byte[]`                     |
-| compound                       | `Dictionary<string, object?>`|
-| reference                      | `H5ObjectReference1`         |
-| enumerated                     | `<base type>`                |
-| variable length, type = string | `string`                     |
-| array                          | `<base type>[]`              |
+| H5 type                        | .NET type                     |
+| ------------------------------ | ----------------------------- |
+| fixed point, 1 byte,  unsigned | `byte`                        |
+| fixed point, 1 byte,    signed | `sbyte`                       |
+| fixed point, 2 bytes, unsigned | `ushort`                      |
+| fixed point, 2 bytes,   signed | `short`                       |
+| fixed point, 4 bytes, unsigned | `uint`                        |
+| fixed point, 4 bytes,   signed | `int`                         |
+| fixed point, 8 bytes, unsigned | `ulong`                       |
+| fixed point, 8 bytes,   signed | `long`                        |
+| floating point, 4 bytes        | `float `                      |
+| floating point, 8 bytes,       | `double`                      |
+| string                         | `string`                      |
+| bitfield                       | `byte[]`                      |
+| opaque                         | `byte[]`                      |
+| compound                       | `Dictionary<string, object?>` |
+| reference                      | `NativeObjectReference1`      |
+| enumerated                     | `<base type>`                 |
+| variable length, type = string | `string`                      |
+| array                          | `<base type>[]`               |
 
 Not supported data types like `time` and `variable length type = sequence` will be represented as `null`.
 
@@ -685,7 +685,7 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 {
     var start = i * SEGMENT_SIZE;
     var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
-    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+    var fileSelection = new RegularHyperslabSelection(start, block: SEGMENT_SIZE)
 
     dataset.Read<float>(partialBuffer, fileSelection);
 });
@@ -710,7 +710,7 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 {
     var start = i * SEGMENT_SIZE;
     var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
-    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+    var fileSelection = new RegularHyperslabSelection(start, block: SEGMENT_SIZE)
 
     dataset.Read<float>(partialBuffer, fileSelection);
 });
@@ -777,7 +777,7 @@ async Task LoadAndProcessDataAsynchronously()
 {
     var processedData1Task = Task.Run(async () => 
     {
-        var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
+        var fileSelection1 = new RegularHyperslabSelection(start: 0, block: 50);
         var data1 = await dataset1.ReadAsync<int>(fileSelection1);
 
         ProcessData(data1);
@@ -785,7 +785,7 @@ async Task LoadAndProcessDataAsynchronously()
 
     var processedData2Task = Task.Run(async () => 
     {
-        var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
+        var fileSelection2 = new RegularHyperslabSelection(start: 50, block: 50);
         var data2 = await dataset2.ReadAsync<int>(fileSelection2);
 
         ProcessData(data2);
@@ -925,6 +925,7 @@ The following features are **not** (yet) supported:
 
 - Virtual datasets with **unlimited dimensions**
 - Filters: `N-bit`, `SZIP`
+- References: `Attribute reference`, `object reference 2`, `dataset region reference 2` (I was unable to produce sample files using `h5py` or `HDF.PInvoke1.10` - the feature seems to be too new)
 
 # 13 Comparison Table
 

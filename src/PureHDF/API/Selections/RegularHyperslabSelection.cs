@@ -1,9 +1,9 @@
 namespace PureHDF;
 
 /// <summary>
-/// A hyperslab is a selection of elements from a hyper rectangle.
+/// A regular hyperslab is a selection of elements from a hyper rectangle.
 /// </summary>
-public class HyperslabSelection : Selection
+public class RegularHyperslabSelection : Selection
 {
     internal ulong[] StartsField;
     internal ulong[] StridesField;
@@ -11,36 +11,36 @@ public class HyperslabSelection : Selection
     internal ulong[] BlocksField;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank 1. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+    /// Initializes a new instance of the <see cref="RegularHyperslabSelection"/> instance of rank 1. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
     /// </summary>
     /// <param name="start">The start coordinate of the block.</param>
     /// <param name="block">The block size.</param>
-    public HyperslabSelection(ulong start, ulong block)
+    public RegularHyperslabSelection(ulong start, ulong block)
         : this(rank: 1, new ulong[] { start }, new ulong[] { block })
     {
         //
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank 1. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+    /// Initializes a new instance of the <see cref="RegularHyperslabSelection"/> instance of rank 1. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
     /// </summary>
     /// <param name="start">The start coordinate of the block.</param>
     /// <param name="stride">The number of elements to separate each block to be selected.</param>
     /// <param name="count">The number of blocks to select.</param>
     /// <param name="block">The block size.</param>
-    public HyperslabSelection(ulong start, ulong stride, ulong count, ulong block)
+    public RegularHyperslabSelection(ulong start, ulong stride, ulong count, ulong block)
         : this(rank: 1, new ulong[] { start }, new ulong[] { stride }, new ulong[] { count }, new ulong[] { block })
     {
         //
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+    /// Initializes a new instance of the <see cref="RegularHyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
     /// </summary>
     /// <param name="rank">The rank of the selection.</param>
     /// <param name="starts">The start coordinate of the block along each dimension.</param>
     /// <param name="blocks">The block size along each dimension.</param>
-    public HyperslabSelection(int rank, ulong[] starts, ulong[] blocks)
+    public RegularHyperslabSelection(int rank, ulong[] starts, ulong[] blocks)
         : this(
             rank,
             starts,
@@ -52,14 +52,14 @@ public class HyperslabSelection : Selection
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="HyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
+    /// Initializes a new instance of the <see cref="RegularHyperslabSelection"/> instance of rank <paramref name="rank"/>. Reference: <seealso href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_s.html#ga6adfdf1b95dc108a65bf66e97d38536d">hdfgroup.org</seealso>.
     /// </summary>
     /// <param name="rank">The rank of the selection.</param>
     /// <param name="starts">The start coordinate of the block along each dimension.</param>
     /// <param name="strides">The number of elements to separate each block to be selected along each dimension.</param>
     /// <param name="counts">The number of blocks to select along each dimension.</param>
     /// <param name="blocks">The block size along each dimension.</param>
-    public HyperslabSelection(int rank, ulong[] starts, ulong[] strides, ulong[] counts, ulong[] blocks)
+    public RegularHyperslabSelection(int rank, ulong[] starts, ulong[] strides, ulong[] counts, ulong[] blocks)
     {
         if (starts.Length != rank || strides.Length != rank || counts.Length != rank || blocks.Length != rank)
             throw new RankException($"The start, stride, count, and block arrays must be the same size as the rank '{rank}'.");

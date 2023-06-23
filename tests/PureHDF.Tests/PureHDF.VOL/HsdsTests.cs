@@ -131,7 +131,7 @@ public class HsdsTests : IClassFixture<HsdsTestsFixture>
         // Arrange
         var expected = new int[] { 6, 10, 14, 15, 25, 35 };
 
-        var fileSelection = new HyperslabSelection(
+        var fileSelection = new RegularHyperslabSelection(
             rank: 2,
             starts: new ulong[] { 2, 3 },
             strides: new ulong[] { 3, 2 },

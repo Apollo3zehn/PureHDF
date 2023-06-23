@@ -1,6 +1,6 @@
-using HDF.PInvoke;
 using System.Runtime.InteropServices;
 using System.Text;
+using HDF.PInvoke;
 
 namespace PureHDF.Tests
 {
@@ -140,7 +140,7 @@ namespace PureHDF.Tests
                     res = H5R.create(new IntPtr(ptr + i), referenceGroupId, $"D{i + 1}", H5R.type_t.OBJECT, -1);
                 }
 
-                Add(container, fileId, "reference", "object_reference", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
+                Add(container, fileId, "reference", "object", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
 
                 res = H5G.close(referenceGroupId);
             }
@@ -150,22 +150,51 @@ namespace PureHDF.Tests
         {
             long res;
 
-            AddSmall(fileId, ContainerType.Dataset);
+            var dims = new ulong[] { 3, 4, 5 };
+            Add(container, fileId, "reference", "referenced", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), dims);
 
-            var length = 1UL;
-            var data = new ulong[length];
+            var length = 5;
+            var data = new NativeRegionReference[length];
 
-            fixed (ulong* ptr = data)
+            fixed (NativeRegionReference* ptr = data)
             {
-                var referenceGroupId = H5G.open(fileId, "small");
-                var spaceId = H5S.create_simple(1, new ulong[] { length }, null);
-                var coordinates = new ulong[] { 2, 4, 6, 8 };
-                res = H5S.select_elements(spaceId, H5S.seloper_t.SET, new IntPtr(4), coordinates);
-                res = H5R.create(new IntPtr(ptr), referenceGroupId, "small", H5R.type_t.DATASET_REGION, spaceId);
+                var referenceGroupId = H5G.open(fileId, "reference");
+                var referencedDatasetId = H5D.open(referenceGroupId, "referenced");
+                var referencedSpaceId = H5D.get_space(referencedDatasetId);
 
-                Add(container, fileId, "reference", "region_reference", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), length);
+                // none selection
+                res = H5S.select_none(referencedSpaceId);
+                res = H5R.create(new IntPtr(ptr + 0), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
 
-                res = H5S.close(spaceId);
+                // point selection
+                var coordinates = new ulong[]
+                {
+                    0, 0, 2, // 2
+                    1, 1, 2, // 27
+                    2, 3, 4, // 59
+                    2, 2, 0, // 50
+                };
+
+                res = H5S.select_elements(referencedSpaceId, H5S.seloper_t.SET, new IntPtr(4), coordinates);
+                res = H5R.create(new IntPtr(ptr + 1), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                // regular hyperslab selection (this does not really work - an irregular hyperslab is being created)
+                res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: new ulong[] { 0, 0, 0 }, stride: new ulong[] { 1, 1, 3 }, count: new ulong[] { 1, 1, 2 }, block: new ulong[] { 1, 1, 2 }); // 0, 1, 3, 4
+                res = H5R.create(new IntPtr(ptr + 2), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                // irregular hyperslab selection
+                res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: new ulong[] { 0, 0, 0 }, stride: new ulong[] { 1, 1, 3 }, count: new ulong[] { 1, 1, 2 }, block: new ulong[] { 1, 1, 2 }); // 0, 1, 3, 4
+                res = H5R.create(new IntPtr(ptr + 3), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                // all selection
+                res = H5S.select_all(referencedSpaceId);
+                res = H5R.create(new IntPtr(ptr + 4), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                //
+                Add(container, fileId, "reference", "region", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), (ulong)length);
+
+                res = H5D.close(referencedDatasetId);
+                res = H5S.close(referencedSpaceId);
                 res = H5G.close(referenceGroupId);
             }
         }

@@ -8,6 +8,7 @@ internal class NativeFile : NativeGroup, INativeFile
     #region Fields
 
     private readonly bool _deleteOnClose;
+    
     private Func<IChunkCache>? _chunkCacheFactory;
 
     #endregion
@@ -159,6 +160,38 @@ internal class NativeFile : NativeGroup, INativeFile
         return expected.SequenceEqual(actual);
     }
 
+    public Selection Get(NativeRegionReference reference)
+    {
+        Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+
+        var globalHeapId = new GlobalHeapId(
+            CollectionAddress: reference.CollectionAddress,
+            ObjectIndex: reference.ObjectIndex);
+
+        var globalHeapCollection = NativeCache.GetGlobalHeapObject(Context, globalHeapId.CollectionAddress);
+        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
+
+        using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
+        var address = Context.Superblock.ReadOffset(localDriver);
+        var dataspaceSelection = DataspaceSelection.Decode(localDriver);
+
+        Selection selection = dataspaceSelection.Info switch
+        {
+            H5S_SEL_NONE none => new NoneSelection(),
+            H5S_SEL_POINTS points => new PointSelection(points.PointData),
+            H5S_SEL_HYPER hyper => hyper.SelectionInfo switch
+            {
+                RegularHyperslabSelectionInfo regular => new RegularHyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
+                IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection(irregular),
+                _ => throw new NotSupportedException($"The hyperslab selection type '{hyper.SelectionInfo.GetType().FullName}' is not supported.")
+            },
+            H5S_SEL_ALL all => new AllSelection(),
+            _ => throw new NotSupportedException($"The dataspace selection type '{dataspaceSelection.Info.GetType().FullName}' is not supported.")
+        };
+
+        return selection;
+    }
+
 #endregion
 
 #region IDisposable
@@ -197,6 +230,6 @@ internal class NativeFile : NativeGroup, INativeFile
         GC.SuppressFinalize(this);
     }
 
-#endregion
+    #endregion
 
 }

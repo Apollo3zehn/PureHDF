@@ -40,7 +40,7 @@ public interface IH5Group : IH5AttributableObject
     /// </summary>
     /// <param name="reference">The reference of the object.</param>
     /// <returns>The requested object.</returns>
-    IH5Object Get(H5ObjectReference reference);
+    IH5Object Get(NativeObjectReference reference);
 
     /// <summary>
     /// Gets the object that is at the given <paramref name="reference"/>.
@@ -48,7 +48,7 @@ public interface IH5Group : IH5AttributableObject
     /// <param name="reference">The reference of the object.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested object.</returns>
-    Task<IH5Object> GetAsync(H5ObjectReference reference, CancellationToken cancellationToken = default);
+    Task<IH5Object> GetAsync(NativeObjectReference reference, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets an enumerable of the available children.

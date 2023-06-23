@@ -263,6 +263,16 @@ namespace PureHDF.Tests.Reading
 #pragma warning restore SYSLIB1045
         }
 
+        // Currently there is no way to create files references of the 2nd generation: 
+        // https://docs.hdfgroup.org/hdf5/develop/_f_m_t3.html#ReferenceEncodeRV
+        // The script reference_attribute.py does not yet work. Maybe the feature is too new.
+
+        // [Fact]
+        // public void CanReadDataset_Reference_Attribute()
+        // {
+            
+        // }
+
         [Fact]
         public void CanReadDataset_Reference_Object()
         {
@@ -273,8 +283,8 @@ namespace PureHDF.Tests.Reading
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
-                var dataset_references = root.Group("reference").Dataset("object_reference");
-                var references = dataset_references.Read<H5ObjectReference>();
+                var dataset_references = root.Group("reference").Dataset("object");
+                var references = dataset_references.Read<NativeObjectReference>();
 
                 var dereferenced = references
                     .Select(reference => root.Get(reference))
@@ -296,36 +306,49 @@ namespace PureHDF.Tests.Reading
             });
         }
 
-        [Fact(Skip = "Not yet fully implemented.")]
+        [Fact]
         public void CanReadDataset_Reference_Region()
         {
             TestUtils.RunForAllVersions(version =>
             {
+                /* it seems to be impossible to create a regular hyperslab - however, it should work even without this test */
+
+#warning what to do with null references? same question applies to object reference
+
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = (NativeFile)NativeFile.OpenRead(filePath, deleteOnClose: true);
-                var dataset_references = root.Group("reference").Dataset("region_reference");
-                var references = dataset_references.Read<H5RegionReference>();
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var dataset_referenced = root.Group("reference").Dataset("referenced");
+                var dataset_region = root.Group("reference").Dataset("region");
+                var references = dataset_region.Read<NativeRegionReference>();
 
-                var reference = references[0];
-                root.Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+                static int[] Read(INativeFile root, IH5Dataset referenced, NativeRegionReference reference)
+                {
+                    var selection = root.Get(reference);
+                    var actual = referenced.Read<int>(fileSelection: selection);
 
-                // H5Rint.c (H5R__get_region)
-                // var globalHeapId = new GlobalHeapId(root.Context)
-                // {
-                //     CollectionAddress = reference.CollectionAddress,
-                //     ObjectIndex = reference.ObjectIndex
-                // };
+                    return actual;
+                }
 
-                // var globalHeapCollection = globalHeapId.Collection;
-                // var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
-                // using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-                // var address = root.Context.Superblock.ReadOffset(localDriver);
-                // var selection = new DataspaceSelection(localDriver);
+                var actual_none = Read(root, dataset_referenced, references[0]);
+                var actual_point = Read(root, dataset_referenced, references[1]);
+                // var actual_regular_hyperslab = Read(root, dataset_referenced, references[2]);
+                var actual_irregular_hyperslab = Read(root, dataset_referenced, references[3]);
+                var actual_all = Read(root, dataset_referenced, references[4]);
 
-                throw new NotImplementedException();
+                // Assert
+                var expected_point = new int[] { 2, 27, 59, 50 };
+                // var expected_regular_hyperslab = new int[] { 0, 1, 3, 4 };
+                var expected_irregular_hyperslab = new int[] { 0, 1, 3, 4 };
+                var expected_all = TestData.SmallData.Take(60);
+
+                Assert.Empty(actual_none);
+                Assert.True(expected_point.SequenceEqual(actual_point));
+                // Assert.True(expected_regular_hyperslab.SequenceEqual(actual_regular_hyperslab));
+                Assert.True(expected_irregular_hyperslab.SequenceEqual(actual_irregular_hyperslab));
+                Assert.True(expected_all.SequenceEqual(actual_all));
             });
         }
 

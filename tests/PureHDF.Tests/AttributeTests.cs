@@ -300,8 +300,8 @@ namespace PureHDF.Tests.Reading
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
-                var attribute_references = root.Group("reference").Attribute("object_reference");
-                var references = attribute_references.Read<H5ObjectReference>();
+                var attribute_references = root.Group("reference").Attribute("object");
+                var references = attribute_references.Read<NativeObjectReference>();
 
                 var dereferenced = references
                     .Select(reference => root.Get(reference))

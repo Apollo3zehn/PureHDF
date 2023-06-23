@@ -46,7 +46,7 @@ public static class IH5GroupExtensions
     /// <returns>The requested object.</returns>
     public static T Get<T>(
         this IH5Group group, 
-        H5ObjectReference reference)
+        NativeObjectReference reference)
         where T : IH5Object
     {
         return (T)group.Get(reference);
@@ -62,7 +62,7 @@ public static class IH5GroupExtensions
     /// <returns>The requested object.</returns>
     public static async Task<T> GetAsync<T>(
         this IH5Group group,
-        H5ObjectReference reference, 
+        NativeObjectReference reference, 
         CancellationToken cancellationToken = default)
         where T : IH5Object
     {

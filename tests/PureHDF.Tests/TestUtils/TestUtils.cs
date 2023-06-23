@@ -84,15 +84,15 @@ namespace PureHDF.Tests
 
         public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong length, long cpl = 0, long apl = 0)
         {
-            var dims0 = new ulong[] { length };
-            Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl, apl);
+            var dims = new ulong[] { length };
+            Add(container, fileId, groupName, elementName, typeId, dataPtr, dims, dims, cpl, apl);
         }
 
-        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims, ulong[]? maxDims = default, long cpl = 0, long apl = 0)
         {
-            dims1 ??= dims0;
+            maxDims ??= dims;
 
-            var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
+            var spaceId = H5S.create_simple(dims.Length, dims, maxDims);
             Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl, apl);
             _ = H5S.close(spaceId);
         }

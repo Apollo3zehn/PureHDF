@@ -96,17 +96,17 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         return Task.FromResult(Get(path, linkAccess));
     }
 
-    public IH5Object Get(H5ObjectReference reference)
+    public IH5Object Get(NativeObjectReference reference)
     {
         return Get(reference, default);
     }
 
-    public Task<IH5Object> GetAsync(H5ObjectReference reference, CancellationToken cancellationToken = default)
+    public Task<IH5Object> GetAsync(NativeObjectReference reference, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Get(reference));
     }
 
-    public IH5Object Get(H5ObjectReference reference, H5LinkAccess linkAccess)
+    public IH5Object Get(NativeObjectReference reference, H5LinkAccess linkAccess)
     {
         if (Reference.Value == reference.Value)
             return this;
@@ -115,7 +115,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
             .Dereference();
     }
 
-    public Task<IH5Object> GetAsync(H5ObjectReference reference, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    public Task<IH5Object> GetAsync(NativeObjectReference reference, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Get(reference, linkAccess));
     }
@@ -188,12 +188,13 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         return current;
     }
 
-    internal NativeNamedReference InternalGet(H5ObjectReference reference, H5LinkAccess linkAccess)
+    internal NativeNamedReference InternalGet(NativeObjectReference reference, H5LinkAccess linkAccess)
     {
         var alreadyVisted = new HashSet<ulong>();
 
         if (TryGetReference(reference, alreadyVisted, linkAccess, recursionLevel: 0, out var namedReference))
             return namedReference;
+
         else
             throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
     }
@@ -308,7 +309,8 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         return false;
     }
 
-    internal bool TryGetReference(H5ObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NativeNamedReference namedReference)
+    // TODO this should make use of the cache to avoid recursively visiting all node (as soon as the cache is implemented)
+    internal bool TryGetReference(NativeObjectReference reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NativeNamedReference namedReference)
     {
         // similar to H5Gint.c (H5G_visit)
         if (recursionLevel >= 100)
@@ -329,8 +331,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
 
         if (!skip)
         {
-            var references = this
-                .EnumerateReferences(linkAccess)
+            var references = EnumerateReferences(linkAccess)
                 .ToList();
 
             namedReference = references
@@ -340,6 +341,7 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
             {
                 return true;
             }
+
             else
             {
                 // search childs for reference

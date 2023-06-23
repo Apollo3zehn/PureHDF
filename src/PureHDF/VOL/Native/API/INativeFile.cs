@@ -14,4 +14,11 @@ public interface INativeFile : INativeGroup, IDisposable
     /// Gets or sets the current chunk cache factory.
     /// </summary>
     Func<IChunkCache> ChunkCacheFactory { get; set; }
+
+    /// <summary>
+    /// Gets the file selection that is referenced by the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the region.</param>
+    /// <returns>The requested selection.</returns>
+    Selection Get(NativeRegionReference reference);
 }

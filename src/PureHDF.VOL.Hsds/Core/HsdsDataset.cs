@@ -237,7 +237,7 @@ namespace PureHDF.VOL.Hsds
                         var stridesAndBlocks = Space.Dimensions.ToArray();
                         stridesAndBlocks.AsSpan().Fill(1);
 
-                        fileSelection = new HyperslabSelection(
+                        fileSelection = new RegularHyperslabSelection(
                             rank: Space.Dimensions.Length, 
                             starts: starts,
                             strides: stridesAndBlocks,
@@ -255,7 +255,7 @@ namespace PureHDF.VOL.Hsds
             var hyperSlabSelectString = default(string?);
             var pointSelectionJsonElement = default(JsonElement);
 
-            if (fileSelection is HyperslabSelection hs)
+            if (fileSelection is RegularHyperslabSelection hs)
             {
                 var selections = Enumerable
                     .Range(0, hs.Rank)
@@ -312,7 +312,7 @@ namespace PureHDF.VOL.Hsds
             memoryDims ??= new ulong[] { sourceElementCount };
 
             /* memory selection */
-            memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
+            memorySelection ??= new RegularHyperslabSelection(start: 0, block: sourceElementCount);
 
             /* target buffer */
             var destinationElementCount = Utils.CalculateSize(memoryDims);

@@ -6,7 +6,7 @@ namespace PureHDF;
 /// An HDF5 object reference.
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 8)]
-public struct H5ObjectReference
+public struct NativeObjectReference
 {
     [FieldOffset(0)]
     internal ulong Value;

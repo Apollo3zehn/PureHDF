@@ -6,7 +6,7 @@ namespace PureHDF;
 /// An HDF5 region reference.
 /// </summary>
 [StructLayout(LayoutKind.Explicit, Size = 12)]
-public partial struct H5RegionReference
+public partial struct NativeRegionReference
 {
     [FieldOffset(0)]
     internal ulong CollectionAddress;

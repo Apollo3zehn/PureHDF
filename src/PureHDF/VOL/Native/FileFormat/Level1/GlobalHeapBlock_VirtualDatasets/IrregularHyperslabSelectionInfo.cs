@@ -7,6 +7,26 @@ internal record class IrregularHyperslabSelectionInfo(
     ulong[] BlockLinearIndices
 ) : HyperslabSelectionInfo(Rank: Rank)
 {
+    /* 
+     * block offsets 
+     *
+     * block 0
+     *   starts
+     *     0
+     *     1
+     *     2
+     *
+     *   ends
+     *     3
+     *     4
+     *     5
+     *
+     *  block 1
+     *   starts
+     *     6
+     *     ...
+     */
+
     public static IrregularHyperslabSelectionInfo Decode(H5DriverBase driver, uint rank, byte encodeSize)
     {
         // block count

@@ -202,7 +202,7 @@ internal static class ReadUtils
 
                     // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
                     (DatatypeMessageClass.Reference, _)
-                        => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData)[0],
+                        => MemoryMarshal.Cast<byte, NativeObjectReference>(slicedData)[0],
 
                     /* It is difficult to avoid array allocation here */
                     (DatatypeMessageClass.Enumerated, _)
@@ -261,7 +261,7 @@ internal static class ReadUtils
 
             // TODO: Reference type (from the bit field) is not being considered here as well as in the normal Read<T> method.
             (DatatypeMessageClass.Reference, _)
-                => MemoryMarshal.Cast<byte, H5ObjectReference>(slicedData).ToArray(),
+                => MemoryMarshal.Cast<byte, NativeObjectReference>(slicedData).ToArray(),
 
             (DatatypeMessageClass.Enumerated, _)
                 => ReadEnumerated(context, baseType, slicedData),

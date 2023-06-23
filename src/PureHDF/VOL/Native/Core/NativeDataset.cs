@@ -702,7 +702,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         var datasetChunkDims = h5d.GetChunkDims();
 
         /* file selection */
-        if (fileSelection is null)
+        if (fileSelection is null || fileSelection is AllSelection)
         {
             switch (DataspaceMessage.Type)
             {
@@ -712,7 +712,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
                     var starts = datasetDims.ToArray();
                     starts.AsSpan().Clear();
 
-                    fileSelection = new HyperslabSelection(rank: datasetDims.Length, starts: starts, blocks: datasetDims);
+                    fileSelection = new RegularHyperslabSelection(rank: datasetDims.Length, starts: starts, blocks: datasetDims);
 
                     break;
 
@@ -731,7 +731,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         memoryDims ??= new ulong[] { sourceElementCount };
 
         /* memory selection */
-        memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
+        memorySelection ??= new RegularHyperslabSelection(start: 0, block: sourceElementCount);
 
         /* target buffer */
         var destinationElementCount = Utils.CalculateSize(memoryDims);

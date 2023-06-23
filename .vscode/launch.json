@@ -2,12 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Benchmark: Inflate",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build-benchmark",
             "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net7.0/PureHDF.Benchmarks.dll",
-            "args": ["inflate"],
+            "args": [
+                "inflate"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
@@ -18,7 +28,9 @@
             "request": "launch",
             "preLaunchTask": "build-benchmark",
             "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net7.0/PureHDF.Benchmarks.dll",
-            "args": ["walk"],
+            "args": [
+                "walk"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"
@@ -29,7 +41,9 @@
             "request": "launch",
             "preLaunchTask": "build-benchmark",
             "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net7.0/PureHDF.Benchmarks.dll",
-            "args": ["shuffle"],
+            "args": [
+                "shuffle"
+            ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
             "console": "internalConsole"

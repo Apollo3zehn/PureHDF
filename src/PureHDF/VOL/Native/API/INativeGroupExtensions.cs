@@ -51,7 +51,7 @@ public static class INativeGroupExtensions
     /// <returns>The requested object.</returns>
     public static T Get<T>(
         this INativeGroup group, 
-        H5ObjectReference reference, 
+        NativeObjectReference reference, 
         H5LinkAccess linkAccess)
         where T : IH5Object
     {
@@ -69,7 +69,7 @@ public static class INativeGroupExtensions
     /// <returns>The requested object.</returns>
     public static async Task<T> GetAsync<T>(
         this INativeGroup group, 
-        H5ObjectReference reference, 
+        NativeObjectReference reference, 
         H5LinkAccess linkAccess, 
         CancellationToken cancellationToken = default)
         where T : IH5Object

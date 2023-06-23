@@ -266,7 +266,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCircularReference(fileId));
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var value = ((NativeGroup)root.Group("/circular/child/rainbow's end")).Reference.Value;
-                var groupReference = new H5ObjectReference() { Value = value };
+                var groupReference = new NativeObjectReference() { Value = value };
 
                 // Act
                 var group = root.Get(groupReference);

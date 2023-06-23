@@ -44,9 +44,9 @@ internal class HsdsGroup : HsdsAttributableObject, IH5Group
     }
 
     // TODO: H5ObjectReference is probably a native only datatype
-    public IH5Object Get(H5ObjectReference reference) => throw new NotImplementedException();
+    public IH5Object Get(NativeObjectReference reference) => throw new NotImplementedException();
 
-    public Task<IH5Object> GetAsync(H5ObjectReference reference, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+    public Task<IH5Object> GetAsync(NativeObjectReference reference, CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
     public IEnumerable<IH5Object> Children()
     {
