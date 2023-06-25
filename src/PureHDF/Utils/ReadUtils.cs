@@ -323,12 +323,13 @@ internal static class ReadUtils
          * Search for "null terminate": null terminate and null padding are essentially
          * the same when simply reading them from file.
          */
-        var size = (int)datatype.Size;
         var destinationSpan = destination.Span;
         var isFixed = datatype.Class == DatatypeMessageClass.String;
 
         if (isFixed)
         {
+            var size = (int)datatype.Size;
+
             if (datatype.BitField is not StringBitFieldDescription bitField)
                 throw new Exception("String bit field description must not be null.");
 
@@ -337,7 +338,7 @@ internal static class ReadUtils
             Func<string, string> trim = bitField.PaddingType switch
             {
 #if NETSTANDARD2_0
-                    PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
+                PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
 #else
                 PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
 #endif
@@ -477,11 +478,11 @@ internal static class ReadUtils
         return destination;
     }
 
-    public static Memory<T[]?> ReadVariableLengthSequence<T>(
+    public static Memory<T[]> ReadVariableLengthSequence<T>(
         NativeContext context, 
         DatatypeMessage datatype, 
         Span<byte> source,
-        Memory<T[]?> destination)
+        Memory<T[]> destination)
     {
         var destinationSpan = destination.Span;
 
@@ -517,8 +518,8 @@ internal static class ReadUtils
                 // if the library cannot handle missing entries.
                 // 
                 // Since this behavior is not according to the spec, this
-                // method still returns a `string` instead of a nullable 
-                // `string?`.
+                // method still returns `T[]` instead of nullable 
+                // `T[]?`.
                 destinationSpan[i] = default!;
             }
         }
