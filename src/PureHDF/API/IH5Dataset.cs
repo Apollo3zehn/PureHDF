@@ -88,6 +88,15 @@ public interface IH5Dataset : IH5AttributableObject
     string?[] ReadString(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
 
     /// <summary>
+    /// Reads the variable-length sequence data.
+    /// </summary>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>The read data as jagged array of <typeparamref name="T"/>.</returns>
+    T[]?[] ReadVariableLength<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
+
+    /// <summary>
     /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
     /// </summary>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
@@ -150,4 +159,14 @@ public interface IH5Dataset : IH5AttributableObject
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>A task which returns the read data as array of <see cref="string"/>.</returns>
     Task<string?[]> ReadStringAsync(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reads the variable-length sequence data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
+    /// </summary>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as jagged array of <typeparamref name="T"/>.</returns>
+    Task<T[]?[]> ReadVariableLengthAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default);
 }

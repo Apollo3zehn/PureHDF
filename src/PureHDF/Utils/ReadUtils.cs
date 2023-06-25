@@ -381,7 +381,7 @@ internal static class ReadUtils
 
             for (int i = 0; i < destination.Length; i++)
             {
-                var dataSize = localDriver.ReadUInt32(); // for what do we need this?
+                var _ = localDriver.ReadUInt32(); // for what do we need this?
                 var globalHeapId = GlobalHeapId.Decode(context.Superblock, localDriver);
                 var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
 
@@ -472,6 +472,55 @@ internal static class ReadUtils
             // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
             var paddingCount = (padSize - (destination.Length + 1) % padSize) % padSize;
             driver.Seek(paddingCount, SeekOrigin.Current);
+        }
+
+        return destination;
+    }
+
+    public static Memory<T[]?> ReadVariableLengthSequence<T>(
+        NativeContext context, 
+        DatatypeMessage datatype, 
+        Span<byte> source,
+        Memory<T[]?> destination)
+    {
+        var destinationSpan = destination.Span;
+
+        using var localDriver = new H5StreamDriver(new MemoryStream(source.ToArray()), leaveOpen: false);
+
+        for (int i = 0; i < destination.Length; i++)
+        {
+            var _ = localDriver.ReadUInt32();
+            var globalHeapId = GlobalHeapId.Decode(context.Superblock, localDriver);
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
+
+            if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+            {
+                if (IsReferenceOrContainsReferences(typeof(T)))
+                {
+                    throw new NotImplementedException();
+                }
+                else if (typeof(T) == typeof(int))
+                {
+                    var value = MemoryMarshal.Cast<byte, int>(globalHeapObject.ObjectData);
+                    destinationSpan[i] = (T[])(object)value.ToArray();
+                }
+            }
+            else
+            {
+                // It would be more correct to just throw an exception 
+                // when the object index is not found in the collection,
+                // but that would make the tests following tests fail
+                // - CanReadDataset_Array_nullable_struct
+                // - CanReadDataset_Array_nullable_struct.
+                // 
+                // And it would make the user's life a bit more complicated
+                // if the library cannot handle missing entries.
+                // 
+                // Since this behavior is not according to the spec, this
+                // method still returns a `string` instead of a nullable 
+                // `string?`.
+                destinationSpan[i] = default!;
+            }
         }
 
         return destination;

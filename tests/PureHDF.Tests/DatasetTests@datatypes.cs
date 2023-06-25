@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using PureHDF.VFD;
 using Xunit;
 
 namespace PureHDF.Tests.Reading
@@ -373,6 +372,28 @@ namespace PureHDF.Tests.Reading
             });
         }
 
+        [Fact]
+        public void CanReadDataset_Variable_Length()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var dataset = root.Dataset("sequence/variable");
+                var actual = dataset.ReadVariableLength<int>();
+
+                // Assert
+                var expected1 = new int[] { 3, 2, 1 };
+                var expected2 = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };
+
+                Assert.True(expected1.SequenceEqual(actual[0]!));
+                Assert.True(expected2.SequenceEqual(actual[1]!));
+            });
+        }
+
 #if NET5_0_OR_GREATER
         [Fact]
         public void ThrowsForNestedNullableStruct()
@@ -380,7 +401,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct((long)fileId, ContainerType.Dataset));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);

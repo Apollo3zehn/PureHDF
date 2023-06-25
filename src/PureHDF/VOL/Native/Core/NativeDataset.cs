@@ -271,6 +271,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             datasetAccess,
             skipShuffle: false).GetAwaiter().GetResult() 
                 ?? throw new Exception("The buffer is null. This should never happen.");
+
         return data;
     }
 
@@ -298,6 +299,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             datasetAccess,
             skipShuffle: false).GetAwaiter().GetResult() 
                 ?? throw new Exception("The buffer is null. This should never happen.");
+
         return data;
     }
 
@@ -325,6 +327,35 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             datasetAccess,
             skipShuffle: false).GetAwaiter().GetResult() 
                 ?? throw new Exception("The buffer is null. This should never happen.");
+
+        return result;
+    }
+
+    public T[]?[] ReadVariableLength<T>(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null)
+    {
+        return ReadVariableLength<T>(default, fileSelection, memorySelection, memoryDims);
+    }
+
+    public T[]?[] ReadVariableLength<T>(
+        H5DatasetAccess datasetAccess,
+        Selection? fileSelection = null,
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null)
+    {
+        var result = ReadCoreReferenceAsync<T[]?, SyncReader>(
+            default,
+            default,
+            (source, destination) => ReadUtils.ReadVariableLengthSequence(Context, InternalElementDataType, source.Span, destination),
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess,
+            skipShuffle: false).GetAwaiter().GetResult() 
+                ?? throw new Exception("The buffer is null. This should never happen.");
+
         return result;
     }
 
@@ -498,6 +529,36 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             default,
             default,
             (source, destination) => ReadUtils.ReadString(Context, InternalElementDataType, source.Span, destination),
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess,
+            skipShuffle: false) 
+            ?? throw new Exception("The buffer is null. This should never happen.");
+            
+        return result;
+    }
+
+    public Task<T[]?[]> ReadVariableLengthAsync<T>(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null, 
+        CancellationToken cancellationToken = default)
+    {
+        return ReadVariableLengthAsync<T>(default, fileSelection, memorySelection, memoryDims, cancellationToken);
+    }
+
+    public async Task<T[]?[]> ReadVariableLengthAsync<T>(
+        H5DatasetAccess datasetAccess,
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null, 
+        CancellationToken cancellationToken = default)
+    {
+        var result = await ReadCoreReferenceAsync<T[]?, AsyncReader>(
+            default,
+            default,
+            (source, destination) => ReadUtils.ReadVariableLengthSequence(Context, InternalElementDataType, source.Span, destination),
             fileSelection,
             memorySelection,
             memoryDims,

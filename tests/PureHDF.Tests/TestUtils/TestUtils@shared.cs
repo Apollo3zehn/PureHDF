@@ -357,38 +357,48 @@ namespace PureHDF.Tests
 
         public static unsafe void AddVariableLengthSequence(long fileId, ContainerType container)
         {
-            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L1621-L1642
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
             // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
-            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/test/tarray.c#L1113
-            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L234-L241
-
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/test/tarray.c#L1113
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L234-L241
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tvlen.c#L837-L941
             // typedef struct {
             //     size_t len; /**< Length of VL data (in base type units) */
             //     void  *p;   /**< Pointer to VL data */
             // } hvl_t;
 
-            var dims = new ulong[] { 10 };
+            // based on: https://svn.ssec.wisc.edu/repos/geoffc/C/HDF5/Examples_by_API/h5ex_t_vlen.c
+
+            var dims = new ulong[] { 2 };
             var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
 
-            var dataVar = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var dataVarChar = dataVar
-               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
-               .ToArray();
+            // data 1 (countdown)
+            var data1 = new int[3];
 
-            fixed (byte* dataVarPtr = dataVarChar)
+            for (int i = 0; i < data1.Length; i++)
+                data1[i] = data1.Length - i;
+
+            // data 2 (Fibonacci sequence)
+            var data2 = new int[12];
+
+            data2[0] = 1;
+            data2[1] = 1;
+
+            for (int i = 2; i < data2.Length; i++)
+                data2[i] = data2[i - 1] + data2[i - 2];
+
+            fixed (int* data1Ptr = data1, data2Ptr = data2)
             {
-                var basePtr = new IntPtr(dataVarPtr);
-
-                var addresses = new IntPtr[]
+                // vlen data
+                var vlenData = new H5T.hvl_t[] 
                 {
-                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 4), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
-                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
-                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34)
+                    new H5T.hvl_t() { len = (nint)data1.Length, p = (nint)data1Ptr },
+                    new H5T.hvl_t() { len = (nint)data2.Length, p = (nint)data2Ptr }
                 };
 
-                fixed (void* dataVarAddressesPtr = addresses)
+                fixed (void* vlenDataPtr = vlenData)
                 {
-                    Add(container, fileId, "sequence", "variable", typeId, dataVarAddressesPtr, dims);
+                    Add(container, fileId, "sequence", "variable", typeId, vlenDataPtr, dims);
                 }
             }
 
