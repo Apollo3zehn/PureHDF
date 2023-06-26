@@ -61,7 +61,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
@@ -97,7 +97,7 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.Equal(
-                    JsonSerializer.Serialize(TestData.NullableStructData, _options).Replace("ShortValueWithCustomName", "ShortValue"),
+                    JsonSerializer.Serialize(TestData.NullableStructData, _options),
                     JsonSerializer.Serialize(actual, _options));
             });
         }
@@ -224,14 +224,8 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Group("array").Dataset("nullable_struct");
 
-                static string converter(FieldInfo fieldInfo)
-                {
-                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return attribute is not null ? attribute.Name : fieldInfo.Name;
-                }
-
                 var actual_1 = dataset
-                    .ReadCompound<TestStructStringAndArray>(converter);
+                    .ReadCompound<TestStructStringAndArray>();
 
                 var actual_2 = dataset
                     .ReadCompound();
@@ -254,12 +248,10 @@ namespace PureHDF.Tests.Reading
                     expectedJsonString, 
                     JsonSerializer.Serialize(actual_1, _options));
 
-#pragma warning disable SYSLIB1045
                 Assert.Equal(
                     expectedJsonString, 
-                    Regex.Replace(JsonSerializer.Serialize(actual_2, _options), "\"ShortValue", "\"ShortValueWithCustomName"));
+                    JsonSerializer.Serialize(actual_2, _options));
             });
-#pragma warning restore SYSLIB1045
         }
 
         // Currently there is no way to create files references of the 2nd generation: 
@@ -354,6 +346,52 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
+        public void CanReadDataset_Variable_Length_Simple()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var dataset = root.Dataset("sequence/variable_simple");
+                var actual = dataset.ReadVariableLength<int>();
+
+                // Assert
+                var expected1 = new int[] { 3, 2, 1 };
+                var expected2 = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };
+
+                Assert.Equal(3, actual.Length);
+                Assert.True(expected1.SequenceEqual(actual[0]!));
+                Assert.True(expected2.SequenceEqual(actual[1]!));
+                Assert.Null(actual[2]);
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Variable_Length_Nullable_Struct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Dataset));
+
+                // Act
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var dataset = root.Dataset("sequence/variable_nullable_struct");
+                var actual = dataset.ReadVariableLength<TestStructStringAndArray>();
+
+                // Assert
+                var expected = new TestStructStringAndArray[]?[] { TestData.NullableStructData, default };
+
+                Assert.Equal(
+                    JsonSerializer.Serialize(expected, _options),
+                    JsonSerializer.Serialize(actual, _options));
+            });
+        }
+
+        [Fact]
         public void CanReadDataset_Shared_Message()
         {
             TestUtils.RunForAllVersions(version =>
@@ -369,28 +407,6 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
-            });
-        }
-
-        [Fact]
-        public void CanReadDataset_Variable_Length()
-        {
-            TestUtils.RunForAllVersions(version =>
-            {
-                // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence(fileId, ContainerType.Dataset));
-
-                // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
-                var dataset = root.Dataset("sequence/variable");
-                var actual = dataset.ReadVariableLength<int>();
-
-                // Assert
-                var expected1 = new int[] { 3, 2, 1 };
-                var expected2 = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };
-
-                Assert.True(expected1.SequenceEqual(actual[0]!));
-                Assert.True(expected2.SequenceEqual(actual[1]!));
             });
         }
 

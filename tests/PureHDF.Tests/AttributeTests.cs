@@ -1,7 +1,6 @@
 ﻿using System.Buffers;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Xunit;
 
 namespace PureHDF.Tests.Reading
@@ -91,7 +90,7 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
@@ -125,7 +124,7 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.Equal(
-                    JsonSerializer.Serialize(TestData.NullableStructData, _options).Replace("ShortValueWithCustomName", "ShortValue"),
+                    JsonSerializer.Serialize(TestData.NullableStructData, _options),
                     JsonSerializer.Serialize(actual, _options));
             });
         }
@@ -252,14 +251,8 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("nullable_struct");
 
-                static string converter(FieldInfo fieldInfo)
-                {
-                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return attribute is not null ? attribute.Name : fieldInfo.Name;
-                }
-
                 var actual_1 = attribute
-                    .ReadCompound<TestStructStringAndArray>(converter);
+                    .ReadCompound<TestStructStringAndArray>();
 
                 var actual_2 = attribute
                     .ReadCompound();
@@ -282,12 +275,10 @@ namespace PureHDF.Tests.Reading
                     expectedJsonString, 
                     JsonSerializer.Serialize(actual_1, _options));
 
-#pragma warning disable SYSLIB1045
                 Assert.Equal(
                     expectedJsonString, 
-                    Regex.Replace(JsonSerializer.Serialize(actual_2, _options), "\"ShortValue", "\"ShortValueWithCustomName"));
+                    JsonSerializer.Serialize(actual_2, _options));
             });
-#pragma warning restore SYSLIB1045
         }
 
         [Fact]
@@ -324,7 +315,7 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void CanReadDataset_Reference_Region()
+        public void CanReadAttribute_Reference_Region()
         {
             TestUtils.RunForAllVersions(version =>
             {
@@ -366,6 +357,52 @@ namespace PureHDF.Tests.Reading
                 Assert.True(expected_all.SequenceEqual(actual_all));
 
                 Assert.Throws<Exception>(() => root.Get(default(NativeRegionReference1)));
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Variable_Length_Simple()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Attribute));
+
+                // Act
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var attribute = root.Group("sequence").Attribute("variable_simple");
+                var actual = attribute.ReadVariableLength<int>();
+
+                // Assert
+                var expected1 = new int[] { 3, 2, 1 };
+                var expected2 = new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 };
+
+                Assert.Equal(3, actual.Length);
+                Assert.True(expected1.SequenceEqual(actual[0]!));
+                Assert.True(expected2.SequenceEqual(actual[1]!));
+                Assert.Null(actual[2]);
+            });
+        }
+
+        [Fact]
+        public void CanReadAttribute_Variable_Length_Nullable_Struct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Attribute));
+
+                // Act
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var attribute = root.Group("sequence").Attribute("variable_nullable_struct");
+                var actual = attribute.ReadVariableLength<TestStructStringAndArray>();
+
+                // Assert
+                var expected = new TestStructStringAndArray[]?[] { TestData.NullableStructData, default };
+
+                Assert.Equal(
+                    JsonSerializer.Serialize(expected, _options),
+                    JsonSerializer.Serialize(actual, _options));
             });
         }
 

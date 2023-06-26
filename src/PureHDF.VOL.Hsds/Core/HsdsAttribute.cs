@@ -68,4 +68,12 @@ internal class HsdsAttribute : IH5Attribute
     {
         throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
     }
+
+    public T[]?[] ReadVariableLength<T>(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null) where T : struct
+    {
+        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
+    }
 }

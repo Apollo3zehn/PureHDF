@@ -160,7 +160,7 @@ namespace PureHDF.Tests
             }
         }
 
-        private static long GetHdfTypeIdFromType(Type type, ulong? arrayLength = default)
+        private static long GetHdfTypeIdFromType(Type type, ulong? arrayLength = default, bool includeH5NameAttribute = false)
         {
             if (type == typeof(bool))
                 return H5T.NATIVE_UINT8;
@@ -247,7 +247,11 @@ namespace PureHDF.Tests
                         : null;
 
                     var fieldType = GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
-                    var nameAttribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+
+                    var nameAttribute = includeH5NameAttribute
+                        ? fieldInfo.GetCustomAttribute<H5NameAttribute>(true)
+                        : default;
+
                     var hdfFieldName = nameAttribute is not null ? nameAttribute.Name : fieldInfo.Name;
 
                     _ = H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(type, fieldInfo.Name), fieldType);

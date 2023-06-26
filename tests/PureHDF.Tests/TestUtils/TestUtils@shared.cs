@@ -114,12 +114,11 @@ namespace PureHDF.Tests
         {
             var dims = new ulong[] { 2, 1 };
 
-            Prepare_nullable_struct((typeId, dataPtr) => 
-            {
-                var typeIdArray = H5T.array_create(typeId, 2, new ulong[] { 2, 3 });
-                Add(container, fileId, "array", "nullable_struct", typeIdArray, dataPtr.ToPointer(), dims);
-                _ = H5T.close(typeIdArray);
-            });
+            using var nullableStruct = Prepare_nullable_struct();
+
+            var typeIdArray = H5T.array_create(nullableStruct.TypeId, 2, new ulong[] { 2, 3 });
+            Add(container, fileId, "array", "nullable_struct", typeIdArray, nullableStruct.Ptr.ToPointer(), dims);
+            _ = H5T.close(typeIdArray);
         }
 
         public static unsafe void AddObjectReference(long fileId, ContainerType container)
@@ -199,20 +198,18 @@ namespace PureHDF.Tests
             }
         }
 
-        public static unsafe void AddStruct(long fileId, ContainerType container)
+        public static unsafe void AddStruct(long fileId, ContainerType container, bool includeH5NameAttribute = false)
         {
-            long res;
-
             var dims = new ulong[] { 2, 2, 3 }; /* "extendible contiguous non-external dataset not allowed" */
 
             // non-nullable struct
             var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
             Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
-            res = H5T.close(typeId);
+            _ = H5T.close(typeId);
 
             // nullable struct
-            Prepare_nullable_struct((typeId, dataPtr) 
-                => Add(container, fileId, "struct", "nullable", typeId, dataPtr.ToPointer(), dims));
+            using var nullableStruct = Prepare_nullable_struct(includeH5NameAttribute);
+            Add(container, fileId, "struct", "nullable", nullableStruct.TypeId, nullableStruct.Ptr.ToPointer(), dims);
         }
 
         public static unsafe void AddString(long fileId, ContainerType container)
@@ -326,13 +323,14 @@ namespace PureHDF.Tests
 
             res = H5T.close(typeIdVar_spacepad);
 
-            // variable length string attribute (UTF8)
+            // variable length string (UTF8)
             var typeIdVarUTF8 = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVarUTF8, H5T.VARIABLE);
             res = H5T.set_cset(typeIdVarUTF8, H5T.cset_t.UTF8);
             res = H5T.set_strpad(typeIdVarUTF8, H5T.str_t.NULLPAD);
 
             var dataVarUTF8 = new string[] { "00", "111", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
+
             var dataVarCharUTF8 = dataVarUTF8
                .SelectMany(value => Encoding.UTF8.GetBytes(value + '\0'))
                .ToArray();
@@ -355,21 +353,11 @@ namespace PureHDF.Tests
             }
         }
 
-        public static unsafe void AddVariableLengthSequence(long fileId, ContainerType container)
+        public static unsafe void AddVariableLengthSequence_Simple(long fileId, ContainerType container)
         {
-            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
-            // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
-            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/test/tarray.c#L1113
-            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L234-L241
-            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tvlen.c#L837-L941
-            // typedef struct {
-            //     size_t len; /**< Length of VL data (in base type units) */
-            //     void  *p;   /**< Pointer to VL data */
-            // } hvl_t;
-
             // based on: https://svn.ssec.wisc.edu/repos/geoffc/C/HDF5/Examples_by_API/h5ex_t_vlen.c
 
-            var dims = new ulong[] { 2 };
+            var dims = new ulong[] { 3 };
             var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
 
             // data 1 (countdown)
@@ -387,6 +375,10 @@ namespace PureHDF.Tests
             for (int i = 2; i < data2.Length; i++)
                 data2[i] = data2[i - 1] + data2[i - 2];
 
+            // data 3 (empty)
+
+            //
+
             fixed (int* data1Ptr = data1, data2Ptr = data2)
             {
                 // vlen data
@@ -398,8 +390,33 @@ namespace PureHDF.Tests
 
                 fixed (void* vlenDataPtr = vlenData)
                 {
-                    Add(container, fileId, "sequence", "variable", typeId, vlenDataPtr, dims);
+                    Add(container, fileId, "sequence", "variable_simple", typeId, vlenDataPtr, dims);
                 }
+            }
+
+            _ = H5T.close(typeId);
+        }
+
+        public static unsafe void AddVariableLengthSequence_NullableStruct(long fileId, ContainerType container)
+        {
+            using var data = Prepare_nullable_struct();
+
+            var dims = new ulong[] { 2 };
+            var typeId = H5T.vlen_create(data.TypeId);
+
+            // vlen data
+            var vlenData = new H5T.hvl_t[] 
+            {
+                // struct data
+                new H5T.hvl_t() { len = (nint)data.Ptrs.Count, p = (nint)data.Ptr },
+
+                // empty
+                new H5T.hvl_t() { len = IntPtr.Zero, p = IntPtr.Zero },
+            };
+
+            fixed (void* vlenDataPtr = vlenData)
+            {
+                Add(container, fileId, "sequence", "variable_nullable_struct", typeId, vlenDataPtr, dims);
             }
 
             _ = H5T.close(typeId);
@@ -468,9 +485,9 @@ namespace PureHDF.Tests
             if (H5I.is_valid(typeId) > 0) { _ = H5T.close(typeId); }
         }
 
-        private static unsafe void Prepare_nullable_struct(Action<long, IntPtr> action)
+        private static unsafe DisposableStruct Prepare_nullable_struct(bool includeH5NameAttribute = false)
         {
-            var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray), includeH5NameAttribute: includeH5NameAttribute);
             var data = TestData.NullableStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
@@ -484,7 +501,8 @@ namespace PureHDF.Tests
             data.Cast<ValueType>().ToList().ForEach(x =>
             {
                 var sourcePtr = Marshal.AllocHGlobal(elementSize);
-                Marshal.StructureToPtr(x, sourcePtr, false);
+                // TODO why not write directly into dataPtr? Is this blocked by Marshal.DestroyStructure?
+                Marshal.StructureToPtr(x, sourcePtr, fDeleteOld: false);
 
                 ptrs.Add(sourcePtr);
                 var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
@@ -494,16 +512,40 @@ namespace PureHDF.Tests
                 counter++;
             });
 
-            action(typeId, dataPtr);
+            return new DisposableStruct(dataPtr, ptrs, typeId);
+        }
 
-            Marshal.FreeHGlobal(dataPtr);
+        private record class DisposableStruct(IntPtr Ptr, List<nint> Ptrs, long TypeId) : IDisposable
+        {
+            private bool _disposedValue;
 
-            foreach (var srcPtr in ptrs)
+            protected virtual void Dispose(bool disposing)
             {
-                Marshal.DestroyStructure<TestStructStringAndArray>(srcPtr);
+                if (!_disposedValue)
+                {
+                    Marshal.FreeHGlobal(Ptr);
+
+                    foreach (var ptr in Ptrs)
+                    {
+                        Marshal.DestroyStructure<TestStructStringAndArray>(ptr);
+                    }
+
+                    _ = H5T.close(TypeId);
+
+                    _disposedValue = true;
+                }
             }
 
-            _ = H5T.close(typeId);
+            ~DisposableStruct()
+            {
+                Dispose(disposing: false);
+            }
+
+            public void Dispose()
+            {
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
         }
     }
 }

@@ -930,9 +930,14 @@ var myGroup = bindings.group1.Get();
 
 The following features are **not** (yet) supported:
 
-- Virtual datasets with **unlimited dimensions**
 - Filters: `N-bit`, `SZIP`
-- References: `Attribute reference`, `object reference 2`, `dataset region reference 2` (I was unable to produce sample files using `h5py` or `HDF.PInvoke1.10` - the feature seems to be too new)
+- Virtual datasets: with **unlimited dimensions**
+- Data Types
+  - Reference: `Attribute reference`, `object reference 2`, `dataset region reference 2` (I was unable to produce sample files using `h5py` or `HDF.PInvoke1.10` - the feature seems to be too new)
+  - Variable-length data consisting of
+      - other variable length data
+      - unknown compound data
+      - strings
 
 # 13 Comparison Table
 

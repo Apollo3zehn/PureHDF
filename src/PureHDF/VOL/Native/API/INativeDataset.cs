@@ -91,7 +91,7 @@ public interface INativeDataset : IH5Dataset
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     /// <returns>The read data as jagged array of <typeparamref name="T"/>.</returns>
-    public T[]?[] ReadVariableLength<T>(H5DatasetAccess datasetAccess, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
+    public T[]?[] ReadVariableLength<T>(H5DatasetAccess datasetAccess, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : struct;
 
     /// <summary>
     /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
@@ -172,5 +172,5 @@ public interface INativeDataset : IH5Dataset
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>A task which returns the read data as jagged array of <typeparamref name="T"/>.</returns>
-    Task<T[]?[]> ReadVariableLengthAsync<T>(H5DatasetAccess datasetAccess, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default);
+    Task<T[]?[]> ReadVariableLengthAsync<T>(H5DatasetAccess datasetAccess, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default) where T : struct;
 }

@@ -334,7 +334,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
     public T[]?[] ReadVariableLength<T>(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
-        ulong[]? memoryDims = null)
+        ulong[]? memoryDims = null) where T : struct
     {
         return ReadVariableLength<T>(default, fileSelection, memorySelection, memoryDims);
     }
@@ -343,9 +343,9 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = null,
         Selection? memorySelection = null, 
-        ulong[]? memoryDims = null)
+        ulong[]? memoryDims = null) where T : struct
     {
-        var result = ReadCoreReferenceAsync<T[]?, SyncReader>(
+        var result = ReadCoreReferenceAsync<T[], SyncReader>(
             default,
             default,
             (source, destination) => ReadUtils.ReadVariableLengthSequence(Context, InternalElementDataType, source.Span, destination),
@@ -543,7 +543,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
         ulong[]? memoryDims = null, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) where T : struct
     {
         return ReadVariableLengthAsync<T>(default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
@@ -553,9 +553,9 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
         ulong[]? memoryDims = null, 
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) where T : struct
     {
-        var result = await ReadCoreReferenceAsync<T[]?, AsyncReader>(
+        var result = await ReadCoreReferenceAsync<T[], AsyncReader>(
             default,
             default,
             (source, destination) => ReadUtils.ReadVariableLengthSequence(Context, InternalElementDataType, source.Span, destination),

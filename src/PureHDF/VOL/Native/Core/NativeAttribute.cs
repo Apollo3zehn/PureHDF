@@ -9,7 +9,7 @@ internal class NativeAttribute : IH5Attribute
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
-    private NativeContext _context;
+    private readonly NativeContext _context;
 
     #endregion
 
@@ -115,6 +115,19 @@ internal class NativeAttribute : IH5Attribute
     public string[] ReadString()
     {
         return ReadUtils.ReadString(_context, InternalElementDataType, Message.Data);
+    }
+
+    public T[]?[] ReadVariableLength<T>(
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null) where T : struct
+    {
+        var elementCount = Message.Data.Length / InternalElementDataType.Size;
+        var result = new T[elementCount][];
+
+        ReadUtils.ReadVariableLengthSequence<T>(_context, InternalElementDataType, Message.Data, result);
+
+        return result;
     }
 
 

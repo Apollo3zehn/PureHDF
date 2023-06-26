@@ -48,4 +48,13 @@ public interface IH5Attribute
     /// </summary>
     /// <returns>The read data as array of <see cref="string"/>.</returns>
     string[] ReadString();
+
+    /// <summary>
+    /// Reads the variable-length sequence data.
+    /// </summary>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>The read data as jagged array of <typeparamref name="T"/>.</returns>
+    T[]?[] ReadVariableLength<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : struct;
 }

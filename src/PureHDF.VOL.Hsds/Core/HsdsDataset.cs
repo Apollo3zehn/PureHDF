@@ -161,12 +161,12 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 
     // TODO: does this API make sense? Can we have variable length data in HSDS?
 
-    public T[]?[] ReadVariableLength<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null)
+    public T[]?[] ReadVariableLength<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : struct
     {
         throw new NotImplementedException();
     }
 
-    public Task<T[]?[]> ReadVariableLengthAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default)
+    public Task<T[]?[]> ReadVariableLengthAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default) where T : struct
     {
         throw new NotImplementedException();
     }
