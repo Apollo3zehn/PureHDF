@@ -10,7 +10,7 @@ namespace Benchmark
 
         public ulong[] ChunkDims = new ulong[] { 1000, 200, 200 };
 
-        public RegularHyperslabSelection Selection = new(
+        public HyperslabSelection Selection = new(
             rank: 3,
             starts: new ulong[] { 1, 1, 1 },
             strides: new ulong[] { 31, 31, 31 },

@@ -5,14 +5,14 @@ namespace PureHDF;
 internal class QueryProvider<TFake> : IQueryProvider where TFake : unmanaged
 {
     private readonly ulong _datasetLength;
-    private readonly Func<RegularHyperslabSelection, TFake[]> _executor;
+    private readonly Func<HyperslabSelection, TFake[]> _executor;
 
     private ulong _start;
     private ulong _stride;
     private ulong _count;
     private ulong _block;
 
-    public QueryProvider(ulong datasetLength, Func<RegularHyperslabSelection, TFake[]> executor)
+    public QueryProvider(ulong datasetLength, Func<HyperslabSelection, TFake[]> executor)
     {
         _datasetLength = datasetLength;
         _executor = executor;
@@ -43,7 +43,7 @@ internal class QueryProvider<TFake> : IQueryProvider where TFake : unmanaged
         if (_count == 0)
             _count = 1;
 
-        var fileSelection = new RegularHyperslabSelection(_start, _stride, _count, _block);
+        var fileSelection = new HyperslabSelection(_start, _stride, _count, _block);
 
         return (T)(object)_executor(fileSelection);
     }

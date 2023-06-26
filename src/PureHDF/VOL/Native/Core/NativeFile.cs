@@ -184,7 +184,7 @@ internal class NativeFile : NativeGroup, INativeFile
             H5S_SEL_POINTS points => new PointSelection(points.PointData),
             H5S_SEL_HYPER hyper => hyper.SelectionInfo switch
             {
-                RegularHyperslabSelectionInfo regular => new RegularHyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
+                RegularHyperslabSelectionInfo regular => new HyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
                 IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection((int)irregular.Rank, irregular.BlockOffsets),
                 _ => throw new NotSupportedException($"The hyperslab selection type '{hyper.SelectionInfo.GetType().FullName}' is not supported.")
             },

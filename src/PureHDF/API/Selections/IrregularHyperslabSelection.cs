@@ -48,7 +48,7 @@ public class IrregularHyperslabSelection : Selection
     /// <inheritdoc />
     public override IEnumerable<Step> Walk(ulong[] limits)
     {
-        /* the following algorithm is a simple version of that of the RegularHyperslabSelection */
+        /* the following algorithm is a simple version of that of the HyperslabSelection */
 
         /* prepare some useful arrays */
         var lastDim = Rank - 1;

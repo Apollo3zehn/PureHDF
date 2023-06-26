@@ -200,7 +200,7 @@ finally
 
     for (uint i = 0; i < SEGMENT_COUNT; i++)
     {
-        var fileSelection = new RegularHyperslabSelection(
+        var fileSelection = new HyperslabSelection(
             start: i * BUFFER_SIZE,
             block: BUFFER_SIZE
         );
@@ -247,7 +247,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
         {
             var asyncBuffer = new CastMemoryManager<byte, float>(writer.GetMemory((int)BUFFER_BYTE_SIZE)).Memory;
 
-            var fileSelection = new RegularHyperslabSelection(
+            var fileSelection = new HyperslabSelection(
                 start: i * BUFFER_SIZE,
                 block: BUFFER_SIZE
             );
@@ -326,7 +326,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
 
     Parallel.For(0, (int)SEGMENT_COUNT, i =>
     {
-        var fileSelection = new RegularHyperslabSelection(
+        var fileSelection = new HyperslabSelection(
             start: (ulong)i * BUFFER_SIZE,
             block: BUFFER_SIZE
         );
@@ -371,7 +371,7 @@ async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, 
 
     Parallel.For(0, (int)SEGMENT_COUNT, i =>
     {
-        var fileSelection = new RegularHyperslabSelection(
+        var fileSelection = new HyperslabSelection(
             start: (ulong)i * BUFFER_SIZE,
             block: BUFFER_SIZE
         );

@@ -55,13 +55,13 @@ namespace PureHDF.Tests.Reading
             expected[7, 1] = 61; expected[7, 2] = 62; expected[7, 4] = 63; expected[7, 5] = 65; expected[7, 7] = 66; expected[7, 8] = 67;
             expected[8, 1] = 71; expected[8, 2] = 72; expected[8, 4] = 73; expected[8, 5] = 75; expected[8, 7] = 76; expected[8, 8] = 77;
 
-            var fileSeletion = new RegularHyperslabSelection(rank: 2,
+            var fileSeletion = new HyperslabSelection(rank: 2,
                 starts: new ulong[] { 1, 1 },
                 strides: new ulong[] { 4, 4 },
                 counts: new ulong[] { 2, 2 },
                 blocks: new ulong[] { 3, 3 });
 
-            var memorySelection = new RegularHyperslabSelection(rank: 2,
+            var memorySelection = new HyperslabSelection(rank: 2,
                 starts: new ulong[] { 1, 1 },
                 strides: new ulong[] { 3, 3 },
                 counts: new ulong[] { 3, 3 },

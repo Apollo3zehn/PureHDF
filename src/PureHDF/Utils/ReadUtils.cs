@@ -500,9 +500,20 @@ internal static class ReadUtils
                 {
                     throw new NotImplementedException();
                 }
-                else if (typeof(T) == typeof(int))
+                else
                 {
-                    var value = MemoryMarshal.Cast<byte, int>(globalHeapObject.ObjectData);
+                    // TODO: move this to a static place
+                    var methodInfo = typeof(MemoryMarshal)
+                        .GetMethods(BindingFlags.Static)
+                        .Where(methodInfo => methodInfo.IsGenericMethod && methodInfo.Name == nameof(MemoryMarshal.Cast))
+                        .SingleOrDefault();
+
+                    var genericMethodInfo = methodInfo.MakeGenericMethod(typeof(byte), typeof(T));
+
+                    // TODO: reuse array? thread safe?
+                    var parameters = new object[] { globalHeapObject.ObjectData };
+
+                    var value = genericMethodInfo.Invoke(default, parameters);
                     destinationSpan[i] = (T[])(object)value.ToArray();
                 }
             }

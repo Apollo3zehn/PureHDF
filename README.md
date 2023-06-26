@@ -267,7 +267,7 @@ PureHDF supports three types of selections. These are:
 
 | Type                 | Description                                                                                                                                                                      |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `RegularHyperslabSelection` | A hyperslab is a selection of elements from a hyper rectangle.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.1 Hyperslab Selection |
+| `HyperslabSelection` | A hyperslab is a selection of elements from a hyper rectangle.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.1 Hyperslab Selection |
 | `PointSelection`     | Selects a collection of points.<br />[HDF5 User's Guide](https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides) > 7.4.1.2 Select Points                                      |
 | `DelegateSelection`  | This selection accepts a custom walker which selects the user defined points or blocks.                                                                                          |
 
@@ -311,7 +311,7 @@ A hyperslab selection can be used to select a contiguous block of elements or to
 The simplest example is a selection for a 1-dimensional dataset at a certain offset (`start: 10`) and a certain length (`block: 50`):
 
 ```cs
-var fileSelection = new RegularHyperslabSelection(start: 10, block: 50);
+var fileSelection = new HyperslabSelection(start: 10, block: 50);
 ```
 
 The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
@@ -320,7 +320,7 @@ The following - more advanced - example shows selecions for a three-dimensional 
 var dataset = root.Dataset("myDataset");
 var memoryDims = new ulong[] { 75, 25 };
 
-var datasetSelection = new RegularHyperslabSelection(
+var datasetSelection = new HyperslabSelection(
     rank: 3,
     starts: new ulong[] { 2, 2, 0 },
     strides: new ulong[] { 5, 8, 2 },
@@ -328,7 +328,7 @@ var datasetSelection = new RegularHyperslabSelection(
     blocks: new ulong[] { 3, 5, 2 }
 );
 
-var memorySelection = new RegularHyperslabSelection(
+var memorySelection = new HyperslabSelection(
     rank: 2,
     starts: new ulong[] { 2, 1 },
     strides: new ulong[] { 35, 17 },
@@ -692,7 +692,7 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 {
     var start = i * SEGMENT_SIZE;
     var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
-    var fileSelection = new RegularHyperslabSelection(start, block: SEGMENT_SIZE)
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
 
     dataset.Read<float>(partialBuffer, fileSelection);
 });
@@ -717,7 +717,7 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 {
     var start = i * SEGMENT_SIZE;
     var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
-    var fileSelection = new RegularHyperslabSelection(start, block: SEGMENT_SIZE)
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
 
     dataset.Read<float>(partialBuffer, fileSelection);
 });
@@ -784,7 +784,7 @@ async Task LoadAndProcessDataAsynchronously()
 {
     var processedData1Task = Task.Run(async () => 
     {
-        var fileSelection1 = new RegularHyperslabSelection(start: 0, block: 50);
+        var fileSelection1 = new HyperslabSelection(start: 0, block: 50);
         var data1 = await dataset1.ReadAsync<int>(fileSelection1);
 
         ProcessData(data1);
@@ -792,7 +792,7 @@ async Task LoadAndProcessDataAsynchronously()
 
     var processedData2Task = Task.Run(async () => 
     {
-        var fileSelection2 = new RegularHyperslabSelection(start: 50, block: 50);
+        var fileSelection2 = new HyperslabSelection(start: 50, block: 50);
         var data2 = await dataset2.ReadAsync<int>(fileSelection2);
 
         ProcessData(data2);

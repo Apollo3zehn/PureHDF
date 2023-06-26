@@ -151,7 +151,7 @@ namespace PureHDF.Tests
             long res;
 
             var dims = new ulong[] { 3, 4, 5 };
-            Add(container, fileId, "reference", "referenced", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), dims);
+            Add(ContainerType.Dataset, fileId, "reference", "referenced", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), dims);
 
             var length = 5;
             var data = new NativeRegionReference1[length];

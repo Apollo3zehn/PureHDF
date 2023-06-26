@@ -111,12 +111,12 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public void CanReadAttribute_Unknown()
+        public void CanReadAttribute_UnknownStruct()
         {
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, (Action<long>)(fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute)));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
@@ -320,6 +320,52 @@ namespace PureHDF.Tests.Reading
 
                     Assert.True(result);
                 }
+            });
+        }
+
+        [Fact]
+        public void CanReadDataset_Reference_Region()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                /* it seems to be impossible to create a regular hyperslab but it should work even without this test */
+
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Attribute));
+
+                // Act
+                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                var dataset_referenced = root.Group("reference").Dataset("referenced");
+                var attribute_region = root.Group("reference").Attribute("region");
+                var references = attribute_region.Read<NativeRegionReference1>();
+
+                static int[] Read(INativeFile root, IH5Dataset referenced, NativeRegionReference1 reference)
+                {
+                    var selection = root.Get(reference);
+                    var actual = referenced.Read<int>(fileSelection: selection);
+
+                    return actual;
+                }
+
+                var actual_none = Read(root, dataset_referenced, references[0]);
+                var actual_point = Read(root, dataset_referenced, references[1]);
+                // var actual_regular_hyperslab = Read(root, dataset_referenced, references[2]);
+                var actual_irregular_hyperslab = Read(root, dataset_referenced, references[3]);
+                var actual_all = Read(root, dataset_referenced, references[4]);
+
+                // Assert
+                var expected_point = new int[] { 2, 27, 59, 50 };
+                // var expected_regular_hyperslab = new int[] { 0, 1, 3, 4 };
+                var expected_irregular_hyperslab = new int[] { 0, 1, 3, 4 };
+                var expected_all = TestData.SmallData.Take(60);
+
+                Assert.Empty(actual_none);
+                Assert.True(expected_point.SequenceEqual(actual_point));
+                // Assert.True(expected_regular_hyperslab.SequenceEqual(actual_regular_hyperslab));
+                Assert.True(expected_irregular_hyperslab.SequenceEqual(actual_irregular_hyperslab));
+                Assert.True(expected_all.SequenceEqual(actual_all));
+
+                Assert.Throws<Exception>(() => root.Get(default(NativeRegionReference1)));
             });
         }
 

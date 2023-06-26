@@ -189,7 +189,7 @@ namespace PureHDF.Tests.Reading
             var dims = new ulong[] { 14, 14, 14 };
             var chunkDims = new ulong[] { 3, 3, 3 };
 
-            var selection = new RegularHyperslabSelection(
+            var selection = new HyperslabSelection(
                 rank: 3,
                 starts: new ulong[] { 2, 3, 2 },
                 strides: new ulong[] { 6, 5, 6 },
@@ -398,12 +398,12 @@ namespace PureHDF.Tests.Reading
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 3 })]
-        public void RegularHyperslabSelectionThrowsForInvalidRank(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
+        public void HyperslabSelectionThrowsForInvalidRank(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
         {
             // Arrange
 
             // Act
-            void action() => _ = new RegularHyperslabSelection(rank: 3, start, stride, count, block);
+            void action() => _ = new HyperslabSelection(rank: 3, start, stride, count, block);
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -412,12 +412,12 @@ namespace PureHDF.Tests.Reading
         [Theory]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 0 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
         [InlineData(new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 2 }, new ulong[] { 1, 2, 3 }, new ulong[] { 1, 2, 3 })]
-        public void RegularHyperslabSelectionThrowsForInvalidStride(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
+        public void HyperslabSelectionThrowsForInvalidStride(ulong[] start, ulong[] stride, ulong[] count, ulong[] block)
         {
             // Arrange
 
             // Act
-            void action() => _ = new RegularHyperslabSelection(rank: 3, start, stride, count, block);
+            void action() => _ = new HyperslabSelection(rank: 3, start, stride, count, block);
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -427,7 +427,7 @@ namespace PureHDF.Tests.Reading
         public void RegularHyperslabWalkThrowsForInvalidLimitsRank()
         {
             // Arrange
-            var selection = new RegularHyperslabSelection(
+            var selection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 25 },
                 strides: new ulong[] { 4, 4 },
@@ -447,7 +447,7 @@ namespace PureHDF.Tests.Reading
         public void RegularHyperslabWalkThrowsForExceedingLimits(ulong[] limits)
         {
             // Arrange
-            var selection = new RegularHyperslabSelection(
+            var selection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 25 },
                 strides: new ulong[] { 4, 4 },
@@ -540,7 +540,7 @@ namespace PureHDF.Tests.Reading
         public void WalkThrowsForInvalidRank(ulong[] dims, ulong[] chunkDims)
         {
             // Arrange
-            var selection = new RegularHyperslabSelection(1, 4, 3, 3);
+            var selection = new HyperslabSelection(1, 4, 3, 3);
 
             // Act
             void action() => _ = SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
@@ -561,8 +561,8 @@ namespace PureHDF.Tests.Reading
             ulong[] targetStarts, ulong[] targetStrides, ulong[] targetCounts, ulong[] targetBlocks)
         {
             // Arrange
-            var sourceSelection = new RegularHyperslabSelection(rank: 2, sourceStarts, sourceStrides, sourceCounts, sourceBlocks);
-            var targetSelection = new RegularHyperslabSelection(rank: 2, targetStarts, targetStrides, targetCounts, targetBlocks);
+            var sourceSelection = new HyperslabSelection(rank: 2, sourceStarts, sourceStrides, sourceCounts, sourceBlocks);
+            var targetSelection = new HyperslabSelection(rank: 2, targetStarts, targetStrides, targetCounts, targetBlocks);
 
             var copyInfo = new CopyInfo<int>(
                 default!,
@@ -598,7 +598,7 @@ namespace PureHDF.Tests.Reading
             var chunkDims = new ulong[] { 6, 6 };
             var memoryDims = new ulong[] { 10, 10 };
 
-            var datasetSelection = new RegularHyperslabSelection(
+            var datasetSelection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 0, 1 },
                 strides: new ulong[] { 5, 5 },
@@ -606,7 +606,7 @@ namespace PureHDF.Tests.Reading
                 blocks: blocks
             );
 
-            var memorySelection = new RegularHyperslabSelection(
+            var memorySelection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 1 },
                 strides: new ulong[] { 5, 5 },
@@ -642,7 +642,7 @@ namespace PureHDF.Tests.Reading
             // Arrange
             var chunkDims = new ulong[] { 6, 6 };
 
-            var datasetSelection = new RegularHyperslabSelection(
+            var datasetSelection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 0, 1 },
                 strides: new ulong[] { 5, 5 },
@@ -650,7 +650,7 @@ namespace PureHDF.Tests.Reading
                 blocks: new ulong[] { 3, 2 }
             );
 
-            var memorySelection = new RegularHyperslabSelection(
+            var memorySelection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 1 },
                 strides: new ulong[] { 5, 5 },
@@ -721,7 +721,7 @@ namespace PureHDF.Tests.Reading
             var chunkDims = new ulong[] { 6, 6 };
             var memoryDims = new ulong[] { 10, 10 };
 
-            var datasetSelection = new RegularHyperslabSelection(
+            var datasetSelection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 0, 1 },
                 strides: new ulong[] { 5, 5 },
@@ -729,7 +729,7 @@ namespace PureHDF.Tests.Reading
                 blocks: new ulong[] { 3, 2 }
             );
 
-            var memorySelection = new RegularHyperslabSelection(
+            var memorySelection = new HyperslabSelection(
                 rank: 2,
                 starts: new ulong[] { 1, 1 },
                 strides: new ulong[] { 4, 25 /* should work */ },
@@ -823,13 +823,13 @@ namespace PureHDF.Tests.Reading
             var chunkDims = new ulong[] { 1, 2, 3 };
             var memoryDims = new ulong[] { 5, 6, 11 };
 
-            var sourceSelection = new RegularHyperslabSelection(rank: 3,
+            var sourceSelection = new HyperslabSelection(rank: 3,
                 starts: new ulong[] { 0, 1, 1 },
                 strides: new ulong[] { 1, 1, 1 },
                 counts: new ulong[] { 1, 2, 3 },
                 blocks: new ulong[] { 1, 1, 1 });
 
-            var targetSelection = new RegularHyperslabSelection(rank: 3,
+            var targetSelection = new HyperslabSelection(rank: 3,
                 starts: new ulong[] { 1, 1, 1 },
                 strides: new ulong[] { 1, 1, 1 },
                 counts: new ulong[] { 3, 1, 2 },
@@ -943,7 +943,7 @@ namespace PureHDF.Tests.Reading
             var chunkDims = new ulong[] { 6, 6, 3 };
             var memoryDims = new ulong[] { 11, 11, 12 };
 
-            var datasetSelection = new RegularHyperslabSelection(
+            var datasetSelection = new HyperslabSelection(
                 rank: 3,
                 starts: new ulong[] { 4, 4, 2 },
                 strides: new ulong[] { 2, 2, 4 },
@@ -951,7 +951,7 @@ namespace PureHDF.Tests.Reading
                 blocks: new ulong[] { 1, 1, 1 }
             );
 
-            var memorySelection = new RegularHyperslabSelection(
+            var memorySelection = new HyperslabSelection(
                 rank: 3,
                 starts: new ulong[] { 2, 1, 1 },
                 strides: new ulong[] { 3, 3, 3 },
@@ -1064,7 +1064,7 @@ namespace PureHDF.Tests.Reading
                 var chunkDims = new ulong[] { 7, 20, 3 };
                 var memoryDims = new ulong[] { 75, 25 };
 
-                var datasetSelection = new RegularHyperslabSelection(
+                var datasetSelection = new HyperslabSelection(
                     rank: 3,
                     starts: new ulong[] { 2, 2, 0 },
                     strides: new ulong[] { 5, 8, 2 },
@@ -1072,7 +1072,7 @@ namespace PureHDF.Tests.Reading
                     blocks: new ulong[] { 3, 5, 2 }
                 );
 
-                var memorySelection = new RegularHyperslabSelection(
+                var memorySelection = new HyperslabSelection(
                     rank: 2,
                     starts: new ulong[] { 2, 1 },
                     strides: new ulong[] { 35, 17 },

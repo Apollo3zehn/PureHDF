@@ -249,7 +249,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
                     var stridesAndBlocks = Space.Dimensions.ToArray();
                     stridesAndBlocks.AsSpan().Fill(1);
 
-                    fileSelection = new RegularHyperslabSelection(
+                    fileSelection = new HyperslabSelection(
                         rank: Space.Dimensions.Length,
                         starts: starts,
                         strides: stridesAndBlocks,
@@ -267,7 +267,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         var hyperSlabSelectString = default(string?);
         var pointSelectionJsonElement = default(JsonElement);
 
-        if (fileSelection is RegularHyperslabSelection hs)
+        if (fileSelection is HyperslabSelection hs)
         {
             var selections = Enumerable
                 .Range(0, hs.Rank)
@@ -324,7 +324,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         memoryDims ??= new ulong[] { sourceElementCount };
 
         /* memory selection */
-        memorySelection ??= new RegularHyperslabSelection(start: 0, block: sourceElementCount);
+        memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
         /* target buffer */
         var destinationElementCount = Utils.CalculateSize(memoryDims);

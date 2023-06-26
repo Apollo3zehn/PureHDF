@@ -18,7 +18,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var selection = new RegularHyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
+            var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
             var actual = dataset.Read<int>(selection);
 
             // Assert
@@ -38,7 +38,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var selection = new RegularHyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
+            var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
             var actual = await dataset.ReadAsync<int>(selection);
 
             // Assert
