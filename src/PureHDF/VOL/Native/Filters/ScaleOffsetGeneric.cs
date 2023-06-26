@@ -17,7 +17,7 @@ internal static class ScaleOffsetGeneric
 
         const int payloadOffset = 21;
 
-        var parameters = ScaleOffsetGeneric.ValidateAndPrepareParameters(parametersBuffer);
+        var parameters = ValidateAndPrepareParameters(parametersBuffer);
         var spanData = data.Span;
 
         /* minbits */
@@ -49,8 +49,7 @@ internal static class ScaleOffsetGeneric
         /* special case: minbits equal to full precision */
         if (minbits == parameters.Size * 8)
         {
-            spanData
-[payloadOffset..]
+            spanData[payloadOffset..]
                 .CopyTo(output);
         }
 
@@ -59,7 +58,7 @@ internal static class ScaleOffsetGeneric
         {
             /* decompress the buffer if minbits not equal to zero */
             if (minbits != 0)
-                ScaleOffsetGeneric.DecompressAll(output, spanData[payloadOffset..], parameters, minbits);
+                DecompressAll(output, spanData[payloadOffset..], parameters, minbits);
 
             /* postprocess after decompression */
             if (parameters.Class == Class.Integer)
@@ -140,7 +139,7 @@ internal static class ScaleOffsetGeneric
         /* decompress */
         for (int i = 0; i < parameters.ElementCount; i++)
         {
-            ScaleOffsetGeneric.DecompressOneAtomic(
+            DecompressOneAtomic(
                 output[(i * (int)parameters.Size)..],
                 input,
                 ref j,

@@ -58,17 +58,17 @@ public static class H5Blosc2
             *  size.
             */
 
-            fixed (byte* srcPtr = info.Buffer.Span)
+            fixed (byte* srcPtr = info.SourceBuffer.Span)
             {
                 Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
 
-                resultBuffer = info.GetResultBuffer((int)outbuf_size);
+                resultBuffer = info.GetBuffer((int)outbuf_size);
 
                 fixed (byte* destPtr = resultBuffer.Span)
                 {
                     status = Blosc.blosc2_decompress(
                         src: new IntPtr(srcPtr), 
-                        srcsize: info.Buffer.Length, 
+                        srcsize: info.SourceBuffer.Length, 
                         dest: new IntPtr(destPtr), 
                         destsize: (int)outbuf_size);
 

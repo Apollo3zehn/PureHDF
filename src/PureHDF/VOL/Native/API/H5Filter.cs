@@ -7,16 +7,16 @@
 /// <param name="Parameters">The filter parameters.</param>
 /// <param name="IsLast">A boolean which indicates if this is the last filter in the pipeline.</param>
 /// <param name="ChunkSize">The chunk size.</param>
-/// <param name="Buffer">The source buffer.</param>
-/// <param name="GetResultBuffer">A function to get the target buffer. The buffer is valid only for the lifetime of this method.</param>
+/// <param name="SourceBuffer">The source buffer.</param>
+/// <param name="GetBuffer">A function to get the target buffer. The buffer is valid only for the lifetime of this method.</param>
 /// <returns>The target buffer.</returns>
 public record class FilterInfo(
     H5FilterFlags Flags,
     uint[] Parameters,
     bool IsLast,
     int ChunkSize,
-    Memory<byte> Buffer,
-    Func<int, Memory<byte>> GetResultBuffer);
+    Memory<byte> SourceBuffer,
+    Func<int, Memory<byte>> GetBuffer);
 
 /// <summary>
 /// A class to manage filters.

@@ -17,7 +17,7 @@ public static class H5DeflateSharpZipLib
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(info.Buffer);
+            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
 
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
@@ -29,7 +29,7 @@ public static class H5DeflateSharpZipLib
 
             if (info.IsLast)
             {
-                var resultBuffer = info.GetResultBuffer(info.ChunkSize /* minimum size */);
+                var resultBuffer = info.GetBuffer(info.ChunkSize /* minimum size */);
                 using var decompressedStream = new MemorySpanStream(resultBuffer);
 
                 decompressionStream.CopyTo(decompressedStream);

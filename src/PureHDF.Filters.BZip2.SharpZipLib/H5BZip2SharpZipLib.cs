@@ -16,11 +16,11 @@ public static class H5BZip2SharpZipLib
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(info.Buffer);
+            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
 
             if (info.IsLast)
             {
-                var resultBuffer = info.GetResultBuffer(info.ChunkSize /* minimum size */);
+                var resultBuffer = info.GetBuffer(info.ChunkSize /* minimum size */);
                 using var decompressedStream = new MemorySpanStream(resultBuffer);
 
                 BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);

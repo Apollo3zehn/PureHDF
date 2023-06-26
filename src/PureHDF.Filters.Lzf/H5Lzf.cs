@@ -20,11 +20,11 @@ public static class H5Lzf
 
             while (status == 0)
             {
-                var target = info.GetResultBuffer((int)targetSize);
-                status = Decompress(info.Buffer.Span, target.Span);
+                var target = info.GetBuffer((int)targetSize);
+                status = Decompress(info.SourceBuffer.Span, target.Span);
 
                 if (status == 0)
-                    targetSize += (uint)info.Buffer.Length;
+                    targetSize += (uint)info.SourceBuffer.Length;
 
                 else
                     return target[..(int)status];

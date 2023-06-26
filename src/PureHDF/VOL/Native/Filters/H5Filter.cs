@@ -29,7 +29,7 @@ static partial class H5Filter
 
     #region Methods
 
-    internal static void ExecutePipeline(
+       internal static void ExecutePipeline(
         List<FilterDescription> pipeline,
         uint filterMask,
         H5FilterFlags flags,
@@ -41,8 +41,6 @@ static partial class H5Filter
         /* Read */
         if (flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var memoryOwners = new List<IMemoryOwner<byte>>();
-
             for (int i = pipeline.Count; i > 0; --i)
             {
                 /* check if filter should be skipped */
@@ -63,12 +61,12 @@ static partial class H5Filter
                 try
                 {
                     var filterInfo = new FilterInfo(
-                        tmpFlags,
-                        filter.ClientData,
-                        isLast,
-                        resultBuffer.Length,
-                        filterBuffer,
-                        minimumLength => 
+                        Flags: tmpFlags,
+                        Parameters: filter.ClientData,
+                        IsLast: isLast,
+                        ChunkSize: resultBuffer.Length,
+                        SourceBuffer: filterBuffer,
+                        GetBuffer: minimumLength => 
                         {
                             /* return result buffer if this is the last filter and it is large enough */
                             if (isLast && minimumLength <= resultBuffer.Length)
@@ -79,9 +77,12 @@ static partial class H5Filter
                             /* otherwise, rent a buffer from the memory pool */
                             else
                             {
-                                var memoryOwner = MemoryPool<byte>.Shared.Rent(minimumLength);
-                                memoryOwners.Add(memoryOwner);
-                                return memoryOwner.Memory[minimumLength..];
+                                // TODO renting memory is disabled because it is hard to know when to free it:
+                                /* I tried to free rented memory but it seems to be
+                                 * impossible to determine if the returned memory belongs
+                                 * to one of the IMemoryOwners in the memoryOwners variable
+                                 */
+                                return new byte[minimumLength];
                             }
                         });
 
@@ -117,8 +118,8 @@ static partial class H5Filter
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var resultBuffer = info.GetResultBuffer(info.Buffer.Length);
-            ShuffleFilter.Unshuffle((int)info.Parameters[0], info.Buffer.Span, resultBuffer.Span);
+            var resultBuffer = info.GetBuffer(info.SourceBuffer.Length);
+            ShuffleFilter.Unshuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
 
             return resultBuffer;
         }
@@ -126,8 +127,8 @@ static partial class H5Filter
         // write
         else
         {
-            var filteredBuffer = info.GetResultBuffer(info.Buffer.Length);
-            ShuffleFilter.Shuffle((int)info.Parameters[0], info.Buffer.Span, filteredBuffer.Span);
+            var filteredBuffer = info.GetBuffer(info.SourceBuffer.Length);
+            ShuffleFilter.Shuffle((int)info.Parameters[0], info.SourceBuffer.Span, filteredBuffer.Span);
 
             return filteredBuffer;
         }
@@ -140,14 +141,14 @@ static partial class H5Filter
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var bufferWithoutChecksum = info.Buffer[0..^4];
+            var bufferWithoutChecksum = info.SourceBuffer[0..^4];
 
             /* Do checksum if it's enabled for read; otherwise skip it
              * to save performance. */
             if (!info.Flags.HasFlag(H5FilterFlags.SkipEdc))
             {
                 /* Get the stored checksum */
-                var storedFletcher_bytes = info.Buffer.Span[^4..];
+                var storedFletcher_bytes = info.SourceBuffer.Span[^4..];
                 var storedFletcher = BitConverter.ToUInt32(storedFletcher_bytes.ToArray(), 0);
 
                 /* Compute checksum */
@@ -176,7 +177,7 @@ static partial class H5Filter
     {
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-            return ScaleOffsetGeneric.Decompress(info.Buffer, info.Parameters);
+            return ScaleOffsetGeneric.Decompress(info.SourceBuffer, info.Parameters);
 
         // write
         else
@@ -191,14 +192,14 @@ static partial class H5Filter
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(info.Buffer);
+            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
 
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
 
             if (info.IsLast)
             {
-                var resultBuffer = info.GetResultBuffer(info.ChunkSize /* minimum size */);
+                var resultBuffer = info.GetBuffer(info.ChunkSize /* minimum size */);
                 using var decompressedStream = new MemorySpanStream(resultBuffer);
                 using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
 

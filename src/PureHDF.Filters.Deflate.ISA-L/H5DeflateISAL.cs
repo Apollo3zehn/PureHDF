@@ -24,7 +24,7 @@ public static class H5DeflateISAL
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var buffer = info.Buffer;
+            var buffer = info.SourceBuffer;
             var state = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
 
             ISAL.isal_inflate_reset(_state_ptr.Value);
@@ -33,7 +33,7 @@ public static class H5DeflateISAL
 
             var length = 0;
             var minimumSize = Math.Max(buffer.Length, info.ChunkSize);
-            var inflated = info.GetResultBuffer(minimumSize);
+            var inflated = info.GetBuffer(minimumSize);
             var sourceBuffer = buffer.Span;
             var targetBuffer = inflated.Span;
 
@@ -61,7 +61,7 @@ public static class H5DeflateISAL
                         {
                             // double array size
                             var tmp = inflated;
-                            inflated = info.GetResultBuffer(tmp.Length * 2 /* minimum size */);
+                            inflated = info.GetBuffer(tmp.Length * 2 /* minimum size */);
                             tmp.CopyTo(inflated);
                             targetBuffer = inflated[tmp.Length..].Span;
                         }
