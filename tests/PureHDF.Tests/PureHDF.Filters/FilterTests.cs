@@ -250,7 +250,7 @@ namespace PureHDF.Tests.Reading.Filters
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Fletcher(fileId));
+            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddFilteredDataset_Fletcher);
 
             // Act
             using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
@@ -274,9 +274,9 @@ namespace PureHDF.Tests.Reading.Filters
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_ZLib(fileId));
+            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddFilteredDataset_ZLib);
 
-            FilterFunction? func = filterFuncId switch
+            Func<FilterInfo, Memory<byte>>? func = filterFuncId switch
             {
                 "MicrosoftDeflateStream" => null, /* default */
                 "SharpZipLibInflater" => H5DeflateSharpZipLib.FilterFunction,
@@ -302,7 +302,7 @@ namespace PureHDF.Tests.Reading.Filters
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddFilteredDataset_Multi(fileId));
+            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddFilteredDataset_Multi);
 
             // Act
             using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
@@ -342,8 +342,11 @@ namespace PureHDF.Tests.Reading.Filters
             var version = H5F.libver_t.LATEST;
 
             var bytesOfType = Unsafe.SizeOf<T>();
-            var expected = Enumerable.Range(0, length * bytesOfType)
-                .Select(value => unchecked((byte)value)).ToArray();
+
+            var expected = Enumerable
+                .Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value))
+                .ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
@@ -393,8 +396,10 @@ namespace PureHDF.Tests.Reading.Filters
             var version = H5F.libver_t.LATEST;
             var bytesOfType = Unsafe.SizeOf<T>();
 
-            var expected = Enumerable.Range(0, length * bytesOfType)
-                .Select(value => unchecked((byte)value)).ToArray();
+            var expected = Enumerable
+                .Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value))
+                .ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
@@ -443,8 +448,11 @@ namespace PureHDF.Tests.Reading.Filters
             var version = H5F.libver_t.LATEST;
 
             var bytesOfType = Unsafe.SizeOf<T>();
-            var expected = Enumerable.Range(0, length * bytesOfType)
-                .Select(value => unchecked((byte)value)).ToArray();
+
+            var expected = Enumerable
+                .Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value))
+                .ToArray();
 
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType: bytesOfType, length, expected));
@@ -513,8 +521,11 @@ namespace PureHDF.Tests.Reading.Filters
         {
             // Arrange
             var bytesOfType = Unsafe.SizeOf<T>();
-            var expected = Enumerable.Range(0, length * bytesOfType)
-                .Select(value => unchecked((byte)value)).ToArray();
+
+            var expected = Enumerable
+                .Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value))
+                .ToArray();
 
             var actual_converted = new byte[expected.Length];
             EndiannessConverterGeneric.Convert(bytesOfType, expected, actual_converted);
@@ -536,8 +547,11 @@ namespace PureHDF.Tests.Reading.Filters
             // Arrange
             var length = 10_000_000;
             var bytesOfType = Unsafe.SizeOf<int>();
-            var expected = Enumerable.Range(0, length * bytesOfType)
-                .Select(value => unchecked((byte)value)).ToArray();
+
+            var expected = Enumerable
+                .Range(0, length * bytesOfType)
+                .Select(value => unchecked((byte)value))
+                .ToArray();
 
             var actual_converted = new byte[expected.Length];
             EndiannessConverterGeneric.Convert(bytesOfType, expected, actual_converted);
@@ -580,6 +594,7 @@ namespace PureHDF.Tests.Reading.Filters
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
+
             var filePath = TestUtils.PrepareTestFile(version, fileId =>
             {
                 TestUtils.AddSmall(fileId, ContainerType.Attribute);

@@ -16,7 +16,7 @@ internal class MemorySpanStream : Stream
 
     public override bool CanSeek => true;
 
-    public override bool CanWrite => false;
+    public override bool CanWrite => true;
 
     public override long Length => _memory.Length;
 
@@ -48,6 +48,23 @@ internal class MemorySpanStream : Stream
 
         return length;
     }
+
+    public override void Write(byte[] buffer, int offset, int count)
+    {
+        buffer.AsSpan(offset, count)
+            .CopyTo(_sliced.Span);
+
+        Position += count;
+    }
+
+#if NETSTANDARD2_1_OR_GREATER
+    public override void Write(ReadOnlySpan<byte> buffer)
+    {
+        buffer.CopyTo(_sliced.Span);
+
+        Position += buffer.Length;
+    }
+#endif
 
     public override long Seek(long offset, SeekOrigin origin)
     {
@@ -91,11 +108,6 @@ internal class MemorySpanStream : Stream
     }
 
     public override void SetLength(long value)
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void Write(byte[] buffer, int offset, int count)
     {
         throw new NotImplementedException();
     }

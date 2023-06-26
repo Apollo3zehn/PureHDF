@@ -1,7 +1,9 @@
 ﻿namespace PureHDF;
+
 internal class OffsetStream : IH5ReadStream
 {
     private readonly H5DriverBase _driver;
+
     private readonly long _baseAddress;
 
     public OffsetStream(H5DriverBase driver)

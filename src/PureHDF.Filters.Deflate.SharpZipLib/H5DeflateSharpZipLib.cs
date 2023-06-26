@@ -9,15 +9,15 @@ namespace PureHDF.Filters;
 public static class H5DeflateSharpZipLib
 {
     /// <summary>
-    /// Gets the filter function.
+    /// The Deflate filter function.
     /// </summary>
-    public unsafe static FilterFunction FilterFunction { get; } = (flags, parameters, buffer) =>
+    /// <param name="info">The filter info.</param>
+    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
     {
         /* We're decompressing */
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(buffer);
-            using var tar = new MemoryStream(buffer.Length /* minimum size to expect */);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
 
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
@@ -27,11 +27,25 @@ public static class H5DeflateSharpZipLib
                 IsStreamOwner = false
             };
 
-            decompressionStream.CopyTo(tar);
+            if (info.IsLast)
+            {
+                var resultBuffer = info.GetResultBuffer(info.ChunkSize /* minimum size */);
+                using var decompressedStream = new MemorySpanStream(resultBuffer);
 
-            return tar
-                .GetBuffer()
-                .AsMemory(0, (int)tar.Length);
+                decompressionStream.CopyTo(decompressedStream);
+
+                return resultBuffer;
+            }
+
+            else
+            {
+                using var decompressedStream = new MemoryStream(info.ChunkSize /* minimum size to expect */);
+                decompressionStream.CopyTo(decompressedStream);
+
+                return decompressedStream
+                    .GetBuffer()
+                    .AsMemory(0, (int)decompressedStream.Length);
+            }
         }
 
         /* We're compressing */
@@ -39,5 +53,5 @@ public static class H5DeflateSharpZipLib
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
-    };
+    }
 }

@@ -6,27 +6,28 @@
 public static class H5Lzf
 {
     /// <summary>
-    /// Gets the filter function.
+    /// The LZF filter function.
     /// </summary>
-    public unsafe static FilterFunction FilterFunction { get; } = (flags, parameters, buffer) =>
+    /// <param name="info">The filter info.</param>
+    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
     {
         /* We're decompressing */
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
             uint status = 0;
 
-            var targetSize = parameters[2];
+            var targetSize = info.Parameters[2];
 
             while (status == 0)
             {
-                var target = new byte[targetSize];
-                status = Decompress(buffer.Span, target);
+                var target = info.GetResultBuffer((int)targetSize);
+                status = Decompress(info.Buffer.Span, target.Span);
 
                 if (status == 0)
-                    targetSize += (uint)buffer.Length;
+                    targetSize += (uint)info.Buffer.Length;
 
                 else
-                    return target.AsMemory(0, (int)status);
+                    return target[..(int)status];
             }
             
             throw new Exception("This should never happen.");
@@ -37,7 +38,7 @@ public static class H5Lzf
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
-    };
+    }
 
     // https://github.com/h5py/h5py/blob/7e769ee3e229848e1fd74eb56382cb7b82c97ed0/lzf/lzf/lzf_d.c
     private static unsafe uint Decompress(Span<byte> input, Span<byte> output)

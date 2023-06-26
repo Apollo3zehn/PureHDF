@@ -3,11 +3,20 @@
 /// <summary>
 /// A delegate which describes a filter function.
 /// </summary>
-/// <param name="flags">The filter flags.</param>
-/// <param name="parameters">The filter parameters.</param>
-/// <param name="buffer">The source buffer.</param>
+/// <param name="Flags">The filter flags.</param>
+/// <param name="Parameters">The filter parameters.</param>
+/// <param name="IsLast">A boolean which indicates if this is the last filter in the pipeline.</param>
+/// <param name="ChunkSize">The chunk size.</param>
+/// <param name="Buffer">The source buffer.</param>
+/// <param name="GetResultBuffer">A function to get the target buffer. The buffer is valid only for the lifetime of this method.</param>
 /// <returns>The target buffer.</returns>
-public delegate Memory<byte> FilterFunction(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer);
+public record class FilterInfo(
+    H5FilterFlags Flags,
+    uint[] Parameters,
+    bool IsLast,
+    int ChunkSize,
+    Memory<byte> Buffer,
+    Func<int, Memory<byte>> GetResultBuffer);
 
 /// <summary>
 /// A class to manage filters.
@@ -20,9 +29,17 @@ public static partial class H5Filter
     /// <param name="identifier">The filter identifier.</param>
     /// <param name="name">The filter name.</param>
     /// <param name="filterFunction">The filter function.</param>
-    public static void Register(H5FilterID identifier, string name, FilterFunction filterFunction)
+    public static void Register(
+        H5FilterID identifier,
+         string name, 
+         Func<FilterInfo, Memory<byte>> filterFunction)
     {
-        var registration = new H5FilterRegistration((FilterIdentifier)identifier, name, filterFunction);
-        Registrations.AddOrUpdate((FilterIdentifier)identifier, registration, (_, oldRegistration) => registration);
+        var registration = new H5FilterRegistration(
+            (FilterIdentifier)identifier, 
+            name, 
+            filterFunction);
+
+        Registrations
+            .AddOrUpdate((FilterIdentifier)identifier, registration, (_, oldRegistration) => registration);
     }
 }

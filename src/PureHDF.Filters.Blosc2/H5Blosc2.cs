@@ -9,15 +9,17 @@ namespace PureHDF.Filters;
 public static class H5Blosc2
 {
     /// <summary>
-    /// Gets the filter function.
+    /// The Blosc2 filter function.
     /// </summary>
-    public unsafe static FilterFunction FilterFunction { get; } = (flags, parameters, buffer) =>
+    /// <param name="info">The filter info.</param>
+    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
     {
         // adapted from https://github.com/Blosc/hdf5-blosc/blob/bd8ee59708f366ac561153858735165d3a543b18/src/blosc_filter.c#L145-L272
         int status = 0;
         uint clevel = 5;
         uint doshuffle = 1;
-        byte[]? resultBuffer = default;
+
+        var parameters = info.Parameters;
 
         /* Filter params that are always set */
         var typesize = parameters[2];                   /* The datatype size */
@@ -44,7 +46,9 @@ public static class H5Blosc2
         }
 
         /* We're decompressing */
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        Memory<byte> resultBuffer = default;
+
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
             /* Extract the exact outbuf_size from the buffer header.
             *
@@ -54,17 +58,17 @@ public static class H5Blosc2
             *  size.
             */
 
-            fixed (byte* srcPtr = buffer.Span)
+            fixed (byte* srcPtr = info.Buffer.Span)
             {
                 Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
 
-                resultBuffer = new byte[outbuf_size];
+                resultBuffer = info.GetResultBuffer((int)outbuf_size);
 
-                fixed (byte* destPtr = resultBuffer)
+                fixed (byte* destPtr = resultBuffer.Span)
                 {
                     status = Blosc.blosc2_decompress(
                         src: new IntPtr(srcPtr), 
-                        srcsize: buffer.Length, 
+                        srcsize: info.Buffer.Length, 
                         dest: new IntPtr(destPtr), 
                         destsize: (int)outbuf_size);
 
@@ -82,5 +86,5 @@ public static class H5Blosc2
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
-    };
+    }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.IO.Compression;
 
 namespace PureHDF.Filters;
@@ -28,17 +29,20 @@ static partial class H5Filter
 
     #region Methods
 
-    internal static void ExecutePipeline(List<FilterDescription> pipeline,
-                                         uint filterMask,
-                                         H5FilterFlags flags,
-                                         Memory<byte> filterBuffer,
-                                         Memory<byte> resultBuffer)
+    internal static void ExecutePipeline(
+        List<FilterDescription> pipeline,
+        uint filterMask,
+        H5FilterFlags flags,
+        Memory<byte> filterBuffer,
+        Memory<byte> resultBuffer)
     {
         // H5Z.c (H5Z_pipeline)
 
         /* Read */
         if (flags.HasFlag(H5FilterFlags.Decompress))
         {
+            var memoryOwners = new List<IMemoryOwner<byte>>();
+
             for (int i = pipeline.Count; i > 0; --i)
             {
                 /* check if filter should be skipped */
@@ -54,10 +58,34 @@ static partial class H5Filter
                 }
 
                 var tmpFlags = (H5FilterFlags)((ushort)flags | (ushort)filter.Flags);
+                var isLast = i == 1;
 
                 try
                 {
-                    filterBuffer = registration.FilterFunction(tmpFlags, filter.ClientData, filterBuffer);
+                    var filterInfo = new FilterInfo(
+                        tmpFlags,
+                        filter.ClientData,
+                        isLast,
+                        resultBuffer.Length,
+                        filterBuffer,
+                        minimumLength => 
+                        {
+                            /* return result buffer if this is the last filter and it is large enough */
+                            if (isLast && minimumLength <= resultBuffer.Length)
+                            {
+                                return resultBuffer;
+                            }
+
+                            /* otherwise, rent a buffer from the memory pool */
+                            else
+                            {
+                                var memoryOwner = MemoryPool<byte>.Shared.Rent(minimumLength);
+                                memoryOwners.Add(memoryOwner);
+                                return memoryOwner.Memory[minimumLength..];
+                            }
+                        });
+
+                    filterBuffer = registration.FilterFunction(filterInfo);
                 }
                 catch (Exception ex)
                 {
@@ -65,9 +93,14 @@ static partial class H5Filter
                 }
             }
 
-            filterBuffer[0..resultBuffer.Length]
-                .CopyTo(resultBuffer);
+            /* skip data copying if possible */
+            if (!filterBuffer.Equals(resultBuffer))
+            {
+                filterBuffer[0..resultBuffer.Length]
+                    .CopyTo(resultBuffer);
+            }
         }
+
         /* Write */
         else
         {
@@ -79,42 +112,42 @@ static partial class H5Filter
 
     #region Built-in filters
 
-    private static Memory<byte> ShuffleFilterFuncion(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+    private static Memory<byte> ShuffleFilterFuncion(FilterInfo info)
     {
         // read
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var unfilteredBuffer = new byte[buffer.Length];
-            ShuffleFilter.Unshuffle((int)parameters[0], buffer.Span, unfilteredBuffer);
+            var resultBuffer = info.GetResultBuffer(info.Buffer.Length);
+            ShuffleFilter.Unshuffle((int)info.Parameters[0], info.Buffer.Span, resultBuffer.Span);
 
-            return unfilteredBuffer;
+            return resultBuffer;
         }
 
         // write
         else
         {
-            var filteredBuffer = new byte[buffer.Length];
-            ShuffleFilter.Shuffle((int)parameters[0], buffer.Span, filteredBuffer);
+            var filteredBuffer = info.GetResultBuffer(info.Buffer.Length);
+            ShuffleFilter.Shuffle((int)info.Parameters[0], info.Buffer.Span, filteredBuffer.Span);
 
             return filteredBuffer;
         }
     }
 
-    private static Memory<byte> Fletcher32FilterFuncion(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+    private static Memory<byte> Fletcher32FilterFuncion(FilterInfo info)
     {
         // H5Zfletcher32.c (H5Z_filter_fletcher32)
 
         // read
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var bufferWithoutChecksum = buffer[0..^4];
+            var bufferWithoutChecksum = info.Buffer[0..^4];
 
             /* Do checksum if it's enabled for read; otherwise skip it
              * to save performance. */
-            if (!flags.HasFlag(H5FilterFlags.SkipEdc))
+            if (!info.Flags.HasFlag(H5FilterFlags.SkipEdc))
             {
                 /* Get the stored checksum */
-                var storedFletcher_bytes = buffer.Span[^4..^0];
+                var storedFletcher_bytes = info.Buffer.Span[^4..];
                 var storedFletcher = BitConverter.ToUInt32(storedFletcher_bytes.ToArray(), 0);
 
                 /* Compute checksum */
@@ -134,42 +167,57 @@ static partial class H5Filter
         }
     }
 
-    private static Memory<byte> NbitFilterFuncion(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+    private static Memory<byte> NbitFilterFuncion(FilterInfo info)
     {
         throw new Exception($"The filter '{FilterIdentifier.Nbit}' is not yet supported by PureHDF.");
     }
 
-    private static Memory<byte> ScaleOffsetFilterFuncion(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+    private static Memory<byte> ScaleOffsetFilterFuncion(FilterInfo info)
     {
         // read
-        if (flags.HasFlag(H5FilterFlags.Decompress))
-            return ScaleOffsetGeneric.Decompress(buffer, parameters);
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
+            return ScaleOffsetGeneric.Decompress(info.Buffer, info.Parameters);
 
         // write
         else
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
 
-    private static Memory<byte> DeflateFilterFuncion(H5FilterFlags flags, uint[] parameters, Memory<byte> buffer)
+    private static Memory<byte> DeflateFilterFuncion(FilterInfo info)
     {
         // Span-based (non-stream) compression APIs
         // https://github.com/dotnet/runtime/issues/39327
 
         // read
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(buffer);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
 
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
 
-            using var decompressedStream = new MemoryStream(buffer.Length /* minimum size to expect */);
-            using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
-            decompressionStream.CopyTo(decompressedStream);
+            if (info.IsLast)
+            {
+                var resultBuffer = info.GetResultBuffer(info.ChunkSize /* minimum size */);
+                using var decompressedStream = new MemorySpanStream(resultBuffer);
+                using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
 
-            return decompressedStream
-                .GetBuffer()
-                .AsMemory(0, (int)decompressedStream.Length);
+                decompressionStream.CopyTo(decompressedStream);
+
+                return resultBuffer;
+            }
+
+            else
+            {
+                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+                using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
+
+                decompressionStream.CopyTo(decompressedStream);
+
+                return decompressedStream
+                    .GetBuffer()
+                    .AsMemory(0, (int)decompressedStream.Length);
+            }
         }
 
         // write

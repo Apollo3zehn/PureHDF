@@ -8,21 +8,36 @@ namespace PureHDF.Filters;
 public static class H5BZip2SharpZipLib
 {
     /// <summary>
-    /// Gets the filter function.
+    /// The BZip2 filter function.
     /// </summary>
-    public unsafe static FilterFunction FilterFunction { get; } = (flags, parameters, buffer) =>
+    /// <param name="info">The filter info.</param>
+    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
     {
         /* We're decompressing */
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(buffer);
-            using var tar = new MemoryStream();
+            using var sourceStream = new MemorySpanStream(info.Buffer);
 
-            BZip2.Decompress(sourceStream, tar, isStreamOwner: false);
+            if (info.IsLast)
+            {
+                var resultBuffer = info.GetResultBuffer(info.ChunkSize /* minimum size */);
+                using var decompressedStream = new MemorySpanStream(resultBuffer);
 
-            return tar
-                .GetBuffer()
-                .AsMemory(0, (int)tar.Length);
+                BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
+
+                return resultBuffer;
+            }
+
+            else
+            {
+                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+
+                BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
+
+                return decompressedStream
+                    .GetBuffer()
+                    .AsMemory(0, (int)decompressedStream.Length);
+            }
         }
 
         /* We're compressing */
@@ -30,5 +45,5 @@ public static class H5BZip2SharpZipLib
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
-    };
+    }
 }

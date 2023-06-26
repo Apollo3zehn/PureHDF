@@ -16,13 +16,15 @@ public static class H5DeflateISAL
         trackAllValues: false);
 
     /// <summary>
-    /// Gets the filter function.
+    /// The hardware accelerated Deflate filter function based on Intel ISA-L.
     /// </summary>
-    public unsafe static FilterFunction FilterFunction { get; } = (flags, parameters, buffer) =>
+    /// <param name="info">The filter info.</param>
+    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
     {
         /* We're decompressing */
-        if (flags.HasFlag(H5FilterFlags.Decompress))
+        if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
+            var buffer = info.Buffer;
             var state = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
 
             ISAL.isal_inflate_reset(_state_ptr.Value);
@@ -30,9 +32,10 @@ public static class H5DeflateISAL
             buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
 
             var length = 0;
-            var inflated = new byte[buffer.Length /* minimum size to expect */];
+            var minimumSize = Math.Max(buffer.Length, info.ChunkSize);
+            var inflated = info.GetResultBuffer(minimumSize);
             var sourceBuffer = buffer.Span;
-            var targetBuffer = inflated.AsSpan();
+            var targetBuffer = inflated.Span;
 
             fixed (byte* ptrIn = sourceBuffer)
             {
@@ -58,9 +61,9 @@ public static class H5DeflateISAL
                         {
                             // double array size
                             var tmp = inflated;
-                            inflated = new byte[tmp.Length * 2];
-                            tmp.CopyTo(inflated, 0);
-                            targetBuffer = inflated.AsSpan(start: tmp.Length);
+                            inflated = info.GetResultBuffer(tmp.Length * 2 /* minimum size */);
+                            tmp.CopyTo(inflated);
+                            targetBuffer = inflated[tmp.Length..].Span;
                         }
                         else
                         {
@@ -70,8 +73,7 @@ public static class H5DeflateISAL
                 }
             }
 
-            return inflated
-                .AsMemory(0, length);
+            return inflated[..length];
         }
 
         /* We're compressing */
@@ -79,7 +81,7 @@ public static class H5DeflateISAL
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
-    };
+    }
 
     private static unsafe IntPtr CreateState()
     {

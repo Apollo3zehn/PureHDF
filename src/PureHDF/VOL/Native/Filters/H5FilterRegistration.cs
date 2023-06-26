@@ -2,7 +2,10 @@
 
 internal class H5FilterRegistration
 {
-    public H5FilterRegistration(FilterIdentifier identifier, string name, FilterFunction filterFunction)
+    public H5FilterRegistration(
+        FilterIdentifier identifier, 
+        string name, 
+        Func<FilterInfo, Memory<byte>> filterFunction)
     {
         Identifier = identifier;
         Name = name;
@@ -15,5 +18,5 @@ internal class H5FilterRegistration
     public string Name { get; set; }
     //public Func<H5Dataset, bool> CanApply { get; set; }
     //public Action<H5Dataset> SetLocal { get; set; }
-    public FilterFunction FilterFunction { get; set; }
+    public Func<FilterInfo, Memory<byte>> FilterFunction { get; set; }
 }
