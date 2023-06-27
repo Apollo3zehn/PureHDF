@@ -62,7 +62,9 @@ public static class H5Blosc2
             {
                 Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
 
-                resultBuffer = info.GetBuffer((int)outbuf_size);
+                resultBuffer = info.FinalBuffer.Equals(default)
+                    ? new byte[outbuf_size]
+                    : info.FinalBuffer;
 
                 fixed (byte* destPtr = resultBuffer.Span)
                 {

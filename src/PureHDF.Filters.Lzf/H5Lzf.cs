@@ -20,7 +20,10 @@ public static class H5Lzf
 
             while (status == 0)
             {
-                var target = info.GetBuffer((int)targetSize);
+                var target = info.FinalBuffer.Equals(default)
+                    ? new byte[(int)targetSize]
+                    : info.FinalBuffer;
+
                 status = Decompress(info.SourceBuffer.Span, target.Span);
 
                 if (status == 0)

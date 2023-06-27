@@ -18,17 +18,7 @@ public static class H5BZip2SharpZipLib
         {
             using var sourceStream = new MemorySpanStream(info.SourceBuffer);
 
-            if (info.IsLast)
-            {
-                var resultBuffer = info.GetBuffer(info.ChunkSize /* minimum size */);
-                using var decompressedStream = new MemorySpanStream(resultBuffer);
-
-                BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
-
-                return resultBuffer;
-            }
-
-            else
+            if (info.FinalBuffer.Equals(default))
             {
                 using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
 
@@ -37,6 +27,15 @@ public static class H5BZip2SharpZipLib
                 return decompressedStream
                     .GetBuffer()
                     .AsMemory(0, (int)decompressedStream.Length);
+            }
+
+            else
+            {
+                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
+
+                BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
+
+                return info.FinalBuffer;
             }
         }
 

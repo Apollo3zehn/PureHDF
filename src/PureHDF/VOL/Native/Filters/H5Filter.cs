@@ -1,5 +1,4 @@
-﻿using System.Buffers;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.IO.Compression;
 
 namespace PureHDF.Filters;
@@ -63,28 +62,9 @@ static partial class H5Filter
                     var filterInfo = new FilterInfo(
                         Flags: tmpFlags,
                         Parameters: filter.ClientData,
-                        IsLast: isLast,
                         ChunkSize: resultBuffer.Length,
                         SourceBuffer: filterBuffer,
-                        GetBuffer: minimumLength => 
-                        {
-                            /* return result buffer if this is the last filter and it is large enough */
-                            if (isLast && minimumLength <= resultBuffer.Length)
-                            {
-                                return resultBuffer;
-                            }
-
-                            /* otherwise, rent a buffer from the memory pool */
-                            else
-                            {
-                                // TODO renting memory is disabled because it is hard to know when to free it:
-                                /* I tried to free rented memory but it seems to be
-                                 * impossible to determine if the returned memory belongs
-                                 * to one of the IMemoryOwners in the memoryOwners variable
-                                 */
-                                return new byte[minimumLength];
-                            }
-                        });
+                        FinalBuffer: isLast ? resultBuffer : default);
 
                     filterBuffer = registration.FilterFunction(filterInfo);
                 }
@@ -115,23 +95,19 @@ static partial class H5Filter
 
     private static Memory<byte> ShuffleFilterFuncion(FilterInfo info)
     {
+        var resultBuffer = info.FinalBuffer.Equals(default)
+            ? new byte[info.SourceBuffer.Length]
+            : info.FinalBuffer;
+
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-        {
-            var resultBuffer = info.GetBuffer(info.SourceBuffer.Length);
             ShuffleFilter.Unshuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
-
-            return resultBuffer;
-        }
 
         // write
         else
-        {
-            var filteredBuffer = info.GetBuffer(info.SourceBuffer.Length);
-            ShuffleFilter.Shuffle((int)info.Parameters[0], info.SourceBuffer.Span, filteredBuffer.Span);
+            ShuffleFilter.Shuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
 
-            return filteredBuffer;
-        }
+        return resultBuffer;
     }
 
     private static Memory<byte> Fletcher32FilterFuncion(FilterInfo info)
@@ -197,18 +173,7 @@ static partial class H5Filter
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
 
-            if (info.IsLast)
-            {
-                var resultBuffer = info.GetBuffer(info.ChunkSize /* minimum size */);
-                using var decompressedStream = new MemorySpanStream(resultBuffer);
-                using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
-
-                decompressionStream.CopyTo(decompressedStream);
-
-                return resultBuffer;
-            }
-
-            else
+            if (info.FinalBuffer.Equals(default))
             {
                 using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
                 using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
@@ -218,6 +183,16 @@ static partial class H5Filter
                 return decompressedStream
                     .GetBuffer()
                     .AsMemory(0, (int)decompressedStream.Length);
+            }
+
+            else
+            {
+                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
+                using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
+
+                decompressionStream.CopyTo(decompressedStream);
+
+                return info.FinalBuffer;
             }
         }
 

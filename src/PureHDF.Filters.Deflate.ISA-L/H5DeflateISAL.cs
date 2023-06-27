@@ -32,8 +32,11 @@ public static class H5DeflateISAL
             buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
 
             var length = 0;
-            var minimumSize = Math.Max(buffer.Length, info.ChunkSize);
-            var inflated = info.GetBuffer(minimumSize);
+
+            var inflated = info.FinalBuffer.Equals(default)
+                ? new byte[info.ChunkSize]
+                : info.FinalBuffer;
+
             var sourceBuffer = buffer.Span;
             var targetBuffer = inflated.Span;
 
@@ -61,10 +64,11 @@ public static class H5DeflateISAL
                         {
                             // double array size
                             var tmp = inflated;
-                            inflated = info.GetBuffer(tmp.Length * 2 /* minimum size */);
+                            inflated = new byte[tmp.Length * 2];
                             tmp.CopyTo(inflated);
                             targetBuffer = inflated.Span.Slice(tmp.Length);
                         }
+                        
                         else
                         {
                             break;

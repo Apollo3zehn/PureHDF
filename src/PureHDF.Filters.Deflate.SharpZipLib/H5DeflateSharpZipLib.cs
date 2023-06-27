@@ -27,17 +27,7 @@ public static class H5DeflateSharpZipLib
                 IsStreamOwner = false
             };
 
-            if (info.IsLast)
-            {
-                var resultBuffer = info.GetBuffer(info.ChunkSize /* minimum size */);
-                using var decompressedStream = new MemorySpanStream(resultBuffer);
-
-                decompressionStream.CopyTo(decompressedStream);
-
-                return resultBuffer;
-            }
-
-            else
+            if (info.FinalBuffer.Equals(default))
             {
                 using var decompressedStream = new MemoryStream(info.ChunkSize /* minimum size to expect */);
                 decompressionStream.CopyTo(decompressedStream);
@@ -45,6 +35,15 @@ public static class H5DeflateSharpZipLib
                 return decompressedStream
                     .GetBuffer()
                     .AsMemory(0, (int)decompressedStream.Length);
+            }
+
+            else
+            {
+                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
+
+                decompressionStream.CopyTo(decompressedStream);
+
+                return info.FinalBuffer;
             }
         }
 
