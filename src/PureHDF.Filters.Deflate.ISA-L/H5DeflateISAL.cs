@@ -63,7 +63,7 @@ public static class H5DeflateISAL
                             var tmp = inflated;
                             inflated = info.GetBuffer(tmp.Length * 2 /* minimum size */);
                             tmp.CopyTo(inflated);
-                            targetBuffer = inflated[tmp.Length..].Span;
+                            targetBuffer = inflated.Span.Slice(tmp.Length);
                         }
                         else
                         {
@@ -73,7 +73,7 @@ public static class H5DeflateISAL
                 }
             }
 
-            return inflated[..length];
+            return inflated.Slice(0, length);
         }
 
         /* We're compressing */

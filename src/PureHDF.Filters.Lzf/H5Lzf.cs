@@ -27,7 +27,7 @@ public static class H5Lzf
                     targetSize += (uint)info.SourceBuffer.Length;
 
                 else
-                    return target[..(int)status];
+                    return target.Slice(0, (int)status);
             }
             
             throw new Exception("This should never happen.");
