@@ -29,7 +29,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
         var chunkCacheFactory = datasetAccess.ChunkCacheFactory;
 
-        chunkCacheFactory ??= ((NativeFile)Dataset.File).ChunkCacheFactory;
+        chunkCacheFactory ??= ((H5File)Dataset.File).ChunkCacheFactory;
 
         _chunkCache = chunkCacheFactory();
 

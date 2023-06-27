@@ -1,0 +1,317 @@
+﻿using System.IO.MemoryMappedFiles;
+using System.Runtime.CompilerServices;
+
+namespace PureHDF;
+
+/// <summary>
+/// A native HDF5 file object. This is the entry-point to work with HDF5 files.
+/// </summary>
+public class H5File : NativeGroup, IDisposable
+{
+    // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
+    #region Fields
+
+    private readonly bool _deleteOnClose;
+    
+    private Func<IChunkCache>? _chunkCacheFactory;
+
+    #endregion
+
+    #region Constructors
+
+    private H5File(
+        NativeContext context,
+        NativeNamedReference reference,
+        ObjectHeader header,
+        string absoluteFilePath,
+        bool deleteOnClose) : base(context, reference, header)
+    {
+        Path = absoluteFilePath;
+        FolderPath = System.IO.Path.GetDirectoryName(absoluteFilePath);
+        _deleteOnClose = deleteOnClose;
+    }
+
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    /// The default chunk cache factory.
+    /// </summary>
+    public static Func<IChunkCache> DefaultChunkCacheFactory { get; } = () => new SimpleChunkCache();
+
+    /// <summary>
+    /// Gets the path of the opened HDF5 file if loaded from the file system.
+    /// </summary>
+    public string? Path { get; }
+
+    /// <summary>
+    /// Gets or sets the current chunk cache factory.
+    /// </summary>
+    public Func<IChunkCache> ChunkCacheFactory
+    {
+        get
+        {
+            if (_chunkCacheFactory is not null)
+                return _chunkCacheFactory;
+
+            else
+                return H5File.DefaultChunkCacheFactory;
+        }
+        set
+        {
+            _chunkCacheFactory = value;
+        }
+    }
+
+    internal string? FolderPath { get; }
+
+    #endregion
+
+    #region Methods
+
+    /// <summary>
+    /// Opens an HDF5 file for reading. Please see the <seealso href="https://learn.microsoft.com/en-us/dotnet/api/system.io.file.openread#remarks">Remarks</seealso> section for more information how the file is opened.
+    /// </summary>
+    /// <param name="filePath">The file to open.</param>
+    public static H5File OpenRead(string filePath)
+    {
+        return InternalOpenRead(filePath);
+    }
+
+    /// <summary>
+    /// Opens an HDF5 file.
+    /// </summary>
+    /// <param name="filePath">The file to open.</param>
+    /// <param name="mode">A <see cref="FileMode"/> value that specifies whether a file is created if one does not exist, and determines whether the contents of existing files are retained or overwritten.</param>
+    /// <param name="fileAccess">A <see cref="FileAccess"/> value that specifies the operations that can be performed on the file.</param>
+    /// <param name="fileShare">A <see cref="FileShare"/> value specifying the type of access other threads have to the file.</param>
+    /// <param name="useAsync">A boolean which indicates if the file be opened with the <see cref="FileOptions.Asynchronous"/> flag.</param>
+    public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool useAsync = false)
+    {
+        return InternalOpen(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
+    }
+
+    /// <summary>
+    /// Opens an HDF5 stream.
+    /// </summary>
+    /// <param name="stream">The stream to use.</param>
+    /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
+    /// <returns></returns>
+    public static H5File Open(Stream stream, bool leaveOpen = false)
+    {
+        H5DriverBase driver;
+
+#if NET6_0_OR_GREATER
+        if (stream is FileStream fileStream)
+            driver = new H5FileHandleDriver(fileStream, leaveOpen: leaveOpen);
+
+        else
+#endif
+            driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
+
+        return InternalOpen(driver, string.Empty);
+    }
+
+    /// <summary>
+    /// Opens an HDF5 memory-mapped file.
+    /// </summary>
+    /// <param name="accessor">The memory-mapped accessor to use.</param>
+    /// <returns></returns>
+    public static H5File Open(MemoryMappedViewAccessor accessor)
+    {
+        var driver = new H5MemoryMappedFileDriver(accessor);
+        return InternalOpen(driver, string.Empty);
+    }
+
+    /// <summary>
+    /// Gets the file selection that is referenced by the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the region.</param>
+    /// <returns>The requested selection.</returns>
+    public Selection Get(NativeRegionReference1 reference)
+    {
+        if (reference.Equals(default))
+            throw new Exception("The reference is invalid");
+
+        Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+
+        var globalHeapId = new GlobalHeapId(
+            CollectionAddress: reference.CollectionAddress,
+            ObjectIndex: reference.ObjectIndex);
+
+        var globalHeapCollection = NativeCache.GetGlobalHeapObject(Context, globalHeapId.CollectionAddress);
+        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
+
+        using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
+        var address = Context.Superblock.ReadOffset(localDriver);
+        var dataspaceSelection = DataspaceSelection.Decode(localDriver);
+
+        Selection selection = dataspaceSelection.Info switch
+        {
+            H5S_SEL_NONE none => new NoneSelection(),
+            H5S_SEL_POINTS points => new PointSelection(points.PointData),
+            H5S_SEL_HYPER hyper => hyper.SelectionInfo switch
+            {
+                RegularHyperslabSelectionInfo regular => new HyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
+                IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection((int)irregular.Rank, irregular.BlockOffsets),
+                _ => throw new NotSupportedException($"The hyperslab selection type '{hyper.SelectionInfo.GetType().FullName}' is not supported.")
+            },
+            H5S_SEL_ALL all => new AllSelection(),
+            _ => throw new NotSupportedException($"The dataspace selection type '{dataspaceSelection.Info.GetType().FullName}' is not supported.")
+        };
+
+        return selection;
+    }
+
+    internal static H5File InternalOpenRead(string filePath, bool deleteOnClose = false)
+    {
+        return InternalOpen(
+            filePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            useAsync: false,
+            deleteOnClose: deleteOnClose);
+    }
+
+    internal static H5File InternalOpen(
+        string filePath,
+        FileMode fileMode,
+        FileAccess fileAccess,
+        FileShare fileShare,
+        bool useAsync = false,
+        bool deleteOnClose = false)
+    {
+        var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
+
+        var stream = new FileStream(
+            absoluteFilePath,
+            fileMode,
+            fileAccess,
+            fileShare,
+            4096,
+            useAsync);
+
+#if NET6_0_OR_GREATER
+        var driver = new H5FileHandleDriver(stream, leaveOpen: false);
+#else
+        var driver = new H5StreamDriver(stream, leaveOpen: false);
+#endif
+
+        return InternalOpen(driver, absoluteFilePath, deleteOnClose);
+    }
+
+    internal static H5File InternalOpen(
+        H5DriverBase driver, 
+        string absoluteFilePath,
+        bool deleteOnClose = false)
+    {
+        if (!BitConverter.IsLittleEndian)
+            throw new Exception("This library only works on little endian systems.");
+
+        // superblock
+        var stepSize = 512;
+        var signature = driver.ReadBytes(8);
+
+        while (!ValidateSignature(signature, Superblock.FormatSignature))
+        {
+            driver.Seek(stepSize - 8, SeekOrigin.Current);
+
+            if (driver.Position >= driver.Length)
+                throw new Exception("The file is not a valid HDF 5 file.");
+
+            signature = driver.ReadBytes(8);
+            stepSize *= 2;
+        }
+
+        var version = driver.ReadByte();
+
+        var superblock = (Superblock)(version switch
+        {
+            >= 0 and < 2 => Superblock01.Decode(driver, version),
+            >= 2 and < 4 => Superblock23.Decode(driver, version),
+            _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
+        });
+
+        driver.SetBaseAddress(superblock.BaseAddress);
+
+        ulong address;
+        var superblock01 = superblock as Superblock01;
+
+        if (superblock01 is not null)
+        {
+            address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
+        }
+        
+        else
+        {
+            var superblock23 = superblock as Superblock23;
+
+            if (superblock23 is not null)
+                address = superblock23.RootGroupObjectHeaderAddress;
+
+            else
+                throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
+        }
+
+        driver.Seek((long)address, SeekOrigin.Begin);
+        var context = new NativeContext(driver, superblock);
+        var header = ObjectHeader.Construct(context);
+
+        var file = new H5File(context, default, header, absoluteFilePath, deleteOnClose);
+        var reference = new NativeNamedReference("/", address, file);
+        file.Reference = reference;
+
+        return file;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool ValidateSignature(byte[] actual, byte[] expected)
+    {
+        return expected.SequenceEqual(actual);
+    }
+
+#endregion
+
+#region IDisposable
+
+    private bool _disposedValue;
+
+    /// <inheritdoc />
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposedValue)
+        {
+            if (disposing)
+            {
+                NativeCache.Clear(Context.Driver);
+                Context.Driver.Dispose();
+
+                if (_deleteOnClose && System.IO.File.Exists(Path))
+                {
+                    try
+                    {
+                        System.IO.File.Delete(Path!);
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
+            }
+
+            _disposedValue = true;
+        }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    #endregion
+
+}

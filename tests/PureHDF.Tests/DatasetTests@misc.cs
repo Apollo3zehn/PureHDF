@@ -70,7 +70,7 @@ namespace PureHDF.Tests.Reading
             var memoryDims = new ulong[] { 10, 10 };
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/misc/half_size");
 
             var actual_ushort = dataset.Read<ushort>(

@@ -3,6 +3,7 @@
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TargetFrameworks>$(TargetFrameworkVersion)</TargetFrameworks>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
  
   <ItemGroup>

@@ -1,6 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract class NativeObject : IH5Object
+/// <inheritdoc />
+public abstract class NativeObject : IH5Object
 {
     #region Fields
 
@@ -27,7 +28,8 @@ internal abstract class NativeObject : IH5Object
     #endregion
 
     #region Properties
-        
+    
+    /// <inheritdoc />
     public string Name => Reference.Name;
 
     internal NativeContext Context { get; }

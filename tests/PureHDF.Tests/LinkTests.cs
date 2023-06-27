@@ -23,7 +23,7 @@ namespace PureHDF.Tests.Reading
                 });
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var actual = root.LinkExists(path);
 
                 // Assert
@@ -53,7 +53,7 @@ namespace PureHDF.Tests.Reading
                     filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMassLinks(fileId));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var actual = root.LinkExists(path);
 
                 // Assert
@@ -73,7 +73,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSomeLinks(fileId));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var group = root.Group(path);
 
                 // Assert
@@ -91,7 +91,7 @@ namespace PureHDF.Tests.Reading
                 var expected = 1000;
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var group = root.Group("mass_links");
 
                 // Assert
@@ -149,7 +149,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddSomeLinks(fileId));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset(path);
 
                 // Assert
@@ -171,7 +171,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("mass_attributes");
                 var actual = parent.AttributeExists(attributeName);
 
@@ -188,7 +188,7 @@ namespace PureHDF.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("mass_attributes");
             var actual = parent.AttributeExists("字形碼 / 字形码, Zìxíngmǎ");
 
@@ -205,7 +205,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddLinks(fileId));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
 
                 var dataset_hard_1 = root.Dataset("links/hard_link_1/dataset");
                 var dataset_hard_2 = root.Dataset("links/hard_link_2/dataset");
@@ -237,7 +237,7 @@ namespace PureHDF.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
 
             var dataset = root.Dataset("/links/external_link/Hello from external file =)");
         }
@@ -249,7 +249,7 @@ namespace PureHDF.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, "not-existing.h5"));
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
             var link = root.Get("/links/external_link") as IH5UnresolvedLink;
 
             // Assert
@@ -264,7 +264,7 @@ namespace PureHDF.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddCircularReference(fileId));
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var value = ((NativeGroup)root.Group("/circular/child/rainbow's end")).Reference.Value;
                 var groupReference = new NativeObjectReference1() { Value = value };
 

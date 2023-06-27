@@ -2,7 +2,8 @@
 
 namespace PureHDF.VOL.Native;
 
-internal abstract class NativeAttributableObject : NativeObject, IH5AttributableObject
+/// <inheritdoc />
+public abstract class NativeAttributableObject : NativeObject, IH5AttributableObject
 {
     #region Constructors
 
@@ -22,16 +23,19 @@ internal abstract class NativeAttributableObject : NativeObject, IH5Attributable
 
     #region Methods
 
+    /// <inheritdoc />
     public IEnumerable<IH5Attribute> Attributes()
     {
         return EnumerateAttributes();
     }
 
+    /// <inheritdoc />
     public Task<IEnumerable<IH5Attribute>> AttributesAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult(EnumerateAttributes());
     }
 
+    /// <inheritdoc />
     public IH5Attribute Attribute(string name)
     {
         if (!TryGetAttributeMessage(name, out var attributeMessage))
@@ -40,16 +44,19 @@ internal abstract class NativeAttributableObject : NativeObject, IH5Attributable
         return new NativeAttribute(Context, attributeMessage);
     }
 
+    /// <inheritdoc />
     public Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Attribute(name));
     }
 
+    /// <inheritdoc />
     public bool AttributeExists(string name)
     {
         return TryGetAttributeMessage(name, out var _);
     }
 
+    /// <inheritdoc />
     public Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(AttributeExists(name));

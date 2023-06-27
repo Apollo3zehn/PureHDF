@@ -4,7 +4,7 @@ internal struct NativeNamedReference
 {
     #region Constructors
 
-    public NativeNamedReference(string name, ulong value, NativeFile file)
+    public NativeNamedReference(string name, ulong value, H5File file)
     {
         Name = name;
         Value = value;
@@ -30,7 +30,7 @@ internal struct NativeNamedReference
 
     public ulong Value { get; }
 
-    public NativeFile? File { get; }
+    public H5File? File { get; }
 
     public ObjectHeaderScratchPad? ScratchPad { get; set; }
 

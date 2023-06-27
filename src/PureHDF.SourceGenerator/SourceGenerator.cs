@@ -1,7 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using PureHDF.VOL.Native;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -111,7 +110,7 @@ public class SourceGenerator : ISourceGenerator
         return output;
     }
 
-    private static string GenerateSource(string className, string classNamespace, string accessibilityString, INativeFile root)
+    private static string GenerateSource(string className, string classNamespace, string accessibilityString, H5File root)
     {
         var classDefinitions = new List<string>();
 
@@ -259,7 +258,7 @@ public class SourceGenerator : ISourceGenerator
 
             constructorAccessibilityString = "public ";
             partialString = "partial ";
-            parentGroupString = "INativeFile file";
+            parentGroupString = "H5File file";
         }
 
         else

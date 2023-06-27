@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceScalar(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Dataset("scalar");
                 var actual = attribute.Read<double>();
 
@@ -31,7 +31,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceNull(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = NativeFile.OpenRead(filePath, deleteOnClose: true);
+                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Dataset("null");
                 var actual = attribute.Read<double>();
 

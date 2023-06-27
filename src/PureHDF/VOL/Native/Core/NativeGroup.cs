@@ -3,11 +3,15 @@ using System.Runtime.CompilerServices;
 
 namespace PureHDF.VOL.Native;
 
-internal class NativeGroup : NativeAttributableObject, INativeGroup
+/// <summary>
+/// An HDF5 group.
+/// </summary>
+public class NativeGroup : NativeAttributableObject, IH5Group
 {
     #region Fields
 
-    private readonly NativeFile? _file;
+    private readonly H5File? _file;
+    
     private readonly ObjectHeaderScratchPad? _scratchPad;
 
     #endregion
@@ -21,14 +25,14 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         //
     }
 
-    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference)
+    internal NativeGroup(H5File file, NativeContext context, NativeNamedReference reference)
        : base(context, reference)
     {
         _file = file;
         _scratchPad = reference.ScratchPad;
     }
 
-    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeGroup(H5File file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         _file = file;
@@ -38,12 +42,12 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
 
     #region Properties
 
-    internal NativeFile File
+    internal H5File File
     {
         get
         {
             if (_file is null)
-                return (NativeFile)this;
+                return (H5File)this;
                 
             else
                 return _file;
@@ -55,47 +59,82 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
     #region Methods
     // TODO: properly implement async
 
+    /// <inheritdoc />
     public bool LinkExists(string path)
     {
         return LinkExists(path, default);
     }
     
+    /// <inheritdoc />
     public Task<bool> LinkExistsAsync(string path, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(LinkExists(path));
     }
 
+    /// <summary>
+    /// Checks if the link with the specified <paramref name="path"/> exist.
+    /// </summary>
+    /// <param name="path">The path of the link.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <returns>A boolean which indicates if the link exists.</returns>
     public bool LinkExists(string path, H5LinkAccess linkAccess)
     {
         return InternalLinkExists(path, linkAccess);
     }
 
+    /// <summary>
+    /// Checks if the link with the specified <paramref name="path"/> exist.
+    /// </summary>
+    /// <param name="path">The path of the link.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A boolean which indicates if the link exists.</returns>
     public Task<bool> LinkExistsAsync(string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(LinkExists(path, linkAccess));
     }
 
+    /// <inheritdoc />
     public IH5Object Get(string path)
     {
         return Get(path, default);
     }
 
+    /// <inheritdoc />
     public Task<IH5Object> GetAsync(string path, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Get(path));
     }
 
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="path"/>.
+    /// </summary>
+    /// <param name="path">The path of the object.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <returns>The requested object.</returns>
     public IH5Object Get(string path, H5LinkAccess linkAccess)
     {
         return InternalGet(path, linkAccess)
             .Dereference();
     }
 
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="path"/>.
+    /// </summary>
+    /// <param name="path">The path of the object.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The requested object.</returns>
     public Task<IH5Object> GetAsync(string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Get(path, linkAccess));
     }
 
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the object.</param>
+    /// <returns>The requested object.</returns>
     public IH5Object Get(NativeObjectReference1 reference)
     {
         if (reference.Equals(default))
@@ -104,11 +143,23 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
         return Get(reference, default);
     }
 
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the object.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The requested object.</returns>
     public Task<IH5Object> GetAsync(NativeObjectReference1 reference, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Get(reference));
     }
 
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the object.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <returns>The requested object.</returns>
     public IH5Object Get(NativeObjectReference1 reference, H5LinkAccess linkAccess)
     {
         if (Reference.Value == reference.Value)
@@ -118,27 +169,47 @@ internal class NativeGroup : NativeAttributableObject, INativeGroup
             .Dereference();
     }
 
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the object.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The requested object.</returns>
     public Task<IH5Object> GetAsync(NativeObjectReference1 reference, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Get(reference, linkAccess));
     }
 
+    /// <inheritdoc />
     public IEnumerable<IH5Object> Children()
     {
         return Children(default);
     }
 
+    /// <inheritdoc />
     public Task<IEnumerable<IH5Object>> ChildrenAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Children());
     }
 
+    /// <summary>
+    /// Gets an enumerable of the available children using the optionally specified <paramref name="linkAccess"/>.
+    /// </summary>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <returns>An enumerable of the available children.</returns>
     public IEnumerable<IH5Object> Children(H5LinkAccess linkAccess = default)
     {
         return EnumerateReferences(linkAccess)
             .Select(reference => reference.Dereference());
     }
 
+    /// <summary>
+    /// Gets an enumerable of the available children using the optionally specified <paramref name="linkAccess"/>.
+    /// </summary>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>An enumerable of the available children.</returns>
     public Task<IEnumerable<IH5Object>> ChildrenAsync(H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Children(linkAccess));

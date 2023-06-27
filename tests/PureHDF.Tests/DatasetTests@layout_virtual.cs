@@ -16,7 +16,7 @@ namespace PureHDF.Tests.Reading
             var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
             var actual = dataset.Read<int>(selection);
@@ -36,7 +36,7 @@ namespace PureHDF.Tests.Reading
             var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
             var actual = await dataset.ReadAsync<int>(selection);
@@ -99,7 +99,7 @@ namespace PureHDF.Tests.Reading
             };
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var actual = dataset.Read<int>();
 
@@ -131,7 +131,7 @@ namespace PureHDF.Tests.Reading
             };
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var actual = dataset.Read<int>();
 
@@ -162,7 +162,7 @@ namespace PureHDF.Tests.Reading
             }
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var actual = dataset.Read<int>();
 
@@ -230,7 +230,7 @@ namespace PureHDF.Tests.Reading
             }
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var actual = dataset.Read<int>();
 
@@ -269,7 +269,7 @@ namespace PureHDF.Tests.Reading
             }
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var actual = dataset.Read<int>();
 
@@ -300,7 +300,7 @@ namespace PureHDF.Tests.Reading
             }
 
             // Act
-            using var root = NativeFile.OpenRead(filePath, deleteOnClose: false);
+            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var actual = dataset.Read<int>();
 

@@ -5,7 +5,10 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
-internal class NativeDataset : NativeAttributableObject, INativeDataset
+/// <summary>
+/// A native HDF5 dataset.
+/// </summary>
+public class NativeDataset : NativeAttributableObject, IH5Dataset
 {
     #region Fields
 
@@ -18,7 +21,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
 
     #region Constructors
 
-    internal NativeDataset(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeDataset(H5File file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         File = file;
@@ -85,8 +88,9 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
 
     #region Properties
 
-    internal INativeFile File { get; }
+    internal H5File File { get; }
 
+    /// <inheritdoc />
     public IH5Dataspace Space
     {
         get
@@ -97,6 +101,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         }
     }
 
+    /// <inheritdoc />
     public IH5DataType Type
     {
         get
@@ -107,6 +112,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         }
     }
 
+    /// <inheritdoc />
     public IH5DataLayout Layout
     {
         get
@@ -117,6 +123,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         }
     }
 
+    /// <inheritdoc />
     public IH5FillValue FillValue
     {
         get
@@ -147,6 +154,14 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
 
     #region Methods
 
+    /// <summary>
+    /// Queries the data. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#43-experimental-iqueryable-1-dimensional-data-only">PureHDF</seealso>.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>A queryable of type <typeparamref name="T"/>.</returns>
     public IQueryable<T> AsQueryable<T>(
         H5DatasetAccess datasetAccess,
         Selection? memorySelection = default,
@@ -164,6 +179,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return queryable;
     }
 
+    /// <inheritdoc />
     public byte[] Read(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -172,6 +188,14 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return Read(default, fileSelection, memorySelection, memoryDims);
     }
 
+    /// <summary>
+    /// Reads the data.
+    /// </summary>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <returns>The read data as array of <see cref="byte"/>.</returns>
     public byte[] Read(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -191,6 +215,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public T[] Read<T>(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -199,6 +224,15 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return Read<T>(default(H5DatasetAccess), fileSelection, memorySelection, memoryDims);
     }
 
+    /// <summary>
+    /// Reads the data. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
     public T[] Read<T>(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -217,6 +251,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public void Read<T>(
         Memory<T> buffer, 
         Selection? fileSelection = null, 
@@ -226,6 +261,15 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         Read(buffer, default, fileSelection, memorySelection, memoryDims);
     }
 
+    /// <summary>
+    /// Reads the data. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="buffer">The destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     public void Read<T>(
         Memory<T> buffer,
         H5DatasetAccess datasetAccess,
@@ -243,6 +287,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             skipShuffle: false).GetAwaiter().GetResult();
     }
 
+    /// <inheritdoc />
     public T[] ReadCompound<T>(
         Func<FieldInfo, string>? getName = null, 
         Selection? fileSelection = null, 
@@ -252,6 +297,16 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadCompound<T>(default, getName, fileSelection, memorySelection, memoryDims);
     }
 
+    /// <summary>
+    /// Reads the compound data. The type parameter <typeparamref name="T"/> must match the <see langword="struct" /> constraint. Nested fields with nullable references are not supported.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="getName">An optional function to map the field names of <typeparamref name="T"/> to the member names of the HDF5 compound type.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
     public T[] ReadCompound<T>(
         H5DatasetAccess datasetAccess,
         Func<FieldInfo, string>? getName = default,
@@ -275,6 +330,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return data;
     }
 
+    /// <inheritdoc />
     public Dictionary<string, object?>[] ReadCompound(
         Selection? fileSelection = null, 
         Selection? memorySelection = null,
@@ -283,6 +339,14 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadCompound(default, fileSelection, memorySelection, memoryDims);
     }
 
+    /// <summary>
+    /// Reads the compound data. This is the slowest but most flexible option to read compound data as no prior type knowledge is required.
+    /// </summary>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the target memory.</param>
+    /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
+    /// <returns>The read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</returns>
     public Dictionary<string, object?>[] ReadCompound(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -303,6 +367,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return data;
     }
 
+    /// <inheritdoc />
     public string?[] ReadString(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -311,6 +376,16 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadString(default, fileSelection, memorySelection, memoryDims);
     }
 
+    // TODO: Unify names: result, destination, destination
+
+    /// <summary>
+    /// Reads the string data.
+    /// </summary>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>The read data as array of <see cref="string"/>.</returns>
     public string?[] ReadString(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -331,6 +406,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public T[]?[] ReadVariableLength<T>(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -339,6 +415,14 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadVariableLength<T>(default, fileSelection, memorySelection, memoryDims);
     }
 
+    /// <summary>
+    /// Reads the variable-length sequence data.
+    /// </summary>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <returns>The read data as jagged array of <typeparamref name="T"/>.</returns>
     public T[]?[] ReadVariableLength<T>(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = null,
@@ -359,6 +443,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public Task<byte[]> ReadAsync(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -368,6 +453,15 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadAsync(default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+    /// <summary>
+    /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
+    /// </summary>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as array of <see cref="byte"/>.</returns>
     public async Task<byte[]> ReadAsync(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -388,6 +482,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public Task<T[]> ReadAsync<T>(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -397,6 +492,16 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadAsync<T>(default(H5DatasetAccess), fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+    /// <summary>
+    /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the target memory.</param>
+    /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as array of <typeparamref name="T"/>.</returns>
     public async Task<T[]> ReadAsync<T>(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -417,6 +522,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public Task ReadAsync<T>(
         Memory<T> buffer, 
         Selection? fileSelection = null, 
@@ -427,6 +533,16 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadAsync(buffer, default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+    /// <summary>
+    /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="buffer">The destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
     public Task ReadAsync<T>(
         Memory<T> buffer,
         H5DatasetAccess datasetAccess,
@@ -445,6 +561,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
             skipShuffle: false);
     }
 
+    /// <inheritdoc />
     public Task<T[]> ReadCompoundAsync<T>(
         Func<FieldInfo, string>? getName = null, 
         Selection? fileSelection = null, 
@@ -455,6 +572,18 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadCompoundAsync<T>(default, getName, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+    /// <summary>
+    /// Reads the compound data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>. The type parameter <typeparamref name="T"/> must match the <see langword="struct" /> constraint. Nested fields with nullable references are not supported.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="getName">An optional function to map the field names of <typeparamref name="T"/> to the member names of the HDF5 compound type.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as array of <typeparamref name="T"/>.</returns>
+    /// 
     public async Task<T[]> ReadCompoundAsync<T>(
         H5DatasetAccess datasetAccess,
         Func<FieldInfo, string>? getName = default,
@@ -479,6 +608,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public Task<Dictionary<string, object?>[]> ReadCompoundAsync(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -488,6 +618,16 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadCompoundAsync(default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+
+    /// <summary>
+    /// Reads the compound data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>. This is the slowest but most flexible option to read compound data as no prior type knowledge is required.
+    /// </summary>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</returns>
     public async Task<Dictionary<string, object?>[]> ReadCompoundAsync(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -509,6 +649,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return data;
     }
 
+    /// <inheritdoc />
     public Task<string?[]> ReadStringAsync(
         Selection? fileSelection = null, 
         Selection? memorySelection = null,
@@ -518,6 +659,15 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadStringAsync(default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+    /// <summary>
+    /// Reads the string data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
+    /// </summary>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as array of <see cref="string"/>.</returns>
     public async Task<string?[]> ReadStringAsync(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
@@ -539,6 +689,7 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return result;
     }
 
+    /// <inheritdoc />
     public Task<T[]?[]> ReadVariableLengthAsync<T>(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
@@ -548,6 +699,15 @@ internal class NativeDataset : NativeAttributableObject, INativeDataset
         return ReadVariableLengthAsync<T>(default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
+    /// <summary>
+    /// Reads the variable-length sequence data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
+    /// </summary>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the read data as jagged array of <typeparamref name="T"/>.</returns>
     public async Task<T[]?[]> ReadVariableLengthAsync<T>(
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = null, 

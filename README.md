@@ -112,7 +112,7 @@ Usage:
 ```cs
 using PureHDF.VOL.Native;
 
-var group = (INativeGroup)root.Group(...);
+var group = (NativeGroup)root.Group(...);
 
 var linkAccess = new H5LinkAccess(
     ExternalLinkPrefix: prefix 
@@ -126,7 +126,7 @@ var dataset = group.Dataset(path, linkAccess);
 ```cs
 using PureHDF.VOL.Native;
 
-var dataset = (INativeDataset)root.Dataset(...);
+var dataset = (NativeDataset)root.Dataset(...);
 
 var datasetAccess = new H5DatasetAccess(
     ExternalFilePrefix: prefix 
@@ -140,7 +140,7 @@ var data = dataset.Read<float>(..., datasetAccess: datasetAccess);
 ```cs
 using PureHDF.VOL.Native;
 
-var dataset = (INativeDataset)root.Dataset(...);
+var dataset = (NativeDataset)root.Dataset(...);
 
 var datasetAccess = new H5DatasetAccess(
     VirtualPrefix: prefix 
