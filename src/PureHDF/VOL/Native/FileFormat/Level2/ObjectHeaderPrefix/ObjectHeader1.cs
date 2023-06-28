@@ -4,8 +4,9 @@ internal record ObjectHeader1(
     ulong Address, 
     ushort HeaderMessagesCount,
     uint ObjectReferenceCount, 
-    uint ObjectHeaderSize) 
-    : ObjectHeader(Address)
+    uint ObjectHeaderSize,
+    List<HeaderMessage> HeaderMessages)
+    : ObjectHeader(Address, HeaderMessages)
 {
     private byte _version;
 
@@ -49,21 +50,23 @@ internal record ObjectHeader1(
         if (objectHeaderSize > 0)
             driver.ReadBytes(4);
 
+        var headerMessages = ReadHeaderMessages(
+            context, 
+            address,
+            objectHeaderSize,
+            version: 1,
+            withCreationOrder: false);
+
         var objectHeader = new ObjectHeader1(
             address,
             headerMessagesCount,
             objectReferenceCount,
-            objectHeaderSize
+            objectHeaderSize,
+            HeaderMessages: headerMessages
         )
         {
             Version = version
         };
-
-        objectHeader.InitializeHeaderMessages(
-            context, 
-            objectHeaderSize,
-            version: 1,
-            withCreationOrder: false);
 
         return objectHeader;
     }

@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal record class ObjectHeader2(
+internal partial record class ObjectHeader2(
     ulong Address, 
     ObjectHeaderFlags Flags,
     uint AccessTime,
@@ -11,8 +11,9 @@ internal record class ObjectHeader2(
     uint BirthTime,
     ushort MaximumCompactAttributesCount,
     ushort MinimumDenseAttributesCount,
-    ulong SizeOfChunk0
-) : ObjectHeader(Address)
+    ulong SizeOfChunk0,
+    List<HeaderMessage> HeaderMessages
+) : ObjectHeader(Address, HeaderMessages)
 {
     private byte _version;
 
@@ -71,11 +72,19 @@ internal record class ObjectHeader2(
         var chunkFieldSize = (byte)(1 << ((byte)flags & 0x03));
         var sizeOfChunk0 = Utils.ReadUlong(driver, chunkFieldSize);
 
-        // header messages
+        // with creation order
         var withCreationOrder = flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
-        
+
         // TODO: H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
         // TODO: read gap and checksum
+
+        // header messages
+        var headerMessages = ReadHeaderMessages(
+            context, 
+            address,
+            sizeOfChunk0,
+            version: 2, 
+            withCreationOrder);
 
         var objectHeader = new ObjectHeader2(
             address,
@@ -86,17 +95,12 @@ internal record class ObjectHeader2(
             birthTime,
             maximumCompactAttributesCount,
             minimumDenseAttributesCount,
-            sizeOfChunk0
+            sizeOfChunk0,
+            headerMessages
         )
         {
             Version = version
         };
-
-        objectHeader.InitializeHeaderMessages(
-            context, 
-            sizeOfChunk0, 
-            version: 2, 
-            withCreationOrder);
 
         return objectHeader;
     }

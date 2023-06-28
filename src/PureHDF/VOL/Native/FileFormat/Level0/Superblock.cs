@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract record class Superblock(
-    byte SuperBlockVersion,
+internal abstract partial record class Superblock(
+    byte Version,
     FileConsistencyFlags FileConsistencyFlags,
     ulong BaseAddress,
     ulong EndOfFileAddress

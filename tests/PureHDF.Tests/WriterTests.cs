@@ -37,14 +37,13 @@ public class ChunkCacheTests
             Attributes: new List<H5AttributeBase>() { attribute_0, attribute_1 },
             Objects: new List<H5Object>() { group_0, group_1, dataset_0 });
 
-        var filePath = "my-path";
-
-        // TODO: continue here
+        var filePath = "my-path.h5";
 
         // Act
-        // expected.Save(filePath);
-        // var actual = H5File.OpenRead(filePath);
+        expected.Save(filePath);
+        var actual = H5File.OpenRead(filePath);
 
+        // TODO continue here
         // Assert
     }
 }

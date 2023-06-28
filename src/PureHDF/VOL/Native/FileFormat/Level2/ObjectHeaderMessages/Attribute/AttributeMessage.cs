@@ -25,7 +25,7 @@ internal record class AttributeMessage(
         }
     }
 
-    public static AttributeMessage Decode(NativeContext context, ObjectHeader objectHeader)
+    public static AttributeMessage Decode(NativeContext context, ulong objectHeaderAddress)
     {
         // version
         var version = context.Driver.ReadByte();
@@ -66,7 +66,7 @@ internal record class AttributeMessage(
             ? MessageFlags.Shared
             : MessageFlags.NoFlags;
 
-        var datatype = Decode(context, objectHeader.Address, flags1,
+        var datatype = Decode(context, objectHeaderAddress, flags1,
             () => DatatypeMessage.Decode(context.Driver));
 
         if (version == 1)
@@ -81,7 +81,7 @@ internal record class AttributeMessage(
             ? MessageFlags.Shared
             : MessageFlags.NoFlags;
 
-        var dataspace = Decode(context, objectHeader.Address, flags2,
+        var dataspace = Decode(context, objectHeaderAddress, flags2,
             () => DataspaceMessage.Decode(context));
 
         if (version == 1)

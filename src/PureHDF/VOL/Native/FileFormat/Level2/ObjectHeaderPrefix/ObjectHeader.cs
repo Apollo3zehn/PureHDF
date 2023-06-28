@@ -1,13 +1,11 @@
 namespace PureHDF.VOL.Native;
 
 internal abstract record class ObjectHeader(
-    ulong Address
+    ulong Address,
+    List<HeaderMessage> HeaderMessages
 )
 {
     private ObjectType _objectType;
-
-    // will be set right after object construction
-    public List<HeaderMessage> HeaderMessages { get; set; } = default!;
 
     public ObjectType ObjectType
     {
@@ -55,25 +53,9 @@ internal abstract record class ObjectHeader(
         };
     }
 
-    private protected List<HeaderMessage> InitializeHeaderMessages(
+    private protected static List<HeaderMessage> ReadHeaderMessages(
         NativeContext context,
-        ulong objectHeaderSize,
-        byte version,
-        bool withCreationOrder)
-    {
-        var headerMessages = ReadHeaderMessages(
-            context,
-            objectHeaderSize,
-            version,
-            withCreationOrder);
-
-        HeaderMessages = headerMessages;
-
-        return headerMessages;
-    }
-
-    private List<HeaderMessage> ReadHeaderMessages(
-        NativeContext context,
+        ulong objectHeaderAddress,
         ulong objectHeaderSize,
         byte version,
         bool withCreationOrder)
@@ -105,7 +87,7 @@ internal abstract record class ObjectHeader(
         while (remainingBytes > gapSize)
         {
             var message = HeaderMessage
-                .Decode(context, version, this, withCreationOrder);
+                .Decode(context, version, objectHeaderAddress, withCreationOrder);
 
             remainingBytes -= message.DataSize + prefixSize;
 
@@ -123,7 +105,8 @@ internal abstract record class ObjectHeader(
             if (version == 1)
             {
                 var moreHeaderMessages = ReadHeaderMessages(
-                    context, 
+                    context,
+                    objectHeaderAddress,
                     continuationMessage.Length, 
                     version, 
                     withCreationOrder: false);
@@ -134,6 +117,7 @@ internal abstract record class ObjectHeader(
             {
                 var continuationBlock = ObjectHeaderContinuationBlock2.Decode(
                     context, 
+                    objectHeaderAddress,
                     continuationMessage.Length, 
                     version, 
                     withCreationOrder);

@@ -227,12 +227,12 @@ public class H5File : NativeGroup, IDisposable
 
         var version = driver.ReadByte();
 
-        var superblock = (Superblock)(version switch
+        Superblock superblock = version switch
         {
             >= 0 and < 2 => Superblock01.Decode(driver, version),
             >= 2 and < 4 => Superblock23.Decode(driver, version),
             _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
-        });
+        };
 
         driver.SetBaseAddress(superblock.BaseAddress);
 

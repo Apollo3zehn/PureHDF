@@ -45,7 +45,7 @@ internal readonly record struct HeaderMessage(
     internal static HeaderMessage Decode(
         NativeContext context, 
         byte version,
-        ObjectHeader objectHeader, 
+        ulong objectHeaderAddress, 
         bool withCreationOrder = false)
     {
         // message type
@@ -80,18 +80,18 @@ internal readonly record struct HeaderMessage(
         Message data = type switch
         {
             MessageType.NIL => new NilMessage(),
-            MessageType.Dataspace => Message.Decode(context, objectHeader.Address, flags, () => DataspaceMessage.Decode(context)),
+            MessageType.Dataspace => Message.Decode(context, objectHeaderAddress, flags, () => DataspaceMessage.Decode(context)),
             MessageType.LinkInfo => LinkInfoMessage.Decode(context),
-            MessageType.Datatype => Message.Decode(context, objectHeader.Address, flags, () => DatatypeMessage.Decode(context.Driver)),
-            MessageType.OldFillValue => Message.Decode(context, objectHeader.Address, flags, () => OldFillValueMessage.Decode(context.Driver)),
-            MessageType.FillValue => Message.Decode(context, objectHeader.Address, flags, () => FillValueMessage.Decode(context.Driver)),
+            MessageType.Datatype => Message.Decode(context, objectHeaderAddress, flags, () => DatatypeMessage.Decode(context.Driver)),
+            MessageType.OldFillValue => Message.Decode(context, objectHeaderAddress, flags, () => OldFillValueMessage.Decode(context.Driver)),
+            MessageType.FillValue => Message.Decode(context, objectHeaderAddress, flags, () => FillValueMessage.Decode(context.Driver)),
             MessageType.Link => LinkMessage.Decode(context),
             MessageType.ExternalDataFiles => ExternalFileListMessage.Decode(context),
             MessageType.DataLayout => DataLayoutMessage.Construct(context),
             MessageType.Bogus => BogusMessage.Decode(context.Driver),
             MessageType.GroupInfo => GroupInfoMessage.Decode(context.Driver),
-            MessageType.FilterPipeline => Message.Decode(context, objectHeader.Address, flags, () => FilterPipelineMessage.Decode(context.Driver)),
-            MessageType.Attribute => Message.Decode(context, objectHeader.Address, flags, () => AttributeMessage.Decode(context, objectHeader)),
+            MessageType.FilterPipeline => Message.Decode(context, objectHeaderAddress, flags, () => FilterPipelineMessage.Decode(context.Driver)),
+            MessageType.Attribute => Message.Decode(context, objectHeaderAddress, flags, () => AttributeMessage.Decode(context, objectHeaderAddress)),
             MessageType.ObjectComment => ObjectCommentMessage.Decode(context.Driver),
             MessageType.OldObjectModificationTime => OldObjectModificationTimeMessage.Decode(context.Driver).ToObjectModificationMessage(),
             MessageType.SharedMessageTable => SharedMessageTableMessage.Decode(context),

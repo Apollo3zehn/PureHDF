@@ -1,8 +1,8 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class Superblock23(
+internal partial record class Superblock23(
     H5DriverBase Driver,
-    byte SuperBlockVersion,
+    byte Version,
     FileConsistencyFlags FileConsistencyFlags,
     ulong BaseAddress,
     ulong ExtensionAddress,
@@ -10,7 +10,7 @@ internal record class Superblock23(
     ulong RootGroupObjectHeaderAddress,
     uint Checksum
 ): Superblock(
-    SuperBlockVersion, 
+    Version, 
     FileConsistencyFlags, 
     BaseAddress, 
     EndOfFileAddress
@@ -20,7 +20,6 @@ internal record class Superblock23(
 
     public static Superblock23 Decode(H5DriverBase driver, byte version)
     {
-        var superBlockVersion = version;
         var offsetsSize = driver.ReadByte();
         var lengthsSize = driver.ReadByte();
         var fileConsistencyFlags = (FileConsistencyFlags)driver.ReadByte();
@@ -32,7 +31,7 @@ internal record class Superblock23(
 
         return new Superblock23(
             driver,
-            superBlockVersion,
+            version,
             fileConsistencyFlags,
             baseAddress,
             extensionAddress,

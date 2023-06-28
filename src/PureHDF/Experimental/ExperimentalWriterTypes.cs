@@ -8,7 +8,17 @@ namespace PureHDF.Experimental;
 public record class H5File(
     IReadOnlyList<H5AttributeBase> Attributes,
     IReadOnlyList<H5Object> Objects)
-    : H5Group("/", Attributes, Objects);
+    : H5Group("/", Attributes, Objects)
+{
+    /// <summary>
+    /// Creates a new file, write the contents to the file, and then closes the file. If the target file already exists, it is overwritten.
+    /// </summary>
+    /// <param name="filePath">The name of the file.</param>
+    public void Save(string filePath)
+    {
+        H5Writer.Serialize(this, filePath);
+    }
+};
 
 /// <summary>
 /// A group.
