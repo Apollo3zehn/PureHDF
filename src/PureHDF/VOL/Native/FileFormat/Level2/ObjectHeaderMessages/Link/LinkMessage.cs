@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class LinkMessage(
-    byte Flags,
+internal partial record class LinkMessage(
+    LinkInfoFlags Flags,
     LinkType LinkType,
     ulong CreationOrder,
     string LinkName,
@@ -33,31 +33,28 @@ internal record class LinkMessage(
         var version = driver.ReadByte();
 
         // flags
-        var flags = driver.ReadByte();
+        var flags = (LinkInfoFlags)driver.ReadByte();
 
         // link type
-        var isLinkTypeFieldPresent = (flags & (1 << 3)) > 0;
         var linkType = default(LinkType);
 
-        if (isLinkTypeFieldPresent)
+        if (flags.HasFlag(LinkInfoFlags.LinkTypeFieldIsPresent))
             linkType = (LinkType)driver.ReadByte();
 
         // creation order
-        var isCreationOrderFieldPresent = (flags & (1 << 2)) > 0;
         var creationOrder = default(ulong);
 
-        if (isCreationOrderFieldPresent)
+        if (flags.HasFlag(LinkInfoFlags.CreatOrderFieldIsPresent))
             creationOrder = driver.ReadUInt64();
 
         // link name encoding
-        var isLinkNameEncodingFieldPresent = (flags & (1 << 4)) > 0;
         var linkNameEncoding = default(CharacterSetEncoding);
 
-        if (isLinkNameEncodingFieldPresent)
+        if (flags.HasFlag(LinkInfoFlags.LinkNameEncodingFieldIsPresent))
             linkNameEncoding = (CharacterSetEncoding)driver.ReadByte();
 
         // link length
-        var linkLengthFieldLength = (ulong)(1 << (flags & 0x03));
+        var linkLengthFieldLength = (ulong)(1 << ((byte)flags & 0x03));
         var linkNameLength = Utils.ReadUlong(driver, linkLengthFieldLength);
 
         // link name

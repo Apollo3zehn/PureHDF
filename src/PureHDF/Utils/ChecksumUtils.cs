@@ -8,7 +8,7 @@ internal static class ChecksumUtils
     public static uint JenkinsLookup3(string key)
     {
         var bytes = Encoding.UTF8.GetBytes(key);
-        return ChecksumUtils.JenkinsLookup3Internal(bytes, 0);
+        return JenkinsLookup3Internal(bytes, 0);
     }
 
     /*
@@ -162,7 +162,7 @@ internal static class ChecksumUtils
                 c += ((uint)k[9]) << 8;
                 c += ((uint)k[10]) << 16;
                 c += ((uint)k[11]) << 24;
-                ChecksumUtils.JenkinsLookup3Mix(ref a, ref b, ref c);
+                JenkinsLookup3Mix(ref a, ref b, ref c);
                 length -= 12;
                 k += 12;
             }

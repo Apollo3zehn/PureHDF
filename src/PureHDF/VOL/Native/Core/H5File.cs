@@ -56,7 +56,7 @@ public class H5File : NativeGroup, IDisposable
                 return _chunkCacheFactory;
 
             else
-                return H5File.DefaultChunkCacheFactory;
+                return DefaultChunkCacheFactory;
         }
         set
         {

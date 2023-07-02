@@ -1,6 +1,14 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract record class LinkInfo();
+internal abstract record class LinkInfo()
+{
+    // virtual until all link types support encoding
+
+    public virtual void Encode(BinaryWriter driver)
+    {
+        //
+    }
+}
 
 internal record class HardLinkInfo(
     ulong HeaderAddress
@@ -13,6 +21,11 @@ internal record class HardLinkInfo(
         return new HardLinkInfo(
             HeaderAddress: superblock.ReadOffset(driver)
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        driver.Write(HeaderAddress);
     }
 }
 
