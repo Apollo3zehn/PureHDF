@@ -11,7 +11,6 @@ internal partial record class ObjectHeader2(
     uint BirthTime,
     ushort MaximumCompactAttributesCount,
     ushort MinimumDenseAttributesCount,
-    ulong SizeOfChunk0,
     List<HeaderMessage> HeaderMessages
 ) : ObjectHeader(Address, HeaderMessages)
 {
@@ -95,7 +94,6 @@ internal partial record class ObjectHeader2(
             birthTime,
             maximumCompactAttributesCount,
             minimumDenseAttributesCount,
-            sizeOfChunk0,
             headerMessages
         )
         {

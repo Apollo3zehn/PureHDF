@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal record class LinkInfoMessage(
+internal partial record class LinkInfoMessage(
     NativeContext Context,
     CreationOrderFlags Flags,
     ulong MaximumCreationIndex,

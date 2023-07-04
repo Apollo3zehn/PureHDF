@@ -2,8 +2,10 @@
 
 internal partial record class ObjectHeader2
 {
-    internal void Encode(BinaryWriter driver)
+    public void Encode(BinaryWriter driver)
     {
+        var position1 = driver.BaseStream.Position;
+
         driver.Write(Signature);
         driver.Write(Version);
         driver.Write((byte)Flags);
@@ -24,18 +26,38 @@ internal partial record class ObjectHeader2
             driver.Write(MinimumDenseAttributesCount);
         }
 
-        // size of chunk 0
-        driver.Write(SizeOfChunk0);
+        // size of chunk 0 (fake)
+        var position2 = driver.BaseStream.Position;
+        var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
+        Utils.WriteUlongArbitrary(driver, 0, chunkFieldSize);
 
         // with creation order
         var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
 
         // header messages
-        WriteHeaderMessages(
-            driver, 
-            address,
-            sizeOfChunk0,
-            version: 2, 
-            withCreationOrder);
+        var position3 = driver.BaseStream.Position;
+        WriteHeaderMessages(driver, withCreationOrder);
+        var position4 = driver.BaseStream.Position;
+
+        // size of chunk 0 (real)
+        driver.BaseStream.Seek(position2, SeekOrigin.Begin);
+        var sizeOfChunk0 = (ulong)(position4 - position3);
+        Utils.WriteUlongArbitrary(driver, sizeOfChunk0, chunkFieldSize);
+
+        // checksum
+        driver.BaseStream.Seek(position1, SeekOrigin.Begin);
+        var checksumData = new byte[position4 - position1];
+        driver.BaseStream.Read(checksumData);
+        var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+
+        driver.Write(checksum);
+    }
+
+    public void WriteHeaderMessages(BinaryWriter driver, bool withCreationOrder)
+    {
+        foreach (var message in HeaderMessages)
+        {
+            message.Encode(driver, withCreationOrder);
+        }
     }
 }

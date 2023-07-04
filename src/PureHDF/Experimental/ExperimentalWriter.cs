@@ -4,15 +4,16 @@ internal static class H5Writer
 {
     public static void Serialize(H5File file, string filePath)
     {
-        using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.Write, FileShare.Read);
+        using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
         using var driver = new BinaryWriter(fileStream);
 
-        // encode superblock
-        var objectHeaderAddress = 
-            (ulong)Superblock.FormatSignature.Length + 
-            sizeof(byte) + sizeof(byte) + sizeof(byte) + sizeof(byte) + 
-            sizeof(ulong) + sizeof(ulong) + sizeof(ulong) + sizeof(ulong) +
-            sizeof(uint);
+        // root group
+        driver.BaseStream.Seek(Superblock23.SIZE, SeekOrigin.Begin);
+        var rootGroupAddress = EncodeGroup(driver, file);
+
+        // superblock
+        var endOfFileAddress = (ulong)driver.BaseStream.Position;
+        driver.BaseStream.Seek(0, SeekOrigin.Begin);
 
         var superblock = new Superblock23(
             Driver: default!,
@@ -20,18 +21,14 @@ internal static class H5Writer
             FileConsistencyFlags: default,
             BaseAddress: 0,
             ExtensionAddress: Superblock.UndefinedAddress,
-            EndOfFileAddress: default, /* TODO write correct value */
-            RootGroupObjectHeaderAddress: objectHeaderAddress,
-            Checksum: default /* TODO write correct value, H5F_super_cache.c -> H5F_sblock_flush */)
+            EndOfFileAddress: endOfFileAddress,
+            RootGroupObjectHeaderAddress: rootGroupAddress)
         {
             OffsetsSize = sizeof(ulong),
             LengthsSize = sizeof(ulong)
         };
 
         superblock.Encode(driver);
-
-        // root group
-        EncodeGroup(driver, file);
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)
@@ -66,7 +63,7 @@ internal static class H5Writer
 
         return new HeaderMessage(
             Type: type,
-            DataSize: default /* TODO write correct value */,
+            DataSize: default /* TODO maybe this can be determined statically (reduces number of Stream.Seek operations) */,
             Flags: MessageFlags.NoFlags,
             CreationOrder: default,
             Data: message
@@ -77,7 +74,7 @@ internal static class H5Writer
         };
     }
 
-    private static void EncodeGroup(BinaryWriter driver, H5Group group)
+    private static ulong EncodeGroup(BinaryWriter driver, H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
 
@@ -85,9 +82,9 @@ internal static class H5Writer
             Context: default,
             Flags: default,
             MaximumCreationIndex: default,
-            FractalHeapAddress: default,
-            BTree2NameIndexAddress: default,
-            BTree2CreationOrderIndexAddress: default
+            FractalHeapAddress: Superblock.UndefinedAddress,
+            BTree2NameIndexAddress: Superblock.UndefinedAddress,
+            BTree2CreationOrderIndexAddress: Superblock.UndefinedAddress
         )
         {
             Version = 0
@@ -95,21 +92,32 @@ internal static class H5Writer
 
         headerMessages.Add(ToHeaderMessage(linkInfoMessage));
 
-        foreach (var child in group.Objects)
+#warning TODO remove this requirement
+        if (group.Objects is not null)
         {
-            var linkMessage = new LinkMessage(
-                Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
-                LinkType: default,
-                CreationOrder: default,
-                LinkName: child.Name,
-                LinkInfo: new HardLinkInfo(HeaderAddress: default /* TODO write correct value */)
-            )
+            foreach (var child in group.Objects)
             {
-                Version = 1
-            };
+                if (child is H5Group childGroup)
+                {
+                    var childAddress = EncodeGroup(driver, childGroup);
 
-            headerMessages.Add(ToHeaderMessage(linkMessage));
+                    var linkMessage = new LinkMessage(
+                        Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
+                        LinkType: default,
+                        CreationOrder: default,
+                        LinkName: child.Name,
+                        LinkInfo: new HardLinkInfo(HeaderAddress: childAddress)
+                    )
+                    {
+                        Version = 1
+                    };
+
+                    headerMessages.Add(ToHeaderMessage(linkMessage));
+                }
+            }
         }
+
+        var address = (ulong)driver.BaseStream.Position;
 
         var objectHeader = new ObjectHeader2(
             Address: default,
@@ -120,7 +128,6 @@ internal static class H5Writer
             BirthTime: default,
             MaximumCompactAttributesCount: default,
             MinimumDenseAttributesCount: default,
-            SizeOfChunk0: default /* TODO write correct value */,
             HeaderMessages: headerMessages
         )
         {
@@ -128,5 +135,7 @@ internal static class H5Writer
         };
 
         objectHeader.Encode(driver);
+
+        return address;
     }
 }

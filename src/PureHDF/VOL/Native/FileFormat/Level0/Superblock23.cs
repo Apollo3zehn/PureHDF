@@ -7,8 +7,7 @@ internal partial record class Superblock23(
     ulong BaseAddress,
     ulong ExtensionAddress,
     ulong EndOfFileAddress,
-    ulong RootGroupObjectHeaderAddress,
-    uint Checksum
+    ulong RootGroupObjectHeaderAddress
 ): Superblock(
     Version, 
     FileConsistencyFlags, 
@@ -27,7 +26,7 @@ internal partial record class Superblock23(
         var extensionAddress = Utils.ReadUlong(driver, offsetsSize);
         var endOfFileAddress = Utils.ReadUlong(driver, offsetsSize);
         var rootGroupObjectHeaderAddress = Utils.ReadUlong(driver, offsetsSize);
-        var checksum = driver.ReadUInt32();
+        var _ = driver.ReadUInt32();
 
         return new Superblock23(
             driver,
@@ -36,8 +35,7 @@ internal partial record class Superblock23(
             baseAddress,
             extensionAddress,
             endOfFileAddress,
-            rootGroupObjectHeaderAddress,
-            checksum
+            rootGroupObjectHeaderAddress
         )
         {
             OffsetsSize = offsetsSize,

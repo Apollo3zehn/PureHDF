@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -489,6 +490,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
                     yield return reference;
                 }
             }
+
             else
             {
                 var linkInfoMessages = Header.GetMessages<LinkInfoMessage>();
@@ -565,7 +567,8 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 
         var fractalHeap = linkInfoMessage.FractalHeap;
         var btree2NameIndex = linkInfoMessage.BTree2NameIndex;
-        var nameHash = ChecksumUtils.JenkinsLookup3(name);
+        var nameBytes = Encoding.UTF8.GetBytes(name);
+        var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(LinkMessage);
 
         var success = btree2NameIndex.TryFindRecord(out var record, record =>
@@ -576,10 +579,12 @@ public class NativeGroup : NativeAttributableObject, IH5Group
             {
                 return -1;
             }
+
             else if (nameHash > record.NameHash)
             {
                 return 1;
             }
+            
             else
             {
                 // TODO: duplicate3_of_3

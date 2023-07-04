@@ -26,7 +26,7 @@ public class ChunkCacheTests
         );
 
         var group_0 = new H5Group(
-            Name: "group1", 
+            Name: "group0", 
             Attributes: new List<H5AttributeBase>() { attribute_g0_0 },
             Objects: new List<H5Object>() { dataset_g0_0 });
 
@@ -37,7 +37,7 @@ public class ChunkCacheTests
             Attributes: new List<H5AttributeBase>() { attribute_0, attribute_1 },
             Objects: new List<H5Object>() { group_0, group_1, dataset_0 });
 
-        var filePath = "my-path.h5";
+        var filePath = Path.GetTempFileName();
 
         // Act
         expected.Save(filePath);

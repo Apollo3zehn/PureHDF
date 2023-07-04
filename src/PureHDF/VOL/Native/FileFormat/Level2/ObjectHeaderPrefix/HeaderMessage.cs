@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal readonly record struct HeaderMessage(
+internal readonly partial record struct HeaderMessage(
     MessageType Type,
     ushort DataSize,
     MessageFlags Flags,

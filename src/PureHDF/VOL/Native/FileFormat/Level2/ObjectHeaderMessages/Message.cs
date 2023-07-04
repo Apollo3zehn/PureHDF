@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract record class Message
+internal abstract partial record class Message
 {
     public static T Decode<T>(
         NativeContext context,

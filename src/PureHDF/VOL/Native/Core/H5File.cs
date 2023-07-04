@@ -214,7 +214,7 @@ public class H5File : NativeGroup, IDisposable
         var stepSize = 512;
         var signature = driver.ReadBytes(8);
 
-        while (!ValidateSignature(signature, Superblock.FormatSignature))
+        while (!ValidateSignature(signature, Superblock.Signature))
         {
             driver.Seek(stepSize - 8, SeekOrigin.Current);
 

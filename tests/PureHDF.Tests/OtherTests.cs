@@ -1,3 +1,4 @@
+using System.Text;
 using Xunit;
 
 namespace PureHDF.Tests.Reading
@@ -59,9 +60,10 @@ namespace PureHDF.Tests.Reading
         public void CanCalculateHash(string key, uint expected)
         {
             // Arrange
+            var nameBytes = Encoding.UTF8.GetBytes(key);
 
             // Act
-            var actual = ChecksumUtils.JenkinsLookup3(key);
+            var actual = ChecksumUtils.JenkinsLookup3(nameBytes);
 
             // Assert
             Assert.Equal(expected, actual);

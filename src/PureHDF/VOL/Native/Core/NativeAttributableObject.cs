@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -164,7 +165,8 @@ public abstract class NativeAttributableObject : NativeObject, IH5AttributableOb
 
         var fractalHeap = attributeInfoMessage.FractalHeap;
         var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
-        var nameHash = ChecksumUtils.JenkinsLookup3(name);
+        var nameBytes = Encoding.UTF8.GetBytes(name);
+        var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(AttributeMessage);
 
         var success = btree2NameIndex.TryFindRecord(out var record, record =>
