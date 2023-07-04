@@ -43,7 +43,8 @@ public class ChunkCacheTests
         expected.Save(filePath);
         var actual = H5File.OpenRead(filePath);
 
-        // TODO continue here
         // Assert
+        var _1 = actual.Group("group0");
+        var _2 = actual.Group("group1");
     }
 }
