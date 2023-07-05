@@ -31,17 +31,18 @@ public class ChunkCacheTests
             Objects: new List<H5Object>() { dataset_g0_0 });
 
         var group_1 = new H5Group(
-            Name: "group1");
+            Name: "group1",
+            Objects: new List<H5Object>() { group_0 /* test same group hard-linked twice */ });
 
         var expected = new Experimental.H5File(
             Attributes: new List<H5AttributeBase>() { attribute_0, attribute_1 },
-            Objects: new List<H5Object>() { group_0, group_1, dataset_0 });
+            Objects: new List<H5Object>() { group_0 /* test same group hard-linked twice */, group_1, dataset_0 });
 
         var filePath = Path.GetTempFileName();
 
         // Act
         expected.Save(filePath);
-        var actual = H5File.OpenRead(filePath);
+        using var actual = H5File.InternalOpenRead(filePath, deleteOnClose: true);
 
         // Assert
         var _1 = actual.Group("group0");

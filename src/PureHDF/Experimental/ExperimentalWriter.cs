@@ -4,12 +4,14 @@ internal static class H5Writer
 {
     public static void Serialize(H5File file, string filePath)
     {
+        var objectToAddressMap = new Dictionary<H5Object, ulong>();
+
         using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
         using var driver = new BinaryWriter(fileStream);
 
         // root group
         driver.BaseStream.Seek(Superblock23.SIZE, SeekOrigin.Begin);
-        var rootGroupAddress = EncodeGroup(driver, file);
+        var rootGroupAddress = EncodeGroup(driver, file, objectToAddressMap);
 
         // superblock
         var endOfFileAddress = (ulong)driver.BaseStream.Position;
@@ -74,7 +76,10 @@ internal static class H5Writer
         };
     }
 
-    private static ulong EncodeGroup(BinaryWriter driver, H5Group group)
+    private static ulong EncodeGroup(
+        BinaryWriter driver, 
+        H5Group group, 
+        Dictionary<H5Object, ulong> objectToAddressMap)
     {
         var headerMessages = new List<HeaderMessage>();
 
@@ -99,7 +104,11 @@ internal static class H5Writer
             {
                 if (child is H5Group childGroup)
                 {
-                    var childAddress = EncodeGroup(driver, childGroup);
+                    if (!objectToAddressMap.TryGetValue(childGroup, out var childAddress))
+                    {
+                        childAddress = EncodeGroup(driver, childGroup, objectToAddressMap);
+                        objectToAddressMap[childGroup] = childAddress;
+                    }
 
                     var linkMessage = new LinkMessage(
                         Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
