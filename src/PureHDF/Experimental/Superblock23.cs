@@ -2,7 +2,7 @@
 
 internal partial record class Superblock23
 {
-    public static int SIZE = 8 + 4 + 8 + 8 + 8 + 8 + 4;
+    public const int SIZE = 8 + 4 + 8 + 8 + 8 + 8 + 4;
 
     public void Encode(BinaryWriter driver)
     {

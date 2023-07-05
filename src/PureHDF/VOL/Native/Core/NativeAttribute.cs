@@ -82,10 +82,10 @@ internal class NativeAttribute : IH5Attribute
         var source = destination.ToArray();
 
         if (byteOrderAware is not null)
-            Utils.EnsureEndianness(source, destination, byteOrderAware.ByteOrder, Message.Datatype.Size);
+            Utils.EnsureEndianness(source, destination.Span, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
         return MemoryMarshal
-            .Cast<byte, T>(Message.Data)
+            .Cast<byte, T>(Message.Data.Span)
             .ToArray();
     }
 
@@ -97,7 +97,7 @@ internal class NativeAttribute : IH5Attribute
         var elementCount = Message.Data.Length / InternalElementDataType.Size;
         var result = new T[elementCount];
 
-        ReadUtils.ReadCompound<T>(_context, InternalElementDataType, Message.Data, result, getName);
+        ReadUtils.ReadCompound<T>(_context, InternalElementDataType, Message.Data.Span, result, getName);
 
         return result;
     }
@@ -107,14 +107,14 @@ internal class NativeAttribute : IH5Attribute
         var elementCount = Message.Data.Length / InternalElementDataType.Size;
         var result = new Dictionary<string, object?>[elementCount];
 
-        ReadUtils.ReadCompound(_context, InternalElementDataType, Message.Data, result);
+        ReadUtils.ReadCompound(_context, InternalElementDataType, Message.Data.Span, result);
 
         return result;
     }
 
     public string[] ReadString()
     {
-        return ReadUtils.ReadString(_context, InternalElementDataType, Message.Data);
+        return ReadUtils.ReadString(_context, InternalElementDataType, Message.Data.Span);
     }
 
     public T[]?[] ReadVariableLength<T>(
@@ -125,7 +125,7 @@ internal class NativeAttribute : IH5Attribute
         var elementCount = Message.Data.Length / InternalElementDataType.Size;
         var result = new T[elementCount][];
 
-        ReadUtils.ReadVariableLengthSequence<T>(_context, InternalElementDataType, Message.Data, result);
+        ReadUtils.ReadVariableLengthSequence<T>(_context, InternalElementDataType, Message.Data.Span, result);
 
         return result;
     }

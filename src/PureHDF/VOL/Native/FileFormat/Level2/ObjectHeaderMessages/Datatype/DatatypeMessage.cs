@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class DatatypeMessage(
+internal partial record class DatatypeMessage(
     uint Size,
     DatatypeBitFieldDescription BitField,
     DatatypePropertyDescription[] Properties
@@ -87,7 +87,7 @@ internal record class DatatypeMessage(
                 DatatypeMessageClass.Enumerated => EnumerationPropertyDescription.Decode(driver, version, size, GetEnumMemberCount(bitField)),
                 DatatypeMessageClass.VariableLength => VariableLengthPropertyDescription.Decode(driver),
                 DatatypeMessageClass.Array => ArrayPropertyDescription.Decode(driver, version),
-                _ => throw new NotSupportedException($"The class '{@class}' is not supported on data type messages of version {version}.")
+                _ => throw new NotSupportedException($"The data type message '{@class}' is not supported.")
             };
 
             if (singleProperties is not null)

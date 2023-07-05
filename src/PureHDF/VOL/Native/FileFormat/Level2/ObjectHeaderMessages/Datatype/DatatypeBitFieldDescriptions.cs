@@ -1,8 +1,12 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract record class DatatypeBitFieldDescription(
-    //
-);
+internal abstract record class DatatypeBitFieldDescription
+{
+    public virtual void Encode(BinaryWriter driver)
+    {
+        //
+    }
+};
 
 internal record class ArrayBitFieldDescription(
     //
@@ -82,6 +86,24 @@ internal record class FixedPointBitFieldDescription(
             IsSigned: (data[0] >> 3) > 0
         );
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+#if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        data[0] = (byte)(
+            (byte)ByteOrder & 0x01 | 
+            (PaddingTypeLow ? 1 : 0) << 1 | 
+            (PaddingTypeHigh ? 1 : 0) << 2 |
+            (IsSigned ? 1 : 0) << 3
+        );
+
+        driver.Write(data);
+    }
 }
 
 internal record class FloatingPointBitFieldDescription(
@@ -125,6 +147,36 @@ internal record class FloatingPointBitFieldDescription(
             MantissaNormalization: (MantissaNormalization)((data[0] >> 4) & 0x03),
             SignLocation: data[1]
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+#if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        if (ByteOrder == ByteOrder.LittleEndian)
+            data[0] = 0 << 0;
+
+        else if (ByteOrder == ByteOrder.BigEndian)
+            data[0] = 1 << 0;
+
+        else if (ByteOrder == ByteOrder.VaxEndian)
+            data[0] = (1 << 0) | (1 << 6);
+
+        data[0] = (byte)(
+            data[0] | 
+            (PaddingTypeLow ? 1 : 0) << 1 | 
+            (PaddingTypeHigh ? 1 : 0) << 2 |
+            (PaddingTypeInternal ? 1 : 0) << 3 |
+            ((byte)MantissaNormalization & 0x03) << 4
+        );
+
+        data[1] = SignLocation;
+
+        driver.Write(data);
     }
 }
 

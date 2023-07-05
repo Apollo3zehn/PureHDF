@@ -33,6 +33,126 @@ internal static class H5Writer
         superblock.Encode(driver);
     }
 
+    private static ulong EncodeGroup(
+        BinaryWriter driver,
+        H5Group group,
+        Dictionary<H5Object, ulong> objectToAddressMap)
+    {
+        var headerMessages = new List<HeaderMessage>();
+
+        var linkInfoMessage = new LinkInfoMessage(
+            Context: default,
+            Flags: CreationOrderFlags.None,
+            MaximumCreationIndex: default,
+            FractalHeapAddress: Superblock.UndefinedAddress,
+            BTree2NameIndexAddress: Superblock.UndefinedAddress,
+            BTree2CreationOrderIndexAddress: Superblock.UndefinedAddress
+        )
+        {
+            Version = 0
+        };
+
+        headerMessages.Add(ToHeaderMessage(linkInfoMessage));
+
+        foreach (var entry in group.Attributes)
+        {
+            var attributeMessage = CreateAttributeMessage(entry.Key, entry.Value);
+
+            headerMessages.Add(ToHeaderMessage(attributeMessage));
+        }
+
+        foreach (var entry in group)
+        {
+            if (entry.Value is H5Group childGroup)
+            {
+                if (!objectToAddressMap.TryGetValue(childGroup, out var childAddress))
+                {
+                    childAddress = EncodeGroup(driver, childGroup, objectToAddressMap);
+                    objectToAddressMap[childGroup] = childAddress;
+                }
+
+                var linkMessage = new LinkMessage(
+                    Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
+                    LinkType: default,
+                    CreationOrder: default,
+                    LinkName: entry.Key,
+                    LinkInfo: new HardLinkInfo(HeaderAddress: childAddress)
+                )
+                {
+                    Version = 1
+                };
+
+                headerMessages.Add(ToHeaderMessage(linkMessage));
+            }
+        }
+
+        var address = (ulong)driver.BaseStream.Position;
+
+        var objectHeader = new ObjectHeader2(
+            Address: default,
+            Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
+            AccessTime: default,
+            ModificationTime: default,
+            ChangeTime: default,
+            BirthTime: default,
+            MaximumCompactAttributesCount: default,
+            MinimumDenseAttributesCount: default,
+            HeaderMessages: headerMessages
+        )
+        {
+            Version = 2
+        };
+
+        objectHeader.Encode(driver);
+
+        return address;
+    }
+
+    private static AttributeMessage CreateAttributeMessage(string name, H5AttributeBase attribute)
+    {
+        // datatype
+        var dataType = new DatatypeMessage(
+            Size: (uint)attribute.TypeSize,
+            BitField: attribute.Bitfield,
+            Properties: attribute.Properies
+        )
+        {
+            Version = 3,
+            Class = attribute.Class
+        };
+
+        // dataspace
+        var dimensions = attribute.Dimensions ?? new ulong[] { 
+            (ulong)(attribute.Data.Length / attribute.TypeSize)
+        };
+
+        var dataspace = new DataspaceMessage(
+            Rank: (byte)dimensions.Length,
+            Flags: DataspaceMessageFlags.None,
+            Type: DataspaceType.Simple,
+            DimensionSizes: dimensions,
+            DimensionMaxSizes: dimensions,
+            PermutationIndices: default
+        )
+        {
+            Version = 2
+        };
+
+        // attribute
+        var attributeMessage = new AttributeMessage(
+            Flags: AttributeMessageFlags.None,
+            Name: name,
+            Datatype: dataType,
+            Dataspace: dataspace,
+            Data: attribute.Data
+        )
+        {
+            Version = 3
+        };
+
+        return attributeMessage;
+    }
+
     private static HeaderMessage ToHeaderMessage(Message message)
     {
         var type = message switch
@@ -74,77 +194,5 @@ internal static class H5Writer
             Version = 2,
             WithCreationOrder = default
         };
-    }
-
-    private static ulong EncodeGroup(
-        BinaryWriter driver, 
-        H5Group group, 
-        Dictionary<H5Object, ulong> objectToAddressMap)
-    {
-        var headerMessages = new List<HeaderMessage>();
-
-        var linkInfoMessage = new LinkInfoMessage(
-            Context: default,
-            Flags: default,
-            MaximumCreationIndex: default,
-            FractalHeapAddress: Superblock.UndefinedAddress,
-            BTree2NameIndexAddress: Superblock.UndefinedAddress,
-            BTree2CreationOrderIndexAddress: Superblock.UndefinedAddress
-        )
-        {
-            Version = 0
-        };
-
-        headerMessages.Add(ToHeaderMessage(linkInfoMessage));
-
-#warning TODO remove this requirement
-        if (group.Objects is not null)
-        {
-            foreach (var child in group.Objects)
-            {
-                if (child is H5Group childGroup)
-                {
-                    if (!objectToAddressMap.TryGetValue(childGroup, out var childAddress))
-                    {
-                        childAddress = EncodeGroup(driver, childGroup, objectToAddressMap);
-                        objectToAddressMap[childGroup] = childAddress;
-                    }
-
-                    var linkMessage = new LinkMessage(
-                        Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
-                        LinkType: default,
-                        CreationOrder: default,
-                        LinkName: child.Name,
-                        LinkInfo: new HardLinkInfo(HeaderAddress: childAddress)
-                    )
-                    {
-                        Version = 1
-                    };
-
-                    headerMessages.Add(ToHeaderMessage(linkMessage));
-                }
-            }
-        }
-
-        var address = (ulong)driver.BaseStream.Position;
-
-        var objectHeader = new ObjectHeader2(
-            Address: default,
-            Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
-            AccessTime: default,
-            ModificationTime: default,
-            ChangeTime: default,
-            BirthTime: default,
-            MaximumCompactAttributesCount: default,
-            MinimumDenseAttributesCount: default,
-            HeaderMessages: headerMessages
-        )
-        {
-            Version = 2
-        };
-
-        objectHeader.Encode(driver);
-
-        return address;
     }
 }

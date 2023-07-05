@@ -1,11 +1,11 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class AttributeMessage(
+internal partial record class AttributeMessage(
     AttributeMessageFlags Flags,
     string Name,
     DatatypeMessage Datatype,
     DataspaceMessage Dataspace,
-    byte[] Data
+    Memory<byte> Data
 ) : Message
 {
     private byte _version;
@@ -29,6 +29,8 @@ internal record class AttributeMessage(
     {
         // version
         var version = context.Driver.ReadByte();
+
+        // flags
         var flags = default(AttributeMessageFlags);
 
         if (version == 1)

@@ -108,6 +108,9 @@ internal readonly partial record struct HeaderMessage(
         var driverPosition2 = context.Driver.Position;
         var paddingBytes = dataSize - (driverPosition2 - driverPosition1);
 
+        if (paddingBytes < 0)
+            throw new Exception();
+
         context.Driver.ReadBytes((int)paddingBytes);
 
         return new HeaderMessage(

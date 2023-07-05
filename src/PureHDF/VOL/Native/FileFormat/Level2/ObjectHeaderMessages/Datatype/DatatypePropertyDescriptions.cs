@@ -1,8 +1,12 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract record class DatatypePropertyDescription(
-    //
-);
+internal abstract record class DatatypePropertyDescription
+{
+    public virtual void Encode(BinaryWriter driver)
+    {
+        //
+    }
+};
 
 internal record class ArrayPropertyDescription(
     byte Rank,
@@ -223,6 +227,12 @@ internal record class FixedPointPropertyDescription(
             BitPrecision: driver.ReadUInt16()
         );
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        driver.Write(BitOffset);
+        driver.Write(BitPrecision);
+    }
 };
 
 internal record class FloatingPointPropertyDescription(
@@ -247,6 +257,17 @@ internal record class FloatingPointPropertyDescription(
             MantissaSize: driver.ReadByte(),
             ExponentBias: driver.ReadUInt32()
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        driver.Write(BitOffset);
+        driver.Write(BitPrecision);
+        driver.Write(ExponentLocation);
+        driver.Write(ExponentSize);
+        driver.Write(MantissaLocation);
+        driver.Write(MantissaSize);
+        driver.Write(ExponentBias);
     }
 };
 

@@ -3,7 +3,7 @@
 [Flags]
 internal enum LinkInfoFlags : byte
 {
-    NoFlags = 0,
+    None = 0,
     LinkNameLengthSizeLowerBit = 1,
     LinkNameLengthSizeUpperBit = 2,
     CreatOrderFieldIsPresent = 4,

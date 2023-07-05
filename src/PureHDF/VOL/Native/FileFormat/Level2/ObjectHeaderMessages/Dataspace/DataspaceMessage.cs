@@ -1,7 +1,8 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class DataspaceMessage(
+internal partial record class DataspaceMessage(
     byte Rank,
+    DataspaceMessageFlags Flags,
     DataspaceType Type,
     ulong[] DimensionSizes,
     ulong[] DimensionMaxSizes,
@@ -71,6 +72,7 @@ internal record class DataspaceMessage(
                 dimensionMaxSizes[i] = superblock.ReadLength(driver);
             }
         }
+        
         else
         {
             dimensionMaxSizes = dimensionSizes.ToArray();
@@ -90,6 +92,7 @@ internal record class DataspaceMessage(
 
         return new DataspaceMessage(
             rank,
+            flags,
             type,
             dimensionSizes,
             dimensionMaxSizes,
