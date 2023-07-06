@@ -1,0 +1,52 @@
+HDF5 "/tmp/tmpqhSPb2.tmp" {
+GROUP "/" {
+   ATTRIBUTE "attribute_1_fixed_point_signed" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      DATA {
+      (0): 1, -2, 3
+      }
+   }
+   ATTRIBUTE "attribute_1_fixed_point_unsigned" {
+      DATATYPE  H5T_STD_U32LE
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      DATA {
+      (0): 1, 2, 3
+      }
+   }
+   ATTRIBUTE "attribute_1_floating_point_32" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      DATA {
+      (0): 1.1, -2.2e+36, 3.3
+      }
+   }
+   ATTRIBUTE "attribute_1_floating_point_64" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      DATA {
+      (0): 1.1, -2.2e+36, 3.3
+      }
+   }
+   GROUP "group_0" {
+      ATTRIBUTE "attribute_g0_0" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+         DATA {
+         (0): 2, 3.1, 4.2
+         }
+      }
+   }
+   GROUP "group_1" {
+      GROUP "group_0" {
+         ATTRIBUTE "attribute_g0_0" {
+            DATATYPE  H5T_IEEE_F64LE
+            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+            DATA {
+            (0): 2, 3.1, 4.2
+            }
+         }
+      }
+   }
+}
+}

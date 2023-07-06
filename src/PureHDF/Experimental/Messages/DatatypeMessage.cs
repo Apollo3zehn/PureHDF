@@ -39,13 +39,22 @@ internal partial record class DatatypeMessage : Message
                 IsSigned: true
             ),
 
-            float or double => new FloatingPointBitFieldDescription(
+            float => new FloatingPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
                 PaddingTypeInternal: default,
-                MantissaNormalization: default,
-                SignLocation: default
+                MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
+                SignLocation: 31
+            ),
+
+            double => new FloatingPointBitFieldDescription(
+                ByteOrder: endianness,
+                PaddingTypeLow: default,
+                PaddingTypeHigh: default,
+                PaddingTypeInternal: default,
+                MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
+                SignLocation: 63
             ),
 
             _ => throw new NotSupportedException($"The data type '{typeof(T)}' is not supported."),
@@ -65,23 +74,23 @@ internal partial record class DatatypeMessage : Message
             // https://learn.microsoft.com/en-us/cpp/c-language/type-float
             float => new FloatingPointPropertyDescription[] {
                 new(BitOffset: 0,
-                    BitPrecision: 64,
-                    ExponentLocation: 52,
-                    ExponentSize: 11,
-                    MantissaLocation: 0,
-                    MantissaSize: 52,
-                    ExponentBias: 1023)
-            },
-
-            // https://learn.microsoft.com/en-us/cpp/c-language/type-float
-            double => new FloatingPointPropertyDescription[] {
-                new(BitOffset: 0,
                     BitPrecision: 32,
                     ExponentLocation: 23,
                     ExponentSize: 8,
                     MantissaLocation: 0,
                     MantissaSize: 23,
                     ExponentBias: 127)
+            },
+
+            // https://learn.microsoft.com/en-us/cpp/c-language/type-float
+            double => new FloatingPointPropertyDescription[] {
+                new(BitOffset: 0,
+                    BitPrecision: 64,
+                    ExponentLocation: 52,
+                    ExponentSize: 11,
+                    MantissaLocation: 0,
+                    MantissaSize: 52,
+                    ExponentBias: 1023)
             },
 
             _ => throw new NotSupportedException($"The data type '{typeof(T)}' is not supported."),
