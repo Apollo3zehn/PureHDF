@@ -50,7 +50,7 @@ jobs:
         run: |
           tar -xzf hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
           hdf/HDF5-1.14.1-Linux.sh --prefix=hdf --skip-license
-          sudo ln -s $(pwf)/hdf/HDF_Group/HDF5/1.14.1/bin/h5dump /usr/bin/h5dump
+          sudo ln -s $(pwd)/hdf/HDF_Group/HDF5/1.14.1/bin/h5dump /usr/bin/h5dump
           h5dump --version
 
       - name: Build
