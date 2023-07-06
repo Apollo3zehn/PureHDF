@@ -201,8 +201,12 @@ The following code samples work for datasets as well as attributes.
 
     /* option 1 (faster) */
     var data = dataset.Read<MyNonNullableStruct>();
-    /* option 2 (slower, for more info see the link below after this code block) */
+
+    /* option 2 (slower): for more info see the link below after this code block */
     var data = dataset.ReadCompound<MyNullableStruct>();
+
+    /* option 3 (slowest, no predefined struct required: for more info see the link below after this code block */
+    var data = dataset.ReadCompound();
 
 // class: reference @ object reference
 
@@ -239,9 +243,13 @@ The following code samples work for datasets as well as attributes.
 
     var data = dataset.Read<MyEnum>();
 
-// class: variable length
+// class: variable length @ string
 
     var data = dataset.ReadString();
+
+// class: variable length @ sequence
+
+    var data = dataset.ReadVariableLength<T>();
 
 // class: array
 
