@@ -28,6 +28,7 @@ jobs:
           
       - name: Environment
         run: |
+          echo $PATH
           echo "VERSION=$(python build/print_version.py ${{ github.run_number }} ${{ env.IS_RELEASE }} false)" >> $GITHUB_ENV
           echo "$(python build/print_solution.py)" >> $GITHUB_ENV
 
