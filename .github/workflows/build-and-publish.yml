@@ -28,7 +28,6 @@ jobs:
           
       - name: Environment
         run: |
-          echo $PATH
           echo "VERSION=$(python build/print_version.py ${{ github.run_number }} ${{ env.IS_RELEASE }} false)" >> $GITHUB_ENV
           echo "$(python build/print_solution.py)" >> $GITHUB_ENV
 
@@ -51,7 +50,8 @@ jobs:
         run: |
           tar -xzf hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
           hdf/HDF5-1.14.1-Linux.sh --prefix=hdf --skip-license
-          sudo ln -s hdf/HDF_Group/HDF5/1.14.1/bin/h5dump /usr/local/bin/h5dump
+          chmod +x hdf/HDF_Group/HDF5/1.14.1/bin/h5dump
+          sudo ln -s hdf/HDF_Group/HDF5/1.14.1/bin/h5dump /usr/bin/h5dump
           h5dump --version
 
       - name: Build
