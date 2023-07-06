@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using PureHDF.Experimental;
 using Xunit;
 
@@ -61,19 +62,39 @@ public class ChunkCacheTests
 
         // Act
         file.Save(filePath);
-        using var actual = H5File.InternalOpenRead(filePath, deleteOnClose: true);
 
         // Assert
+        var expected = File
+            .ReadAllText("TestFiles/expected.writertests.dump")
+            .Replace("<file-path>", filePath);
 
-        // TODO compare dump instead?
-        var actual_attribute_1 = actual.Attribute("attribute_1_fixed_point_unsigned");
+        var actual = default(string);
 
-        var actual_group_0 = actual.Group("group_0");
-        var actual_group_0_attribute_1 = actual_group_0.Attribute("attribute_g0_0");
-        var actual_group_0_attribute_1_data = actual_group_0_attribute_1.Read<byte>();
+        var h5dumpProcess = new Process 
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "h5dump",
+                Arguments = filePath,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true
+            }
+        };
 
-        Assert.True(attribute_g0_0.Data.ToArray().SequenceEqual(actual_group_0_attribute_1_data.ToArray()));
+        h5dumpProcess.Start();
 
-        var actual_group_1 = actual.Group("group_1");
+        while (!h5dumpProcess.StandardOutput.EndOfStream)
+        {
+            var line = h5dumpProcess.StandardOutput.ReadLine();
+
+            if (actual is null)
+                actual = line;
+
+            else
+                actual += Environment.NewLine + line;
+        }
+
+        Assert.Equal(expected, actual);
     }
 }

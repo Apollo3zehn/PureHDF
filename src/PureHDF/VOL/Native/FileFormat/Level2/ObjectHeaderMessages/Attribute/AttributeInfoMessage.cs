@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal record class AttributeInfoMessage(
+internal partial record class AttributeInfoMessage(
     NativeContext Context,
     CreationOrderFlags Flags,
     ushort MaximumCreationIndex,

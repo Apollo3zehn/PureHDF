@@ -40,6 +40,7 @@ internal static class H5Writer
     {
         var headerMessages = new List<HeaderMessage>();
 
+        // link info message
         var linkInfoMessage = new LinkInfoMessage(
             Context: default,
             Flags: CreationOrderFlags.None,
@@ -54,6 +55,26 @@ internal static class H5Writer
 
         headerMessages.Add(ToHeaderMessage(linkInfoMessage));
 
+        // TODO https://forum.hdfgroup.org/t/hdf5-file-format-is-attribute-info-message-required/11277
+        // attribute info message
+        if (group.Attributes.Any())
+        {
+            var attributeInfoMessage = new AttributeInfoMessage(
+                default,
+                Flags: CreationOrderFlags.None,
+                MaximumCreationIndex: default,
+                FractalHeapAddress: Superblock.UndefinedAddress,
+                BTree2NameIndexAddress: Superblock.UndefinedAddress,
+                BTree2CreationOrderIndexAddress: Superblock.UndefinedAddress
+            )
+            {
+                Version = 0
+            };
+
+            headerMessages.Add(ToHeaderMessage(attributeInfoMessage));
+        }
+
+        // attribute messages
         foreach (var entry in group.Attributes)
         {
             var attributeMessage = CreateAttributeMessage(entry.Key, entry.Value);

@@ -1,4 +1,4 @@
-HDF5 "/tmp/tmpqhSPb2.tmp" {
+HDF5 "<file-path>" {
 GROUP "/" {
    ATTRIBUTE "attribute_1_fixed_point_signed" {
       DATATYPE  H5T_STD_I32LE
