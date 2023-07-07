@@ -1,11 +1,16 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage : Message
 {
-    public static DatatypeMessage Create(Type type, int typeSize)
+    public static DatatypeMessage Create(Type type)
     {
+        /* https://stackoverflow.com/a/4472641 */
+        var typeSize = type.IsEnum
+            ? Marshal.SizeOf(Enum.GetUnderlyingType(type))
+            : Marshal.SizeOf(type);
+
         return new DatatypeMessage(
             Size: (uint)typeSize,
             BitField: GetBitFieldDescription(type),
@@ -35,7 +40,9 @@ internal partial record class DatatypeMessage : Message
                 t == typeof(float) ||
                 t == typeof(double) => DatatypeMessageClass.FloatingPoint,
 
-            Type t when t.BaseType == typeof(Enum) => DatatypeMessageClass.Enumerated,
+            Type t when t.IsEnum => DatatypeMessageClass.Enumerated,
+
+            Type t when t.IsValueType && !t.IsPrimitive => DatatypeMessageClass.Compound,
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
         };
@@ -89,8 +96,12 @@ internal partial record class DatatypeMessage : Message
                 SignLocation: 63
             ),
 
-            Type t when t.BaseType == typeof(Enum) => new EnumerationBitFieldDescription(
+            Type t when t.IsEnum => new EnumerationBitFieldDescription(
                 MemberCount: (ushort)Enum.GetNames(type).Length),
+
+            Type t when t.IsValueType && !t.IsPrimitive => new CompoundBitFieldDescription(
+                MemberCount: (ushort)type.GetFields().Length
+            ),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -135,9 +146,11 @@ internal partial record class DatatypeMessage : Message
                     ExponentBias: 1023)
             },
 
-            Type t when t.BaseType == typeof(Enum) => new EnumerationPropertyDescription[] {
+            Type t when t.IsEnum => new EnumerationPropertyDescription[] {
                 EnumerationPropertyDescription.Create(type, typeSize)
             },
+
+            Type t when t.IsValueType && !t.IsPrimitive => CompoundPropertyDescription.Create(type),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -154,7 +167,7 @@ internal partial record class DatatypeMessage : Message
 
         foreach (var property in Properties)
         {
-            property.Encode(driver);
+            property.Encode(driver, Size);
         }
     }
 }

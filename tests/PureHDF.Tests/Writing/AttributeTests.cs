@@ -46,4 +46,28 @@ public class AttributeTests
 
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    public void CanWriteAttribute_NonNullableStruct()
+    {
+        // Arrange
+        var data = TestData.NonNullableStructData;
+        var file = new Experimental.H5File();
+
+        file.Attributes[typeof(TestStructL1).Name] = new H5Attribute<TestStructL1>(data);
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var expected = File
+            .ReadAllText("TestFiles/expected.attributetests_nonnullablestruct.dump")
+            .Replace("<file-path>", filePath);
+
+        var actual = TestUtils.DumpH5File(filePath);
+
+        Assert.Equal(expected, actual);
+    }
 }

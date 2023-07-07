@@ -214,8 +214,6 @@ public abstract class H5AttributeBase
         return new H5Attribute<ushort>(data);
     }
 
-
-
     /// <summary>
     /// Converts the input data to an HDF5 attribute.
     /// </summary>

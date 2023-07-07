@@ -1,10 +1,11 @@
-﻿using System.Text;
+﻿using System.Runtime.InteropServices;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
 internal abstract record class DatatypePropertyDescription
 {
-    public virtual void Encode(BinaryWriter driver)
+    public virtual void Encode(BinaryWriter driver, uint typeSize /* only for compound v3 */)
     {
         //
     }
@@ -79,6 +80,26 @@ internal record class CompoundPropertyDescription(
     DatatypeMessage MemberTypeMessage)
     : DatatypePropertyDescription
 {
+    public static CompoundPropertyDescription[] Create(Type type)
+    {
+        var fieldInfos = type.GetFields();
+        var properyDescriptions = new CompoundPropertyDescription[fieldInfos.Length];
+
+        for (int i = 0; i < fieldInfos.Length; i++)
+        {
+            var fieldInfo = fieldInfos[i];
+            var underlyingType = fieldInfo.FieldType;
+
+            properyDescriptions[i] = new CompoundPropertyDescription(
+                Name: fieldInfo.Name,
+                MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
+                MemberTypeMessage: DatatypeMessage.Create(underlyingType)
+            );
+        }
+
+        return properyDescriptions;
+    }
+
     public static CompoundPropertyDescription Decode(
         H5DriverBase driver,
         byte version,
@@ -171,8 +192,33 @@ internal record class CompoundPropertyDescription(
             MemberTypeMessage: memberTypeMessage 
         );
     }
-};
 
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        // name
+        var nameBytes = Encoding.ASCII.GetBytes(Name); // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
+        driver.Write(nameBytes);
+        driver.Write((byte)0);
+
+        // member byte offset
+        var byteCount = Utils.FindMinByteCount(typeSize);
+
+        if (!(1 <= byteCount && byteCount <= 8))
+            throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");
+
+        var memberByteOffsetBytes = BitConverter.GetBytes(MemberByteOffset);
+        var slicedMemberByteOffsetBytes = memberByteOffsetBytes.AsSpan(0, (int)byteCount);
+
+#if NETSTANDARD2_1_OR_GREATER
+        driver.Write(slicedMemberByteOffsetBytes);
+#else
+        driver.Write(slicedMemberByteOffsetBytes.ToArray());
+#endif
+    
+        // member type message
+        MemberTypeMessage.Encode(driver);
+    }
+}
 internal record class EnumerationPropertyDescription(
     DatatypeMessage BaseType,
     string[] Names,
@@ -204,7 +250,7 @@ internal record class EnumerationPropertyDescription(
         }).ToArray();
 
         return new EnumerationPropertyDescription(
-            BaseType: DatatypeMessage.Create(underlyingType, typeSize),
+            BaseType: DatatypeMessage.Create(underlyingType),
             Names: Enum.GetNames(type),
             Values: values
         );
@@ -242,7 +288,7 @@ internal record class EnumerationPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(BinaryWriter driver, uint typeSize)
     {
         // base type
         BaseType.Encode(driver);
@@ -277,7 +323,7 @@ internal record class FixedPointPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(BinaryWriter driver, uint typeSize)
     {
         driver.Write(BitOffset);
         driver.Write(BitPrecision);
@@ -308,7 +354,7 @@ internal record class FloatingPointPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(BinaryWriter driver, uint typeSize)
     {
         driver.Write(BitOffset);
         driver.Write(BitPrecision);
