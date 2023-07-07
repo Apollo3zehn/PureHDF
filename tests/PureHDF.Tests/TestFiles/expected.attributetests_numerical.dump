@@ -53,12 +53,12 @@ GROUP "/" {
       DATATYPE  H5T_ENUM {
          H5T_STD_I16LE;
          "a"                0;
-         "c"                -1;
-         "b"                2;
+         "c"                2;
+         "b"                -1;
       }
       DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
       DATA {
-      (0): a, c, b, b, b, a, c, c, c, b, b, 63:00
+      (0): a, b, c, c, c, a, b, b, b, c, c, 63:00
       }
    }
    ATTRIBUTE "UInt16[]" {
