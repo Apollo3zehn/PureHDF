@@ -1,13 +1,46 @@
-using HDF.PInvoke;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using HDF.PInvoke;
 using Xunit.Abstractions;
 
 namespace PureHDF.Tests
 {
     public partial class TestUtils
     {
+        public static string? DumpH5File(string filePath)
+        {
+            var dump = default(string);
+
+            var h5dumpProcess = new Process 
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "h5dump",
+                    Arguments = filePath,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            h5dumpProcess.Start();
+
+            while (!h5dumpProcess.StandardOutput.EndOfStream)
+            {
+                var line = h5dumpProcess.StandardOutput.ReadLine();
+
+                if (dump is null)
+                    dump = line;
+
+                else
+                    dump += Environment.NewLine + line;
+            }
+
+            return dump;
+        }
+
         public static async Task RunForAllVersionsAsync(Func<H5F.libver_t, Task> action)
         {
             var versions = new H5F.libver_t[]

@@ -132,15 +132,7 @@ internal static class H5Writer
     private static AttributeMessage CreateAttributeMessage(string name, H5AttributeBase attribute)
     {
         // datatype
-        var dataType = new DatatypeMessage(
-            Size: (uint)attribute.TypeSize,
-            BitField: attribute.Bitfield,
-            Properties: attribute.Properies
-        )
-        {
-            Version = 3,
-            Class = attribute.Class
-        };
+        var dataType = DatatypeMessage.Create(attribute.Type, attribute.TypeSize);
 
         // dataspace
         var dimensions = attribute.Dimensions ?? new ulong[] { 

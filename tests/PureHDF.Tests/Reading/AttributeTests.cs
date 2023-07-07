@@ -8,7 +8,7 @@ namespace PureHDF.Tests.Reading
     public class AttributeTests
     {
         private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
-        public static IList<object[]> AttributeNumericalTestData { get; } = TestData.NumericalData;
+        public static IList<object[]> AttributeNumericalTestData { get; } = TestData.NumericalReadData;
 
         [Fact]
         public void CanReadAttribute_Dataspace_Scalar()
@@ -299,10 +299,10 @@ namespace PureHDF.Tests.Reading
                     .ToArray();
 
                 // Assert
-                for (int i = 0; i < TestData.NumericalData.Count; i++)
+                for (int i = 0; i < TestData.NumericalReadData.Count; i++)
                 {
                     var dataset = (NativeDataset)dereferenced[i];
-                    var expected = (Array)TestData.NumericalData[i][1];
+                    var expected = (Array)TestData.NumericalReadData[i][1];
                     var elementType = expected.GetType().GetElementType()!;
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);

@@ -16,7 +16,7 @@ namespace PureHDF.Tests.Reading
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
-        public static IList<object[]> DatasetNumericalTestData { get; } = TestData.NumericalData;
+        public static IList<object[]> DatasetNumericalTestData { get; } = TestData.NumericalReadData;
 
         [Theory]
         [MemberData(nameof(DatasetNumericalTestData))]
@@ -282,10 +282,10 @@ namespace PureHDF.Tests.Reading
                     .ToArray();
 
                 // Assert
-                for (int i = 0; i < TestData.NumericalData.Count; i++)
+                for (int i = 0; i < TestData.NumericalReadData.Count; i++)
                 {
                     var dataset = (NativeDataset)dereferenced[i];
-                    var expected = (Array)TestData.NumericalData[i][1];
+                    var expected = (Array)TestData.NumericalReadData[i][1];
                     var elementType = expected.GetType().GetElementType()!;
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);

@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Text;
+
+namespace PureHDF.VOL.Native;
 
 internal abstract record class DatatypePropertyDescription
 {
@@ -173,10 +175,40 @@ internal record class CompoundPropertyDescription(
 
 internal record class EnumerationPropertyDescription(
     DatatypeMessage BaseType,
-    List<string> Names,
-    List<byte[]> Values)
+    string[] Names,
+    byte[][] Values)
     : DatatypePropertyDescription
 {
+    public static EnumerationPropertyDescription Create(Type type, int typeSize)
+    {
+        var underlyingType = Enum.GetUnderlyingType(type);
+
+        var values = new byte[][] 
+        {
+            new byte[] { 0, 0 },
+            new byte[] { 0xff, 0xff },
+            new byte[] { 2, 0 }
+        };
+
+        // var values = underlyingType switch
+        // {
+        //     Type t when t == typeof(byte[]) => Enum.GetValues<H5DataTypeClass>(),
+        //     Type t when t == typeof(sbyte[]) => ((sbyte[])valuesArray).Select(value => ),
+        //     Type t when t == typeof(ushort[]) => ((ushort[])valuesArray),
+        //     Type t when t == typeof(short[]) => ((short[])valuesArray),
+        //     Type t when t == typeof(uint[]) => ((uint[])valuesArray),
+        //     Type t when t == typeof(int[]) => ((int[])valuesArray),
+        //     Type t when t == typeof(ulong[]) => ((ulong[])valuesArray),
+        //     Type t when t == typeof(long[]) => ((long[])valuesArray),
+        // };
+
+        return new EnumerationPropertyDescription(
+            BaseType: DatatypeMessage.Create(underlyingType, typeSize),
+            Names: Enum.GetNames(type),
+            Values: values
+        );
+    }
+
     public static EnumerationPropertyDescription Decode(
         H5DriverBase driver, 
         byte version, 
@@ -187,23 +219,19 @@ internal record class EnumerationPropertyDescription(
         var baseType = DatatypeMessage.Decode(driver);
 
         // names
-        var names = new List<string>(memberCount);
+        var names = new string[memberCount];
 
         for (int i = 0; i < memberCount; i++)
         {
-            if (version <= 2)
-                names.Add(ReadUtils.ReadNullTerminatedString(driver, pad: true));
-
-            else
-                names.Add(ReadUtils.ReadNullTerminatedString(driver, pad: false));
+            names[i] = ReadUtils.ReadNullTerminatedString(driver, pad: version <= 2);
         }
 
         // values
-        var values = new List<byte[]>(memberCount);
+        var values = new byte[memberCount][];
 
         for (int i = 0; i < memberCount; i++)
         {
-            values.Add(driver.ReadBytes((int)valueSize));
+            values[i] = driver.ReadBytes((int)valueSize);
         }
 
         return new EnumerationPropertyDescription(
@@ -211,6 +239,26 @@ internal record class EnumerationPropertyDescription(
             Names: names,
             Values: values
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        // base type
+        BaseType.Encode(driver);
+
+        // names
+        foreach (var name in Names)
+        {
+            var nameBytes = Encoding.ASCII.GetBytes(name);
+            driver.Write(nameBytes);
+            driver.Write((byte)0);
+        }
+
+        // values
+        foreach (var value in Values)
+        {
+            driver.Write(value);
+        }
     }
 };
 

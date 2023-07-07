@@ -1,0 +1,86 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "Byte[]" {
+      DATATYPE  H5T_STD_U8LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "Double[]" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "Int16[]" {
+      DATATYPE  H5T_STD_I16LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "Int32[]" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "Int64[]" {
+      DATATYPE  H5T_STD_I64LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "SByte[]" {
+      DATATYPE  H5T_STD_I8LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "Single[]" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "TestEnum[]" {
+      DATATYPE  H5T_ENUM {
+         H5T_STD_I16LE;
+         "a"                0;
+         "c"                -1;
+         "b"                2;
+      }
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): a, c, b, b, b, a, c, c, c, b, b, 63:00
+      }
+   }
+   ATTRIBUTE "UInt16[]" {
+      DATATYPE  H5T_STD_U16LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "UInt32[]" {
+      DATATYPE  H5T_STD_U32LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+   ATTRIBUTE "UInt64[]" {
+      DATATYPE  H5T_STD_U64LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+}
+}

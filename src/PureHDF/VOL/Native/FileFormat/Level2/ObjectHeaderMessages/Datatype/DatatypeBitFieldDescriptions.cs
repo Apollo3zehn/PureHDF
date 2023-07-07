@@ -66,6 +66,20 @@ internal record class EnumerationBitFieldDescription(
             MemberCount: (ushort)(data[0] + (data[1] << 8))
         );
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+#if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        data[0] = (byte)(MemberCount & 0xFF);
+        data[1] = (byte)((MemberCount >> 8) & 0xFF);
+
+        driver.Write(data);
+    }
 }
 
 internal record class FixedPointBitFieldDescription(

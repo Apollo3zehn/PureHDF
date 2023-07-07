@@ -1,11 +1,9 @@
-﻿using System.Diagnostics;
-using System.Drawing;
-using PureHDF.Experimental;
+﻿using PureHDF.Experimental;
 using Xunit;
 
 namespace PureHDF.Tests.Writing;
 
-public class ChunkCacheTests
+public class WriterTests
 {
     [Fact]
     public void CanWrite()
@@ -68,32 +66,7 @@ public class ChunkCacheTests
             .ReadAllText("TestFiles/expected.writertests.dump")
             .Replace("<file-path>", filePath);
 
-        var actual = default(string);
-
-        var h5dumpProcess = new Process 
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "h5dump",
-                Arguments = filePath,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            }
-        };
-
-        h5dumpProcess.Start();
-
-        while (!h5dumpProcess.StandardOutput.EndOfStream)
-        {
-            var line = h5dumpProcess.StandardOutput.ReadLine();
-
-            if (actual is null)
-                actual = line;
-
-            else
-                actual += Environment.NewLine + line;
-        }
+        var actual = TestUtils.DumpH5File(filePath);
 
         Assert.Equal(expected, actual);
     }

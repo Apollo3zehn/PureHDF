@@ -4,42 +4,74 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage : Message
 {
-    public static DatatypeMessageClass GetClass<T>()
+    public static DatatypeMessage Create(Type type, int typeSize)
     {
-        return default(T) switch
+        return new DatatypeMessage(
+            Size: (uint)typeSize,
+            BitField: GetBitFieldDescription(type),
+            Properties: GetPropertyDescriptions(type, typeSize)
+        )
         {
-            byte or ushort or uint or ulong or
-            sbyte or short or int or long => DatatypeMessageClass.FixedPoint,
-
-            float or double => DatatypeMessageClass.FloatingPoint,
-
-            _ => throw new NotSupportedException($"The data type '{typeof(T)}' is not supported."),
+            Version = 3,
+            Class = GetClass(type)
         };
     }
 
-    public static DatatypeBitFieldDescription GetBitFieldDescription<T>()
+    private static DatatypeMessageClass GetClass(Type type)
+    {
+        return type switch
+        {
+            Type t when 
+                t == typeof(byte) || 
+                t == typeof(ushort) || 
+                t == typeof(uint) || 
+                t == typeof(ulong) ||
+                t == typeof(sbyte) || 
+                t == typeof(short) || 
+                t == typeof(int) || 
+                t == typeof(long) => DatatypeMessageClass.FixedPoint,
+
+            Type t when 
+                t == typeof(float) ||
+                t == typeof(double) => DatatypeMessageClass.FloatingPoint,
+
+            Type t when t.BaseType == typeof(Enum) => DatatypeMessageClass.Enumerated,
+
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
+        };
+    }
+
+    private static DatatypeBitFieldDescription GetBitFieldDescription(Type type)
     {
         var endianness = BitConverter.IsLittleEndian 
             ? ByteOrder.LittleEndian 
             : ByteOrder.BigEndian;
 
-        return default(T) switch
+        return type switch
         {
-            byte or ushort or uint or ulong => new FixedPointBitFieldDescription(
+            Type t when 
+                t == typeof(byte) || 
+                t == typeof(ushort) || 
+                t == typeof(uint) || 
+                t == typeof(ulong) => new FixedPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
                 IsSigned: false
             ),
 
-            sbyte or short or int or long => new FixedPointBitFieldDescription(
+            Type t when 
+                t == typeof(sbyte) || 
+                t == typeof(short) || 
+                t == typeof(int) || 
+                t == typeof(long) => new FixedPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
                 IsSigned: true
             ),
 
-            float => new FloatingPointBitFieldDescription(
+            Type t when t == typeof(float) => new FloatingPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
@@ -48,7 +80,7 @@ internal partial record class DatatypeMessage : Message
                 SignLocation: 31
             ),
 
-            double => new FloatingPointBitFieldDescription(
+            Type t when t == typeof(double) => new FloatingPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
@@ -57,22 +89,32 @@ internal partial record class DatatypeMessage : Message
                 SignLocation: 63
             ),
 
-            _ => throw new NotSupportedException($"The data type '{typeof(T)}' is not supported."),
+            Type t when t.BaseType == typeof(Enum) => new EnumerationBitFieldDescription(
+                MemberCount: (ushort)Enum.GetNames(type).Length),
+
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
     }
 
-    public static DatatypePropertyDescription[] GetDatatypePropertyDescriptions<T>()
+    private static DatatypePropertyDescription[] GetPropertyDescriptions(Type type, int typeSize)
     {
-        return default(T) switch
+        return type switch
         {
-            byte or ushort or uint or ulong or 
-            sbyte or short or int or long => new FixedPointPropertyDescription[] {
+            Type t when 
+                t == typeof(byte) || 
+                t == typeof(ushort) || 
+                t == typeof(uint) || 
+                t == typeof(ulong) ||
+                t == typeof(sbyte) || 
+                t == typeof(short) || 
+                t == typeof(int) || 
+                t == typeof(long) => new FixedPointPropertyDescription[] {
                 new(BitOffset: 0,
-                    BitPrecision: (ushort)(Unsafe.SizeOf<T>() * 8))
+                    BitPrecision: (ushort)(typeSize * 8))
             },
 
             // https://learn.microsoft.com/en-us/cpp/c-language/type-float
-            float => new FloatingPointPropertyDescription[] {
+            Type t when t == typeof(float) => new FloatingPointPropertyDescription[] {
                 new(BitOffset: 0,
                     BitPrecision: 32,
                     ExponentLocation: 23,
@@ -83,7 +125,7 @@ internal partial record class DatatypeMessage : Message
             },
 
             // https://learn.microsoft.com/en-us/cpp/c-language/type-float
-            double => new FloatingPointPropertyDescription[] {
+            Type t when t == typeof(double) => new FloatingPointPropertyDescription[] {
                 new(BitOffset: 0,
                     BitPrecision: 64,
                     ExponentLocation: 52,
@@ -93,7 +135,11 @@ internal partial record class DatatypeMessage : Message
                     ExponentBias: 1023)
             },
 
-            _ => throw new NotSupportedException($"The data type '{typeof(T)}' is not supported."),
+            Type t when t.BaseType == typeof(Enum) => new EnumerationPropertyDescription[] {
+                EnumerationPropertyDescription.Create(type, typeSize)
+            },
+
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
     }
 

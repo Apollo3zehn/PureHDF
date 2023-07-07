@@ -124,7 +124,22 @@
                 }
             }
 
-            NumericalData = new List<object[]>
+            NumericalWriteData = new List<object>
+            {
+                new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+                new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+                new uint[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+                new ulong[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+                new sbyte[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+                new short[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+                new int[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+                new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+                new float[] { 0, 1, 2, 3, 4, 5, 6, -7.99f, 8, 9, 10, 11 },
+                new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 },
+                EnumData,
+            };
+
+            NumericalReadData = new List<object[]>
             {
                 new object[] { "D1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
                 new object[] { "D2", new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
@@ -134,7 +149,7 @@
                 new object[] { "D6", new short[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
                 new object[] { "D7", new int[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
                 new object[] { "D8", new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } },
-                new object[] { "D9", new float[] { 0, 1, 2, 3, 4, 5, 6, (float)-7.99, 8, 9, 10, 11 } },
+                new object[] { "D9", new float[] { 0, 1, 2, 3, 4, 5, 6, -7.99f, 8, 9, 10, 11 } },
                 new object[] {"D10", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 } },
                 new object[] {"D11", EnumData },
             };
@@ -156,7 +171,9 @@
         public static int[,,,] ArrayDataValue { get; }
         public static string[,,,] ArrayDataVariableLengthString { get; }
 
-        public static IList<object[]> NumericalData { get; }
+        public static IList<object> NumericalWriteData { get; }
+
+        public static IList<object[]> NumericalReadData { get; }
 
         public static TestStructL1[] NonNullableStructData { get; }
 

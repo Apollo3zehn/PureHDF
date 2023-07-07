@@ -155,10 +155,8 @@ public class H5Attribute<T> : H5AttributeBase where T : unmanaged
     /// <param name="data">The attribute data.</param>
     /// <param name="dimensions">The dimensions of the attribute data.</param>
     public H5Attribute(Memory<T> data, ulong[]? dimensions = null) : base(
+        type: typeof(T),
         typeSize: Unsafe.SizeOf<T>(),
-        @class: DatatypeMessage.GetClass<T>(),
-        bitfield: DatatypeMessage.GetBitFieldDescription<T>(),
-        properies: DatatypeMessage.GetDatatypePropertyDescriptions<T>(),
         buffer: new CastMemoryManager<T, byte>(data).Memory,
         dimensions: dimensions
     )
@@ -173,25 +171,19 @@ public class H5Attribute<T> : H5AttributeBase where T : unmanaged
 public abstract class H5AttributeBase
 {
     internal H5AttributeBase(
+        Type type,
         int typeSize,
-        DatatypeMessageClass @class,
-        DatatypeBitFieldDescription bitfield,
-        DatatypePropertyDescription[] properies,
         Memory<byte> buffer,
         ulong[]? dimensions = default)
     {
         TypeSize = typeSize;
-        @Class = @class;
-        Bitfield = bitfield;
-        Properies = properies;
+        Type = type;
         Data = buffer;
         Dimensions = dimensions;
     }
 
     internal int TypeSize { get; init; }
-    internal DatatypeMessageClass @Class { get; init; }
-    internal DatatypeBitFieldDescription Bitfield { get; init; }
-    internal DatatypePropertyDescription[] Properies { get; init; }
+    internal Type Type { get; init; }
     internal Memory<byte> Data { get; init; }
     internal ulong[]? Dimensions { get; init; }
 
@@ -222,14 +214,7 @@ public abstract class H5AttributeBase
         return new H5Attribute<ushort>(data);
     }
 
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(short[] data)
-    {
-        return new H5Attribute<short>(data);
-    }
+
 
     /// <summary>
     /// Converts the input data to an HDF5 attribute.

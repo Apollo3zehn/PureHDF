@@ -10,7 +10,7 @@ namespace PureHDF.Tests
         {
             var dims = new ulong[] { 2, 2, 3 };
 
-            foreach (var entry in TestData.NumericalData)
+            foreach (var entry in TestData.NumericalReadData)
             {
                 var attributeData = (Array)entry[1];
 
@@ -127,7 +127,7 @@ namespace PureHDF.Tests
 
             AddNumerical(fileId, ContainerType.Dataset);
 
-            var length = (ulong)TestData.NumericalData.Count;
+            var length = (ulong)TestData.NumericalReadData.Count;
             var data = new ulong[length];
 
             fixed (ulong* ptr = data)
