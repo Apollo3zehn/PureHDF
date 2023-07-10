@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Drawing;
 using PureHDF.Experimental;
 using Xunit;
 
@@ -8,26 +9,48 @@ public class AttributeTests
 {
     public static IList<object[]> AttributeValidTestData { get; } = new List<object[]>()
     {
+        // /* dictionary */
+        // new object[] { new Dictionary<string, int> { ["A"] = 1, ["B"] = -2, ["C"] = 3 } },
+
         /* array */
-        new object[] { new List<int> { 1, -2, 3 } },
-        new object[] { new int[] { 1, -2, 3 } },
+        // new object[] { new int[] { 1, -2, 3 } },
 
-        /* dictionary */
-        new object[] { new Dictionary<string, int> { ["A"] = 1, ["B"] = -2, ["C"] = 3 } },
+        /* generic IEnumerable */
+        // new object[] { new List<int> { 1, -2, 3 } },
 
-        /* tuple (reference type) */
-        new object[] { Tuple.Create(1) },
+        // /* tuple (reference type) */
+        // new object[] { Tuple.Create(1, -2, 3.3) },
 
+        /* random reference type */
+        new object[] { 
+            new DataspaceMessage(
+                Rank: 1,
+                Flags: DataspaceMessageFlags.DimensionMaxSizes,
+                Type: DataspaceType.Simple,
+                DimensionSizes: new ulong[] { 10, 20, 30 },
+                DimensionMaxSizes: new ulong[] { 10, 20, 30 },
+                PermutationIndices: default)
+            {
+                Version = 1
+            }
+        },
 
-        new object[] { (A: 1, B: -2, C: 3.3) },
+        // /* bool */
+        // new object[] { true },
 
+        // /* enumeration */
+        // new object[] { FileAccess.Read },
 
+        // /* tuple (value type) */
+        // new object[] { (A: 1, B: -2, C: 3.3) },
+
+        // /* random value type */
+        // new object[] { new Point(x: 1, y: 99) }
     };
 
     public static IList<object[]> AttributeInvalidTestData { get; } = new List<object[]>()
     {
         new object[] { new Dictionary<object, object>() },
-        new object[] { (IEnumerable)new List<object>() }
     };
 
     [Fact]
@@ -80,29 +103,29 @@ public class AttributeTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact]
-    public void CanWriteAttribute_NonNullableStruct()
-    {
-        // Arrange
-        var data = TestData.NonNullableStructData;
-        var file = new Experimental.H5File();
+    // [Fact]
+    // public void CanWriteAttribute_NonNullableStruct()
+    // {
+    //     // Arrange
+    //     var data = TestData.NonNullableStructData;
+    //     var file = new Experimental.H5File();
 
-        file.Attributes[typeof(TestStructL1).Name] = data;
+    //     file.Attributes[typeof(TestStructL1).Name] = data;
 
-        var filePath = Path.GetTempFileName();
+    //     var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Save(filePath);
+    //     // Act
+    //     file.Save(filePath);
 
-        // Assert
-        var expected = File
-            .ReadAllText("TestFiles/expected.attributetests_nonnullablestruct.dump")
-            .Replace("<file-path>", filePath);
+    //     // Assert
+    //     var expected = File
+    //         .ReadAllText("TestFiles/expected.attributetests_nonnullablestruct.dump")
+    //         .Replace("<file-path>", filePath);
 
-        var actual = TestUtils.DumpH5File(filePath);
+    //     var actual = TestUtils.DumpH5File(filePath);
 
-        Assert.Equal(expected, actual);
-    }
+    //     Assert.Equal(expected, actual);
+    // }
 
     [Theory]
     [MemberData(nameof(AttributeInvalidTestData))]

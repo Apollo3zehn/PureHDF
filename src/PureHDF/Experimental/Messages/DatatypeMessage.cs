@@ -5,14 +5,16 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage : Message
 {
+    private const int REFERENCE_SIZE = sizeof(ulong) + sizeof(uint);
+
     public static DatatypeMessage Create(Type type)
     {
-        var (underlyingType, typeSize) = GetTypeInfo(type);
+        var (elementType, typeSize) = GetTypeInfo(type, isTopLevel: true);
 
         return new DatatypeMessage(
             Size: (uint)typeSize,
-            BitField: GetBitFieldDescription(type, underlyingType),
-            Properties: GetPropertyDescriptions(underlyingType, typeSize)
+            BitField: GetBitFieldDescription(type, elementType),
+            Properties: GetPropertyDescriptions(elementType, typeSize)
         )
         {
             Version = 3,
@@ -20,53 +22,56 @@ internal partial record class DatatypeMessage : Message
         };
     }
 
-    private static (Type UnderlyingType, int Size) GetTypeInfo(Type type)
+    private static int GetTypeSize(
+        Type type, 
+        bool isTopLevel = false)
     {
-        // validation
-        var isValid = true;
-
-        if (typeof(IEnumerable).IsAssignableFrom(type))
-        {
-            if (!type.IsGenericType)
-                isValid = false;
-        }
-
-        if (typeof(IDictionary).IsAssignableFrom(type))
-        {
-            if (!type.IsGenericType)
-                isValid = false;
-
-            if (type.GenericTypeArguments[0] != typeof(string))
-                isValid = false;
-        }
-
-        if (!isValid)
-            throw new Exception($"The data type {type} is not supported.");
+        // TODO: value tuple is not working yet (because of generic + Marshal.SizeOf(t))
+        // TODO: calculate top level dictionary size
+        // TODO: can structs contain array / variable length types, i.e. references?
+        // TODO: what about T[,], T[][] and T[,,x], T[][][x]?
 
         // determine size (https://stackoverflow.com/a/4472641)
         return type switch
         {
+            /* dictionary */
+            Type t when typeof(IDictionary).IsAssignableFrom(t) && 
+                        type.GenericTypeArguments[0] == typeof(string) 
+                => isTopLevel
+
+                    /* compound */
+                    ? // TODO calculate size
+
+                    /* variable-length list of key-value pairs */
+                    : REFERENCE_SIZE,
+
             /* array */
-            Type t when typeof(IEnumerable).IsAssignableFrom(t) => GetTypeInfo(t.GenericTypeArguments[0]),
+            Type t when t.IsArray && t.GetElementType() is not null
+                => isTopLevel
+                    ? GetTypeSize(t.GetElementType()!)
+                    : REFERENCE_SIZE,
 
-            /* map */
-            Type t when typeof(IDictionary).IsAssignableFrom(t) => GetTypeInfo(t.GenericTypeArguments[1]),
+            /* generic IEnumerable */
+            Type t when typeof(IEnumerable).IsAssignableFrom(t) && t.IsGenericType
+                => isTopLevel
+                    ? GetTypeSize(t.GenericTypeArguments[0])
+                    : REFERENCE_SIZE,
 
-            /* tuple (reference type) */
-
-            /* reference */
-            Type t when ReadUtils.IsReferenceOrContainsReferences(t) => (t, t
+            /* remaining reference types */
+            Type t when ReadUtils.IsReferenceOrContainsReferences(t) => t
                 .GetProperties()
-                .Where(propertyInfo => propertyInfo.CanRead && propertyInfo.CanWrite)
-                .Aggregate(0, (sum, propertyInfo) => sum + GetTypeInfo(propertyInfo.PropertyType).Size)),
+                .Where(propertyInfo => propertyInfo.CanRead)
+                .Aggregate(0, (sum, propertyInfo) => 
+                sum + GetTypeSize(propertyInfo.PropertyType)),
 
             /* non blittable */
-            Type t when t == typeof(bool) => (typeof(byte), 1),
+            Type t when t == typeof(bool) => 1,
 
             /* enumeration */
-            Type t when t == typeof(Enum) => GetTypeInfo(Enum.GetUnderlyingType(t)),
+            Type t when t.IsEnum => GetTypeSize(Enum.GetUnderlyingType(t)),
 
-            Type t when t.IsValueType => (t, Marshal.SizeOf(t)),
+            /* remaining value types */
+            Type t when t.IsValueType => Marshal.SizeOf(t),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -81,7 +86,7 @@ internal partial record class DatatypeMessage : Message
         return underlyingType switch
         {
             Type t when 
-                ReadUtils.IsReferenceOrContainsReferences(t) => ,
+                ReadUtils.IsReferenceOrContainsReferences(t) => throw new Exception(),
 
             Type when type.IsEnum => new EnumerationBitFieldDescription(
                 MemberCount: (ushort)Enum.GetNames(type).Length),
