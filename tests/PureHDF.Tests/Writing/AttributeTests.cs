@@ -1,10 +1,35 @@
-﻿using PureHDF.Experimental;
+﻿using System.Collections;
+using PureHDF.Experimental;
 using Xunit;
 
 namespace PureHDF.Tests.Writing;
 
 public class AttributeTests
 {
+    public static IList<object[]> AttributeValidTestData { get; } = new List<object[]>()
+    {
+        /* array */
+        new object[] { new List<int> { 1, -2, 3 } },
+        new object[] { new int[] { 1, -2, 3 } },
+
+        /* dictionary */
+        new object[] { new Dictionary<string, int> { ["A"] = 1, ["B"] = -2, ["C"] = 3 } },
+
+        /* tuple (reference type) */
+        new object[] { Tuple.Create(1) },
+
+
+        new object[] { (A: 1, B: -2, C: 3.3) },
+
+
+    };
+
+    public static IList<object[]> AttributeInvalidTestData { get; } = new List<object[]>()
+    {
+        new object[] { new Dictionary<object, object>() },
+        new object[] { (IEnumerable)new List<object>() }
+    };
+
     [Fact]
     public void CanWriteAttribute_Numerical()
     {
@@ -14,22 +39,7 @@ public class AttributeTests
         foreach (var data in TestData.NumericalWriteData)
         {
             var type = data.GetType();
-
-            file.Attributes[type.Name] = type switch
-            {
-                Type t when t == typeof(byte[]) => new H5Attribute<byte>((byte[])data),
-                Type t when t == typeof(sbyte[]) => new H5Attribute<sbyte>((sbyte[])data),
-                Type t when t == typeof(ushort[]) => new H5Attribute<ushort>((ushort[])data),
-                Type t when t == typeof(short[]) => new H5Attribute<short>((short[])data),
-                Type t when t == typeof(uint[]) => new H5Attribute<uint>((uint[])data),
-                Type t when t == typeof(int[]) => new H5Attribute<int>((int[])data),
-                Type t when t == typeof(ulong[]) => new H5Attribute<ulong>((ulong[])data),
-                Type t when t == typeof(long[]) => new H5Attribute<long>((long[])data),
-                Type t when t == typeof(float[]) => new H5Attribute<float>((float[])data),
-                Type t when t == typeof(double[]) => new H5Attribute<double>((double[])data),
-                Type t when t == typeof(TestEnum[]) => new H5Attribute<TestEnum>((TestEnum[])data),
-                _ => throw new Exception($"Unsupported type {type}")
-            };
+            file.Attributes[type.Name] = data;
         }
 
         var filePath = Path.GetTempFileName();
@@ -47,6 +57,29 @@ public class AttributeTests
         Assert.Equal(expected, actual);
     }
 
+    [Theory]
+    [MemberData(nameof(AttributeValidTestData))]
+    public void CanWriteAttribute_NonNumerical(object data)
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+        file.Attributes[data.GetType().Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var expected = File
+            .ReadAllText("TestFiles/expected.attributetests_enumerable.dump")
+            .Replace("<file-path>", filePath);
+
+        var actual = TestUtils.DumpH5File(filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
     [Fact]
     public void CanWriteAttribute_NonNullableStruct()
     {
@@ -54,7 +87,7 @@ public class AttributeTests
         var data = TestData.NonNullableStructData;
         var file = new Experimental.H5File();
 
-        file.Attributes[typeof(TestStructL1).Name] = new H5Attribute<TestStructL1>(data);
+        file.Attributes[typeof(TestStructL1).Name] = data;
 
         var filePath = Path.GetTempFileName();
 
@@ -69,5 +102,22 @@ public class AttributeTests
         var actual = TestUtils.DumpH5File(filePath);
 
         Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(AttributeInvalidTestData))]
+    public void ThrowsForInvalidDataType(object data)
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+        file.Attributes["data"] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        void action() => file.Save(filePath);
+
+        // Assert
+        Assert.Throws<Exception>(action);
     }
 }

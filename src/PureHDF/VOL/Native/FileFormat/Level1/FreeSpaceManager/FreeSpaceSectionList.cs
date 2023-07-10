@@ -22,7 +22,7 @@ internal record struct FreeSpaceSectionList(
 
     public required byte Version
     {
-        get
+        readonly get
         {
             return _version;
         }

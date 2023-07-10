@@ -133,7 +133,7 @@ public class H5AttributableObject : H5Object
     /// <summary>
     /// A map of attributes that belong to this object.
     /// </summary>
-    public Dictionary<string, H5AttributeBase> Attributes { get; set; } = new();
+    public Dictionary<string, object> Attributes { get; set; } = new();
 }
 
 /// <summary>
@@ -145,126 +145,23 @@ public class H5Object
 }
 
 /// <summary>
-/// A generic attribute.
+/// An attribute.
 /// </summary>
-public class H5Attribute<T> : H5AttributeBase where T : unmanaged
+public class H5Attribute
 {
     /// <summary>
-    /// Initializes a new instances of the <see cref="H5Attribute{T}"/> class.
+    /// Initializes a new instance of the <see cref="H5Attribute"/> class.
     /// </summary>
     /// <param name="data">The attribute data.</param>
-    /// <param name="dimensions">The dimensions of the attribute data.</param>
-    public H5Attribute(Memory<T> data, ulong[]? dimensions = null) : base(
-        type: typeof(T),
-        typeSize: Unsafe.SizeOf<T>(),
-        buffer: new CastMemoryManager<T, byte>(data).Memory,
-        dimensions: dimensions
-    )
-    {
-        //
-    }
-}
-
-/// <summary>
-/// Non-generic base class for attributes.
-/// </summary>
-public abstract class H5AttributeBase
-{
-    internal H5AttributeBase(
-        Type type,
-        int typeSize,
-        Memory<byte> buffer,
+    /// <param name="dimensions">The attribute dimensions.</param>
+    public H5Attribute(
+        object data,
         ulong[]? dimensions = default)
     {
-        TypeSize = typeSize;
-        Type = type;
-        Data = buffer;
+        Data = data;
         Dimensions = dimensions;
     }
 
-    internal int TypeSize { get; init; }
-    internal Type Type { get; init; }
-    internal Memory<byte> Data { get; init; }
+    internal object Data { get; init; }
     internal ulong[]? Dimensions { get; init; }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(byte[] data)
-    {
-        return new H5Attribute<byte>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(sbyte[] data)
-    {
-        return new H5Attribute<sbyte>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(ushort[] data)
-    {
-        return new H5Attribute<ushort>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(uint[] data)
-    {
-        return new H5Attribute<uint>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(int[] data)
-    {
-        return new H5Attribute<int>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(ulong[] data)
-    {
-        return new H5Attribute<ulong>(data);
-    }
-
-        /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(long[] data)
-    {
-        return new H5Attribute<long>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(float[] data)
-    {
-        return new H5Attribute<float>(data);
-    }
-
-    /// <summary>
-    /// Converts the input data to an HDF5 attribute.
-    /// </summary>
-    /// <param name="data">The input data.</param>
-    public static implicit operator H5AttributeBase(double[] data)
-    {
-        return new H5Attribute<double>(data);
-    }
 }

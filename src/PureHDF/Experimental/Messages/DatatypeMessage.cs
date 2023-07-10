@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections;
+using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
@@ -6,15 +7,12 @@ internal partial record class DatatypeMessage : Message
 {
     public static DatatypeMessage Create(Type type)
     {
-        /* https://stackoverflow.com/a/4472641 */
-        var typeSize = type.IsEnum
-            ? Marshal.SizeOf(Enum.GetUnderlyingType(type))
-            : Marshal.SizeOf(type);
+        var (underlyingType, typeSize) = GetTypeInfo(type);
 
         return new DatatypeMessage(
             Size: (uint)typeSize,
-            BitField: GetBitFieldDescription(type),
-            Properties: GetPropertyDescriptions(type, typeSize)
+            BitField: GetBitFieldDescription(type, underlyingType),
+            Properties: GetPropertyDescriptions(underlyingType, typeSize)
         )
         {
             Version = 3,
@@ -22,40 +20,72 @@ internal partial record class DatatypeMessage : Message
         };
     }
 
-    private static DatatypeMessageClass GetClass(Type type)
+    private static (Type UnderlyingType, int Size) GetTypeInfo(Type type)
     {
+        // validation
+        var isValid = true;
+
+        if (typeof(IEnumerable).IsAssignableFrom(type))
+        {
+            if (!type.IsGenericType)
+                isValid = false;
+        }
+
+        if (typeof(IDictionary).IsAssignableFrom(type))
+        {
+            if (!type.IsGenericType)
+                isValid = false;
+
+            if (type.GenericTypeArguments[0] != typeof(string))
+                isValid = false;
+        }
+
+        if (!isValid)
+            throw new Exception($"The data type {type} is not supported.");
+
+        // determine size (https://stackoverflow.com/a/4472641)
         return type switch
         {
-            Type t when 
-                t == typeof(byte) || 
-                t == typeof(ushort) || 
-                t == typeof(uint) || 
-                t == typeof(ulong) ||
-                t == typeof(sbyte) || 
-                t == typeof(short) || 
-                t == typeof(int) || 
-                t == typeof(long) => DatatypeMessageClass.FixedPoint,
+            /* array */
+            Type t when typeof(IEnumerable).IsAssignableFrom(t) => GetTypeInfo(t.GenericTypeArguments[0]),
 
-            Type t when 
-                t == typeof(float) ||
-                t == typeof(double) => DatatypeMessageClass.FloatingPoint,
+            /* map */
+            Type t when typeof(IDictionary).IsAssignableFrom(t) => GetTypeInfo(t.GenericTypeArguments[1]),
 
-            Type t when t.IsEnum => DatatypeMessageClass.Enumerated,
+            /* tuple (reference type) */
 
-            Type t when t.IsValueType && !t.IsPrimitive => DatatypeMessageClass.Compound,
+            /* reference */
+            Type t when ReadUtils.IsReferenceOrContainsReferences(t) => (t, t
+                .GetProperties()
+                .Where(propertyInfo => propertyInfo.CanRead && propertyInfo.CanWrite)
+                .Aggregate(0, (sum, propertyInfo) => sum + GetTypeInfo(propertyInfo.PropertyType).Size)),
 
-            _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
+            /* non blittable */
+            Type t when t == typeof(bool) => (typeof(byte), 1),
+
+            /* enumeration */
+            Type t when t == typeof(Enum) => GetTypeInfo(Enum.GetUnderlyingType(t)),
+
+            Type t when t.IsValueType => (t, Marshal.SizeOf(t)),
+
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
     }
 
-    private static DatatypeBitFieldDescription GetBitFieldDescription(Type type)
+    private static DatatypeBitFieldDescription GetBitFieldDescription(Type type, Type underlyingType)
     {
         var endianness = BitConverter.IsLittleEndian 
             ? ByteOrder.LittleEndian 
             : ByteOrder.BigEndian;
 
-        return type switch
+        return underlyingType switch
         {
+            Type t when 
+                ReadUtils.IsReferenceOrContainsReferences(t) => ,
+
+            Type when type.IsEnum => new EnumerationBitFieldDescription(
+                MemberCount: (ushort)Enum.GetNames(type).Length),
+
             Type t when 
                 t == typeof(byte) || 
                 t == typeof(ushort) || 
@@ -95,9 +125,6 @@ internal partial record class DatatypeMessage : Message
                 MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
                 SignLocation: 63
             ),
-
-            Type t when t.IsEnum => new EnumerationBitFieldDescription(
-                MemberCount: (ushort)Enum.GetNames(type).Length),
 
             Type t when t.IsValueType && !t.IsPrimitive => new CompoundBitFieldDescription(
                 MemberCount: (ushort)type.GetFields().Length
@@ -147,12 +174,38 @@ internal partial record class DatatypeMessage : Message
             },
 
             Type t when t.IsEnum => new EnumerationPropertyDescription[] {
-                EnumerationPropertyDescription.Create(type, typeSize)
+                EnumerationPropertyDescription.Create(type)
             },
 
             Type t when t.IsValueType && !t.IsPrimitive => CompoundPropertyDescription.Create(type),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
+        };
+    }
+
+    private static DatatypeMessageClass GetClass(Type type)
+    {
+        return type switch
+        {
+            Type t when 
+                t == typeof(byte) || 
+                t == typeof(ushort) || 
+                t == typeof(uint) || 
+                t == typeof(ulong) ||
+                t == typeof(sbyte) || 
+                t == typeof(short) || 
+                t == typeof(int) || 
+                t == typeof(long) => DatatypeMessageClass.FixedPoint,
+
+            Type t when 
+                t == typeof(float) ||
+                t == typeof(double) => DatatypeMessageClass.FloatingPoint,
+
+            Type t when t.IsEnum => DatatypeMessageClass.Enumerated,
+
+            Type t when t.IsValueType && !t.IsPrimitive => DatatypeMessageClass.Compound,
+
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
         };
     }
 

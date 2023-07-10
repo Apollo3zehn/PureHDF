@@ -225,7 +225,7 @@ internal record class EnumerationPropertyDescription(
     byte[][] Values)
     : DatatypePropertyDescription
 {
-    public static EnumerationPropertyDescription Create(Type type, int typeSize)
+    public static EnumerationPropertyDescription Create(Type type)
     {
         var underlyingType = Enum.GetUnderlyingType(type);
         var enumValues = Enum.GetValues(type);

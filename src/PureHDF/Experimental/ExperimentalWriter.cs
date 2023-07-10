@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace PureHDF.Experimental;
 
 internal static class H5Writer
@@ -129,15 +131,18 @@ internal static class H5Writer
         return address;
     }
 
-    private static AttributeMessage CreateAttributeMessage(string name, H5AttributeBase attribute)
+    private static AttributeMessage CreateAttributeMessage(string name, object attribute)
     {
+        var type = attribute.GetType();
+
         // datatype
-        var dataType = DatatypeMessage.Create(attribute.Type);
+        var dataType = DatatypeMessage.Create(type);
 
         // dataspace
-        var dimensions = attribute.Dimensions ?? new ulong[] { 
-            (ulong)(attribute.Data.Length / attribute.TypeSize)
-        };
+        var dimensions = new ulong[0];
+        // var dimensions = attribute.Dimensions ?? new ulong[] { 
+        //     (ulong)(attribute.Data.Length / dataType.Size)
+        // };
 
         var dataspace = new DataspaceMessage(
             Rank: (byte)dimensions.Length,
@@ -151,19 +156,21 @@ internal static class H5Writer
             Version = 2
         };
 
-        // attribute
-        var attributeMessage = new AttributeMessage(
-            Flags: AttributeMessageFlags.None,
-            Name: name,
-            Datatype: dataType,
-            Dataspace: dataspace,
-            Data: attribute.Data
-        )
-        {
-            Version = 3
-        };
+        throw new Exception("bam");
 
-        return attributeMessage;
+        // // attribute
+        // var attributeMessage = new AttributeMessage(
+        //     Flags: AttributeMessageFlags.None,
+        //     Name: name,
+        //     Datatype: dataType,
+        //     Dataspace: dataspace,
+        //     Data: attribute
+        // )
+        // {
+        //     Version = 3
+        // };
+
+        // return attributeMessage;
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)
