@@ -1,5 +1,3 @@
-using System.Collections;
-
 namespace PureHDF.Experimental;
 
 internal static class H5Writer
@@ -133,16 +131,33 @@ internal static class H5Writer
 
     private static AttributeMessage CreateAttributeMessage(string name, object attribute)
     {
-        var type = attribute.GetType();
-
         // datatype
-        var dataType = DatatypeMessage.Create(type);
+        ulong[] dimensions;
+
+        var data = attribute is H5Attribute h5Attribute1
+            ? h5Attribute1.Data
+            : attribute;
+
+        var dataType = DatatypeMessage.Create(data.GetType(), data);
 
         // dataspace
-        var dimensions = new ulong[0];
-        // var dimensions = attribute.Dimensions ?? new ulong[] { 
-        //     (ulong)(attribute.Data.Length / dataType.Size)
-        // };
+        var dataTotalSize = WriteUtils.CalculateDataTotalSize(data);
+
+        if (attribute is H5Attribute h5Attribute2)
+        {
+            dimensions = h5Attribute2.Dimensions ?? new ulong[] { dataTotalSize };
+
+            var dimensionsTotalSize = dimensions
+                .Aggregate(1UL, (x, y) => x * y);
+
+            if (dimensionsTotalSize != dataTotalSize)
+                throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
+        }
+
+        else
+        {
+            dimensions = new ulong[] { dataTotalSize };
+        }
 
         var dataspace = new DataspaceMessage(
             Rank: (byte)dimensions.Length,

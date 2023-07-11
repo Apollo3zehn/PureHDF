@@ -27,7 +27,7 @@ internal partial record class LinkMessage
         // link length
         var encodedName = Encoding.UTF8.GetBytes(LinkName);
         var linkLengthFieldLength = (ulong)(1 << ((byte)Flags & 0x03));
-        Utils.WriteUlongArbitrary(driver, (ulong)encodedName.Length, linkLengthFieldLength);
+        WriteUtils.WriteUlongArbitrary(driver, (ulong)encodedName.Length, linkLengthFieldLength);
 
         // link name
         if (encodedName.Length > ushort.MaxValue)

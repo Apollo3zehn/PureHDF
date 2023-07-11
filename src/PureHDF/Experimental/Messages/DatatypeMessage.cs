@@ -5,16 +5,20 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage : Message
 {
+    // reference size                = GHEAP address + GHEAP index
     private const int REFERENCE_SIZE = sizeof(ulong) + sizeof(uint);
 
-    public static DatatypeMessage Create(Type type)
+    // variable length entry size           length
+    private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
+
+    public static DatatypeMessage Create(Type type, object? data = default)
     {
-        var (elementType, typeSize) = GetTypeInfo(type, isTopLevel: true);
+        var typeSize = GetTypeSize(type, data);
 
         return new DatatypeMessage(
             Size: (uint)typeSize,
-            BitField: GetBitFieldDescription(type, elementType),
-            Properties: GetPropertyDescriptions(elementType, typeSize)
+            BitField: GetBitFieldDescription(type, data),
+            Properties: GetPropertyDescriptions(type, typeSize, data)
         )
         {
             Version = 3,
@@ -23,97 +27,181 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static int GetTypeSize(
-        Type type, 
-        bool isTopLevel = false)
+        Type type,
+        object? data = default)
     {
-        // TODO: value tuple is not working yet (because of generic + Marshal.SizeOf(t))
-        // TODO: calculate top level dictionary size
-        // TODO: can structs contain array / variable length types, i.e. references?
-        // TODO: what about T[,], T[][] and T[,,x], T[][][x]?
+        var isTopLevel = data is not null;
 
         // determine size (https://stackoverflow.com/a/4472641)
         return type switch
         {
             /* dictionary */
-            Type t when typeof(IDictionary).IsAssignableFrom(t) && 
+            Type when typeof(IDictionary).IsAssignableFrom(type) && 
                         type.GenericTypeArguments[0] == typeof(string) 
                 => isTopLevel
 
                     /* compound */
-                    ? // TODO calculate size
+                    ? GetTypeSize(type.GenericTypeArguments[1]) * ((IDictionary)data!).Count
 
                     /* variable-length list of key-value pairs */
-                    : REFERENCE_SIZE,
+                    : VLEN_REFERENCE_SIZE,
 
             /* array */
-            Type t when t.IsArray && t.GetElementType() is not null
+            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
                 => isTopLevel
-                    ? GetTypeSize(t.GetElementType()!)
-                    : REFERENCE_SIZE,
+
+                    /* array */
+                    ? GetTypeSize(type.GetElementType()!)
+
+                    /* variable-length list of elements */
+                    : VLEN_REFERENCE_SIZE,
 
             /* generic IEnumerable */
-            Type t when typeof(IEnumerable).IsAssignableFrom(t) && t.IsGenericType
+            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
                 => isTopLevel
-                    ? GetTypeSize(t.GenericTypeArguments[0])
-                    : REFERENCE_SIZE,
+
+                    /* array */
+                    ? GetTypeSize(type.GenericTypeArguments[0])
+
+                    /* variable-length list of elements */
+                    : VLEN_REFERENCE_SIZE,
+
+            /* string */
+            Type when type == typeof(string) => REFERENCE_SIZE,
 
             /* remaining reference types */
-            Type t when ReadUtils.IsReferenceOrContainsReferences(t) => t
+            Type when ReadUtils.IsReferenceOrContainsReferences(type) => type
                 .GetProperties()
                 .Where(propertyInfo => propertyInfo.CanRead)
                 .Aggregate(0, (sum, propertyInfo) => 
                 sum + GetTypeSize(propertyInfo.PropertyType)),
 
             /* non blittable */
-            Type t when t == typeof(bool) => 1,
+            Type when type == typeof(bool) => 1,
 
             /* enumeration */
-            Type t when t.IsEnum => GetTypeSize(Enum.GetUnderlyingType(t)),
+            Type when type.IsEnum => GetTypeSize(Enum.GetUnderlyingType(type)),
 
-            /* remaining value types */
-            Type t when t.IsValueType => Marshal.SizeOf(t),
+            /* remaining non-generic value types */
+            Type when type.IsValueType && !type.IsGenericType => Marshal.SizeOf(type),
+
+            /* remaining generic value types */
+            Type when type.IsValueType => WriteUtils.SizeOfGenericStruct(type),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
     }
 
-    private static DatatypeBitFieldDescription GetBitFieldDescription(Type type, Type underlyingType)
+    private static DatatypeBitFieldDescription GetBitFieldDescription(
+        Type type,
+        object? data = default)
     {
+        var isTopLevel = data is not null;
+
         var endianness = BitConverter.IsLittleEndian 
             ? ByteOrder.LittleEndian 
             : ByteOrder.BigEndian;
 
-        return underlyingType switch
+        return type switch
         {
-            Type t when 
-                ReadUtils.IsReferenceOrContainsReferences(t) => throw new Exception(),
+            /* dictionary */
+            Type when typeof(IDictionary).IsAssignableFrom(type)
+                => isTopLevel
 
-            Type when type.IsEnum => new EnumerationBitFieldDescription(
-                MemberCount: (ushort)Enum.GetNames(type).Length),
+                    /* compound */
+                    ? new CompoundBitFieldDescription(
+                        MemberCount: (ushort)((IDictionary)data!).Count
+                    )
 
-            Type t when 
-                t == typeof(byte) || 
-                t == typeof(ushort) || 
-                t == typeof(uint) || 
-                t == typeof(ulong) => new FixedPointBitFieldDescription(
+                    /* variable-length list of key-value pairs */
+                    : new VariableLengthBitFieldDescription(
+                        Type: InternalVariableLengthType.Sequence,
+                        PaddingType: default,
+                        Encoding: default
+                    ),
+
+            /* array */
+            Type when type.IsArray
+                => isTopLevel
+
+                    /* array */
+                    ? GetBitFieldDescription(type.GetElementType()!)
+
+                    /* variable-length list of elements */
+                    : new VariableLengthBitFieldDescription(
+                        Type: InternalVariableLengthType.Sequence,
+                        PaddingType: default,
+                        Encoding: default
+                    ),
+
+            /* generic IEnumerable */
+            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
+                => isTopLevel
+
+                    /* array */
+                    ? GetBitFieldDescription(type.GenericTypeArguments[0])
+
+                    /* variable-length list of elements */
+                    : new VariableLengthBitFieldDescription(
+                        Type: InternalVariableLengthType.Sequence,
+                        PaddingType: default,
+                        Encoding: default
+                    ),
+
+            /* string */
+            Type when type == typeof(string) => new VariableLengthBitFieldDescription(
+                Type: InternalVariableLengthType.String,
+                PaddingType: PaddingType.NullTerminate,
+                Encoding: CharacterSetEncoding.UTF8
+            ),
+
+            /* remaining reference types */
+            Type when ReadUtils.IsReferenceOrContainsReferences(type) => new CompoundBitFieldDescription(
+                MemberCount: (ushort)type
+                    .GetProperties()
+                    .Where(propertyInfo => propertyInfo.CanRead)
+                    .Count()
+            ),
+
+            /* non blittable */
+            Type when type == typeof(bool) => new FixedPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
                 IsSigned: false
             ),
 
-            Type t when 
-                t == typeof(sbyte) || 
-                t == typeof(short) || 
-                t == typeof(int) || 
-                t == typeof(long) => new FixedPointBitFieldDescription(
+            /* enumeration */
+            Type when type.IsEnum => new EnumerationBitFieldDescription(
+                MemberCount: (ushort)Enum
+                    .GetNames(type).Length),
+
+            /* unsigned fixed-point types */
+            Type when 
+                type == typeof(byte) || 
+                type == typeof(ushort) || 
+                type == typeof(uint) || 
+                type == typeof(ulong) => new FixedPointBitFieldDescription(
+                ByteOrder: endianness,
+                PaddingTypeLow: default,
+                PaddingTypeHigh: default,
+                IsSigned: false
+            ),
+
+            /* signed fixed-point types */
+            Type when 
+                type == typeof(sbyte) || 
+                type == typeof(short) || 
+                type == typeof(int) || 
+                type == typeof(long) => new FixedPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
                 IsSigned: true
             ),
 
-            Type t when t == typeof(float) => new FloatingPointBitFieldDescription(
+            /* 32 bit floating-point */
+            Type when type == typeof(float) => new FloatingPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
@@ -122,7 +210,8 @@ internal partial record class DatatypeMessage : Message
                 SignLocation: 31
             ),
 
-            Type t when t == typeof(double) => new FloatingPointBitFieldDescription(
+            /* 64 bit floating-point */
+            Type when type == typeof(double) => new FloatingPointBitFieldDescription(
                 ByteOrder: endianness,
                 PaddingTypeLow: default,
                 PaddingTypeHigh: default,
@@ -131,33 +220,112 @@ internal partial record class DatatypeMessage : Message
                 SignLocation: 63
             ),
 
-            Type t when t.IsValueType && !t.IsPrimitive => new CompoundBitFieldDescription(
-                MemberCount: (ushort)type.GetFields().Length
+            /* remaining value types */            
+            Type when type.IsValueType && !type.IsPrimitive => new CompoundBitFieldDescription(
+                MemberCount: (ushort)type
+                    .GetFields().Length
             ),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
     }
 
-    private static DatatypePropertyDescription[] GetPropertyDescriptions(Type type, int typeSize)
+    private static DatatypePropertyDescription[] GetPropertyDescriptions(
+        Type type, 
+        int typeSize,
+        object? data = default)
     {
+        var isTopLevel = data is not null;
+
         return type switch
         {
-            Type t when 
-                t == typeof(byte) || 
-                t == typeof(ushort) || 
-                t == typeof(uint) || 
-                t == typeof(ulong) ||
-                t == typeof(sbyte) || 
-                t == typeof(short) || 
-                t == typeof(int) || 
-                t == typeof(long) => new FixedPointPropertyDescription[] {
+            /* dictionary */
+            Type when typeof(IDictionary).IsAssignableFrom(type) && 
+                        type.GenericTypeArguments[0] == typeof(string) 
+                => isTopLevel
+
+                    /* compound */
+                    ? CompoundPropertyDescription.Create(type)
+
+                    /* variable-length list of key-value pairs */
+                    : new VariableLengthPropertyDescription[] { 
+                        new (
+                            BaseType: Create(typeof(KeyValuePair<,>).MakeGenericType(type.GenericTypeArguments))
+                        )
+                    },
+
+            /* array */
+            Type when type.IsArray
+                => isTopLevel
+
+                    /* array */
+                    ? GetPropertyDescriptions(type.GetElementType()!, typeSize)
+
+                    /* variable-length list of elements */
+                    : new VariableLengthPropertyDescription[] { 
+                        new (
+                            BaseType: Create(type.GetElementType()!)
+                        )
+                    },
+
+            /* generic IEnumerable */
+            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
+                => isTopLevel
+
+                    /* array */
+                    ? GetPropertyDescriptions(type.GenericTypeArguments[0], typeSize)
+
+                    /* variable-length list of elements */
+                    : new VariableLengthPropertyDescription[] { 
+                        new (
+                            BaseType: Create(type.GetElementType()!)
+                        )
+                    },
+
+            /* string */
+            Type when type == typeof(string) => 
+                new VariableLengthPropertyDescription[] { 
+                    new (
+                        BaseType: Create(typeof(byte))
+                    )
+                },
+
+            /* remaining reference types */
+            Type when ReadUtils.IsReferenceOrContainsReferences(type) =>
+                CompoundPropertyDescription.Create(type),
+
+            /* non blittable */
+            Type when type == typeof(bool) =>
+                new FixedPointPropertyDescription[] { 
+                    new (
+                        BitOffset: 0,
+                        BitPrecision: 8
+                    )
+                },
+
+            /* enumeration */
+            Type when type.IsEnum => 
+                new EnumerationPropertyDescription[] { 
+                    EnumerationPropertyDescription.Create(type)
+                },
+
+            /* fixed-point types */
+            Type when 
+                type == typeof(byte) || 
+                type == typeof(ushort) || 
+                type == typeof(uint) || 
+                type == typeof(ulong) ||
+                type == typeof(sbyte) || 
+                type == typeof(short) || 
+                type == typeof(int) || 
+                type == typeof(long) => new FixedPointPropertyDescription[] {
                 new(BitOffset: 0,
                     BitPrecision: (ushort)(typeSize * 8))
             },
 
-            // https://learn.microsoft.com/en-us/cpp/c-language/type-float
-            Type t when t == typeof(float) => new FloatingPointPropertyDescription[] {
+            /* 32 bit floating-point */
+            /* https://learn.microsoft.com/en-us/cpp/c-language/type-float */
+            Type when type == typeof(float) => new FloatingPointPropertyDescription[] {
                 new(BitOffset: 0,
                     BitPrecision: 32,
                     ExponentLocation: 23,
@@ -167,8 +335,9 @@ internal partial record class DatatypeMessage : Message
                     ExponentBias: 127)
             },
 
-            // https://learn.microsoft.com/en-us/cpp/c-language/type-float
-            Type t when t == typeof(double) => new FloatingPointPropertyDescription[] {
+            /* 64 bit floating-point */
+            /* https://learn.microsoft.com/en-us/cpp/c-language/type-float */
+            Type when type == typeof(double) => new FloatingPointPropertyDescription[] {
                 new(BitOffset: 0,
                     BitPrecision: 64,
                     ExponentLocation: 52,
@@ -178,11 +347,9 @@ internal partial record class DatatypeMessage : Message
                     ExponentBias: 1023)
             },
 
-            Type t when t.IsEnum => new EnumerationPropertyDescription[] {
-                EnumerationPropertyDescription.Create(type)
-            },
-
-            Type t when t.IsValueType && !t.IsPrimitive => CompoundPropertyDescription.Create(type),
+            /* remaining value types */
+            Type when type.IsValueType && !type.IsPrimitive 
+                => CompoundPropertyDescription.Create(type),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -192,23 +359,23 @@ internal partial record class DatatypeMessage : Message
     {
         return type switch
         {
-            Type t when 
-                t == typeof(byte) || 
-                t == typeof(ushort) || 
-                t == typeof(uint) || 
-                t == typeof(ulong) ||
-                t == typeof(sbyte) || 
-                t == typeof(short) || 
-                t == typeof(int) || 
-                t == typeof(long) => DatatypeMessageClass.FixedPoint,
+            Type when 
+                type == typeof(byte) || 
+                type == typeof(ushort) || 
+                type == typeof(uint) || 
+                type == typeof(ulong) ||
+                type == typeof(sbyte) || 
+                type == typeof(short) || 
+                type == typeof(int) || 
+                type == typeof(long) => DatatypeMessageClass.FixedPoint,
 
-            Type t when 
-                t == typeof(float) ||
-                t == typeof(double) => DatatypeMessageClass.FloatingPoint,
+            Type when 
+                type == typeof(float) ||
+                type == typeof(double) => DatatypeMessageClass.FloatingPoint,
 
-            Type t when t.IsEnum => DatatypeMessageClass.Enumerated,
+            Type when type.IsEnum => DatatypeMessageClass.Enumerated,
 
-            Type t when t.IsValueType && !t.IsPrimitive => DatatypeMessageClass.Compound,
+            Type when type.IsValueType && !type.IsPrimitive => DatatypeMessageClass.Compound,
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
         };

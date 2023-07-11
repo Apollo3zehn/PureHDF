@@ -29,7 +29,7 @@ internal partial record class ObjectHeader2
         // size of chunk 0 (fake)
         var position2 = driver.BaseStream.Position;
         var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
-        Utils.WriteUlongArbitrary(driver, 0, chunkFieldSize);
+        WriteUtils.WriteUlongArbitrary(driver, 0, chunkFieldSize);
 
         // with creation order
         var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
@@ -42,7 +42,7 @@ internal partial record class ObjectHeader2
         // size of chunk 0 (real)
         driver.BaseStream.Seek(position2, SeekOrigin.Begin);
         var sizeOfChunk0 = (ulong)(position4 - position3);
-        Utils.WriteUlongArbitrary(driver, sizeOfChunk0, chunkFieldSize);
+        WriteUtils.WriteUlongArbitrary(driver, sizeOfChunk0, chunkFieldSize);
 
         // checksum
         driver.BaseStream.Seek(position1, SeekOrigin.Begin);

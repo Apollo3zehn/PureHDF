@@ -4,6 +4,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TargetFrameworks>net7.0;net6.0;</TargetFrameworks>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <LangVersion>Preview</LangVersion>
 
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>
