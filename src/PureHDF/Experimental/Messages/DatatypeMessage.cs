@@ -3,6 +3,16 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
+[StructLayout(LayoutKind.Explicit, Size = 12)]
+internal record struct GlobalHeapId(
+    [field: FieldOffset(0)] ulong Address, 
+    [field: FieldOffset(8)] uint Index);
+
+[StructLayout(LayoutKind.Explicit, Size = 16)]
+internal record struct VariableLengthElement(
+    [field: FieldOffset(0)] uint Length,
+    [field: FieldOffset(4)] GlobalHeapId HeapId);
+
 internal partial record class DatatypeMessage : Message
 {
     // reference size                = GHEAP address + GHEAP index
@@ -33,7 +43,6 @@ internal partial record class DatatypeMessage : Message
     {
         var isTopLevel = data is not null;
 
-        // determine size (https://stackoverflow.com/a/4472641)
         return type switch
         {
             /* dictionary */
@@ -112,7 +121,8 @@ internal partial record class DatatypeMessage : Message
         return type switch
         {
             /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type)
+            Type when typeof(IDictionary).IsAssignableFrom(type) &&
+                type.GenericTypeArguments[0] == typeof(string)
                 => isTopLevel
 
                     /* compound */
@@ -128,7 +138,7 @@ internal partial record class DatatypeMessage : Message
                     ),
 
             /* array */
-            Type when type.IsArray
+            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
                 => isTopLevel
 
                     /* array */
@@ -270,7 +280,7 @@ internal partial record class DatatypeMessage : Message
                     },
 
             /* array */
-            Type when type.IsArray
+            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
                 => isTopLevel
 
                     /* array */
@@ -383,7 +393,8 @@ internal partial record class DatatypeMessage : Message
         return type switch
         {
             /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type)
+            Type when typeof(IDictionary).IsAssignableFrom(type) && 
+                        type.GenericTypeArguments[0] == typeof(string)
                 => isTopLevel
 
                     /* compound */
@@ -393,7 +404,7 @@ internal partial record class DatatypeMessage : Message
                     : DatatypeMessageClass.VariableLength,
 
             /* array */
-            Type when type.IsArray
+            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
                 => isTopLevel
 
                     /* array */
@@ -451,6 +462,73 @@ internal partial record class DatatypeMessage : Message
                 => DatatypeMessageClass.Compound,
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
+        };
+    }
+
+    public static Memory<byte> Convert(Type type, object? data = default)
+    {
+        var isTopLevel = data is not null;
+
+        return type switch
+        {
+            /* dictionary */
+            Type when typeof(IDictionary).IsAssignableFrom(type) && 
+                        type.GenericTypeArguments[0] == typeof(string)
+                => isTopLevel
+
+                    /* compound */
+                    ? throw new NotImplementedException()
+
+                    /* variable-length list of key-value pairs */
+                    : new CastMemoryManager<VariableLengthElement, byte>(new VariableLengthElement[] {
+                        new(
+                            Length:(ushort)((IDictionary)data!).Count,
+                            HeapId: GetGlobalHeapId())
+                    }).Memory,
+
+            /* array */
+            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
+                => isTopLevel
+
+                    /* array */
+                    ? throw new NotImplementedException()
+
+                    /* variable-length list of elements */
+                    : throw new NotImplementedException(),
+
+            /* generic IEnumerable */
+            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
+                => isTopLevel
+
+                    /* array */
+                    ? throw new NotImplementedException()
+
+                    /* variable-length list of elements */
+                    : throw new NotImplementedException(),
+
+            /* string */
+            Type when type == typeof(string)
+                => new CastMemoryManager<GlobalHeapId, byte>(new VariableLengthElement[] {
+                    GetGlobalHeapId()
+                }).Memory,
+
+            /* remaining reference types */
+            Type when ReadUtils.IsReferenceOrContainsReferences(type) 
+                => throw new NotImplementedException(),
+
+            /* non blittable */
+            Type when type == typeof(bool) 
+                => new byte[] { ((bool)data!) ? (byte)1 : (byte)0 },
+
+            /* enumeration */
+            Type when type.IsEnum 
+                => InvokeGenericMethodWithUnmanagedConstraint(Enum.GetUnderlyingType(type), data),
+
+            /* remaining value types */
+            Type when type.IsValueType 
+                => InvokeGenericMethodWithUnmanagedConstraint(type, data),
+
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
     }
 

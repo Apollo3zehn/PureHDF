@@ -141,28 +141,28 @@ internal static class H5Writer
         var dataType = DatatypeMessage.Create(data.GetType(), data);
 
         // dataspace
-        var dataTotalSize = WriteUtils.CalculateDataTotalSize(data);
+        var dataDimensions = WriteUtils.CalculateDataDimensions(data);
 
         if (attribute is H5Attribute h5Attribute2)
         {
-            dimensions = h5Attribute2.Dimensions ?? new ulong[] { dataTotalSize };
+            dimensions = h5Attribute2.Dimensions ?? dataDimensions;
 
             var dimensionsTotalSize = dimensions
                 .Aggregate(1UL, (x, y) => x * y);
 
-            if (dimensionsTotalSize != dataTotalSize)
+            if (dimensionsTotalSize != dataDimensions[0])
                 throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
         }
 
         else
         {
-            dimensions = new ulong[] { dataTotalSize };
+            dimensions = dataDimensions;
         }
 
         var dataspace = new DataspaceMessage(
             Rank: (byte)dimensions.Length,
             Flags: DataspaceMessageFlags.None,
-            Type: DataspaceType.Simple,
+            Type: dataDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
             DimensionSizes: dimensions,
             DimensionMaxSizes: dimensions,
             PermutationIndices: default
@@ -171,21 +171,19 @@ internal static class H5Writer
             Version = 2
         };
 
-        throw new Exception("bam");
+        // attribute
+        var attributeMessage = new AttributeMessage(
+            Flags: AttributeMessageFlags.None,
+            Name: name,
+            Datatype: dataType,
+            Dataspace: dataspace,
+            Data: DatatypeMessage.Convert(data.GetType(), data)
+        )
+        {
+            Version = 3
+        };
 
-        // // attribute
-        // var attributeMessage = new AttributeMessage(
-        //     Flags: AttributeMessageFlags.None,
-        //     Name: name,
-        //     Datatype: dataType,
-        //     Dataspace: dataspace,
-        //     Data: attribute
-        // )
-        // {
-        //     Version = 3
-        // };
-
-        // return attributeMessage;
+        return attributeMessage;
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)

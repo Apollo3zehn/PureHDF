@@ -17,7 +17,7 @@ internal static partial class WriteUtils
         }
     }
 
-    public static ulong CalculateDataTotalSize(object data)
+    public static ulong[] CalculateDataDimensions(object data)
     {
         if (data is IEnumerable enumerable)
         {
@@ -37,12 +37,12 @@ internal static partial class WriteUtils
                     count++;
             }
 
-            return (ulong)count;
+            return new ulong[] { (ulong)count };
         }
 
         else
         {
-            return 1;
+            return Array.Empty<ulong>();
         }
     }
         
