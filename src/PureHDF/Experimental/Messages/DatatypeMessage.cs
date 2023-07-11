@@ -1,17 +1,8 @@
 ﻿using System.Collections;
 using System.Runtime.InteropServices;
+using PureHDF.Experimental;
 
 namespace PureHDF.VOL.Native;
-
-[StructLayout(LayoutKind.Explicit, Size = 12)]
-internal record struct GlobalHeapId(
-    [field: FieldOffset(0)] ulong Address, 
-    [field: FieldOffset(8)] uint Index);
-
-[StructLayout(LayoutKind.Explicit, Size = 16)]
-internal record struct VariableLengthElement(
-    [field: FieldOffset(0)] uint Length,
-    [field: FieldOffset(4)] GlobalHeapId HeapId);
 
 internal partial record class DatatypeMessage : Message
 {
