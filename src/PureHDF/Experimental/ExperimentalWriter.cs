@@ -132,8 +132,6 @@ internal static class H5Writer
     private static AttributeMessage CreateAttributeMessage(string name, object attribute)
     {
         // datatype
-        ulong[] dimensions;
-
         var data = attribute is H5Attribute h5Attribute1
             ? h5Attribute1.Data
             : attribute;
@@ -143,21 +141,15 @@ internal static class H5Writer
         // dataspace
         var dataDimensions = WriteUtils.CalculateDataDimensions(data);
 
-        if (attribute is H5Attribute h5Attribute2)
-        {
-            dimensions = h5Attribute2.Dimensions ?? dataDimensions;
+        var dimensions = attribute is H5Attribute h5Attribute2
+            ? h5Attribute2.Dimensions ?? dataDimensions
+            : dataDimensions;
 
-            var dimensionsTotalSize = dimensions
-                .Aggregate(1UL, (x, y) => x * y);
+        var dimensionsTotalSize = dimensions
+            .Aggregate(1UL, (x, y) => x * y);
 
-            if (dimensionsTotalSize != dataDimensions[0])
-                throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
-        }
-
-        else
-        {
-            dimensions = dataDimensions;
-        }
+        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensions[0])
+            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
 
         var dataspace = new DataspaceMessage(
             Rank: (byte)dimensions.Length,
@@ -171,13 +163,19 @@ internal static class H5Writer
             Version = 2
         };
 
+        // result
+        // TODO: do not create array if type is already array
+        var result = dataspace.Type == DataspaceType.Scalar
+            ? new byte[dataType.Size]
+            : new byte[dimensionsTotalSize * dataType.Size];
+
         // attribute
         var attributeMessage = new AttributeMessage(
             Flags: AttributeMessageFlags.None,
             Name: name,
             Datatype: dataType,
             Dataspace: dataspace,
-            Data: DatatypeMessage.Convert(data.GetType(), data)
+            Data: DatatypeMessage.EncodeData(data.GetType(), result, data)
         )
         {
             Version = 3

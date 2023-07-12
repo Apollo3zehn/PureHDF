@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -80,26 +81,6 @@ internal record class CompoundPropertyDescription(
     DatatypeMessage MemberTypeMessage)
     : DatatypePropertyDescription
 {
-    public static CompoundPropertyDescription[] Create(Type type)
-    {
-        var fieldInfos = type.GetFields();
-        var properyDescriptions = new CompoundPropertyDescription[fieldInfos.Length];
-
-        for (int i = 0; i < fieldInfos.Length; i++)
-        {
-            var fieldInfo = fieldInfos[i];
-            var underlyingType = fieldInfo.FieldType;
-
-            properyDescriptions[i] = new CompoundPropertyDescription(
-                Name: fieldInfo.Name,
-                MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
-                MemberTypeMessage: DatatypeMessage.Create(underlyingType)
-            );
-        }
-
-        return properyDescriptions;
-    }
-
     public static CompoundPropertyDescription Decode(
         H5DriverBase driver,
         byte version,

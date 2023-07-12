@@ -45,15 +45,4 @@ internal static partial class WriteUtils
             return Array.Empty<ulong>();
         }
     }
-        
-    public static int SizeOfGenericStruct(Type type)
-    {
-        var dm = new DynamicMethod("SizeOfType", typeof(int), Array.Empty<Type>());
-
-        var il = dm.GetILGenerator();
-        il.Emit(OpCodes.Sizeof, type);
-        il.Emit(OpCodes.Ret);
-
-        return (int)dm.Invoke(null, null)!;
-    }
 }

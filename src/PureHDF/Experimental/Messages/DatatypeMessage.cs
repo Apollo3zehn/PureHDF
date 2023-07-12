@@ -1,8 +1,10 @@
 ﻿using System.Collections;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using PureHDF.Experimental;
 
 namespace PureHDF.VOL.Native;
+
+// TODO: use this for generic structs https://github.com/SergeyTeplyakov/ObjectLayoutInspector?
 
 internal partial record class DatatypeMessage : Message
 {
@@ -30,9 +32,9 @@ internal partial record class DatatypeMessage : Message
 
     private static int GetTypeSize(
         Type type,
-        object? data = default)
+        object? topLevelData = default)
     {
-        var isTopLevel = data is not null;
+        var isTopLevel = topLevelData is not null;
 
         return type switch
         {
@@ -42,7 +44,7 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* compound */
-                    ? GetTypeSize(type.GenericTypeArguments[1]) * ((IDictionary)data!).Count
+                    ? GetTypeSize(type.GenericTypeArguments[1]) * ((IDictionary)topLevelData!).Count
 
                     /* variable-length list of key-value pairs */
                     : VLEN_REFERENCE_SIZE,
@@ -73,11 +75,7 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => type
-                    .GetProperties()
-                    .Where(propertyInfo => propertyInfo.CanRead)
-                    .Aggregate(0, (sum, propertyInfo) => 
-                    sum + GetTypeSize(propertyInfo.PropertyType)),
+                => GetSizeOfObject(type),
 
             /* non blittable */
             Type when type == typeof(bool) 
@@ -93,7 +91,7 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining generic value types */
             Type when type.IsValueType 
-                => WriteUtils.SizeOfGenericStruct(type),
+                => GetSizeOfObject(type, useFields: true),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -101,9 +99,9 @@ internal partial record class DatatypeMessage : Message
 
     private static DatatypeBitFieldDescription GetBitFieldDescription(
         Type type,
-        object? data = default)
+        object? topLevelData = default)
     {
-        var isTopLevel = data is not null;
+        var isTopLevel = topLevelData is not null;
 
         var endianness = BitConverter.IsLittleEndian 
             ? ByteOrder.LittleEndian 
@@ -118,7 +116,7 @@ internal partial record class DatatypeMessage : Message
 
                     /* compound */
                     ? new CompoundBitFieldDescription(
-                        MemberCount: (ushort)((IDictionary)data!).Count
+                        MemberCount: (ushort)((IDictionary)topLevelData!).Count
                     )
 
                     /* variable-length list of key-value pairs */
@@ -261,7 +259,7 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* compound */
-                    ? CompoundPropertyDescription.Create(type)
+                    ? CreateCompoundFromObject(type)
 
                     /* variable-length list of key-value pairs */
                     : new VariableLengthPropertyDescription[] { 
@@ -308,7 +306,7 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => CompoundPropertyDescription.Create(type),
+                => CreateCompoundFromObject(type),
 
             /* non blittable */
             Type when type == typeof(bool) 
@@ -369,12 +367,90 @@ internal partial record class DatatypeMessage : Message
                     )
                 },
 
-            /* remaining value types */
+            /* remaining non-generic value types */
+            Type when type.IsValueType && !type.IsPrimitive && !type.IsGenericType 
+                => CreateCompoundFromStruct(type),
+
+            /* remaining generic value types */
             Type when type.IsValueType && !type.IsPrimitive 
-                => CompoundPropertyDescription.Create(type),
+                => CreateCompoundFromObject(type, useFields: true),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
+    }
+
+    private static CompoundPropertyDescription[] CreateCompoundFromStruct(Type type)
+    {
+        var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+        var properyDescriptions = new CompoundPropertyDescription[fieldInfos.Length];
+
+        for (int i = 0; i < fieldInfos.Length; i++)
+        {
+            var fieldInfo = fieldInfos[i];
+            var underlyingType = fieldInfo.FieldType;
+
+            properyDescriptions[i] = new CompoundPropertyDescription(
+                Name: fieldInfo.Name,
+                MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
+                MemberTypeMessage: Create(underlyingType)
+            );
+        }
+
+        return properyDescriptions;
+    }
+
+    private static CompoundPropertyDescription[] CreateCompoundFromObject(Type type, bool useFields = false)
+    {
+        CompoundPropertyDescription[] propertyDescriptions;
+        var offset = 0UL;
+
+        if (useFields)
+        {
+            var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            propertyDescriptions = new CompoundPropertyDescription[fieldInfos.Length];
+
+            for (int i = 0; i < fieldInfos.Length; i++)
+            {
+                var fieldInfo = fieldInfos[i];
+                var underlyingType = fieldInfo.FieldType;
+                var dataTypeMessage = Create(underlyingType);
+
+                propertyDescriptions[i] = new CompoundPropertyDescription(
+                    Name: fieldInfo.Name,
+                    MemberByteOffset: offset,
+                    MemberTypeMessage: dataTypeMessage
+                );
+
+                offset += dataTypeMessage.Size;
+            }
+        }
+
+        else
+        {
+            var propertyInfos = type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(propertyInfo => propertyInfo.CanRead)
+                .ToArray();
+
+            propertyDescriptions = new CompoundPropertyDescription[propertyInfos.Length];
+
+            for (int i = 0; i < propertyInfos.Length; i++)
+            {
+                var propertyInfo = propertyInfos[i];
+                var underlyingType = propertyInfo.PropertyType;
+                var dataTypeMessage = Create(underlyingType);
+
+                propertyDescriptions[i] = new CompoundPropertyDescription(
+                    Name: propertyInfo.Name,
+                    MemberByteOffset: offset,
+                    MemberTypeMessage: dataTypeMessage
+                );
+
+                offset += dataTypeMessage.Size;
+            }
+        }
+
+        return propertyDescriptions;
     }
 
     private static DatatypeMessageClass GetClass(
@@ -456,26 +532,26 @@ internal partial record class DatatypeMessage : Message
         };
     }
 
-    public static Memory<byte> Convert(Type type, object? data = default)
+    public static Memory<byte> EncodeData(Type type, Memory<byte> result, object? data = default)
     {
         var isTopLevel = data is not null;
 
         return type switch
         {
-            /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type) && 
-                        type.GenericTypeArguments[0] == typeof(string)
-                => isTopLevel
+            // /* dictionary */
+            // Type when typeof(IDictionary).IsAssignableFrom(type) && 
+            //             type.GenericTypeArguments[0] == typeof(string)
+            //     => isTopLevel
 
-                    /* compound */
-                    ? throw new NotImplementedException()
+            //         /* compound */
+            //         ? throw new NotImplementedException()
 
-                    /* variable-length list of key-value pairs */
-                    : new CastMemoryManager<VariableLengthElement, byte>(new VariableLengthElement[] {
-                        new(
-                            Length:(ushort)((IDictionary)data!).Count,
-                            HeapId: GetGlobalHeapId())
-                    }).Memory,
+            //         /* variable-length list of key-value pairs */
+            //         : new CastMemoryManager<VariableLengthElement, byte>(new VariableLengthElement[] {
+            //             new(
+            //                 Length:(ushort)((IDictionary)data!).Count,
+            //                 HeapId: GetGlobalHeapId())
+            //         }).Memory,
 
             /* array */
             Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
@@ -492,20 +568,20 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* array */
-                    ? throw new NotImplementedException()
+                    ? EncodeEnumerable(type, result, data)
 
                     /* variable-length list of elements */
                     : throw new NotImplementedException(),
 
-            /* string */
-            Type when type == typeof(string)
-                => new CastMemoryManager<GlobalHeapId, byte>(new VariableLengthElement[] {
-                    GetGlobalHeapId()
-                }).Memory,
+            // /* string */
+            // Type when type == typeof(string)
+            //     => new CastMemoryManager<GlobalHeapId, byte>(new VariableLengthElement[] {
+            //         GetGlobalHeapId()
+            //     }).Memory,
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => throw new NotImplementedException(),
+                => EncodeObject(type, result, data),
 
             /* non blittable */
             Type when type == typeof(bool) 
@@ -513,14 +589,128 @@ internal partial record class DatatypeMessage : Message
 
             /* enumeration */
             Type when type.IsEnum 
-                => InvokeGenericMethodWithUnmanagedConstraint(Enum.GetUnderlyingType(type), data),
+                => InvokeEncodeUnmanaged(Enum.GetUnderlyingType(type), result, data),
 
-            /* remaining value types */
-            Type when type.IsValueType 
-                => InvokeGenericMethodWithUnmanagedConstraint(type, data),
+            /* remaining non-generic value types */
+            Type when type.IsValueType && !type.IsGenericType 
+                => InvokeEncodeUnmanaged(type, result, data),
+
+            /* remaining generic value types */
+            Type when type.IsValueType
+                => EncodeObject(type, result, data, useFields: true),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
+    }
+
+    private static readonly MethodInfo _methodInfo = typeof(DatatypeMessage)
+        .GetMethod(nameof(EncodeUnmanaged), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static Memory<byte> EncodeEnumerable(Type type, Memory<byte> result, IEnumerable data)
+    {
+        var current = result;
+        var elementType = type.GenericTypeArguments[0];
+        var encodeMethod = GetEncodeMethod(elementType);
+
+        foreach (var element in data)
+        {
+            encodeMethod(element, result);
+            current = current[elementSize..];
+        }
+
+        return result;
+    }
+
+    private static Memory<byte> EncodeObject(Type type, Memory<byte> result, object data, bool useFields = false)
+    {
+        var current = result;
+
+        if (useFields)
+        {
+            var fieldInfos = type
+                .GetFields(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var fieldInfo in fieldInfos)
+            {
+                var underlyingType = fieldInfo.FieldType;
+                var value = fieldInfo.GetValue(data);
+
+                EncodeData(underlyingType, current, value);
+
+                var size = GetTypeSize(underlyingType);
+                current = current[size..];
+            }
+        }
+
+        else
+        {
+            var propertyInfos = type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(propertyInfo => propertyInfo.CanRead);
+
+            foreach (var propertyInfo in propertyInfos)
+            {
+                var underlyingType = propertyInfo.PropertyType;
+                var value = propertyInfo.GetValue(data);
+
+                EncodeData(underlyingType, current, value);
+
+                var size = GetTypeSize(underlyingType);
+                current = current[size..];
+            }
+        }
+
+        return result;
+    }
+
+    private static int GetSizeOfObject(Type type, bool useFields = false)
+    {
+        if (useFields)
+            return type
+                .GetFields(BindingFlags.Public | BindingFlags.Instance)
+                .Aggregate(0, (sum, fieldInfo) => sum + GetTypeSize(fieldInfo.FieldType));
+
+        else
+            return type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(propertyInfo => propertyInfo.CanRead)
+                .Aggregate(0, (sum, propertyInfo) => sum + GetTypeSize(propertyInfo.PropertyType));
+    }
+
+    private static Memory<byte> InvokeEncodeUnmanaged(Type type, Memory<byte> result, object data)
+    {
+        var genericMethod = _methodInfo.MakeGenericMethod(type);
+        return (Memory<byte>)genericMethod.Invoke(null, new object[] { result, data })!;
+    }
+
+    private static Memory<byte> EncodeUnmanaged<T>(Memory<byte> result, object data) where T : unmanaged
+    {
+        var type = typeof(T);
+
+        if (type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null)
+        {
+            return new CastMemoryManager<T, byte>((T[])data).Memory;
+        }
+
+        else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
+        {
+            new CastMemoryManager<T, byte>(((IEnumerable<T>)data).ToArray())
+                .Memory
+                .CopyTo(result);
+
+            return result;
+        }
+
+        else 
+        {
+            Span<T> source = stackalloc T[] { (T)data };
+
+            MemoryMarshal
+                .AsBytes(source)
+                .CopyTo(result.Span);
+
+            return result;
+        }
     }
 
     public override void Encode(BinaryWriter driver)
