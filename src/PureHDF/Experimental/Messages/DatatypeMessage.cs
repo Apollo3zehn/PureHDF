@@ -17,11 +17,11 @@ internal partial record class DatatypeMessage : Message
     public static DatatypeMessage Create(Type type, object? data = default)
     {
         var isTopLevel = data is not null;
-        var typeSize = GetTypeSize(type, data);
+        var (typeSize, bitField) = GetTypeInfo(type, data);
 
         return new DatatypeMessage(
             Size: (uint)typeSize,
-            BitField: GetBitFieldDescription(type, data),
+            BitField: bitField,
             Properties: GetPropertyDescriptions(type, typeSize, isTopLevel: isTopLevel)
         )
         {
@@ -30,74 +30,7 @@ internal partial record class DatatypeMessage : Message
         };
     }
 
-    private static int GetTypeSize(
-        Type type,
-        object? topLevelData = default)
-    {
-        var isTopLevel = topLevelData is not null;
-
-        return type switch
-        {
-            /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type) && 
-                        type.GenericTypeArguments[0] == typeof(string) 
-                => isTopLevel
-
-                    /* compound */
-                    ? GetTypeSize(type.GenericTypeArguments[1]) * ((IDictionary)topLevelData!).Count
-
-                    /* variable-length list of key-value pairs */
-                    : VLEN_REFERENCE_SIZE,
-
-            /* array */
-            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
-                => isTopLevel
-
-                    /* array */
-                    ? GetTypeSize(type.GetElementType()!)
-
-                    /* variable-length list of elements */
-                    : VLEN_REFERENCE_SIZE,
-
-            /* generic IEnumerable */
-            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
-                => isTopLevel
-
-                    /* array */
-                    ? GetTypeSize(type.GenericTypeArguments[0])
-
-                    /* variable-length list of elements */
-                    : VLEN_REFERENCE_SIZE,
-
-            /* string */
-            Type when type == typeof(string)
-                => REFERENCE_SIZE,
-
-            /* remaining reference types */
-            Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => GetSizeOfObject(type),
-
-            /* non blittable */
-            Type when type == typeof(bool) 
-                => 1,
-
-            /* enumeration */
-            Type when type.IsEnum 
-                => GetTypeSize(Enum.GetUnderlyingType(type)),
-
-            /* remaining non-generic value types */
-            Type when type.IsValueType && !type.IsGenericType 
-                => Marshal.SizeOf(type),
-
-            /* remaining generic value types */
-            Type when type.IsValueType 
-                => GetSizeOfObject(type, useFields: true),
-
-            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
-        };
-    }
-
-    private static DatatypeBitFieldDescription GetBitFieldDescription(
+    private static (int Size, DatatypeBitFieldDescription BitField) GetTypeInfo(
         Type type,
         object? topLevelData = default)
     {
@@ -110,20 +43,28 @@ internal partial record class DatatypeMessage : Message
         return type switch
         {
             /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type) &&
-                type.GenericTypeArguments[0] == typeof(string)
+            Type when typeof(IDictionary).IsAssignableFrom(type) && 
+                        type.GenericTypeArguments[0] == typeof(string) 
                 => isTopLevel
 
                     /* compound */
-                    ? new CompoundBitFieldDescription(
-                        MemberCount: (ushort)((IDictionary)topLevelData!).Count
+                    ? (
+                        GetTypeInfo(type.GenericTypeArguments[1]).Size * ((IDictionary)topLevelData!).Count,
+
+                        new CompoundBitFieldDescription(
+                            MemberCount: (ushort)((IDictionary)topLevelData!).Count
+                        )
                     )
 
                     /* variable-length list of key-value pairs */
-                    : new VariableLengthBitFieldDescription(
-                        Type: InternalVariableLengthType.Sequence,
-                        PaddingType: default,
-                        Encoding: default
+                    : (
+                        VLEN_REFERENCE_SIZE,
+
+                        new VariableLengthBitFieldDescription(
+                            Type: InternalVariableLengthType.Sequence,
+                            PaddingType: default,
+                            Encoding: default
+                        )
                     ),
 
             /* array */
@@ -131,13 +72,17 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* array */
-                    ? GetBitFieldDescription(type.GetElementType()!)
+                    ? GetTypeInfo(type.GetElementType()!)
 
                     /* variable-length list of elements */
-                    : new VariableLengthBitFieldDescription(
-                        Type: InternalVariableLengthType.Sequence,
-                        PaddingType: default,
-                        Encoding: default
+                    : (
+                        VLEN_REFERENCE_SIZE,
+
+                        new VariableLengthBitFieldDescription(
+                            Type: InternalVariableLengthType.Sequence,
+                            PaddingType: default,
+                            Encoding: default
+                        )
                     ),
 
             /* generic IEnumerable */
@@ -145,46 +90,56 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* array */
-                    ? GetBitFieldDescription(type.GenericTypeArguments[0])
+                    ? GetTypeInfo(type.GenericTypeArguments[0])
 
                     /* variable-length list of elements */
-                    : new VariableLengthBitFieldDescription(
-                        Type: InternalVariableLengthType.Sequence,
-                        PaddingType: default,
-                        Encoding: default
+                    : (
+                        VLEN_REFERENCE_SIZE,
+
+                        new VariableLengthBitFieldDescription(
+                            Type: InternalVariableLengthType.Sequence,
+                            PaddingType: default,
+                            Encoding: default
+                        )
                     ),
 
             /* string */
-            Type when type == typeof(string) 
-                => new VariableLengthBitFieldDescription(
-                    Type: InternalVariableLengthType.String,
-                    PaddingType: PaddingType.NullTerminate,
-                    Encoding: CharacterSetEncoding.UTF8
+            Type when type == typeof(string)
+                => (
+                    REFERENCE_SIZE,
+
+                    new VariableLengthBitFieldDescription(
+                        Type: InternalVariableLengthType.String,
+                        PaddingType: PaddingType.NullTerminate,
+                        Encoding: CharacterSetEncoding.UTF8
+                    )
                 ),
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => new CompoundBitFieldDescription(
-                    MemberCount: (ushort)type
-                        .GetProperties()
-                        .Where(propertyInfo => propertyInfo.CanRead)
-                        .Count()
-                ),
+                => GetTypeInfoOfObject(type),
 
             /* non blittable */
             Type when type == typeof(bool) 
-                => new FixedPointBitFieldDescription(
-                    ByteOrder: endianness,
-                    PaddingTypeLow: default,
-                    PaddingTypeHigh: default,
-                    IsSigned: false
+                => (
+                    1,
+
+                    new FixedPointBitFieldDescription(
+                        ByteOrder: endianness,
+                        PaddingTypeLow: default,
+                        PaddingTypeHigh: default,
+                        IsSigned: false
+                    )
                 ),
 
             /* enumeration */
             Type when type.IsEnum 
-                => new EnumerationBitFieldDescription(
-                    MemberCount: (ushort)Enum
-                        .GetNames(type).Length
+                => (
+                    GetTypeInfo(Enum.GetUnderlyingType(type)).Size,
+
+                    new EnumerationBitFieldDescription(
+                        MemberCount: (ushort)Enum.GetNames(type).Length
+                    )
                 ),
 
             /* unsigned fixed-point types */
@@ -193,11 +148,15 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(ushort) || 
                 type == typeof(uint) || 
                 type == typeof(ulong) 
-                => new FixedPointBitFieldDescription(
-                    ByteOrder: endianness,
-                    PaddingTypeLow: default,
-                    PaddingTypeHigh: default,
-                    IsSigned: false
+                => (
+                    Marshal.SizeOf(type),
+                    
+                    new FixedPointBitFieldDescription(
+                        ByteOrder: endianness,
+                        PaddingTypeLow: default,
+                        PaddingTypeHigh: default,
+                        IsSigned: false
+                    )
                 ),
 
             /* signed fixed-point types */
@@ -206,41 +165,60 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(short) || 
                 type == typeof(int) || 
                 type == typeof(long) 
-                => new FixedPointBitFieldDescription(
-                    ByteOrder: endianness,
-                    PaddingTypeLow: default,
-                    PaddingTypeHigh: default,
-                    IsSigned: true
+                => (
+                    Marshal.SizeOf(type),
+                    
+                    new FixedPointBitFieldDescription(
+                        ByteOrder: endianness,
+                        PaddingTypeLow: default,
+                        PaddingTypeHigh: default,
+                        IsSigned: true
+                    )
                 ),
 
             /* 32 bit floating-point */
             Type when type == typeof(float) 
-                => new FloatingPointBitFieldDescription(
-                    ByteOrder: endianness,
-                    PaddingTypeLow: default,
-                    PaddingTypeHigh: default,
-                    PaddingTypeInternal: default,
-                    MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
-                    SignLocation: 31
+                => (
+                    Marshal.SizeOf(type),
+                    
+                    new FloatingPointBitFieldDescription(
+                        ByteOrder: endianness,
+                        PaddingTypeLow: default,
+                        PaddingTypeHigh: default,
+                        PaddingTypeInternal: default,
+                        MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
+                        SignLocation: 31
+                    )
                 ),
 
             /* 64 bit floating-point */
             Type when type == typeof(double) 
-                => new FloatingPointBitFieldDescription(
-                    ByteOrder: endianness,
-                    PaddingTypeLow: default,
-                    PaddingTypeHigh: default,
-                    PaddingTypeInternal: default,
-                    MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
-                    SignLocation: 63
+                => (
+                    Marshal.SizeOf(type),
+                    
+                    new FloatingPointBitFieldDescription(
+                        ByteOrder: endianness,
+                        PaddingTypeLow: default,
+                        PaddingTypeHigh: default,
+                        PaddingTypeInternal: default,
+                        MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
+                        SignLocation: 63
+                    )
                 ),
 
-            /* remaining value types */            
-            Type when type.IsValueType && !type.IsPrimitive 
-                => new CompoundBitFieldDescription(
-                    MemberCount: (ushort)type
-                        .GetFields().Length
+            /* remaining non-generic value types */
+            Type when type.IsValueType && !type.IsGenericType 
+                => (
+                    Marshal.SizeOf(type),
+
+                    new CompoundBitFieldDescription(
+                        MemberCount: (ushort)type.GetFields(BindingFlags.Public | BindingFlags.Instance).Length
+                    )
                 ),
+
+            /* remaining generic value types */
+            Type when type.IsValueType 
+                => GetTypeInfoOfObject(type, useFields: true),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -637,7 +615,7 @@ internal partial record class DatatypeMessage : Message
 
                 EncodeData(underlyingType, current, value);
 
-                var size = GetTypeSize(underlyingType);
+                var size = GetTypeInfo(underlyingType);
                 current = current[size..];
             }
         }
@@ -655,7 +633,7 @@ internal partial record class DatatypeMessage : Message
 
                 EncodeData(underlyingType, current, value);
 
-                var size = GetTypeSize(underlyingType);
+                var size = GetTypeInfo(underlyingType);
                 current = current[size..];
             }
         }
@@ -663,18 +641,44 @@ internal partial record class DatatypeMessage : Message
         return result;
     }
 
-    private static int GetSizeOfObject(Type type, bool useFields = false)
+    private static (int Size, DatatypeBitFieldDescription BitField) GetTypeInfoOfObject(Type type, bool useFields = false)
     {
         if (useFields)
-            return type
+        {
+            var fieldInfos = type
                 .GetFields(BindingFlags.Public | BindingFlags.Instance)
-                .Aggregate(0, (sum, fieldInfo) => sum + GetTypeSize(fieldInfo.FieldType));
+                .ToArray();
+
+            var count = (ushort)fieldInfos.Length;
+
+            var size = fieldInfos
+                .Aggregate(0, (sum, fieldInfo) => sum + GetTypeInfo(fieldInfo.FieldType).Size);
+
+            var bitField = new CompoundBitFieldDescription(
+                MemberCount: count
+            );
+
+            return (size, bitField);
+        }
 
         else
-            return type
+        {
+            var propertyInfos = type
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(propertyInfo => propertyInfo.CanRead)
-                .Aggregate(0, (sum, propertyInfo) => sum + GetTypeSize(propertyInfo.PropertyType));
+                .ToArray();
+
+            var count = (ushort)propertyInfos.Length;
+
+            var size = propertyInfos
+                .Aggregate(0, (sum, propertyInfo) => sum + GetTypeInfo(propertyInfo.PropertyType).Size);
+
+            var bitField = new CompoundBitFieldDescription(
+                MemberCount: count
+            );
+
+            return (size, bitField);
+        }
     }
 
     private static Memory<byte> InvokeEncodeUnmanaged(Type type, Memory<byte> result, object data)
