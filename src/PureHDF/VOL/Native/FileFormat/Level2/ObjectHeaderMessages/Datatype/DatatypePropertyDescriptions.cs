@@ -206,37 +206,6 @@ internal record class EnumerationPropertyDescription(
     byte[][] Values)
     : DatatypePropertyDescription
 {
-    public static EnumerationPropertyDescription Create(Type type)
-    {
-        var underlyingType = Enum.GetUnderlyingType(type);
-        var enumValues = Enum.GetValues(type);
-        var enumObjects = new object[enumValues.Length];
-
-        for (int i = 0; i < enumValues.Length; i++)
-        {
-            enumObjects[i] = enumValues.GetValue(i)!;
-        }
-
-        var values = (underlyingType switch
-        {
-            Type t when t == typeof(byte) => enumObjects.Select(enumValue => BitConverter.GetBytes((byte)enumValue)),
-            Type t when t == typeof(sbyte) => enumObjects.Select(enumValue => BitConverter.GetBytes((sbyte)enumValue)),
-            Type t when t == typeof(ushort) => enumObjects.Select(enumValue => BitConverter.GetBytes((ushort)enumValue)),
-            Type t when t == typeof(short) => enumObjects.Select(enumValue => BitConverter.GetBytes((short)enumValue)),
-            Type t when t == typeof(uint) => enumObjects.Select(enumValue => BitConverter.GetBytes((uint)enumValue)),
-            Type t when t == typeof(int) => enumObjects.Select(enumValue => BitConverter.GetBytes((int)enumValue)),
-            Type t when t == typeof(ulong) => enumObjects.Select(enumValue => BitConverter.GetBytes((ulong)enumValue)),
-            Type t when t == typeof(long) => enumObjects.Select(enumValue => BitConverter.GetBytes((long)enumValue)),
-            _ => throw new Exception($"The enum type {underlyingType} is not supported.")
-        }).ToArray();
-
-        return new EnumerationPropertyDescription(
-            BaseType: DatatypeMessage.Create(underlyingType),
-            Names: Enum.GetNames(type),
-            Values: values
-        );
-    }
-
     public static EnumerationPropertyDescription Decode(
         H5DriverBase driver, 
         byte version, 

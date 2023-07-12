@@ -8,39 +8,29 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage : Message
 {
+    private const int DATATYPE_MESSAGE_VERSION = 3;
+
     // reference size                = GHEAP address + GHEAP index
     private const int REFERENCE_SIZE = sizeof(ulong) + sizeof(uint);
 
     // variable length entry size           length
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
-    public static DatatypeMessage Create(Type type, object? data = default)
-    {
-        var isTopLevel = data is not null;
-        var (typeSize, bitField) = GetTypeInfo(type, data);
-
-        return new DatatypeMessage(
-            Size: (uint)typeSize,
-            BitField: bitField,
-            Properties: GetPropertyDescriptions(type, typeSize, isTopLevel: isTopLevel)
-        )
-        {
-            Version = 3,
-            Class = GetClass(type, isTopLevel: isTopLevel)
-        };
-    }
-
-    private static (int Size, DatatypeBitFieldDescription BitField) GetTypeInfo(
+    private static DatatypeMessage Create(
+        Dictionary<Type, DatatypeMessage> cache,
         Type type,
         object? topLevelData = default)
     {
+        if (cache.TryGetValue(type, out var cachedMessage))
+            return cachedMessage;
+
         var isTopLevel = topLevelData is not null;
 
         var endianness = BitConverter.IsLittleEndian 
             ? ByteOrder.LittleEndian 
             : ByteOrder.BigEndian;
 
-        return type switch
+        var newMessage = type switch
         {
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) && 
@@ -48,23 +38,25 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* compound */
-                    ? (
-                        GetTypeInfo(type.GenericTypeArguments[1]).Size * ((IDictionary)topLevelData!).Count,
+                    ? new DatatypeMessage(
+
+                        (uint)(Create(cache, type.GenericTypeArguments[1]).Size * ((IDictionary)topLevelData!).Count),
 
                         new CompoundBitFieldDescription(
                             MemberCount: (ushort)((IDictionary)topLevelData!).Count
-                        )
+                        ),
+
+                        // TODO: this is wrong
+                        GetTypeInfoForObject(cache, type).Properties
                     )
+                    {
+                        Version = DATATYPE_MESSAGE_VERSION,
+                        Class = DatatypeMessageClass.Compound
+                    }
 
                     /* variable-length list of key-value pairs */
-                    : (
-                        VLEN_REFERENCE_SIZE,
-
-                        new VariableLengthBitFieldDescription(
-                            Type: InternalVariableLengthType.Sequence,
-                            PaddingType: default,
-                            Encoding: default
-                        )
+                    : GetTypeInfoForVariableLengthSequence(
+                        baseType: Create(cache, typeof(KeyValuePair<,>).MakeGenericType(type.GenericTypeArguments))
                     ),
 
             /* array */
@@ -72,17 +64,11 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* array */
-                    ? GetTypeInfo(type.GetElementType()!)
+                    ? Create(cache, type.GetElementType()!)
 
                     /* variable-length list of elements */
-                    : (
-                        VLEN_REFERENCE_SIZE,
-
-                        new VariableLengthBitFieldDescription(
-                            Type: InternalVariableLengthType.Sequence,
-                            PaddingType: default,
-                            Encoding: default
-                        )
+                    : GetTypeInfoForVariableLengthSequence(
+                        baseType: Create(cache, type.GetElementType()!)
                     ),
 
             /* generic IEnumerable */
@@ -90,57 +76,47 @@ internal partial record class DatatypeMessage : Message
                 => isTopLevel
 
                     /* array */
-                    ? GetTypeInfo(type.GenericTypeArguments[0])
+                    ? Create(cache, type.GenericTypeArguments[0])
 
                     /* variable-length list of elements */
-                    : (
-                        VLEN_REFERENCE_SIZE,
-
-                        new VariableLengthBitFieldDescription(
-                            Type: InternalVariableLengthType.Sequence,
-                            PaddingType: default,
-                            Encoding: default
-                        )
+                    : GetTypeInfoForVariableLengthSequence(
+                        baseType: Create(cache, type.GenericTypeArguments[0])
                     ),
 
             /* string */
             Type when type == typeof(string)
-                => (
+                => new DatatypeMessage(
+
                     REFERENCE_SIZE,
 
                     new VariableLengthBitFieldDescription(
                         Type: InternalVariableLengthType.String,
                         PaddingType: PaddingType.NullTerminate,
                         Encoding: CharacterSetEncoding.UTF8
-                    )
-                ),
+                    ),
+
+                    new VariableLengthPropertyDescription[] { 
+                        new (
+                            BaseType: Create(cache, typeof(byte))
+                        )
+                    }
+                )
+                {
+                    Version = DATATYPE_MESSAGE_VERSION,
+                    Class = DatatypeMessageClass.VariableLength
+                },
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => GetTypeInfoOfObject(type),
+                => GetTypeInfoForObject(cache, type),
 
             /* non blittable */
             Type when type == typeof(bool) 
-                => (
-                    1,
-
-                    new FixedPointBitFieldDescription(
-                        ByteOrder: endianness,
-                        PaddingTypeLow: default,
-                        PaddingTypeHigh: default,
-                        IsSigned: false
-                    )
-                ),
+                => Create(cache, typeof(byte)),
 
             /* enumeration */
             Type when type.IsEnum 
-                => (
-                    GetTypeInfo(Enum.GetUnderlyingType(type)).Size,
-
-                    new EnumerationBitFieldDescription(
-                        MemberCount: (ushort)Enum.GetNames(type).Length
-                    )
-                ),
+                => GetTypeInfoForEnum(cache, type),
 
             /* unsigned fixed-point types */
             Type when 
@@ -148,16 +124,27 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(ushort) || 
                 type == typeof(uint) || 
                 type == typeof(ulong) 
-                => (
-                    Marshal.SizeOf(type),
+                => new DatatypeMessage(
+
+                    (uint)Marshal.SizeOf(type),
                     
                     new FixedPointBitFieldDescription(
                         ByteOrder: endianness,
                         PaddingTypeLow: default,
                         PaddingTypeHigh: default,
                         IsSigned: false
-                    )
-                ),
+                    ),
+
+                    new FixedPointPropertyDescription[] {
+                        new(BitOffset: 0,
+                            BitPrecision: (ushort)(Marshal.SizeOf(type) * 8)
+                        )
+                    }
+                )
+                {
+                    Version = DATATYPE_MESSAGE_VERSION,
+                    Class = DatatypeMessageClass.FixedPoint
+                },
 
             /* signed fixed-point types */
             Type when
@@ -165,21 +152,33 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(short) || 
                 type == typeof(int) || 
                 type == typeof(long) 
-                => (
-                    Marshal.SizeOf(type),
+                => new DatatypeMessage(
+
+                    (uint)Marshal.SizeOf(type),
                     
                     new FixedPointBitFieldDescription(
                         ByteOrder: endianness,
                         PaddingTypeLow: default,
                         PaddingTypeHigh: default,
                         IsSigned: true
-                    )
-                ),
+                    ),
+
+                    new FixedPointPropertyDescription[] {
+                        new(BitOffset: 0,
+                            BitPrecision: (ushort)(Marshal.SizeOf(type) * 8)
+                        )
+                    }
+                )
+                {
+                    Version = DATATYPE_MESSAGE_VERSION,
+                    Class = DatatypeMessageClass.FixedPoint
+                },
 
             /* 32 bit floating-point */
             Type when type == typeof(float) 
-                => (
-                    Marshal.SizeOf(type),
+                => new DatatypeMessage(
+
+                    (uint)Marshal.SizeOf(type),
                     
                     new FloatingPointBitFieldDescription(
                         ByteOrder: endianness,
@@ -188,13 +187,29 @@ internal partial record class DatatypeMessage : Message
                         PaddingTypeInternal: default,
                         MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
                         SignLocation: 31
-                    )
-                ),
+                    ),
+
+                    new FloatingPointPropertyDescription[] {
+                        new(BitOffset: 0,
+                            BitPrecision: 32,
+                            ExponentLocation: 23,
+                            ExponentSize: 8,
+                            MantissaLocation: 0,
+                            MantissaSize: 23,
+                            ExponentBias: 127
+                        )
+                    }
+                )
+                {
+                    Version = DATATYPE_MESSAGE_VERSION,
+                    Class = DatatypeMessageClass.FloatingPoint
+                },
 
             /* 64 bit floating-point */
             Type when type == typeof(double) 
-                => (
-                    Marshal.SizeOf(type),
+                => new DatatypeMessage(
+
+                    (uint)Marshal.SizeOf(type),
                     
                     new FloatingPointBitFieldDescription(
                         ByteOrder: endianness,
@@ -203,310 +218,234 @@ internal partial record class DatatypeMessage : Message
                         PaddingTypeInternal: default,
                         MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
                         SignLocation: 63
-                    )
-                ),
+                    ),
+
+                    new FloatingPointPropertyDescription[] {
+                        new(BitOffset: 0,
+                            BitPrecision: 64,
+                            ExponentLocation: 52,
+                            ExponentSize: 11,
+                            MantissaLocation: 0,
+                            MantissaSize: 52,
+                            ExponentBias: 1023
+                        )
+                    }
+                )
+                {
+                    Version = DATATYPE_MESSAGE_VERSION,
+                    Class = DatatypeMessageClass.FloatingPoint
+                },
 
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType 
-                => (
-                    Marshal.SizeOf(type),
-
-                    new CompoundBitFieldDescription(
-                        MemberCount: (ushort)type.GetFields(BindingFlags.Public | BindingFlags.Instance).Length
-                    )
-                ),
+                => GetTypeInfoForStruct(cache, type),
 
             /* remaining generic value types */
             Type when type.IsValueType 
-                => GetTypeInfoOfObject(type, useFields: true),
+                => GetTypeInfoForObject(cache, type, useFields: true),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
-    }
 
-    private static DatatypePropertyDescription[] GetPropertyDescriptions(
-        Type type, 
-        int typeSize,
-        bool isTopLevel = false)
-    {
-        return type switch
+        // do not cache IEnumerable types when we are in top-level mode
+        if (isTopLevel && typeof(IEnumerable).IsAssignableFrom(type))
         {
-            /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type) && 
-                        type.GenericTypeArguments[0] == typeof(string) 
-                => isTopLevel
+            //
+        }
 
-                    /* compound */
-                    ? CreateCompoundFromObject(type)
+        else
+        {
+            cache[type] = newMessage;
+        }
+        
+        return newMessage;
+    }
 
-                    /* variable-length list of key-value pairs */
-                    : new VariableLengthPropertyDescription[] { 
-                        new (
-                            BaseType: Create(typeof(KeyValuePair<,>).MakeGenericType(type.GenericTypeArguments))
-                        )
-                    },
+    private static DatatypeMessage GetTypeInfoForEnum(
+        Dictionary<Type, DatatypeMessage> cache, 
+        Type type)
+    {
+        var underlyingType = Enum.GetUnderlyingType(type);
+        var enumValues = Enum.GetValues(type);
+        var enumObjects = new object[enumValues.Length];
 
-            /* array */
-            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
-                => isTopLevel
+        for (int i = 0; i < enumValues.Length; i++)
+        {
+            enumObjects[i] = enumValues.GetValue(i)!;
+        }
 
-                    /* array */
-                    ? GetPropertyDescriptions(type.GetElementType()!, typeSize)
+        var values = (underlyingType switch
+        {
+            Type t when t == typeof(byte) => enumObjects.Select(enumValue => BitConverter.GetBytes((byte)enumValue)),
+            Type t when t == typeof(sbyte) => enumObjects.Select(enumValue => BitConverter.GetBytes((sbyte)enumValue)),
+            Type t when t == typeof(ushort) => enumObjects.Select(enumValue => BitConverter.GetBytes((ushort)enumValue)),
+            Type t when t == typeof(short) => enumObjects.Select(enumValue => BitConverter.GetBytes((short)enumValue)),
+            Type t when t == typeof(uint) => enumObjects.Select(enumValue => BitConverter.GetBytes((uint)enumValue)),
+            Type t when t == typeof(int) => enumObjects.Select(enumValue => BitConverter.GetBytes((int)enumValue)),
+            Type t when t == typeof(ulong) => enumObjects.Select(enumValue => BitConverter.GetBytes((ulong)enumValue)),
+            Type t when t == typeof(long) => enumObjects.Select(enumValue => BitConverter.GetBytes((long)enumValue)),
+            _ => throw new Exception($"The enum type {underlyingType} is not supported.")
+        }).ToArray();
 
-                    /* variable-length list of elements */
-                    : new VariableLengthPropertyDescription[] { 
-                        new (
-                            BaseType: Create(type.GetElementType()!)
-                        )
-                    },
+        var properties = new EnumerationPropertyDescription(
+            BaseType: Create(cache, underlyingType),
+            Names: Enum.GetNames(type),
+            Values: values
+        );
 
-            /* generic IEnumerable */
-            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
-                => isTopLevel
+        return new DatatypeMessage(
+            Create(cache, Enum.GetUnderlyingType(type)).Size,
 
-                    /* array */
-                    ? GetPropertyDescriptions(type.GenericTypeArguments[0], typeSize)
+            new EnumerationBitFieldDescription(
+                MemberCount: (ushort)Enum.GetNames(type).Length
+            ),
 
-                    /* variable-length list of elements */
-                    : new VariableLengthPropertyDescription[] { 
-                        new (
-                            BaseType: Create(type.GetElementType()!)
-                        )
-                    },
-
-            /* string */
-            Type when type == typeof(string) 
-                => new VariableLengthPropertyDescription[] { 
-                    new (
-                        BaseType: Create(typeof(byte))
-                    )
-                },
-
-            /* remaining reference types */
-            Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => CreateCompoundFromObject(type),
-
-            /* non blittable */
-            Type when type == typeof(bool) 
-                => new FixedPointPropertyDescription[] { 
-                    new (
-                        BitOffset: 0,
-                        BitPrecision: 8
-                    )
-                },
-
-            /* enumeration */
-            Type when type.IsEnum 
-                => new EnumerationPropertyDescription[] { 
-                    EnumerationPropertyDescription.Create(type)
-                },
-
-            /* fixed-point types */
-            Type when 
-                type == typeof(byte) || 
-                type == typeof(ushort) || 
-                type == typeof(uint) || 
-                type == typeof(ulong) ||
-                type == typeof(sbyte) || 
-                type == typeof(short) || 
-                type == typeof(int) || 
-                type == typeof(long) 
-                => new FixedPointPropertyDescription[] {
-                    new(BitOffset: 0,
-                        BitPrecision: (ushort)(typeSize * 8)
-                    )
-                },
-
-            /* 32 bit floating-point */
-            /* https://learn.microsoft.com/en-us/cpp/c-language/type-float */
-            Type when type == typeof(float) 
-                => new FloatingPointPropertyDescription[] {
-                    new(BitOffset: 0,
-                        BitPrecision: 32,
-                        ExponentLocation: 23,
-                        ExponentSize: 8,
-                        MantissaLocation: 0,
-                        MantissaSize: 23,
-                        ExponentBias: 127
-                    )
-                },
-
-            /* 64 bit floating-point */
-            /* https://learn.microsoft.com/en-us/cpp/c-language/type-float */
-            Type when type == typeof(double) 
-                => new FloatingPointPropertyDescription[] {
-                    new(BitOffset: 0,
-                        BitPrecision: 64,
-                        ExponentLocation: 52,
-                        ExponentSize: 11,
-                        MantissaLocation: 0,
-                        MantissaSize: 52,
-                        ExponentBias: 1023
-                    )
-                },
-
-            /* remaining non-generic value types */
-            Type when type.IsValueType && !type.IsPrimitive && !type.IsGenericType 
-                => CreateCompoundFromStruct(type),
-
-            /* remaining generic value types */
-            Type when type.IsValueType && !type.IsPrimitive 
-                => CreateCompoundFromObject(type, useFields: true),
-
-            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
+            new EnumerationPropertyDescription[] {
+                properties
+            }
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.Enumerated
         };
     }
 
-    private static CompoundPropertyDescription[] CreateCompoundFromStruct(Type type)
+    private static DatatypeMessage GetTypeInfoForStruct(
+        Dictionary<Type, DatatypeMessage> cache,
+        Type type)
     {
         var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-        var properyDescriptions = new CompoundPropertyDescription[fieldInfos.Length];
+        var properties = new CompoundPropertyDescription[fieldInfos.Length];
 
         for (int i = 0; i < fieldInfos.Length; i++)
         {
             var fieldInfo = fieldInfos[i];
             var underlyingType = fieldInfo.FieldType;
 
-            properyDescriptions[i] = new CompoundPropertyDescription(
+            properties[i] = new CompoundPropertyDescription(
                 Name: fieldInfo.Name,
                 MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
-                MemberTypeMessage: Create(underlyingType)
+                MemberTypeMessage: Create(cache, underlyingType)
             );
         }
 
-        return properyDescriptions;
+        var bitfield = new CompoundBitFieldDescription(
+            MemberCount: (ushort)fieldInfos.Length
+        );
+
+        return new DatatypeMessage(
+            (uint)Marshal.SizeOf(type),            
+            bitfield,
+            properties
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.Compound
+        };
     }
 
-    private static CompoundPropertyDescription[] CreateCompoundFromObject(Type type, bool useFields = false)
+    private static DatatypeMessage GetTypeInfoForObject(
+        Dictionary<Type, DatatypeMessage> cache,
+        Type type, 
+        bool useFields = false)
     {
-        CompoundPropertyDescription[] propertyDescriptions;
-        var offset = 0UL;
+        DatatypeBitFieldDescription bitfield;
+        DatatypePropertyDescription[] properties;
+
+        var count = default(ushort);
+        var offset = 0U;
 
         if (useFields)
         {
-            var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            propertyDescriptions = new CompoundPropertyDescription[fieldInfos.Length];
+            var fieldInfos = type
+                .GetFields(BindingFlags.Public | BindingFlags.Instance);
+
+            properties = new CompoundPropertyDescription[fieldInfos.Length];
 
             for (int i = 0; i < fieldInfos.Length; i++)
             {
                 var fieldInfo = fieldInfos[i];
                 var underlyingType = fieldInfo.FieldType;
-                var dataTypeMessage = Create(underlyingType);
+                var dataTypeMessage = Create(cache, underlyingType);
 
-                propertyDescriptions[i] = new CompoundPropertyDescription(
+                properties[i] = new CompoundPropertyDescription(
                     Name: fieldInfo.Name,
                     MemberByteOffset: offset,
                     MemberTypeMessage: dataTypeMessage
                 );
 
+                count += 1;
                 offset += dataTypeMessage.Size;
             }
+
+            bitfield = new CompoundBitFieldDescription(
+                MemberCount: count
+            );
         }
 
         else
         {
+
             var propertyInfos = type
                 .GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(propertyInfo => propertyInfo.CanRead)
                 .ToArray();
 
-            propertyDescriptions = new CompoundPropertyDescription[propertyInfos.Length];
+            properties = new CompoundPropertyDescription[propertyInfos.Length];
 
             for (int i = 0; i < propertyInfos.Length; i++)
             {
                 var propertyInfo = propertyInfos[i];
                 var underlyingType = propertyInfo.PropertyType;
-                var dataTypeMessage = Create(underlyingType);
+                var dataTypeMessage = Create(cache,  underlyingType);
 
-                propertyDescriptions[i] = new CompoundPropertyDescription(
+                properties[i] = new CompoundPropertyDescription(
                     Name: propertyInfo.Name,
                     MemberByteOffset: offset,
                     MemberTypeMessage: dataTypeMessage
                 );
 
+                count += 1;
                 offset += dataTypeMessage.Size;
             }
+
+            bitfield = new CompoundBitFieldDescription(
+                MemberCount: count
+            );
         }
 
-        return propertyDescriptions;
+        return new DatatypeMessage(
+            offset,            
+            bitfield, 
+            properties
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.Compound
+        };
     }
 
-    private static DatatypeMessageClass GetClass(
-        Type type,
-        bool isTopLevel = false)
+    private static DatatypeMessage GetTypeInfoForVariableLengthSequence(
+        DatatypeMessage baseType)
     {
-        return type switch
+        return new DatatypeMessage(
+            VLEN_REFERENCE_SIZE,
+
+            new VariableLengthBitFieldDescription(
+                Type: InternalVariableLengthType.Sequence,
+                PaddingType: default,
+                Encoding: default
+            ),
+
+            new VariableLengthPropertyDescription[] {
+                new (
+                    BaseType: baseType
+                )
+            }
+        )
         {
-            /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type) && 
-                        type.GenericTypeArguments[0] == typeof(string)
-                => isTopLevel
-
-                    /* compound */
-                    ? DatatypeMessageClass.Compound
-
-                    /* variable-length list of key-value pairs */
-                    : DatatypeMessageClass.VariableLength,
-
-            /* array */
-            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
-                => isTopLevel
-
-                    /* array */
-                    ? GetClass(type.GetElementType()!)
-
-                    /* variable-length list of elements */
-                    : DatatypeMessageClass.VariableLength,
-
-            /* generic IEnumerable */
-            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
-                => isTopLevel
-
-                    /* array */
-                    ? GetClass(type.GenericTypeArguments[0])
-
-                    /* variable-length list of elements */
-                    : DatatypeMessageClass.VariableLength,
-
-            /* string */
-            Type when type == typeof(string) 
-                => DatatypeMessageClass.String,
-
-            /* remaining reference types */
-            Type when ReadUtils.IsReferenceOrContainsReferences(type) 
-                => DatatypeMessageClass.Compound,
-
-            /* non blittable */
-            Type when type == typeof(bool)
-                => DatatypeMessageClass.FixedPoint,
-
-            /* enumeration */
-            Type when type.IsEnum 
-                => DatatypeMessageClass.Enumerated,
-
-            /* fixed-point types */
-            Type when
-                type == typeof(byte) || 
-                type == typeof(ushort) || 
-                type == typeof(uint) || 
-                type == typeof(ulong) ||
-                type == typeof(sbyte) || 
-                type == typeof(short) || 
-                type == typeof(int) || 
-                type == typeof(long) 
-                => DatatypeMessageClass.FixedPoint,
-
-            /* floating-point types */
-            Type when 
-                type == typeof(float) ||
-                type == typeof(double) 
-                => DatatypeMessageClass.FloatingPoint,
-
-            /* remaining value types */
-            Type when type.IsValueType && !type.IsPrimitive 
-                => DatatypeMessageClass.Compound,
-
-            _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.VariableLength
         };
     }
 
@@ -615,7 +554,7 @@ internal partial record class DatatypeMessage : Message
 
                 EncodeData(underlyingType, current, value);
 
-                var size = GetTypeInfo(underlyingType);
+                var size = Create(underlyingType);
                 current = current[size..];
             }
         }
@@ -633,52 +572,12 @@ internal partial record class DatatypeMessage : Message
 
                 EncodeData(underlyingType, current, value);
 
-                var size = GetTypeInfo(underlyingType);
+                var size = Create(underlyingType);
                 current = current[size..];
             }
         }
 
         return result;
-    }
-
-    private static (int Size, DatatypeBitFieldDescription BitField) GetTypeInfoOfObject(Type type, bool useFields = false)
-    {
-        if (useFields)
-        {
-            var fieldInfos = type
-                .GetFields(BindingFlags.Public | BindingFlags.Instance)
-                .ToArray();
-
-            var count = (ushort)fieldInfos.Length;
-
-            var size = fieldInfos
-                .Aggregate(0, (sum, fieldInfo) => sum + GetTypeInfo(fieldInfo.FieldType).Size);
-
-            var bitField = new CompoundBitFieldDescription(
-                MemberCount: count
-            );
-
-            return (size, bitField);
-        }
-
-        else
-        {
-            var propertyInfos = type
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(propertyInfo => propertyInfo.CanRead)
-                .ToArray();
-
-            var count = (ushort)propertyInfos.Length;
-
-            var size = propertyInfos
-                .Aggregate(0, (sum, propertyInfo) => sum + GetTypeInfo(propertyInfo.PropertyType).Size);
-
-            var bitField = new CompoundBitFieldDescription(
-                MemberCount: count
-            );
-
-            return (size, bitField);
-        }
     }
 
     private static Memory<byte> InvokeEncodeUnmanaged(Type type, Memory<byte> result, object data)
