@@ -1,0 +1,19 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "ValueTuple`3" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_STD_I32LE "Item1";
+         H5T_STD_I64LE "Item2";
+         H5T_IEEE_F64LE "Item3";
+      }
+      DATASPACE  SCALAR
+      DATA {
+      (0): {
+            1,
+            -2,
+            3.3
+         }
+      }
+   }
+}
+}

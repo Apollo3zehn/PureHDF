@@ -1,0 +1,19 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "Dictionary`2" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_STD_I32LE "A";
+         H5T_STD_I32LE "B";
+         H5T_STD_I32LE "C";
+      }
+      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+      DATA {
+      (0): {
+            1,
+            -2,
+            3
+         }
+      }
+   }
+}
+}

@@ -2,16 +2,24 @@ namespace PureHDF.Experimental;
 
 internal static class H5Writer
 {
+    private record WriteContext(
+        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> TypeToMessageMap,
+        Dictionary<H5Object, ulong> ObjectToAddressMap
+    );
+
     public static void Serialize(H5File file, string filePath)
     {
-        var objectToAddressMap = new Dictionary<H5Object, ulong>();
+        var writeContext = new WriteContext(
+            TypeToMessageMap: new(),
+            ObjectToAddressMap: new()
+        );
 
         using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
         using var driver = new BinaryWriter(fileStream);
 
         // root group
         driver.BaseStream.Seek(Superblock23.SIZE, SeekOrigin.Begin);
-        var rootGroupAddress = EncodeGroup(driver, file, objectToAddressMap);
+        var rootGroupAddress = EncodeGroup(driver, file, writeContext);
 
         // superblock
         var endOfFileAddress = (ulong)driver.BaseStream.Position;
@@ -36,7 +44,7 @@ internal static class H5Writer
     private static ulong EncodeGroup(
         BinaryWriter driver,
         H5Group group,
-        Dictionary<H5Object, ulong> objectToAddressMap)
+        WriteContext writeContext)
     {
         var headerMessages = new List<HeaderMessage>();
 
@@ -77,7 +85,7 @@ internal static class H5Writer
         // attribute messages
         foreach (var entry in group.Attributes)
         {
-            var attributeMessage = CreateAttributeMessage(entry.Key, entry.Value);
+            var attributeMessage = CreateAttributeMessage(writeContext, entry.Key, entry.Value);
 
             headerMessages.Add(ToHeaderMessage(attributeMessage));
         }
@@ -86,10 +94,10 @@ internal static class H5Writer
         {
             if (entry.Value is H5Group childGroup)
             {
-                if (!objectToAddressMap.TryGetValue(childGroup, out var childAddress))
+                if (!writeContext.ObjectToAddressMap.TryGetValue(childGroup, out var childAddress))
                 {
-                    childAddress = EncodeGroup(driver, childGroup, objectToAddressMap);
-                    objectToAddressMap[childGroup] = childAddress;
+                    childAddress = EncodeGroup(driver, childGroup, writeContext);
+                    writeContext.ObjectToAddressMap[childGroup] = childAddress;
                 }
 
                 var linkMessage = new LinkMessage(
@@ -129,14 +137,18 @@ internal static class H5Writer
         return address;
     }
 
-    private static AttributeMessage CreateAttributeMessage(string name, object attribute)
+    private static AttributeMessage CreateAttributeMessage(
+        WriteContext writeContext,
+        string name, 
+        object attribute)
     {
         // datatype
         var data = attribute is H5Attribute h5Attribute1
             ? h5Attribute1.Data
             : attribute;
 
-        var dataType = DatatypeMessage.Create(data.GetType(), data);
+        var (dataType, encode) = DatatypeMessage
+            .Create(writeContext.TypeToMessageMap, data.GetType(), data);
 
         // dataspace
         var dataDimensions = WriteUtils.CalculateDataDimensions(data);
@@ -169,13 +181,16 @@ internal static class H5Writer
             ? new byte[dataType.Size]
             : new byte[dimensionsTotalSize * dataType.Size];
 
+        // encode data
+        encode(result, data);
+
         // attribute
         var attributeMessage = new AttributeMessage(
             Flags: AttributeMessageFlags.None,
             Name: name,
             Datatype: dataType,
             Dataspace: dataspace,
-            Data: DatatypeMessage.EncodeData(data.GetType(), result, data)
+            Data: result
         )
         {
             Version = 3

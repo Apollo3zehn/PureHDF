@@ -1,0 +1,16 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "FileAccess" {
+      DATATYPE  H5T_ENUM {
+         H5T_STD_I32LE;
+         "Read"             1;
+         "Write"            2;
+         "ReadWrite"        3;
+      }
+      DATASPACE  SCALAR
+      DATA {
+      (0): Read
+      }
+   }
+}
+}

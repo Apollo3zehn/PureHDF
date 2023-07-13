@@ -1,0 +1,17 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "Point" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_STD_I32LE "x";
+         H5T_IEEE_F64LE "y";
+      }
+      DATASPACE  SCALAR
+      DATA {
+      (0): {
+            1,
+            99.38
+         }
+      }
+   }
+}
+}

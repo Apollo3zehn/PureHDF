@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "UInt32" {
+      DATATYPE  H5T_STD_U32LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 2
+      }
+   }
+}
+}

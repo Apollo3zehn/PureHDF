@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "Boolean" {
+      DATATYPE  H5T_STD_U8LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 0
+      }
+   }
+}
+}

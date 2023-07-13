@@ -17,26 +17,37 @@ internal static partial class WriteUtils
         }
     }
 
+    public static int GetEnumerableLength(IEnumerable data)
+    {
+        int count = 0;
+        var collection = data as ICollection;
+
+        if (collection is not null)
+        {
+            count = collection.Count;
+        }
+
+        else
+        {
+            var enumerator = data.GetEnumerator();
+
+            while (enumerator.MoveNext())
+                count++;
+        }
+
+        return count;
+    }
+
     public static ulong[] CalculateDataDimensions(object data)
     {
-        if (data is IEnumerable enumerable)
+        if (data is IDictionary)
         {
-            int count = 0;
-            var collection = data as ICollection;
+            return new ulong[] { 1 };
+        }
 
-            if (collection is not null)
-            {
-                count = collection.Count;
-            }
-
-            else
-            {
-                var enumerator = enumerable.GetEnumerator();
-
-                while (enumerator.MoveNext())
-                    count++;
-            }
-
+        else if (data is IEnumerable enumerable)
+        {
+            var count = GetEnumerableLength(enumerable);
             return new ulong[] { (ulong)count };
         }
 

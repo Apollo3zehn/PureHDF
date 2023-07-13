@@ -56,7 +56,7 @@ public class WriterTests
 
         // Assert
         var expected = File
-            .ReadAllText("TestFiles/expected.writertests.dump")
+            .ReadAllText("DumpFiles/writer.dump")
             .Replace("<file-path>", filePath);
 
         var actual = TestUtils.DumpH5File(filePath);
