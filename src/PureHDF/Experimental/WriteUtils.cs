@@ -81,7 +81,7 @@ internal static partial class WriteUtils
         return (int)genericMethod.Invoke(null, new object[] { data })!;
     }
 
-    private static int GetMemoryLength<T>(Memory<T> data) where T : unmanaged
+    private static int GetMemoryLength<T>(Memory<T> data)
     {
         return data.Length;
     }

@@ -36,13 +36,13 @@ internal partial record class DatatypeMessage : Message
             Type when IsArray(type)
                 => ReadUtils.IsReferenceOrContainsReferences(type.GetElementType()!)
                     ? GetTypeInfoForEnumerable(context, type)
-                    : GetTypeInfoForArray(context, type.GetElementType()!),
+                    : GetTypeInfoForUnmanagedArray(context, type.GetElementType()!),
 
             /* Memory<T> */
             Type when IsMemory(type)
                 => ReadUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
-                    ? GetTypeInfoForEnumerable(context, type)
-                    : GetTypeInfoForMemory(context, type.GenericTypeArguments[0]),
+                    ? GetTypeInfoForMemory(context, type.GenericTypeArguments[0])
+                    : GetTypeInfoForUnmanagedMemory(context, type.GenericTypeArguments[0]),
 
             /* generic IEnumerable */
             Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
@@ -422,15 +422,36 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.VariableLength
         };
 
-        static void encode(ref Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
         {
-            var length = WriteUtils.GetEnumerableLength((IEnumerable)data);
-            var globalHeapId = new Experimental.GlobalHeapId(default, default); // TODO use global heap manager to get real ID
+            var enumerable = (IEnumerable)data;
+
+            // get global heap id and memory
+            var itemCount = WriteUtils.GetEnumerableLength(enumerable);
+
+            var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
+                .BaseType
+                .Size;
+
+            var totalLength = (int)typeSize * itemCount;
+
+            var (globalHeapId, memory) = context.GlobalHeapManager
+                .AddObject(totalLength);
+
+            // encode items
+            foreach (var item in enumerable)
+            {
+                // TODO make use of the return value!! this may be important for unmanaged data
+                baseEncode(ref memory, item);
+
+                memory = memory[(int)typeSize..];
+            }
+
+            // encode variable length object
             var targetSpan = target.Span;
 
-            // write length
             Span<int> lengthArray = stackalloc int[1];
-            lengthArray[0] = length;
+            lengthArray[0] = itemCount;
 
             MemoryMarshal
                 .AsBytes(lengthArray)
@@ -770,7 +791,7 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForArray(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForUnmanagedArray(
         WriteContext context,
         Type elementType)
     {
@@ -785,6 +806,25 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForMemory(
+        WriteContext context,
+        Type elementType)
+    {
+        var (message, elementEncode) = InternalCreate(context, elementType);
+
+        void encode(ref Memory<byte> target, object data)
+        {
+            target = InvokeEncodeMemory(
+                elementType, 
+                target, 
+                data, 
+                elementEncode,
+                message.Size);
+        }
+
+        return (message, encode);
+    }
+
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForUnmanagedMemory(
         WriteContext context,
         Type elementType)
     {
@@ -813,14 +853,14 @@ internal partial record class DatatypeMessage : Message
         return result;
     }
 
-    // Array
-    private static readonly MethodInfo _methodInfoArray = typeof(DatatypeMessage)
+    // Unmanaged Array
+    private static readonly MethodInfo _methodInfoUnmanagedArray = typeof(DatatypeMessage)
         .GetMethod(nameof(EncodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
     private static Memory<byte> InvokeEncodeUnmanagedArray(Type type, Memory<byte> result, object data)
     {
-        var genericMethod = _methodInfoArray.MakeGenericMethod(type);
+        var genericMethod = _methodInfoUnmanagedArray.MakeGenericMethod(type);
         return (Memory<byte>)genericMethod.Invoke(null, new object[] { result, data })!;
     }
 
@@ -829,20 +869,62 @@ internal partial record class DatatypeMessage : Message
         return new CastMemoryManager<T, byte>((T[])data).Memory;
     }
 
-    // Memory
-    private static readonly MethodInfo _methodInfoMemory = typeof(DatatypeMessage)
+    // Unmanaged Memory
+    private static readonly MethodInfo _methodInfoUnmanagedMemory = typeof(DatatypeMessage)
         .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
     private static Memory<byte> InvokeEncodeUnmanagedMemory(Type type, Memory<byte> result, object data)
     {
-        var genericMethod = _methodInfoMemory.MakeGenericMethod(type);
+        var genericMethod = _methodInfoUnmanagedMemory.MakeGenericMethod(type);
         return (Memory<byte>)genericMethod.Invoke(null, new object[] { result, data })!;
     }
 
     private static Memory<byte> EncodeUnmanagedMemory<T>(Memory<byte> _, object data) where T : unmanaged
     {
         return new CastMemoryManager<T, byte>((Memory<T>)data).Memory;
+    }
+
+    // Memory
+    private static readonly MethodInfo _methodInfoMemory = typeof(DatatypeMessage)
+        .GetMethod(nameof(EncodeMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
+    private static Memory<byte> InvokeEncodeMemory(
+        Type type, 
+        Memory<byte> result, 
+        object data, 
+        EncodeDelegate elementEncode,
+        ulong typeSize)
+    {
+        var genericMethod = _methodInfoMemory.MakeGenericMethod(type);
+
+        return (Memory<byte>)genericMethod.Invoke(null, new object[] 
+        {
+            result, 
+            data, 
+            elementEncode, 
+            typeSize
+        })!;
+    }
+
+    private static Memory<byte> EncodeMemory<T>(
+        Memory<byte> target, 
+        object data, 
+        EncodeDelegate elementEncode,
+        ulong typeSize)
+    {
+        var span = ((Memory<T>)data).Span;
+        var remaining = target;
+
+        for (int i = 0; i < span.Length; i++)
+        {
+            elementEncode(ref remaining, span[i]!);
+
+            remaining = remaining[(int)typeSize..];
+        }
+
+        return target;
     }
 
     public override void Encode(BinaryWriter driver)
