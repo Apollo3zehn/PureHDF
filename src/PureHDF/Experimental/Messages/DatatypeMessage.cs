@@ -2,12 +2,13 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using PureHDF.Experimental;
 
 namespace PureHDF.VOL.Native;
 
 // TODO: use this for generic structs https://github.com/SergeyTeplyakov/ObjectLayoutInspector?
 
-internal delegate void EncodeDelegate(Memory<byte> target, object data);
+internal delegate void EncodeDelegate(ref Memory<byte> target, object data);
 
 internal partial record class DatatypeMessage : Message
 {
@@ -20,7 +21,7 @@ internal partial record class DatatypeMessage : Message
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
     public static (DatatypeMessage, EncodeDelegate) Create(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+        WriteContext context,
         Type type,
         object topLevelData
     )
@@ -29,26 +30,28 @@ internal partial record class DatatypeMessage : Message
         {
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string)
-                => GetTypeInfoForTopLevelDictionary(cache, type, topLevelData),
+                => GetTypeInfoForTopLevelDictionary(context, type, topLevelData),
 
             /* array */
             Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
-                => ReadUtils.IsReferenceOrContainsReferences(type)
-                    ? GetTypeInfoForEnumerable(cache, type)
-                    : GetTypeInfoForArray(cache, type),
+                => ReadUtils.IsReferenceOrContainsReferences(type.GetElementType()!)
+                    ? GetTypeInfoForEnumerable(context, type)
+                    : GetTypeInfoForArray(context, type.GetElementType()!),
 
             /* generic IEnumerable */
             Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
-                => GetTypeInfoForEnumerable(cache, type),
+                => GetTypeInfoForEnumerable(context, type),
 
-            _ => InternalCreate(cache, type)
+            _ => InternalCreate(context, type)
         };
     }
 
     private static (DatatypeMessage, EncodeDelegate) InternalCreate(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+        WriteContext context,
         Type type)
     {
+        var cache = context.TypeToMessageMap;
+
         if (cache.TryGetValue(type, out var cachedMessage))
             return cachedMessage;
 
@@ -61,31 +64,33 @@ internal partial record class DatatypeMessage : Message
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) &&
                         type.GenericTypeArguments[0] == typeof(string)
-                => GetTypeInfoForVariableLengthSequence(cache, typeof(KeyValuePair<,>).MakeGenericType(type.GenericTypeArguments)),
+                => GetTypeInfoForVariableLengthSequence(context, typeof(KeyValuePair<,>)
+                    .MakeGenericType(type.GenericTypeArguments)),
 
             /* array */
             Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
-                => GetTypeInfoForVariableLengthSequence(cache, type.GetElementType()!),
+                => GetTypeInfoForVariableLengthSequence(context, type.GetElementType()!),
 
             /* generic IEnumerable */
             Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
-                => GetTypeInfoForVariableLengthSequence(cache, type.GenericTypeArguments[0]),
+                => GetTypeInfoForVariableLengthSequence(context, type.GenericTypeArguments[0]),
 
             /* string */
             Type when type == typeof(string)
-                => GetTypeInfoForVariableLengthString(cache),
+                => GetTypeInfoForVariableLengthString(context),
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type)
-                => GetTypeInfoForObject(cache, type),
+                => GetTypeInfoForReferenceType(context, type),
 
-            /* non blittable */
+            /* non blittable (but unmanged!) */
+            /* https://stackoverflow.com/questions/65833341/does-c-sharp-enforce-that-an-unmanaged-type-is-blittable#comment116401977_65833341 */
             Type when type == typeof(bool)
-                => GetTypeInfoForBool(cache),
+                => GetTypeInfoForBool(context),
 
             /* enumeration */
             Type when type.IsEnum
-                => GetTypeInfoForEnum(cache, type),
+                => GetTypeInfoForEnum(context, type),
 
             /* unsigned fixed-point types */
             Type when
@@ -113,11 +118,13 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType
-                => GetTypeInfoForStruct(cache, type),
+                => context.SerializerOptions.IncludeStructProperties
+                    ? GetTypeInfoForReferenceType(context, type, isValueType: true)
+                    : GetTypeInfoForValueType(context, type),
 
             /* remaining generic value types */
             Type when type.IsValueType
-                => GetTypeInfoForObject(cache, type, useFields: true),
+                => GetTypeInfoForReferenceType(context, type, isValueType: true),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -127,19 +134,18 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForBool(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache
-    )
+        WriteContext context)
     {
-        var (baseMessage, _) = InternalCreate(cache, typeof(byte));
+        var (baseMessage, _) = InternalCreate(context, typeof(byte));
 
-        static void encode(Memory<byte> target, object data)
+        static void encode(ref Memory<byte> target, object data)
             => target.Span[0] = ((bool)data) ? (byte)1 : (byte)0;
 
         return (baseMessage, encode);
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForEnum(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+        WriteContext context,
         Type type)
     {
         var underlyingType = Enum.GetUnderlyingType(type);
@@ -164,7 +170,7 @@ internal partial record class DatatypeMessage : Message
             _ => throw new Exception($"The enum type {underlyingType} is not supported.")
         }).ToArray();
 
-        var (baseMessage, baseEncode) = InternalCreate(cache, Enum.GetUnderlyingType(type));
+        var (baseMessage, baseEncode) = InternalCreate(context, Enum.GetUnderlyingType(type));
 
         var properties = new EnumerationPropertyDescription(
             BaseType: baseMessage,
@@ -191,8 +197,8 @@ internal partial record class DatatypeMessage : Message
         return (message, baseEncode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForStruct(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForValueType(
+        WriteContext context,
         Type type)
     {
         var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
@@ -202,7 +208,7 @@ internal partial record class DatatypeMessage : Message
         {
             var fieldInfo = fieldInfos[i];
             var underlyingType = fieldInfo.FieldType;
-            var (fieldMessage, _) = InternalCreate(cache, underlyingType);
+            var (fieldMessage, _) = InternalCreate(context, underlyingType);
 
             properties[i] = new CompoundPropertyDescription(
                 Name: fieldInfo.Name,
@@ -225,38 +231,63 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
             => InvokeEncodeUnmanagedElement(type, target, data);
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForObject(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForReferenceType(
+        WriteContext context,
         Type type,
-        bool useFields = false)
+        bool isValueType = false)
     {
         CompoundBitFieldDescription bitfield;
-        CompoundPropertyDescription[] properties;
 
-        var count = default(ushort);
         var offset = 0U;
 
-        EncodeDelegate encode;
+        // fields
+        var includeFields = isValueType 
+            ? context.SerializerOptions.IncludeStructFields
+            : context.SerializerOptions.IncludeClassFields;
 
-        if (useFields)
+        var fieldInfos = includeFields
+            ? type.GetFields(BindingFlags.Public | BindingFlags.Instance)
+            : Array.Empty<FieldInfo>();
+
+        var fieldEncodes = includeFields
+            ? new EncodeDelegate[fieldInfos.Length]
+            : Array.Empty<EncodeDelegate>();
+
+        // properties
+        var includeProperties = isValueType 
+            ? context.SerializerOptions.IncludeStructProperties
+            : context.SerializerOptions.IncludeClassProperties;
+
+        var propertyInfos = type
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(propertyInfo => propertyInfo.CanRead)
+            .ToArray();
+
+        var propertyEncodes = includeProperties
+            ? new EncodeDelegate[propertyInfos.Length]
+            : Array.Empty<EncodeDelegate>();
+
+        // bitfield
+        bitfield = new CompoundBitFieldDescription(
+            MemberCount: (ushort)(fieldInfos.Length + propertyInfos.Length)
+        );
+
+        // propertyDescriptions
+        var properties = new CompoundPropertyDescription[bitfield.MemberCount];
+
+        if (includeFields)
         {
-            var fieldInfos = type
-                .GetFields(BindingFlags.Public | BindingFlags.Instance);
-
-            properties = new CompoundPropertyDescription[fieldInfos.Length];
-            var fieldEncodes = new EncodeDelegate[fieldInfos.Length];
-
             for (int i = 0; i < fieldInfos.Length; i++)
             {
                 var fieldInfo = fieldInfos[i];
                 var underlyingType = fieldInfo.FieldType;
-                var (fieldMessage, fieldEncode) = InternalCreate(cache, underlyingType);
+                var (fieldMessage, fieldEncode) = InternalCreate(context, underlyingType);
 
                 fieldEncodes[i] = fieldEncode;
 
@@ -266,78 +297,57 @@ internal partial record class DatatypeMessage : Message
                     MemberTypeMessage: fieldMessage
                 );
 
-                count += 1;
                 offset += fieldMessage.Size;
             }
-
-            bitfield = new CompoundBitFieldDescription(
-                MemberCount: count
-            );
-
-            encode = (target, data) =>
-            {
-                var remaining = target;
-
-                for (int i = 0; i < fieldEncodes.Length; i++)
-                {
-                    var memberEncode = fieldEncodes[i];
-                    var typeSize = (int)properties[i].MemberTypeMessage.Size;
-                    var fieldInfo = fieldInfos[i];
-
-                    memberEncode(remaining, fieldInfo.GetValue(data)!);
-
-                    remaining = remaining[typeSize..];
-                }
-            };
         }
 
-        else
+        if (includeProperties)
         {
-            var propertyInfos = type
-                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(propertyInfo => propertyInfo.CanRead)
-                .ToArray();
-
-            properties = new CompoundPropertyDescription[propertyInfos.Length];
-            var propertyEncodes = new EncodeDelegate[propertyInfos.Length];
-
             for (int i = 0; i < propertyInfos.Length; i++)
             {
                 var propertyInfo = propertyInfos[i];
                 var underlyingType = propertyInfo.PropertyType;
-                var (propertyMessage, propertyEncode) = InternalCreate(cache, underlyingType);
+                var (propertyMessage, propertyEncode) = InternalCreate(context, underlyingType);
 
                 propertyEncodes[i] = propertyEncode;
 
-                properties[i] = new CompoundPropertyDescription(
+                properties[fieldInfos.Length + i] = new CompoundPropertyDescription(
                     Name: propertyInfo.Name,
                     MemberByteOffset: offset,
                     MemberTypeMessage: propertyMessage
                 );
 
-                count += 1;
                 offset += propertyMessage.Size;
             }
+        }
 
-            bitfield = new CompoundBitFieldDescription(
-                MemberCount: count
-            );
+        void encode(ref Memory<byte> target, object data)
+        {
+            var remaining = target;
 
-            encode = (target, data) =>
+            // fields
+            for (int i = 0; i < fieldEncodes.Length; i++)
             {
-                var remaining = target;
+                var memberEncode = fieldEncodes[i];
+                var typeSize = (int)properties[i].MemberTypeMessage.Size;
+                var fieldInfo = fieldInfos[i];
 
-                for (int i = 0; i < propertyEncodes.Length; i++)
-                {
-                    var memberEncode = propertyEncodes[i];
-                    var typeSize = (int)properties[i].MemberTypeMessage.Size;
-                    var propertyInfo = propertyInfos[i];
+                memberEncode(ref remaining, fieldInfo.GetValue(data)!);
 
-                    memberEncode(remaining, propertyInfo.GetValue(data)!);
+                remaining = remaining[typeSize..];
+            }
 
-                    remaining = remaining[typeSize..];
-                }
-            };
+            // properties
+            for (int i = 0; i < propertyEncodes.Length; i++)
+            {
+                var memberEncode = propertyEncodes[i];
+                var typeSize = (int)properties[i].MemberTypeMessage.Size;
+                var propertyInfo = propertyInfos[i];
+
+                memberEncode(ref remaining, propertyInfo.GetValue(data)!);
+
+                remaining = remaining[typeSize..];
+            }
         }
 
         var message = new DatatypeMessage(
@@ -354,10 +364,10 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForVariableLengthSequence(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+        WriteContext context,
         Type baseType)
     {
-        var (baseMessage, baseEncode) = InternalCreate(cache, baseType);
+        var (baseMessage, baseEncode) = InternalCreate(context, baseType);
 
         var message = new DatatypeMessage(
 
@@ -380,7 +390,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.VariableLength
         };
 
-        static void encode(Memory<byte> target, object data)
+        static void encode(ref Memory<byte> target, object data)
         {
             var length = WriteUtils.GetEnumerableLength((IEnumerable)data);
             var globalHeapId = new GlobalHeapId(default, default); // TODO use global heap manager to get real ID
@@ -394,7 +404,7 @@ internal partial record class DatatypeMessage : Message
                 .AsBytes(lengthArray)
                 .CopyTo(targetSpan);
 
-            target = target[sizeof(int)..];
+            targetSpan = targetSpan[sizeof(int)..];
 
             // write global heap id
             Span<int> gheapIdArray = stackalloc int[1];
@@ -409,9 +419,9 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForVariableLengthString(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache)
+        WriteContext context)
     {
-        var (baseMessage, baseEncode) = InternalCreate(cache, typeof(byte));
+        var (baseMessage, baseEncode) = InternalCreate(context, typeof(byte));
 
         var message = new DatatypeMessage(
 
@@ -434,7 +444,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.VariableLength
         };
 
-        static void encode(Memory<byte> target, object data)
+        static void encode(ref Memory<byte> target, object data)
         {
             var stringData = (string)data;
             var length = Encoding.UTF8.GetBytes(stringData).Length; // TODO use global heap manager to convert string only once
@@ -449,7 +459,7 @@ internal partial record class DatatypeMessage : Message
                 .AsBytes(lengthArray)
                 .CopyTo(targetSpan);
 
-            target = target[sizeof(int)..];
+            targetSpan = targetSpan[sizeof(int)..];
 
             // write global heap id
             Span<int> gheapIdArray = stackalloc int[1];
@@ -489,7 +499,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
             => InvokeEncodeUnmanagedElement(type, target, data);
 
         return (message, encode);
@@ -521,7 +531,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
             => InvokeEncodeUnmanagedElement(type, target, data);
 
         return (message, encode);
@@ -560,7 +570,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
             => InvokeEncodeUnmanagedElement(type, target, data);
 
         return (message, encode);
@@ -599,20 +609,20 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
             => InvokeEncodeUnmanagedElement(type, target, data);
 
         return (message, encode);
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelDictionary(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+        WriteContext context,
         Type type,
         object topLevelData)
     {
         var dictionary = (IDictionary)topLevelData;
 
-        var (valueMessage, valueEncode) = InternalCreate(cache, type.GenericTypeArguments[1]);
+        var (valueMessage, valueEncode) = InternalCreate(context, type.GenericTypeArguments[1]);
         var memberCount = (ushort)dictionary.Count;
         var memberSize = valueMessage.Size;
 
@@ -651,15 +661,16 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
         {
+            var localTarget = target;
             var dataAsDictionary = (IDictionary)data;
 
             foreach (var value in dictionary.Values)
             {
-                valueEncode(target, value);
+                valueEncode(ref localTarget, value);
 
-                target = target[(int)memberSize..];
+                localTarget = localTarget[(int)memberSize..];
             }
         }
 
@@ -667,16 +678,16 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForEnumerable(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
+        WriteContext context,
         Type type)
     {
         var elementType = type.IsArray
             ? type.GetElementType()!
             : type.GenericTypeArguments[0];
 
-        var (message, elementEncode) = InternalCreate(cache, elementType);
+        var (message, elementEncode) = InternalCreate(context, elementType);
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
         {
             var enumerable = (IEnumerable)data;
             var enumerator = enumerable.GetEnumerator();
@@ -686,7 +697,7 @@ internal partial record class DatatypeMessage : Message
             {
                 var currentElement = enumerator.Current;
 
-                elementEncode(remaining, currentElement);
+                elementEncode(ref remaining, currentElement);
 
                 remaining = remaining[(int)message.Size..];
             }
@@ -696,14 +707,14 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForArray(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> cache,
-        Type type)
+        WriteContext context,
+        Type elementType)
     {
-        var (message, elementEncode) = InternalCreate(cache, type.GetElementType()!);
+        var (message, _) = InternalCreate(context, elementType);
 
-        void encode(Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
         {
-            InvokeEncodeUnmanagedArray(type, target, data);
+            target = InvokeEncodeUnmanagedArray(elementType, target, data);
         }
 
         return (message, encode);

@@ -4,6 +4,20 @@ using System.Diagnostics.CodeAnalysis;
 namespace PureHDF.Experimental;
 
 /// <summary>
+/// Provides options to be used with <see cref="H5File"/>.
+/// </summary>
+/// <param name="IncludeStructFields">Gets a value that indicates whether struct fields are handled during serialization. The default value is <see langword="true"/>.</param>
+/// <param name="IncludeStructProperties">Gets a value that indicates whether struct properties are handled during serialization. The default value is <see langword="false"/>.</param>
+/// <param name="IncludeClassFields">Gets a value that indicates whether class fields are handled during serialization. The default value is <see langword="false"/>.</param>
+/// <param name="IncludeClassProperties">Gets a value that indicates whether class properties are handled during serialization. The default value is <see langword="true"/>.</param>
+public record H5SerializerOptions(
+    bool IncludeStructFields = true,
+    bool IncludeStructProperties = false,
+    bool IncludeClassFields = false,
+    bool IncludeClassProperties = true
+);
+
+/// <summary>
 /// An H5 file.
 /// </summary>
 public class H5File : H5Group
@@ -12,9 +26,10 @@ public class H5File : H5Group
     /// Creates a new file, write the contents to the file, and then closes the file. If the target file already exists, it is overwritten.
     /// </summary>
     /// <param name="filePath">The name of the file.</param>
-    public void Save(string filePath)
+    /// <param name="options">Options to control serialization behavior.</param>
+    public void Save(string filePath, H5SerializerOptions? options = default)
     {
-        H5Writer.Serialize(this, filePath);
+        H5Writer.Serialize(this, filePath, options ?? new H5SerializerOptions());
     }
 };
 

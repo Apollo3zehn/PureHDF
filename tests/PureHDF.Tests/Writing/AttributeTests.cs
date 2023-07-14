@@ -22,11 +22,13 @@ public class AttributeTests
         }},
 
         new object[] { new Dictionary<string, int> { 
-            ["A"] = 1, ["B"] = -2, ["C"] = 3 
+            ["A"] = 1, ["B"] = -2, ["C"] = 3
         }},
 
         /* array */
         new object[] { new int[] { 1, -2, 3 } },
+
+        new object[] { new bool[] { true, false, true } },
 
         // new object[] { new Dictionary<string, int>[] {
         //     new Dictionary<string, int> { 
@@ -119,6 +121,42 @@ public class AttributeTests
     }
 
     [Fact]
+    public void CanWriteAttribute_Anonymous()
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+
+        var data = new
+        {
+            Numerical = 1,
+            Boolean = true,
+            Enum = FileAccess.Read,
+            Anonymous = new {
+                A = 1,
+                B = 9.81
+            }
+        };
+
+        var type = data.GetType();
+
+        file.Attributes[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText($"DumpFiles/attribute_{type.Name}.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
     public void CanWriteAttribute_Large_Array()
     {
         // Arrange
@@ -136,11 +174,11 @@ public class AttributeTests
         file.Save(filePath);
 
         // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
         var expected = File
             .ReadAllText("DumpFiles/attribute_large_array.dump")
             .Replace("<file-path>", filePath);
-
-        var actual = TestUtils.DumpH5File(filePath);
 
         Assert.Equal(expected, actual);
     }

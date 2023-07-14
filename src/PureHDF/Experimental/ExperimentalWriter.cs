@@ -2,14 +2,10 @@ namespace PureHDF.Experimental;
 
 internal static class H5Writer
 {
-    private record WriteContext(
-        Dictionary<Type, (DatatypeMessage, EncodeDelegate)> TypeToMessageMap,
-        Dictionary<H5Object, ulong> ObjectToAddressMap
-    );
-
-    public static void Serialize(H5File file, string filePath)
+    public static void Serialize(H5File file, string filePath, H5SerializerOptions options)
     {
         var writeContext = new WriteContext(
+            SerializerOptions: options,
             TypeToMessageMap: new(),
             ObjectToAddressMap: new()
         );
@@ -138,7 +134,7 @@ internal static class H5Writer
     }
 
     private static AttributeMessage CreateAttributeMessage(
-        WriteContext writeContext,
+        WriteContext context,
         string name, 
         object attribute)
     {
@@ -148,7 +144,7 @@ internal static class H5Writer
             : attribute;
 
         var (dataType, encode) = DatatypeMessage
-            .Create(writeContext.TypeToMessageMap, data.GetType(), data);
+            .Create(context, data.GetType(), data);
 
         // dataspace
         var dataDimensions = WriteUtils.CalculateDataDimensions(data);
@@ -177,12 +173,12 @@ internal static class H5Writer
 
         // result
         // TODO: do not create array if type is already array
-        var result = dataspace.Type == DataspaceType.Scalar
+        var result = (dataspace.Type == DataspaceType.Scalar
             ? new byte[dataType.Size]
-            : new byte[dimensionsTotalSize * dataType.Size];
+            : new byte[dimensionsTotalSize * dataType.Size]).AsMemory();
 
         // encode data
-        encode(result, data);
+        encode(ref result, data);
 
         // attribute
         var attributeMessage = new AttributeMessage(

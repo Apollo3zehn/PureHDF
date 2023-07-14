@@ -2,6 +2,12 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.Experimental;
 
+internal record WriteContext(
+    H5SerializerOptions SerializerOptions,
+    Dictionary<Type, (DatatypeMessage, EncodeDelegate)> TypeToMessageMap,
+    Dictionary<H5Object, ulong> ObjectToAddressMap
+);
+
 [StructLayout(LayoutKind.Explicit, Size = 12)]
 internal record struct GlobalHeapId(
     [field: FieldOffset(0)] ulong Address, 
