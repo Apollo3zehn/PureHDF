@@ -30,7 +30,7 @@ internal static class H5Writer
         globalHeapManager.Encode(driver);
 
         // superblock
-        var endOfFileAddress = (ulong)driver.BaseStream.Position;
+        var endOfFileAddress = (ulong)driver.BaseStream.Length;
         driver.BaseStream.Seek(0, SeekOrigin.Begin);
 
         var superblock = new Superblock23(

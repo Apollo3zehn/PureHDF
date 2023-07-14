@@ -88,7 +88,9 @@ internal static partial class ReadUtils
 
             for (int i = 0; i < destination.Length; i++)
             {
-                var _ = localDriver.ReadUInt32(); // for what do we need this?
+                /* Skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
+                var _ = localDriver.ReadUInt32();
+
                 var globalHeapId = GlobalHeapId.Decode(context.Superblock, localDriver);
 
                 if (globalHeapId.Equals(default))

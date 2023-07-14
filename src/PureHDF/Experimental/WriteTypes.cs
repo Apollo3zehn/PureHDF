@@ -2,6 +2,13 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.Experimental;
 
+internal record GlobalHeapCollectionState(
+    GlobalHeapCollection Collection, 
+    Memory<byte> Memory)
+{
+    public int Consumed { get; set; }
+};
+
 internal record WriteContext(
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,

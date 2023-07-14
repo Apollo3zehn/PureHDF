@@ -44,7 +44,7 @@ public static class WritingTestData
         // new object[] { new List<string> { "A", "ßAB", "C BA" } },
 
         // /* string */
-        // new object[] { "ß Abc" },
+        new object[] { "ß Abc" },
 
         /* tuple (reference type) */
         new object[] { Tuple.Create(1, -2L, 3.3) },
