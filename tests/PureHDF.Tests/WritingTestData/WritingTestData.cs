@@ -4,8 +4,8 @@ public static class WritingTestData
 {
     public static IList<object[]> AttributeTestData { get; } = new List<object[]>()
     {
-        // TODO: check if T[,] should also be supported
-        // TODO: what about T[,], T[][] and T[,,x], T[][][x]?
+        // // TODO: check if T[,] should also be supported
+        // // TODO: what about T[,], T[][] and T[,,x], T[][][x]?
 
         /* dictionary */
         new object[] { new Dictionary<string, object>() {
@@ -21,6 +21,8 @@ public static class WritingTestData
 
         new object[] { new bool[] { true, false, true } },
 
+        // new object[] { new string[] { "A", "ßAB", "C BA" } },
+
         // new object[] { new Dictionary<string, int>[] {
         //     new Dictionary<string, int> { 
         //         ["A"] = 1, ["B"] = -2, ["C"] = 3 
@@ -30,11 +32,22 @@ public static class WritingTestData
         //     }
         // }},
 
+        /* Memory<T> */
+        new object[] { new int[] { 1, -2, 3 }.AsMemory() },
+
+        new object[] { new bool[] { true, false, true }.AsMemory() },
+
+        // new object[] { new string[] { "A", "ßAB", "C BA" }.AsMemory() },
+
         /* generic IEnumerable */
         new object[] { new List<int> { 1, -2, 3 } },
 
+        new object[] { new List<bool> { true, false, true } },
+
+        // new object[] { new List<string> { "A", "ßAB", "C BA" } },
+
         // /* string */
-        // new object[] { "Abc" },
+        // new object[] { "ß Abc" },
 
         /* tuple (reference type) */
         new object[] { Tuple.Create(1, -2L, 3.3) },

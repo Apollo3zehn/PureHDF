@@ -29,6 +29,7 @@ public class AttributeTests
             Type when type == typeof(bool) => $"_{data}",
             Type when typeof(IDictionary).IsAssignableFrom(type) => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
             Type when typeof(IEnumerable).IsAssignableFrom(type) && !type.IsArray => $"_{type.GenericTypeArguments[0].Name}",
+            Type when type.IsGenericType && typeof(Memory<>).Equals(type.GetGenericTypeDefinition()) => $"_{type.GenericTypeArguments[0].Name}",
             _ => default
         };
 

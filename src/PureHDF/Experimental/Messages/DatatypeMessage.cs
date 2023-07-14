@@ -38,6 +38,12 @@ internal partial record class DatatypeMessage : Message
                     ? GetTypeInfoForEnumerable(context, type)
                     : GetTypeInfoForArray(context, type.GetElementType()!),
 
+            /* Memory<T> */
+            Type when type.IsGenericType && typeof(Memory<>).Equals(type.GetGenericTypeDefinition())
+                => ReadUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
+                    ? GetTypeInfoForEnumerable(context, type)
+                    : GetTypeInfoForMemory(context, type.GenericTypeArguments[0]),
+
             /* generic IEnumerable */
             Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
                 => GetTypeInfoForEnumerable(context, type),
@@ -720,6 +726,20 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForMemory(
+        WriteContext context,
+        Type elementType)
+    {
+        var (message, _) = InternalCreate(context, elementType);
+
+        void encode(ref Memory<byte> target, object data)
+        {
+            target = InvokeEncodeUnmanagedMemory(elementType, target, data);
+        }
+
+        return (message, encode);
+    }
+
     private static readonly MethodInfo _methodInfoElement = typeof(DatatypeMessage)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
@@ -752,6 +772,20 @@ internal partial record class DatatypeMessage : Message
     private static Memory<byte> EncodeUnmanagedArray<T>(Memory<byte> _, object data) where T : unmanaged
     {
         return new CastMemoryManager<T, byte>((T[])data).Memory;
+    }
+
+    private static readonly MethodInfo _methodInfoMemory = typeof(DatatypeMessage)
+        .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static Memory<byte> InvokeEncodeUnmanagedMemory(Type type, Memory<byte> result, object data)
+    {
+        var genericMethod = _methodInfoMemory.MakeGenericMethod(type);
+        return (Memory<byte>)genericMethod.Invoke(null, new object[] { result, data })!;
+    }
+
+    private static Memory<byte> EncodeUnmanagedMemory<T>(Memory<byte> _, object data) where T : unmanaged
+    {
+        return new CastMemoryManager<T, byte>((Memory<T>)data).Memory;
     }
 
     public override void Encode(BinaryWriter driver)

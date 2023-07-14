@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Reflection;
 using System.Reflection.Emit;
 
 namespace PureHDF;
@@ -40,6 +41,8 @@ internal static partial class WriteUtils
 
     public static ulong[] CalculateDataDimensions(object data)
     {
+        var type = data.GetType();
+
         if (data is IDictionary)
         {
             return new ulong[] { 1 };
@@ -51,9 +54,30 @@ internal static partial class WriteUtils
             return new ulong[] { (ulong)count };
         }
 
+        else if (
+            type.IsGenericType && 
+            typeof(Memory<>).Equals(type.GetGenericTypeDefinition()))
+        {
+            return new ulong[] { (ulong)InvokeGetMemoryLengthGeneric(type.GenericTypeArguments[0], data) };
+        }
+
         else
         {
             return Array.Empty<ulong>();
         }
+    }
+
+    private static readonly MethodInfo _methodInfoMemory = typeof(WriteUtils)
+        .GetMethod(nameof(GetMemoryLength), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    private static int InvokeGetMemoryLengthGeneric(Type type, object data)
+    {
+        var genericMethod = _methodInfoMemory.MakeGenericMethod(type);
+        return (int)genericMethod.Invoke(null, new object[] { data })!;
+    }
+
+    private static int GetMemoryLength<T>(Memory<T> data) where T : unmanaged
+    {
+        return data.Length;
     }
 }
