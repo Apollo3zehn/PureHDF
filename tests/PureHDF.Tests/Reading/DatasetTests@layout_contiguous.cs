@@ -20,7 +20,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.HugeData));
+                Assert.True(actual.SequenceEqual(ReadingTestData.HugeData));
             });
         }
 
@@ -36,7 +36,7 @@ namespace PureHDF.Tests.Reading
             var version = H5F.libver_t.LATEST;
             var fillValue = 99;
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddContiguousDatasetWithFillValueAndAllocationLate(fileId, fillValue));
-            var expected = Enumerable.Range(0, TestData.MediumData.Length)
+            var expected = Enumerable.Range(0, ReadingTestData.MediumData.Length)
                 .Select(value => fillValue)
                 .ToArray();
 
@@ -57,7 +57,7 @@ namespace PureHDF.Tests.Reading
             var version = H5F.libver_t.LATEST;
             var fillValue = 99;
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddContiguousDatasetWithFillValueAndAllocationLate(fileId, fillValue));
-            var expected = Enumerable.Range(0, TestData.MediumData.Length)
+            var expected = Enumerable.Range(0, ReadingTestData.MediumData.Length)
                 .Select(value => fillValue)
                 .ToArray();
 
@@ -81,7 +81,7 @@ namespace PureHDF.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, "external_file"));
-                var expected = TestData.MediumData.ToArray();
+                var expected = ReadingTestData.MediumData.ToArray();
 
                 for (int i = 33; i < 40; i++)
                 {
@@ -110,7 +110,7 @@ namespace PureHDF.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddExternalDataset(fileId, "external_file"));
-                var expected = TestData.MediumData.ToArray();
+                var expected = ReadingTestData.MediumData.ToArray();
 
                 for (int i = 33; i < 40; i++)
                 {

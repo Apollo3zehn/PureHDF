@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.Tests
 {
-    public class TestData
+    public class ReadingTestData
     {
         private static TestStructL1 _nn_a = new()
         {
@@ -81,7 +81,7 @@
             }
         };
 
-        static TestData()
+        static ReadingTestData()
         {
             EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
                                                  TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };

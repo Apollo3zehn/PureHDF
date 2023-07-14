@@ -19,7 +19,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.SmallData));
+                Assert.True(actual.SequenceEqual(ReadingTestData.SmallData));
             });
         }
 

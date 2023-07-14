@@ -24,7 +24,7 @@ namespace PureHDF.Tests
                 File.Delete(fileName1);
 
             var fileId1 = H5F.create(fileName1, H5F.ACC_TRUNC);
-            var dataA = TestData.SmallData.Skip(0).Take(16).ToArray();
+            var dataA = ReadingTestData.SmallData.Skip(0).Take(16).ToArray();
             Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
 
             var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)dataA.Length }, new ulong[] { (ulong)dataA.Length });
@@ -40,7 +40,7 @@ namespace PureHDF.Tests
                 File.Delete(fileName2);
 
             var fileId2 = H5F.create(fileName2, H5F.ACC_TRUNC);
-            var dataB = TestData.SmallData.Skip(10).Take(16).ToArray();
+            var dataB = ReadingTestData.SmallData.Skip(10).Take(16).ToArray();
             Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
 
             var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)dataB.Length }, new ulong[] { (ulong)dataB.Length });
@@ -107,7 +107,7 @@ namespace PureHDF.Tests
             var sourceSpaceId = H5S.create_simple(2, new ulong[] { 13, 10 }, new ulong[] { 13, 10 });
             var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
             var memorySpaceId = H5S.create_simple(1, new ulong[] { 130 }, new ulong[] { 130 });
-            var data = TestData.MediumData.Skip(0).Take(130).ToArray();
+            var data = ReadingTestData.MediumData.Skip(0).Take(130).ToArray();
 
             unsafe
             {
@@ -210,7 +210,7 @@ namespace PureHDF.Tests
             var sourceSpaceId = H5S.create_simple(2, new ulong[] { 13, 10 }, new ulong[] { 13, 10 });
             var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
             var memorySpaceId = H5S.create_simple(1, new ulong[] { 130 }, new ulong[] { 130 });
-            var data = TestData.MediumData.Skip(0).Take(130).ToArray();
+            var data = ReadingTestData.MediumData.Skip(0).Take(130).ToArray();
 
             unsafe
             {
@@ -286,7 +286,7 @@ namespace PureHDF.Tests
             var sourceSpaceId = H5S.create_simple(2, new ulong[] { 40, 10 }, new ulong[] { 40, 10 });
             var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
             var memorySpaceId = H5S.create_simple(1, new ulong[] { 400 }, new ulong[] { 400 });
-            var data = TestData.MediumData.Skip(0).Take(400).ToArray();
+            var data = ReadingTestData.MediumData.Skip(0).Take(400).ToArray();
 
             unsafe
             {
@@ -357,7 +357,7 @@ namespace PureHDF.Tests
             var sourceSpaceId = H5S.create_simple(1, new ulong[] { 10 }, new ulong[] { 10 });
             var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
             var memorySpaceId = H5S.create_simple(1, new ulong[] { 10 }, new ulong[] { 10 });
-            var data = TestData.MediumData.Skip(0).Take(10).ToArray();
+            var data = ReadingTestData.MediumData.Skip(0).Take(10).ToArray();
 
             unsafe
             {
@@ -460,7 +460,7 @@ namespace PureHDF.Tests
             var sourceSpaceId = H5S.create_simple(1, new ulong[] { 41 }, new ulong[] { 41 });
             var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
             var memorySpaceId = H5S.create_simple(1, new ulong[] { 41 }, new ulong[] { 41 });
-            var data = TestData.MediumData.Skip(0).Take(41).ToArray();
+            var data = ReadingTestData.MediumData.Skip(0).Take(41).ToArray();
 
             unsafe
             {
@@ -536,7 +536,7 @@ namespace PureHDF.Tests
             var sourceSpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
             var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
             var memorySpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
-            var data = TestData.MediumData.Skip(0).Take(90).ToArray();
+            var data = ReadingTestData.MediumData.Skip(0).Take(90).ToArray();
 
             unsafe
             {

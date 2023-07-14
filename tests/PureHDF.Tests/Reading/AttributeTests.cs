@@ -8,7 +8,7 @@ namespace PureHDF.Tests.Reading
     public class AttributeTests
     {
         private readonly JsonSerializerOptions _options = new() { IncludeFields = true };
-        public static IList<object[]> AttributeNumericalTestData { get; } = TestData.NumericalReadData;
+        public static IList<object[]> AttributeNumericalTestData { get; } = ReadingTestData.NumericalReadData;
 
         [Fact]
         public void CanReadAttribute_Dataspace_Scalar()
@@ -80,7 +80,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<TestStructL1>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
+                Assert.True(actual.SequenceEqual(ReadingTestData.NonNullableStructData));
             });
         }
 
@@ -105,7 +105,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.ReadCompound<TestStructStringAndArray>(converter);
 
                 // Assert
-                Assert.Equal(JsonSerializer.Serialize(TestData.NullableStructData, _options), JsonSerializer.Serialize(actual, _options));
+                Assert.Equal(JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), JsonSerializer.Serialize(actual, _options));
             });
         }
 
@@ -124,7 +124,7 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.Equal(
-                    JsonSerializer.Serialize(TestData.NullableStructData, _options),
+                    JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
                     JsonSerializer.Serialize(actual, _options));
             });
         }
@@ -169,7 +169,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<TestBitfield>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.BitfieldData));
+                Assert.True(actual.SequenceEqual(ReadingTestData.BitfieldData));
             });
         }
 
@@ -187,7 +187,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.SmallData));
+                Assert.True(actual.SequenceEqual(ReadingTestData.SmallData));
             });
         }
 
@@ -207,7 +207,7 @@ namespace PureHDF.Tests.Reading
                     .Read<int>()
                     .ToArray4D(2, 3, 4, 5);
 
-                var expected_casted = TestData.ArrayDataValue.Cast<int>().ToArray();
+                var expected_casted = ReadingTestData.ArrayDataValue.Cast<int>().ToArray();
                 var actual_casted = actual.Cast<int>().ToArray();
 
                 // Assert
@@ -230,7 +230,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute
                     .ReadString();
 
-                var expected = TestData.ArrayDataVariableLengthString
+                var expected = ReadingTestData.ArrayDataVariableLengthString
                     .Cast<string>()
                     .ToArray();
 
@@ -257,7 +257,7 @@ namespace PureHDF.Tests.Reading
                 var actual_2 = attribute
                     .ReadCompound();
 
-                var expected = TestData.NullableStructData
+                var expected = ReadingTestData.NullableStructData
                     .ToArray();
 
 // HACK: Probably a bug in C-lib
@@ -299,10 +299,10 @@ namespace PureHDF.Tests.Reading
                     .ToArray();
 
                 // Assert
-                for (int i = 0; i < TestData.NumericalReadData.Count; i++)
+                for (int i = 0; i < ReadingTestData.NumericalReadData.Count; i++)
                 {
                     var dataset = (NativeDataset)dereferenced[i];
-                    var expected = (Array)TestData.NumericalReadData[i][1];
+                    var expected = (Array)ReadingTestData.NumericalReadData[i][1];
                     var elementType = expected.GetType().GetElementType()!;
 
                     var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
@@ -348,7 +348,7 @@ namespace PureHDF.Tests.Reading
                 var expected_point = new int[] { 2, 27, 59, 50 };
                 // var expected_regular_hyperslab = new int[] { 0, 1, 3, 4 };
                 var expected_irregular_hyperslab = new int[] { 0, 1, 3, 4 };
-                var expected_all = TestData.SmallData.Take(60);
+                var expected_all = ReadingTestData.SmallData.Take(60);
 
                 Assert.Empty(actual_none);
                 Assert.True(expected_point.SequenceEqual(actual_point));
@@ -398,7 +398,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.ReadVariableLength<TestStructStringAndArray>();
 
                 // Assert
-                var expected = new TestStructStringAndArray[]?[] { TestData.NullableStructData, default };
+                var expected = new TestStructStringAndArray[]?[] { ReadingTestData.NullableStructData, default };
 
                 Assert.Equal(
                     JsonSerializer.Serialize(expected, _options),
@@ -460,7 +460,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<byte>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.TinyData));
+                Assert.True(actual.SequenceEqual(ReadingTestData.TinyData));
             });
         }
 
@@ -479,7 +479,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(TestData.HugeData[0..actual.Length]));
+                Assert.True(actual.SequenceEqual(ReadingTestData.HugeData[0..actual.Length]));
             });
         }
 
@@ -502,7 +502,7 @@ namespace PureHDF.Tests.Reading
                     var actual = attribute.ReadCompound<TestStructL1>();
 
                     // Assert
-                    Assert.True(actual.SequenceEqual(TestData.NonNullableStructData));
+                    Assert.True(actual.SequenceEqual(ReadingTestData.NonNullableStructData));
                 }
 
                 Assert.Equal(expectedCount, attributes.Count);

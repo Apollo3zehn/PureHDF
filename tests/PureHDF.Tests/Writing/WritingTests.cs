@@ -3,7 +3,7 @@ using Xunit;
 
 namespace PureHDF.Tests.Writing;
 
-public class WriterTests
+public class WritingTests
 {
     [Fact]
     public void CanWrite()

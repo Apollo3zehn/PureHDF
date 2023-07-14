@@ -10,7 +10,7 @@ namespace PureHDF.Tests
         {
             var dims = new ulong[] { 2, 2, 3 };
 
-            foreach (var entry in TestData.NumericalReadData)
+            foreach (var entry in ReadingTestData.NumericalReadData)
             {
                 var attributeData = (Array)entry[1];
 
@@ -39,16 +39,16 @@ namespace PureHDF.Tests
 
         public static unsafe void AddBitField(long fileId, ContainerType container)
         {
-            Add(container, fileId, "bitfield", "bitfield", H5T.STD_B16LE, TestData.BitfieldData.AsSpan());
+            Add(container, fileId, "bitfield", "bitfield", H5T.STD_B16LE, ReadingTestData.BitfieldData.AsSpan());
         }
 
         public static unsafe void AddOpaque(long fileId, ContainerType container)
         {
-            var length = (ulong)TestData.SmallData.Length * 2;
+            var length = (ulong)ReadingTestData.SmallData.Length * 2;
             var typeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
             _ = H5T.set_tag(typeId, "Opaque Test Tag");
 
-            Add(container, fileId, "opaque", "opaque", typeId, TestData.SmallData.AsSpan(), length);
+            Add(container, fileId, "opaque", "opaque", typeId, ReadingTestData.SmallData.AsSpan(), length);
 
             _ = H5T.close(typeId);
         }
@@ -60,7 +60,7 @@ namespace PureHDF.Tests
             var typeId = H5T.array_create(H5T.NATIVE_INT32, 2, new ulong[] { 4, 5 });
             var dims = new ulong[] { 2, 3 };
 
-            fixed (void* dataPtr = TestData.ArrayDataValue)
+            fixed (void* dataPtr = ReadingTestData.ArrayDataValue)
             {
                 Add(container, fileId, "array", "value", typeId, dataPtr, dims);
             }
@@ -81,7 +81,7 @@ namespace PureHDF.Tests
             var offset = 0;
             var offsets = new List<int>();
 
-            var dataVarChar = TestData.ArrayDataVariableLengthString
+            var dataVarChar = ReadingTestData.ArrayDataVariableLengthString
                 .Cast<string>()
                 .SelectMany(value => 
                 {
@@ -127,7 +127,7 @@ namespace PureHDF.Tests
 
             AddNumerical(fileId, ContainerType.Dataset);
 
-            var length = (ulong)TestData.NumericalReadData.Count;
+            var length = (ulong)ReadingTestData.NumericalReadData.Count;
             var data = new ulong[length];
 
             fixed (ulong* ptr = data)
@@ -150,7 +150,7 @@ namespace PureHDF.Tests
             long res;
 
             var dims = new ulong[] { 3, 4, 5 };
-            Add(ContainerType.Dataset, fileId, "reference", "referenced", H5T.NATIVE_INT32, TestData.SmallData.AsSpan(), dims);
+            Add(ContainerType.Dataset, fileId, "reference", "referenced", H5T.NATIVE_INT32, ReadingTestData.SmallData.AsSpan(), dims);
 
             var length = 5;
             var data = new NativeRegionReference1[length];
@@ -204,7 +204,7 @@ namespace PureHDF.Tests
 
             // non-nullable struct
             var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
-            Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
+            Add(container, fileId, "struct", "nonnullable", typeId, ReadingTestData.NonNullableStructData.AsSpan(), dims);
             _ = H5T.close(typeId);
 
             // nullable struct
@@ -435,12 +435,12 @@ namespace PureHDF.Tests
                     var acpl_id = H5P.create(H5P.ATTRIBUTE_CREATE);
                     _ = H5P.set_char_encoding(acpl_id, H5T.cset_t.UTF8);
                     var name = "字形碼 / 字形码, Zìxíngmǎ";
-                    Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
+                    Add(container, fileId, "mass_attributes", name, typeId, ReadingTestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
                 }
                 else
                 {
                     var name = $"mass_{i:D4}";
-                    Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims);
+                    Add(container, fileId, "mass_attributes", name, typeId, ReadingTestData.NonNullableStructData.AsSpan(), dims);
                 }
             }
 
@@ -449,7 +449,7 @@ namespace PureHDF.Tests
 
         public static unsafe void AddSmall(long fileId, ContainerType container)
         {
-            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, TestData.SmallData.AsSpan());
+            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, ReadingTestData.SmallData.AsSpan());
         }
 
         public static unsafe void AddDataWithSharedDataType(long fileId, ContainerType container)
@@ -488,7 +488,7 @@ namespace PureHDF.Tests
         private static unsafe DisposableStruct Prepare_nullable_struct(bool includeH5NameAttribute = false)
         {
             var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray), includeH5NameAttribute: includeH5NameAttribute);
-            var data = TestData.NullableStructData;
+            var data = ReadingTestData.NullableStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.

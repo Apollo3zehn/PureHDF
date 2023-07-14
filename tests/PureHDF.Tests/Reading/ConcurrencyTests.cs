@@ -44,7 +44,7 @@ namespace PureHDF.Tests.Reading
                     var actual = await dataset.ReadAsync<int>(fileSelection);
 
                     // Assert
-                    var slicedData = TestData.HugeData.AsSpan(localIndex * CHUNK_SIZE, CHUNK_SIZE).ToArray();
+                    var slicedData = ReadingTestData.HugeData.AsSpan(localIndex * CHUNK_SIZE, CHUNK_SIZE).ToArray();
                     Assert.True(actual.SequenceEqual(slicedData));
                 });
 
@@ -85,7 +85,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>(fileSelection);
 
                 // Assert
-                var slicedData = TestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
+                var slicedData = ReadingTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
                 Assert.True(actual.SequenceEqual(slicedData));
             });
         }
@@ -117,7 +117,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>(fileSelection);
 
                 // Assert
-                var slicedData = TestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
+                var slicedData = ReadingTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
                 Assert.True(actual.SequenceEqual(slicedData));
             });
         }
