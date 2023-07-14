@@ -4,7 +4,16 @@ internal static class H5Writer
 {
     public static void Serialize(H5File file, string filePath, H5SerializerOptions options)
     {
+        var freeSpaceManager = new FreeSpaceManager();
+
+        // TODO FIX THIS (workaround to skip superblock and other relevant data)
+        freeSpaceManager.Allocate(1024);
+
+        var globalHeapManager = new GlobalHeapManager(freeSpaceManager);
+
         var writeContext = new WriteContext(
+            FreeSpaceManager: freeSpaceManager,
+            GlobalHeapManager: globalHeapManager,
             SerializerOptions: options,
             TypeToMessageMap: new(),
             ObjectToAddressMap: new()
@@ -16,6 +25,9 @@ internal static class H5Writer
         // root group
         driver.BaseStream.Seek(Superblock23.SIZE, SeekOrigin.Begin);
         var rootGroupAddress = EncodeGroup(driver, file, writeContext);
+
+        // global heap collections
+        globalHeapManager.Encode(driver);
 
         // superblock
         var endOfFileAddress = (ulong)driver.BaseStream.Position;
@@ -143,8 +155,10 @@ internal static class H5Writer
             ? h5Attribute1.Data
             : attribute;
 
+        var type = data.GetType();
+
         var (dataType, encode) = DatatypeMessage
-            .Create(context, data.GetType(), data);
+            .Create(context, type, data);
 
         // dataspace
         var dataDimensions = WriteUtils.CalculateDataDimensions(data);
@@ -172,10 +186,25 @@ internal static class H5Writer
         };
 
         // result
-        // TODO: do not create array if type is already array
-        var result = (dataspace.Type == DataspaceType.Scalar
-            ? new byte[dataType.Size]
-            : new byte[dimensionsTotalSize * dataType.Size]).AsMemory();
+        Memory<byte> result = Array.Empty<byte>();
+
+        var isUnmanagedArray = DatatypeMessage.IsArray(type) && 
+            !ReadUtils.IsReferenceOrContainsReferences(type.GetElementType()!);
+
+        var isUnmanagedMemory = DatatypeMessage.IsMemory(type) &&
+            !ReadUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0]);
+
+        if (isUnmanagedArray || isUnmanagedMemory)
+        {
+            //
+        }
+
+        else
+        {
+            result = dataspace.Type == DataspaceType.Scalar
+                ? new byte[dataType.Size]
+                : new byte[dimensionsTotalSize * dataType.Size];
+        }
 
         // encode data
         encode(ref result, data);

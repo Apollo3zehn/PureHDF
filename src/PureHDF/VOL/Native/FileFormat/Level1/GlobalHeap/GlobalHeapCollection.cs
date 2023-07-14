@@ -43,6 +43,8 @@ internal readonly record struct GlobalHeapCollection(
 
     public static GlobalHeapCollection Decode(NativeContext context)
     {
+        // TODO: do not decode individual global heap objects and use a Memory<byte> of size 4096 instead
+
         var (driver, superblock) = context;
 
         // signature
@@ -70,10 +72,10 @@ internal readonly record struct GlobalHeapCollection(
             var globalHeapObject = GlobalHeapObject.Decode(context);
 
             // Global Heap Object 0 (free space) can appear at the end of the collection.
-            if (globalHeapObject.HeapObjectIndex == 0)
+            if (globalHeapObject.ObjectIndex == 0)
                 break;
 
-            globalHeapObjects[globalHeapObject.HeapObjectIndex] = globalHeapObject;
+            globalHeapObjects[globalHeapObject.ObjectIndex] = globalHeapObject;
             var after = driver.Position;
             var consumed = (ulong)(after - before);
 

@@ -1,9 +1,9 @@
 HDF5 "<file-path>" {
 GROUP "/" {
-   ATTRIBUTE "WritingTestStruct" {
+   ATTRIBUTE "WritingTestRecordStruct" {
       DATATYPE  H5T_COMPOUND {
-         H5T_STD_I32LE "x";
-         H5T_IEEE_F64LE "y2";
+         H5T_STD_I32LE "X";
+         H5T_IEEE_F64LE "Y2";
       }
       DATASPACE  SCALAR
       DATA {

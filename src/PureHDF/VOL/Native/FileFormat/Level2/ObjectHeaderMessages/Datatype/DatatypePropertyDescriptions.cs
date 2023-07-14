@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -355,5 +353,10 @@ internal record class VariableLengthPropertyDescription(
         return new VariableLengthPropertyDescription(
             BaseType: DatatypeMessage.Decode(driver)
         );
+    }
+
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        BaseType.Encode(driver);
     }
 };

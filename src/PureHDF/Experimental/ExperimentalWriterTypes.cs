@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace PureHDF.Experimental;
 
@@ -10,11 +11,15 @@ namespace PureHDF.Experimental;
 /// <param name="IncludeStructProperties">Gets a value that indicates whether struct properties are handled during serialization. The default value is <see langword="false"/>.</param>
 /// <param name="IncludeClassFields">Gets a value that indicates whether class fields are handled during serialization. The default value is <see langword="false"/>.</param>
 /// <param name="IncludeClassProperties">Gets a value that indicates whether class properties are handled during serialization. The default value is <see langword="true"/>.</param>
+/// <param name="FieldNameMapper">Maps a <see cref="FieldInfo"/> to the name of the HDF5 member.</param>
+/// <param name="PropertyNameMapper">Maps a <see cref="PropertyInfo"/> to the name of the HDF5 member.</param>
 public record H5SerializerOptions(
     bool IncludeStructFields = true,
     bool IncludeStructProperties = false,
     bool IncludeClassFields = false,
-    bool IncludeClassProperties = true
+    bool IncludeClassProperties = true,
+    Func<FieldInfo, string>? FieldNameMapper = default,
+    Func<PropertyInfo, string>? PropertyNameMapper = default
 );
 
 /// <summary>

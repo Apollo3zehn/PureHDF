@@ -282,4 +282,24 @@ internal record class VariableLengthBitFieldDescription(
             Encoding: (CharacterSetEncoding)(data[1] & 0x0F)
         );
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+#if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        data[0] = (byte)((byte)Type & 0x0F);
+        data[0] |= (byte)(((byte)PaddingType & 0x0F) << 4);
+
+        var encoding = Type == InternalVariableLengthType.String
+            ? Encoding
+            : 0;
+
+        data[1] = (byte)((byte)encoding & 0x0F);
+
+        driver.Write(data);
+    }
 }

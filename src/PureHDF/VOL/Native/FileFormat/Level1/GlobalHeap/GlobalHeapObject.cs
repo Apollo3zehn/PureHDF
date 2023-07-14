@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal readonly record struct GlobalHeapObject(
-    ushort HeapObjectIndex,
+    ushort ObjectIndex,
     ushort ReferenceCount,
     byte[] ObjectData
 )
@@ -16,7 +16,7 @@ internal readonly record struct GlobalHeapObject(
         if (heapObjectIndex == 0 /* free space object */)
         {
             return new GlobalHeapObject(
-                HeapObjectIndex: default,
+                ObjectIndex: default,
                 ReferenceCount: default,
                 ObjectData: Array.Empty<byte>()
             );
@@ -39,7 +39,7 @@ internal readonly record struct GlobalHeapObject(
         driver.ReadBytes(remainingSize);
 
         return new GlobalHeapObject(
-            HeapObjectIndex: heapObjectIndex,
+            ObjectIndex: heapObjectIndex,
             ReferenceCount: referenceCount,
             ObjectData: objectData
         );

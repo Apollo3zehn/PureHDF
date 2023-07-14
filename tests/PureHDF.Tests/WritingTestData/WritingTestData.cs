@@ -4,9 +4,6 @@ public static class WritingTestData
 {
     public static IList<object[]> AttributeTestData { get; } = new List<object[]>()
     {
-        // // TODO: check if T[,] should also be supported
-        // // TODO: what about T[,], T[][] and T[,,x], T[][][x]?
-
         /* dictionary */
         new object[] { new Dictionary<string, object>() {
             ["A"] = 1, ["B"] = "-2", ["C"] = 3
@@ -52,7 +49,7 @@ public static class WritingTestData
         /* tuple (reference type) */
         new object[] { Tuple.Create(1, -2L, 3.3) },
 
-        /* random reference type */
+        /* reference type */
         // new object[] { 
         //     new DataspaceMessage(
         //         Rank: 1,
@@ -65,6 +62,8 @@ public static class WritingTestData
         //         Version = 1
         //     }
         // },
+
+        new object[] { new WritingTestRecordClass(X: 1, Y: 99.38 ) },
 
         // /* bool */
         new object[] { false },
@@ -89,6 +88,8 @@ public static class WritingTestData
         new object[] { 99.38 },
 
         // /* complex value type */
-        new object[] { new WritingTestStruct() { x = 1, y = 99.38 } }
+        new object[] { new WritingTestStruct() { x = 1, y = 99.38 } },
+
+        new object[] { new WritingTestRecordStruct(X: 1, Y: 99.38 ) }
     };
 }

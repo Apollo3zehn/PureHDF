@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 namespace PureHDF.Experimental;
 
 internal record WriteContext(
+    FreeSpaceManager FreeSpaceManager,
+    GlobalHeapManager GlobalHeapManager,
     H5SerializerOptions SerializerOptions,
     Dictionary<Type, (DatatypeMessage, EncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, ulong> ObjectToAddressMap

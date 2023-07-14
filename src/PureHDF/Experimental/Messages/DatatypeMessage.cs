@@ -33,13 +33,13 @@ internal partial record class DatatypeMessage : Message
                 => GetTypeInfoForTopLevelDictionary(context, type, topLevelData),
 
             /* array */
-            Type when type.IsArray && type.GetArrayRank() == 1 && type.GetElementType() is not null
+            Type when IsArray(type)
                 => ReadUtils.IsReferenceOrContainsReferences(type.GetElementType()!)
                     ? GetTypeInfoForEnumerable(context, type)
                     : GetTypeInfoForArray(context, type.GetElementType()!),
 
             /* Memory<T> */
-            Type when type.IsGenericType && typeof(Memory<>).Equals(type.GetGenericTypeDefinition())
+            Type when IsMemory(type)
                 => ReadUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
                     ? GetTypeInfoForEnumerable(context, type)
                     : GetTypeInfoForMemory(context, type.GenericTypeArguments[0]),
@@ -50,6 +50,20 @@ internal partial record class DatatypeMessage : Message
 
             _ => InternalCreate(context, type)
         };
+    }
+
+    public static bool IsArray(Type type)
+    {
+        return
+            type.IsArray &&
+            type.GetArrayRank() == 1 && type.GetElementType() is not null;
+    }
+
+    public static bool IsMemory(Type type)
+    {
+        return 
+            type.IsGenericType && 
+            typeof(Memory<>).Equals(type.GetGenericTypeDefinition());
     }
 
     private static (DatatypeMessage, EncodeDelegate) InternalCreate(
@@ -215,9 +229,10 @@ internal partial record class DatatypeMessage : Message
             var fieldInfo = fieldInfos[i];
             var underlyingType = fieldInfo.FieldType;
             var (fieldMessage, _) = InternalCreate(context, underlyingType);
+            var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
 
             properties[i] = new CompoundPropertyDescription(
-                Name: fieldInfo.Name,
+                Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo),
                 MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
                 MemberTypeMessage: fieldMessage
             );
@@ -237,8 +252,15 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
+        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var parameters = new object[2];
+
         void encode(ref Memory<byte> target, object data)
-            => InvokeEncodeUnmanagedElement(type, target, data);
+        {
+            parameters[0] = target;
+            parameters[1] = data;
+            invokeEncodeUnmanagedElement.Invoke(target, parameters);
+        };
 
         return (message, encode);
     }
@@ -265,6 +287,8 @@ internal partial record class DatatypeMessage : Message
             ? new EncodeDelegate[fieldInfos.Length]
             : Array.Empty<EncodeDelegate>();
 
+        var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
+
         // properties
         var includeProperties = isValueType 
             ? context.SerializerOptions.IncludeStructProperties
@@ -278,6 +302,8 @@ internal partial record class DatatypeMessage : Message
         var propertyEncodes = includeProperties
             ? new EncodeDelegate[propertyInfos.Length]
             : Array.Empty<EncodeDelegate>();
+
+        var propertyNameMapper = context.SerializerOptions.PropertyNameMapper;
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
@@ -298,7 +324,7 @@ internal partial record class DatatypeMessage : Message
                 fieldEncodes[i] = fieldEncode;
 
                 properties[i] = new CompoundPropertyDescription(
-                    Name: fieldInfo.Name,
+                    Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo),
                     MemberByteOffset: offset,
                     MemberTypeMessage: fieldMessage
                 );
@@ -318,7 +344,7 @@ internal partial record class DatatypeMessage : Message
                 propertyEncodes[i] = propertyEncode;
 
                 properties[fieldInfos.Length + i] = new CompoundPropertyDescription(
-                    Name: propertyInfo.Name,
+                    Name: propertyNameMapper is null ? propertyInfo.Name : propertyNameMapper(propertyInfo),
                     MemberByteOffset: offset,
                     MemberTypeMessage: propertyMessage
                 );
@@ -399,7 +425,7 @@ internal partial record class DatatypeMessage : Message
         static void encode(ref Memory<byte> target, object data)
         {
             var length = WriteUtils.GetEnumerableLength((IEnumerable)data);
-            var globalHeapId = new GlobalHeapId(default, default); // TODO use global heap manager to get real ID
+            var globalHeapId = new Experimental.GlobalHeapId(default, default); // TODO use global heap manager to get real ID
             var targetSpan = target.Span;
 
             // write length
@@ -413,8 +439,8 @@ internal partial record class DatatypeMessage : Message
             targetSpan = targetSpan[sizeof(int)..];
 
             // write global heap id
-            Span<int> gheapIdArray = stackalloc int[1];
-            // gheapIdArray[0] = globalHeapId;
+            Span<Experimental.GlobalHeapId> gheapIdArray = stackalloc Experimental.GlobalHeapId[1];
+            gheapIdArray[0] = globalHeapId;
 
             MemoryMarshal
                 .AsBytes(gheapIdArray)
@@ -431,7 +457,7 @@ internal partial record class DatatypeMessage : Message
 
         var message = new DatatypeMessage(
 
-            REFERENCE_SIZE,
+            VLEN_REFERENCE_SIZE,
 
             new VariableLengthBitFieldDescription(
                 Type: InternalVariableLengthType.String,
@@ -450,16 +476,20 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.VariableLength
         };
 
-        static void encode(ref Memory<byte> target, object data)
+        void encode(ref Memory<byte> target, object data)
         {
             var stringData = (string)data;
-            var length = Encoding.UTF8.GetBytes(stringData).Length; // TODO use global heap manager to convert string only once
-            var globalHeapId = new GlobalHeapId(default, default); // TODO use global heap manager to get real ID
+            var stringBytes = Encoding.UTF8.GetBytes(stringData);
+            var (globalHeapId, memory) = context.GlobalHeapManager.AddObject(stringBytes.Length);
+
+            // TODO: optimally no copy operation would be required ... but that requires prior knowledge of string length in bytes
+            stringBytes.CopyTo(memory);
+
             var targetSpan = target.Span;
 
             // write length
             Span<int> lengthArray = stackalloc int[1];
-            lengthArray[0] = length;
+            lengthArray[0] = stringBytes.Length;
 
             MemoryMarshal
                 .AsBytes(lengthArray)
@@ -468,8 +498,8 @@ internal partial record class DatatypeMessage : Message
             targetSpan = targetSpan[sizeof(int)..];
 
             // write global heap id
-            Span<int> gheapIdArray = stackalloc int[1];
-            // gheapIdArray[0] = globalHeapId;
+            Span<Experimental.GlobalHeapId> gheapIdArray = stackalloc Experimental.GlobalHeapId[1];
+            gheapIdArray[0] = globalHeapId;
 
             MemoryMarshal
                 .AsBytes(gheapIdArray)
@@ -505,8 +535,15 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
+        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var parameters = new object[2];
+
         void encode(ref Memory<byte> target, object data)
-            => InvokeEncodeUnmanagedElement(type, target, data);
+        {
+            parameters[0] = target;
+            parameters[1] = data;
+            invokeEncodeUnmanagedElement.Invoke(target, parameters);
+        };
 
         return (message, encode);
     }
@@ -537,8 +574,15 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
+        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var parameters = new object[2];
+
         void encode(ref Memory<byte> target, object data)
-            => InvokeEncodeUnmanagedElement(type, target, data);
+        {
+            parameters[0] = target;
+            parameters[1] = data;
+            invokeEncodeUnmanagedElement.Invoke(target, parameters);
+        };
 
         return (message, encode);
     }
@@ -576,8 +620,15 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
+        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var parameters = new object[2];
+
         void encode(ref Memory<byte> target, object data)
-            => InvokeEncodeUnmanagedElement(type, target, data);
+        {
+            parameters[0] = target;
+            parameters[1] = data;
+            invokeEncodeUnmanagedElement.Invoke(target, parameters);
+        };
 
         return (message, encode);
     }
@@ -615,8 +666,15 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
+        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var parameters = new object[2];
+
         void encode(ref Memory<byte> target, object data)
-            => InvokeEncodeUnmanagedElement(type, target, data);
+        {
+            parameters[0] = target;
+            parameters[1] = data;
+            invokeEncodeUnmanagedElement.Invoke(target, parameters);
+        };
 
         return (message, encode);
     }
@@ -740,14 +798,9 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
+    // Element
     private static readonly MethodInfo _methodInfoElement = typeof(DatatypeMessage)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static Memory<byte> InvokeEncodeUnmanagedElement(Type type, Memory<byte> result, object data)
-    {
-        var genericMethod = _methodInfoElement.MakeGenericMethod(type);
-        return (Memory<byte>)genericMethod.Invoke(null, new object[] { result, data })!;
-    }
 
     private static Memory<byte> EncodeUnmanagedElement<T>(Memory<byte> result, object data) where T : unmanaged
     {
@@ -760,9 +813,11 @@ internal partial record class DatatypeMessage : Message
         return result;
     }
 
+    // Array
     private static readonly MethodInfo _methodInfoArray = typeof(DatatypeMessage)
         .GetMethod(nameof(EncodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
     private static Memory<byte> InvokeEncodeUnmanagedArray(Type type, Memory<byte> result, object data)
     {
         var genericMethod = _methodInfoArray.MakeGenericMethod(type);
@@ -774,9 +829,11 @@ internal partial record class DatatypeMessage : Message
         return new CastMemoryManager<T, byte>((T[])data).Memory;
     }
 
+    // Memory
     private static readonly MethodInfo _methodInfoMemory = typeof(DatatypeMessage)
         .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
     private static Memory<byte> InvokeEncodeUnmanagedMemory(Type type, Memory<byte> result, object data)
     {
         var genericMethod = _methodInfoMemory.MakeGenericMethod(type);

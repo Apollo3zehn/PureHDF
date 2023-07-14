@@ -3,7 +3,7 @@
 /// <summary>
 /// Specifies the member name that is present in the HDF5 compound data type.
 /// </summary>
-[AttributeUsage(AttributeTargets.Field)]
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class H5NameAttribute : Attribute
 {
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Reflection;
 using Xunit;
 
 namespace PureHDF.Tests.Writing;
@@ -14,12 +15,30 @@ public class AttributeTests
         // Arrange
         var type = data.GetType();
         var file = new Experimental.H5File();
-        file.Attributes[data.GetType().Name] = data;
+        file.Attributes[type.Name] = data;
 
         var filePath = Path.GetTempFileName();
 
+        static string fieldNameNameMapper(FieldInfo fieldInfo)
+        {
+            var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>();
+            return attribute is not null ? attribute.Name : fieldInfo.Name;
+        }
+
+        static string propertyNameMapper(PropertyInfo propertyInfo)
+        {
+            var attribute = propertyInfo.GetCustomAttribute<H5NameAttribute>();
+            return attribute is not null ? attribute.Name : propertyInfo.Name;
+        }
+
+        var options = new Experimental.H5SerializerOptions(
+            IncludeStructProperties: typeof(WritingTestRecordStruct) == type,
+            FieldNameMapper: fieldNameNameMapper,
+            PropertyNameMapper: propertyNameMapper
+        );
+
         // Act
-        file.Save(filePath);
+        file.Save(filePath, options);
 
         // Assert
         var actual = TestUtils.DumpH5File(filePath);
@@ -98,6 +117,31 @@ public class AttributeTests
 
         var expected = File
             .ReadAllText("DumpFiles/attribute_large_array.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void CanWriteAttribute_2D()
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+        var data = new int[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        var dimensions = new ulong[] { 3, 3 };
+
+        file.Attributes["2D"] = new Experimental.H5Attribute(data, dimensions);
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText($"DumpFiles/attribute_2D.dump")
             .Replace("<file-path>", filePath);
 
         Assert.Equal(expected, actual);

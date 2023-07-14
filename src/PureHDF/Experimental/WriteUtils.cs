@@ -43,7 +43,12 @@ internal static partial class WriteUtils
     {
         var type = data.GetType();
 
-        if (data is IDictionary)
+        if (data is string)
+        {
+            return new ulong[] { 1 };
+        }
+
+        else if (data is IDictionary)
         {
             return new ulong[] { 1 };
         }

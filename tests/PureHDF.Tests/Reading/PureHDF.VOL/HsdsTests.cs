@@ -3,14 +3,9 @@ using Xunit;
 
 namespace PureHDF.Tests.Reading.VOL;
 
-public class HsdsTests : IClassFixture<HsdsTestsFixture>
+public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixture>
 {
-    private readonly IHsdsConnector _connector;
-
-    public HsdsTests(HsdsTestsFixture fixture)
-    {
-        _connector = fixture.Connector;
-    }
+    private readonly IHsdsConnector _connector = fixture.Connector;
 
     [Fact]
     public void CanGetGroup()
