@@ -43,25 +43,25 @@ public static class WritingTestData
 
         new object[] { new List<string> { "A", "ßAB", "C BA" } },
 
-        // /* string */
+        /* string */
         new object[] { "ß Abc" },
 
         /* tuple (reference type) */
         new object[] { Tuple.Create(1, -2L, 3.3) },
 
         /* reference type */
-        // new object[] { 
-        //     new DataspaceMessage(
-        //         Rank: 1,
-        //         Flags: DataspaceMessageFlags.DimensionMaxSizes,
-        //         Type: DataspaceType.Simple,
-        //         DimensionSizes: new ulong[] { 10, 20, 30 },
-        //         DimensionMaxSizes: new ulong[] { 10, 20, 30 },
-        //         PermutationIndices: new ulong[] { 10, 20, 30 }) // TODO, this is a good candiate to check null value handling once it is implemented
-        //     {
-        //         Version = 1
-        //     }
-        // },
+        new object[] { 
+            new DataspaceMessage(
+                Rank: 1,
+                Flags: DataspaceMessageFlags.DimensionMaxSizes,
+                Type: DataspaceType.Simple,
+                DimensionSizes: new ulong[] { 10, 20, 30 },
+                DimensionMaxSizes: new ulong[] { 20, 40, 60 },
+                PermutationIndices: new ulong[] { 40, 80, 120 }) // TODO, this is a good candiate to check null value handling once it is implemented
+            {
+                Version = 1
+            }
+        },
 
         new object[] { new WritingTestRecordClass(X: 1, Y: 99.38 ) },
 
@@ -72,22 +72,22 @@ public static class WritingTestData
         /* enumeration */
         new object[] { FileAccess.Read },
 
-        // /* tuple (value type) */
+        /* tuple (value type) */
         new object[] { (A: 1, B: -2L, C: 3.3) },
 
-        // /* unsigned fixed-point */
+        /* unsigned fixed-point */
         new object[] { 2U },
 
-        // /* signed fixed-point */
+        /* signed fixed-point */
         new object[] { -2 },
 
         /* 32 bit floating-point */
         new object[] { 99.38f },
 
-        // /* 64 bit floating-point */
+        /* 64 bit floating-point */
         new object[] { 99.38 },
 
-        // /* complex value type */
+        /* complex value type */
         new object[] { new WritingTestStruct() { x = 1, y = 99.38 } },
 
         new object[] { new WritingTestRecordStruct(X: 1, Y: 99.38 ) }

@@ -179,8 +179,8 @@ internal partial record class DatatypeMessage : Message
 
         var values = (underlyingType switch
         {
-            Type t when t == typeof(byte) => enumObjects.Select(enumValue => BitConverter.GetBytes((byte)enumValue)),
-            Type t when t == typeof(sbyte) => enumObjects.Select(enumValue => BitConverter.GetBytes((sbyte)enumValue)),
+            Type t when t == typeof(byte) => enumObjects.Select(enumValue => new byte[] { (byte)enumValue }),
+            Type t when t == typeof(sbyte) => enumObjects.Select(enumValue => new byte[] { unchecked((byte)enumValue) }),
             Type t when t == typeof(ushort) => enumObjects.Select(enumValue => BitConverter.GetBytes((ushort)enumValue)),
             Type t when t == typeof(short) => enumObjects.Select(enumValue => BitConverter.GetBytes((short)enumValue)),
             Type t when t == typeof(uint) => enumObjects.Select(enumValue => BitConverter.GetBytes((uint)enumValue)),
