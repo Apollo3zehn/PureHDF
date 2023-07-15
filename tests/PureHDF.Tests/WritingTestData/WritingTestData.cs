@@ -53,7 +53,7 @@ public static class WritingTestData
         new object[] { 
             new DataspaceMessage(
                 Rank: 1,
-                Flags: DataspaceMessageFlags.DimensionMaxSizes,
+                Flags: DataspaceMessageFlags.DimensionMaxSizes | DataspaceMessageFlags.PermuationIndices,
                 Type: DataspaceType.Simple,
                 DimensionSizes: new ulong[] { 10, 20, 30 },
                 DimensionMaxSizes: new ulong[] { 20, 40, 60 },

@@ -24,7 +24,7 @@ GROUP "/" {
       DATA {
       (0): {
             1,
-            DimensionMaxSizes,
+            0x03,
             Simple,
             (10, 20, 30),
             (20, 40, 60),
