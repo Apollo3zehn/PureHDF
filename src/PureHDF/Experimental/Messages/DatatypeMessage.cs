@@ -424,34 +424,36 @@ internal partial record class DatatypeMessage : Message
 
         void encode(ref Memory<byte> target, object data)
         {
-            var enumerable = (IEnumerable)data;
+            var globalHeapId = default(Experimental.GlobalHeapId);
+            Span<int> lengthArray = stackalloc int[1];
 
-            // get global heap id and memory
-            var itemCount = WriteUtils.GetEnumerableLength(enumerable);
-
-            var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
-                .BaseType
-                .Size;
-
-            var totalLength = (int)typeSize * itemCount;
-
-            var (globalHeapId, memory) = context.GlobalHeapManager
-                .AddObject(totalLength);
-
-            // encode items
-            foreach (var item in enumerable)
+            if (data is not null)
             {
-                // TODO make use of the return value!! this may be important for unmanaged data
-                baseEncode(ref memory, item);
+                var enumerable = (IEnumerable)data;
+                var itemCount = WriteUtils.GetEnumerableLength(enumerable);
 
-                memory = memory[(int)typeSize..];
+                var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
+                    .BaseType
+                    .Size;
+
+                var totalLength = (int)typeSize * itemCount;
+                lengthArray[0] = itemCount;
+
+                (globalHeapId, var memory) = context.GlobalHeapManager
+                    .AddObject(totalLength);
+
+                // encode items
+                foreach (var item in enumerable)
+                {
+                    // TODO make use of the return value!! this may be important for unmanaged data
+                    baseEncode(ref memory, item);
+
+                    memory = memory[(int)typeSize..];
+                }
             }
 
             // encode variable length object
             var targetSpan = target.Span;
-
-            Span<int> lengthArray = stackalloc int[1];
-            lengthArray[0] = itemCount;
 
             MemoryMarshal
                 .AsBytes(lengthArray)
@@ -499,18 +501,24 @@ internal partial record class DatatypeMessage : Message
 
         void encode(ref Memory<byte> target, object data)
         {
-            var stringData = (string)data;
-            var stringBytes = Encoding.UTF8.GetBytes(stringData);
-            var (globalHeapId, memory) = context.GlobalHeapManager.AddObject(stringBytes.Length);
-
-            // TODO: optimally no copy operation would be required ... but that requires prior knowledge of string length in bytes
-            stringBytes.CopyTo(memory);
-
-            var targetSpan = target.Span;
-
-            // write length
+            var globalHeapId = default(Experimental.GlobalHeapId);
             Span<int> lengthArray = stackalloc int[1];
-            lengthArray[0] = stringBytes.Length;
+
+            if (data is not null)
+            {
+                var stringData = (string)data;
+                var stringBytes = Encoding.UTF8.GetBytes(stringData);
+                lengthArray[0] = stringBytes.Length;
+
+                (globalHeapId, var memory) = context.GlobalHeapManager
+                    .AddObject(stringBytes.Length);
+
+                // TODO: optimally no copy operation would be required ... but that requires prior knowledge of string length in bytes
+                stringBytes.CopyTo(memory);
+            }
+
+            // encode variable length object
+            var targetSpan = target.Span;
 
             MemoryMarshal
                 .AsBytes(lengthArray)
@@ -518,7 +526,6 @@ internal partial record class DatatypeMessage : Message
 
             targetSpan = targetSpan[sizeof(int)..];
 
-            // write global heap id
             Span<Experimental.GlobalHeapId> gheapIdArray = stackalloc Experimental.GlobalHeapId[1];
             gheapIdArray[0] = globalHeapId;
 

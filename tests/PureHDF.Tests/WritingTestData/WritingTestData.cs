@@ -4,6 +4,15 @@ public static class WritingTestData
 {
     public static IList<object[]> AttributeTestData { get; } = new List<object[]>()
     {
+        new object[] { 
+            new int[]?[]
+            {
+                new int[] { 1, -2, 3 },
+                null,
+                new int[] { 2, -4, 6 },
+            }
+        },
+        
         /* dictionary */
         new object[] { new Dictionary<string, object>() {
             ["A"] = 1, ["B"] = "-2", ["C"] = 3
@@ -18,7 +27,16 @@ public static class WritingTestData
 
         new object[] { new bool[] { true, false, true } },
 
-        new object[] { new string[] { "A", "ßAB", "C BA" } },
+        new object[] { new string?[] { "A", "ßAB", null, "C BA" } },
+
+        new object[] { 
+            new int[]?[]
+            {
+                new int[] { 1, -2, 3 },
+                null,
+                new int[] { 2, -4, 6 },
+            }
+        },
 
         new object[] { new Dictionary<string, int>[] {
             new Dictionary<string, int> { 
