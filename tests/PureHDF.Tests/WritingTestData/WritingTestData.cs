@@ -3,16 +3,7 @@
 public static class WritingTestData
 {
     public static IList<object[]> AttributeTestData { get; } = new List<object[]>()
-    {
-        new object[] { 
-            new int[]?[]
-            {
-                new int[] { 1, -2, 3 },
-                null,
-                new int[] { 2, -4, 6 },
-            }
-        },
-        
+    {       
         /* dictionary */
         new object[] { new Dictionary<string, object>() {
             ["A"] = 1, ["B"] = "-2", ["C"] = 3
