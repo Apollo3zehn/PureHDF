@@ -806,7 +806,7 @@ internal partial record class DatatypeMessage : Message
         {
 #if NET6_0_OR_GREATER
             var span = MemoryMarshal.CreateSpan(
-                reference: ref Unsafe.As<byte, byte>(source: ref MemoryMarshal.GetArrayDataReference(topLevelData)), 
+                reference: ref MemoryMarshal.GetArrayDataReference(topLevelData), 
                 length: topLevelData.Length * (int)message.Size);
 
             driver.Write(span);
