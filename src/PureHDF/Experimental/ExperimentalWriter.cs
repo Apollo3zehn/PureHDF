@@ -185,37 +185,14 @@ internal static class H5Writer
             Version = 2
         };
 
-        // result
-        Memory<byte> result = Array.Empty<byte>();
-
-        var isUnmanagedArray = DatatypeMessage.IsArray(type) && 
-            !ReadUtils.IsReferenceOrContainsReferences(type.GetElementType()!);
-
-        var isUnmanagedMemory = DatatypeMessage.IsMemory(type) &&
-            !ReadUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0]);
-
-        if (isUnmanagedArray || isUnmanagedMemory)
-        {
-            //
-        }
-
-        else
-        {
-            result = dataspace.Type == DataspaceType.Scalar
-                ? new byte[dataType.Size]
-                : new byte[dimensionsTotalSize * dataType.Size];
-        }
-
-        // encode data
-        encode(ref result, data);
-
         // attribute
         var attributeMessage = new AttributeMessage(
             Flags: AttributeMessageFlags.None,
             Name: name,
             Datatype: dataType,
             Dataspace: dataspace,
-            Data: result
+            InputData: default,
+            EncodeData: writer => encode(writer.BaseStream, data)
         )
         {
             Version = 3

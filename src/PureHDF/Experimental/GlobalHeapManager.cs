@@ -125,12 +125,7 @@ internal class GlobalHeapManager
             driver.Write(collection.CollectionSize);
 
             // collection
-
-#if NETSTANDARD2_0
-            driver.Write(memory.Span[..consumed].ToArray());
-#else
             driver.Write(memory.Span[..consumed]);
-#endif
 
             // Global Heap Object 0
             if (remainingSpace > OBJECT_HEADER_SIZE)

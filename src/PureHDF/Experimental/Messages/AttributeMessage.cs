@@ -60,11 +60,7 @@ internal partial record class AttributeMessage
             throw new NotImplementedException() /* Version 1 requires padding */;
 
         // data
-#if NETSTANDARD2_1_OR_GREATER
-        driver.Write(Data.Span);
-#else
-        driver.Write(Data.Span.ToArray());
-#endif
+        EncodeData?.Invoke(driver);
 
         var position6 = driver.BaseStream.Position;
 

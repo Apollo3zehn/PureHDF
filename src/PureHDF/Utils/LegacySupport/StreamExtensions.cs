@@ -45,6 +45,11 @@ internal static class StreamExtensions
             }
         }
     }
+
+    public static void Write(this Stream stream, Span<byte> buffer)
+    {
+        stream.Write(buffer.ToArray());
+    }
 }
 
 #endif

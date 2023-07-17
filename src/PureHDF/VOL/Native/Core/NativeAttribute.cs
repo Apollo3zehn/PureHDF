@@ -76,7 +76,7 @@ internal class NativeAttribute : IH5Attribute
                 throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Reference}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
         }
 
-        var buffer = Message.Data;
+        var buffer = Message.InputData;
         var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
         var destination = buffer;
         var source = destination.ToArray();
@@ -85,7 +85,7 @@ internal class NativeAttribute : IH5Attribute
             Utils.EnsureEndianness(source, destination.Span, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
         return MemoryMarshal
-            .Cast<byte, T>(Message.Data.Span)
+            .Cast<byte, T>(Message.InputData.Span)
             .ToArray();
     }
 
@@ -94,27 +94,27 @@ internal class NativeAttribute : IH5Attribute
     {
         getName ??= fieldInfo => fieldInfo.Name;
 
-        var elementCount = Message.Data.Length / InternalElementDataType.Size;
+        var elementCount = Message.InputData.Length / InternalElementDataType.Size;
         var result = new T[elementCount];
 
-        ReadUtils.ReadCompound<T>(_context, InternalElementDataType, Message.Data.Span, result, getName);
+        ReadUtils.ReadCompound<T>(_context, InternalElementDataType, Message.InputData.Span, result, getName);
 
         return result;
     }
 
     public Dictionary<string, object?>[] ReadCompound()
     {
-        var elementCount = Message.Data.Length / InternalElementDataType.Size;
+        var elementCount = Message.InputData.Length / InternalElementDataType.Size;
         var result = new Dictionary<string, object?>[elementCount];
 
-        ReadUtils.ReadCompound(_context, InternalElementDataType, Message.Data.Span, result);
+        ReadUtils.ReadCompound(_context, InternalElementDataType, Message.InputData.Span, result);
 
         return result;
     }
 
     public string[] ReadString()
     {
-        return ReadUtils.ReadString(_context, InternalElementDataType, Message.Data.Span);
+        return ReadUtils.ReadString(_context, InternalElementDataType, Message.InputData.Span);
     }
 
     public T[]?[] ReadVariableLength<T>(
@@ -122,10 +122,10 @@ internal class NativeAttribute : IH5Attribute
         Selection? memorySelection = null, 
         ulong[]? memoryDims = null) where T : struct
     {
-        var elementCount = Message.Data.Length / InternalElementDataType.Size;
+        var elementCount = Message.InputData.Length / InternalElementDataType.Size;
         var result = new T[elementCount][];
 
-        ReadUtils.ReadVariableLengthSequence<T>(_context, InternalElementDataType, Message.Data.Span, result);
+        ReadUtils.ReadVariableLengthSequence<T>(_context, InternalElementDataType, Message.InputData.Span, result);
 
         return result;
     }
