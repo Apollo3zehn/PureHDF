@@ -19,7 +19,8 @@ internal static partial class ReadUtils
     public static bool IsReferenceOrContainsReferences(Type type)
     {
 #if NETSTANDARD2_0
-            return false;
+        var isSimpleValueType = type.IsPrimitive || type.IsEnum;
+        return !isSimpleValueType;
 #else
         var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
         var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
