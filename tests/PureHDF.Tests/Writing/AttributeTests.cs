@@ -112,6 +112,97 @@ public class AttributeTests
         Assert.Equal(expected, actual);
     }
 
+#if NET6_0_OR_GREATER
+    [Fact]
+    public void CanWriteAttribute_MultiDimensionalArray_value_type()
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+
+        var data = new int[,,]
+        {
+            {
+                {  0,  1,  2 },
+                {  3,  4,  5 },
+                {  6,  7,  8 }
+            },
+            {
+                {  9, 10, 11 },
+                { 12, 13, 14 },
+                { 15, 16, 17 }
+            },
+            {
+                { 18, 19, 20 },
+                { 21, 22, 23 },
+                { 24, 25, 26 }
+            },
+        };
+
+        var type = data.GetType();
+
+        file.Attributes[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText($"DumpFiles/attribute_{type.Name}.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
+# endif
+
+    [Fact]
+    public void CanWriteAttribute_MultiDimensionalArray_reference_type()
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+
+        var data = new string[,,]
+        {
+            {
+                { "A", "B", "C" },
+                { "D", "E", "F" },
+                { "G", "H", "I" }
+            },
+            {
+                { "J", "K", "L" },
+                { "M", "N", "O" },
+                { "P", "Q", "R" }
+            },
+            {
+                { "S", "T", "U" },
+                { "V", "W", "X" },
+                { "Y", "Z", "Ä" }
+            },
+        };
+
+        var type = data.GetType();
+
+        file.Attributes[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText($"DumpFiles/attribute_{type.Name}.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
     [Fact]
     public void CanWriteAttribute_Large_Array()
     {

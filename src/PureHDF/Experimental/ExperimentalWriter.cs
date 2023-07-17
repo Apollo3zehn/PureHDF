@@ -157,12 +157,10 @@ internal static class H5Writer
 
         var type = data.GetType();
 
-        var (dataType, encode) = DatatypeMessage
+        var (dataType, dataDimensions, encode) = DatatypeMessage
             .Create(context, type, data);
 
         // dataspace
-        var dataDimensions = WriteUtils.CalculateDataDimensions(data);
-
         var dimensions = attribute is H5Attribute h5Attribute2
             ? h5Attribute2.Dimensions ?? dataDimensions
             : dataDimensions;
@@ -170,7 +168,10 @@ internal static class H5Writer
         var dimensionsTotalSize = dimensions
             .Aggregate(1UL, (x, y) => x * y);
 
-        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensions[0])
+        var dataDimensionsTotalSize = dataDimensions
+            .Aggregate(1UL, (x, y) => x * y);
+
+        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensionsTotalSize)
             throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
 
         var dataspace = new DataspaceMessage(

@@ -39,43 +39,11 @@ internal static partial class WriteUtils
         return count;
     }
 
-    public static ulong[] CalculateDataDimensions(object data)
-    {
-        var type = data.GetType();
-
-        if (data is string)
-        {
-            return new ulong[] { 1 };
-        }
-
-        else if (data is IDictionary)
-        {
-            return new ulong[] { 1 };
-        }
-
-        else if (data is IEnumerable enumerable)
-        {
-            var count = GetEnumerableLength(enumerable);
-            return new ulong[] { (ulong)count };
-        }
-
-        else if (
-            type.IsGenericType && 
-            typeof(Memory<>).Equals(type.GetGenericTypeDefinition()))
-        {
-            return new ulong[] { (ulong)InvokeGetMemoryLengthGeneric(type.GenericTypeArguments[0], data) };
-        }
-
-        else
-        {
-            return Array.Empty<ulong>();
-        }
-    }
 
     private static readonly MethodInfo _methodInfoMemory = typeof(WriteUtils)
         .GetMethod(nameof(GetMemoryLength), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    private static int InvokeGetMemoryLengthGeneric(Type type, object data)
+    public static int InvokeGetMemoryLengthGeneric(Type type, object data)
     {
         var genericMethod = _methodInfoMemory.MakeGenericMethod(type);
         return (int)genericMethod.Invoke(null, new object[] { data })!;
@@ -84,5 +52,19 @@ internal static partial class WriteUtils
     private static int GetMemoryLength<T>(Memory<T> data)
     {
         return data.Length;
+    }
+
+    public static bool IsArray(Type type)
+    {
+        return
+            type.IsArray &&
+            type.GetElementType() is not null;
+    }
+
+    public static bool IsMemory(Type type)
+    {
+        return 
+            type.IsGenericType && 
+            typeof(Memory<>).Equals(type.GetGenericTypeDefinition());
     }
 }

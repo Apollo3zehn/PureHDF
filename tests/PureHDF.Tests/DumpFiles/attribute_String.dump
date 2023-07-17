@@ -7,7 +7,7 @@ GROUP "/" {
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
-      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+      DATASPACE  SCALAR
       DATA {
       (0): "\37777777703\37777777637 Abc"
       }

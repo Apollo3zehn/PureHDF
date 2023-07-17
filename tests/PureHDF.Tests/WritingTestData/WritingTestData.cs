@@ -3,15 +3,9 @@
 public static class WritingTestData
 {
     public static IList<object[]> AttributeTestData { get; } = new List<object[]>()
-    {       
-        new object[] { 
-            new int[]?[]
-            {
-                new int[] { 1, -2, 3 },
-                null,
-                new int[] { 2, -4, 6 },
-            }
-        },
+    {
+        /* string */
+        new object[] { "ß Abc" },
 
         /* dictionary */
         new object[] { new Dictionary<string, object>() {
@@ -20,6 +14,15 @@ public static class WritingTestData
 
         new object[] { new Dictionary<string, int> {
             ["A"] = 1, ["B"] = -2, ["C"] = 3
+        }},
+
+        new object[] { new Dictionary<string, int[,]> { 
+            ["A"] = new int[,] 
+            {
+                { 0, 1, 2 },
+                { 3, 4, 5 },
+                { 6, 7, 8 }
+            }
         }},
 
         /* array */
@@ -61,9 +64,6 @@ public static class WritingTestData
 
         new object[] { new List<string> { "A", "ßAB", "C BA" } },
 
-        /* string */
-        new object[] { "ß Abc" },
-
         /* tuple (reference type) */
         new object[] { Tuple.Create(1, -2L, 3.3) },
 
@@ -75,7 +75,7 @@ public static class WritingTestData
                 Type: DataspaceType.Simple,
                 DimensionSizes: new ulong[] { 10, 20, 30 },
                 DimensionMaxSizes: new ulong[] { 20, 40, 60 },
-                PermutationIndices: new ulong[] { 40, 80, 120 }) // TODO, this is a good candiate to check null value handling once it is implemented
+                PermutationIndices: null)
             {
                 Version = 1
             }
