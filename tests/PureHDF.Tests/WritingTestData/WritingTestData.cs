@@ -83,7 +83,7 @@ public static class WritingTestData
 
         new object[] { new WritingTestRecordClass(X: 1, Y: 99.38 ) },
 
-        // /* bool */
+        /* bool */
         new object[] { false },
         new object[] { true },
 
@@ -99,11 +99,22 @@ public static class WritingTestData
         /* signed fixed-point */
         new object[] { -2 },
 
+#if NET5_0_OR_GREATER
+        /* 16 bit floating-point */
+        new object[] { (Half)99.38f },
+#endif
+
         /* 32 bit floating-point */
         new object[] { 99.38f },
 
         /* 64 bit floating-point */
         new object[] { 99.38 },
+
+        /* 128 bit floating-point */
+        // h5dump and other H5 tools cannot display this value properly:
+        // https://forum.hdfgroup.org/t/h5dump-displays-wrong-value-for-ieee-754-quadruple-precision-value/11330
+        // However, the data itself are written fine to the file.
+        new object[] { 99.38m },
 
         /* complex value type */
         new object[] { new WritingTestStruct() { x = 1, y = 99.38 } },

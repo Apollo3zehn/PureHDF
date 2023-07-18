@@ -48,7 +48,7 @@ public class AttributeTests
         var suffix = type switch
         {
             Type when 
-                type == typeof(bool) 
+                type == typeof(bool)
                 => $"_{data}",
 
             Type when 
@@ -56,14 +56,14 @@ public class AttributeTests
                 => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
 
             Type when type != 
-                typeof(string) && 
-                typeof(IEnumerable).IsAssignableFrom(type) && 
-                !type.IsArray 
+                typeof(string) &&
+                typeof(IEnumerable).IsAssignableFrom(type) &&
+                !type.IsArray
                 => $"_{type.GenericTypeArguments[0].Name}",
 
-            Type when 
-                type.IsGenericType && 
-                typeof(Memory<>).Equals(type.GetGenericTypeDefinition()) 
+            Type when
+                type.IsGenericType &&
+                typeof(Memory<>).Equals(type.GetGenericTypeDefinition())
                 => $"_{type.GenericTypeArguments[0].Name}",
 
             _ => default
@@ -74,6 +74,9 @@ public class AttributeTests
             .Replace("<file-path>", filePath);
 
         Assert.Equal(expected, actual);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
     }
 
     [Fact]
