@@ -115,6 +115,9 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(ushort) ||
                 type == typeof(uint) ||
                 type == typeof(ulong)
+#if NET7_0_OR_GREATER
+                || type == typeof(UInt128)
+#endif
                 => GetTypeInfoForUnsignedFixedPointTypes(type, endianness),
 
             /* signed fixed-point types */
@@ -123,6 +126,9 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(short) ||
                 type == typeof(int) ||
                 type == typeof(long)
+#if NET7_0_OR_GREATER
+                || type == typeof(Int128)
+#endif
                 => GetTypeInfoForSignedFixedPointTypes(type, endianness),
 
 #if NET5_0_OR_GREATER

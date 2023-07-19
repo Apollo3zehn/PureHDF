@@ -212,7 +212,7 @@ public class AttributeTests
         // Arrange
         var file = new Experimental.H5File();
 
-        foreach (var data in ReadingTestData.NumericalWriteData)
+        foreach (var data in WritingTestData.NumericalWriteData)
         {
             var type = data.GetType();
             file.Attributes[type.Name] = data;
@@ -232,6 +232,35 @@ public class AttributeTests
 
         Assert.Equal(expected, actual);
     }
+
+#if NET7_0_OR_GREATER
+    [Fact]
+    public void CanWriteAttribute_Large_Array_Int128()
+    {
+        // Arrange
+        var file = new Experimental.H5File();
+
+        foreach (var data in WritingTestData.NumericalWriteData_Int128)
+        {
+            var type = data.GetType();
+            file.Attributes[type.Name] = data;
+        }
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Save(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText("DumpFiles/attribute_large_array_int128.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+#endif
 
     [Fact]
     public void CanWriteAttribute_2D()

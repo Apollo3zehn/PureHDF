@@ -119,4 +119,36 @@ public static class WritingTestData
 
         new object[] { new WritingTestRecordStruct(X: 1, Y: 99.38 ) }
     };
+
+    public static IList<object> NumericalWriteData { get; }
+
+#if NET7_0_OR_GREATER
+    public static IList<object> NumericalWriteData_Int128 { get; }
+#endif
+
+    static WritingTestData()
+    {
+        NumericalWriteData = new List<object>
+        {
+            new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+            new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+            new uint[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+            new ulong[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+            new sbyte[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+            new short[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+            new int[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+            new long[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+            new float[] { 0, 1, 2, 3, 4, 5, 6, -7.99f, 8, 9, 10, 11 },
+            new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 },
+            ReadingTestData.EnumData,
+        };
+
+#if NET7_0_OR_GREATER
+        NumericalWriteData_Int128 = new List<object>
+        {
+            new UInt128[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
+            new Int128[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },
+        };
+#endif
+    }
 }
