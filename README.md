@@ -674,7 +674,7 @@ Reading data from a dataset is thread-safe in the following cases, depending on 
 |         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                    |
 | ------- | -------------- | -------------------------------- | --------------------------------- |
 | .NET 4+ | x              | ✓                               | x                                 |
-| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
+| .NET 6+ | ✓              | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
 
 > The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
@@ -707,7 +707,11 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 
 ```
 
-## 8.2 Multi-Threading (FileStream) (.NET 6+)
+## 8.2 Multi-Threading (FileStream)
+
+| Requires  |
+| --------- |
+| `.NET 6+` |
 
 Starting with .NET 6, there is a new API to access files in a thread-safe way which PureHDF utilizes. The process to load data in parallel is similar to the memory-mapped file approach above:
 
@@ -732,7 +736,11 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 
 ```
 
-## 8.3 Async (.NET 6+)
+## 8.3 Async
+
+| Requires  |
+| --------- |
+| `.NET 6+` |
 
 PureHDF supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
 
