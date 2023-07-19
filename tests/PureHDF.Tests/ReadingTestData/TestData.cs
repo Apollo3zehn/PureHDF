@@ -165,10 +165,6 @@
 
         public static IList<object[]> NumericalReadData { get; }
 
-#if NET7_0_OR_GREATER
-        public static IList<object[]> NumericalReadData_Int128 { get; }
-#endif
-
         public static TestStructL1[] NonNullableStructData { get; }
 
         public static TestStructStringAndArray[] NullableStructData { get; }
