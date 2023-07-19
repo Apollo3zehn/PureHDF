@@ -9,7 +9,7 @@ namespace PureHDF.Tests.Reading
         public void CanQueryDataset_Full()
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(libver_t.V110, (Action<long>)(fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset)));
+            var filePath = TestUtils.PrepareTestFile(libver_t.V110, fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset));
             var expected = new int[] { 5, 6, 7, 10, 11, 12 };
 
             // Act
@@ -31,7 +31,7 @@ namespace PureHDF.Tests.Reading
         public void CanQueryDataset_Skip_Take()
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(libver_t.V110, (Action<long>)(fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset)));
+            var filePath = TestUtils.PrepareTestFile(libver_t.V110, fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset));
             var expected = new int[] { 5, 6, 7 };
 
             // Act
@@ -51,7 +51,7 @@ namespace PureHDF.Tests.Reading
         public void CanQueryDataset_Skip_Stride()
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(libver_t.V110, (Action<long>)(fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset)));
+            var filePath = TestUtils.PrepareTestFile(libver_t.V110, fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset));
             var expected = Enumerable.Empty<int>();
 
             // Act
@@ -71,7 +71,7 @@ namespace PureHDF.Tests.Reading
         public void CanQueryDataset_Skip()
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(libver_t.V110, (Action<long>)(fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset)));
+            var filePath = TestUtils.PrepareTestFile(libver_t.V110, fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset));
 
             var expected = Enumerable
                 .Range(5, 95)
@@ -93,7 +93,7 @@ namespace PureHDF.Tests.Reading
         public void CanQueryDataset()
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(libver_t.V110, (Action<long>)(fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset)));
+            var filePath = TestUtils.PrepareTestFile(libver_t.V110, fileId => TestUtils.AddSmall(fileId, ContainerType.Dataset));
 
             var expected = Enumerable
                 .Range(0, 100)

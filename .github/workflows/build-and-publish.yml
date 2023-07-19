@@ -65,9 +65,15 @@ jobs:
           dotnet build -c Release src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj
           dotnet build -c Release src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj
 
-      - name: Test
+      # run writing tests separately because H5Dump seems to interfere with the 
+      # reading tests ("The process cannot access the file '/tmp/tmpXXXXX.tmp' because it is being used by another process")
+
+      - name: Test (common)
         # temporarily disable HSDS tests until the service is available again (GET http://hsdshdflab.hdfgroup.org?domain=/shared/tall.h5)
-        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+
+      - name: Test (writing)
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Writing"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3

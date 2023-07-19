@@ -28,6 +28,28 @@
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: common",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--filter",
+                "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: writing",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--filter",
+                "FullyQualifiedName~PureHDF.Tests.Writing"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
