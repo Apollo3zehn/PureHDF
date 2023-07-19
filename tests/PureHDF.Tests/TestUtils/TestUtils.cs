@@ -222,6 +222,46 @@ namespace PureHDF.Tests
             else if (type == typeof(long))
                 return H5T.NATIVE_INT64;
 
+#if NET7_0_OR_GREATER
+            else if (type == typeof(UInt128))
+            {
+                var typeId = H5T.copy(H5T.NATIVE_UINT64);
+                _ = H5T.set_size(typeId, 16);
+                _ = H5T.set_precision(typeId, 128);
+
+                return typeId;
+            }
+
+            else if (type == typeof(Int128))
+            {
+                var typeId = H5T.copy(H5T.NATIVE_INT64);
+                _ = H5T.set_size(typeId, 16);
+                _ = H5T.set_precision(typeId, 128);
+                
+                return typeId;
+            }
+#endif
+
+#if NET5_0_OR_GREATER
+            else if (type == typeof(Half))
+            {
+                var typeId = H5T.copy(H5T.NATIVE_FLOAT);
+
+                _ = H5T.set_fields(typeId,
+                    spos: (nint)15,
+                    epos: (nint)10,
+                    esize: (nint)5,
+                    mpos: (nint)0,
+                    msize: (nint)10);
+
+                _ = H5T.set_ebias(typeId, (nint)15);
+                _ = H5T.set_precision(typeId, (nint)16);
+                _ = H5T.set_size(typeId, (nint)2);                
+
+                return typeId;
+            }
+#endif
+
             else if (type == typeof(float))
                 return H5T.NATIVE_FLOAT;
 
