@@ -139,10 +139,6 @@ internal partial record class DatatypeMessage : Message
             Type when type == typeof(double)
                 => GetTypeInfoFor64BitFloatingPoint(type, endianness),
 
-            /* 128 bit floating-point */
-            Type when type == typeof(decimal)
-                => GetTypeInfoFor128BitFloatingPoint(type, endianness),
-
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType
                 => context.SerializerOptions.IncludeStructProperties
@@ -724,53 +720,6 @@ internal partial record class DatatypeMessage : Message
                     MantissaLocation: 0,
                     MantissaSize: 52,
                     ExponentBias: 1023
-                )
-            }
-        )
-        {
-            Version = DATATYPE_MESSAGE_VERSION,
-            Class = DatatypeMessageClass.FloatingPoint
-        };
-
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
-        var parameters = new object[2];
-
-        void encode(Stream driver, object data)
-        {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(null, parameters);
-        };
-
-        return (message, encode);
-    }
-
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoFor128BitFloatingPoint(
-        Type type,
-        ByteOrder endianness)
-    {
-        var message = new DatatypeMessage(
-
-            sizeof(decimal),
-
-            new FloatingPointBitFieldDescription(
-                ByteOrder: endianness,
-                PaddingTypeLow: default,
-                PaddingTypeHigh: default,
-                PaddingTypeInternal: default,
-                MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
-                SignLocation: 127
-            ),
-
-            // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
-            new FloatingPointPropertyDescription[] {
-                new(BitOffset: 0,
-                    BitPrecision: 128,
-                    ExponentLocation: 112,
-                    ExponentSize: 15,
-                    MantissaLocation: 0,
-                    MantissaSize: 112,
-                    ExponentBias: 16383
                 )
             }
         )

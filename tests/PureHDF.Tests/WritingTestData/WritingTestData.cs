@@ -111,10 +111,8 @@ public static class WritingTestData
         new object[] { 99.38 },
 
         /* 128 bit floating-point */
-        // h5dump and other H5 tools cannot display this value properly:
-        // https://forum.hdfgroup.org/t/h5dump-displays-wrong-value-for-ieee-754-quadruple-precision-value/11330
-        // However, the data itself are written fine to the file.
-        new object[] { 99.38m },
+        // decimal is not an IEEE 754 data type: https://forum.hdfgroup.org/t/h5dump-displays-wrong-value-for-ieee-754-quadruple-precision-value/11330
+        // new object[] { 99.38m },
 
         /* complex value type */
         new object[] { new WritingTestStruct() { x = 1, y = 99.38 } },
