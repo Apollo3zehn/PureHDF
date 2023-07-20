@@ -289,7 +289,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     /// <inheritdoc />
     public T[] ReadCompound<T>(
-        Func<FieldInfo, string>? getName = null, 
+        Func<FieldInfo, string?>? getName = null, 
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
         ulong[]? memoryDims = null) where T : struct
@@ -309,7 +309,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
     public T[] ReadCompound<T>(
         H5DatasetAccess datasetAccess,
-        Func<FieldInfo, string>? getName = default,
+        Func<FieldInfo, string?>? getName = default,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default) where T : struct
@@ -563,7 +563,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     /// <inheritdoc />
     public Task<T[]> ReadCompoundAsync<T>(
-        Func<FieldInfo, string>? getName = null, 
+        Func<FieldInfo, string?>? getName = null, 
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
         ulong[]? memoryDims = null,
@@ -586,7 +586,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// 
     public async Task<T[]> ReadCompoundAsync<T>(
         H5DatasetAccess datasetAccess,
-        Func<FieldInfo, string>? getName = default,
+        Func<FieldInfo, string?>? getName = default,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,

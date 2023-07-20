@@ -35,7 +35,7 @@ public interface IH5Attribute
     /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="getName">An optional function to map the field names of <typeparamref name="T"/> to the member names of the HDF5 compound type.</param>
     /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
-    T[] ReadCompound<T>(Func<FieldInfo, string>? getName = null) where T : struct;
+    T[] ReadCompound<T>(Func<FieldInfo, string?>? getName = null) where T : struct;
 
     /// <summary>
     /// Reads the compound data. This is the slowest but most flexible option to read compound data as no prior type knowledge is required.

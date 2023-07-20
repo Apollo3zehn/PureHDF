@@ -13,14 +13,9 @@ using Xunit.Abstractions;
 
 namespace PureHDF.Tests.Reading.Filters
 {
-    public class FilterTests
+    public class FilterTests(ITestOutputHelper logger)
     {
-        private readonly ITestOutputHelper _logger;
-
-        public FilterTests(ITestOutputHelper logger)
-        {
-            _logger = logger;
-        }
+        private readonly ITestOutputHelper _logger = logger;
 
         [Theory]
 

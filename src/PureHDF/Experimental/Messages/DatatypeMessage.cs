@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Buffers;
+using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -65,8 +66,12 @@ internal partial record class DatatypeMessage : Message
 
     private static (DatatypeMessage, EncodeDelegate) InternalCreate(
         WriteContext context,
-        Type type)
+        Type type,
+        int stringLength = default)
     {
+        if (stringLength == default)
+            stringLength = context.SerializerOptions.DefaultStringLength;
+
         var cache = context.TypeToMessageMap;
 
         if (cache.TryGetValue(type, out var cachedMessage))
@@ -80,7 +85,9 @@ internal partial record class DatatypeMessage : Message
         {
             /* string */
             Type when type == typeof(string)
-                => GetTypeInfoForVariableLengthString(context),
+                => stringLength == 0
+                    ? GetTypeInfoForVariableLengthString(context)
+                    : GetTypeInfoForFixedLengthString(context, stringLength),
 
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) &&
@@ -98,7 +105,7 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining reference types */
             Type when ReadUtils.IsReferenceOrContainsReferences(type)
-                => GetTypeInfoForReferenceType(context, type),
+                => GetTypeInfoForReferenceLikeType(context, type),
 
             /* non blittable (but unmanged!) */
             /* https://stackoverflow.com/questions/65833341/does-c-sharp-enforce-that-an-unmanaged-type-is-blittable#comment116401977_65833341 */
@@ -148,12 +155,12 @@ internal partial record class DatatypeMessage : Message
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType
                 => context.SerializerOptions.IncludeStructProperties
-                    ? GetTypeInfoForReferenceType(context, type, isValueType: true)
+                    ? GetTypeInfoForReferenceLikeType(context, type)
                     : GetTypeInfoForValueType(context, type),
 
             /* remaining generic value types */
             Type when type.IsValueType
-                => GetTypeInfoForReferenceType(context, type, isValueType: true),
+                => GetTypeInfoForReferenceLikeType(context, type),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -244,7 +251,7 @@ internal partial record class DatatypeMessage : Message
             var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
 
             properties[i] = new CompoundPropertyDescription(
-                Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo),
+                Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
                 MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
                 MemberTypeMessage: fieldMessage
             );
@@ -277,14 +284,15 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForReferenceType(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForReferenceLikeType(
         WriteContext context,
-        Type type,
-        bool isValueType = false)
+        Type type)
     {
         CompoundBitFieldDescription bitfield;
 
         var offset = 0U;
+        var isValueType = type.IsValueType;
+        var defaultStringLength = context.SerializerOptions.DefaultStringLength;
 
         // fields
         var includeFields = isValueType 
@@ -300,6 +308,7 @@ internal partial record class DatatypeMessage : Message
             : Array.Empty<EncodeDelegate>();
 
         var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
+        var fieldStringLengthMapper = context.SerializerOptions.FieldStringLengthMapper;
 
         // properties
         var includeProperties = isValueType 
@@ -316,6 +325,7 @@ internal partial record class DatatypeMessage : Message
             : Array.Empty<EncodeDelegate>();
 
         var propertyNameMapper = context.SerializerOptions.PropertyNameMapper;
+        var propertyStringLengthMapper = context.SerializerOptions.PropertyStringLengthMapper;
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
@@ -331,12 +341,17 @@ internal partial record class DatatypeMessage : Message
             {
                 var fieldInfo = fieldInfos[i];
                 var underlyingType = fieldInfo.FieldType;
-                var (fieldMessage, fieldEncode) = InternalCreate(context, underlyingType);
+
+                var stringLength = underlyingType == typeof(string)
+                    ? fieldStringLengthMapper is null ? defaultStringLength : fieldStringLengthMapper(fieldInfo) ?? defaultStringLength
+                    : defaultStringLength;
+
+                var (fieldMessage, fieldEncode) = InternalCreate(context, underlyingType, stringLength: stringLength);
 
                 fieldEncodes[i] = fieldEncode;
 
                 properties[i] = new CompoundPropertyDescription(
-                    Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo),
+                    Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
                     MemberByteOffset: offset,
                     MemberTypeMessage: fieldMessage
                 );
@@ -351,12 +366,17 @@ internal partial record class DatatypeMessage : Message
             {
                 var propertyInfo = propertyInfos[i];
                 var underlyingType = propertyInfo.PropertyType;
-                var (propertyMessage, propertyEncode) = InternalCreate(context, underlyingType);
+
+                var stringLength = underlyingType == typeof(string)
+                    ? propertyStringLengthMapper is null ? defaultStringLength : propertyStringLengthMapper(propertyInfo) ?? defaultStringLength
+                    : defaultStringLength;
+
+                var (propertyMessage, propertyEncode) = InternalCreate(context, underlyingType, stringLength: stringLength);
 
                 propertyEncodes[i] = propertyEncode;
 
                 properties[fieldInfos.Length + i] = new CompoundPropertyDescription(
-                    Name: propertyNameMapper is null ? propertyInfo.Name : propertyNameMapper(propertyInfo),
+                    Name: propertyNameMapper is null ? propertyInfo.Name : propertyNameMapper(propertyInfo) ?? propertyInfo.Name,
                     MemberByteOffset: offset,
                     MemberTypeMessage: propertyMessage
                 );
@@ -521,6 +541,58 @@ internal partial record class DatatypeMessage : Message
                 = stackalloc Experimental.GlobalHeapId[] { globalHeapId };
 
             driver.Write(MemoryMarshal.AsBytes(gheapIdArray));
+        }
+
+        return (message, encode);
+    }
+
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForFixedLengthString(
+        WriteContext context, int length)
+    {
+        var message = new DatatypeMessage(
+
+            (uint)length,
+
+            new StringBitFieldDescription(
+                PaddingType: PaddingType.NullPad,
+                Encoding: CharacterSetEncoding.UTF8
+            ),
+
+            Array.Empty<DatatypePropertyDescription>()
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.String
+        };
+
+        void encode(Stream driver, object data)
+        {
+            var stringBytes = Encoding.UTF8
+                .GetBytes((string)data)
+                .AsSpan();
+
+            var truncate = Math.Min(stringBytes.Length, length);
+            stringBytes = stringBytes[..truncate];
+
+            driver.Write(stringBytes);
+
+            var padding = length - stringBytes.Length;
+
+            if (padding > 0)
+            {
+                if (padding < 256)
+                {
+                    Span<byte> paddingBuffer = stackalloc byte[padding];
+                    paddingBuffer.Clear();
+                    driver.Write(paddingBuffer);
+                }
+
+                else
+                {
+                    using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
+                    driver.Write(paddingBufferOwner.Memory.Span[..padding]);
+                }
+            }
         }
 
         return (message, encode);

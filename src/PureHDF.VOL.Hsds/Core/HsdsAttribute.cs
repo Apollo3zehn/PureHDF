@@ -54,7 +54,7 @@ internal class HsdsAttribute : IH5Attribute
         return data;
     }
 
-    public T[] ReadCompound<T>(Func<FieldInfo, string>? getName = null) where T : struct
+    public T[] ReadCompound<T>(Func<FieldInfo, string?>? getName = null) where T : struct
     {
         throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
     }

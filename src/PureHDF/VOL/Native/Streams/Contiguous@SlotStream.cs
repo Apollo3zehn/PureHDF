@@ -56,7 +56,7 @@ internal class SlotStream : IH5ReadStream
         // If file is shorter than slot: fill remaining buffer with zeros.
         buffer
             .Span[actualLength..length]
-            .Fill(0);
+            .Clear();
 
         _position += length;
     }

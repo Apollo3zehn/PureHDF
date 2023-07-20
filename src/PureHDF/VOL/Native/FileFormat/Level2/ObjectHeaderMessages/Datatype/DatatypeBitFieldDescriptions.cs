@@ -250,6 +250,20 @@ internal record class StringBitFieldDescription(
             Encoding: (CharacterSetEncoding)((data[0] >> 4) & 0x01)
         );
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+#if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        data[0] = (byte)((byte)PaddingType & 0x0F);
+        data[0] |= (byte)(((byte)Encoding & 0x0F) << 4);
+
+        driver.Write(data);
+    }
 }
 
 internal record class TimeBitFieldDescription(

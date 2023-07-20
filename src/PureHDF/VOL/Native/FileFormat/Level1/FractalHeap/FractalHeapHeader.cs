@@ -211,7 +211,7 @@ internal record class FractalHeapHeader(
             }
         }
 
-        var hugeIdsAreDirect = default(bool);
+        bool hugeIdsAreDirect;
         var hugeIdsSize = default(byte);
 
         var tinyObjectsAreExtended = default(bool);

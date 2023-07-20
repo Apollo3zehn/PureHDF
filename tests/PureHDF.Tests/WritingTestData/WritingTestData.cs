@@ -2,7 +2,7 @@
 
 public static class WritingTestData
 {
-    public static IList<object[]> AttributeTestData { get; } = new List<object[]>()
+    public static IList<object[]> Common { get; } = new List<object[]>()
     {
         /* string */
         new object[] { "ß Abc" },
@@ -120,15 +120,34 @@ public static class WritingTestData
         new object[] { new WritingTestRecordStruct(X: 1, Y: 99.38 ) }
     };
 
-    public static IList<object> NumericalWriteData { get; }
+    public static IList<object[]> Common_FixedLengthString { get; } = new List<object[]>()
+    {
+        new object[] { "ABCDEF" },
+
+        new object[] { new string[] { "ABCDEF", "ÄÜÖß@!", "1234567", "1234", "" } },
+
+        new object[] { new WritingTestStringRecordClass(X: 1, Y: "ABCDEFG" ) },
+
+        new object[] { new WritingTestStringStruct() { x = 1, y = "ABCDEFG" } },
+    };
+
+    public static IList<object[]> Common_FixedLengthStringMapper { get; } = new List<object[]>()
+    {
+        new object[] { new WritingTestStringRecordClass(X: 1, Y: "ABCDEFG" ) },
+
+        new object[] { new WritingTestStringStruct() { x = 1, y = "ABCDEFG" } },
+    };
+
+    public static IList<object> Numerical { get; }
+
 
 #if NET7_0_OR_GREATER
-    public static IList<object> NumericalWriteData_Int128 { get; }
+    public static IList<object> Numerical_Int128 { get; }
 #endif
 
     static WritingTestData()
     {
-        NumericalWriteData = new List<object>
+        Numerical = new List<object>
         {
             new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
             new ushort[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
@@ -144,7 +163,7 @@ public static class WritingTestData
         };
 
 #if NET7_0_OR_GREATER
-        NumericalWriteData_Int128 = new List<object>
+        Numerical_Int128 = new List<object>
         {
             new UInt128[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },
             new Int128[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 },

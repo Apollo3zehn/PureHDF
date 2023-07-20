@@ -6,11 +6,13 @@ namespace PureHDF.Tests.Writing;
 
 public class AttributeTests
 {
-    public static IList<object[]> AttributeTestData { get; } = WritingTestData.AttributeTestData;
+    public static IList<object[]> CommonData { get; } = WritingTestData.Common;
+    public static IList<object[]> CommonData_FixedLengthString { get; } = WritingTestData.Common_FixedLengthString;
+    public static IList<object[]> CommonData_FixedLengthStringMapper { get; } = WritingTestData.Common_FixedLengthStringMapper;
 
     [Theory]
-    [MemberData(nameof(AttributeTestData))]
-    public void CanWriteAttribute(object data)
+    [MemberData(nameof(CommonData))]
+    public void CanWriteCommon(object data)
     {
         // Arrange
         var type = data.GetType();
@@ -19,21 +21,21 @@ public class AttributeTests
 
         var filePath = Path.GetTempFileName();
 
-        static string fieldNameNameMapper(FieldInfo fieldInfo)
+        static string? fieldNameMapper(FieldInfo fieldInfo)
         {
             var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>();
-            return attribute is not null ? attribute.Name : fieldInfo.Name;
+            return attribute is not null ? attribute.Name : default;
         }
 
-        static string propertyNameMapper(PropertyInfo propertyInfo)
+        static string? propertyNameMapper(PropertyInfo propertyInfo)
         {
             var attribute = propertyInfo.GetCustomAttribute<H5NameAttribute>();
-            return attribute is not null ? attribute.Name : propertyInfo.Name;
+            return attribute is not null ? attribute.Name : default;
         }
 
         var options = new Experimental.H5SerializerOptions(
-            IncludeStructProperties: typeof(WritingTestRecordStruct) == type,
-            FieldNameMapper: fieldNameNameMapper,
+            IncludeStructProperties: type == typeof(WritingTestRecordStruct) || type == typeof(Dictionary<string, int>[]),
+            FieldNameMapper: fieldNameMapper,
             PropertyNameMapper: propertyNameMapper
         );
 
@@ -42,7 +44,7 @@ public class AttributeTests
 
         // Assert
 
-        /* utf-8 is output as base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
+        /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
         var actual = TestUtils.DumpH5File(filePath);
 
         var suffix = type switch
@@ -71,6 +73,86 @@ public class AttributeTests
 
         var expected = File
             .ReadAllText($"DumpFiles/attribute_{type.Name}{suffix}.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+    }
+
+    [Theory]
+    [MemberData(nameof(CommonData_FixedLengthString))]
+    public void CanWriteCommon_DefaultFixedLengthString(object data)
+    {
+        // Arrange
+        var type = data.GetType();
+        var file = new Experimental.H5File();
+        file.Attributes[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new Experimental.H5SerializerOptions(
+            DefaultStringLength: 6
+        );
+
+        // Act
+        file.Save(filePath, options);
+
+        // Assert
+
+        /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText($"DumpFiles/attribute_default_fls_{type.Name}.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+
+        if (File.Exists(filePath))
+            File.Delete(filePath);
+    }
+
+    [Theory]
+    [MemberData(nameof(CommonData_FixedLengthStringMapper))]
+    public void CanWriteCommon_FixedLengthStringMapper(object data)
+    {
+        // Arrange
+        var type = data.GetType();
+        var file = new Experimental.H5File();
+        file.Attributes[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        static int? fieldStringLengthMapper(FieldInfo fieldInfo)
+        {
+            var attribute = fieldInfo.GetCustomAttribute<H5StringLengthAttribute>();
+            return attribute is not null ? attribute.Length : default;
+        }
+
+        static int? propertyStringLengthMapper(PropertyInfo propertyInfo)
+        {
+            var attribute = propertyInfo.GetCustomAttribute<H5StringLengthAttribute>();
+            return attribute is not null ? attribute.Length : default;
+        }
+
+        var options = new Experimental.H5SerializerOptions(
+            DefaultStringLength: 3,
+            FieldStringLengthMapper: fieldStringLengthMapper,
+            PropertyStringLengthMapper: propertyStringLengthMapper
+        );
+
+        // Act
+        file.Save(filePath, options);
+
+        // Assert
+
+        /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText($"DumpFiles/attribute_default_flsm_{type.Name}.dump")
             .Replace("<file-path>", filePath);
 
         Assert.Equal(expected, actual);
@@ -212,7 +294,7 @@ public class AttributeTests
         // Arrange
         var file = new Experimental.H5File();
 
-        foreach (var data in WritingTestData.NumericalWriteData)
+        foreach (var data in WritingTestData.Numerical)
         {
             var type = data.GetType();
             file.Attributes[type.Name] = data;
@@ -240,7 +322,7 @@ public class AttributeTests
         // Arrange
         var file = new Experimental.H5File();
 
-        foreach (var data in WritingTestData.NumericalWriteData_Int128)
+        foreach (var data in WritingTestData.Numerical_Int128)
         {
             var type = data.GetType();
             file.Attributes[type.Name] = data;

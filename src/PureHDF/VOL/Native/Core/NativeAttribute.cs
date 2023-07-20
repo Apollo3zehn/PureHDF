@@ -89,7 +89,7 @@ internal class NativeAttribute : IH5Attribute
             .ToArray();
     }
 
-    public T[] ReadCompound<T>(Func<FieldInfo, string>? getName = default)
+    public T[] ReadCompound<T>(Func<FieldInfo, string?>? getName = default)
         where T : struct
     {
         getName ??= fieldInfo => fieldInfo.Name;

@@ -11,15 +11,21 @@ namespace PureHDF.Experimental;
 /// <param name="IncludeStructProperties">Gets a value that indicates whether struct properties are handled during serialization. The default value is <see langword="false"/>.</param>
 /// <param name="IncludeClassFields">Gets a value that indicates whether class fields are handled during serialization. The default value is <see langword="false"/>.</param>
 /// <param name="IncludeClassProperties">Gets a value that indicates whether class properties are handled during serialization. The default value is <see langword="true"/>.</param>
+/// <param name="DefaultStringLength">Gets a value that indicates how strings are handled during serialization. A nonzero positve value means that strings are treated as fixed-length strings, otherwise they are variable-length strings. The default value is 0.</param>
 /// <param name="FieldNameMapper">Maps a <see cref="FieldInfo"/> to the name of the HDF5 member.</param>
+/// <param name="FieldStringLengthMapper">Maps a <see cref="FieldInfo"/> of type string to the desired string length.</param>
 /// <param name="PropertyNameMapper">Maps a <see cref="PropertyInfo"/> to the name of the HDF5 member.</param>
+/// <param name="PropertyStringLengthMapper">Maps a <see cref="PropertyInfo"/> of type string to the desired string length.</param>
 public record H5SerializerOptions(
     bool IncludeStructFields = true,
     bool IncludeStructProperties = false,
     bool IncludeClassFields = false,
     bool IncludeClassProperties = true,
-    Func<FieldInfo, string>? FieldNameMapper = default,
-    Func<PropertyInfo, string>? PropertyNameMapper = default
+    int DefaultStringLength = default,
+    Func<FieldInfo, string?>? FieldNameMapper = default,
+    Func<FieldInfo, int?>? FieldStringLengthMapper = default,
+    Func<PropertyInfo, string?>? PropertyNameMapper = default,
+    Func<PropertyInfo, int?>? PropertyStringLengthMapper = default
 );
 
 /// <summary>
@@ -120,11 +126,19 @@ public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
         return _objects.Remove(item);
     }
 
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+    /// <inheritdoc />
+    public bool TryGetValue(string key, out H5Object value)
+    {
+        return _objects.TryGetValue(key, out value);
+    }
+#else
     /// <inheritdoc />
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out H5Object value)
     {
         return _objects.TryGetValue(key, out value);
     }
+#endif
 
     IEnumerator IEnumerable.GetEnumerator()
     {

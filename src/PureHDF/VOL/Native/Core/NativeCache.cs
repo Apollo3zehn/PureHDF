@@ -24,9 +24,9 @@ internal static class NativeCache
 
 
         // file map
-        if (_fileMap.ContainsKey(driver))
+        if (_fileMap.TryGetValue(driver, out Dictionary<string, H5File>? value))
         {
-            var pathToH5FileMap = _fileMap[driver];
+            var pathToH5FileMap = value;
 
             foreach (var h5File in pathToH5FileMap.Values)
             {

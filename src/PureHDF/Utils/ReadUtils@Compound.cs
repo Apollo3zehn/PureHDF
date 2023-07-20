@@ -11,7 +11,7 @@ internal static partial class ReadUtils
         DatatypeMessage datatype,
         Span<byte> data,
         Memory<T> destination,
-        Func<FieldInfo, string> getName) where T : struct
+        Func<FieldInfo, string?> getName) where T : struct
     {
         if (datatype.Class != DatatypeMessageClass.Compound)
             throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Compound}'.");
@@ -31,7 +31,7 @@ internal static partial class ReadUtils
 
         foreach (var fieldInfo in type.GetFields())
         {
-            var name = getName(fieldInfo);
+            var name = getName(fieldInfo) ?? fieldInfo.Name;
 
             var isNotSupported = IsReferenceOrContainsReferences(fieldInfo.FieldType) &&
                 fieldInfo.FieldType != typeof(string) &&

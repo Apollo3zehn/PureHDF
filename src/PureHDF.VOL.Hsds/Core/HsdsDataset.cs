@@ -107,7 +107,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
     }
 
     public T[] ReadCompound<T>(
-        Func<FieldInfo, string>? getName = null,
+        Func<FieldInfo, string?>? getName = null,
         Selection? fileSelection = null,
         Selection? memorySelection = null,
         ulong[]? memoryDims = null) where T : struct
@@ -124,7 +124,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
     }
 
     public Task<T[]> ReadCompoundAsync<T>(
-        Func<FieldInfo, string>? getName = null,
+        Func<FieldInfo, string?>? getName = null,
         Selection? fileSelection = null,
         Selection? memorySelection = null,
         ulong[]? memoryDims = null,
