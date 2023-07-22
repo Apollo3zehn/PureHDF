@@ -20,10 +20,14 @@ public static partial class ArrayExtensions
         ValidateInputData(data, dims);
         var output = new T[dims[0], dims[1]];
 
+#if NET6_0_OR_GREATER
+        CopyData(data.AsSpan(), output);
+#else
         fixed (void* ptr = output)
         {
-            CopyData(data, ptr);
+            CopyData(data.AsSpan(), ptr);
         }
+#endif
 
         return output;
     }
@@ -44,10 +48,14 @@ public static partial class ArrayExtensions
         ValidateInputData(data, dims);
         var output = new T[dims[0], dims[1], dims[2]];
 
+#if NET6_0_OR_GREATER
+        CopyData(data.AsSpan(), output);
+#else
         fixed (void* ptr = output)
         {
-            CopyData(data, ptr);
+            CopyData(data.AsSpan(), ptr);
         }
+#endif
 
         return output;
     }
@@ -69,10 +77,14 @@ public static partial class ArrayExtensions
         ValidateInputData(data, dims);
         var output = new T[dims[0], dims[1], dims[2], dims[3]];
 
+#if NET6_0_OR_GREATER
+        CopyData(data.AsSpan(), output);
+#else
         fixed (void* ptr = output)
         {
-            CopyData(data, ptr);
+            CopyData(data.AsSpan(), ptr);
         }
+#endif
 
         return output;
     }
@@ -95,10 +107,14 @@ public static partial class ArrayExtensions
         ValidateInputData(data, dims);
         var output = new T[dims[0], dims[1], dims[2], dims[3], dims[4]];
 
+#if NET6_0_OR_GREATER
+        CopyData(data.AsSpan(), output);
+#else
         fixed (void* ptr = output)
         {
-            CopyData(data, ptr);
+            CopyData(data.AsSpan(), ptr);
         }
+#endif
 
         return output;
     }
@@ -122,10 +138,14 @@ public static partial class ArrayExtensions
         ValidateInputData(data, dims);
         var output = new T[dims[0], dims[1], dims[2], dims[3], dims[4], dims[5]];
 
+#if NET6_0_OR_GREATER
+        CopyData(data.AsSpan(), output);
+#else
         fixed (void* ptr = output)
         {
-            CopyData(data, ptr);
+            CopyData(data.AsSpan(), ptr);
         }
+#endif
 
         return output;
     }
