@@ -4,12 +4,15 @@ internal static class H5Writer
 {
     public static void Serialize(H5File file, string filePath, H5SerializerOptions options)
     {
+        using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+        using var driver = new BinaryWriter(fileStream);
+
         var freeSpaceManager = new FreeSpaceManager();
 
         // TODO FIX THIS (workaround to skip superblock and other relevant data)
         freeSpaceManager.Allocate(1024);
 
-        var globalHeapManager = new GlobalHeapManager(freeSpaceManager);
+        var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
         var writeContext = new WriteContext(
             FreeSpaceManager: freeSpaceManager,
@@ -19,15 +22,12 @@ internal static class H5Writer
             ObjectToAddressMap: new()
         );
 
-        using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-        using var driver = new BinaryWriter(fileStream);
-
         // root group
         driver.BaseStream.Seek(Superblock23.SIZE, SeekOrigin.Begin);
         var rootGroupAddress = EncodeGroup(driver, file, writeContext);
 
         // global heap collections
-        globalHeapManager.Encode(driver);
+        globalHeapManager.Encode();
 
         // superblock
         var endOfFileAddress = (ulong)driver.BaseStream.Length;

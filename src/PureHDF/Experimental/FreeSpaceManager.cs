@@ -2,9 +2,9 @@
 
 internal class FreeSpaceManager
 {
-    private ulong _length;
+    private long _length;
 
-    public ulong Allocate(ulong length)
+    public long Allocate(long length)
     {
         var address = _length;
 

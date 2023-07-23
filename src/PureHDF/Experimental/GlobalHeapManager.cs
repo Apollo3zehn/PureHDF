@@ -3,21 +3,32 @@
 internal class GlobalHeapManager
 {
     private const int ALIGNMENT = 8;
-    private const ulong SPEC_COLLECTION_SIZE = 4096; /* according to spec, includes collection header */
-    private const ulong COLLECTION_SIZE = SPEC_COLLECTION_SIZE - COLLECTION_HEADER_SIZE; /* without collection header */
+    private const int MINIMUM_COLLECTION_SIZE = 4096; /* according to spec, includes collection header */
     private const int COLLECTION_HEADER_SIZE = 16;
     private const int OBJECT_HEADER_SIZE = 16;
 
+    private readonly int _totalCollectionSize;
+    private readonly int _collectionSize;
+    private readonly long _flushThreshold;
     private readonly FreeSpaceManager _freeSpaceManager;
-    private readonly Dictionary<ulong, GlobalHeapCollectionState> _collectionMap = new();
-    private GlobalHeapCollectionState? _collectionState;
-    private ulong _baseAddress;
-    private ushort _index;
-        private Memory<byte> _memory;
+    private readonly Dictionary<long, GlobalHeapCollectionState> _collectionMap = new();
+    private readonly BinaryWriter _driver;
 
-    public GlobalHeapManager(FreeSpaceManager freeSpaceManager)
+    private GlobalHeapCollectionState? _collectionState;
+    private long _baseAddress;
+    private ushort _index;
+    private Memory<byte> _memory;
+
+    public GlobalHeapManager(H5SerializerOptions options, FreeSpaceManager freeSpaceManager, BinaryWriter driver)
     {
+        if (options.GlobalHeapCollectionSize < MINIMUM_COLLECTION_SIZE)
+            throw new Exception($"The minimum global heap collection size is {MINIMUM_COLLECTION_SIZE} bytes");
+
+        _totalCollectionSize = options.GlobalHeapCollectionSize;
+        _collectionSize = _totalCollectionSize - COLLECTION_HEADER_SIZE;
+        _flushThreshold = options.GlobalHeapFlushThreshold;
         _freeSpaceManager = freeSpaceManager;
+        _driver = driver;
     }
 
     public (GlobalHeapId, Memory<byte>) AddObject(int size)
@@ -60,7 +71,7 @@ internal class GlobalHeapManager
         collectionState.Consumed += sizeof(ulong);
 
         var globalHeapId = new GlobalHeapId(
-            Address: _baseAddress,
+            Address: (ulong)_baseAddress,
             Index: _index
         );
 
@@ -79,16 +90,23 @@ internal class GlobalHeapManager
 
     private void AddNewCollection()
     {
+        // flush before we are able to continue
+        if (_collectionMap.Count * _collectionSize >= _flushThreshold)
+        {
+            Encode();
+            _collectionMap.Clear();
+        }
+
         // TODO make encoding and decoding of collection more symmetrical
 
         var collection = new GlobalHeapCollection(default!)
         {
             Version = 1,
-            CollectionSize = SPEC_COLLECTION_SIZE
+            CollectionSize = (ulong)_totalCollectionSize
         };
 
-        _baseAddress = _freeSpaceManager.Allocate(COLLECTION_HEADER_SIZE + COLLECTION_SIZE);
-        _memory = new byte[COLLECTION_SIZE];
+        _baseAddress = _freeSpaceManager.Allocate(_totalCollectionSize);
+        _memory = new byte[_collectionSize];
 
         //
         _index = 0;
@@ -101,8 +119,10 @@ internal class GlobalHeapManager
         _collectionMap[_baseAddress] = collectionState;
     }
 
-    public void Encode(BinaryWriter driver)
+    public void Encode()
     {
+        var driver = _driver;
+
         foreach (var entry in _collectionMap)
         {
             var address = entry.Key;
