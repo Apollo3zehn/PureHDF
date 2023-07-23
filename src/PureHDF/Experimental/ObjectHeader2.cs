@@ -1,9 +1,16 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using PureHDF.Experimental;
+
+namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
-    public void Encode(BinaryWriter driver)
+    public void Encode(WriteContext writeContext)
     {
+        var freeSpaceManager = writeContext.FreeSpaceManager;
+        // TODO reserve space here and remove the 1024 byte reserve call
+
+        var driver = writeContext.Driver;
+
         var position1 = driver.BaseStream.Position;
 
         driver.Write(Signature);

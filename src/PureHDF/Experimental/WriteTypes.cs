@@ -10,6 +10,7 @@ internal record GlobalHeapCollectionState(
 };
 
 internal record WriteContext(
+    BinaryWriter Driver,
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,
     H5SerializerOptions SerializerOptions,

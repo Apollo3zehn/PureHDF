@@ -8,13 +8,12 @@ internal static class H5Writer
         using var driver = new BinaryWriter(fileStream);
 
         var freeSpaceManager = new FreeSpaceManager();
-
-        // TODO FIX THIS (workaround to skip superblock and other relevant data)
-        freeSpaceManager.Allocate(1024);
+        freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
 
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
         var writeContext = new WriteContext(
+            Driver: driver,
             FreeSpaceManager: freeSpaceManager,
             GlobalHeapManager: globalHeapManager,
             SerializerOptions: options,
@@ -23,15 +22,18 @@ internal static class H5Writer
         );
 
         // root group
-        driver.BaseStream.Seek(Superblock23.SIZE, SeekOrigin.Begin);
-        var rootGroupAddress = EncodeGroup(driver, file, writeContext);
+        
+        // TODO FIX THIS (workaround to object header data)
+        freeSpaceManager.Allocate(1024);
+
+        driver.BaseStream.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
+        var rootGroupAddress = EncodeGroup(writeContext, file);
 
         // global heap collections
         globalHeapManager.Encode();
 
         // superblock
         var endOfFileAddress = (ulong)driver.BaseStream.Length;
-        driver.BaseStream.Seek(0, SeekOrigin.Begin);
 
         var superblock = new Superblock23(
             Driver: default!,
@@ -46,13 +48,13 @@ internal static class H5Writer
             LengthsSize = sizeof(ulong)
         };
 
+        driver.BaseStream.Seek(0, SeekOrigin.Begin);
         superblock.Encode(driver);
     }
 
     private static ulong EncodeGroup(
-        BinaryWriter driver,
-        H5Group group,
-        WriteContext writeContext)
+        WriteContext writeContext,
+        H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
 
@@ -104,7 +106,7 @@ internal static class H5Writer
             {
                 if (!writeContext.ObjectToAddressMap.TryGetValue(childGroup, out var childAddress))
                 {
-                    childAddress = EncodeGroup(driver, childGroup, writeContext);
+                    childAddress = EncodeGroup(writeContext, childGroup);
                     writeContext.ObjectToAddressMap[childGroup] = childAddress;
                 }
 
@@ -123,7 +125,7 @@ internal static class H5Writer
             }
         }
 
-        var address = (ulong)driver.BaseStream.Position;
+        var address = (ulong)writeContext.Driver.BaseStream.Position;
 
         var objectHeader = new ObjectHeader2(
             Address: default,
@@ -140,7 +142,7 @@ internal static class H5Writer
             Version = 2
         };
 
-        objectHeader.Encode(driver);
+        objectHeader.Encode(writeContext);
 
         return address;
     }
