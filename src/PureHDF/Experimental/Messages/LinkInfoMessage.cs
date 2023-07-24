@@ -24,4 +24,25 @@ internal partial record class LinkInfoMessage
         if (Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
             driver.Write(BTree2CreationOrderIndexAddress);
     }
+
+    public ushort GetEncodeSize()
+    {
+        var size =
+            sizeof(byte) +
+            sizeof(byte) +
+            (
+                Flags.HasFlag(CreationOrderFlags.TrackCreationOrder)
+                    ? sizeof(ulong)
+                    : (ushort)0
+            ) +
+            sizeof(ulong) +
+            sizeof(ulong) +
+            (
+                Flags.HasFlag(CreationOrderFlags.IndexCreationOrder)
+                    ? sizeof(ulong)
+                    : (ushort)0
+            );
+            
+        return (ushort)size;
+    }
 }

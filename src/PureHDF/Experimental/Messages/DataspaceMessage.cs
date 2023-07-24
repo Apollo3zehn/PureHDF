@@ -41,4 +41,24 @@ internal partial record class DataspaceMessage
             }
         }
     }
+
+    public ushort GetEncodeSize()
+    {
+        if (Version != 2)
+            throw new Exception("Only version 2 dataspace messages are supported.");
+
+        var size =
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(ulong) * Rank +
+            (
+                Flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes)
+                    ? sizeof(ulong) * Rank
+                    : (ushort)0
+            );
+            
+        return (ushort)size;
+    }
 }

@@ -27,7 +27,8 @@ internal partial record class AttributeInfoMessage
 
     public ushort GetEncodeSize()
     {
-        var size = sizeof(byte) +
+        var size = 
+            sizeof(byte) +
             sizeof(byte) +
             (
                 Flags.HasFlag(CreationOrderFlags.TrackCreationOrder)

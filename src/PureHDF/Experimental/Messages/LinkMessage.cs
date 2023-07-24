@@ -17,7 +17,7 @@ internal partial record class LinkMessage
             driver.Write((byte)LinkType);
 
         // creation order
-        if (Flags.HasFlag(LinkInfoFlags.CreatOrderFieldIsPresent))
+        if (Flags.HasFlag(LinkInfoFlags.CreationOrderFieldIsPresent))
             driver.Write(CreationOrder);
 
         // link name encoding
@@ -26,8 +26,8 @@ internal partial record class LinkMessage
 
         // link length
         var encodedName = Encoding.UTF8.GetBytes(LinkName);
-        var linkLengthFieldLength = (ulong)(1 << ((byte)Flags & 0x03));
-        WriteUtils.WriteUlongArbitrary(driver, (ulong)encodedName.Length, linkLengthFieldLength);
+        var linkNameFieldLength = GetLinkNameFieldLength();
+        WriteUtils.WriteUlongArbitrary(driver, (ulong)encodedName.Length, linkNameFieldLength);
 
         // link name
         if (encodedName.Length > ushort.MaxValue)
@@ -37,5 +37,40 @@ internal partial record class LinkMessage
 
         // link info
         LinkInfo.Encode(driver);
+    }
+
+    public ushort GetEncodeSize()
+    {
+        var encodedNameLength = Encoding.UTF8.GetBytes(LinkName).Length;
+        var linkNameFieldLength = GetLinkNameFieldLength();
+
+        var size =
+            sizeof(byte) +
+            sizeof(byte) +
+            (
+                Flags.HasFlag(LinkInfoFlags.LinkTypeFieldIsPresent)
+                    ? sizeof(byte)
+                    : (ushort)0
+            ) +
+            (
+                Flags.HasFlag(LinkInfoFlags.CreationOrderFieldIsPresent)
+                    ? sizeof(ulong)
+                    : (ushort)0
+            )
+            (
+                Flags.HasFlag(LinkInfoFlags.LinkNameEncodingFieldIsPresent)
+                    ? sizeof(byte)
+                    : (ushort)0
+            ) +
+            linkNameFieldLength +
+            (ushort)encodedNameLength +
+            LinkInfo.GetEncodeSize();
+            
+        return (ushort)size;
+    }
+
+    private ulong GetLinkNameFieldLength()
+    {
+        return (ulong)(1 << ((byte)Flags & 0x03));
     }
 }

@@ -44,7 +44,7 @@ internal partial record class LinkMessage(
         // creation order
         var creationOrder = default(ulong);
 
-        if (flags.HasFlag(LinkInfoFlags.CreatOrderFieldIsPresent))
+        if (flags.HasFlag(LinkInfoFlags.CreationOrderFieldIsPresent))
             creationOrder = driver.ReadUInt64();
 
         // link name encoding

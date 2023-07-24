@@ -73,14 +73,15 @@ internal partial record class ObjectHeader2
     private ulong GetHeaderMessagesEncodeSize()
     {
         var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
-        
+
         return HeaderMessages
             .Aggregate(0UL, (result, headerMessage) => result + headerMessage.GetEncodeSize(withCreationOrder));
     }
 
     private ulong GetEncodeSize(ulong headerMessagesEncodeSize)
     {
-        return (uint)Signature.Length +
+        return 
+            (uint)Signature.Length +
             sizeof(byte) +
             sizeof(byte) +
             (

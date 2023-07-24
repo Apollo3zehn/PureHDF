@@ -21,11 +21,12 @@ internal partial record class AttributeMessage
         driver.Write((ushort)(nameBytes.Length + 1));
 
         // datatype size
-        var position1 = driver.BaseStream.Position;
-        driver.Write((ushort)0 /* dummy */);
+        var dataTypeEncodeSize = Datatype.GetEncodeSize();
+        driver.Write(dataTypeEncodeSize);
 
         // dataspace size
-        driver.Write((ushort)0 /* dummy */);
+        var dataSpaceEncodeSize = Dataspace.GetEncodeSize();
+        driver.Write(dataSpaceEncodeSize);
 
         // name character set encoding
         if (Version == 3)
@@ -44,31 +45,45 @@ internal partial record class AttributeMessage
         }
 
         // datatype
-        var position2 = driver.BaseStream.Position;
         Datatype.Encode(driver);
-        var position3 = driver.BaseStream.Position;
 
         if (Version == 1)
             throw new NotImplementedException() /* Version 1 requires padding */;
 
         // dataspace
-        var position4 = driver.BaseStream.Position;
         Dataspace.Encode(driver);
-        var position5 = driver.BaseStream.Position;
 
         if (Version == 1)
             throw new NotImplementedException() /* Version 1 requires padding */;
 
         // data
         EncodeData?.Invoke(driver);
+    }
 
-        var position6 = driver.BaseStream.Position;
+    public ushort GetEncodeSize()
+    {
+        if (Version != 3)
+            throw new Exception("Only version 3 attribute messages are supported.");
 
-        // TODO make this more efficient
-        // datatype size & dataspace size
-        driver.BaseStream.Seek(position1, SeekOrigin.Begin);
-        driver.Write((ushort)(position3 - position2));
-        driver.Write((ushort)(position5 - position4));
-        driver.BaseStream.Seek(position6, SeekOrigin.Begin);
+        var nameEncodeSize = Encoding.UTF8.GetBytes(Name).Length + 1;
+
+        var size =
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(ushort) +
+            sizeof(ushort) +
+            sizeof(ushort) +
+            sizeof(byte) +
+            nameEncodeSize +
+            Datatype.GetEncodeSize() +
+            Dataspace.GetEncodeSize() +
+            GetDataSize();
+
+        return (ushort)size;
+    }
+
+    private ushort GetDataSize()
+    {
+        return 0; // TODO: implement
     }
 }
