@@ -13,9 +13,10 @@ internal readonly partial record struct HeaderMessage
         else if (Version == 2)
             driver.Write((byte)Type);
 
+
         // data size (fake)
-        var position1 = driver.BaseStream.Position;
-        driver.Write((ushort)0 /* dummy */);
+        var dataEncodeSize = Data.GetEncodeSize();
+        driver.Write(dataEncodeSize);
 
         // flags
         driver.Write((byte)Flags);
@@ -28,14 +29,24 @@ internal readonly partial record struct HeaderMessage
             driver.Write(CreationOrder);
 
         // data
-        var position2 = driver.BaseStream.Position;
         Data.Encode(driver);
-        var position3 = driver.BaseStream.Position;
+    }
 
-        // data size (real)
-        driver.BaseStream.Seek(position1, SeekOrigin.Begin);
-        var dataSize = (ushort)(position3 - position2);
-        driver.Write(dataSize);
-        driver.BaseStream.Seek(position3, SeekOrigin.Begin);
+    public uint GetEncodeSize(bool withCreationOrder)
+    {
+        if (Version != 2)
+            throw new Exception("Only v2 header messages are supported");
+
+        var dataEncodeSize = Data.GetEncodeSize();
+
+        return sizeof(byte) +
+            sizeof(ushort) +
+            sizeof(byte) +
+            (
+                withCreationOrder
+                    ? sizeof(ushort)
+                    : 0U
+            ) +
+            dataEncodeSize;
     }
 }

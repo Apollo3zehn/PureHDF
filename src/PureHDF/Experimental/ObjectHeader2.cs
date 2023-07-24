@@ -5,16 +5,23 @@ namespace PureHDF.VOL.Native;
 internal partial record class ObjectHeader2
 {
     public void Encode(WriteContext writeContext)
-    {
+    {   
+        var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
+        var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
+
         var freeSpaceManager = writeContext.FreeSpaceManager;
-        // TODO reserve space here and remove the 1024 byte reserve call
+        var address = freeSpaceManager.Allocate((long)encodeSize);
 
         var driver = writeContext.Driver;
+        driver.BaseStream.Seek(address, SeekOrigin.Begin);
 
-        var position1 = driver.BaseStream.Position;
-
+        // signature
         driver.Write(Signature);
+
+        // version
         driver.Write(Version);
+
+        // flags
         driver.Write((byte)Flags);
 
         // access time, modification time, change time and birth time
@@ -33,28 +40,23 @@ internal partial record class ObjectHeader2
             driver.Write(MinimumDenseAttributesCount);
         }
 
-        // size of chunk 0 (fake)
-        var position2 = driver.BaseStream.Position;
-        var chunkFieldSize = (byte)(1 << ((byte)Flags & 0x03));
-        WriteUtils.WriteUlongArbitrary(driver, 0, chunkFieldSize);
+        // size of chunk 0
+        // TODO: this size should depend on actual value of headerMessagesEncodeSize
+        var chunkFieldSize = GetChunk0FieldSize();
+        WriteUtils.WriteUlongArbitrary(driver, headerMessagesEncodeSize, chunkFieldSize);
 
         // with creation order
         var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
 
         // header messages
-        var position3 = driver.BaseStream.Position;
         WriteHeaderMessages(driver, withCreationOrder);
-        var position4 = driver.BaseStream.Position;
-
-        // size of chunk 0 (real)
-        driver.BaseStream.Seek(position2, SeekOrigin.Begin);
-        var sizeOfChunk0 = (ulong)(position4 - position3);
-        WriteUtils.WriteUlongArbitrary(driver, sizeOfChunk0, chunkFieldSize);
 
         // checksum
-        driver.BaseStream.Seek(position1, SeekOrigin.Begin);
-        var checksumData = new byte[position4 - position1];
+        var checksumData = new byte[encodeSize - sizeof(uint)];
+
+        driver.BaseStream.Seek(address, SeekOrigin.Begin);
         driver.BaseStream.Read(checksumData);
+
         var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
 
         driver.Write(checksum);
@@ -66,5 +68,39 @@ internal partial record class ObjectHeader2
         {
             message.Encode(driver, withCreationOrder);
         }
+    }
+
+    private ulong GetHeaderMessagesEncodeSize()
+    {
+        var withCreationOrder = Flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
+        
+        return HeaderMessages
+            .Aggregate(0UL, (result, headerMessage) => result + headerMessage.GetEncodeSize(withCreationOrder));
+    }
+
+    private ulong GetEncodeSize(ulong headerMessagesEncodeSize)
+    {
+        return (uint)Signature.Length +
+            sizeof(byte) +
+            sizeof(byte) +
+            (
+                Flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes)
+                    ? sizeof(uint) + sizeof(uint) + sizeof(uint) + sizeof(uint)
+                    : 0UL
+            ) +
+            (
+                Flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues)
+                    ? sizeof(ushort) + sizeof(ushort)
+                    : 0UL
+            ) +
+            GetChunk0FieldSize() +
+            headerMessagesEncodeSize +
+            0UL /* gap */ +
+            sizeof(uint);
+    }
+
+    private byte GetChunk0FieldSize()
+    {
+        return (byte)(1 << ((byte)Flags & 0x03));
     }
 }
