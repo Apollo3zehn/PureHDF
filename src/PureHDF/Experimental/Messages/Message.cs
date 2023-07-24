@@ -7,7 +7,7 @@ internal abstract partial record class Message
         throw new NotImplementedException();
     }
 
-    public ushort GetEncodeSize()
+    public virtual ushort GetEncodeSize()
     {
         throw new NotImplementedException();
     }

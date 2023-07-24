@@ -42,7 +42,7 @@ internal partial record class DataspaceMessage
         }
     }
 
-    public ushort GetEncodeSize()
+    public override ushort GetEncodeSize()
     {
         if (Version != 2)
             throw new Exception("Only version 2 dataspace messages are supported.");
@@ -56,7 +56,7 @@ internal partial record class DataspaceMessage
             (
                 Flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes)
                     ? sizeof(ulong) * Rank
-                    : (ushort)0
+                    : 0
             );
             
         return (ushort)size;

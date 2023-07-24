@@ -39,7 +39,7 @@ internal partial record class LinkMessage
         LinkInfo.Encode(driver);
     }
 
-    public ushort GetEncodeSize()
+    public override ushort GetEncodeSize()
     {
         var encodedNameLength = Encoding.UTF8.GetBytes(LinkName).Length;
         var linkNameFieldLength = GetLinkNameFieldLength();
@@ -50,21 +50,21 @@ internal partial record class LinkMessage
             (
                 Flags.HasFlag(LinkInfoFlags.LinkTypeFieldIsPresent)
                     ? sizeof(byte)
-                    : (ushort)0
+                    : 0
             ) +
             (
                 Flags.HasFlag(LinkInfoFlags.CreationOrderFieldIsPresent)
                     ? sizeof(ulong)
-                    : (ushort)0
-            )
+                    : 0
+            ) +
             (
                 Flags.HasFlag(LinkInfoFlags.LinkNameEncodingFieldIsPresent)
                     ? sizeof(byte)
-                    : (ushort)0
+                    : 0
             ) +
-            linkNameFieldLength +
-            (ushort)encodedNameLength +
-            LinkInfo.GetEncodeSize();
+            (ushort)linkNameFieldLength +
+            (ushort)encodedNameLength;
+            // LinkInfo.GetEncodeSize();
             
         return (ushort)size;
     }

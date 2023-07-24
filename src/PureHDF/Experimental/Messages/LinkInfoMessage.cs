@@ -25,7 +25,7 @@ internal partial record class LinkInfoMessage
             driver.Write(BTree2CreationOrderIndexAddress);
     }
 
-    public ushort GetEncodeSize()
+    public override ushort GetEncodeSize()
     {
         var size =
             sizeof(byte) +
@@ -33,14 +33,14 @@ internal partial record class LinkInfoMessage
             (
                 Flags.HasFlag(CreationOrderFlags.TrackCreationOrder)
                     ? sizeof(ulong)
-                    : (ushort)0
+                    : 0
             ) +
             sizeof(ulong) +
             sizeof(ulong) +
             (
                 Flags.HasFlag(CreationOrderFlags.IndexCreationOrder)
                     ? sizeof(ulong)
-                    : (ushort)0
+                    : 0
             );
             
         return (ushort)size;

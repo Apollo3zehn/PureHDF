@@ -4,10 +4,7 @@ namespace PureHDF.VOL.Native;
 
 internal abstract record class DatatypePropertyDescription
 {
-    public virtual void Encode(BinaryWriter driver, uint typeSize /* only for compound v3 */)
-    {
-        //
-    }
+    public abstract void Encode(BinaryWriter driver, uint typeSize /* only for compound v3 */);
 };
 
 internal record class ArrayPropertyDescription(
@@ -56,8 +53,12 @@ internal record class ArrayPropertyDescription(
             BaseType: baseType
         );
     }
-};
 
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
+}
 internal record class BitFieldPropertyDescription(
     ushort BitOffset,
     ushort BitPrecision)
@@ -71,8 +72,12 @@ internal record class BitFieldPropertyDescription(
             BitPrecision: driver.ReadUInt16()
         );
     }
-};
 
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
+}
 internal record class CompoundPropertyDescription(
     string Name,
     ulong MemberByteOffset,
@@ -328,8 +333,12 @@ internal record class OpaquePropertyDescription(
                 .TrimEnd('\0')
         );
     }
-};
 
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
+}
 internal record class TimePropertyDescription(
     ushort BitPrecision)
     : DatatypePropertyDescription
@@ -341,8 +350,12 @@ internal record class TimePropertyDescription(
             BitPrecision: driver.ReadUInt16()
         );
     }
-};
 
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
+}
 internal record class VariableLengthPropertyDescription(
     DatatypeMessage BaseType)
     : DatatypePropertyDescription

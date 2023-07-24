@@ -2,12 +2,7 @@
 
 internal abstract record class LinkInfo()
 {
-    // virtual until all link types support encoding
-
-    public virtual void Encode(BinaryWriter driver)
-    {
-        //
-    }
+    public abstract void Encode(BinaryWriter driver);
 }
 
 internal record class HardLinkInfo(
@@ -41,6 +36,11 @@ internal record class SoftLinkInfo(
         return new SoftLinkInfo(
             Value: value
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -108,6 +108,11 @@ internal record class ExternalLinkInfo(
             Flags = flags
         };
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal record class UserDefinedLinkInfo(
@@ -121,5 +126,10 @@ internal record class UserDefinedLinkInfo(
         return new UserDefinedLinkInfo(
             Data: driver.ReadBytes(dataLength)
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }

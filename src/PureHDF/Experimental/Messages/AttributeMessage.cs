@@ -60,7 +60,7 @@ internal partial record class AttributeMessage
         EncodeData?.Invoke(driver);
     }
 
-    public ushort GetEncodeSize()
+    public override ushort GetEncodeSize()
     {
         if (Version != 3)
             throw new Exception("Only version 3 attribute messages are supported.");

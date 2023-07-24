@@ -2,10 +2,7 @@
 
 internal abstract record class DatatypeBitFieldDescription
 {
-    public virtual void Encode(BinaryWriter driver)
-    {
-        //
-    }
+    public abstract void Encode(BinaryWriter driver);
 };
 
 internal record class ArrayBitFieldDescription(
@@ -19,6 +16,11 @@ internal record class ArrayBitFieldDescription(
         return new ArrayBitFieldDescription(
             //
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -37,6 +39,11 @@ internal record class BitFieldBitFieldDescription(
             PaddingTypeLow: (data[0] >> 1) > 0,
             PaddingTypeHigh: (data[0] >> 2) > 0
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -220,6 +227,11 @@ internal record class OpaqueBitFieldDescription(
             AsciiTagByteLength: data[0]
         );
     }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal record class ReferenceBitFieldDescription(
@@ -233,6 +245,11 @@ internal record class ReferenceBitFieldDescription(
         return new ReferenceBitFieldDescription(
             Type: (InternalReferenceType)(data[0] & 0x0F)
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -277,6 +294,11 @@ internal record class TimeBitFieldDescription(
         return new TimeBitFieldDescription(
             ByteOrder: (ByteOrder)(data[0] & 0x01)
         );
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
