@@ -82,9 +82,9 @@ internal partial record class DatatypeMessage(
                 DatatypeMessageClass.FloatingPoint => FloatingPointPropertyDescription.Decode(driver),
                 DatatypeMessageClass.Time => TimePropertyDescription.Decode(driver),
                 DatatypeMessageClass.BitField => BitFieldPropertyDescription.Decode(driver),
-                DatatypeMessageClass.Opaque => OpaquePropertyDescription.Decode(driver, GetOpaqueTagByteLength(bitField)),
+                DatatypeMessageClass.Opaque => OpaquePropertyDescription.Decode(driver, ((OpaqueBitFieldDescription)bitField).AsciiTagByteLength),
                 DatatypeMessageClass.Compound => CompoundPropertyDescription.Decode(driver, version, size),
-                DatatypeMessageClass.Enumerated => EnumerationPropertyDescription.Decode(driver, version, size, GetEnumMemberCount(bitField)),
+                DatatypeMessageClass.Enumerated => EnumerationPropertyDescription.Decode(driver, version, size, ((EnumerationBitFieldDescription)bitField).MemberCount),
                 DatatypeMessageClass.VariableLength => VariableLengthPropertyDescription.Decode(driver),
                 DatatypeMessageClass.Array => ArrayPropertyDescription.Decode(driver, version),
                 _ => throw new NotSupportedException($"The data type message '{@class}' is not supported.")
@@ -103,27 +103,5 @@ internal partial record class DatatypeMessage(
             Version = version,
             Class = @class
         };
-    }
-
-    private static byte GetOpaqueTagByteLength(DatatypeBitFieldDescription bitField)
-    {
-        var opaqueDescription = bitField as OpaqueBitFieldDescription;
-
-        if (opaqueDescription is not null)
-            return opaqueDescription.AsciiTagByteLength;
-
-        else
-            throw new FormatException($"For opaque types, the bit field description must be an instance of type '{nameof(OpaqueBitFieldDescription)}'.");
-    }
-
-    private static ushort GetEnumMemberCount(DatatypeBitFieldDescription bitField)
-    {
-        var enumerationDescription = bitField as EnumerationBitFieldDescription;
-
-        if (enumerationDescription is not null)
-            return enumerationDescription.MemberCount;
-
-        else
-            throw new FormatException($"For enumeration types, the bit field description must be an instance of type '{nameof(EnumerationBitFieldDescription)}'.");
     }
 }

@@ -5,6 +5,8 @@ namespace PureHDF.VOL.Native;
 internal abstract record class DatatypePropertyDescription
 {
     public abstract void Encode(BinaryWriter driver, uint typeSize /* only for compound v3 */);
+
+    public abstract ushort GetEncodeSize(uint typeSize /* only for compound v3 */);
 };
 
 internal record class ArrayPropertyDescription(
@@ -58,6 +60,11 @@ internal record class ArrayPropertyDescription(
     {
         throw new NotImplementedException();
     }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
 }
 internal record class BitFieldPropertyDescription(
     ushort BitOffset,
@@ -76,6 +83,13 @@ internal record class BitFieldPropertyDescription(
     public override void Encode(BinaryWriter driver, uint typeSize)
     {
         throw new NotImplementedException();
+    }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        return
+            sizeof(uint) +
+            sizeof(uint);
     }
 }
 internal record class CompoundPropertyDescription(
@@ -180,7 +194,8 @@ internal record class CompoundPropertyDescription(
     public override void Encode(BinaryWriter driver, uint typeSize)
     {
         // name
-        var nameBytes = Encoding.ASCII.GetBytes(Name); // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
+        // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
+        var nameBytes = Encoding.ASCII.GetBytes(Name);
         driver.Write(nameBytes);
         driver.Write((byte)0);
 
@@ -201,6 +216,20 @@ internal record class CompoundPropertyDescription(
     
         // member type message
         MemberTypeMessage.Encode(driver);
+    }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
+        var nameBytesCount = Name.Length;
+        var byteCount = Utils.FindMinByteCount(typeSize);
+
+        var encodeSize =
+            (ulong)nameBytesCount +
+            byteCount +
+            MemberTypeMessage.GetEncodeSize();
+
+        return (ushort)encodeSize;
     }
 }
 internal record class EnumerationPropertyDescription(
@@ -260,6 +289,16 @@ internal record class EnumerationPropertyDescription(
             driver.Write(value);
         }
     }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        var encodeSize =
+            BaseType.GetEncodeSize() +
+            Names.Aggregate(0, (sum, name) => sum + name.Length) +
+            Values.Aggregate(0, (sum, value) => sum + value.Length);
+
+        return (ushort)encodeSize;
+    }
 };
 
 internal record class FixedPointPropertyDescription(
@@ -280,6 +319,13 @@ internal record class FixedPointPropertyDescription(
     {
         driver.Write(BitOffset);
         driver.Write(BitPrecision);
+    }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        return
+            sizeof(ushort) +
+            sizeof(ushort);
     }
 };
 
@@ -317,6 +363,18 @@ internal record class FloatingPointPropertyDescription(
         driver.Write(MantissaSize);
         driver.Write(ExponentBias);
     }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        return
+            sizeof(ushort) +
+            sizeof(ushort) +
+            sizeof(byte) + 
+            sizeof(byte) + 
+            sizeof(byte) + 
+            sizeof(byte) + 
+            sizeof(uint);
+    }
 };
 
 internal record class OpaquePropertyDescription(
@@ -338,7 +396,13 @@ internal record class OpaquePropertyDescription(
     {
         throw new NotImplementedException();
     }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
 }
+
 internal record class TimePropertyDescription(
     ushort BitPrecision)
     : DatatypePropertyDescription
@@ -355,7 +419,13 @@ internal record class TimePropertyDescription(
     {
         throw new NotImplementedException();
     }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        throw new NotImplementedException();
+    }
 }
+
 internal record class VariableLengthPropertyDescription(
     DatatypeMessage BaseType)
     : DatatypePropertyDescription
@@ -371,5 +441,10 @@ internal record class VariableLengthPropertyDescription(
     public override void Encode(BinaryWriter driver, uint typeSize)
     {
         BaseType.Encode(driver);
+    }
+
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        return BaseType.GetEncodeSize();
     }
 };

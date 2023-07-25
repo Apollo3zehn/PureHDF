@@ -57,7 +57,7 @@ internal partial record class AttributeMessage
             throw new NotImplementedException() /* Version 1 requires padding */;
 
         // data
-        EncodeData?.Invoke(driver);
+        EncodeData.Invoke(driver);
     }
 
     public override ushort GetEncodeSize()
@@ -66,6 +66,11 @@ internal partial record class AttributeMessage
             throw new Exception("Only version 3 attribute messages are supported.");
 
         var nameEncodeSize = Encoding.UTF8.GetBytes(Name).Length + 1;
+        var dataSize = Datatype.Size * Dataspace.DimensionSizes.Aggregate(1UL, (product, dimension) => product * dimension);
+
+        // TODO: make this more exact?
+        if (dataSize > 64 * 1024)
+            throw new Exception("The maximum attribute size is 64KB");
 
         var size =
             sizeof(byte) +
@@ -77,13 +82,8 @@ internal partial record class AttributeMessage
             nameEncodeSize +
             Datatype.GetEncodeSize() +
             Dataspace.GetEncodeSize() +
-            GetDataSize();
+            (ushort)dataSize;
 
         return (ushort)size;
-    }
-
-    private ushort GetDataSize()
-    {
-        return 0; // TODO: implement
     }
 }

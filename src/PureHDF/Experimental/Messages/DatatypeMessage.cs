@@ -64,6 +64,37 @@ internal partial record class DatatypeMessage : Message
         return result;
     }
 
+    public override void Encode(BinaryWriter driver)
+    {
+        var classVersion = (byte)((byte)Class & 0x0F | Version << 4);
+        driver.Write(classVersion);
+
+        BitField.Encode(driver);
+
+        driver.Write(Size);
+
+        foreach (var property in Properties)
+        {
+            property.Encode(driver, Size);
+        }
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        var propertiesEncodeSize = Properties.Aggregate(0, (sum, properties) 
+            => sum + properties.GetEncodeSize(Size));
+
+        var encodeSize =
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(uint) +
+            propertiesEncodeSize;
+            
+        return (ushort)encodeSize;
+    }
+
     private static (DatatypeMessage, EncodeDelegate) InternalCreate(
         WriteContext context,
         Type type,
@@ -1069,21 +1100,6 @@ internal partial record class DatatypeMessage : Message
         for (int i = 0; i < span.Length; i++)
         {
             elementEncode(driver, span[i]!);
-        }
-    }
-
-    public override void Encode(BinaryWriter driver)
-    {
-        var classVersion = (byte)((byte)Class & 0x0F | Version << 4);
-        driver.Write(classVersion);
-
-        BitField.Encode(driver);
-
-        driver.Write(Size);
-
-        foreach (var property in Properties)
-        {
-            property.Encode(driver, Size);
         }
     }
 }

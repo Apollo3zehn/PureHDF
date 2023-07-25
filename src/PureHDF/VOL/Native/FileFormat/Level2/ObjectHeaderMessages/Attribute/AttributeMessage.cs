@@ -6,7 +6,7 @@ internal partial record class AttributeMessage(
     DatatypeMessage Datatype,
     DataspaceMessage Dataspace,
     Memory<byte> InputData,
-    Action<BinaryWriter>? EncodeData
+    Action<BinaryWriter> EncodeData
 ) : Message
 {
     private byte _version;
@@ -104,7 +104,7 @@ internal partial record class AttributeMessage(
             Datatype: datatype,
             Dataspace: dataspace,
             InputData: data,
-            EncodeData: default
+            EncodeData: default!
         )
         {
             Version = version
