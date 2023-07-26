@@ -63,7 +63,7 @@ internal partial record class LinkMessage
                     : 0
             ) +
             (ushort)linkNameFieldLength +
-            (ushort)encodedNameLength;
+            (ushort)encodedNameLength +
             LinkInfo.GetEncodeSize();
             
         return (ushort)size;
