@@ -221,7 +221,7 @@ internal record class CompoundPropertyDescription(
     public override ushort GetEncodeSize(uint typeSize)
     {
         // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
-        var nameBytesCount = Name.Length;
+        var nameBytesCount = Name.Length + 1;
         var byteCount = Utils.FindMinByteCount(typeSize);
 
         var encodeSize =
@@ -294,7 +294,7 @@ internal record class EnumerationPropertyDescription(
     {
         var encodeSize =
             BaseType.GetEncodeSize() +
-            Names.Aggregate(0, (sum, name) => sum + name.Length) +
+            Names.Aggregate(0, (sum, name) => sum + name.Length + 1) +
             Values.Aggregate(0, (sum, value) => sum + value.Length);
 
         return (ushort)encodeSize;

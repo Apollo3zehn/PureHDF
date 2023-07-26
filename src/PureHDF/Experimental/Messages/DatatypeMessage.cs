@@ -86,9 +86,7 @@ internal partial record class DatatypeMessage : Message
 
         var encodeSize =
             sizeof(byte) +
-            sizeof(byte) +
-            sizeof(byte) +
-            sizeof(byte) +
+            sizeof(byte) * 3 +
             sizeof(uint) +
             propertiesEncodeSize;
             

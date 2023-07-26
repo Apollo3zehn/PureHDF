@@ -21,11 +21,7 @@ internal static class H5Writer
             ObjectToAddressMap: new()
         );
 
-        // root group
-        
-        // TODO FIX THIS (workaround to object header data)
-        freeSpaceManager.Allocate(1024);
-
+        // root group       
         driver.BaseStream.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
         var rootGroupAddress = EncodeGroup(writeContext, file);
 
