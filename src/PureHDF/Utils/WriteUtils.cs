@@ -12,6 +12,9 @@ internal static class WriteUtils
     private static readonly MethodInfo _methodInfoUnmanagedArray = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    private static readonly MethodInfo _methodInfoUnmanagedMemory = typeof(WriteUtils)
+        .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     private static readonly MethodInfo _methodInfoMemory = typeof(WriteUtils)
         .GetMethod(nameof(EncodeMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
@@ -98,9 +101,6 @@ internal static class WriteUtils
     }
 
     // Unmanaged Memory
-    private static readonly MethodInfo _methodInfoUnmanagedMemory = typeof(DatatypeMessage)
-        .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
     // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
     public static void InvokeEncodeUnmanagedMemory(Type type, Stream driver, object data)
     {
