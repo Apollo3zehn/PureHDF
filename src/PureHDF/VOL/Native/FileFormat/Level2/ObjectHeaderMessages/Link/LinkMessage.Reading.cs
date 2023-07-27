@@ -55,7 +55,7 @@ internal partial record class LinkMessage(
 
         // link length
         var linkLengthFieldLength = (ulong)(1 << ((byte)flags & 0x03));
-        var linkNameLength = Utils.ReadUlong(driver, linkLengthFieldLength);
+        var linkNameLength = ReadUtils.ReadUlong(driver, linkLengthFieldLength);
 
         // link name
         var linkName = ReadUtils.ReadFixedLengthString(driver, (int)linkNameLength, linkNameEncoding);

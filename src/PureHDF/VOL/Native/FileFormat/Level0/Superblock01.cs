@@ -49,10 +49,10 @@ internal record class Superblock01(
             driver.ReadUInt16();
         }
 
-        var baseAddress = Utils.ReadUlong(driver, offsetsSize);
-        var freeSpaceInfoAddress = Utils.ReadUlong(driver, offsetsSize);
-        var endOfFileAddress = Utils.ReadUlong(driver, offsetsSize);
-        var driverInfoBlockAddress = Utils.ReadUlong(driver, offsetsSize);
+        var baseAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var freeSpaceInfoAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var endOfFileAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var driverInfoBlockAddress = ReadUtils.ReadUlong(driver, offsetsSize);
 
         var superblock = new Superblock01(
             driver,

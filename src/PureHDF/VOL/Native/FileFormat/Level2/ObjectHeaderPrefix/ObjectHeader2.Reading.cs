@@ -69,7 +69,7 @@ internal partial record class ObjectHeader2(
 
         // size of chunk 0
         var chunkFieldSize = (byte)(1 << ((byte)flags & 0x03));
-        var sizeOfChunk0 = Utils.ReadUlong(driver, chunkFieldSize);
+        var sizeOfChunk0 = ReadUtils.ReadUlong(driver, chunkFieldSize);
 
         // with creation order
         var withCreationOrder = flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);

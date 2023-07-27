@@ -22,10 +22,10 @@ internal partial record class Superblock23(
         var offsetsSize = driver.ReadByte();
         var lengthsSize = driver.ReadByte();
         var fileConsistencyFlags = (FileConsistencyFlags)driver.ReadByte();
-        var baseAddress = Utils.ReadUlong(driver, offsetsSize);
-        var extensionAddress = Utils.ReadUlong(driver, offsetsSize);
-        var endOfFileAddress = Utils.ReadUlong(driver, offsetsSize);
-        var rootGroupObjectHeaderAddress = Utils.ReadUlong(driver, offsetsSize);
+        var baseAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var extensionAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var endOfFileAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var rootGroupObjectHeaderAddress = ReadUtils.ReadUlong(driver, offsetsSize);
         var _ = driver.ReadUInt32();
 
         return new Superblock23(

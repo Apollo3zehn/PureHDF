@@ -35,14 +35,14 @@ internal record class BTree2InternalNode<T>(
             var address = superblock.ReadOffset(driver);
 
             // record count
-            var childRecordCount = Utils.ReadUlong(driver, header.MaxRecordCountSize);
+            var childRecordCount = ReadUtils.ReadUlong(driver, header.MaxRecordCountSize);
 
             // total record count
             ulong totalRecordCount;
 
             if (nodeLevel > 1)
             {
-                var totalChildRecordCount = Utils.ReadUlong(driver, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
+                var totalChildRecordCount = ReadUtils.ReadUlong(driver, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
                 totalRecordCount = totalChildRecordCount;
             }
 

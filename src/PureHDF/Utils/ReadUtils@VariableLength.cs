@@ -27,14 +27,14 @@ internal static partial class ReadUtils
 
         using var localDriver = new H5StreamDriver(new MemoryStream(source.ToArray()), leaveOpen: false);
 
-        var genericMethodInfo = _methodInfo.MakeGenericMethod(typeof(T));
+        var genericMethodInfo = DataUtils.MethodInfoCastToArray.MakeGenericMethod(typeof(T));
         var parameters = new object[1];
-        var isReferenceOrContainsReferences = IsReferenceOrContainsReferences(typeof(T));
+        var isReferenceOrContainsReferences = DataUtils.IsReferenceOrContainsReferences(typeof(T));
 
         for (int i = 0; i < destinationSpan.Length; i++)
         {
             var length = localDriver.ReadUInt32();
-            var globalHeapId = GlobalHeapId.Decode(context.Superblock, localDriver);
+            var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, localDriver);
 
             if (globalHeapId.Equals(default))
             {

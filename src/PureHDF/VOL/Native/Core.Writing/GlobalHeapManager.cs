@@ -1,4 +1,4 @@
-﻿namespace PureHDF.Experimental;
+﻿namespace PureHDF.VOL.Native;
 
 internal class GlobalHeapManager
 {
@@ -31,7 +31,7 @@ internal class GlobalHeapManager
         _driver = driver;
     }
 
-    public (GlobalHeapId, Memory<byte>) AddObject(int size)
+    public (WritingGlobalHeapId, Memory<byte>) AddObject(int size)
     {
         // validation
         if (_collectionState is null)
@@ -70,7 +70,7 @@ internal class GlobalHeapManager
 
         collectionState.Consumed += sizeof(ulong);
 
-        var globalHeapId = new GlobalHeapId(
+        var globalHeapId = new WritingGlobalHeapId(
             Address: (ulong)_baseAddress,
             Index: _index
         );

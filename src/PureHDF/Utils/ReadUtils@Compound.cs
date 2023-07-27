@@ -33,7 +33,7 @@ internal static partial class ReadUtils
         {
             var name = getName(fieldInfo) ?? fieldInfo.Name;
 
-            var isNotSupported = IsReferenceOrContainsReferences(fieldInfo.FieldType) &&
+            var isNotSupported = DataUtils.IsReferenceOrContainsReferences(fieldInfo.FieldType) &&
                 fieldInfo.FieldType != typeof(string) &&
                 !IsFixedSizeArray(fieldInfo);
 

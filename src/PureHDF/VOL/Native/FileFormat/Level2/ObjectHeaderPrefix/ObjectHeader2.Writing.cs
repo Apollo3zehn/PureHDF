@@ -1,6 +1,4 @@
-﻿using PureHDF.Experimental;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {

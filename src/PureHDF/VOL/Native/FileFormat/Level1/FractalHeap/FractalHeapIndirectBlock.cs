@@ -65,7 +65,7 @@ internal record class FractalHeapIndirectBlock(
 
         // block offset
         var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-        var blockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
+        var blockOffset = ReadUtils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
 
         // H5HFcache.c (H5HF__cache_iblock_deserialize)
         var length = rowCount * header.TableWidth;

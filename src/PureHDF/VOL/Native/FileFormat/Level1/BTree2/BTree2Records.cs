@@ -247,7 +247,7 @@ internal readonly record struct BTree2Record11(
         var address = superblock.ReadOffset(driver);
 
         // chunk size
-        var chunkSize = Utils.ReadUlong(driver, chunkSizeLength);
+        var chunkSize = ReadUtils.ReadUlong(driver, chunkSizeLength);
 
         // filter mask
         var filterMask = driver.ReadUInt32();

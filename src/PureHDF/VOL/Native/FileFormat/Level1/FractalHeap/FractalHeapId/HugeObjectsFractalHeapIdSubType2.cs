@@ -16,7 +16,7 @@ internal record class HugeObjectsFractalHeapIdSubType2(
         return new HugeObjectsFractalHeapIdSubType2(
             Context: context,
             HeapHeader: header,
-            BTree2Key: Utils.ReadUlong(localDriver, header.HugeIdsSize)
+            BTree2Key: ReadUtils.ReadUlong(localDriver, header.HugeIdsSize)
         );
     }
 

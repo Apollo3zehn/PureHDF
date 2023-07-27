@@ -213,7 +213,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             else
                 byteOrder = ByteOrder.VaxEndian;
 
-            Utils.EnsureEndianness(
+            DataUtils.EnsureEndianness(
                 source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */,
                 destination: MemoryMarshal.AsBytes(result.AsSpan()),
                 byteOrder,

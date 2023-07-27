@@ -67,7 +67,7 @@ internal record class FractalHeapDirectBlock(
 
         // block offset
         var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-        var blockOffset = Utils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
+        var blockOffset = ReadUtils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
         headerSize += (ulong)blockOffsetFieldSize;
 
         // checksum

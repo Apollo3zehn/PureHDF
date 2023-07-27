@@ -21,7 +21,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Constructors
 
-    internal NativeDataset(H5File file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeDataset(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         File = file;
@@ -88,7 +88,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Properties
 
-    internal H5File File { get; }
+    internal NativeFile File { get; }
 
     /// <inheritdoc />
     public IH5Dataspace Space
@@ -780,7 +780,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         /* ensure correct endianness */
         if (DataTypeMessage.BitField is IByteOrderAware byteOrderAware)
         {
-            Utils.EnsureEndianness(
+            DataUtils.EnsureEndianness(
                 source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */,
                 destination: MemoryMarshal.AsBytes(result.AsSpan()),
                 byteOrderAware.ByteOrder,

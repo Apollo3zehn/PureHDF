@@ -103,7 +103,7 @@
                 {
                     return new FilteredDataBlockElement(
                         Address: Dataset.Context.Superblock.ReadOffset(driver),
-                        ChunkSize: (uint)Utils.ReadUlong(driver, chunkSizeLength),
+                        ChunkSize: (uint)ReadUtils.ReadUlong(driver, chunkSizeLength),
                         FilterMask: driver.ReadUInt32()
                     );
                 });

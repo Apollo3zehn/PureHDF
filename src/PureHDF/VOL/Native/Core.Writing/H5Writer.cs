@@ -1,4 +1,4 @@
-namespace PureHDF.Experimental;
+namespace PureHDF;
 
 internal static class H5Writer
 {

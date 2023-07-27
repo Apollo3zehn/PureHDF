@@ -1,12 +1,11 @@
-﻿using System.IO.MemoryMappedFiles;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace PureHDF;
 
 /// <summary>
 /// A native HDF5 file object. This is the entry-point to work with HDF5 files.
 /// </summary>
-public class H5File : NativeGroup, IDisposable
+public class NativeFile : NativeGroup, IDisposable
 {
     // TODO: K-Values message https://forum.hdfgroup.org/t/problem-reading-version-1-8-hdf5-files-using-file-format-specification-document-clarification-needed/7568
     #region Fields
@@ -19,7 +18,7 @@ public class H5File : NativeGroup, IDisposable
 
     #region Constructors
 
-    private H5File(
+    private NativeFile(
         NativeContext context,
         NativeNamedReference reference,
         ObjectHeader header,
@@ -70,101 +69,7 @@ public class H5File : NativeGroup, IDisposable
 
     #region Methods
 
-    /// <summary>
-    /// Opens an HDF5 file for reading. Please see the <seealso href="https://learn.microsoft.com/en-us/dotnet/api/system.io.file.openread#remarks">Remarks</seealso> section for more information how the file is opened.
-    /// </summary>
-    /// <param name="filePath">The file to open.</param>
-    public static H5File OpenRead(string filePath)
-    {
-        return InternalOpenRead(filePath);
-    }
-
-    /// <summary>
-    /// Opens an HDF5 file.
-    /// </summary>
-    /// <param name="filePath">The file to open.</param>
-    /// <param name="mode">A <see cref="FileMode"/> value that specifies whether a file is created if one does not exist, and determines whether the contents of existing files are retained or overwritten.</param>
-    /// <param name="fileAccess">A <see cref="FileAccess"/> value that specifies the operations that can be performed on the file.</param>
-    /// <param name="fileShare">A <see cref="FileShare"/> value specifying the type of access other threads have to the file.</param>
-    /// <param name="useAsync">A boolean which indicates if the file be opened with the <see cref="FileOptions.Asynchronous"/> flag.</param>
-    public static H5File Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool useAsync = false)
-    {
-        return InternalOpen(filePath, mode, fileAccess, fileShare, useAsync: useAsync);
-    }
-
-    /// <summary>
-    /// Opens an HDF5 stream.
-    /// </summary>
-    /// <param name="stream">The stream to use.</param>
-    /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
-    /// <returns></returns>
-    public static H5File Open(Stream stream, bool leaveOpen = false)
-    {
-        H5DriverBase driver;
-
-#if NET6_0_OR_GREATER
-        if (stream is FileStream fileStream)
-            driver = new H5FileHandleDriver(fileStream, leaveOpen: leaveOpen);
-
-        else
-#endif
-            driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
-
-        return InternalOpen(driver, string.Empty);
-    }
-
-    /// <summary>
-    /// Opens an HDF5 memory-mapped file.
-    /// </summary>
-    /// <param name="accessor">The memory-mapped accessor to use.</param>
-    /// <returns></returns>
-    public static H5File Open(MemoryMappedViewAccessor accessor)
-    {
-        var driver = new H5MemoryMappedFileDriver(accessor);
-        return InternalOpen(driver, string.Empty);
-    }
-
-    /// <summary>
-    /// Gets the file selection that is referenced by the given <paramref name="reference"/>.
-    /// </summary>
-    /// <param name="reference">The reference of the region.</param>
-    /// <returns>The requested selection.</returns>
-    public Selection Get(NativeRegionReference1 reference)
-    {
-        if (reference.Equals(default))
-            throw new Exception("The reference is invalid");
-
-        Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
-
-        var globalHeapId = new GlobalHeapId(
-            CollectionAddress: reference.CollectionAddress,
-            ObjectIndex: reference.ObjectIndex);
-
-        var globalHeapCollection = NativeCache.GetGlobalHeapObject(Context, globalHeapId.CollectionAddress);
-        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
-
-        using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-        var address = Context.Superblock.ReadOffset(localDriver);
-        var dataspaceSelection = DataspaceSelection.Decode(localDriver);
-
-        Selection selection = dataspaceSelection.Info switch
-        {
-            H5S_SEL_NONE none => new NoneSelection(),
-            H5S_SEL_POINTS points => new PointSelection(points.PointData),
-            H5S_SEL_HYPER hyper => hyper.SelectionInfo switch
-            {
-                RegularHyperslabSelectionInfo regular => new HyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
-                IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection((int)irregular.Rank, irregular.BlockOffsets),
-                _ => throw new NotSupportedException($"The hyperslab selection type '{hyper.SelectionInfo.GetType().FullName}' is not supported.")
-            },
-            H5S_SEL_ALL all => new AllSelection(),
-            _ => throw new NotSupportedException($"The dataspace selection type '{dataspaceSelection.Info.GetType().FullName}' is not supported.")
-        };
-
-        return selection;
-    }
-
-    internal static H5File InternalOpenRead(string filePath, bool deleteOnClose = false)
+    internal static NativeFile InternalOpenRead(string filePath, bool deleteOnClose = false)
     {
         return InternalOpen(
             filePath,
@@ -175,7 +80,7 @@ public class H5File : NativeGroup, IDisposable
             deleteOnClose: deleteOnClose);
     }
 
-    internal static H5File InternalOpen(
+    internal static NativeFile InternalOpen(
         string filePath,
         FileMode fileMode,
         FileAccess fileAccess,
@@ -202,7 +107,7 @@ public class H5File : NativeGroup, IDisposable
         return InternalOpen(driver, absoluteFilePath, deleteOnClose);
     }
 
-    internal static H5File InternalOpen(
+    internal static NativeFile InternalOpen(
         H5DriverBase driver, 
         string absoluteFilePath,
         bool deleteOnClose = false)
@@ -259,7 +164,7 @@ public class H5File : NativeGroup, IDisposable
         var context = new NativeContext(driver, superblock);
         var header = ObjectHeader.Construct(context);
 
-        var file = new H5File(context, default, header, absoluteFilePath, deleteOnClose);
+        var file = new NativeFile(context, default, header, absoluteFilePath, deleteOnClose);
         var reference = new NativeNamedReference("/", address, file);
         file.Reference = reference;
 
@@ -270,6 +175,46 @@ public class H5File : NativeGroup, IDisposable
     private static bool ValidateSignature(byte[] actual, byte[] expected)
     {
         return expected.SequenceEqual(actual);
+    }
+
+    /// <summary>
+    /// Gets the file selection that is referenced by the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the region.</param>
+    /// <returns>The requested selection.</returns>
+    public Selection Get(NativeRegionReference1 reference)
+    {
+        if (reference.Equals(default))
+            throw new Exception("The reference is invalid");
+
+        Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+
+        var globalHeapId = new ReadingGlobalHeapId(
+            CollectionAddress: reference.CollectionAddress,
+            ObjectIndex: reference.ObjectIndex);
+
+        var globalHeapCollection = NativeCache.GetGlobalHeapObject(Context, globalHeapId.CollectionAddress);
+        var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
+
+        using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
+        var address = Context.Superblock.ReadOffset(localDriver);
+        var dataspaceSelection = DataspaceSelection.Decode(localDriver);
+
+        Selection selection = dataspaceSelection.Info switch
+        {
+            H5S_SEL_NONE none => new NoneSelection(),
+            H5S_SEL_POINTS points => new PointSelection(points.PointData),
+            H5S_SEL_HYPER hyper => hyper.SelectionInfo switch
+            {
+                RegularHyperslabSelectionInfo regular => new HyperslabSelection((int)regular.Rank, regular.Starts, regular.Strides, regular.Counts, regular.Blocks),
+                IrregularHyperslabSelectionInfo irregular => new IrregularHyperslabSelection((int)irregular.Rank, irregular.BlockOffsets),
+                _ => throw new NotSupportedException($"The hyperslab selection type '{hyper.SelectionInfo.GetType().FullName}' is not supported.")
+            },
+            H5S_SEL_ALL all => new AllSelection(),
+            _ => throw new NotSupportedException($"The dataspace selection type '{dataspaceSelection.Info.GetType().FullName}' is not supported.")
+        };
+
+        return selection;
     }
 
 #endregion

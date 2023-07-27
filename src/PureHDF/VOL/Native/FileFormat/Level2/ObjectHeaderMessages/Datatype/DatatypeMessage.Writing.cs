@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using PureHDF.Experimental;
 
 namespace PureHDF.VOL.Native;
 
@@ -36,13 +35,13 @@ internal partial record class DatatypeMessage : Message
 
             /* array */
             Type when WriteUtils.IsArray(type)
-                => ReadUtils.IsReferenceOrContainsReferences(type.GetElementType()!)
+                => DataUtils.IsReferenceOrContainsReferences(type.GetElementType()!)
                     ? GetTypeInfoForTopLevelEnumerable(context, type, (IEnumerable)topLevelData, isArray: true)
                     : GetTypeInfoForTopLevelUnmanagedArray(context, type.GetElementType()!, (Array)topLevelData),
 
             /* Memory<T> */
             Type when WriteUtils.IsMemory(type)
-                => ReadUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
+                => DataUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
                     ? GetTypeInfoForTopLevelMemory(context, type.GenericTypeArguments[0], topLevelData)
                     : GetTypeInfoForTopLevelUnmanagedMemory(context, type.GenericTypeArguments[0], topLevelData),
 
@@ -133,7 +132,7 @@ internal partial record class DatatypeMessage : Message
                 => GetTypeInfoForVariableLengthSequence(context, type.GenericTypeArguments[0]),
 
             /* remaining reference types */
-            Type when ReadUtils.IsReferenceOrContainsReferences(type)
+            Type when DataUtils.IsReferenceOrContainsReferences(type)
                 => GetTypeInfoForReferenceLikeType(context, type),
 
             /* non blittable (but unmanged!) */
@@ -300,7 +299,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(Stream driver, object data)
@@ -479,7 +478,7 @@ internal partial record class DatatypeMessage : Message
 
         void encode(Stream driver, object data)
         {
-            var globalHeapId = default(Experimental.GlobalHeapId);
+            var globalHeapId = default(WritingGlobalHeapId);
             Span<int> lengthArray = stackalloc int[1];
 
             if (data is not null)
@@ -510,8 +509,8 @@ internal partial record class DatatypeMessage : Message
             // encode variable length object
             driver.Write(MemoryMarshal.AsBytes(lengthArray));
 
-            Span<Experimental.GlobalHeapId> gheapIdArray 
-                = stackalloc Experimental.GlobalHeapId[] { globalHeapId };
+            Span<WritingGlobalHeapId> gheapIdArray 
+                = stackalloc WritingGlobalHeapId[] { globalHeapId };
 
             driver.Write(MemoryMarshal.AsBytes(gheapIdArray));
         }
@@ -547,7 +546,7 @@ internal partial record class DatatypeMessage : Message
 
         void encode(Stream driver, object data)
         {
-            var globalHeapId = default(Experimental.GlobalHeapId);
+            var globalHeapId = default(WritingGlobalHeapId);
             Span<int> lengthArray = stackalloc int[1];
 
             if (data is not null)
@@ -566,8 +565,8 @@ internal partial record class DatatypeMessage : Message
             // encode variable length object
             driver.Write(MemoryMarshal.AsBytes(lengthArray));
 
-            Span<Experimental.GlobalHeapId> gheapIdArray 
-                = stackalloc Experimental.GlobalHeapId[] { globalHeapId };
+            Span<WritingGlobalHeapId> gheapIdArray 
+                = stackalloc WritingGlobalHeapId[] { globalHeapId };
 
             driver.Write(MemoryMarshal.AsBytes(gheapIdArray));
         }
@@ -653,7 +652,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(Stream driver, object data)
@@ -692,7 +691,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(Stream driver, object data)
@@ -740,7 +739,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(Stream driver, object data)
@@ -788,7 +787,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(Stream driver, object data)
@@ -835,7 +834,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        var invokeEncodeUnmanagedElement = _methodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(Stream driver, object data)
@@ -979,7 +978,7 @@ internal partial record class DatatypeMessage : Message
                 throw new Exception("Multi-dimensions arrays are only supported on .NET 6+.");
 
             else
-                InvokeEncodeUnmanagedArray(elementType, driver, data);
+                WriteUtils.InvokeEncodeUnmanagedArray(elementType, driver, data);
 #endif
         }
 
@@ -998,7 +997,7 @@ internal partial record class DatatypeMessage : Message
         };
 
         void encode(Stream driver, object data)
-            => InvokeEncodeMemory(
+            => WriteUtils.InvokeEncodeMemory(
                 elementType, 
                 driver, 
                 data, 
@@ -1019,85 +1018,8 @@ internal partial record class DatatypeMessage : Message
         };
 
         void encode(Stream driver, object data) 
-            => InvokeEncodeUnmanagedMemory(elementType, driver, data);
+            => WriteUtils.InvokeEncodeUnmanagedMemory(elementType, driver, data);
 
         return (message, dimensions, encode);
-    }
-
-    // Unmanaged element
-    private static readonly MethodInfo _methodInfoElement = typeof(DatatypeMessage)
-        .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static void EncodeUnmanagedElement<T>(Stream driver, object data) where T : unmanaged
-    {
-        Span<T> source = stackalloc T[] { (T)data };
-
-        driver.Write(MemoryMarshal.AsBytes(source));
-    }
-
-    // Unmanaged array
-    private static readonly MethodInfo _methodInfoUnmanagedArray = typeof(DatatypeMessage)
-        .GetMethod(nameof(EncodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
-    private static void InvokeEncodeUnmanagedArray(Type type, Stream driver, object data)
-    {
-        var genericMethod = _methodInfoUnmanagedArray.MakeGenericMethod(type);
-        genericMethod.Invoke(null, new object[] { driver, data });
-    }
-
-    private static void EncodeUnmanagedArray<T>(Stream driver, object data) where T : unmanaged
-    {
-        driver.Write(MemoryMarshal.AsBytes<T>((T[])data));
-    }
-
-    // Unmanaged Memory
-    private static readonly MethodInfo _methodInfoUnmanagedMemory = typeof(DatatypeMessage)
-        .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
-    private static void InvokeEncodeUnmanagedMemory(Type type, Stream driver, object data)
-    {
-        var genericMethod = _methodInfoUnmanagedMemory.MakeGenericMethod(type);
-        genericMethod.Invoke(null, new object[] { driver, data });
-    }
-
-    private static void EncodeUnmanagedMemory<T>(Stream driver, object data) where T : unmanaged
-    {
-        driver.Write(MemoryMarshal.AsBytes(((Memory<T>)data).Span));
-    }
-
-    // Memory
-    private static readonly MethodInfo _methodInfoMemory = typeof(DatatypeMessage)
-        .GetMethod(nameof(EncodeMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    // TODO: cache the generic method for cases where there are large amount of datasets/attributes with different datatype
-    private static void InvokeEncodeMemory(
-        Type type, 
-        Stream driver, 
-        object data, 
-        EncodeDelegate elementEncode)
-    {
-        var genericMethod = _methodInfoMemory.MakeGenericMethod(type);
-
-        genericMethod.Invoke(null, new object[] 
-        {
-            driver, 
-            data, 
-            elementEncode
-        });
-    }
-
-    private static void EncodeMemory<T>(
-        Stream driver, 
-        object data, 
-        EncodeDelegate elementEncode)
-    {
-        var span = ((Memory<T>)data).Span;
-
-        for (int i = 0; i < span.Length; i++)
-        {
-            elementEncode(driver, span[i]!);
-        }
     }
 }

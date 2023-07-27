@@ -98,7 +98,7 @@ internal record class ChunkedStoragePropertyDescription4(
 
         for (uint i = 0; i < rank; i++)
         {
-            dimensionSizes[i] = Utils.ReadUlong(driver, dimensionSizeEncodedLength);
+            dimensionSizes[i] = ReadUtils.ReadUlong(driver, dimensionSizeEncodedLength);
         }
 
         // chunk indexing type

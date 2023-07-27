@@ -19,8 +19,8 @@ internal record class ManagedObjectsFractalHeapId(
         return new ManagedObjectsFractalHeapId(
             Driver: driver,
             Header: header,
-            Offset: Utils.ReadUlong(localDriver, offsetByteCount),
-            Length: Utils.ReadUlong(localDriver, lengthByteCount)
+            Offset: ReadUtils.ReadUlong(localDriver, offsetByteCount),
+            Length: ReadUtils.ReadUlong(localDriver, lengthByteCount)
         );
     }
 

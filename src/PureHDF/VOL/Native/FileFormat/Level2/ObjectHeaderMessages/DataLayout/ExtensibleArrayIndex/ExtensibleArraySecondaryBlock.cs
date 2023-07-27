@@ -77,7 +77,7 @@ internal record class ExtensibleArraySecondaryBlock(
         var headerAddress = superblock.ReadOffset(driver);
 
         // block offset
-        var blockOffset = Utils.ReadUlong(driver, header.ArrayOffsetsSize);
+        var blockOffset = ReadUtils.ReadUlong(driver, header.ArrayOffsetsSize);
 
         // page bitmap
         // H5EAcache.c (H5EA__cache_sblock_deserialize)

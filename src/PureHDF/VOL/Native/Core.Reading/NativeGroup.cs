@@ -11,7 +11,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 {
     #region Fields
 
-    private readonly H5File? _file;
+    private readonly NativeFile? _file;
     
     private readonly ObjectHeaderScratchPad? _scratchPad;
 
@@ -26,14 +26,14 @@ public class NativeGroup : NativeAttributableObject, IH5Group
         //
     }
 
-    internal NativeGroup(H5File file, NativeContext context, NativeNamedReference reference)
+    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference)
        : base(context, reference)
     {
         _file = file;
         _scratchPad = reference.ScratchPad;
     }
 
-    internal NativeGroup(H5File file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         _file = file;
@@ -43,12 +43,12 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 
     #region Properties
 
-    internal H5File File
+    internal NativeFile File
     {
         get
         {
             if (_file is null)
-                return (H5File)this;
+                return (NativeFile)this;
                 
             else
                 return _file;

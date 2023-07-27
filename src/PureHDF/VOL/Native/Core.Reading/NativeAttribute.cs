@@ -82,7 +82,7 @@ internal class NativeAttribute : IH5Attribute
         var source = destination.ToArray();
 
         if (byteOrderAware is not null)
-            Utils.EnsureEndianness(source, destination.Span, byteOrderAware.ByteOrder, Message.Datatype.Size);
+            DataUtils.EnsureEndianness(source, destination.Span, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
         return MemoryMarshal
             .Cast<byte, T>(Message.InputData.Span)

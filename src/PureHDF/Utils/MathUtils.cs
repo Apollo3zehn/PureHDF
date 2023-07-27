@@ -167,20 +167,6 @@ internal static partial class Utils
         return result;
     }
 
-    public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)
-    {
-        if (byteOrder == ByteOrder.VaxEndian)
-            throw new Exception("VAX-endian byte order is not supported.");
-
-        var isLittleEndian = BitConverter.IsLittleEndian;
-
-        if ((isLittleEndian && byteOrder != ByteOrder.LittleEndian) ||
-           (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
-        {
-            EndiannessConverter.Convert((int)bytesOfType, source, destination);
-        }
-    }
-
     public static ulong CalculateSize(IEnumerable<uint> dimensionSizes, DataspaceType type = DataspaceType.Simple)
     {
         return CalculateSize(dimensionSizes.Select(value => (ulong)value), type);
@@ -208,32 +194,5 @@ internal static partial class Utils
             default:
                 throw new Exception($"The dataspace type '{type}' is not supported.");
         }
-    }
-
-    public static ulong ReadUlong(H5DriverBase driver, ulong size)
-    {
-        return size switch
-        {
-            1 => driver.ReadByte(),
-            2 => driver.ReadUInt16(),
-            4 => driver.ReadUInt32(),
-            8 => driver.ReadUInt64(),
-            _ => ReadUlongArbitrary(driver, size)
-        };
-    }
-
-    private static ulong ReadUlongArbitrary(H5DriverBase driver, ulong size)
-    {
-        var result = 0UL;
-        var shift = 0;
-
-        for (ulong i = 0; i < size; i++)
-        {
-            var value = driver.ReadByte();
-            result += (ulong)(value << shift);
-            shift += 8;
-        }
-
-        return result;
     }
 }

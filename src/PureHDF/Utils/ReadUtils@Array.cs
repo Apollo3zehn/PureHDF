@@ -65,5 +65,4 @@ internal static partial class ReadUtils
 
         return ReadRawArray(context, baseType, slicedData);
     }
-
 }

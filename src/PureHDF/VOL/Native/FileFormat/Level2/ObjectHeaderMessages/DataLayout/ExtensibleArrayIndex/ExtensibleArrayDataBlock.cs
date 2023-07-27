@@ -61,7 +61,7 @@ internal record class ExtensibleArrayDataBlock<T>(
         var headerAddress = superblock.ReadOffset(driver);
 
         // block offset
-        var blockOffset = Utils.ReadUlong(driver, header.ArrayOffsetsSize);
+        var blockOffset = ReadUtils.ReadUlong(driver, header.ArrayOffsetsSize);
 
         // elements
         T[] elements;
