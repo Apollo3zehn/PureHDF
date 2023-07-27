@@ -33,7 +33,7 @@ public class WritingTests
             ["group_0"] = group_0
         };
 
-        var file = new Experimental.H5File
+        var file = new H5File
         {
             ["group_0"] = group_0,
             ["group_1"] = group_1,

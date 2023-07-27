@@ -19,7 +19,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 
     #region Constructors
 
-    // Only for H5File constructor
+    // Only for NativeFile constructor
     internal NativeGroup(NativeContext context, NativeNamedReference reference, ObjectHeader header)
        : base(context, reference, header)
     {

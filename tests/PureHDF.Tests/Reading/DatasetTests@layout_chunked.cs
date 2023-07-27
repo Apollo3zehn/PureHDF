@@ -22,7 +22,7 @@ namespace PureHDF.Tests.Reading
                     var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Legacy(fileId, withShuffle));
 
                     // Act
-                    using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                    using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                     var parent = root.Group("chunked");
                     var dataset = parent.Dataset("chunked");
                     var actual = dataset.Read<int>();
@@ -43,7 +43,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Single_Chunk(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_single_chunk");
                 var actual = dataset.Read<int>();
@@ -61,7 +61,7 @@ namespace PureHDF.Tests.Reading
             var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Implicit);
 
             // Act
-            using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("chunked");
             var dataset = parent.Dataset("chunked_implicit");
             var actual = dataset.Read<int>();
@@ -80,7 +80,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_fixed_array");
                 var actual = dataset.Read<int>();
@@ -100,7 +100,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_fixed_array_paged");
                 var actual = dataset.Read<int>();
@@ -120,7 +120,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_extensible_array_elements");
                 var actual = dataset.Read<int>();
@@ -140,7 +140,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_extensible_array_data_blocks");
                 var actual = dataset.Read<int>();
@@ -160,7 +160,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_extensible_array_secondary_blocks");
                 var actual = dataset.Read<int>();
@@ -180,7 +180,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_BTree2(fileId, withShuffle));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_btree2");
                 var actual = dataset.Read<int>();
@@ -203,7 +203,7 @@ namespace PureHDF.Tests.Reading
                     .ToArray();
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var group = root.Group("fillvalue");
                 var dataset = group.Dataset($"{LayoutClass.Chunked}");
                 var actual = dataset.Read<int>();

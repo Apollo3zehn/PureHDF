@@ -34,7 +34,7 @@
                 if (Dataset.Context.Superblock.IsUndefinedAddress(address))
                 {
                     if (Dataset.InternalExternalFileList is not null)
-                        _stream = new ExternalFileListStream((H5File)Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
+                        _stream = new ExternalFileListStream((NativeFile)Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
 
                     else
                         _stream = new UnsafeFillValueStream(Dataset.FillValueMessage.Value ?? new byte[] { 0 });

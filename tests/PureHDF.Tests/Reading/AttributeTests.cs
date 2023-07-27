@@ -19,7 +19,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceScalar(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Attribute("scalar");
                 var actual = attribute.Read<double>();
 
@@ -37,7 +37,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceNull(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Attribute("null");
                 var actual = attribute.Read<double>();
 
@@ -57,7 +57,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumerical(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("numerical").Attribute(name);
                 var actual = attribute.Read<T>();
 
@@ -75,7 +75,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nonnullable");
                 var actual = attribute.Read<TestStructL1>();
 
@@ -93,7 +93,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nullable");
 
                 static string converter(FieldInfo fieldInfo)
@@ -118,7 +118,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nullable");
                 var actual = attribute.ReadCompound();
 
@@ -146,7 +146,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddString(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("string").Attribute(name);
                 var actual = attribute.ReadString();
 
@@ -164,7 +164,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitField(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("bitfield").Attribute("bitfield");
                 var actual = attribute.Read<TestBitfield>();
 
@@ -182,7 +182,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("opaque").Attribute("opaque");
                 var actual = attribute.Read<int>();
 
@@ -200,7 +200,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_value(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("value");
 
                 var actual = attribute
@@ -224,7 +224,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("variable_length_string");
 
                 var actual = attribute
@@ -248,7 +248,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("nullable_struct");
 
                 var actual_1 = attribute
@@ -290,7 +290,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddObjectReference(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute_references = root.Group("reference").Attribute("object");
                 var references = attribute_references.Read<NativeObjectReference1>();
 
@@ -325,12 +325,12 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset_referenced = root.Group("reference").Dataset("referenced");
                 var attribute_region = root.Group("reference").Attribute("region");
                 var references = attribute_region.Read<NativeRegionReference1>();
 
-                static int[] Read(H5File root, IH5Dataset referenced, NativeRegionReference1 reference)
+                static int[] Read(NativeFile root, IH5Dataset referenced, NativeRegionReference1 reference)
                 {
                     var selection = root.Get(reference);
                     var actual = referenced.Read<int>(fileSelection: selection);
@@ -369,7 +369,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("sequence").Attribute("variable_simple");
                 var actual = attribute.ReadVariableLength<int>();
 
@@ -393,7 +393,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("sequence").Attribute("variable_nullable_struct");
                 var actual = attribute.ReadVariableLength<TestStructStringAndArray>();
 
@@ -416,7 +416,7 @@ namespace PureHDF.Tests.Reading
                 var expected = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute_references = root.Group("shared_data_type").Attribute("shared_data_type");
                 var actual = attribute_references.ReadString();
 
@@ -435,7 +435,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("struct").Attribute("nullable");
                 var exception = Assert.Throws<Exception>(() => attribute.ReadCompound<TestStructStringAndArrayL1>());
 
@@ -454,7 +454,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddTiny(fileId, ContainerType.Attribute));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("tiny");
                 var attribute = parent.Attributes().First();
                 var actual = attribute.Read<byte>();
@@ -473,7 +473,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddHuge(fileId, ContainerType.Attribute, version));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("huge");
                 var attribute = parent.Attributes().First();
                 var actual = attribute.Read<int>();
@@ -493,7 +493,7 @@ namespace PureHDF.Tests.Reading
                 var expectedCount = 1000;
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("mass_attributes");
                 var attributes = parent.Attributes().ToList();
 

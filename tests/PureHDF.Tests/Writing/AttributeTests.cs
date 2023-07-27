@@ -16,7 +16,7 @@ public class AttributeTests
     {
         // Arrange
         var type = data.GetType();
-        var file = new Experimental.H5File();
+        var file = new H5File();
         file.Attributes[type.Name] = data;
 
         var filePath = Path.GetTempFileName();
@@ -33,7 +33,7 @@ public class AttributeTests
             return attribute is not null ? attribute.Name : default;
         }
 
-        var options = new Experimental.H5SerializerOptions(
+        var options = new H5SerializerOptions(
             IncludeStructProperties: type == typeof(WritingTestRecordStruct) || type == typeof(Dictionary<string, int>[]),
             FieldNameMapper: fieldNameMapper,
             PropertyNameMapper: propertyNameMapper
@@ -87,12 +87,12 @@ public class AttributeTests
     {
         // Arrange
         var type = data.GetType();
-        var file = new Experimental.H5File();
+        var file = new H5File();
         file.Attributes[type.Name] = data;
 
         var filePath = Path.GetTempFileName();
 
-        var options = new Experimental.H5SerializerOptions(
+        var options = new H5SerializerOptions(
             DefaultStringLength: 6
         );
 
@@ -120,7 +120,7 @@ public class AttributeTests
     {
         // Arrange
         var type = data.GetType();
-        var file = new Experimental.H5File();
+        var file = new H5File();
         file.Attributes[type.Name] = data;
 
         var filePath = Path.GetTempFileName();
@@ -137,7 +137,7 @@ public class AttributeTests
             return attribute is not null ? attribute.Length : default;
         }
 
-        var options = new Experimental.H5SerializerOptions(
+        var options = new H5SerializerOptions(
             DefaultStringLength: 3,
             FieldStringLengthMapper: fieldStringLengthMapper,
             PropertyStringLengthMapper: propertyStringLengthMapper
@@ -165,7 +165,7 @@ public class AttributeTests
     public void CanWriteAttribute_Anonymous()
     {
         // Arrange
-        var file = new Experimental.H5File();
+        var file = new H5File();
 
         var data = new
         {
@@ -202,7 +202,7 @@ public class AttributeTests
     public void CanWriteAttribute_MultiDimensionalArray_value_type()
     {
         // Arrange
-        var file = new Experimental.H5File();
+        var file = new H5File();
 
         var data = new int[,,]
         {
@@ -248,7 +248,7 @@ public class AttributeTests
     public void CanWriteAttribute_MultiDimensionalArray_reference_type()
     {
         // Arrange
-        var file = new Experimental.H5File();
+        var file = new H5File();
 
         var data = new string[,,]
         {
@@ -292,7 +292,7 @@ public class AttributeTests
     public void CanWriteAttribute_Large_Array()
     {
         // Arrange
-        var file = new Experimental.H5File();
+        var file = new H5File();
 
         foreach (var data in WritingTestData.Numerical)
         {
@@ -320,7 +320,7 @@ public class AttributeTests
     public void CanWriteAttribute_Large_Array_Int128()
     {
         // Arrange
-        var file = new Experimental.H5File();
+        var file = new H5File();
 
         foreach (var data in WritingTestData.Numerical_Int128)
         {
@@ -348,11 +348,11 @@ public class AttributeTests
     public void CanWriteAttribute_2D()
     {
         // Arrange
-        var file = new Experimental.H5File();
+        var file = new H5File();
         var data = new int[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         var dimensions = new ulong[] { 3, 3 };
 
-        file.Attributes["2D"] = new Experimental.H5Attribute(data, dimensions);
+        file.Attributes["2D"] = new H5Attribute(data, dimensions);
 
         var filePath = Path.GetTempFileName();
 

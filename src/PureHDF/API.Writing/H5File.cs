@@ -1,6 +1,6 @@
 ﻿namespace PureHDF;
 
-public partial class H5File
+public partial class H5File : H5Group
 {
     /// <summary>
     /// Creates a new file, write the contents to the file, and then closes the file. If the target file already exists, it is overwritten.

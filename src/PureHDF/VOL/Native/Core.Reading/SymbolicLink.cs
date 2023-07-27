@@ -70,7 +70,7 @@ internal class SymbolicLink
                     ?? throw new Exception($"Could not find file {Value}.");
 
                 var externalFile = NativeCache
-                    .GetH5File(Parent.Context.Driver, absoluteFilePath, useAsync: useAsync);
+                    .GetNativeFile(Parent.Context.Driver, absoluteFilePath, useAsync: useAsync);
 
 #if NETSTANDARD2_0
                     return externalFile.InternalGet(ObjectPath!, linkAccess);

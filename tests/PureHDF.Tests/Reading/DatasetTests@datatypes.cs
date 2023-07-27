@@ -27,7 +27,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddNumerical(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset($"/numerical/{name}");
                 var actual = dataset.Read<T>();
 
@@ -45,7 +45,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("/struct/nonnullable");
                 var actual = dataset.Read<TestStructL1>();
 
@@ -63,7 +63,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("/struct/nullable");
 
                 static string converter(FieldInfo fieldInfo)
@@ -90,7 +90,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("/struct/nullable");
                 var actual = dataset.ReadCompound();
 
@@ -118,7 +118,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddString(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset($"/string/{name}");
                 var actual = dataset.ReadString();
 
@@ -136,7 +136,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddBitField(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Group("bitfield").Dataset("bitfield");
                 var actual = dataset.Read<TestBitfield>();
 
@@ -154,7 +154,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Group("opaque").Dataset("opaque");
                 var actual = dataset.Read<byte>();
 
@@ -172,7 +172,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_value(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Group("array").Dataset("value");
 
                 var actual = dataset
@@ -196,7 +196,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Group("array").Dataset("variable_length_string");
 
                 var actual = dataset
@@ -220,7 +220,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Group("array").Dataset("nullable_struct");
 
                 var actual_1 = dataset
@@ -272,7 +272,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddObjectReference(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset_references = root.Group("reference").Dataset("object");
                 var references = dataset_references.Read<NativeObjectReference1>();
 
@@ -309,12 +309,12 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset_referenced = root.Group("reference").Dataset("referenced");
                 var dataset_region = root.Group("reference").Dataset("region");
                 var references = dataset_region.Read<NativeRegionReference1>();
 
-                static int[] Read(H5File root, IH5Dataset referenced, NativeRegionReference1 reference)
+                static int[] Read(NativeFile root, IH5Dataset referenced, NativeRegionReference1 reference)
                 {
                     var selection = root.Get(reference);
                     var actual = referenced.Read<int>(fileSelection: selection);
@@ -353,7 +353,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("sequence/variable_simple");
                 var actual = dataset.ReadVariableLength<int>();
 
@@ -377,7 +377,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset("sequence/variable_nullable_struct");
                 var actual = dataset.ReadVariableLength<TestStructStringAndArray>();
 
@@ -400,7 +400,7 @@ namespace PureHDF.Tests.Reading
                 var expected = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute_references = root.Group("shared_data_type").Dataset("shared_data_type");
                 var actual = attribute_references.ReadString();
 
@@ -419,7 +419,7 @@ namespace PureHDF.Tests.Reading
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
                 // Act
-                using var root = H5File.InternalOpenRead(filePath, deleteOnClose: true);
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = root.Dataset($"/struct/nullable");
                 var exception = Assert.Throws<Exception>(() => dataset.ReadCompound<TestStructStringAndArrayL1>());
 

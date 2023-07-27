@@ -110,7 +110,7 @@ public class SourceGenerator : ISourceGenerator
         return output;
     }
 
-    private static string GenerateSource(string className, string classNamespace, string accessibilityString, H5File root)
+    private static string GenerateSource(string className, string classNamespace, string accessibilityString, NativeFile root)
     {
         var classDefinitions = new List<string>();
 
@@ -258,7 +258,7 @@ public class SourceGenerator : ISourceGenerator
 
             constructorAccessibilityString = "public ";
             partialString = "partial ";
-            parentGroupString = "H5File file";
+            parentGroupString = "NativeFile file";
         }
 
         else
