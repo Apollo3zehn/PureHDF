@@ -9,13 +9,13 @@ internal static class WriteUtils
     private static readonly MethodInfo _methodInfoMemoryLength = typeof(WriteUtils)
         .GetMethod(nameof(GetMemoryLength), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    private static readonly MethodInfo _methodInfoUnmanagedArray = typeof(DatatypeMessage)
+    private static readonly MethodInfo _methodInfoUnmanagedArray = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    private static readonly MethodInfo _methodInfoMemory = typeof(DatatypeMessage)
+    private static readonly MethodInfo _methodInfoMemory = typeof(WriteUtils)
         .GetMethod(nameof(EncodeMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    public static MethodInfo MethodInfoElement { get; } = typeof(DatatypeMessage)
+    public static MethodInfo MethodInfoElement { get; } = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public static void WriteUlongArbitrary(BinaryWriter driver, ulong value, ulong size)

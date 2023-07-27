@@ -8,7 +8,7 @@ internal static class DataUtils
 {
     static DataUtils()
     {
-        MethodInfoCastToArray = typeof(ReadUtils)
+        MethodInfoCastToArray = typeof(DataUtils)
             .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
             .Where(methodInfo => methodInfo.IsGenericMethod && methodInfo.Name == nameof(CastToArray))
             .Single();
