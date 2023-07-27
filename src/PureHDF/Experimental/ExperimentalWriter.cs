@@ -49,7 +49,7 @@ internal static class H5Writer
     }
 
     private static ulong EncodeGroup(
-        WriteContext writeContext,
+        WriteContext context,
         H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
@@ -91,7 +91,7 @@ internal static class H5Writer
         // attribute messages
         foreach (var entry in group.Attributes)
         {
-            var attributeMessage = CreateAttributeMessage(writeContext, entry.Key, entry.Value);
+            var attributeMessage = CreateAttributeMessage(context, entry.Key, entry.Value);
 
             headerMessages.Add(ToHeaderMessage(attributeMessage));
         }
@@ -100,10 +100,10 @@ internal static class H5Writer
         {
             if (entry.Value is H5Group childGroup)
             {
-                if (!writeContext.ObjectToAddressMap.TryGetValue(childGroup, out var childAddress))
+                if (!context.ObjectToAddressMap.TryGetValue(childGroup, out var childAddress))
                 {
-                    childAddress = EncodeGroup(writeContext, childGroup);
-                    writeContext.ObjectToAddressMap[childGroup] = childAddress;
+                    childAddress = EncodeGroup(context, childGroup);
+                    context.ObjectToAddressMap[childGroup] = childAddress;
                 }
 
                 var linkMessage = new LinkMessage(
@@ -121,7 +121,7 @@ internal static class H5Writer
             }
         }
 
-        var address = (ulong)writeContext.Driver.BaseStream.Position;
+        var address = (ulong)context.Driver.BaseStream.Position;
 
         var objectHeader = new ObjectHeader2(
             Address: default,
@@ -138,7 +138,7 @@ internal static class H5Writer
             Version = 2
         };
 
-        objectHeader.Encode(writeContext);
+        objectHeader.Encode(context);
 
         return address;
     }

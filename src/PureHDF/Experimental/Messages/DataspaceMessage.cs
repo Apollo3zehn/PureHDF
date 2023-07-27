@@ -2,6 +2,26 @@
 
 internal partial record class DataspaceMessage
 {
+    public override ushort GetEncodeSize()
+    {
+        if (Version != 2)
+            throw new Exception("Only version 2 dataspace messages are supported.");
+
+        var size =
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(ulong) * Rank +
+            (
+                Flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes)
+                    ? sizeof(ulong) * Rank
+                    : 0
+            );
+            
+        return (ushort)size;
+    }
+
     public override void Encode(BinaryWriter driver)
     {
         driver.Write(Version);
@@ -40,25 +60,5 @@ internal partial record class DataspaceMessage
                 driver.Write(PermutationIndices[i]);
             }
         }
-    }
-
-    public override ushort GetEncodeSize()
-    {
-        if (Version != 2)
-            throw new Exception("Only version 2 dataspace messages are supported.");
-
-        var size =
-            sizeof(byte) +
-            sizeof(byte) +
-            sizeof(byte) +
-            sizeof(byte) +
-            sizeof(ulong) * Rank +
-            (
-                Flags.HasFlag(DataspaceMessageFlags.DimensionMaxSizes)
-                    ? sizeof(ulong) * Rank
-                    : 0
-            );
-            
-        return (ushort)size;
     }
 }

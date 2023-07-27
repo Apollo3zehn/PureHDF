@@ -2,9 +2,9 @@
 
 internal abstract record class LinkInfo()
 {
-    public abstract void Encode(BinaryWriter driver);
-
     public abstract ushort GetEncodeSize();
+
+    public abstract void Encode(BinaryWriter driver);
 }
 
 internal record class HardLinkInfo(
@@ -20,14 +20,14 @@ internal record class HardLinkInfo(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
-    {
-        driver.Write(HeaderAddress);
-    }
-
     public override ushort GetEncodeSize()
     {
         return sizeof(ulong);
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        driver.Write(HeaderAddress);
     }
 }
 
@@ -45,12 +45,12 @@ internal record class SoftLinkInfo(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override ushort GetEncodeSize()
     {
         throw new NotImplementedException();
     }
 
-    public override ushort GetEncodeSize()
+    public override void Encode(BinaryWriter driver)
     {
         throw new NotImplementedException();
     }
@@ -121,12 +121,12 @@ internal record class ExternalLinkInfo(
         };
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override ushort GetEncodeSize()
     {
         throw new NotImplementedException();
     }
 
-    public override ushort GetEncodeSize()
+    public override void Encode(BinaryWriter driver)
     {
         throw new NotImplementedException();
     }
@@ -145,12 +145,12 @@ internal record class UserDefinedLinkInfo(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override ushort GetEncodeSize()
     {
         throw new NotImplementedException();
     }
 
-    public override ushort GetEncodeSize()
+    public override void Encode(BinaryWriter driver)
     {
         throw new NotImplementedException();
     }

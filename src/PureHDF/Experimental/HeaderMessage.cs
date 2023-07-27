@@ -2,6 +2,25 @@
 
 internal readonly partial record struct HeaderMessage
 {
+    public uint GetEncodeSize(bool withCreationOrder)
+    {
+        if (Version != 2)
+            throw new Exception("Only v2 header messages are supported");
+
+        var dataEncodeSize = Data.GetEncodeSize();
+
+        return 
+            sizeof(byte) +
+            sizeof(ushort) +
+            sizeof(byte) +
+            (
+                withCreationOrder
+                    ? sizeof(ushort)
+                    : 0U
+            ) +
+            dataEncodeSize;
+    }
+
     public void Encode(
         BinaryWriter driver,
         bool withCreationOrder)
@@ -30,24 +49,5 @@ internal readonly partial record struct HeaderMessage
 
         // data
         Data.Encode(driver);
-    }
-
-    public uint GetEncodeSize(bool withCreationOrder)
-    {
-        if (Version != 2)
-            throw new Exception("Only v2 header messages are supported");
-
-        var dataEncodeSize = Data.GetEncodeSize();
-
-        return 
-            sizeof(byte) +
-            sizeof(ushort) +
-            sizeof(byte) +
-            (
-                withCreationOrder
-                    ? sizeof(ushort)
-                    : 0U
-            ) +
-            dataEncodeSize;
     }
 }

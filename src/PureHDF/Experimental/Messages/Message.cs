@@ -2,12 +2,12 @@
 
 internal abstract partial record class Message
 {
-    public virtual void Encode(BinaryWriter driver)
+    public virtual ushort GetEncodeSize()
     {
         throw new NotImplementedException();
     }
 
-    public virtual ushort GetEncodeSize()
+    public virtual void Encode(BinaryWriter driver)
     {
         throw new NotImplementedException();
     }

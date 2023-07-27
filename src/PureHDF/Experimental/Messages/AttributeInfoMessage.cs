@@ -2,6 +2,27 @@
 
 internal partial record class AttributeInfoMessage
 {
+    public override ushort GetEncodeSize()
+    {
+        var size = 
+            sizeof(byte) +
+            sizeof(byte) +
+            (
+                Flags.HasFlag(CreationOrderFlags.TrackCreationOrder)
+                    ? sizeof(ushort)
+                    : 0
+            ) +
+            sizeof(ulong) +
+            sizeof(ulong) +
+            (
+                Flags.HasFlag(CreationOrderFlags.IndexCreationOrder)
+                    ? sizeof(ulong)
+                    : 0
+            );
+
+        return (ushort)size;
+    }
+
     public override void Encode(BinaryWriter driver)
     {
         // version
@@ -23,26 +44,5 @@ internal partial record class AttributeInfoMessage
         // b-tree 2 creation order index address
         if (Flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
             driver.Write(BTree2CreationOrderIndexAddress);
-    }
-
-    public override ushort GetEncodeSize()
-    {
-        var size = 
-            sizeof(byte) +
-            sizeof(byte) +
-            (
-                Flags.HasFlag(CreationOrderFlags.TrackCreationOrder)
-                    ? sizeof(ushort)
-                    : 0
-            ) +
-            sizeof(ulong) +
-            sizeof(ulong) +
-            (
-                Flags.HasFlag(CreationOrderFlags.IndexCreationOrder)
-                    ? sizeof(ulong)
-                    : 0
-            );
-
-        return (ushort)size;
     }
 }

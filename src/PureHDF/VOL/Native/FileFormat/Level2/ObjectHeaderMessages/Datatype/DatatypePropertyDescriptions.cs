@@ -56,12 +56,12 @@ internal record class ArrayPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override ushort GetEncodeSize(uint typeSize)
     {
         throw new NotImplementedException();
     }
 
-    public override ushort GetEncodeSize(uint typeSize)
+    public override void Encode(BinaryWriter driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -80,16 +80,16 @@ internal record class BitFieldPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
-    {
-        throw new NotImplementedException();
-    }
-
     public override ushort GetEncodeSize(uint typeSize)
     {
         return
             sizeof(uint) +
             sizeof(uint);
+    }
+
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        throw new NotImplementedException();
     }
 }
 internal record class CompoundPropertyDescription(
@@ -191,6 +191,20 @@ internal record class CompoundPropertyDescription(
         );
     }
 
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
+        var nameBytesCount = Name.Length + 1;
+        var byteCount = Utils.FindMinByteCount(typeSize);
+
+        var encodeSize =
+            (ulong)nameBytesCount +
+            byteCount +
+            MemberTypeMessage.GetEncodeSize();
+
+        return (ushort)encodeSize;
+    }
+
     public override void Encode(BinaryWriter driver, uint typeSize)
     {
         // name
@@ -216,20 +230,6 @@ internal record class CompoundPropertyDescription(
     
         // member type message
         MemberTypeMessage.Encode(driver);
-    }
-
-    public override ushort GetEncodeSize(uint typeSize)
-    {
-        // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
-        var nameBytesCount = Name.Length + 1;
-        var byteCount = Utils.FindMinByteCount(typeSize);
-
-        var encodeSize =
-            (ulong)nameBytesCount +
-            byteCount +
-            MemberTypeMessage.GetEncodeSize();
-
-        return (ushort)encodeSize;
     }
 }
 internal record class EnumerationPropertyDescription(
@@ -270,6 +270,16 @@ internal record class EnumerationPropertyDescription(
         );
     }
 
+    public override ushort GetEncodeSize(uint typeSize)
+    {
+        var encodeSize =
+            BaseType.GetEncodeSize() +
+            Names.Aggregate(0, (sum, name) => sum + name.Length + 1) +
+            Values.Aggregate(0, (sum, value) => sum + value.Length);
+
+        return (ushort)encodeSize;
+    }
+
     public override void Encode(BinaryWriter driver, uint typeSize)
     {
         // base type
@@ -289,16 +299,6 @@ internal record class EnumerationPropertyDescription(
             driver.Write(value);
         }
     }
-
-    public override ushort GetEncodeSize(uint typeSize)
-    {
-        var encodeSize =
-            BaseType.GetEncodeSize() +
-            Names.Aggregate(0, (sum, name) => sum + name.Length + 1) +
-            Values.Aggregate(0, (sum, value) => sum + value.Length);
-
-        return (ushort)encodeSize;
-    }
 };
 
 internal record class FixedPointPropertyDescription(
@@ -315,17 +315,17 @@ internal record class FixedPointPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
-    {
-        driver.Write(BitOffset);
-        driver.Write(BitPrecision);
-    }
-
     public override ushort GetEncodeSize(uint typeSize)
     {
         return
             sizeof(ushort) +
             sizeof(ushort);
+    }
+
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        driver.Write(BitOffset);
+        driver.Write(BitPrecision);
     }
 };
 
@@ -353,17 +353,6 @@ internal record class FloatingPointPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
-    {
-        driver.Write(BitOffset);
-        driver.Write(BitPrecision);
-        driver.Write(ExponentLocation);
-        driver.Write(ExponentSize);
-        driver.Write(MantissaLocation);
-        driver.Write(MantissaSize);
-        driver.Write(ExponentBias);
-    }
-
     public override ushort GetEncodeSize(uint typeSize)
     {
         return
@@ -374,6 +363,17 @@ internal record class FloatingPointPropertyDescription(
             sizeof(byte) + 
             sizeof(byte) + 
             sizeof(uint);
+    }
+
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        driver.Write(BitOffset);
+        driver.Write(BitPrecision);
+        driver.Write(ExponentLocation);
+        driver.Write(ExponentSize);
+        driver.Write(MantissaLocation);
+        driver.Write(MantissaSize);
+        driver.Write(ExponentBias);
     }
 };
 
@@ -392,12 +392,12 @@ internal record class OpaquePropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override ushort GetEncodeSize(uint typeSize)
     {
         throw new NotImplementedException();
     }
 
-    public override ushort GetEncodeSize(uint typeSize)
+    public override void Encode(BinaryWriter driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -415,12 +415,12 @@ internal record class TimePropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override ushort GetEncodeSize(uint typeSize)
     {
         throw new NotImplementedException();
     }
 
-    public override ushort GetEncodeSize(uint typeSize)
+    public override void Encode(BinaryWriter driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -438,13 +438,13 @@ internal record class VariableLengthPropertyDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
-    {
-        BaseType.Encode(driver);
-    }
-
     public override ushort GetEncodeSize(uint typeSize)
     {
         return BaseType.GetEncodeSize();
+    }
+
+    public override void Encode(BinaryWriter driver, uint typeSize)
+    {
+        BaseType.Encode(driver);
     }
 };
