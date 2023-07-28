@@ -165,7 +165,7 @@ public class AttributeTests
     }
 
     [Fact]
-    public void CanWriteAttribute_Anonymous()
+    public void CanWrite_Anonymous()
     {
         // Arrange
         var file = new H5File();
@@ -203,7 +203,7 @@ public class AttributeTests
 
 #if NET6_0_OR_GREATER
     [Fact]
-    public void CanWriteAttribute_MultiDimensionalArray_value_type()
+    public void CanWrite_MultiDimensionalArray_value_type()
     {
         // Arrange
         var file = new H5File();
@@ -250,7 +250,7 @@ public class AttributeTests
 # endif
 
     [Fact]
-    public void CanWriteAttribute_MultiDimensionalArray_reference_type()
+    public void CanWrite_MultiDimensionalArray_reference_type()
     {
         // Arrange
         var file = new H5File();
@@ -295,7 +295,7 @@ public class AttributeTests
     }
 
     [Fact]
-    public void CanWriteAttribute_Large_Array()
+    public void CanWrite_Large_Array()
     {
         // Arrange
         var file = new H5File();
@@ -324,7 +324,7 @@ public class AttributeTests
 
 #if NET7_0_OR_GREATER
     [Fact]
-    public void CanWriteAttribute_Large_Array_Int128()
+    public void CanWrite_Large_Array_Int128()
     {
         // Arrange
         var file = new H5File();
@@ -353,7 +353,7 @@ public class AttributeTests
 #endif
 
     [Fact]
-    public void CanWriteAttribute_2D()
+    public void CanWrite_2D()
     {
         // Arrange
         var file = new H5File();

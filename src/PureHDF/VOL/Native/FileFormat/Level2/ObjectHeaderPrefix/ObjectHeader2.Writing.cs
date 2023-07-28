@@ -2,7 +2,7 @@
 
 internal partial record class ObjectHeader2
 {
-    public void Encode(WriteContext writeContext)
+    public ulong Encode(WriteContext writeContext)
     {   
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
@@ -58,6 +58,8 @@ internal partial record class ObjectHeader2
         var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
 
         driver.Write(checksum);
+
+        return (ulong)address;
     }
 
     public void WriteHeaderMessages(BinaryWriter driver, bool withCreationOrder)

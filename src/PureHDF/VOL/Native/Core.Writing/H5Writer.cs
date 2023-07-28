@@ -146,9 +146,6 @@ internal static class H5Writer
             headerMessages.Add(ToHeaderMessage(linkMessage));
         }
 
-        // TODO use free space manager to get address
-        var address = (ulong)context.Driver.BaseStream.Position;
-
         var objectHeader = new ObjectHeader2(
             Address: default,
             Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
@@ -164,7 +161,7 @@ internal static class H5Writer
             Version = 2
         };
 
-        objectHeader.Encode(context);
+        var address = objectHeader.Encode(context);
 
         return address;
     }
