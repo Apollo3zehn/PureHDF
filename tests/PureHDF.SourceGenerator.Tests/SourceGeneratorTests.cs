@@ -12,10 +12,10 @@ public class SourceGeneratorTests
     [Fact]
     public void CanGenerateSource()
     {
-        using var h5File = H5File.OpenRead(FILE_PATH);
+        using var nativeFile = H5File.OpenRead(FILE_PATH);
 
         // Act
-        var bindings = new MyGeneratedH5Bindings(h5File);
+        var bindings = new MyGeneratedH5Bindings(nativeFile);
         var group = bindings.group1.Get();
         var dataset = bindings.group1.sub_group1.sub_sub_dataset1;
         var actual = dataset.Read<long>();

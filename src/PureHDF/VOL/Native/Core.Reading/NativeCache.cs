@@ -26,11 +26,11 @@ internal static class NativeCache
         // file map
         if (_fileMap.TryGetValue(driver, out Dictionary<string, NativeFile>? value))
         {
-            var pathToH5FileMap = value;
+            var pathToNativeFileMap = value;
 
-            foreach (var h5File in pathToH5FileMap.Values)
+            foreach (var nativeFile in pathToNativeFileMap.Values)
             {
-                h5File.Dispose();
+                nativeFile.Dispose();
             }
 
             _fileMap.TryRemove(driver, out var _);
@@ -80,20 +80,20 @@ internal static class NativeCache
         if (!uri.IsFile && !uri.IsUnc)
             throw new Exception("The provided path is not a file path or a UNC path.");
 
-        if (!_fileMap.TryGetValue(driver, out var pathToH5FileMap))
+        if (!_fileMap.TryGetValue(driver, out var pathToNativeFileMap))
         {
-            pathToH5FileMap = new Dictionary<string, NativeFile>();
-            _fileMap.AddOrUpdate(driver, pathToH5FileMap, (_, oldPathToH5FileMap) => pathToH5FileMap);
+            pathToNativeFileMap = new Dictionary<string, NativeFile>();
+            _fileMap.AddOrUpdate(driver, pathToNativeFileMap, (_, oldPathToNativeFileMap) => pathToNativeFileMap);
         }
 
-        if (!pathToH5FileMap.TryGetValue(uri.AbsoluteUri, out var h5File))
+        if (!pathToNativeFileMap.TryGetValue(uri.AbsoluteUri, out var nativeFile))
         {
             // TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
-            h5File = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
-            pathToH5FileMap[uri.AbsoluteUri] = h5File;
+            nativeFile = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
+            pathToNativeFileMap[uri.AbsoluteUri] = nativeFile;
         }
 
-        return h5File;
+        return nativeFile;
     }
 
     #endregion

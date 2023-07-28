@@ -77,13 +77,13 @@ public class SourceGenerator : ISourceGenerator
                     if (attribute is null)
                         continue;
 
-                    var h5FilePath = attribute.ConstructorArguments[0].Value!.ToString();
+                    var filePath = attribute.ConstructorArguments[0].Value!.ToString();
 
-                    if (!Path.IsPathRooted(h5FilePath))
-                        h5FilePath = Path.Combine(sourceFolderPath, h5FilePath);
+                    if (!Path.IsPathRooted(filePath))
+                        filePath = Path.Combine(sourceFolderPath, filePath);
 
-                    using var h5File = H5File.OpenRead(h5FilePath);
-                    var source = GenerateSource(className, classNamespace, accessibilityString, h5File);
+                    using var nativeFile = H5File.OpenRead(filePath);
+                    var source = GenerateSource(className, classNamespace, accessibilityString, nativeFile);
 
                     context.AddSource($"{classSymbol.ToDisplayString()}.g.cs", source);
                 }
