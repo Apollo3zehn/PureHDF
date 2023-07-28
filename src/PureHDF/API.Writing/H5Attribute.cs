@@ -19,5 +19,6 @@ public class H5Attribute
     }
 
     internal object Data { get; init; }
+    
     internal ulong[]? Dimensions { get; init; }
 }

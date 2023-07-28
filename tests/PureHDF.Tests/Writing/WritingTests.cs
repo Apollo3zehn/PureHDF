@@ -8,7 +8,7 @@ public class WritingTests
     public void CanWrite()
     {
         // Arrange
-        var dataset_g0_0 = new H5Dataset<ushort>()
+        var dataset_g0_0 = new H5Dataset(data: new float[] { 1.1f, 2.2f })
         {
             Attributes = new Dictionary<string, object>
             {
@@ -16,7 +16,7 @@ public class WritingTests
             }
         };
 
-        var dataset_0 = new H5Dataset<long>();
+        var dataset_0 = new H5Dataset(data: new float[] { 1.1f });
 
         var group_0 = new H5Group
         {

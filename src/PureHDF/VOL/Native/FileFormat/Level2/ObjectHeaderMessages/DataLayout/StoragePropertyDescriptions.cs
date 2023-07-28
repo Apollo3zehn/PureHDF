@@ -2,10 +2,17 @@
 
 internal abstract record class StoragePropertyDescription(
     ulong Address
-);
+)
+{
+    public abstract ushort GetEncodeSize();
+
+    public abstract void Encode(BinaryWriter driver);
+};
 
 internal record class CompactStoragePropertyDescription(
-    byte[] RawData
+    byte[] InputData,
+    Action<BinaryWriter> EncodeData,
+    ushort EncodeDataSize
 ) : StoragePropertyDescription(Superblock.UndefinedAddress)
 {
     public static CompactStoragePropertyDescription Decode(H5DriverBase driver)
@@ -13,8 +20,28 @@ internal record class CompactStoragePropertyDescription(
         var size = driver.ReadUInt16();
 
         return new CompactStoragePropertyDescription(
-            RawData: driver.ReadBytes(size)
+            InputData: driver.ReadBytes(size),
+            EncodeData: default!,
+            EncodeDataSize: default!
         );
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        var encodeSize =
+            sizeof(ushort) +
+            EncodeDataSize;
+
+        return (ushort)encodeSize;
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        // version
+        driver.Write(EncodeDataSize);
+
+        // data
+        EncodeData.Invoke(driver);
     }
 }
 
@@ -31,6 +58,15 @@ internal record class ContiguousStoragePropertyDescription(
             Address: superblock.ReadOffset(driver),
             Size: superblock.ReadLength(driver)
         );
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -68,6 +104,16 @@ internal record class ChunkedStoragePropertyDescription3(
             Rank: rank,
             DimensionSizes: dimensionSizes
         );
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -127,6 +173,15 @@ internal record class ChunkedStoragePropertyDescription4(
             IndexingTypeInformation: indexingTypeInformation
         );
     }
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal record class VirtualStoragePropertyDescription(
@@ -142,5 +197,15 @@ internal record class VirtualStoragePropertyDescription(
             Address: superblock.ReadOffset(driver),
             Index: driver.ReadUInt32()
         );
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }

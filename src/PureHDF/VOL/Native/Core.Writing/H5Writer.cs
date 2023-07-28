@@ -98,29 +98,119 @@ internal static class H5Writer
 
         foreach (var entry in group)
         {
+            ulong linkAddress;
+
             if (entry.Value is H5Group childGroup)
             {
-                if (!context.ObjectToAddressMap.TryGetValue(childGroup, out var childAddress))
+                if (!context.ObjectToAddressMap.TryGetValue(childGroup, out linkAddress))
                 {
-                    childAddress = EncodeGroup(context, childGroup);
-                    context.ObjectToAddressMap[childGroup] = childAddress;
+                    linkAddress = EncodeGroup(context, childGroup);
+                    context.ObjectToAddressMap[childGroup] = linkAddress;
                 }
-
-                var linkMessage = new LinkMessage(
-                    Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
-                    LinkType: default,
-                    CreationOrder: default,
-                    LinkName: entry.Key,
-                    LinkInfo: new HardLinkInfo(HeaderAddress: childAddress)
-                )
-                {
-                    Version = 1
-                };
-
-                headerMessages.Add(ToHeaderMessage(linkMessage));
             }
+
+            else if (entry.Value is H5Dataset dataset)
+            {
+                if (!context.ObjectToAddressMap.TryGetValue(dataset, out linkAddress))
+                {
+                    linkAddress = EncodeDataset(context, dataset);
+                    context.ObjectToAddressMap[dataset] = linkAddress;
+                }
+            }
+
+            else if (entry.Value is object objectDataset)
+            {
+                if (!context.ObjectToAddressMap.TryGetValue(objectDataset, out linkAddress))
+                {
+                    linkAddress = EncodeDataset(context, objectDataset);
+                    context.ObjectToAddressMap[objectDataset] = linkAddress;
+                }
+            }
+
+            else
+            {
+                throw new Exception("This should never happen.");
+            }
+
+            var linkMessage = new LinkMessage(
+                Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
+                LinkType: default,
+                CreationOrder: default,
+                LinkName: entry.Key,
+                LinkInfo: new HardLinkInfo(HeaderAddress: linkAddress)
+            )
+            {
+                Version = 1
+            };
+
+            headerMessages.Add(ToHeaderMessage(linkMessage));
         }
 
+        // TODO use free space manager to get address
+        var address = (ulong)context.Driver.BaseStream.Position;
+
+        var objectHeader = new ObjectHeader2(
+            Address: default,
+            Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
+            AccessTime: default,
+            ModificationTime: default,
+            ChangeTime: default,
+            BirthTime: default,
+            MaximumCompactAttributesCount: default,
+            MinimumDenseAttributesCount: default,
+            HeaderMessages: headerMessages
+        )
+        {
+            Version = 2
+        };
+
+        objectHeader.Encode(context);
+
+        return address;
+    }
+
+    private static ulong EncodeDataset(
+        WriteContext context,
+        object dataset)
+    {
+        var data = dataset is H5Dataset h5Dataset1
+            ? h5Dataset1.Data
+            : dataset;
+
+        var (datatype, dataspace, encode) = dataset is H5Dataset h5Dataset2
+            ? GetDataMessages(context, data, h5Dataset2.Dimensions)
+            : GetDataMessages(context, data, default);
+
+        var dataEncodeSize = datatype.Size * dataspace.DimensionSizes.Aggregate(1UL, (product, dimension) => product * dimension);
+
+        // TODO: this limit is not stated in the specification but make sense 
+        // because of the size field of the Compact Storage Property Description
+        if (dataEncodeSize > ushort.MaxValue)
+            throw new Exception("The maximum compact dataset size is 65KB.");
+
+        var properties = new CompactStoragePropertyDescription(
+            InputData: default!,
+            EncodeData: driver => encode(driver.BaseStream, data),
+            EncodeDataSize: (ushort)dataEncodeSize
+        );
+
+        var dataLayout = new DataLayoutMessage4(
+            LayoutClass: LayoutClass.Compact,
+            Address: default,
+            Properties: properties
+        )
+        {
+            Version = 4
+        };
+
+        var headerMessages = new List<HeaderMessage>()
+        {
+            ToHeaderMessage(datatype),
+            ToHeaderMessage(dataspace),
+            ToHeaderMessage(dataLayout)
+        };
+
+        // TODO use free space manager to get address
         var address = (ulong)context.Driver.BaseStream.Position;
 
         var objectHeader = new ObjectHeader2(
@@ -148,47 +238,19 @@ internal static class H5Writer
         string name, 
         object attribute)
     {
-        // datatype
         var data = attribute is H5Attribute h5Attribute1
             ? h5Attribute1.Data
             : attribute;
 
-        var type = data.GetType();
-
-        var (dataType, dataDimensions, encode) = DatatypeMessage
-            .Create(context, type, data);
-
-        // dataspace
-        var dimensions = attribute is H5Attribute h5Attribute2
-            ? h5Attribute2.Dimensions ?? dataDimensions
-            : dataDimensions;
-
-        var dimensionsTotalSize = dimensions
-            .Aggregate(1UL, (x, y) => x * y);
-
-        var dataDimensionsTotalSize = dataDimensions
-            .Aggregate(1UL, (x, y) => x * y);
-
-        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensionsTotalSize)
-            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
-
-        var dataspace = new DataspaceMessage(
-            Rank: (byte)dimensions.Length,
-            Flags: DataspaceMessageFlags.None,
-            Type: dataDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
-            DimensionSizes: dimensions,
-            DimensionMaxSizes: dimensions,
-            PermutationIndices: default
-        )
-        {
-            Version = 2
-        };
+        var (datatype, dataspace, encode) = attribute is H5Attribute h5Attribute2
+            ? GetDataMessages(context, data, h5Attribute2.Dimensions)
+            : GetDataMessages(context, data, default);
 
         // attribute
         var attributeMessage = new AttributeMessage(
             Flags: AttributeMessageFlags.None,
             Name: name,
-            Datatype: dataType,
+            Datatype: datatype,
             Dataspace: dataspace,
             InputData: default,
             EncodeData: writer => encode(writer.BaseStream, data)
@@ -241,5 +303,40 @@ internal static class H5Writer
             Version = 2,
             WithCreationOrder = default
         };
+    }
+
+    private static (DatatypeMessage, DataspaceMessage, EncodeDelegate) GetDataMessages(WriteContext context, object data, ulong[]? dimensions)
+    {
+        // datatype
+        var type = data.GetType();
+
+        var (dataType, dataDimensions, encode) = DatatypeMessage
+            .Create(context, type, data);
+
+        // dataspace
+        dimensions ??= dataDimensions;
+
+        var dimensionsTotalSize = dimensions
+            .Aggregate(1UL, (x, y) => x * y);
+
+        var dataDimensionsTotalSize = dataDimensions
+            .Aggregate(1UL, (x, y) => x * y);
+
+        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensionsTotalSize)
+            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
+
+        var dataspace = new DataspaceMessage(
+            Rank: (byte)dimensions.Length,
+            Flags: DataspaceMessageFlags.None,
+            Type: dataDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
+            DimensionSizes: dimensions,
+            DimensionMaxSizes: dimensions,
+            PermutationIndices: default
+        )
+        {
+            Version = 2
+        };
+
+        return (dataType, dataspace, encode);
     }
 }

@@ -32,11 +32,13 @@
                 // TODO: untested
                 buffer = layout12.CompactData;
             }
+
             else if (Dataset.DataLayoutMessage is DataLayoutMessage3 layout34)
             {
                 var compact = (CompactStoragePropertyDescription)layout34.Properties;
-                buffer = compact.RawData;
+                buffer = compact.InputData;
             }
+            
             else
             {
                 throw new Exception($"Data layout message type '{Dataset.DataLayoutMessage.GetType().Name}' is not supported.");

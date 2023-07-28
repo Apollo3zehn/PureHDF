@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "Decimal" {
+      DATATYPE  128-bit little-endian floating-point 128-bit precision
+      DATASPACE  SCALAR
+      DATA {
+      (0): 1.18705e-4942
+      }
+   }
+}
+}

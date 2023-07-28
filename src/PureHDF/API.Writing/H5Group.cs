@@ -6,12 +6,12 @@ namespace PureHDF;
 /// <summary>
 /// A group.
 /// </summary>
-public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
+public class H5Group : H5AttributableObject, IDictionary<string, object>
 {
-    private readonly IDictionary<string, H5Object> _objects = new Dictionary<string, H5Object>();
+    private readonly IDictionary<string, object> _objects = new Dictionary<string, object>();
 
     /// <inheritdoc />
-    public H5Object this[string key] 
+    public object this[string key] 
     { 
         get => _objects[key];
         set => _objects[key] = value;
@@ -23,7 +23,7 @@ public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
     public ICollection<string> Keys => _objects.Keys;
 
     /// <inheritdoc />
-    public ICollection<H5Object> Values => _objects.Values;
+    public ICollection<object> Values => _objects.Values;
 
     /// <inheritdoc />
     public int Count => _objects.Count;
@@ -32,13 +32,13 @@ public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
     public bool IsReadOnly => _objects.IsReadOnly;
 
     /// <inheritdoc />
-    public void Add(string key, H5Object value)
+    public void Add(string key, object value)
     {
         _objects.Add(key, value);
     }
 
     /// <inheritdoc />
-    public void Add(KeyValuePair<string, H5Object> item)
+    public void Add(KeyValuePair<string, object> item)
     {
         _objects.Add(item);
     }
@@ -50,7 +50,7 @@ public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
     }
 
     /// <inheritdoc />
-    public bool Contains(KeyValuePair<string, H5Object> item)
+    public bool Contains(KeyValuePair<string, object> item)
     {
         return _objects.Contains(item);
     }
@@ -62,13 +62,13 @@ public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
     }
 
     /// <inheritdoc />
-    public void CopyTo(KeyValuePair<string, H5Object>[] array, int arrayIndex)
+    public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
     {
         _objects.CopyTo(array, arrayIndex);
     }
 
     /// <inheritdoc />
-    public IEnumerator<KeyValuePair<string, H5Object>> GetEnumerator()
+    public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
     {
         return _objects.GetEnumerator();
     }
@@ -80,20 +80,20 @@ public class H5Group : H5AttributableObject, IDictionary<string, H5Object>
     }
 
     /// <inheritdoc />
-    public bool Remove(KeyValuePair<string, H5Object> item)
+    public bool Remove(KeyValuePair<string, object> item)
     {
         return _objects.Remove(item);
     }
 
 #if NETSTANDARD2_0 || NETSTANDARD2_1
     /// <inheritdoc />
-    public bool TryGetValue(string key, out H5Object value)
+    public bool TryGetValue(string key, out object value)
     {
         return _objects.TryGetValue(key, out value);
     }
 #else
     /// <inheritdoc />
-    public bool TryGetValue(string key, [MaybeNullWhen(false)] out H5Object value)
+    public bool TryGetValue(string key, [MaybeNullWhen(false)] out object value)
     {
         return _objects.TryGetValue(key, out value);
     }

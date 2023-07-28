@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "Double" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 99.38
+      }
+   }
+}
+}

@@ -15,7 +15,7 @@ internal record WriteContext(
     GlobalHeapManager GlobalHeapManager,
     H5SerializerOptions SerializerOptions,
     Dictionary<Type, (DatatypeMessage, EncodeDelegate)> TypeToMessageMap,
-    Dictionary<H5Object, ulong> ObjectToAddressMap
+    Dictionary<object, ulong> ObjectToAddressMap
 );
 
 [StructLayout(LayoutKind.Explicit, Size = 12)]

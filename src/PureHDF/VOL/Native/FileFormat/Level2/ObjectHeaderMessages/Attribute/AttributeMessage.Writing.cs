@@ -14,7 +14,7 @@ internal partial record class AttributeMessage
 
         // TODO: make this more exact?
         if (dataSize > 64 * 1024)
-            throw new Exception("The maximum attribute size is 64KB");
+            throw new Exception("The maximum attribute size is 64KB.");
 
         var size =
             sizeof(byte) +
