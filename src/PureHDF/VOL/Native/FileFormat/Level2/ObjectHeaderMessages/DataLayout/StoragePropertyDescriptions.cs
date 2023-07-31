@@ -62,11 +62,20 @@ internal record class ContiguousStoragePropertyDescription(
 
     public override ushort GetEncodeSize()
     {
-        throw new NotImplementedException();
+        var encodeSize =
+            sizeof(ulong) +
+            sizeof(ulong);
+
+        return (ushort)encodeSize;
     }
+
     public override void Encode(BinaryWriter driver)
     {
-        throw new NotImplementedException();
+        // address
+        driver.Write(Address);
+
+        // size
+        driver.Write(Size);
     }
 }
 

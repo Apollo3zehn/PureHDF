@@ -2,15 +2,15 @@
 
 internal partial record class ObjectHeader2
 {
-    public ulong Encode(WriteContext writeContext)
+    public ulong Encode(WriteContext context)
     {   
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
 
-        var freeSpaceManager = writeContext.FreeSpaceManager;
+        var freeSpaceManager = context.FreeSpaceManager;
         var address = freeSpaceManager.Allocate((long)encodeSize);
 
-        var driver = writeContext.Driver;
+        var driver = context.Driver;
         driver.BaseStream.Seek(address, SeekOrigin.Begin);
 
         // signature
