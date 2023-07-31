@@ -1,11 +1,10 @@
 ﻿using System.Collections;
 using System.Reflection;
-using PureHDF.Tests.Reading;
 using Xunit;
 
 namespace PureHDF.Tests.Writing;
 
-public class DatasetTests
+public partial class DatasetTests
 {
     public static IList<object[]> CommonData { get; } = WritingTestData.Common;
     public static IList<object[]> CommonData_FixedLengthString { get; } = WritingTestData.Common_FixedLengthString;

@@ -28,7 +28,7 @@ namespace PureHDF.Tests.Reading
                     var actual = dataset.Read<int>();
 
                     // Assert
-                    Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                    Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
                 }
             });
         }
@@ -49,7 +49,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -67,7 +67,7 @@ namespace PureHDF.Tests.Reading
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
 
         [Fact]
@@ -86,7 +86,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -106,7 +106,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -126,7 +126,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -146,7 +146,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -166,7 +166,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -186,7 +186,7 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
         }
 
@@ -198,7 +198,7 @@ namespace PureHDF.Tests.Reading
                 // Arrange
                 var fillValue = 99;
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetWithFillValueAndAllocationLate(fileId, fillValue));
-                var expected = Enumerable.Range(0, ReadingTestData.MediumData.Length)
+                var expected = Enumerable.Range(0, SharedTestData.MediumData.Length)
                     .Select(value => fillValue)
                     .ToArray();
 

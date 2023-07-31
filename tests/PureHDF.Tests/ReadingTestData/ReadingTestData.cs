@@ -148,11 +148,6 @@
 
             NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
             NullableStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
-            
-            TinyData = new byte[] { 99 };
-            SmallData = Enumerable.Range(0, 100).ToArray();
-            MediumData = Enumerable.Range(0, 10_000).ToArray();
-            HugeData = Enumerable.Range(0, 10_000_000).ToArray();
             HyperslabData = Enumerable.Range(0, 2 * 3 * 6).ToArray();
         }
 
@@ -168,14 +163,6 @@
         public static TestStructL1[] NonNullableStructData { get; }
 
         public static TestStructStringAndArray[] NullableStructData { get; }
-
-        public static byte[] TinyData { get; }
-
-        public static int[] SmallData { get; }
-
-        public static int[] MediumData { get; }
-
-        public static int[] HugeData { get; }
 
         public static int[] HyperslabData { get; }
     }

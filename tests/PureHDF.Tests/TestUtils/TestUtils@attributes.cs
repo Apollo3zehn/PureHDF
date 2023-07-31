@@ -9,15 +9,15 @@ namespace PureHDF.Tests
             var length = version switch
             {
                 H5F.libver_t.EARLIEST => 16368UL, // max 64 kb in object header
-                _ => (ulong)ReadingTestData.HugeData.Length,
+                _ => (ulong)SharedTestData.HugeData.Length,
             };
 
-            Add(container, fileId, "huge", "huge", H5T.NATIVE_INT32, ReadingTestData.HugeData.AsSpan(), length);
+            Add(container, fileId, "huge", "huge", H5T.NATIVE_INT32, SharedTestData.HugeData.AsSpan(), length);
         }
 
         public static unsafe void AddTiny(long fileId, ContainerType container)
         {
-            Add(container, fileId, "tiny", "tiny", H5T.NATIVE_UINT8, ReadingTestData.TinyData.AsSpan());
+            Add(container, fileId, "tiny", "tiny", H5T.NATIVE_UINT8, SharedTestData.TinyData.AsSpan());
         }
     }
 }

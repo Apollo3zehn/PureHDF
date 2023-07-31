@@ -41,7 +41,7 @@ namespace PureHDF.Tests.Reading
 
             // Arrange
             var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
-                => TestUtils.Add(ContainerType.Dataset, fileId, "misc", "half_size", H5T.NATIVE_INT32, ReadingTestData.SmallData.AsSpan(), new ulong[] { 10, 10 }));
+                => TestUtils.Add(ContainerType.Dataset, fileId, "misc", "half_size", H5T.NATIVE_INT32, SharedTestData.SmallData.AsSpan(), new ulong[] { 10, 10 }));
 
             var expected = new ushort[100]
                 .ToArray2D(10, 10);

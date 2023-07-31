@@ -254,7 +254,7 @@ namespace PureHDF.Tests.Reading.Filters
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
 
         [Theory]
@@ -289,7 +289,7 @@ namespace PureHDF.Tests.Reading.Filters
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
 
         [Fact]
@@ -306,7 +306,7 @@ namespace PureHDF.Tests.Reading.Filters
             var actual = dataset.Read<int>();
 
             // Assert
-            Assert.True(actual.SequenceEqual(ReadingTestData.MediumData));
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
 
         // TODO: 16 byte and arbitrary number of bytes tests missing
@@ -642,17 +642,17 @@ namespace PureHDF.Tests.Reading.Filters
                 .Group("chunked")
                 .Dataset("chunked_single_chunk");
 
-            var attribute_expected = new int[ReadingTestData.SmallData.Length];
-            EndiannessConverter.Convert<int>(ReadingTestData.SmallData, attribute_expected);
+            var attribute_expected = new int[SharedTestData.SmallData.Length];
+            EndiannessConverter.Convert<int>(SharedTestData.SmallData, attribute_expected);
 
-            var dataset_compact_expected = new int[ReadingTestData.SmallData.Length];
-            EndiannessConverter.Convert<int>(ReadingTestData.SmallData, dataset_compact_expected);
+            var dataset_compact_expected = new int[SharedTestData.SmallData.Length];
+            EndiannessConverter.Convert<int>(SharedTestData.SmallData, dataset_compact_expected);
 
-            var dataset_contiguous_expected = new int[ReadingTestData.HugeData.Length];
-            EndiannessConverter.Convert<int>(ReadingTestData.HugeData, dataset_contiguous_expected);
+            var dataset_contiguous_expected = new int[SharedTestData.HugeData.Length];
+            EndiannessConverter.Convert<int>(SharedTestData.HugeData, dataset_contiguous_expected);
 
-            var dataset_chunked_expected = new int[ReadingTestData.MediumData.Length];
-            EndiannessConverter.Convert<int>(ReadingTestData.MediumData, dataset_chunked_expected);
+            var dataset_chunked_expected = new int[SharedTestData.MediumData.Length];
+            EndiannessConverter.Convert<int>(SharedTestData.MediumData, dataset_chunked_expected);
 
             // Act
             var attribute_actual = attribute.Read<int>();

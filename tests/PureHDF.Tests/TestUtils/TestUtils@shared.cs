@@ -44,11 +44,11 @@ namespace PureHDF.Tests
 
         public static unsafe void AddOpaque(long fileId, ContainerType container)
         {
-            var length = (ulong)ReadingTestData.SmallData.Length * 2;
+            var length = (ulong)SharedTestData.SmallData.Length * 2;
             var typeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
             _ = H5T.set_tag(typeId, "Opaque Test Tag");
 
-            Add(container, fileId, "opaque", "opaque", typeId, ReadingTestData.SmallData.AsSpan(), length);
+            Add(container, fileId, "opaque", "opaque", typeId, SharedTestData.SmallData.AsSpan(), length);
 
             _ = H5T.close(typeId);
         }
@@ -150,7 +150,7 @@ namespace PureHDF.Tests
             long res;
 
             var dims = new ulong[] { 3, 4, 5 };
-            Add(ContainerType.Dataset, fileId, "reference", "referenced", H5T.NATIVE_INT32, ReadingTestData.SmallData.AsSpan(), dims);
+            Add(ContainerType.Dataset, fileId, "reference", "referenced", H5T.NATIVE_INT32, SharedTestData.SmallData.AsSpan(), dims);
 
             var length = 5;
             var data = new NativeRegionReference1[length];
@@ -449,7 +449,7 @@ namespace PureHDF.Tests
 
         public static unsafe void AddSmall(long fileId, ContainerType container)
         {
-            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, ReadingTestData.SmallData.AsSpan());
+            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, SharedTestData.SmallData.AsSpan());
         }
 
         public static unsafe void AddDataWithSharedDataType(long fileId, ContainerType container)

@@ -26,33 +26,33 @@ namespace PureHDF.Tests
 
         public static unsafe void AddFilteredDataset_ZLib(long fileId)
         {
-            var length = (ulong)ReadingTestData.MediumData.Length / 4;
+            var length = (ulong)SharedTestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
             _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
             _ = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), new uint[] { 5 } /* compression level */);
 
-            Add(ContainerType.Dataset, fileId, "filtered", $"deflate", H5T.NATIVE_INT32, ReadingTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"deflate", H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddFilteredDataset_Fletcher(long fileId)
         {
-            var length = (ulong)ReadingTestData.MediumData.Length / 4;
+            var length = (ulong)SharedTestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
             _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
             _ = H5P.set_fletcher32(dcpl_id);
 
-            Add(ContainerType.Dataset, fileId, "filtered", $"fletcher", H5T.NATIVE_INT32, ReadingTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"fletcher", H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
             _ = H5P.close(dcpl_id);
         }
 
         public static unsafe void AddFilteredDataset_Multi(long fileId)
         {
-            var length = (ulong)ReadingTestData.MediumData.Length / 4;
+            var length = (ulong)SharedTestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
@@ -61,7 +61,7 @@ namespace PureHDF.Tests
             _ = H5P.set_shuffle(dcpl_id);
             _ = H5P.set_deflate(dcpl_id, level: 5);
 
-            Add(ContainerType.Dataset, fileId, "filtered", $"multi", H5T.NATIVE_INT32, ReadingTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "filtered", $"multi", H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
         }
     }
 }

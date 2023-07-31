@@ -187,7 +187,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.SmallData));
+                Assert.True(actual.SequenceEqual(SharedTestData.SmallData));
             });
         }
 
@@ -348,7 +348,7 @@ namespace PureHDF.Tests.Reading
                 var expected_point = new int[] { 2, 27, 59, 50 };
                 // var expected_regular_hyperslab = new int[] { 0, 1, 3, 4 };
                 var expected_irregular_hyperslab = new int[] { 0, 1, 3, 4 };
-                var expected_all = ReadingTestData.SmallData.Take(60);
+                var expected_all = SharedTestData.SmallData.Take(60);
 
                 Assert.Empty(actual_none);
                 Assert.True(expected_point.SequenceEqual(actual_point));
@@ -460,7 +460,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<byte>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.TinyData));
+                Assert.True(actual.SequenceEqual(SharedTestData.TinyData));
             });
         }
 
@@ -479,7 +479,7 @@ namespace PureHDF.Tests.Reading
                 var actual = attribute.Read<int>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(ReadingTestData.HugeData[0..actual.Length]));
+                Assert.True(actual.SequenceEqual(SharedTestData.HugeData[0..actual.Length]));
             });
         }
 
