@@ -1,7 +1,7 @@
 ﻿// https://support.hdfgroup.org/HDF5/doc_resource/H5Fill_Behavior.html
 namespace PureHDF.VOL.Native;
 
-internal record class FillValueMessage(
+internal partial record class FillValueMessage(
     SpaceAllocationTime AllocationTime,
     FillValueWriteTime FillTime,
     byte[]? Value

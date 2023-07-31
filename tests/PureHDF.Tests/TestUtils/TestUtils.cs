@@ -18,9 +18,10 @@ namespace PureHDF.Tests
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "h5dump",
-                    Arguments = filePath,
+                    Arguments = $"--enable-error-stack {filePath}",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     CreateNoWindow = true
                 }
             };
@@ -30,6 +31,17 @@ namespace PureHDF.Tests
             while (!h5dumpProcess.StandardOutput.EndOfStream)
             {
                 var line = h5dumpProcess.StandardOutput.ReadLine();
+
+                if (dump is null)
+                    dump = line;
+
+                else
+                    dump += Environment.NewLine + line;
+            }
+
+            while (!h5dumpProcess.StandardError.EndOfStream)
+            {
+                var line = h5dumpProcess.StandardError.ReadLine();
 
                 if (dump is null)
                     dump = line;

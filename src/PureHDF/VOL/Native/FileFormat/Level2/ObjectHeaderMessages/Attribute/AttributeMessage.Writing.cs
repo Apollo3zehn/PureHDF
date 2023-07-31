@@ -4,6 +4,40 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class AttributeMessage
 {
+    public static AttributeMessage Create(
+        WriteContext context,
+        string name, 
+        object attribute)
+    {
+        var data = attribute is H5Attribute h5Attribute1
+            ? h5Attribute1.Data
+            : attribute;
+
+        var type = data.GetType();
+
+        var (datatype, dataDimensions, encode) = 
+            DatatypeMessage.Create(context, type, data);
+
+        var dataspace = attribute is H5Attribute h5Attribute2
+            ? DataspaceMessage.Create(dataDimensions, h5Attribute2.Dimensions)
+            : DataspaceMessage.Create(dataDimensions, default);
+
+        // attribute
+        var attributeMessage = new AttributeMessage(
+            Flags: AttributeMessageFlags.None,
+            Name: name,
+            Datatype: datatype,
+            Dataspace: dataspace,
+            InputData: default,
+            EncodeData: writer => encode(writer.BaseStream, data)
+        )
+        {
+            Version = 3
+        };
+
+        return attributeMessage;
+    }
+    
     public override ushort GetEncodeSize()
     {
         if (Version != 3)

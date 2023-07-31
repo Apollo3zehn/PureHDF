@@ -91,7 +91,7 @@ internal static class H5Writer
         // attribute messages
         foreach (var entry in group.Attributes)
         {
-            var attributeMessage = CreateAttributeMessage(context, entry.Key, entry.Value);
+            var attributeMessage = AttributeMessage.Create(context, entry.Key, entry.Value);
 
             headerMessages.Add(ToHeaderMessage(attributeMessage));
         }
@@ -171,24 +171,56 @@ internal static class H5Writer
         WriteContext context,
         object dataset)
     {
-        var data = dataset is H5Dataset h5Dataset1
-            ? h5Dataset1.Data
-            : dataset;
+        var (data, chunkDimensions) = dataset is H5Dataset h5Dataset1
+            ? (h5Dataset1.Data, h5Dataset1.ChunkDimensions)
+            : (dataset, default);
 
-        var (datatype, dataspace, encode) = dataset is H5Dataset h5Dataset2
-            ? GetDataMessages(context, data, h5Dataset2.Dimensions)
-            : GetDataMessages(context, data, default);
+        var type = data.GetType();
+
+        var (datatype, dataDimensions, encode) = 
+            DatatypeMessage.Create(context, type, data);
+
+        var dataspace = dataset is H5Dataset h5Dataset2
+            ? DataspaceMessage.Create(dataDimensions, h5Dataset2.Dimensions)
+            : DataspaceMessage.Create(dataDimensions, default);
+
+        if (chunkDimensions is not null)
+        {
+            if (dataspace.DimensionSizes.Length != chunkDimensions.Length)
+                throw new Exception("The rank of the chunk dimensions must be equal to the rank of the dataset dimensions.");
+
+            for (int i = 0; i < dataspace.Rank; i++)
+            {
+                if (chunkDimensions[i] > dataspace.DimensionSizes[i])
+                    throw new Exception("The chunk dimensions must be less than or equal to the dataset dimensions.");
+            }
+        }
 
         var dataEncodeSize = datatype.Size * dataspace.DimensionSizes
             .Aggregate(1UL, (product, dimension) => product * dimension);
 
-        var dataLayout = CreateLayoutMessage(context, encode, dataEncodeSize, data);
+        var dataLayout = DataLayoutMessage4.Create(
+            context, 
+            encode, 
+            dataEncodeSize, 
+            data,
+            chunkDimensions);
+
+        var fillValueMessage = new FillValueMessage(
+            AllocationTime: SpaceAllocationTime.Early,
+            FillTime: FillValueWriteTime.Never,
+            Value: default
+        )
+        {
+            Version = 3
+        };
 
         var headerMessages = new List<HeaderMessage>()
         {
             ToHeaderMessage(datatype),
             ToHeaderMessage(dataspace),
-            ToHeaderMessage(dataLayout)
+            ToHeaderMessage(dataLayout),
+            ToHeaderMessage(fillValueMessage)
         };
 
         var objectHeader = new ObjectHeader2(
@@ -215,112 +247,26 @@ internal static class H5Writer
             encode.Invoke(driver.BaseStream, data);
         }
 
+        else if (dataLayout.Properties is ChunkedStoragePropertyDescription4 chunked)
+        {
+            var driver = context.Driver;
+            driver.BaseStream.Seek((long)chunked.Address, SeekOrigin.Begin);
+
+            if (chunked.IndexingTypeInformation is ImplicitIndexingInformation @implicit)
+            {
+                encode.Invoke(driver.BaseStream, data);
+            }
+
+            else
+            {
+                throw new Exception($"The indexing type {chunked.IndexingTypeInformation.GetType()} is not supported.");
+            }
+        }
+
         // encode object header
         var address = objectHeader.Encode(context);
 
         return address;
-    }
-
-    private static DataLayoutMessage4 CreateLayoutMessage(
-        WriteContext context,
-        EncodeDelegate encode,
-        ulong dataEncodeSize,
-        object data)
-    {
-        // TODO: The ushort.MaxValue limit is not stated in the specification but
-        // makes sense because of the size field of the Compact Storage Property
-        // Description.
-        //
-        // See also H5Dcompact.c (H5D__compact_construct): "Verify data size is 
-        // smaller than maximum header message size (64KB) minus other layout 
-        // message fields."
-
-        var isChunked = false;
-        var preferCompact = context.SerializerOptions.PreferCompactDatasetLayout;
-        var dataLayout = default(DataLayoutMessage4);
-
-        if (isChunked)
-        {
-            throw new NotImplementedException();
-        }
-
-        else
-        {
-            /* try to create compact dataset */
-            if (preferCompact && dataEncodeSize <= ushort.MaxValue)
-            {
-                var properties = new CompactStoragePropertyDescription(
-                    InputData: default!,
-                    EncodeData: driver => encode(driver.BaseStream, data),
-                    EncodeDataSize: (ushort)dataEncodeSize
-                );
-
-                dataLayout = new DataLayoutMessage4(
-                    LayoutClass: LayoutClass.Compact,
-                    Address: default,
-                    Properties: properties
-                )
-                {
-                    Version = 4
-                };
-
-                var dataLayoutEncodeSize = dataLayout.GetEncodeSize();
-
-                if (dataEncodeSize + dataLayoutEncodeSize > ushort.MaxValue)
-                    dataLayout = default;
-            }
-
-            /* create contiguous dataset */
-            if (dataLayout == default)
-            {
-                var address = context.FreeSpaceManager.Allocate((long)dataEncodeSize);
-
-                var properties = new ContiguousStoragePropertyDescription(
-                    Address: (ulong)address,
-                    Size: dataEncodeSize
-                );
-
-                dataLayout = new DataLayoutMessage4(
-                    LayoutClass: LayoutClass.Contiguous,
-                    Address: default,
-                    Properties: properties
-                )
-                {
-                    Version = 4
-                };
-            }
-        }
-
-        return dataLayout;
-    }
-
-    private static AttributeMessage CreateAttributeMessage(
-        WriteContext context,
-        string name, 
-        object attribute)
-    {
-        var data = attribute is H5Attribute h5Attribute1
-            ? h5Attribute1.Data
-            : attribute;
-
-        var (datatype, dataspace, encode) = attribute is H5Attribute h5Attribute2
-            ? GetDataMessages(context, data, h5Attribute2.Dimensions)
-            : GetDataMessages(context, data, default);
-
-        // attribute
-        var attributeMessage = new AttributeMessage(
-            Flags: AttributeMessageFlags.None,
-            Name: name,
-            Datatype: datatype,
-            Dataspace: dataspace,
-            InputData: default,
-            EncodeData: writer => encode(writer.BaseStream, data)
-        )
-        {
-            Version = 3
-        };
-
-        return attributeMessage;
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)
@@ -364,40 +310,5 @@ internal static class H5Writer
             Version = 2,
             WithCreationOrder = default
         };
-    }
-
-    private static (DatatypeMessage, DataspaceMessage, EncodeDelegate) GetDataMessages(WriteContext context, object data, ulong[]? dimensions)
-    {
-        // datatype
-        var type = data.GetType();
-
-        var (dataType, dataDimensions, encode) = DatatypeMessage
-            .Create(context, type, data);
-
-        // dataspace
-        dimensions ??= dataDimensions;
-
-        var dimensionsTotalSize = dimensions
-            .Aggregate(1UL, (x, y) => x * y);
-
-        var dataDimensionsTotalSize = dataDimensions
-            .Aggregate(1UL, (x, y) => x * y);
-
-        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensionsTotalSize)
-            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
-
-        var dataspace = new DataspaceMessage(
-            Rank: (byte)dimensions.Length,
-            Flags: DataspaceMessageFlags.None,
-            Type: dataDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
-            DimensionSizes: dimensions,
-            DimensionMaxSizes: dimensions,
-            PermutationIndices: default
-        )
-        {
-            Version = 2
-        };
-
-        return (dataType, dataspace, encode);
     }
 }

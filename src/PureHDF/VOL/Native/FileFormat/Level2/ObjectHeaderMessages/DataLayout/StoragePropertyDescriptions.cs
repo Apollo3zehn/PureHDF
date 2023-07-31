@@ -131,7 +131,6 @@ internal record class ChunkedStoragePropertyDescription4(
     byte Rank,
     ChunkedStoragePropertyFlags Flags,
     ulong[] DimensionSizes,
-    ChunkIndexingType ChunkIndexingType,
     IndexingInformation IndexingTypeInformation
 ) : ChunkedStoragePropertyDescription(Address, Rank)
 {
@@ -178,18 +177,61 @@ internal record class ChunkedStoragePropertyDescription4(
             Rank: rank,
             Flags: flags,
             DimensionSizes: dimensionSizes,
-            ChunkIndexingType: chunkIndexingType,
             IndexingTypeInformation: indexingTypeInformation
         );
     }
+
     public override ushort GetEncodeSize()
     {
-        throw new NotImplementedException();
+        var encodeSize =
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(ulong) * Rank +
+            sizeof(byte) +
+            IndexingTypeInformation.GetEncodeSize() +
+            sizeof(ulong);
+
+        return (ushort)encodeSize;
     }
 
     public override void Encode(BinaryWriter driver)
     {
-        throw new NotImplementedException();
+        // flags
+        driver.Write((byte)Flags);
+
+        // dimensionality
+        driver.Write(Rank);
+
+        // dimension size encoded length
+        driver.Write((byte)8);
+
+        // dimension sizes
+        for (int i = 0; i < Rank - 1; i++)
+        {
+            driver.Write(DimensionSizes[i]);
+        }
+
+        driver.Write((ulong)4);
+
+        // chunk indexing type
+        var indexingType = IndexingTypeInformation switch
+        {
+            SingleChunkIndexingInformation => ChunkIndexingType.SingleChunk,
+            ImplicitIndexingInformation => ChunkIndexingType.Implicit,
+            FixedArrayIndexingInformation => ChunkIndexingType.FixedArray,
+            ExtensibleArrayIndexingInformation => ChunkIndexingType.ExtensibleArray,
+            BTree2IndexingInformation => ChunkIndexingType.BTree2,
+            _ => throw new NotSupportedException($"The chunk indexing type '{IndexingTypeInformation.GetType()}' is not supported.")
+        };
+
+        driver.Write((byte)indexingType);
+
+        // indexing type information
+        IndexingTypeInformation.Encode(driver);
+
+        // address
+        driver.Write(Address);
     }
 }
 

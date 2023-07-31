@@ -1,6 +1,11 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal abstract record class IndexingInformation();
+internal abstract record class IndexingInformation()
+{
+    public abstract ushort GetEncodeSize();
+    
+    public abstract void Encode(BinaryWriter driver);
+};
 
 
 internal record class SingleChunkIndexingInformation(
@@ -29,9 +34,30 @@ internal record class SingleChunkIndexingInformation(
             ChunkFilters: chunkFilters
         );
     }
+
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
+    }
 }
 
-internal record class ImplicitIndexingInformation : IndexingInformation;
+internal record class ImplicitIndexingInformation : IndexingInformation
+{
+    public override ushort GetEncodeSize()
+    {
+        return 0;
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        return;
+    }
+};
 
 internal record class FixedArrayIndexingInformation(
     byte PageBits
@@ -47,6 +73,16 @@ internal record class FixedArrayIndexingInformation(
         return new FixedArrayIndexingInformation(
             PageBits: pageBits
         );
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }
 
@@ -98,6 +134,16 @@ internal record class ExtensibleArrayIndexingInformation(
             PageBitCount: pageBitCount
         );
     }
+    
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 internal record class BTree2IndexingInformation(
@@ -113,5 +159,15 @@ internal record class BTree2IndexingInformation(
             SplitPercent: driver.ReadByte(),
             MergePercent: driver.ReadByte()
         );
+    }
+
+    public override ushort GetEncodeSize()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void Encode(BinaryWriter driver)
+    {
+        throw new NotImplementedException();
     }
 }

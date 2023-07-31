@@ -76,24 +76,24 @@ internal abstract class H5D_Chunk : H5D_Base
         {
             DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(dataset, layout12, datasetAccess),
 
-            DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).ChunkIndexingType switch
+            DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).IndexingTypeInformation switch
             {
                 // the current, maximum, and chunk dimension sizes are all the same
-                ChunkIndexingType.SingleChunk => new H5Dataset_Chunk_Single_Chunk4(dataset, layout4, datasetAccess),
+                SingleChunkIndexingInformation => new H5Dataset_Chunk_Single_Chunk4(dataset, layout4, datasetAccess),
 
                 // fixed maximum dimension sizes
                 // no filter applied to the dataset
                 // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
-                ChunkIndexingType.Implicit => new H5D_Chunk4_Implicit(dataset, layout4, datasetAccess),
+                ImplicitIndexingInformation => new H5D_Chunk4_Implicit(dataset, layout4, datasetAccess),
 
                 // fixed maximum dimension sizes
-                ChunkIndexingType.FixedArray => new H5D_Chunk4_FixedArray(dataset, layout4, datasetAccess),
+                FixedArrayIndexingInformation => new H5D_Chunk4_FixedArray(dataset, layout4, datasetAccess),
 
                 // only one dimension of unlimited extent
-                ChunkIndexingType.ExtensibleArray => new H5D_Chunk4_ExtensibleArray(dataset, layout4, datasetAccess),
+                ExtensibleArrayIndexingInformation => new H5D_Chunk4_ExtensibleArray(dataset, layout4, datasetAccess),
 
                 // more than one dimension of unlimited extent
-                ChunkIndexingType.BTree2 => new H5D_Chunk4_BTree2(dataset, layout4, datasetAccess),
+                BTree2IndexingInformation => new H5D_Chunk4_BTree2(dataset, layout4, datasetAccess),
                 _ => throw new Exception("Unknown chunk indexing type.")
             },
 
