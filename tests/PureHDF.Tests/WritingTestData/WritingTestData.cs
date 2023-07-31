@@ -7,11 +7,6 @@ public static class WritingTestData
         /* string */
         new object[] { "ß Abc" },
 
-        /* dictionary */
-        new object[] { new Dictionary<string, object>() {
-            ["A"] = 1, ["B"] = "-2", ["C"] = 3
-        }},
-
         new object[] { new Dictionary<string, int> {
             ["A"] = 1, ["B"] = -2, ["C"] = 3
         }},

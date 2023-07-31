@@ -289,6 +289,10 @@ internal partial record class DatatypeMessage : Message
             MemberCount: (ushort)fieldInfos.Length
         );
 
+        /* H5Odtype.c (H5O_dtype_decode_helper: case H5T_COMPOUND) */
+        if (bitfield.MemberCount == 0)
+            throw new Exception("The compound data type needs at least one member");
+
         var message = new DatatypeMessage(
             (uint)Marshal.SizeOf(type),
             bitfield,
@@ -359,6 +363,10 @@ internal partial record class DatatypeMessage : Message
         bitfield = new CompoundBitFieldDescription(
             MemberCount: (ushort)(fieldInfos.Length + propertyInfos.Length)
         );
+
+        /* H5Odtype.c (H5O_dtype_decode_helper: case H5T_COMPOUND) */
+        if (bitfield.MemberCount == 0)
+            throw new Exception("The compound data type needs at least one member");
 
         // propertyDescriptions
         var properties = new CompoundPropertyDescription[bitfield.MemberCount];

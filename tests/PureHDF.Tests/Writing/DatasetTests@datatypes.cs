@@ -47,43 +47,47 @@ public class DatasetTests
         file.Save(filePath, options);
 
         // Assert
-
-        /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
-        var actual = TestUtils.DumpH5File(filePath);
-
-        var suffix = type switch
+        try
         {
-            Type when 
-                type == typeof(bool)
-                => $"_{data}",
+            /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
+            var actual = TestUtils.DumpH5File(filePath);
 
-            Type when 
-                typeof(IDictionary).IsAssignableFrom(type) 
-                => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
+            var suffix = type switch
+            {
+                Type when 
+                    type == typeof(bool)
+                    => $"_{data}",
 
-            Type when type != 
-                typeof(string) &&
-                typeof(IEnumerable).IsAssignableFrom(type) &&
-                !type.IsArray
-                => $"_{type.GenericTypeArguments[0].Name}",
+                Type when 
+                    typeof(IDictionary).IsAssignableFrom(type) 
+                    => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
 
-            Type when
-                type.IsGenericType &&
-                typeof(Memory<>).Equals(type.GetGenericTypeDefinition())
-                => $"_{type.GenericTypeArguments[0].Name}",
+                Type when type != 
+                    typeof(string) &&
+                    typeof(IEnumerable).IsAssignableFrom(type) &&
+                    !type.IsArray
+                    => $"_{type.GenericTypeArguments[0].Name}",
 
-            _ => default
-        };
+                Type when
+                    type.IsGenericType &&
+                    typeof(Memory<>).Equals(type.GetGenericTypeDefinition())
+                    => $"_{type.GenericTypeArguments[0].Name}",
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_{type.Name}{suffix}.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+                _ => default
+            };
 
-        Assert.Equal(expected, actual);
+            var expected = File
+                .ReadAllText($"DumpFiles/data_{type.Name}{suffix}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        if (File.Exists(filePath))
-            File.Delete(filePath);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 
     [Theory]
@@ -105,19 +109,23 @@ public class DatasetTests
         file.Save(filePath, options);
 
         // Assert
+        try
+        {
+            /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
+            var actual = TestUtils.DumpH5File(filePath);
 
-        /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
-        var actual = TestUtils.DumpH5File(filePath);
+            var expected = File
+                .ReadAllText($"DumpFiles/data_default_fls_{type.Name}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_default_fls_{type.Name}.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
-
-        Assert.Equal(expected, actual);
-
-        if (File.Exists(filePath))
-            File.Delete(filePath);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 
     [Theory]
@@ -153,19 +161,23 @@ public class DatasetTests
         file.Save(filePath, options);
 
         // Assert
+        try
+        {
+            /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
+            var actual = TestUtils.DumpH5File(filePath);
 
-        /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
-        var actual = TestUtils.DumpH5File(filePath);
+            var expected = File
+                .ReadAllText($"DumpFiles/data_default_flsm_{type.Name}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_default_flsm_{type.Name}.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
-
-        Assert.Equal(expected, actual);
-
-        if (File.Exists(filePath))
-            File.Delete(filePath);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 
     [Fact]
@@ -195,14 +207,22 @@ public class DatasetTests
         file.Save(filePath);
 
         // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_{type.Name}.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+            var expected = File
+                .ReadAllText($"DumpFiles/data_{type.Name}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
 #if NET6_0_OR_GREATER
@@ -238,17 +258,25 @@ public class DatasetTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        try
+        {
+            file.Save(filePath);
 
-        // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+            // Assert
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_{type.Name}.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+            var expected = File
+                .ReadAllText($"DumpFiles/data_{type.Name}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
 # endif
@@ -288,14 +316,22 @@ public class DatasetTests
         file.Save(filePath);
 
         // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_{type.Name}.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+            var expected = File
+                .ReadAllText($"DumpFiles/data_{type.Name}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -316,14 +352,22 @@ public class DatasetTests
         file.Save(filePath);
 
         // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/data_large_array.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+            var expected = File
+                .ReadAllText("DumpFiles/data_large_array.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
 #if NET7_0_OR_GREATER
@@ -345,14 +389,22 @@ public class DatasetTests
         file.Save(filePath);
 
         // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/data_large_array_int128.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+            var expected = File
+                .ReadAllText("DumpFiles/data_large_array_int128.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 #endif
 
@@ -372,13 +424,50 @@ public class DatasetTests
         file.Save(filePath);
 
         // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText($"DumpFiles/data_2D.dump")
-            .Replace("<file-path>", filePath)
-            .Replace("<type>", "DATASET");
+            var expected = File
+                .ReadAllText($"DumpFiles/data_2D.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public void ThrowsForInvalidNumberOfCompoundMembers()
+    {
+        // Arrange
+        var data = new object[] { new Dictionary<string, object>() {
+            ["A"] = 1, ["B"] = "-2", ["C"] = 3
+        }};
+
+        var type = data.GetType();
+        var file = new H5File();
+        file[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        void action() => file.Save(filePath);
+
+        // Assert
+        try
+        {
+            Assert.Throws<Exception>(action);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 }
