@@ -95,8 +95,11 @@ public partial class DatasetTests
     {
         // Arrange
         var type = data.GetType();
-        var file = new H5File();
-        file[type.Name] = data;
+
+        var file = new H5File
+        {
+            [type.Name] = data
+        };
 
         var filePath = Path.GetTempFileName();
 
@@ -133,8 +136,11 @@ public partial class DatasetTests
     {
         // Arrange
         var type = data.GetType();
-        var file = new H5File();
-        file[type.Name] = data;
+
+        var file = new H5File
+        {
+            [type.Name] = data
+        };
 
         var filePath = Path.GetTempFileName();
 
@@ -450,8 +456,11 @@ public partial class DatasetTests
         }};
 
         var type = data.GetType();
-        var file = new H5File();
-        file[type.Name] = data;
+        
+        var file = new H5File
+        {
+            [type.Name] = data
+        };
 
         var filePath = Path.GetTempFileName();
 

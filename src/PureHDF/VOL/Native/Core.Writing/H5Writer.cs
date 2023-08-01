@@ -206,10 +206,12 @@ internal static class H5Writer
             data,
             chunkDimensions);
 
+        var fillValue = new byte[datatype.Size];
+
         var fillValueMessage = new FillValueMessage(
             AllocationTime: SpaceAllocationTime.Early,
             FillTime: FillValueWriteTime.Never,
-            Value: default
+            Value: fillValue
         )
         {
             Version = 3

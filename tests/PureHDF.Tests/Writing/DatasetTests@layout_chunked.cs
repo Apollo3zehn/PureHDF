@@ -21,9 +21,6 @@ public partial class DatasetTests
         file.Save(filePath);
 
         // Assert
-        // TODO, this test will fail until 
-        // https://forum.hdfgroup.org/t/h5dump-1-14-gives-error-with-fill-value-1-12-is-ok/11385 
-        // is solved
         try
         {
             var actual = TestUtils.DumpH5File(filePath);

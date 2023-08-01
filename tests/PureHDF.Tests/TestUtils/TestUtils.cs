@@ -18,7 +18,7 @@ namespace PureHDF.Tests
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "h5dump",
-                    Arguments = $"--enable-error-stack {filePath}",
+                    Arguments = filePath,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
