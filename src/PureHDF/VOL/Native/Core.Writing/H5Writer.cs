@@ -177,9 +177,11 @@ internal static class H5Writer
 
         var type = data.GetType();
 
+        // datatype
         var (datatype, dataDimensions, encode) = 
             DatatypeMessage.Create(context, type, data);
 
+        // dataspace
         var dataspace = dataset is H5Dataset h5Dataset2
             ? DataspaceMessage.Create(dataDimensions, h5Dataset2.Dimensions)
             : DataspaceMessage.Create(dataDimensions, default);
@@ -196,9 +198,32 @@ internal static class H5Writer
             }
         }
 
-        var dataEncodeSize = datatype.Size * dataspace.DimensionSizes
-            .Aggregate(1UL, (product, dimension) => product * dimension);
+        // data encode size
+        ulong dataEncodeSize;
 
+        if (chunkDimensions is null)
+        {
+            dataEncodeSize = datatype.Size * dataspace.DimensionSizes
+                .Aggregate(1UL, (product, dimension) => product * dimension);
+        }
+
+        else
+        {
+            var chunkSize = chunkDimensions
+                .Aggregate(1UL, (product, dimension) => product * dimension);
+
+            dataEncodeSize = 1;
+
+            for (int dimension = 0; dimension < dataspace.Rank; dimension++)
+            {
+                dataEncodeSize *= (ulong)Math
+                    .Ceiling(dataspace.DimensionSizes[dimension] / (double)chunkDimensions[dimension]);
+            }
+
+            dataEncodeSize *= chunkSize * datatype.Size;
+        }
+        
+        // data layout
         var dataLayout = DataLayoutMessage4.Create(
             context, 
             encode, 
@@ -206,6 +231,7 @@ internal static class H5Writer
             data,
             chunkDimensions);
 
+        // fill value
         var fillValue = new byte[datatype.Size];
 
         var fillValueMessage = new FillValueMessage(
@@ -217,6 +243,7 @@ internal static class H5Writer
             Version = 3
         };
 
+        // header messages
         var headerMessages = new List<HeaderMessage>()
         {
             ToHeaderMessage(datatype),
@@ -225,6 +252,7 @@ internal static class H5Writer
             ToHeaderMessage(fillValueMessage)
         };
 
+        // object header
         var objectHeader = new ObjectHeader2(
             Address: default,
             Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
@@ -251,6 +279,13 @@ internal static class H5Writer
 
         else if (dataLayout.Properties is ChunkedStoragePropertyDescription4 chunked)
         {
+            // TODO: make use of walker
+            var steps = SelectionUtils.Walk(
+                rank: dataspace.Rank,
+                dims: dataspace.DimensionSizes,
+                chunkDims: chunkDimensions!.Select(value => (ulong)value).ToArray(),
+                selection: new AllSelection());
+
             var driver = context.Driver;
             driver.BaseStream.Seek((long)chunked.Address, SeekOrigin.Begin);
 
