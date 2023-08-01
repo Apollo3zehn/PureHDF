@@ -564,7 +564,7 @@ namespace PureHDF.Tests.Reading
             var sourceSelection = new HyperslabSelection(rank: 2, sourceStarts, sourceStrides, sourceCounts, sourceBlocks);
             var targetSelection = new HyperslabSelection(rank: 2, targetStarts, targetStrides, targetCounts, targetBlocks);
 
-            var copyInfo = new CopyInfo<int>(
+            var decodeInfo = new DecodeInfo<int>(
                 default!,
                 default!,
                 default!,
@@ -580,7 +580,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             void action() => SelectionUtils
-                .CopyAsync(default(SyncReader), sourceRank: 2, targetRank: 2, copyInfo)
+                .DecodeAsync(default(SyncReader), sourceRank: 2, targetRank: 2, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
 
@@ -614,7 +614,7 @@ namespace PureHDF.Tests.Reading
                 blocks: blocks
             );
 
-            var copyInfo = new CopyInfo<int>(
+            var decodeInfo = new DecodeInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -623,13 +623,13 @@ namespace PureHDF.Tests.Reading
                 memorySelection,
                 indices => default!,
                 indices => default,
-                Converter: default!,
+                Decoder: default!,
                 SourceTypeSize: 4,
                 TargetTypeFactor: 1
             );
 
             // Act
-            await SelectionUtils.CopyAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, copyInfo);
+            await SelectionUtils.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert
         }
@@ -658,7 +658,7 @@ namespace PureHDF.Tests.Reading
                 blocks: new ulong[] { 3, 2 }
             );
 
-            var copyInfo = new CopyInfo<int>(
+            var decodeInfo = new DecodeInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -667,13 +667,13 @@ namespace PureHDF.Tests.Reading
                 memorySelection,
                 indices => default!,
                 indices => default,
-                Converter: default!,
+                Decoder: default!,
                 SourceTypeSize: 4,
                 TargetTypeFactor: 1
             );
 
             // Act
-            await SelectionUtils.CopyAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, copyInfo);
+            await SelectionUtils.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert        
         }
@@ -772,7 +772,7 @@ namespace PureHDF.Tests.Reading
             var actual = new int[10 * 10];
             var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
 
-            var copyInfo = new CopyInfo<int>(
+            var decodeInfo = new DecodeInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -788,7 +788,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             SelectionUtils
-                .CopyAsync(default(SyncReader), sourceRank: 2, targetRank: 2, copyInfo)
+                .DecodeAsync(default(SyncReader), sourceRank: 2, targetRank: 2, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
 
@@ -895,7 +895,7 @@ namespace PureHDF.Tests.Reading
             IH5ReadStream getSourceStreamAsync(ulong[] indices) 
                 => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
-            var copyInfo = new CopyInfo<int>(
+            var decodeInfo = new DecodeInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -911,7 +911,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             SelectionUtils
-                .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 3, copyInfo)
+                .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
 
@@ -1030,7 +1030,7 @@ namespace PureHDF.Tests.Reading
             IH5ReadStream getSourceStreamAsync(ulong[] indices) 
                 => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
-            var copyInfo = new CopyInfo<int>(
+            var decodeInfo = new DecodeInfo<int>(
                 datasetDims,
                 chunkDims,
                 memoryDims,
@@ -1046,7 +1046,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             SelectionUtils
-                .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 3, copyInfo)
+                .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
 
@@ -1123,7 +1123,7 @@ namespace PureHDF.Tests.Reading
                 var h5dIntermediate = H5D_Chunk.Create(dataset, default);
                 h5dIntermediate.Initialize();
 
-                var copyInfoInterMediate = new CopyInfo<int>(
+                var decodeInfoInterMediate = new DecodeInfo<int>(
                     datasetDims,
                     chunkDims,
                     datasetDims,
@@ -1138,7 +1138,7 @@ namespace PureHDF.Tests.Reading
                 );
 
                 SelectionUtils
-                    .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 3, copyInfoInterMediate)
+                    .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfoInterMediate)
                     .GetAwaiter()
                     .GetResult();
 
@@ -1148,7 +1148,7 @@ namespace PureHDF.Tests.Reading
                 var h5d = H5D_Chunk.Create(dataset, default);
                 h5d.Initialize();
 
-                var copyInfo = new CopyInfo<int>(
+                var decodeInfo = new DecodeInfo<int>(
                     datasetDims,
                     chunkDims,
                     memoryDims,
@@ -1157,14 +1157,14 @@ namespace PureHDF.Tests.Reading
                     memorySelection,
                     indices => h5d.GetStreamAsync(default(SyncReader), indices),
                     indices => actual,
-                    Converter: default!,
+                    Decoder: default!,
                     SourceTypeSize: 4,
                     TargetTypeFactor: 1
                 );
 
                 // Act
                 SelectionUtils
-                    .CopyAsync(default(SyncReader), sourceRank: 3, targetRank: 2, copyInfo)
+                    .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 2, decodeInfo)
                     .GetAwaiter()
                     .GetResult();
 

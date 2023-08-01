@@ -962,7 +962,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var destinationMemory = optionalDestinationArray ?? destination;
 
         /* copy info */
-        var copyInfo = new ReadInfo<TResult>(
+        var decodeInfo = new DecodeInfo<TResult>(
             datasetDims,
             datasetChunkDims,
             memoryDims,
@@ -977,7 +977,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         );
 
         await SelectionUtils
-            .ReadAsync(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo)
+            .DecodeAsync(reader, datasetChunkDims.Length, memoryDims.Length, decodeInfo)
             .ConfigureAwait(false);
 
         return optionalDestinationArray;
