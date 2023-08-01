@@ -232,7 +232,7 @@ internal static class H5Writer
             chunkDimensions);
 
         // fill value
-        var fillValue = new byte[datatype.Size];
+        var fillValue = new byte[datatype.Size]; /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
 
         var fillValueMessage = new FillValueMessage(
             AllocationTime: SpaceAllocationTime.Early,
@@ -279,13 +279,6 @@ internal static class H5Writer
 
         else if (dataLayout.Properties is ChunkedStoragePropertyDescription4 chunked)
         {
-            // TODO: make use of walker
-            var steps = SelectionUtils.Walk(
-                rank: dataspace.Rank,
-                dims: dataspace.DimensionSizes,
-                chunkDims: chunkDimensions!.Select(value => (ulong)value).ToArray(),
-                selection: new AllSelection());
-
             var driver = context.Driver;
             driver.BaseStream.Seek((long)chunked.Address, SeekOrigin.Begin);
 

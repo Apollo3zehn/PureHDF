@@ -749,7 +749,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
         var factor = (int)(bytesOfType / sizeOfT);
 
-        static void converter(Memory<byte> source, Memory<TResult> target)
+        static void decoder(Memory<byte> source, Memory<TResult> target)
             => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
 
         Task readVirtualDelegate(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
@@ -766,7 +766,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var result = await ReadCoreAsync(
             reader,
             destination,
-            converter,
+            decoder,
             readVirtualDelegate,
             fillValue,
             factor,
@@ -793,7 +793,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     internal async Task<TResult[]?> ReadCoreReferenceAsync<TResult, TReader>(
         TReader reader,
         Memory<TResult> destination,
-        Action<Memory<byte>, Memory<TResult>> converter,
+        Action<Memory<byte>, Memory<TResult>> decoder,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,
@@ -811,7 +811,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             => dataset.ReadCoreReferenceAsync(
                 reader,
                 destination,
-                converter,
+                decoder,
                 fileSelection: fileSelection,
                 datasetAccess: datasetAccess);
 
@@ -821,14 +821,14 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
         if (FillValueMessage.Value is not null)
         {
-            converter(FillValueMessage.Value, fillValueArray);
+            decoder(FillValueMessage.Value, fillValueArray);
             fillValue = fillValueArray.Span[0];
         }
 
         var result = await ReadCoreAsync(
             reader,
             destination,
-            converter,
+            decoder,
             readVirtualDelegate,
             fillValue,
             factor,
@@ -845,7 +845,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     internal async Task<TResult[]?> ReadCoreAsync<TResult, TReader>(
         TReader reader,
         Memory<TResult> destination,
-        Action<Memory<byte>, Memory<TResult>> converter,
+        Action<Memory<byte>, Memory<TResult>> decoder,
         ReadVirtualDelegate<TResult> readVirtualDelegate,
         TResult? fillValue,
         int factor,
@@ -962,7 +962,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var destinationMemory = optionalDestinationArray ?? destination;
 
         /* copy info */
-        var copyInfo = new CopyInfo<TResult>(
+        var copyInfo = new ReadInfo<TResult>(
             datasetDims,
             datasetChunkDims,
             memoryDims,
@@ -971,13 +971,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection,
             GetSourceStreamAsync: chunkIndices => h5d.GetStreamAsync(reader, chunkIndices),
             GetTargetBuffer: _ => destinationMemory,
-            Converter: converter,
+            Decoder: decoder,
             SourceTypeSize: (int)DataTypeMessage.Size,
             TargetTypeFactor: factor
         );
 
         await SelectionUtils
-            .CopyAsync(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo)
+            .ReadAsync(reader, datasetChunkDims.Length, memoryDims.Length, copyInfo)
             .ConfigureAwait(false);
 
         return optionalDestinationArray;
