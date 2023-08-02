@@ -316,21 +316,21 @@ internal static class H5Writer
         /* file selection */
         var fileSelection = new HyperslabSelection(rank: dataDimensions.Length, starts: starts, blocks: dataDimensions);
 
-        var encodeInfo = new EncodeInfo<T>(
-            SourceDims: dataDimensions,
-            SourceChunkDims: dataDimensions,
-            TargetDims: dataDimensions,
-            TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
-            SourceSelection: memorySelection,
-            TargetSelection: fileSelection,
-            GetSourceBuffer: (Memory<T>)data,
-            GetTargetStreamAsync: getTargetStreamAsync,
-            Encoder: encode,
-            TargetTypeSize: (int)datatype.Size,
-            SourceTypeFactor: 1
-        );
+        // var encodeInfo = new EncodeInfo<T>(
+        //     SourceDims: dataDimensions,
+        //     SourceChunkDims: dataDimensions,
+        //     TargetDims: dataDimensions,
+        //     TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
+        //     SourceSelection: memorySelection,
+        //     TargetSelection: fileSelection,
+        //     GetSourceBuffer: (Memory<T>)data,
+        //     GetTargetStreamAsync: getTargetStreamAsync,
+        //     Encoder: encode,
+        //     TargetTypeSize: (int)datatype.Size,
+        //     SourceTypeFactor: 1
+        // );
 
-        SelectionUtils.EncodeAsync(reader, dataspace.Rank, dataspace.Rank, encodeInfo);
+        // SelectionUtils.EncodeAsync(reader, dataspace.Rank, dataspace.Rank, encodeInfo);
 
         // encode object header
         var address = objectHeader.Encode(context);

@@ -11,6 +11,9 @@ internal static class WriteUtils
     private static readonly MethodInfo _methodInfoMemoryLength = typeof(WriteUtils)
         .GetMethod(nameof(GetMemoryLength), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    private static readonly MethodInfo _methodInfoElementToMemory = typeof(WriteUtils)
+        .GetMethod(nameof(ElementToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     private static readonly MethodInfo _methodInfoUnmanagedArrayToMemory = typeof(WriteUtils)
         .GetMethod(nameof(UnmanagedArrayToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
@@ -84,7 +87,7 @@ internal static class WriteUtils
         var type = data.GetType();
 
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
-            return (data, Array.Empty<ulong>());
+            return ElementToMemory(data);
 
         else if (IsArray(type))
             return type.GetElementType()!.IsValueType
@@ -100,7 +103,7 @@ internal static class WriteUtils
             return InvokeEnumerableToMemory(type.GenericTypeArguments[0], data);
 
         else
-            return (data, Array.Empty<ulong>());
+            return ElementToMemory(data);
     }
 
     // Get memory length
@@ -113,6 +116,23 @@ internal static class WriteUtils
     private static int GetMemoryLength<T>(Memory<T> data)
     {
         return data.Length;
+    }
+
+    // Convert element to memory
+    private static (object, ulong[]) InvokeElementToMemory(Type type, object data)
+    {
+        var genericMethod = _methodInfoEnumerableToMemory.MakeGenericMethod(type);
+        return ((object, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
+    }
+
+    private static (object, ulong[]) ElementToMemory<T>(T data)
+    {
+        var memory = new T[] { data }.AsMemory();
+        
+        return (
+            memory,
+            Array.Empty<ulong>()
+        );
     }
 
     // Convert enumerable to memory
