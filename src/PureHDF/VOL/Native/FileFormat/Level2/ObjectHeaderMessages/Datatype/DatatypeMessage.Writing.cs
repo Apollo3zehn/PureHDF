@@ -13,6 +13,9 @@ internal delegate void EncodeDelegate(Stream driver, object data);
 
 internal partial record class DatatypeMessage : Message
 {
+    private static readonly MethodInfo _methodInfoGetTypeInfoForTopLevelUnmanagedMemory = typeof(DatatypeMessage)
+        .GetMethod(nameof(GetTypeInfoForTopLevelUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     private const int DATATYPE_MESSAGE_VERSION = 3;
 
     // reference size                = GHEAP address + GHEAP index
@@ -21,26 +24,27 @@ internal partial record class DatatypeMessage : Message
     // variable length entry size           length
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
-    public static (DatatypeMessage, EncodeDelegate) Create(
+    public static (DatatypeMessage, EncodeDelegate) Create<T>(
         WriteContext context,
-        Type type,
-        object topLevelData
+        Memory<T> topLevelData,
+        bool isScalar
     )
     {
-        return type switch
-        {
-            /* dictionary */
-            Type when typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string)
-                => GetTypeInfoForTopLevelDictionary(context, type, (IDictionary)topLevelData),
+        var isScalarDictionary = isScalar && typeof(IDictionary)
+            .IsAssignableFrom(typeof(T)) && typeof(T).GenericTypeArguments[0] == typeof(string);
 
-            /* Memory<T> */
-            Type when WriteUtils.IsMemory(type)
-                => DataUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
-                    ? GetTypeInfoForTopLevelMemory(context, type.GenericTypeArguments[0])
-                    : GetTypeInfoForTopLevelUnmanagedMemory(context, type.GenericTypeArguments[0]),
+        if (isScalar)
+            return isScalarDictionary
+                ? GetTypeInfoForTopLevelDictionary<T>(context, (IDictionary)topLevelData.Span[0]!)
+                : GetTypeInfoForScalar_SpecialEncode<T>(context, typeof(T), stringLength: default);
 
-            _ => InternalCreate(context, type)
-        };
+        else
+            return DataUtils.IsReferenceOrContainsReferences(typeof(T))
+                ? GetTypeInfoForTopLevelMemory<T>(context)
+                : ((DatatypeMessage, EncodeDelegate))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
+                    // TODO cache
+                    .MakeGenericMethod(typeof(T))
+                    .Invoke(default, new object[] { context })!;
     }
 
     public override void Encode(BinaryWriter driver)
@@ -72,7 +76,20 @@ internal partial record class DatatypeMessage : Message
         return (ushort)encodeSize;
     }
 
-    private static (DatatypeMessage, EncodeDelegate) InternalCreate(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForScalar_SpecialEncode<T>(
+        WriteContext context,
+        Type type,
+        int stringLength = default)
+    {
+        var (dataType, encode) = GetTypeInfoForScalar(context, type, stringLength);
+
+        void encodeFirstElement(Stream driver, object data) 
+            => encode(driver, ((Memory<T>)data).Span[0]!);
+
+        return (dataType, encodeFirstElement);
+    }
+
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForScalar(
         WriteContext context,
         Type type,
         int stringLength = default)
@@ -180,7 +197,7 @@ internal partial record class DatatypeMessage : Message
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForBool(
         WriteContext context)
     {
-        var (baseMessage, _) = InternalCreate(context, typeof(byte));
+        var (baseMessage, _) = GetTypeInfoForScalar(context, typeof(byte));
 
         static void encode(Stream driver, object data)
         {
@@ -217,7 +234,7 @@ internal partial record class DatatypeMessage : Message
             _ => throw new Exception($"The enum type {underlyingType} is not supported.")
         }).ToArray();
 
-        var (baseMessage, baseEncode) = InternalCreate(context, Enum.GetUnderlyingType(type));
+        var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, Enum.GetUnderlyingType(type));
 
         var properties = new EnumerationPropertyDescription(
             BaseType: baseMessage,
@@ -255,7 +272,7 @@ internal partial record class DatatypeMessage : Message
         {
             var fieldInfo = fieldInfos[i];
             var underlyingType = fieldInfo.FieldType;
-            var (fieldMessage, _) = InternalCreate(context, underlyingType);
+            var (fieldMessage, _) = GetTypeInfoForScalar(context, underlyingType);
             var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
 
             properties[i] = new CompoundPropertyDescription(
@@ -362,7 +379,7 @@ internal partial record class DatatypeMessage : Message
                     ? fieldStringLengthMapper is null ? defaultStringLength : fieldStringLengthMapper(fieldInfo) ?? defaultStringLength
                     : defaultStringLength;
 
-                var (fieldMessage, fieldEncode) = InternalCreate(context, underlyingType, stringLength: stringLength);
+                var (fieldMessage, fieldEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength: stringLength);
 
                 fieldEncodes[i] = fieldEncode;
 
@@ -387,7 +404,7 @@ internal partial record class DatatypeMessage : Message
                     ? propertyStringLengthMapper is null ? defaultStringLength : propertyStringLengthMapper(propertyInfo) ?? defaultStringLength
                     : defaultStringLength;
 
-                var (propertyMessage, propertyEncode) = InternalCreate(context, underlyingType, stringLength: stringLength);
+                var (propertyMessage, propertyEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength: stringLength);
 
                 propertyEncodes[i] = propertyEncode;
 
@@ -441,7 +458,7 @@ internal partial record class DatatypeMessage : Message
         WriteContext context,
         Type baseType)
     {
-        var (baseMessage, baseEncode) = InternalCreate(context, baseType);
+        var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, baseType);
 
         var message = new DatatypeMessage(
 
@@ -509,7 +526,7 @@ internal partial record class DatatypeMessage : Message
     private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForVariableLengthString(
         WriteContext context)
     {
-        var (baseMessage, baseEncode) = InternalCreate(context, typeof(byte));
+        var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, typeof(byte));
 
         var message = new DatatypeMessage(
 
@@ -835,12 +852,12 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelDictionary(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelDictionary<T>(
         WriteContext context,
-        Type type,
         IDictionary topLevelData)
     {
-        var (valueMessage, valueEncode) = InternalCreate(context, type.GenericTypeArguments[1]);
+        var elementType = topLevelData.GetType().GenericTypeArguments[1];
+        var (valueMessage, valueEncode) = GetTypeInfoForScalar(context, elementType);
         var memberCount = (ushort)topLevelData.Count;
         var memberSize = valueMessage.Size;
 
@@ -881,41 +898,38 @@ internal partial record class DatatypeMessage : Message
 
         void encode(Stream driver, object data)
         {
-            var dataAsDictionary = (IDictionary)data;
+            var dataAsDictionary = ((Memory<T>)data).Span[0];
 
             foreach (var value in topLevelData.Values)
             {
-                valueEncode(driver, value);
+                valueEncode(driver, value!);
             }
         }
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelMemory(
-        WriteContext context,
-        Type elementType)
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelMemory<T>(
+        WriteContext context)
     {
-        var (message, elementEncode) = InternalCreate(context, elementType);
+        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T));
 
         void encode(Stream driver, object data)
-            => WriteUtils.InvokeEncodeMemory(
-                elementType, 
+            => WriteUtils.EncodeMemory(
                 driver, 
-                data, 
+                (Memory<T>)data,
                 elementEncode);
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelUnmanagedMemory(
-        WriteContext context,
-        Type elementType)
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelUnmanagedMemory<T>(
+        WriteContext context)
     {
-        var (message, _) = InternalCreate(context, elementType);
+        var (message, _) = GetTypeInfoForScalar(context, typeof(T));
 
-        void encode(Stream driver, object data) 
-            => WriteUtils.InvokeEncodeUnmanagedMemory(elementType, driver, data);
+        static void encode(Stream driver, object data) 
+            => WriteUtils.InvokeEncodeUnmanagedMemory(typeof(T), driver, data);
 
         return (message, encode);
     }

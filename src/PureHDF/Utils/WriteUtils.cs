@@ -8,29 +8,14 @@ namespace PureHDF;
 
 internal static class WriteUtils
 {
-    private static readonly MethodInfo _methodInfoMemoryLength = typeof(WriteUtils)
-        .GetMethod(nameof(GetMemoryLength), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static readonly MethodInfo _methodInfoElementToMemory = typeof(WriteUtils)
-        .GetMethod(nameof(ElementToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
     private static readonly MethodInfo _methodInfoUnmanagedArrayToMemory = typeof(WriteUtils)
         .GetMethod(nameof(UnmanagedArrayToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static readonly MethodInfo _methodInfoArray1DToMemory = typeof(WriteUtils)
-        .GetMethod(nameof(Array1DToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static readonly MethodInfo _methodInfoArrayNDToMemory = typeof(WriteUtils)
-        .GetMethod(nameof(ArrayNDToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     private static readonly MethodInfo _methodInfoEnumerableToMemory = typeof(WriteUtils)
         .GetMethod(nameof(EnumerableToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     private static readonly MethodInfo _methodInfoEncodeUnmanagedMemory = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static readonly MethodInfo _methodInfoEncodeMemory = typeof(WriteUtils)
-        .GetMethod(nameof(EncodeMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public static MethodInfo MethodInfoElement { get; } = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -82,50 +67,52 @@ internal static class WriteUtils
             type.GetElementType() is not null;
     }
 
-    public static (object, ulong[]) EnsureMemoryOrScalar(object data)
+    public static (Type ElementType, bool IsScalar) GetElementType(object data)
     {
         var type = data.GetType();
 
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
-            return ElementToMemory(data);
+            return (type, true);
+
+        else if (IsArray(type))
+            return (type.GetElementType()!, false);
+
+        else if (IsMemory(type))
+            return (type.GenericTypeArguments[0], false);
+
+        else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
+            return (type.GenericTypeArguments[0], false);
+
+        else
+            return (type, true);
+    }
+
+    public static (Memory<TElement>, ulong[]) ToMemory<T, TElement>(object data)
+    {
+        var type = typeof(T);
+
+        if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
+            return ElementToMemory((TElement)data);
 
         else if (IsArray(type))
             return type.GetElementType()!.IsValueType
-                ? InvokeUnmanagedArrayToMemory(type.GetElementType()!, data)
+                ? InvokeUnmanagedArrayToMemory<TElement>(data)
                 : ((Array)data).Rank == 1
-                    ? InvokeArray1DToMemory(type.GetElementType()!, data)
-                    : InvokeArrayNDToMemory(type.GetElementType()!, data);
+                    ? Array1DToMemory((TElement[])data)
+                    : ArrayNDToMemory<TElement>((Array)data);
 
         else if (IsMemory(type))
-            return (data, new ulong[] { (ulong)InvokeGetMemoryLength(type.GenericTypeArguments[0], data) });
+            return ((Memory<TElement>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
 
         else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
-            return InvokeEnumerableToMemory(type.GenericTypeArguments[0], data);
+            return EnumerableToMemory((IEnumerable<TElement>)data);
 
         else
-            return ElementToMemory(data);
-    }
-
-    // Get memory length
-    private static int InvokeGetMemoryLength(Type type, object data)
-    {
-        var genericMethod = _methodInfoMemoryLength.MakeGenericMethod(type);
-        return (int)genericMethod.Invoke(null, new object[] { data })!;
-    }
-
-    private static int GetMemoryLength<T>(Memory<T> data)
-    {
-        return data.Length;
+            return ElementToMemory((TElement)data);
     }
 
     // Convert element to memory
-    private static (object, ulong[]) InvokeElementToMemory(Type type, object data)
-    {
-        var genericMethod = _methodInfoEnumerableToMemory.MakeGenericMethod(type);
-        return ((object, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
-    }
-
-    private static (object, ulong[]) ElementToMemory<T>(T data)
+    private static (Memory<T>, ulong[]) ElementToMemory<T>(T data)
     {
         var memory = new T[] { data }.AsMemory();
         
@@ -136,13 +123,7 @@ internal static class WriteUtils
     }
 
     // Convert enumerable to memory
-    private static (object, ulong[]) InvokeEnumerableToMemory(Type type, object data)
-    {
-        var genericMethod = _methodInfoEnumerableToMemory.MakeGenericMethod(type);
-        return ((object, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
-    }
-
-    private static (object, ulong[]) EnumerableToMemory<T>(IEnumerable<T> data)
+    private static (Memory<T>, ulong[]) EnumerableToMemory<T>(IEnumerable<T> data)
     {
         var memory = data.ToArray().AsMemory();
         
@@ -153,13 +134,7 @@ internal static class WriteUtils
     }
 
     // Convert 1D array to memory
-    private static (object, ulong[]) InvokeArray1DToMemory(Type type, object data)
-    {
-        var genericMethod = _methodInfoArray1DToMemory.MakeGenericMethod(type);
-        return ((object, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
-    }
-
-    private static (object, ulong[]) Array1DToMemory<T>(T[] data)
+    private static (Memory<T>, ulong[]) Array1DToMemory<T>(T[] data)
     {
         var memory = data.AsMemory();
 
@@ -170,13 +145,7 @@ internal static class WriteUtils
     }
 
     // Convert ND array to memory
-    private static (object, ulong[]) InvokeArrayNDToMemory(Type type, object data)
-    {
-        var genericMethod = _methodInfoArrayNDToMemory.MakeGenericMethod(type);
-        return ((object, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
-    }
-
-    private static (object, ulong[]) ArrayNDToMemory<T>(Array data)
+    private static (Memory<T>, ulong[]) ArrayNDToMemory<T>(Array data)
     {
         var dimensions = new ulong[data.Rank];
 
@@ -194,13 +163,13 @@ internal static class WriteUtils
     }
 
     // Convert unmanaged array to memory
-    private static (object, ulong[]) InvokeUnmanagedArrayToMemory(Type type, object data)
+    private static (Memory<T>, ulong[]) InvokeUnmanagedArrayToMemory<T>(object data)
     {
-        var genericMethod = _methodInfoUnmanagedArrayToMemory.MakeGenericMethod(type);
-        return ((object, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
+        var genericMethod = _methodInfoUnmanagedArrayToMemory.MakeGenericMethod(typeof(T));
+        return ((Memory<T>, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
     }
 
-    private static (object, ulong[]) UnmanagedArrayToMemory<T>(Array data) where T : struct
+    private static (Memory<T>, ulong[]) UnmanagedArrayToMemory<T>(Array data) where T : struct
     {
         var dimensions = new ulong[data.Rank];
 
@@ -232,34 +201,18 @@ internal static class WriteUtils
         genericMethod.Invoke(null, new object[] { driver, data });
     }
 
-    private static void EncodeUnmanagedMemory<T>(Stream driver, object data) where T : unmanaged
+    private static void EncodeUnmanagedMemory<T>(Stream driver, Memory<T> data) where T : unmanaged
     {
-        driver.Write(MemoryMarshal.AsBytes(((Memory<T>)data).Span));
+        driver.Write(MemoryMarshal.AsBytes(data.Span));
     }
 
     // Encode memory
-    public static void InvokeEncodeMemory(
-        Type type, 
+    public static void EncodeMemory<T>(
         Stream driver, 
-        object data, 
+        Memory<T> data, 
         EncodeDelegate elementEncode)
     {
-        var genericMethod = _methodInfoEncodeMemory.MakeGenericMethod(type);
-
-        genericMethod.Invoke(null, new object[] 
-        {
-            driver, 
-            data, 
-            elementEncode
-        });
-    }
-
-    private static void EncodeMemory<T>(
-        Stream driver, 
-        object data, 
-        EncodeDelegate elementEncode)
-    {
-        var span = ((Memory<T>)data).Span;
+        var span = data.Span;
 
         for (int i = 0; i < span.Length; i++)
         {

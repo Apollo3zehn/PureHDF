@@ -458,7 +458,7 @@ public class AttributeTests
         // Assert
         try
         {
-            Assert.Throws<Exception>(action);
+            Assert.Throws<TargetInvocationException>(action);
         }
         finally
         {

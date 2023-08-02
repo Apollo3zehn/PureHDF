@@ -1,9 +1,14 @@
-﻿using System.Text;
+﻿using System.Collections;
+using System.Reflection;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
 internal partial record class AttributeMessage
 {
+    private static readonly MethodInfo _methodInfoCreateAttributeMessage = typeof(AttributeMessage)
+        .GetMethod(nameof(InternalCreate), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     public static AttributeMessage Create(
         WriteContext context,
         string name, 
@@ -13,12 +18,26 @@ internal partial record class AttributeMessage
             ? h5Attribute1.Data
             : attribute;
 
-        (data, var dataDimensions) = WriteUtils.EnsureMemoryOrScalar(data);
+        var (elementType, isScalar) = WriteUtils.GetElementType(data);
 
-        var type = data.GetType();
+        // TODO cache this
+        var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(data.GetType(), elementType);
+
+        return (AttributeMessage)method.Invoke(default, new object?[] { context, name, attribute, data, isScalar })!;
+    }
+
+    private static AttributeMessage InternalCreate<T, TElement>(
+        WriteContext context,
+        string name, 
+        object attribute,
+        object data,
+        bool isScalar)
+    {
+        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data);
+        var type = memoryData.GetType();
 
         var (datatype, encode) = 
-            DatatypeMessage.Create(context, type, data);
+            DatatypeMessage.Create(context, memoryData, isScalar);
 
         var dataspace = attribute is H5Attribute h5Attribute2
             ? DataspaceMessage.Create(dataDimensions, h5Attribute2.Dimensions)
@@ -31,7 +50,7 @@ internal partial record class AttributeMessage
             Datatype: datatype,
             Dataspace: dataspace,
             InputData: default,
-            EncodeData: writer => encode(writer.BaseStream, data)
+            EncodeData: writer => encode(writer.BaseStream, memoryData)
         )
         {
             Version = 3

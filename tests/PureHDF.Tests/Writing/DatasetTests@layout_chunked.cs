@@ -1,4 +1,5 @@
 ﻿using Xunit;
+using System.Reflection;
 
 namespace PureHDF.Tests.Writing;
 
@@ -100,7 +101,7 @@ public partial class DatasetTests
         // Assert
         try
         {
-            Assert.Throws<Exception>(action);
+            Assert.Throws<TargetInvocationException>(action);
         }
         finally
         {
@@ -128,7 +129,7 @@ public partial class DatasetTests
         // Assert
         try
         {
-            Assert.Throws<Exception>(action);
+            Assert.Throws<TargetInvocationException>(action);
         }
         finally
         {

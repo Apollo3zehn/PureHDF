@@ -1,7 +1,13 @@
+using System.Collections;
+using System.Reflection;
+
 namespace PureHDF;
 
 internal static class H5Writer
 {
+    private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5Writer)
+        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     public static void Serialize(H5File file, string filePath, H5SerializerOptions options)
     {
         using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
@@ -175,12 +181,27 @@ internal static class H5Writer
             ? (h5Dataset1.Data, h5Dataset1.ChunkDimensions)
             : (dataset, default);
 
-        (data, var dataDimensions) = WriteUtils.EnsureMemoryOrScalar(data);
-        var type = data.GetType();
+        var (elementType, isScalar) = WriteUtils.GetElementType(data);
+
+        // TODO cache this
+        var method = _methodInfoEncodeDataset.MakeGenericMethod(data.GetType(), elementType);
+
+        return (ulong)method.Invoke(default, new object?[] { context, dataset, data, chunkDimensions, isScalar })!;
+    }
+
+    private static ulong InternalEncodeDataset<T, TElement>(
+        WriteContext context,
+        object dataset,
+        object data,
+        uint[]? chunkDimensions,
+        bool isScalar)
+    {
+        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data);
+        var type = memoryData.GetType();
 
         // datatype
         var (datatype, encode) = 
-            DatatypeMessage.Create(context, type, data);
+            DatatypeMessage.Create(context, memoryData, isScalar);
 
         // dataspace
         var dataspace = dataset is H5Dataset h5Dataset2
@@ -323,7 +344,7 @@ internal static class H5Writer
         //     TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
         //     SourceSelection: memorySelection,
         //     TargetSelection: fileSelection,
-        //     GetSourceBuffer: (Memory<T>)data,
+        //     GetSourceBuffer: indiced => memoryData,
         //     GetTargetStreamAsync: getTargetStreamAsync,
         //     Encoder: encode,
         //     TargetTypeSize: (int)datatype.Size,
