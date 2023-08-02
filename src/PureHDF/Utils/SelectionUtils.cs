@@ -24,7 +24,7 @@ internal record EncodeInfo<T>(
     Selection SourceSelection,
     Selection TargetSelection,
     Func<ulong[], Memory<T>> GetSourceBuffer,
-    Func<ulong[], Task<IH5ReadStream>> GetTargetStreamAsync,
+    Func<ulong[], Task<IH5WriteStream>> GetTargetStreamAsync,
     Action<Memory<T>, Memory<byte>> Encoder,
     int TargetTypeSize,
     int SourceTypeFactor
@@ -135,7 +135,7 @@ internal static class SelectionUtils
         var currentSource = default(Memory<TResult>);
 
         /* initialize target walker */
-        var targetStream = default(IH5ReadStream);
+        var targetStream = default(IH5WriteStream);
         var lastTargetChunk = default(ulong[]);
 
         /* walk until end */
@@ -203,7 +203,7 @@ internal static class SelectionUtils
                     // using var rentedOwner = MemoryPool<byte>.Shared.Rent(sourceLength);
                     // var rentedMemory = rentedOwner.Memory;
 
-                    // await reader.ReadDatasetAsync(
+                    // await writer.WriteDatasetAsync(
                     //     sourceBuffer,
                     //     rentedMemory[..sourceLength],
                     //     currentOffset * decodeInfo.TargetTypeSize).ConfigureAwait(false);

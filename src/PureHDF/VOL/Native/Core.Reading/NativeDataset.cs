@@ -969,7 +969,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memoryDims,
             fileSelection,
             memorySelection,
-            GetSourceStreamAsync: chunkIndices => h5d.GetStreamAsync(reader, chunkIndices),
+            GetSourceStreamAsync: chunkIndices => h5d.GetReadStreamAsync(reader, chunkIndices),
             GetTargetBuffer: _ => destinationMemory,
             Decoder: decoder,
             SourceTypeSize: (int)DataTypeMessage.Size,

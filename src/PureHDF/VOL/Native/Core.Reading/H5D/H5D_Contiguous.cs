@@ -25,7 +25,7 @@
             return Dataset.GetDatasetDims();
         }
 
-        public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             var address = Dataset.DataLayoutMessage.Address;
 

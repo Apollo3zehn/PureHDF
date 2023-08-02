@@ -270,29 +270,67 @@ internal static class H5Writer
         };
 
         // encode data
-        if (dataLayout.Properties is ContiguousStoragePropertyDescription contiguous)
+
+        /* buffer provider */
+        using H5D_Base h5d = dataLayout.LayoutClass switch
         {
-            var driver = context.Driver;
-            driver.BaseStream.Seek((long)contiguous.Address, SeekOrigin.Begin);
+            LayoutClass.Compact => new H5D_Compact(default!, default),
+            LayoutClass.Contiguous => new H5D_Contiguous(default!, default),
+            LayoutClass.Chunked => H5D_Chunk.Create(default!, default),
 
-            encode.Invoke(driver.BaseStream, data);
-        }
+            /* default */
+            _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
+        };
 
-        else if (dataLayout.Properties is ChunkedStoragePropertyDescription4 chunked)
-        {
-            var driver = context.Driver;
-            driver.BaseStream.Seek((long)chunked.Address, SeekOrigin.Begin);
+        var reader = default(SyncReader);
 
-            if (chunked.IndexingTypeInformation is ImplicitIndexingInformation @implicit)
-            {
-                encode.Invoke(driver.BaseStream, data);
-            }
+        Task<IH5WriteStream> getTargetStreamAsync(ulong[] indices) => h5d.GetWriteStreamAsync(reader, indices);
 
-            else
-            {
-                throw new Exception($"The indexing type {chunked.IndexingTypeInformation.GetType()} is not supported.");
-            }
-        }
+        // if (dataLayout.Properties is ContiguousStoragePropertyDescription contiguous)
+        // {
+        //     var driver = context.Driver;
+        //     driver.BaseStream.Seek((long)contiguous.Address, SeekOrigin.Begin);
+
+        //     encode.Invoke(driver.BaseStream, data);
+        // }
+
+        // else if (dataLayout.Properties is ChunkedStoragePropertyDescription4 chunked)
+        // {
+        //     var driver = context.Driver;
+        //     driver.BaseStream.Seek((long)chunked.Address, SeekOrigin.Begin);
+
+        //     if (chunked.IndexingTypeInformation is ImplicitIndexingInformation @implicit)
+        //         encode.Invoke(driver.BaseStream, data);
+
+        //     else
+        //         throw new Exception($"The indexing type {chunked.IndexingTypeInformation.GetType()} is not supported.");
+        // }
+
+        /* selection */
+        var starts = dataDimensions.ToArray();
+        starts.AsSpan().Clear();
+
+        /* memory selection */
+        var memorySelection = new HyperslabSelection(rank: dataDimensions.Length, starts: starts, blocks: dataDimensions);
+
+        /* file selection */
+        var fileSelection = new HyperslabSelection(rank: dataDimensions.Length, starts: starts, blocks: dataDimensions);
+
+        var encodeInfo = new EncodeInfo<T>(
+            SourceDims: dataDimensions,
+            SourceChunkDims: dataDimensions,
+            TargetDims: dataDimensions,
+            TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
+            SourceSelection: memorySelection,
+            TargetSelection: fileSelection,
+            GetSourceBuffer: (Memory<T>)data,
+            GetTargetStreamAsync: getTargetStreamAsync,
+            Encoder: encode,
+            TargetTypeSize: (int)datatype.Size,
+            SourceTypeFactor: 1
+        );
+
+        SelectionUtils.EncodeAsync(reader, dataspace.Rank, dataspace.Rank, encodeInfo);
 
         // encode object header
         var address = objectHeader.Encode(context);

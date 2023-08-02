@@ -1,26 +1,16 @@
 namespace PureHDF
 {
-    internal abstract class H5D_Base : IDisposable
+    internal abstract partial class H5D_Base : IDisposable
     {
-        #region Constructors
-
         public H5D_Base(NativeDataset dataset, H5DatasetAccess datasetAccess)
         {
             Dataset = dataset;
             DatasetAccess = datasetAccess;
         }
 
-        #endregion
-
-        #region Properties
-
         public NativeDataset Dataset { get; }
 
         public H5DatasetAccess DatasetAccess { get; }
-
-        #endregion
-
-        #region Methods
 
         public virtual void Initialize()
         {
@@ -29,11 +19,7 @@ namespace PureHDF
 
         public abstract ulong[] GetChunkDims();
 
-        public abstract Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
-
-        #endregion
-
-        #region IDisposable
+        public abstract Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader;
 
         protected virtual void Dispose(bool disposing)
         {
@@ -45,7 +31,5 @@ namespace PureHDF
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
-
-        #endregion
     }
 }

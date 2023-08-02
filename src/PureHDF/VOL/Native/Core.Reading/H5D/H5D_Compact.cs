@@ -23,7 +23,7 @@
             return Dataset.DataspaceMessage.DimensionSizes;
         }
 
-        public override Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+        public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             byte[] buffer;
 

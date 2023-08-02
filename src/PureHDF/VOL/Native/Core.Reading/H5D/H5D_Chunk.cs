@@ -148,7 +148,7 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override async Task<IH5ReadStream> GetStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override async Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
     {
         var buffer = await _chunkCache
             .GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices))
