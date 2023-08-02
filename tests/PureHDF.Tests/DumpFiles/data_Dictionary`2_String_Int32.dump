@@ -6,7 +6,7 @@ GROUP "/" {
          H5T_STD_I32LE "B";
          H5T_STD_I32LE "C";
       }
-      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+      DATASPACE  SCALAR
       DATA {
       (0): {
             1,

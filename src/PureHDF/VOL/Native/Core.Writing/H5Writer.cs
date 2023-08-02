@@ -175,10 +175,11 @@ internal static class H5Writer
             ? (h5Dataset1.Data, h5Dataset1.ChunkDimensions)
             : (dataset, default);
 
+        (data, var dataDimensions) = WriteUtils.EnsureMemoryOrScalar(data);
         var type = data.GetType();
 
         // datatype
-        var (datatype, dataDimensions, encode) = 
+        var (datatype, encode) = 
             DatatypeMessage.Create(context, type, data);
 
         // dataspace

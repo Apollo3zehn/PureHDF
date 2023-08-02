@@ -4,7 +4,7 @@ GROUP "/" {
       DATATYPE  H5T_COMPOUND {
          H5T_VLEN { H5T_STD_I32LE} "A";
       }
-      DATASPACE  SIMPLE { ( 1 ) / ( 1 ) }
+      DATASPACE  SCALAR
       DATA {
       (0): {
             (0, 1, 2, 3, 4, 5, 6, 7, 8)

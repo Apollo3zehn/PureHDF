@@ -13,9 +13,11 @@ internal partial record class AttributeMessage
             ? h5Attribute1.Data
             : attribute;
 
+        (data, var dataDimensions) = WriteUtils.EnsureMemoryOrScalar(data);
+
         var type = data.GetType();
 
-        var (datatype, dataDimensions, encode) = 
+        var (datatype, encode) = 
             DatatypeMessage.Create(context, type, data);
 
         var dataspace = attribute is H5Attribute h5Attribute2

@@ -21,46 +21,26 @@ internal partial record class DatatypeMessage : Message
     // variable length entry size           length
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
-    public static (DatatypeMessage, ulong[] dimensions, EncodeDelegate) Create(
+    public static (DatatypeMessage, EncodeDelegate) Create(
         WriteContext context,
         Type type,
         object topLevelData
     )
     {
-        var result = type switch
+        return type switch
         {
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string)
                 => GetTypeInfoForTopLevelDictionary(context, type, (IDictionary)topLevelData),
 
-            /* array */
-            Type when WriteUtils.IsArray(type)
-                => DataUtils.IsReferenceOrContainsReferences(type.GetElementType()!)
-                    ? GetTypeInfoForTopLevelEnumerable(context, type, (IEnumerable)topLevelData, isArray: true)
-                    : GetTypeInfoForTopLevelUnmanagedArray(context, type.GetElementType()!, (Array)topLevelData),
-
             /* Memory<T> */
             Type when WriteUtils.IsMemory(type)
                 => DataUtils.IsReferenceOrContainsReferences(type.GenericTypeArguments[0])
-                    ? GetTypeInfoForTopLevelMemory(context, type.GenericTypeArguments[0], topLevelData)
-                    : GetTypeInfoForTopLevelUnmanagedMemory(context, type.GenericTypeArguments[0], topLevelData),
+                    ? GetTypeInfoForTopLevelMemory(context, type.GenericTypeArguments[0])
+                    : GetTypeInfoForTopLevelUnmanagedMemory(context, type.GenericTypeArguments[0]),
 
-            /* generic IEnumerable */
-            Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
-                => GetTypeInfoForTopLevelEnumerable(context, type, (IEnumerable)topLevelData),
-
-            _ => default
+            _ => InternalCreate(context, type)
         };
-
-        if (result.Equals(default))
-        {
-            var singleElementResult = InternalCreate(context, type);
-            var dimensions = Array.Empty<ulong>();
-
-            result = (singleElementResult.Item1, dimensions, singleElementResult.Item2);
-        }
-
-        return result;
     }
 
     public override void Encode(BinaryWriter driver)
@@ -855,7 +835,7 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, ulong[], EncodeDelegate) GetTypeInfoForTopLevelDictionary(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelDictionary(
         WriteContext context,
         Type type,
         IDictionary topLevelData)
@@ -899,8 +879,6 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
-        var dimensions = new ulong[] { 1 };
-
         void encode(Stream driver, object data)
         {
             var dataAsDictionary = (IDictionary)data;
@@ -911,98 +889,14 @@ internal partial record class DatatypeMessage : Message
             }
         }
 
-        return (message, dimensions, encode);
+        return (message, encode);
     }
 
-    private static (DatatypeMessage, ulong[], EncodeDelegate) GetTypeInfoForTopLevelEnumerable(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelMemory(
         WriteContext context,
-        Type type,
-        IEnumerable topLevelData,
-        bool isArray = false)
-    {
-        var elementType = type.IsArray
-            ? type.GetElementType()!
-            : type.GenericTypeArguments[0];
-
-        var (message, elementEncode) = InternalCreate(context, elementType);
-
-        ulong[] dimensions;
-
-        if (isArray)
-        {
-            var arrayData = (Array)topLevelData;
-
-            dimensions = Enumerable
-                .Range(0, arrayData.Rank)
-                .Select(dimension => (ulong)arrayData.GetLongLength(dimension))
-                .ToArray();
-        }
-
-        else
-        {
-            dimensions = new ulong[]
-            {
-                (ulong)WriteUtils.GetEnumerableLength(topLevelData)
-            };
-        }
-
-        void encode(Stream driver, object data)
-        {
-            var enumerable = (IEnumerable)data;
-            var enumerator = enumerable.GetEnumerator();
-
-            while (enumerator.MoveNext())
-            {
-                var currentElement = enumerator.Current;
-                elementEncode(driver, currentElement);
-            }
-        }
-
-        return (message, dimensions, encode);
-    }
-
-    private static (DatatypeMessage, ulong[], EncodeDelegate) GetTypeInfoForTopLevelUnmanagedArray(
-        WriteContext context,
-        Type elementType,
-        Array topLevelData)
-    {
-        var (message, _) = InternalCreate(context, elementType);
-
-        var dimensions = Enumerable
-            .Range(0, topLevelData.Rank)
-            .Select(dimension => (ulong)topLevelData.GetLongLength(dimension))
-            .ToArray();
-
-        void encode(Stream driver, object data)
-        {
-#if NET6_0_OR_GREATER
-            var span = MemoryMarshal.CreateSpan(
-                reference: ref MemoryMarshal.GetArrayDataReference(topLevelData), 
-                length: topLevelData.Length * (int)message.Size);
-
-            driver.Write(span);
-#else
-            if (topLevelData.Rank != 1)
-                throw new Exception("Multi-dimensions arrays are only supported on .NET 6+.");
-
-            else
-                WriteUtils.InvokeEncodeUnmanagedArray(elementType, driver, data);
-#endif
-        }
-
-        return (message, dimensions, encode);
-    }
-
-    private static (DatatypeMessage, ulong[], EncodeDelegate) GetTypeInfoForTopLevelMemory(
-        WriteContext context,
-        Type elementType,
-        object topLevelData)
+        Type elementType)
     {
         var (message, elementEncode) = InternalCreate(context, elementType);
-
-        var dimensions = new ulong[] {
-            (ulong)WriteUtils.InvokeGetMemoryLengthGeneric(elementType, topLevelData)
-        };
 
         void encode(Stream driver, object data)
             => WriteUtils.InvokeEncodeMemory(
@@ -1011,23 +905,18 @@ internal partial record class DatatypeMessage : Message
                 data, 
                 elementEncode);
 
-        return (message, dimensions, encode);
+        return (message, encode);
     }
 
-    private static (DatatypeMessage, ulong[], EncodeDelegate) GetTypeInfoForTopLevelUnmanagedMemory(
+    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelUnmanagedMemory(
         WriteContext context,
-        Type elementType,
-        object topLevelData)
+        Type elementType)
     {
         var (message, _) = InternalCreate(context, elementType);
-
-        var dimensions = new ulong[] {
-            (ulong)WriteUtils.InvokeGetMemoryLengthGeneric(elementType, topLevelData)
-        };
 
         void encode(Stream driver, object data) 
             => WriteUtils.InvokeEncodeUnmanagedMemory(elementType, driver, data);
 
-        return (message, dimensions, encode);
+        return (message, encode);
     }
 }
