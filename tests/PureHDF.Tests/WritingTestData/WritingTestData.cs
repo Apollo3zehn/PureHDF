@@ -86,6 +86,14 @@ public static class WritingTestData
         new object[] { FileAccess.Read },
 
         /* tuple (value type) */
+        // 
+        // I was only able to extract the tuple names via reflection using the TupleElementNames attribute using the 
+        // return type parameter info (MethodInfo.ReturnParameter.CustomAttributes). I have no idea how to get the
+        // names using an instance of the tuple. One reason could be that there is only one definition of ValueTuple
+        // in the framework. 
+        //
+        // In general, this topic seems to be quite complicated: 
+        // https://github.com/dotnet/csharplang/discussions/1906#discussioncomment-103932
         new object[] { (A: 1, B: -2L, C: 3.3) },
 
         /* unsigned fixed-point */
