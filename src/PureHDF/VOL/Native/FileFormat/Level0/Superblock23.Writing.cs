@@ -14,9 +14,9 @@ internal partial record class Superblock23
         sizeof(ulong) +
         sizeof(uint);
 
-    public void Encode(BinaryWriter driver)
+    public void Encode(H5DriverBase driver)
     {
-        var position = driver.BaseStream.Position;
+        var position = driver.Position;
 
         driver.Write(Signature);
         driver.Write(Version);
@@ -29,9 +29,9 @@ internal partial record class Superblock23
         driver.Write(RootGroupObjectHeaderAddress);
 
         // checksum
-        driver.BaseStream.Seek(position, SeekOrigin.Begin);
+        driver.Seek(position, SeekOrigin.Begin);
         Span<byte> checksumData = stackalloc byte[ENCODE_SIZE - sizeof(int)];
-        driver.BaseStream.Read(checksumData);
+        driver.Read(checksumData);
         var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
 
         driver.Write(checksum);

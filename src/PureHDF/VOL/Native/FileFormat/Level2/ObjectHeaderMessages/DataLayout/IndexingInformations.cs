@@ -4,7 +4,7 @@ internal abstract record class IndexingInformation()
 {
     public abstract ushort GetEncodeSize();
     
-    public abstract void Encode(BinaryWriter driver);
+    public abstract void Encode(H5DriverBase driver);
 };
 
 
@@ -40,7 +40,7 @@ internal record class SingleChunkIndexingInformation(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -53,7 +53,7 @@ internal record class ImplicitIndexingInformation : IndexingInformation
         return 0;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         return;
     }
@@ -80,7 +80,7 @@ internal record class FixedArrayIndexingInformation(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -140,7 +140,7 @@ internal record class ExtensibleArrayIndexingInformation(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -166,7 +166,7 @@ internal record class BTree2IndexingInformation(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }

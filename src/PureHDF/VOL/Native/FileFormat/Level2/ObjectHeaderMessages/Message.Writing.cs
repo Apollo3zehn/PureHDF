@@ -7,7 +7,7 @@ internal abstract partial record class Message
         throw new NotImplementedException();
     }
 
-    public virtual void Encode(BinaryWriter driver)
+    public virtual void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }

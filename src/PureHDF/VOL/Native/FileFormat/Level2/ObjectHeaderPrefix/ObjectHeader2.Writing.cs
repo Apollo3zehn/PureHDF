@@ -11,7 +11,7 @@ internal partial record class ObjectHeader2
         var address = freeSpaceManager.Allocate((long)encodeSize);
 
         var driver = context.Driver;
-        driver.BaseStream.Seek(address, SeekOrigin.Begin);
+        driver.Seek(address, SeekOrigin.Begin);
 
         // signature
         driver.Write(Signature);
@@ -52,8 +52,8 @@ internal partial record class ObjectHeader2
         // checksum
         var checksumData = new byte[encodeSize - sizeof(uint)];
 
-        driver.BaseStream.Seek(address, SeekOrigin.Begin);
-        driver.BaseStream.Read(checksumData);
+        driver.Seek(address, SeekOrigin.Begin);
+        driver.Read(checksumData);
 
         var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
 
@@ -62,7 +62,7 @@ internal partial record class ObjectHeader2
         return (ulong)address;
     }
 
-    public void WriteHeaderMessages(BinaryWriter driver, bool withCreationOrder)
+    public void WriteHeaderMessages(H5DriverBase driver, bool withCreationOrder)
     {
         foreach (var message in HeaderMessages)
         {

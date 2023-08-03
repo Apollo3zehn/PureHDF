@@ -12,14 +12,14 @@ internal class GlobalHeapManager
     private readonly long _flushThreshold;
     private readonly FreeSpaceManager _freeSpaceManager;
     private readonly Dictionary<long, GlobalHeapCollectionState> _collectionMap = new();
-    private readonly BinaryWriter _driver;
+    private readonly H5DriverBase _driver;
 
     private GlobalHeapCollectionState? _collectionState;
     private long _baseAddress;
     private ushort _index;
     private Memory<byte> _memory;
 
-    public GlobalHeapManager(H5SerializerOptions options, FreeSpaceManager freeSpaceManager, BinaryWriter driver)
+    public GlobalHeapManager(H5SerializerOptions options, FreeSpaceManager freeSpaceManager, H5DriverBase driver)
     {
         if (options.GlobalHeapCollectionSize < MINIMUM_COLLECTION_SIZE)
             throw new Exception($"The minimum global heap collection size is {MINIMUM_COLLECTION_SIZE} bytes");
@@ -132,7 +132,7 @@ internal class GlobalHeapManager
             var consumed = entry.Value.Consumed;
             var remainingSpace = (ulong)(memory.Length - consumed);
 
-            driver.BaseStream.Seek((long)address, SeekOrigin.Begin);
+            driver.Seek(address, SeekOrigin.Begin);
 
             // signature
             driver.Write(GlobalHeapCollection.Signature);
@@ -159,10 +159,10 @@ internal class GlobalHeapManager
                 remainingSpace -= OBJECT_HEADER_SIZE;
             }
 
-            var endAddress = driver.BaseStream.Position + (long)remainingSpace;
+            var endAddress = driver.Position + (long)remainingSpace;
 
-            if (driver.BaseStream.Length < endAddress)
-                driver.BaseStream.SetLength(endAddress);
+            if (driver.Length < endAddress)
+                driver.SetLength(endAddress);
         }
     }
 }

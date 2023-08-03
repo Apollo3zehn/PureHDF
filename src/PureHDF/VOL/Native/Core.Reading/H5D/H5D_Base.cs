@@ -1,6 +1,6 @@
 namespace PureHDF
 {
-    internal abstract partial class H5D_Base : IDisposable
+    internal abstract class H5D_Base : IDisposable
     {
         public H5D_Base(NativeDataset dataset, H5DatasetAccess datasetAccess)
         {

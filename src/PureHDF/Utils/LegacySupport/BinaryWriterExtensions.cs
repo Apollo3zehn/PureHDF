@@ -7,7 +7,7 @@ namespace PureHDF;
 
 internal static class BinaryWriterExtensions
 {
-    public static void Write(this BinaryWriter driver, Span<byte> data)
+    public static void Write(this H5DriverBase driver, Span<byte> data)
     {
         driver.Write(data.ToArray());
     }

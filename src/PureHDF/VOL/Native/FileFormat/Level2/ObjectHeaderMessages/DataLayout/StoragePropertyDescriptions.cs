@@ -6,12 +6,12 @@ internal abstract record class StoragePropertyDescription(
 {
     public abstract ushort GetEncodeSize();
 
-    public abstract void Encode(BinaryWriter driver);
+    public abstract void Encode(H5DriverBase driver);
 };
 
 internal record class CompactStoragePropertyDescription(
     byte[] InputData,
-    Action<BinaryWriter> EncodeData,
+    Action<H5DriverBase> EncodeData,
     ushort EncodeDataSize
 ) : StoragePropertyDescription(Superblock.UndefinedAddress)
 {
@@ -35,7 +35,7 @@ internal record class CompactStoragePropertyDescription(
         return (ushort)encodeSize;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         // version
         driver.Write(EncodeDataSize);
@@ -69,7 +69,7 @@ internal record class ContiguousStoragePropertyDescription(
         return (ushort)encodeSize;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         // address
         driver.Write(Address);
@@ -120,7 +120,7 @@ internal record class ChunkedStoragePropertyDescription3(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -195,7 +195,7 @@ internal record class ChunkedStoragePropertyDescription4(
         return (ushort)encodeSize;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         // flags
         driver.Write((byte)Flags);
@@ -255,7 +255,7 @@ internal record class VirtualStoragePropertyDescription(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }

@@ -6,7 +6,7 @@ internal partial record class AttributeMessage(
     DatatypeMessage Datatype,
     DataspaceMessage Dataspace,
     Memory<byte> InputData,
-    Action<BinaryWriter> EncodeData
+    Action<H5DriverBase> EncodeData
 ) : Message
 {
     private byte _version;

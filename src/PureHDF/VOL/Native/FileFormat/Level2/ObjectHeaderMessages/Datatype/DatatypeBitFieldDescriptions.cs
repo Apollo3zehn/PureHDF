@@ -2,7 +2,7 @@
 
 internal abstract record class DatatypeBitFieldDescription
 {
-    public abstract void Encode(BinaryWriter driver);
+    public abstract void Encode(H5DriverBase driver);
 };
 
 internal record class ArrayBitFieldDescription(
@@ -18,7 +18,7 @@ internal record class ArrayBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -41,7 +41,7 @@ internal record class BitFieldBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -60,7 +60,7 @@ internal record class CompoundBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
 #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
@@ -88,7 +88,7 @@ internal record class EnumerationBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
 #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
@@ -122,7 +122,7 @@ internal record class FixedPointBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
 #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
@@ -184,7 +184,7 @@ internal record class FloatingPointBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
 #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
@@ -228,7 +228,7 @@ internal record class OpaqueBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -247,7 +247,7 @@ internal record class ReferenceBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -268,7 +268,7 @@ internal record class StringBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
 #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
@@ -296,7 +296,7 @@ internal record class TimeBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -319,7 +319,7 @@ internal record class VariableLengthBitFieldDescription(
         );
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
 #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];

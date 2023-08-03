@@ -4,7 +4,7 @@ namespace PureHDF.VOL.Native;
 
 internal abstract record class DatatypePropertyDescription
 {
-    public abstract void Encode(BinaryWriter driver, uint typeSize /* only for compound v3 */);
+    public abstract void Encode(H5DriverBase driver, uint typeSize /* only for compound v3 */);
 
     public abstract ushort GetEncodeSize(uint typeSize /* only for compound v3 */);
 };
@@ -61,7 +61,7 @@ internal record class ArrayPropertyDescription(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -87,7 +87,7 @@ internal record class BitFieldPropertyDescription(
             sizeof(uint);
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -205,7 +205,7 @@ internal record class CompoundPropertyDescription(
         return (ushort)encodeSize;
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         // name
         // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
@@ -280,7 +280,7 @@ internal record class EnumerationPropertyDescription(
         return (ushort)encodeSize;
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         // base type
         BaseType.Encode(driver);
@@ -322,7 +322,7 @@ internal record class FixedPointPropertyDescription(
             sizeof(ushort);
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         driver.Write(BitOffset);
         driver.Write(BitPrecision);
@@ -365,7 +365,7 @@ internal record class FloatingPointPropertyDescription(
             sizeof(uint);
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         driver.Write(BitOffset);
         driver.Write(BitPrecision);
@@ -397,7 +397,7 @@ internal record class OpaquePropertyDescription(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -420,7 +420,7 @@ internal record class TimePropertyDescription(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         throw new NotImplementedException();
     }
@@ -443,7 +443,7 @@ internal record class VariableLengthPropertyDescription(
         return BaseType.GetEncodeSize();
     }
 
-    public override void Encode(BinaryWriter driver, uint typeSize)
+    public override void Encode(H5DriverBase driver, uint typeSize)
     {
         BaseType.Encode(driver);
     }

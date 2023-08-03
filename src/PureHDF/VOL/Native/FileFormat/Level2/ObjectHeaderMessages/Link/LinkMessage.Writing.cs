@@ -4,7 +4,7 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class LinkMessage
 {
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         // version
         driver.Write(Version);

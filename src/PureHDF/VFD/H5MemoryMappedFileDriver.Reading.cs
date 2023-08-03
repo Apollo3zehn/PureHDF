@@ -8,17 +8,19 @@ namespace PureHDF.VFD;
 // Does it make sense to acquire pointer only once instead of every read operation?
 // https://stackoverflow.com/questions/49339804/memorymappedviewaccessor-performance-workaround
 // -> I think the synchrnonization complaint is not valid anymore: https://github.com/dotnet/runtime/blob/9b76c28567640e4cbe0d20e18b765b8f1a47473f/src/libraries/System.Private.CoreLib/src/System/Runtime/InteropServices/SafeBuffer.cs#L27-L28
-internal unsafe class H5MemoryMappedFileDriver : H5DriverBase
+internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
 {
     private readonly ThreadLocal<long> _position = new();
     private readonly MemoryMappedViewAccessor _accessor;
 
-    public H5MemoryMappedFileDriver(MemoryMappedViewAccessor accessor) : base(accessor.Capacity)
+    public H5MemoryMappedFileDriver(MemoryMappedViewAccessor accessor)
     {
         _accessor = accessor;
     }
 
     public override long Position { get => _position.Value; }
+
+    public override long Length => _accessor.Capacity;
 
     public override void Seek(long offset, SeekOrigin seekOrigin)
     {
@@ -43,6 +45,11 @@ internal unsafe class H5MemoryMappedFileDriver : H5DriverBase
     public override ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
     {
         throw new Exception("Memory-mapped files cannot be accessed asynchronously.");
+    }
+
+    public override void Read(Span<byte> buffer)
+    {
+        throw new NotImplementedException();
     }
 
     public override byte ReadByte()

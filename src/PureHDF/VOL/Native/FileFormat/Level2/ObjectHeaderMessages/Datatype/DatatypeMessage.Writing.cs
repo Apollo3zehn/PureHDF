@@ -49,7 +49,7 @@ internal partial record class DatatypeMessage : Message
                     .Invoke(default, new object[] { context })!;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         var classVersion = (byte)((byte)Class & 0x0F | Version << 4);
         driver.Write(classVersion);

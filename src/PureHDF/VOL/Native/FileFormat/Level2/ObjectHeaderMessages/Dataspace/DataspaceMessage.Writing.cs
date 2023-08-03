@@ -52,7 +52,7 @@ internal partial record class DataspaceMessage
         return (ushort)size;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         driver.Write(Version);
         driver.Write(Rank);

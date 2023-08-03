@@ -4,7 +4,7 @@ internal abstract record class LinkInfo()
 {
     public abstract ushort GetEncodeSize();
 
-    public abstract void Encode(BinaryWriter driver);
+    public abstract void Encode(H5DriverBase driver);
 }
 
 internal record class HardLinkInfo(
@@ -25,7 +25,7 @@ internal record class HardLinkInfo(
         return sizeof(ulong);
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         driver.Write(HeaderAddress);
     }
@@ -50,7 +50,7 @@ internal record class SoftLinkInfo(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -126,7 +126,7 @@ internal record class ExternalLinkInfo(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }
@@ -150,7 +150,7 @@ internal record class UserDefinedLinkInfo(
         throw new NotImplementedException();
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         throw new NotImplementedException();
     }

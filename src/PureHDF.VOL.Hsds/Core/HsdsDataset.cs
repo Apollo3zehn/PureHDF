@@ -349,7 +349,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             ? await streamResponse.Content.ReadAsStreamAsync(cancellationToken)
             : streamResponse.Content.ReadAsStream(cancellationToken);
 
-        var byteMemory = new CastMemoryManager<TResult, byte>(destinationMemory).Memory;
+        var byteMemory = destinationMemory.Cast<TResult, byte>();
         await ReadExactlyAsync(stream, buffer: byteMemory, useAsync: useAsync, cancellationToken);
 
         return optionalDestinationArray;

@@ -17,7 +17,7 @@ internal static class WriteUtils
     public static MethodInfo MethodInfoElement { get; } = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    public static void WriteUlongArbitrary(BinaryWriter driver, ulong value, ulong size)
+    public static void WriteUlongArbitrary(H5DriverBase driver, ulong value, ulong size)
     {
         switch (size)
         {

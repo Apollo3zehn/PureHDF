@@ -6,14 +6,14 @@ using Microsoft.Win32.SafeHandles;
 
 namespace PureHDF.VFD;
 
-internal class H5FileHandleDriver : H5DriverBase
+internal partial class H5FileHandleDriver : H5DriverBase
 {
     private readonly ThreadLocal<long> _position = new();
     private readonly FileStream _stream; // it is important to keep a reference, otherwise the SafeFileHandle gets closed during the next GC
     private readonly SafeFileHandle _handle;
     private readonly bool _leaveOpen;
 
-    public H5FileHandleDriver(FileStream stream, bool leaveOpen) : base(stream.Length)
+    public H5FileHandleDriver(FileStream stream, bool leaveOpen)
     {
         _stream = stream;
         _handle = _stream.SafeFileHandle;
@@ -26,6 +26,8 @@ internal class H5FileHandleDriver : H5DriverBase
     public bool IsAsync { get; }
 
     public override long Position { get => _position.Value; }
+
+    public override long Length => _stream.Length;
 
     public override void Seek(long offset, SeekOrigin seekOrigin)
     {
@@ -55,6 +57,11 @@ internal class H5FileHandleDriver : H5DriverBase
             throw new Exception("The file is too small");
 
         _position.Value += count;
+    }
+
+    public override void Read(Span<byte> buffer)
+    {
+        throw new NotImplementedException();
     }
 
     public override byte ReadByte()

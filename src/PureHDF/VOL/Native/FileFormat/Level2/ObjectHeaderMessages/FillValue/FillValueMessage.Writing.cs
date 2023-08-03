@@ -20,7 +20,7 @@ internal partial record class FillValueMessage
         return (ushort)size;
     }
 
-    public override void Encode(BinaryWriter driver)
+    public override void Encode(H5DriverBase driver)
     {
         // version
         driver.Write(Version);

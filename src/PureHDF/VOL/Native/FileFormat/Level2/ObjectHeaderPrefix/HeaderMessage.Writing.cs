@@ -22,7 +22,7 @@ internal readonly partial record struct HeaderMessage
     }
 
     public void Encode(
-        BinaryWriter driver,
+        H5DriverBase driver,
         bool withCreationOrder)
     {
         // message type

@@ -11,7 +11,7 @@ internal static class H5Writer
     public static void Serialize(H5File file, string filePath, H5SerializerOptions options)
     {
         using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-        using var driver = new BinaryWriter(fileStream);
+        using var driver = new H5StreamDriver(fileStream, leaveOpen: false);
 
         var freeSpaceManager = new FreeSpaceManager();
         freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
@@ -28,14 +28,14 @@ internal static class H5Writer
         );
 
         // root group       
-        driver.BaseStream.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
+        driver.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
         var rootGroupAddress = EncodeGroup(writeContext, file);
 
         // global heap collections
         globalHeapManager.Encode();
 
         // superblock
-        var endOfFileAddress = (ulong)driver.BaseStream.Length;
+        var endOfFileAddress = (ulong)driver.Length;
 
         var superblock = new Superblock23(
             Driver: default!,
@@ -50,7 +50,7 @@ internal static class H5Writer
             LengthsSize = sizeof(ulong)
         };
 
-        driver.BaseStream.Seek(0, SeekOrigin.Begin);
+        driver.Seek(0, SeekOrigin.Begin);
         superblock.Encode(driver);
     }
 
@@ -204,8 +204,8 @@ internal static class H5Writer
             DatatypeMessage.Create(context, memoryData, isScalar);
 
         // dataspace
-        var dataspace = dataset is H5Dataset h5Dataset2
-            ? DataspaceMessage.Create(dataDimensions, h5Dataset2.Dimensions)
+        var dataspace = dataset is H5Dataset h5Dataset
+            ? DataspaceMessage.Create(dataDimensions, h5Dataset.Dimensions)
             : DataspaceMessage.Create(dataDimensions, default);
 
         if (chunkDimensions is not null)
@@ -293,54 +293,29 @@ internal static class H5Writer
         // encode data
 
         /* buffer provider */
-        using H5D_Base h5d = dataLayout.LayoutClass switch
-        {
-            LayoutClass.Compact => new H5D_Compact(default!, default),
-            LayoutClass.Contiguous => new H5D_Contiguous(default!, default),
-            LayoutClass.Chunked => H5D_Chunk.Create(default!, default),
-
-            /* default */
-            _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
-        };
-
+        var h5d = new H5DWrite(context.Driver, dataLayout);
         var reader = default(SyncReader);
 
         Task<IH5WriteStream> getTargetStreamAsync(ulong[] indices) => h5d.GetWriteStreamAsync(reader, indices);
 
-        // if (dataLayout.Properties is ContiguousStoragePropertyDescription contiguous)
-        // {
-        //     var driver = context.Driver;
-        //     driver.BaseStream.Seek((long)contiguous.Address, SeekOrigin.Begin);
-
-        //     encode.Invoke(driver.BaseStream, data);
-        // }
-
-        // else if (dataLayout.Properties is ChunkedStoragePropertyDescription4 chunked)
-        // {
-        //     var driver = context.Driver;
-        //     driver.BaseStream.Seek((long)chunked.Address, SeekOrigin.Begin);
-
-        //     if (chunked.IndexingTypeInformation is ImplicitIndexingInformation @implicit)
-        //         encode.Invoke(driver.BaseStream, data);
-
-        //     else
-        //         throw new Exception($"The indexing type {chunked.IndexingTypeInformation.GetType()} is not supported.");
-        // }
-
-        /* selection */
-        var starts = dataDimensions.ToArray();
-        starts.AsSpan().Clear();
-
         /* memory selection */
-        var memorySelection = new HyperslabSelection(rank: dataDimensions.Length, starts: starts, blocks: dataDimensions);
+        var memoryDimensions = dataDimensions;
+        var memoryStarts = memoryDimensions.ToArray();
+        memoryStarts.AsSpan().Clear();
+
+        var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
 
         /* file selection */
-        var fileSelection = new HyperslabSelection(rank: dataDimensions.Length, starts: starts, blocks: dataDimensions);
+        var fileDimensions = dataspace.DimensionSizes;
+        var fileStarts = fileDimensions.ToArray();
+        fileStarts.AsSpan().Clear();
+
+        var fileSelection = new HyperslabSelection(rank: fileDimensions.Length, starts: fileStarts, blocks: fileDimensions);
 
         var encodeInfo = new EncodeInfo<TElement>(
-            SourceDims: dataDimensions,
-            SourceChunkDims: dataDimensions,
-            TargetDims: dataDimensions,
+            SourceDims: memoryDimensions,
+            SourceChunkDims: memoryDimensions,
+            TargetDims: fileDimensions,
             TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
             SourceSelection: memorySelection,
             TargetSelection: fileSelection,
@@ -351,7 +326,7 @@ internal static class H5Writer
             SourceTypeFactor: 1
         );
 
-        SelectionUtils.EncodeAsync(reader, dataspace.Rank, dataspace.Rank, encodeInfo);
+        SelectionUtils.EncodeAsync(reader, memorySelection.Rank, fileSelection.Rank, encodeInfo);
 
         // encode object header
         var address = objectHeader.Encode(context);

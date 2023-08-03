@@ -3,12 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.VFD;
 
-internal class H5StreamDriver : H5DriverBase
+internal partial class H5StreamDriver : H5DriverBase
 {
     private readonly bool _leaveOpen;
     private readonly Stream _stream;
 
-    public H5StreamDriver(Stream stream, bool leaveOpen) : base(stream.Length)
+    public H5StreamDriver(Stream stream, bool leaveOpen)
     {
         if (!stream.CanRead)
             throw new Exception("The stream must be readable.");
@@ -21,6 +21,8 @@ internal class H5StreamDriver : H5DriverBase
     }
 
     public override long Position { get => _stream.Position - (long)BaseAddress; }
+
+    public override long Length => _stream.Length;
 
     public override void Seek(long offset, SeekOrigin seekOrigin)
     {
@@ -77,6 +79,11 @@ internal class H5StreamDriver : H5DriverBase
         }
     }
 
+    public override void Read(Span<byte> buffer)
+    {
+        _stream.ReadExactly(buffer);
+    }
+
     public override byte ReadByte()
     {
         return Read<byte>();
@@ -85,7 +92,7 @@ internal class H5StreamDriver : H5DriverBase
     public override byte[] ReadBytes(int count)
     {
         var buffer = new byte[count];
-        _stream.Read(buffer);
+        _stream.ReadExactly(buffer);
 
         return buffer;
     }
