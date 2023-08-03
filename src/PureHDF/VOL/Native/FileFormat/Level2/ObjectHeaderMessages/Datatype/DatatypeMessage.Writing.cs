@@ -7,9 +7,11 @@ using System.Text;
 
 namespace PureHDF.VOL.Native;
 
-// TODO: use this for generic structs https://github.com/SergeyTeplyakov/ObjectLayoutInspector?
+// TODO: use this for generic structs
+// - https://github.com/SergeyTeplyakov/ObjectLayoutInspector?
+// - https://stackoverflow.com/a/56512720
 
-internal delegate void EncodeDelegate(Stream driver, object data);
+internal delegate void ElementEncodeDelegate(object source, IH5WriteStream target);
 
 internal partial record class DatatypeMessage : Message
 {
@@ -24,7 +26,7 @@ internal partial record class DatatypeMessage : Message
     // variable length entry size           length
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
-    public static (DatatypeMessage, EncodeDelegate) Create<T>(
+    public static (DatatypeMessage, EncodeDelegate<T>) Create<T>(
         WriteContext context,
         Memory<T> topLevelData,
         bool isScalar
@@ -36,12 +38,12 @@ internal partial record class DatatypeMessage : Message
         if (isScalar)
             return isScalarDictionary
                 ? GetTypeInfoForTopLevelDictionary<T>(context, (IDictionary)topLevelData.Span[0]!)
-                : GetTypeInfoForScalar_SpecialEncode<T>(context, typeof(T), stringLength: default);
+                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength: default);
 
         else
             return DataUtils.IsReferenceOrContainsReferences(typeof(T))
                 ? GetTypeInfoForTopLevelMemory<T>(context)
-                : ((DatatypeMessage, EncodeDelegate))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
+                : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
                     // TODO cache
                     .MakeGenericMethod(typeof(T))
                     .Invoke(default, new object[] { context })!;
@@ -64,7 +66,7 @@ internal partial record class DatatypeMessage : Message
 
     public override ushort GetEncodeSize()
     {
-        var propertiesEncodeSize = Properties.Aggregate(0, (sum, properties) 
+        var propertiesEncodeSize = Properties.Aggregate(0, (sum, properties)
             => sum + properties.GetEncodeSize(Size));
 
         var encodeSize =
@@ -72,24 +74,23 @@ internal partial record class DatatypeMessage : Message
             sizeof(byte) * 3 +
             sizeof(uint) +
             propertiesEncodeSize;
-            
+
         return (ushort)encodeSize;
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForScalar_SpecialEncode<T>(
+    private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForScalar_SpecialEncode<T>(
         WriteContext context,
-        Type type,
         int stringLength = default)
     {
-        var (dataType, encode) = GetTypeInfoForScalar(context, type, stringLength);
+        var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength);
 
-        void encodeFirstElement(Stream driver, object data) 
-            => encode(driver, ((Memory<T>)data).Span[0]!);
+        void encodeFirstElement(Memory<T> source, IH5WriteStream target)
+            => encode(source.Span[0]!, target);
 
         return (dataType, encodeFirstElement);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForScalar(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForScalar(
         WriteContext context,
         Type type,
         int stringLength = default)
@@ -106,7 +107,7 @@ internal partial record class DatatypeMessage : Message
             ? ByteOrder.LittleEndian
             : ByteOrder.BigEndian;
 
-        (DatatypeMessage newMessage, EncodeDelegate encode) = type switch
+        (DatatypeMessage newMessage, ElementEncodeDelegate encode) = type switch
         {
             /* string */
             Type when type == typeof(string)
@@ -194,21 +195,25 @@ internal partial record class DatatypeMessage : Message
         return (newMessage, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForBool(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForBool(
         WriteContext context)
     {
         var (baseMessage, _) = GetTypeInfoForScalar(context, typeof(byte));
 
-        static void encode(Stream driver, object data)
+        static void encode(object source, IH5WriteStream target)
         {
-            Span<byte> buffer = stackalloc byte[] { ((bool)data) ? (byte)1 : (byte)0 };
-            driver.Write(buffer);
+            Span<byte> buffer = stackalloc byte[]
+            {
+                ((bool)source) ? (byte)1 : (byte)0
+            };
+
+            target.Write(buffer);
         }
 
         return (baseMessage, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForEnum(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForEnum(
         WriteContext context,
         Type type)
     {
@@ -261,7 +266,7 @@ internal partial record class DatatypeMessage : Message
         return (message, baseEncode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForValueType(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForValueType(
         WriteContext context,
         Type type)
     {
@@ -303,17 +308,17 @@ internal partial record class DatatypeMessage : Message
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(driver, parameters);
+            parameters[0] = source;
+            parameters[1] = target;
+            invokeEncodeUnmanagedElement.Invoke(default, parameters);
         };
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForReferenceLikeType(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForReferenceLikeType(
         WriteContext context,
         Type type)
     {
@@ -324,7 +329,7 @@ internal partial record class DatatypeMessage : Message
         var defaultStringLength = context.SerializerOptions.DefaultStringLength;
 
         // fields
-        var includeFields = isValueType 
+        var includeFields = isValueType
             ? context.SerializerOptions.IncludeStructFields
             : context.SerializerOptions.IncludeClassFields;
 
@@ -333,14 +338,14 @@ internal partial record class DatatypeMessage : Message
             : Array.Empty<FieldInfo>();
 
         var fieldEncodes = includeFields
-            ? new EncodeDelegate[fieldInfos.Length]
-            : Array.Empty<EncodeDelegate>();
+            ? new ElementEncodeDelegate[fieldInfos.Length]
+            : Array.Empty<ElementEncodeDelegate>();
 
         var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
         var fieldStringLengthMapper = context.SerializerOptions.FieldStringLengthMapper;
 
         // properties
-        var includeProperties = isValueType 
+        var includeProperties = isValueType
             ? context.SerializerOptions.IncludeStructProperties
             : context.SerializerOptions.IncludeClassProperties;
 
@@ -350,8 +355,8 @@ internal partial record class DatatypeMessage : Message
             .ToArray();
 
         var propertyEncodes = includeProperties
-            ? new EncodeDelegate[propertyInfos.Length]
-            : Array.Empty<EncodeDelegate>();
+            ? new ElementEncodeDelegate[propertyInfos.Length]
+            : Array.Empty<ElementEncodeDelegate>();
 
         var propertyNameMapper = context.SerializerOptions.PropertyNameMapper;
         var propertyStringLengthMapper = context.SerializerOptions.PropertyStringLengthMapper;
@@ -418,7 +423,7 @@ internal partial record class DatatypeMessage : Message
             }
         }
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
             // fields
             for (int i = 0; i < fieldEncodes.Length; i++)
@@ -427,7 +432,7 @@ internal partial record class DatatypeMessage : Message
                 var typeSize = (int)properties[i].MemberTypeMessage.Size;
                 var fieldInfo = fieldInfos[i];
 
-                memberEncode(driver, fieldInfo.GetValue(data)!);
+                memberEncode(fieldInfo.GetValue(source)!, target);
             }
 
             // properties
@@ -437,7 +442,7 @@ internal partial record class DatatypeMessage : Message
                 var typeSize = (int)properties[i].MemberTypeMessage.Size;
                 var propertyInfo = propertyInfos[i];
 
-                memberEncode(driver, propertyInfo.GetValue(data)!);
+                memberEncode(propertyInfo.GetValue(source)!, target);
             }
         }
 
@@ -454,7 +459,7 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForVariableLengthSequence(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForVariableLengthSequence(
         WriteContext context,
         Type baseType)
     {
@@ -481,14 +486,14 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.VariableLength
         };
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
             var globalHeapId = default(WritingGlobalHeapId);
             Span<int> lengthArray = stackalloc int[1];
 
-            if (data is not null)
+            if (source is not null)
             {
-                var enumerable = (IEnumerable)data;
+                var enumerable = (IEnumerable)source;
                 var itemCount = WriteUtils.GetEnumerableLength(enumerable);
 
                 var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
@@ -498,32 +503,29 @@ internal partial record class DatatypeMessage : Message
                 var totalLength = (int)typeSize * itemCount;
                 lengthArray[0] = itemCount;
 
-                (globalHeapId, var memory) = context.GlobalHeapManager
+                (globalHeapId, var localTarget) = context.GlobalHeapManager
                     .AddObject(totalLength);
 
                 // encode items
                 foreach (var item in enumerable)
                 {
-                    var localDriver = new MemorySpanStream(memory);
-
-                    baseEncode(localDriver, item);
-                    memory = memory[(int)typeSize..];
+                    baseEncode(item, localTarget);
                 }
             }
 
             // encode variable length object
-            driver.Write(MemoryMarshal.AsBytes(lengthArray));
+            target.Write(MemoryMarshal.AsBytes(lengthArray));
 
-            Span<WritingGlobalHeapId> gheapIdArray 
+            Span<WritingGlobalHeapId> gheapIdArray
                 = stackalloc WritingGlobalHeapId[] { globalHeapId };
 
-            driver.Write(MemoryMarshal.AsBytes(gheapIdArray));
+            target.Write(MemoryMarshal.AsBytes(gheapIdArray));
         }
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForVariableLengthString(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForVariableLengthString(
         WriteContext context)
     {
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, typeof(byte));
@@ -549,37 +551,39 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.VariableLength
         };
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
             var globalHeapId = default(WritingGlobalHeapId);
             Span<int> lengthArray = stackalloc int[1];
 
-            if (data is not null)
+            if (source is not null)
             {
-                var stringData = (string)data;
-                var stringBytes = Encoding.UTF8.GetBytes(stringData);
-                lengthArray[0] = stringBytes.Length;
+                var stringData = (string)source;
+                var stringLength = Encoding.UTF8.GetByteCount(stringData);
 
-                (globalHeapId, var memory) = context.GlobalHeapManager
-                    .AddObject(stringBytes.Length);
+                lengthArray[0] = stringLength;
 
-                // TODO: optimally no copy operation would be required ... but that requires prior knowledge of string length in bytes
-                stringBytes.CopyTo(memory);
+                (globalHeapId, var localTarget) = context.GlobalHeapManager
+                    .AddObject(stringLength);
+
+                // TODO can array creation be avoided here?
+                var bytes = Encoding.UTF8.GetBytes(stringData);
+                localTarget.Write(bytes);
             }
 
             // encode variable length object
-            driver.Write(MemoryMarshal.AsBytes(lengthArray));
+            target.Write(MemoryMarshal.AsBytes(lengthArray));
 
-            Span<WritingGlobalHeapId> gheapIdArray 
+            Span<WritingGlobalHeapId> gheapIdArray
                 = stackalloc WritingGlobalHeapId[] { globalHeapId };
 
-            driver.Write(MemoryMarshal.AsBytes(gheapIdArray));
+            target.Write(MemoryMarshal.AsBytes(gheapIdArray));
         }
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForFixedLengthString(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForFixedLengthString(
         WriteContext context, int length)
     {
         var message = new DatatypeMessage(
@@ -598,16 +602,16 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.String
         };
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
             var stringBytes = Encoding.UTF8
-                .GetBytes((string)data)
+                .GetBytes((string)source)
                 .AsSpan();
 
             var truncate = Math.Min(stringBytes.Length, length);
             stringBytes = stringBytes[..truncate];
 
-            driver.Write(stringBytes);
+            target.Write(stringBytes);
 
             var padding = length - stringBytes.Length;
 
@@ -617,13 +621,13 @@ internal partial record class DatatypeMessage : Message
                 {
                     Span<byte> paddingBuffer = stackalloc byte[padding];
                     paddingBuffer.Clear();
-                    driver.Write(paddingBuffer);
+                    target.Write(paddingBuffer);
                 }
 
                 else
                 {
                     using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
-                    driver.Write(paddingBufferOwner.Memory.Span[..padding]);
+                    target.Write(paddingBufferOwner.Memory.Span[..padding]);
                 }
             }
         }
@@ -631,7 +635,7 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForUnsignedFixedPointTypes(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForUnsignedFixedPointTypes(
         Type type,
         ByteOrder endianness)
     {
@@ -660,17 +664,17 @@ internal partial record class DatatypeMessage : Message
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(driver, parameters);
+            parameters[0] = source;
+            parameters[1] = target;
+            invokeEncodeUnmanagedElement.Invoke(default, parameters);
         };
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForSignedFixedPointTypes(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForSignedFixedPointTypes(
         Type type,
         ByteOrder endianness)
     {
@@ -699,18 +703,18 @@ internal partial record class DatatypeMessage : Message
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
-        void encode(Stream driver, object data)
+        void encode(object source, IH5WriteStream target)
         {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(driver, parameters);
+            parameters[0] = source;
+            parameters[1] = target;
+            invokeEncodeUnmanagedElement.Invoke(default, parameters);
         };
 
         return (message, encode);
     }
 
 #if NET5_0_OR_GREATER
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoFor16BitFloatingPoint(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoFor16BitFloatingPoint(
         Type type,
         ByteOrder endianness)
     {
@@ -744,21 +748,17 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
-        var parameters = new object[2];
-
-        void encode(Stream driver, object data)
+        static void encode(object source, IH5WriteStream target)
         {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(null, parameters);
+            Span<Half> data = stackalloc Half[] { (Half)source };
+            target.Write(MemoryMarshal.AsBytes(data));
         };
 
         return (message, encode);
     }
 #endif
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoFor32BitFloatingPoint(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoFor32BitFloatingPoint(
         Type type,
         ByteOrder endianness)
     {
@@ -792,20 +792,16 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
-        var parameters = new object[2];
-
-        void encode(Stream driver, object data)
+        static void encode(object source, IH5WriteStream target)
         {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(null, parameters);
+            Span<float> data = stackalloc float[] { (float)source };
+            target.Write(MemoryMarshal.AsBytes(data));
         };
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoFor64BitFloatingPoint(
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoFor64BitFloatingPoint(
         Type type,
         ByteOrder endianness)
     {
@@ -839,20 +835,16 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FloatingPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
-        var parameters = new object[2];
-
-        void encode(Stream driver, object data)
+        static void encode(object source, IH5WriteStream target)
         {
-            parameters[0] = driver;
-            parameters[1] = data;
-            invokeEncodeUnmanagedElement.Invoke(null, parameters);
+            Span<double> data = stackalloc double[] { (double)source };
+            target.Write(MemoryMarshal.AsBytes(data));
         };
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelDictionary<T>(
+    private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelDictionary<T>(
         WriteContext context,
         IDictionary topLevelData)
     {
@@ -889,47 +881,49 @@ internal partial record class DatatypeMessage : Message
                 MemberCount: memberCount
             ),
 
-            propertyDescriptions 
+            propertyDescriptions
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
             Class = DatatypeMessageClass.Compound
         };
 
-        void encode(Stream driver, object data)
+        void encode(Memory<T> source, IH5WriteStream target)
         {
-            var dataAsDictionary = ((Memory<T>)data).Span[0];
-
             foreach (var value in topLevelData.Values)
             {
-                valueEncode(driver, value!);
+                valueEncode(value, target);
             }
         }
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelMemory<T>(
+    private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelMemory<T>(
         WriteContext context)
     {
         var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T));
 
-        void encode(Stream driver, object data)
-            => WriteUtils.EncodeMemory(
-                driver, 
-                (Memory<T>)data,
-                elementEncode);
+        void encode(Memory<T> source, IH5WriteStream target)
+        {
+            var sourceSpan = source.Span;
+
+            for (int i = 0; i < source.Length; i++)
+            {
+                elementEncode(sourceSpan[i]!, target);
+            }
+        };
 
         return (message, encode);
     }
 
-    private static (DatatypeMessage, EncodeDelegate) GetTypeInfoForTopLevelUnmanagedMemory<T>(
-        WriteContext context)
+    private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelUnmanagedMemory<T>(
+        WriteContext context) where T : struct
     {
         var (message, _) = GetTypeInfoForScalar(context, typeof(T));
 
-        static void encode(Stream driver, object data) 
-            => WriteUtils.InvokeEncodeUnmanagedMemory(typeof(T), driver, data);
+        static void encode(Memory<T> source, IH5WriteStream target)
+            => target.Write(MemoryMarshal.AsBytes(source.Span));
 
         return (message, encode);
     }

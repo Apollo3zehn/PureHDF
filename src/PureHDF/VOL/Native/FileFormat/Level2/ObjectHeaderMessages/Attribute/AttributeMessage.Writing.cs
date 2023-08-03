@@ -33,7 +33,7 @@ internal partial record class AttributeMessage
         object data,
         bool isScalar)
     {
-        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data);
+        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data!);
         var type = memoryData.GetType();
 
         var (datatype, encode) = 
@@ -44,13 +44,24 @@ internal partial record class AttributeMessage
             : DataspaceMessage.Create(dataDimensions, default);
 
         // attribute
+        // TODO avoid creation of system memory stream too often
+        var dataEncodeSize = datatype.Size * dataspace.DimensionSizes
+            .Aggregate(1UL, (product, dimension) => product * dimension); ;
+
+        var buffer = new byte[dataEncodeSize];
+        var localWriter = new SystemMemoryStream(buffer);
+
         var attributeMessage = new AttributeMessage(
             Flags: AttributeMessageFlags.None,
             Name: name,
             Datatype: datatype,
             Dataspace: dataspace,
             InputData: default,
-            EncodeData: writer => encode(writer.BaseStream, memoryData)
+            EncodeData: driver => 
+            {
+                encode(memoryData, localWriter);
+                driver.Write(buffer);
+            }
         )
         {
             Version = 3

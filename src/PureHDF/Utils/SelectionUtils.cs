@@ -25,7 +25,7 @@ internal record EncodeInfo<T>(
     Selection TargetSelection,
     Func<ulong[], Memory<T>> GetSourceBuffer,
     Func<ulong[], Task<IH5WriteStream>> GetTargetStreamAsync,
-    Action<Memory<T>, Memory<byte>> Encoder,
+    EncodeDelegate<T> Encoder,
     int TargetTypeSize,
     int SourceTypeFactor
 );
@@ -189,9 +189,10 @@ internal static class SelectionUtils
                     var currentTarget = systemMemoryStream.SlicedMemory;
                     var targetLength = length * encodeInfo.TargetTypeSize;
 
-                    encodeInfo.Encoder(
-                        currentSource[..sourceLength],
-                        currentTarget[..targetLength]);
+                    // TODO, currently 'currentTarget' is unused
+                    encodeInfo.Encoder.Invoke(
+                        source: currentSource[..sourceLength],
+                        target: systemMemoryStream);
                 }
 
                 // default; contiguous dataset (OffsetStream)

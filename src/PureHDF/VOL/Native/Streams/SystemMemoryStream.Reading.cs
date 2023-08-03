@@ -1,6 +1,6 @@
 ﻿namespace PureHDF
 {
-    internal class SystemMemoryStream : IH5ReadStream
+    internal partial class SystemMemoryStream : IH5ReadStream
     {
         private long _position;
 
@@ -12,7 +12,7 @@
 
         public long Position { get => _position; }
 
-        public Memory<byte> OriginalMemory { get; }
+        public Memory<byte> OriginalMemory { get; private set; }
         
         public Memory<byte> SlicedMemory { get; private set; }
 

@@ -14,9 +14,6 @@ internal static class WriteUtils
     private static readonly MethodInfo _methodInfoEnumerableToMemory = typeof(WriteUtils)
         .GetMethod(nameof(EnumerableToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    private static readonly MethodInfo _methodInfoEncodeUnmanagedMemory = typeof(WriteUtils)
-        .GetMethod(nameof(EncodeUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
     public static MethodInfo MethodInfoElement { get; } = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
@@ -187,36 +184,10 @@ internal static class WriteUtils
     }
 
     // Encode unmanaged element
-    private static void EncodeUnmanagedElement<T>(Stream driver, object data) where T : unmanaged
+    private static void EncodeUnmanagedElement<T>(object source, IH5WriteStream target) where T : unmanaged
     {
-        Span<T> source = stackalloc T[] { (T)data };
+        Span<T> sourceArray = stackalloc T[] { (T)source };
 
-        driver.Write(MemoryMarshal.AsBytes(source));
-    }
-
-    // Encode unmanaged Memory
-    public static void InvokeEncodeUnmanagedMemory(Type type, Stream driver, object data)
-    {
-        var genericMethod = _methodInfoEncodeUnmanagedMemory.MakeGenericMethod(type);
-        genericMethod.Invoke(null, new object[] { driver, data });
-    }
-
-    private static void EncodeUnmanagedMemory<T>(Stream driver, Memory<T> data) where T : unmanaged
-    {
-        driver.Write(MemoryMarshal.AsBytes(data.Span));
-    }
-
-    // Encode memory
-    public static void EncodeMemory<T>(
-        Stream driver, 
-        Memory<T> data, 
-        EncodeDelegate elementEncode)
-    {
-        var span = data.Span;
-
-        for (int i = 0; i < span.Length; i++)
-        {
-            elementEncode(driver, span[i]!);
-        }
+        target.Write(MemoryMarshal.AsBytes(sourceArray));
     }
 }

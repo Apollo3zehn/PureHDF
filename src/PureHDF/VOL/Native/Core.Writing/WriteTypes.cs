@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
+internal delegate void EncodeDelegate<T>(Memory<T> source, IH5WriteStream target);
+
 internal record GlobalHeapCollectionState(
     GlobalHeapCollection Collection, 
     Memory<byte> Memory)
@@ -16,7 +18,7 @@ internal record WriteContext(
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,
     H5SerializerOptions SerializerOptions,
-    Dictionary<Type, (DatatypeMessage, EncodeDelegate)> TypeToMessageMap,
+    Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<object, ulong> ObjectToAddressMap
 );
 

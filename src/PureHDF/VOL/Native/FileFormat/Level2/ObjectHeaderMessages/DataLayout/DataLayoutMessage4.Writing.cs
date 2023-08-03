@@ -2,11 +2,11 @@
 
 internal partial record class DataLayoutMessage4
 {
-    public static DataLayoutMessage4 Create(
+    public static DataLayoutMessage4 Create<T>(
         WriteContext context,
-        EncodeDelegate encode,
+        EncodeDelegate<T> encode,
         ulong dataEncodeSize,
-        object data,
+        Memory<T> data,
         uint[]? chunkDimensions)
     {
         var preferCompact = context.SerializerOptions.PreferCompactDatasetLayout;
@@ -48,9 +48,17 @@ internal partial record class DataLayoutMessage4
             /* try to create compact dataset */
             if (preferCompact && dataEncodeSize <= ushort.MaxValue)
             {
+                // TODO avoid creation of system memory stream too often
+                var buffer = new byte[dataEncodeSize];
+                var localWriter = new SystemMemoryStream(buffer);
+
                 var properties = new CompactStoragePropertyDescription(
                     InputData: default!,
-                    EncodeData: driver => encode(driver.BaseStream, data),
+                    EncodeData: driver => 
+                    {
+                        encode(data, localWriter);
+                        driver.Write(buffer);
+                    },
                     EncodeDataSize: (ushort)dataEncodeSize
                 );
 

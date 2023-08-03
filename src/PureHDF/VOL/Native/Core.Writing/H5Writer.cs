@@ -192,11 +192,11 @@ internal static class H5Writer
     private static ulong InternalEncodeDataset<T, TElement>(
         WriteContext context,
         object dataset,
-        object data,
+        T data,
         uint[]? chunkDimensions,
         bool isScalar)
     {
-        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data);
+        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data!);
         var type = memoryData.GetType();
 
         // datatype
@@ -250,7 +250,7 @@ internal static class H5Writer
             context, 
             encode, 
             dataEncodeSize, 
-            data,
+            memoryData,
             chunkDimensions);
 
         // fill value
@@ -337,21 +337,21 @@ internal static class H5Writer
         /* file selection */
         var fileSelection = new HyperslabSelection(rank: dataDimensions.Length, starts: starts, blocks: dataDimensions);
 
-        // var encodeInfo = new EncodeInfo<T>(
-        //     SourceDims: dataDimensions,
-        //     SourceChunkDims: dataDimensions,
-        //     TargetDims: dataDimensions,
-        //     TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
-        //     SourceSelection: memorySelection,
-        //     TargetSelection: fileSelection,
-        //     GetSourceBuffer: indiced => memoryData,
-        //     GetTargetStreamAsync: getTargetStreamAsync,
-        //     Encoder: encode,
-        //     TargetTypeSize: (int)datatype.Size,
-        //     SourceTypeFactor: 1
-        // );
+        var encodeInfo = new EncodeInfo<TElement>(
+            SourceDims: dataDimensions,
+            SourceChunkDims: dataDimensions,
+            TargetDims: dataDimensions,
+            TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
+            SourceSelection: memorySelection,
+            TargetSelection: fileSelection,
+            GetSourceBuffer: indiced => memoryData,
+            GetTargetStreamAsync: getTargetStreamAsync,
+            Encoder: encode,
+            TargetTypeSize: (int)datatype.Size,
+            SourceTypeFactor: 1
+        );
 
-        // SelectionUtils.EncodeAsync(reader, dataspace.Rank, dataspace.Rank, encodeInfo);
+        SelectionUtils.EncodeAsync(reader, dataspace.Rank, dataspace.Rank, encodeInfo);
 
         // encode object header
         var address = objectHeader.Encode(context);
