@@ -3,7 +3,7 @@ namespace PureHDF;
 internal static partial class ReadUtils
 {
     public static Memory<T[]> ReadVariableLengthSequence<T>(
-        NativeContext context, 
+        NativeReadContext context, 
         DatatypeMessage datatype, 
         Span<byte> source,
         Memory<T[]> destination) where T : struct

@@ -25,7 +25,7 @@ internal record ObjectHeader1(
         }
     }
 
-    internal static ObjectHeader1 Decode(NativeContext context, byte version)
+    internal static ObjectHeader1 Decode(NativeReadContext context, byte version)
     {
         var driver = context.Driver;
 

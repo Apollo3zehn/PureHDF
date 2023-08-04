@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal record class ExternalFileListMessage(
-    NativeContext Context,
+    NativeReadContext Context,
     ushort AllocatedSlotCount,
     ushort UsedSlotCount,
     ulong HeapAddress,
@@ -40,7 +40,7 @@ internal record class ExternalFileListMessage(
         }
     }
 
-    public static ExternalFileListMessage Decode(NativeContext context)
+    public static ExternalFileListMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

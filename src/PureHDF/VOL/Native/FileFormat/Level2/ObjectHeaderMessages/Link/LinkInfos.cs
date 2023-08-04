@@ -11,7 +11,7 @@ internal record class HardLinkInfo(
     ulong HeaderAddress
 ) : LinkInfo
 {
-    public static HardLinkInfo Decode(NativeContext context)
+    public static HardLinkInfo Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

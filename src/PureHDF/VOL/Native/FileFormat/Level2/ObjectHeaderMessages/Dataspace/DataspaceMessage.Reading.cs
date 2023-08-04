@@ -26,7 +26,7 @@ internal partial record class DataspaceMessage(
         }
     }
 
-    public static DataspaceMessage Decode(NativeContext context)
+    public static DataspaceMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

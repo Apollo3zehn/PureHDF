@@ -51,7 +51,7 @@ internal partial record class Superblock23(
             if (_extension is null)
             {
                 Driver.Seek((long)ExtensionAddress, SeekOrigin.Begin);
-                _extension = ObjectHeader.Construct(new NativeContext(Driver, this));
+                _extension = ObjectHeader.Construct(new NativeReadContext(Driver, this));
             }
             
             return _extension;

@@ -4,7 +4,7 @@ namespace PureHDF.VOL.Native;
 
 // this should be a class because it has so many fields
 internal record class FractalHeapHeader(
-    NativeContext Context,
+    NativeReadContext Context,
     
     ushort HeapIdLength,
     ushort IOFilterEncodedLength,
@@ -71,7 +71,7 @@ internal record class FractalHeapHeader(
         }
     }
 
-    public static FractalHeapHeader Decode(NativeContext context)
+    public static FractalHeapHeader Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

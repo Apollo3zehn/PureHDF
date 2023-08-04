@@ -5,7 +5,7 @@ internal record class ObjectHeaderContinuationMessage(
     ulong Length
 ) : Message
 {
-    public static ObjectHeaderContinuationMessage Decode(NativeContext context)
+    public static ObjectHeaderContinuationMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

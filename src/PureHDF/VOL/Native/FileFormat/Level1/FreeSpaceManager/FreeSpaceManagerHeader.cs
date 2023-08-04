@@ -38,7 +38,7 @@ internal record class FreeSpaceManagerHeader(
         }
     }
 
-    public static FreeSpaceManagerHeader Decode(NativeContext context)
+    public static FreeSpaceManagerHeader Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

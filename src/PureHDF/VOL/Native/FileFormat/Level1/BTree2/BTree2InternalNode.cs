@@ -8,7 +8,7 @@ internal record class BTree2InternalNode<T>(
 ) : BTree2Node<T>(Records) where T : struct, IBTree2Record
 {
     public static BTree2InternalNode<T> Decode(
-        NativeContext context, 
+        NativeReadContext context, 
         BTree2Header<T> header, 
         ulong recordCount, 
         int nodeLevel, 

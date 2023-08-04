@@ -8,7 +8,7 @@ internal record class HugeObjectsFractalHeapIdSubType3(
     ulong Length
 ) : FractalHeapId
 {
-    public static HugeObjectsFractalHeapIdSubType3 Decode(NativeContext context, H5DriverBase localDriver)
+    public static HugeObjectsFractalHeapIdSubType3 Decode(NativeReadContext context, H5DriverBase localDriver)
     {
         var (driver, superblock) = context;
 

@@ -17,13 +17,13 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 
     #region Constructors
 
-    internal NativeGroup(NativeContext context, NativeNamedReference reference)
+    internal NativeGroup(NativeReadContext context, NativeNamedReference reference)
        : base(context, reference)
     {
         _scratchPad = reference.ScratchPad;
     }
 
-    internal NativeGroup(NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeGroup(NativeReadContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         //

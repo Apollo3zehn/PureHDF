@@ -25,7 +25,7 @@ internal partial record class LinkMessage(
         }
     }
 
-    public static LinkMessage Decode(NativeContext context)
+    public static LinkMessage Decode(NativeReadContext context)
     {
         var (driver, _) = context;
 

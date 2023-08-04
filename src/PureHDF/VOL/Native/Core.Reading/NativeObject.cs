@@ -12,13 +12,13 @@ public abstract class NativeObject : IH5Object
 
     #region Constructors
 
-    internal NativeObject(NativeContext context, NativeNamedReference reference)
+    internal NativeObject(NativeReadContext context, NativeNamedReference reference)
     {
         Context = context;
         Reference = reference;
     }
 
-    internal NativeObject(NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeObject(NativeReadContext context, NativeNamedReference reference, ObjectHeader header)
     {
         Context = context;
         Reference = reference;
@@ -32,7 +32,7 @@ public abstract class NativeObject : IH5Object
     /// <inheritdoc />
     public string Name => Reference.Name;
 
-    internal NativeContext Context { get; }
+    internal NativeReadContext Context { get; }
 
     internal uint ReferenceCount => GetReferenceCount();
 

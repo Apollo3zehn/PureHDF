@@ -6,7 +6,7 @@ internal partial record class DataLayoutMessage4(
     StoragePropertyDescription Properties
 ) : DataLayoutMessage3(LayoutClass, Address, Properties)
 {
-    internal static new DataLayoutMessage4 Decode(NativeContext context, byte version)
+    internal static new DataLayoutMessage4 Decode(NativeReadContext context, byte version)
     {
         var (driver, _) = context;
 

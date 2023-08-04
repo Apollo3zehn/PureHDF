@@ -15,7 +15,7 @@ internal readonly record struct BTree1GroupKey(
     ulong LocalHeapByteOffset
 ) : IBTree1Key
 {
-    public static BTree1GroupKey Decode(NativeContext context)
+    public static BTree1GroupKey Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

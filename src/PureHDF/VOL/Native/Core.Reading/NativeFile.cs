@@ -19,7 +19,7 @@ public class NativeFile : NativeGroup, IDisposable
     #region Constructors
 
     private NativeFile(
-        NativeContext context,
+        NativeReadContext context,
         NativeNamedReference reference,
         ObjectHeader header,
         string absoluteFilePath,
@@ -161,7 +161,7 @@ public class NativeFile : NativeGroup, IDisposable
         }
 
         driver.Seek((long)address, SeekOrigin.Begin);
-        var context = new NativeContext(driver, superblock);
+        var context = new NativeReadContext(driver, superblock);
         var header = ObjectHeader.Construct(context);
 
         var file = new NativeFile(context, default, header, absoluteFilePath, deleteOnClose);

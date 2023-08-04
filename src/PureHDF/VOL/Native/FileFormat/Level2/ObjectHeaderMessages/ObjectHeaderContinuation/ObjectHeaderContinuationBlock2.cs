@@ -10,7 +10,7 @@ internal record class ObjectHeaderContinuationBlock2(
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("OCHK");
     
     internal static ObjectHeaderContinuationBlock2 Decode(
-        NativeContext context, 
+        NativeReadContext context, 
         ulong objectHeaderAddress,
         ulong objectHeaderSize,
         byte version, 

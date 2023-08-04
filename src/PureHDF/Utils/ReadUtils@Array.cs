@@ -4,7 +4,7 @@ namespace PureHDF;
 
 internal static partial class ReadUtils
 {
-     private static Array? ReadRawArray(NativeContext context, DatatypeMessage baseType, Span<byte> slicedData)
+     private static Array? ReadRawArray(NativeReadContext context, DatatypeMessage baseType, Span<byte> slicedData)
     {
         _ = context.Superblock;
 
@@ -55,7 +55,7 @@ internal static partial class ReadUtils
         };
     }
 
-    private static Array? ReadArray(NativeContext context, DatatypeMessage type, Span<byte> slicedData)
+    private static Array? ReadArray(NativeReadContext context, DatatypeMessage type, Span<byte> slicedData)
     {
         if (type.Class != DatatypeMessageClass.Array)
             throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Array}'.");

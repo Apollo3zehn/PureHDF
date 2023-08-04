@@ -2,7 +2,7 @@
 
 internal partial record class ObjectHeader2
 {
-    public ulong Encode(WriteContext context)
+    public ulong Encode(NativeWriteContext context)
     {   
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         var encodeSize = GetEncodeSize(headerMessagesEncodeSize);

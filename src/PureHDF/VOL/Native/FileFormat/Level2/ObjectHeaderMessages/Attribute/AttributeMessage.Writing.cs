@@ -10,7 +10,7 @@ internal partial record class AttributeMessage
         .GetMethod(nameof(InternalCreate), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public static AttributeMessage Create(
-        WriteContext context,
+        NativeWriteContext context,
         string name, 
         object attribute)
     {
@@ -27,7 +27,7 @@ internal partial record class AttributeMessage
     }
 
     private static AttributeMessage InternalCreate<T, TElement>(
-        WriteContext context,
+        NativeWriteContext context,
         string name, 
         object attribute,
         object data,

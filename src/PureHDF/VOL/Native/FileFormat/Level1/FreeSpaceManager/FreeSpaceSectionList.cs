@@ -10,7 +10,7 @@ namespace PureHDF.VOL.Native;
 // public List<SectionDataRecord> SectionRecordData { get; set; } // actually it is a List<List<SectionDataRecord>>
 
 internal record struct FreeSpaceSectionList(
-    NativeContext Context,
+    NativeReadContext Context,
     ulong FreeSpaceManagerHeaderAddress
 )
 {
@@ -49,7 +49,7 @@ internal record struct FreeSpaceSectionList(
         }
     }
 
-    public static FreeSpaceSectionList Decode(NativeContext context)
+    public static FreeSpaceSectionList Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

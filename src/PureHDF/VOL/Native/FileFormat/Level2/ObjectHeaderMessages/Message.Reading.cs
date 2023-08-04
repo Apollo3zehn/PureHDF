@@ -3,7 +3,7 @@
 internal abstract partial record class Message
 {
     public static T Decode<T>(
-        NativeContext context,
+        NativeReadContext context,
         ulong address,
         MessageFlags messageFlags, 
         Func<T> decode) where T : Message
@@ -21,7 +21,7 @@ internal abstract partial record class Message
         }
     }
 
-    private static T DecodeSharedMessage<T>(NativeContext context, ulong address, SharedMessage message) where T : Message
+    private static T DecodeSharedMessage<T>(NativeReadContext context, ulong address, SharedMessage message) where T : Message
     {
         // H5Oshared.c (H5O__shared_read)
 

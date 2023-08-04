@@ -6,7 +6,7 @@ internal readonly record struct ExternalFileListSlot(
     ulong Size
 )
 {
-    public static ExternalFileListSlot Decode(NativeContext context)
+    public static ExternalFileListSlot Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

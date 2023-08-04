@@ -18,7 +18,7 @@ internal record class SymbolicLinkScratchPad(
 }
 
 internal record class ObjectHeaderScratchPad(
-    NativeContext Context,
+    NativeReadContext Context,
     ulong BTree1Address,
     ulong NameHeapAddress
 ) : ScratchPad
@@ -26,7 +26,7 @@ internal record class ObjectHeaderScratchPad(
     private LocalHeap _localHeap;
     private BTree1Node<BTree1GroupKey> _btree1Node;
 
-    public static ObjectHeaderScratchPad Decode(NativeContext context)
+    public static ObjectHeaderScratchPad Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

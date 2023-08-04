@@ -11,7 +11,7 @@ internal readonly record struct BTree2Record01(
     ulong HugeObjectId
 ) : IBTree2Record
 {
-    public static BTree2Record01 Decode(NativeContext context)
+    public static BTree2Record01 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -31,7 +31,7 @@ internal readonly record struct BTree2Record02(
     ulong HugeObjectId
 ) : IBTree2Record
 {
-    public static BTree2Record02 Decode(NativeContext context)
+    public static BTree2Record02 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -50,7 +50,7 @@ internal readonly record struct BTree2Record03(
     ulong HugeObjectLength
 ) : IBTree2Record
 {
-    public static BTree2Record03 Decode(NativeContext context)
+    public static BTree2Record03 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -68,7 +68,7 @@ internal readonly record struct BTree2Record04(
     ulong FilteredHugeObjectMemorySize
 ) : IBTree2Record
 {
-    public static BTree2Record04 Decode(NativeContext context)
+    public static BTree2Record04 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -210,7 +210,7 @@ internal readonly record struct BTree2Record10(
     ulong[] ScaledOffsets
 ) : IBTree2Record
 {
-    public static BTree2Record10 Decode(NativeContext context, byte rank)
+    public static BTree2Record10 Decode(NativeReadContext context, byte rank)
     {
         var (driver, superblock) = context;
 
@@ -239,7 +239,7 @@ internal readonly record struct BTree2Record11(
     ulong[] ScaledOffsets
 ) : IBTree2Record
 {
-    public static BTree2Record11 Decode(NativeContext context, byte rank, uint chunkSizeLength)
+    public static BTree2Record11 Decode(NativeReadContext context, byte rank, uint chunkSizeLength)
     {
         var (driver, superblock) = context;
 

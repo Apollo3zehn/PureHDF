@@ -41,7 +41,7 @@ internal readonly record struct GlobalHeapCollection(
         }
     }
 
-    public static GlobalHeapCollection Decode(NativeContext context)
+    public static GlobalHeapCollection Decode(NativeReadContext context)
     {
         // TODO: do not decode individual global heap objects and use a Memory<byte> of size 4096 instead
 

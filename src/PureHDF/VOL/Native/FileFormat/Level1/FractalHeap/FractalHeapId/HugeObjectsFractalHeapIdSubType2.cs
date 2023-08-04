@@ -3,13 +3,13 @@
 namespace PureHDF.VOL.Native;
 
 internal record class HugeObjectsFractalHeapIdSubType2(
-    NativeContext Context,
+    NativeReadContext Context,
     FractalHeapHeader HeapHeader,
     ulong BTree2Key
 ) : HugeObjectsFractalHeapIdSubType1(Context, HeapHeader, BTree2Key)
 {
     public static new HugeObjectsFractalHeapIdSubType2 Decode(
-        NativeContext context, 
+        NativeReadContext context, 
         H5DriverBase localDriver, 
         FractalHeapHeader header)
     {

@@ -26,7 +26,7 @@ internal readonly record struct SymbolTableNode(
         }
     }
 
-    public static SymbolTableNode Decode(NativeContext context)
+    public static SymbolTableNode Decode(NativeReadContext context)
     {
         var driver = context.Driver;
 

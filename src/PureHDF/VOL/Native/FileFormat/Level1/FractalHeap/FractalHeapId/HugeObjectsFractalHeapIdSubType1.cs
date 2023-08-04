@@ -4,13 +4,13 @@ using System.Runtime.CompilerServices;
 namespace PureHDF.VOL.Native;
 
 internal record class HugeObjectsFractalHeapIdSubType1(
-    NativeContext Context,
+    NativeReadContext Context,
     FractalHeapHeader HeapHeader,
     ulong BTree2Key
 ) : FractalHeapId
 {
     internal static HugeObjectsFractalHeapIdSubType1 Decode(
-        NativeContext context, 
+        NativeReadContext context, 
         H5DriverBase localDriver, 
         FractalHeapHeader header)
     {

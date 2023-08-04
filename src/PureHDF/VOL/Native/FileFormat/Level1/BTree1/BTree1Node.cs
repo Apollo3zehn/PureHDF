@@ -7,7 +7,7 @@ internal delegate bool FoundDelegate<T, TUserData>(ulong address, T leftNode, ou
 
 // TODO: better use class here? Benchmark required
 internal readonly record struct BTree1Node<T>(
-    NativeContext Context,
+    NativeReadContext Context,
     Func<T> DecodeKey,
     byte NodeLevel,
     ushort EntriesUsed,
@@ -19,7 +19,7 @@ internal readonly record struct BTree1Node<T>(
 {
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
-    public static BTree1Node<T> Decode(NativeContext context, Func<T> decodeKey)
+    public static BTree1Node<T> Decode(NativeReadContext context, Func<T> decodeKey)
     {
         var (driver, superblock) = context;
 

@@ -32,7 +32,7 @@ internal record class FixedArrayDataBlock<T>(
     }
 
     public static FixedArrayDataBlock<T> Decode(
-        NativeContext context,
+        NativeReadContext context,
         FixedArrayHeader header,
         Func<H5DriverBase, T> decode)
     {

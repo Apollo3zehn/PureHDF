@@ -7,7 +7,7 @@ internal abstract record class FractalHeapId(
 )
 {
     internal static FractalHeapId Construct(
-        NativeContext context, 
+        NativeReadContext context, 
         H5DriverBase localDriver,
         in FractalHeapHeader header)
     {

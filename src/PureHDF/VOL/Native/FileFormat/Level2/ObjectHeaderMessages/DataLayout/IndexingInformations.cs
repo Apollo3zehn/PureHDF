@@ -13,7 +13,7 @@ internal record class SingleChunkIndexingInformation(
     uint ChunkFilters
 ) : IndexingInformation
 {
-    public static SingleChunkIndexingInformation Decode(NativeContext context, ChunkedStoragePropertyFlags flags)
+    public static SingleChunkIndexingInformation Decode(NativeReadContext context, ChunkedStoragePropertyFlags flags)
     {
         var filteredChunkSize = default(ulong);
         var chunkFilters = default(uint);

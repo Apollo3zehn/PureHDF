@@ -21,7 +21,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Constructors
 
-    internal NativeDataset(NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeDataset(NativeReadContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         foreach (var message in Header.HeaderMessages)
@@ -886,7 +886,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             /* Compact: The array is stored in one contiguous block as part of
              * this object header message. 
              */
-            LayoutClass.Compact => new H5D_Compact(Context, datasetInfo, datasetAccess),
+            LayoutClass.Compact => new H5D_Compact(Context, default!, datasetInfo, datasetAccess),
 
             /* Contiguous: The array is stored in one contiguous area of the file. 
             * This layout requires that the size of the array be constant: 
@@ -895,7 +895,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             * storage size of the array. The offset of an element from the 
             * beginning of the storage area is computed as in a C array.
             */
-            LayoutClass.Contiguous => new H5D_Contiguous(Context, datasetInfo, datasetAccess),
+            LayoutClass.Contiguous => new H5D_Contiguous(Context, default!, datasetInfo, datasetAccess),
 
             /* Chunked: The array domain is regularly decomposed into chunks,
              * and each chunk is allocated and stored separately. This layout 
@@ -906,7 +906,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
              * calculated by traversing the chunk index that stores the chunk 
              * addresses. 
              */
-            LayoutClass.Chunked => H5D_Chunk.Create(Context, datasetInfo, datasetAccess),
+            LayoutClass.Chunked => H5D_Chunk.Create(Context, default!, datasetInfo, datasetAccess),
 
             /* Virtual: This is only supported for version 4 of the Data Layout 
              * message. The message stores information that is used to locate 
@@ -914,7 +914,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
              * mapping information. The mapping associates the VDS to the source
              * dataset elements that are stored across a collection of HDF5 files.
              */
-            LayoutClass.VirtualStorage => new H5D_Virtual<TResult>(Context, datasetInfo, datasetAccess, fillValue, readVirtualDelegate),
+            LayoutClass.VirtualStorage => new H5D_Virtual<TResult>(Context, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate),
 
             /* default */
             _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")

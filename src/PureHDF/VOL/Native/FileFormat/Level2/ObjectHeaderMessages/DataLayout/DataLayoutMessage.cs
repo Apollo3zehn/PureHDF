@@ -5,7 +5,7 @@ internal abstract record class DataLayoutMessage(
     ulong Address)
     : Message
 {
-    public static DataLayoutMessage Construct(NativeContext context)
+    public static DataLayoutMessage Construct(NativeReadContext context)
     {
         // get version
         var version = context.Driver.ReadByte();

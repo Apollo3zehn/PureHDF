@@ -5,7 +5,7 @@ namespace PureHDF;
 internal static partial class ReadUtils
 {
     public static string[] ReadString(
-        NativeContext context,
+        NativeReadContext context,
         DatatypeMessage datatype,
         Span<byte> data)
     {
@@ -19,7 +19,7 @@ internal static partial class ReadUtils
     }
 
     public static Memory<string> ReadString(
-        NativeContext context,
+        NativeReadContext context,
         DatatypeMessage datatype,
         Span<byte> source,
         Memory<string> destination)

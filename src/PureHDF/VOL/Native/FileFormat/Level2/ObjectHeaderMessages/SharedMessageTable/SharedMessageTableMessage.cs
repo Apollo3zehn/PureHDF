@@ -38,7 +38,7 @@ internal record class SharedMessageTableMessage(
         }
     }
 
-    public static SharedMessageTableMessage Decode(NativeContext context)
+    public static SharedMessageTableMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

@@ -25,7 +25,7 @@ internal record class DataLayoutMessage12(
         }
     }
 
-    public static DataLayoutMessage12 Decode(NativeContext context, byte version)
+    public static DataLayoutMessage12 Decode(NativeReadContext context, byte version)
     {
         /* H5Olayout.c (H5O__layout_decode) */
 

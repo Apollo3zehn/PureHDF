@@ -121,7 +121,7 @@ namespace PureHDF.Tests.Reading
                 LengthsSize  = 8
             };
 
-            var context = new NativeContext(driver, superblock);
+            var context = new NativeReadContext(driver, superblock);
 
             // Act
             var layout = DataLayoutMessage12.Decode(context, version: 1);

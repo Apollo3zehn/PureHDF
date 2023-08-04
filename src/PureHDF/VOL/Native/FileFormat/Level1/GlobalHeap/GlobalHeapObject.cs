@@ -6,7 +6,7 @@ internal readonly record struct GlobalHeapObject(
     byte[] ObjectData
 )
 {
-    public static GlobalHeapObject Decode(NativeContext context)
+    public static GlobalHeapObject Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

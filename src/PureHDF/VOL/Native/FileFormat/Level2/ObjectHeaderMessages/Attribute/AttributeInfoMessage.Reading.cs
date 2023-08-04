@@ -3,7 +3,7 @@
 namespace PureHDF.VOL.Native;
 
 internal partial record class AttributeInfoMessage(
-    NativeContext Context,
+    NativeReadContext Context,
     CreationOrderFlags Flags,
     ushort MaximumCreationIndex,
     ulong FractalHeapAddress,
@@ -73,7 +73,7 @@ internal partial record class AttributeInfoMessage(
         }
     }
 
-    public static AttributeInfoMessage Decode(NativeContext context)
+    public static AttributeInfoMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

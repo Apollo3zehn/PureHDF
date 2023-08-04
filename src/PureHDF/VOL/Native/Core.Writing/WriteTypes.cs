@@ -13,16 +13,6 @@ internal record GlobalHeapCollectionState(
     public int Consumed { get; set; }
 };
 
-internal record WriteContext(
-    H5File File,
-    H5DriverBase Driver,
-    FreeSpaceManager FreeSpaceManager,
-    GlobalHeapManager GlobalHeapManager,
-    H5SerializerOptions SerializerOptions,
-    Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
-    Dictionary<object, ulong> ObjectToAddressMap
-);
-
 [StructLayout(LayoutKind.Explicit, Size = 12)]
 internal record struct WritingGlobalHeapId(
     [field: FieldOffset(0)] ulong Address, 

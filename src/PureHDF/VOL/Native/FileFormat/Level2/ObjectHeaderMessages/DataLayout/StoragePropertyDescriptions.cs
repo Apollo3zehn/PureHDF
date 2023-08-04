@@ -50,7 +50,7 @@ internal record class ContiguousStoragePropertyDescription(
     ulong Size
 ) : StoragePropertyDescription(Address)
 {
-    public static ContiguousStoragePropertyDescription Decode(NativeContext context)
+    public static ContiguousStoragePropertyDescription Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -90,7 +90,7 @@ internal record class ChunkedStoragePropertyDescription3(
     uint[] DimensionSizes
 ) : ChunkedStoragePropertyDescription(Address, Rank)
 {
-    public static ChunkedStoragePropertyDescription3 Decode(NativeContext context)
+    public static ChunkedStoragePropertyDescription3 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -134,7 +134,7 @@ internal record class ChunkedStoragePropertyDescription4(
     IndexingInformation IndexingTypeInformation
 ) : ChunkedStoragePropertyDescription(Address, Rank)
 {
-    public static ChunkedStoragePropertyDescription4 Decode(NativeContext context)
+    public static ChunkedStoragePropertyDescription4 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
@@ -240,7 +240,7 @@ internal record class VirtualStoragePropertyDescription(
     uint Index
 ) : StoragePropertyDescription(Address)
 {
-    public static VirtualStoragePropertyDescription Decode(NativeContext context)
+    public static VirtualStoragePropertyDescription Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

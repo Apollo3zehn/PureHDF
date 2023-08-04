@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Reflection;
 
 namespace PureHDF;
@@ -18,7 +17,7 @@ internal static class H5Writer
 
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
-        var writeContext = new WriteContext(
+        var writeContext = new NativeWriteContext(
             File: file,
             Driver: driver,
             FreeSpaceManager: freeSpaceManager,
@@ -56,7 +55,7 @@ internal static class H5Writer
     }
 
     private static ulong EncodeGroup(
-        WriteContext context,
+        NativeWriteContext context,
         H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
@@ -175,7 +174,7 @@ internal static class H5Writer
     }
 
     private static ulong EncodeDataset(
-        WriteContext context,
+        NativeWriteContext context,
         object dataset)
     {
         if (dataset is not H5Dataset h5Dataset)
@@ -190,7 +189,7 @@ internal static class H5Writer
     }
 
     private static ulong InternalEncodeDataset<T, TElement>(
-        WriteContext context,
+        NativeWriteContext context,
         H5Dataset dataset,
         T data,
         bool isScalar)
@@ -293,8 +292,30 @@ internal static class H5Writer
 
         // encode data
 
+        /* dataset info */
+        var datasetInfo = new DatasetInfo(
+            Space: dataspace,
+            Type: datatype,
+            Layout: dataLayout,
+            FillValue: fillValueMessage,
+            FilterPipeline: default,
+            ExternalFileList: default
+        );
+
         /* buffer provider */
-        var h5d = new H5DWrite(context, dataset, dataLayout);
+        using H5D_Base h5d = dataLayout.LayoutClass switch
+        {
+            LayoutClass.Compact => new H5D_Compact(default!, context, datasetInfo, dataset.DatasetAccess),
+            LayoutClass.Contiguous => new H5D_Contiguous(default!, context, datasetInfo, dataset.DatasetAccess),
+            LayoutClass.Chunked => H5D_Chunk.Create(default!, context, datasetInfo, dataset.DatasetAccess),
+
+            /* default */
+            _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
+        };
+
+        h5d.Initialize();
+
+        /* buffer provider */
         var reader = default(SyncReader);
 
         Task<IH5WriteStream> getTargetStreamAsync(ulong[] indices) => h5d.GetWriteStreamAsync(reader, indices);

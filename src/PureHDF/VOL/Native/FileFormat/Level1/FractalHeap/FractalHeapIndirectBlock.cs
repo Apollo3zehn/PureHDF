@@ -3,7 +3,7 @@
 namespace PureHDF.VOL.Native;
 
 internal record class FractalHeapIndirectBlock(
-    NativeContext Context,
+    NativeReadContext Context,
     ulong HeapHeaderAddress,
     ulong BlockOffset,
     FractalHeapEntry[] Entries,
@@ -47,7 +47,7 @@ internal record class FractalHeapIndirectBlock(
     }
 
         public static FractalHeapIndirectBlock Decode(
-        NativeContext context, 
+        NativeReadContext context, 
         FractalHeapHeader header, 
         uint rowCount)
     {

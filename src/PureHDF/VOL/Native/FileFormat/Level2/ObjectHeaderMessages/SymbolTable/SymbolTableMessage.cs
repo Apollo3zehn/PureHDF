@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal record class SymbolTableMessage(
-    NativeContext Context,
+    NativeReadContext Context,
     ulong BTree1Address,
     ulong LocalHeapAddress
 ) : Message
@@ -9,7 +9,7 @@ internal record class SymbolTableMessage(
     private LocalHeap _localHeap;
     private BTree1Node<BTree1GroupKey> _bTree1;
 
-    public static SymbolTableMessage Decode(NativeContext context)
+    public static SymbolTableMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

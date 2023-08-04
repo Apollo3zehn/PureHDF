@@ -3,7 +3,7 @@
 internal partial record class DataLayoutMessage4
 {
     public static DataLayoutMessage4 Create<T>(
-        WriteContext context,
+        NativeWriteContext context,
         EncodeDelegate<T> encode,
         ulong dataEncodeSize,
         Memory<T> data,

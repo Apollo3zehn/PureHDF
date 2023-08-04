@@ -7,7 +7,7 @@ internal readonly record struct SymbolTableEntry(
     ScratchPad? ScratchPad
 )
 {
-    public static SymbolTableEntry Decode(NativeContext context)
+    public static SymbolTableEntry Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

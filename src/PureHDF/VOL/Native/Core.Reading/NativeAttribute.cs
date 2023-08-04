@@ -9,13 +9,13 @@ internal class NativeAttribute : IH5Attribute
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
-    private readonly NativeContext _context;
+    private readonly NativeReadContext _context;
 
     #endregion
 
     #region Constructors
 
-    internal NativeAttribute(NativeContext context, AttributeMessage message)
+    internal NativeAttribute(NativeReadContext context, AttributeMessage message)
     {
         _context = context;
         Message = message;

@@ -9,7 +9,7 @@ internal record class SharedMessage(
 {
     private byte _version;
 
-    public static SharedMessage Decode(NativeContext context)
+    public static SharedMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

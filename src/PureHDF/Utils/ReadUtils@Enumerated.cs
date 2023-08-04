@@ -2,7 +2,7 @@ namespace PureHDF;
 
 internal static partial class ReadUtils
 {
-    private static Array? ReadEnumerated(NativeContext context, DatatypeMessage type, Span<byte> slicedData)
+    private static Array? ReadEnumerated(NativeReadContext context, DatatypeMessage type, Span<byte> slicedData)
     {
         if (type.Class != DatatypeMessageClass.Enumerated)
             throw new Exception($"This method can only be used for data type class '{DatatypeMessageClass.Enumerated}'.");

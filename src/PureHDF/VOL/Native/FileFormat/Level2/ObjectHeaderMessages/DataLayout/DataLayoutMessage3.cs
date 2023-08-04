@@ -23,7 +23,7 @@ internal record class DataLayoutMessage3(
         }
     }
 
-    internal static DataLayoutMessage3 Decode(NativeContext context, byte version)
+    internal static DataLayoutMessage3 Decode(NativeReadContext context, byte version)
     {
         var (driver, _) = context;
 

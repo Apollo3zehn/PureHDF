@@ -42,7 +42,7 @@ internal record class ExtensibleArrayHeader(
         }
     }
 
-    public static ExtensibleArrayHeader Decode(NativeContext context)
+    public static ExtensibleArrayHeader Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

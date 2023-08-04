@@ -15,7 +15,7 @@ internal record class ObjectHeaderSharedMessageRecord(
     ulong ObjectHeaderAddress
 ) : SharedMessageRecord(MessageLocation)
 {
-    public static ObjectHeaderSharedMessageRecord Decode(NativeContext context)
+    public static ObjectHeaderSharedMessageRecord Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

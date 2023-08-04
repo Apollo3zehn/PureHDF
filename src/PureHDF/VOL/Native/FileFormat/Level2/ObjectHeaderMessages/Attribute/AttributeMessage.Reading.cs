@@ -26,7 +26,7 @@ internal partial record class AttributeMessage(
         }
     }
 
-    public static AttributeMessage Decode(NativeContext context, ulong objectHeaderAddress)
+    public static AttributeMessage Decode(NativeReadContext context, ulong objectHeaderAddress)
     {
         // version
         var version = context.Driver.ReadByte();

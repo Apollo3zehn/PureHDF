@@ -32,7 +32,7 @@ internal record class ExtensibleArraySecondaryBlock(
         }
     }
 
-    public static ExtensibleArraySecondaryBlock Decode(NativeContext context, ExtensibleArrayHeader header, uint index)
+    public static ExtensibleArraySecondaryBlock Decode(NativeReadContext context, ExtensibleArrayHeader header, uint index)
     {
         var (driver, superblock) = context;
 

@@ -1,6 +1,6 @@
 ﻿namespace PureHDF;
 
-internal record class NativeContext(
+internal record class NativeReadContext(
     H5DriverBase Driver,
     Superblock Superblock
 )

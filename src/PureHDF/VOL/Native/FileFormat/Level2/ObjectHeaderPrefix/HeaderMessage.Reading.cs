@@ -43,7 +43,7 @@ internal readonly partial record struct HeaderMessage(
     }
 
     internal static HeaderMessage Decode(
-        NativeContext context, 
+        NativeReadContext context, 
         byte version,
         ulong objectHeaderAddress, 
         bool withCreationOrder = false)

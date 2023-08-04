@@ -6,7 +6,7 @@ namespace PureHDF.VOL.Native;
 // public byte[] ObjectData { get; set; }
 
 internal record class FractalHeapDirectBlock(
-    NativeContext Context,
+    NativeReadContext Context,
     ulong HeapHeaderAddress,
     ulong BlockOffset,
     ulong HeaderSize
@@ -46,7 +46,7 @@ internal record class FractalHeapDirectBlock(
         }
     }
 
-    public static FractalHeapDirectBlock Decode(NativeContext context, FractalHeapHeader header)
+    public static FractalHeapDirectBlock Decode(NativeReadContext context, FractalHeapHeader header)
     {
         var (driver, superblock) = context;
 

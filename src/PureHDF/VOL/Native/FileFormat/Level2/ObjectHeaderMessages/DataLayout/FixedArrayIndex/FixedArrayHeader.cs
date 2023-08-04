@@ -30,7 +30,7 @@ internal record class FixedArrayHeader(
         }
     }
 
-    public static FixedArrayHeader Decode(NativeContext context)
+    public static FixedArrayHeader Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

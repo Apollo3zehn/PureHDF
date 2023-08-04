@@ -3,7 +3,7 @@
 namespace PureHDF.VOL.Native;
 
 internal partial record class LinkInfoMessage(
-    NativeContext Context,
+    NativeReadContext Context,
     CreationOrderFlags Flags,
     ulong MaximumCreationIndex,
     ulong FractalHeapAddress,
@@ -73,7 +73,7 @@ internal partial record class LinkInfoMessage(
         }
     }
 
-    public static LinkInfoMessage Decode(NativeContext context)
+    public static LinkInfoMessage Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

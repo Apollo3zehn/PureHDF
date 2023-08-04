@@ -44,7 +44,7 @@ internal record struct LocalHeap(
         }
     }
 
-    public static LocalHeap Decode(NativeContext context)
+    public static LocalHeap Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 

@@ -8,13 +8,13 @@ public abstract class NativeAttributableObject : NativeObject, IH5AttributableOb
 {
     #region Constructors
 
-    internal NativeAttributableObject(NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeAttributableObject(NativeReadContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         //
     }
 
-    internal NativeAttributableObject(NativeContext context, NativeNamedReference reference)
+    internal NativeAttributableObject(NativeReadContext context, NativeNamedReference reference)
         : base(context, reference)
     {
         //

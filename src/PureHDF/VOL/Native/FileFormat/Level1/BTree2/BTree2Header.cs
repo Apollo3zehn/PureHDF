@@ -4,7 +4,7 @@ namespace PureHDF.VOL.Native;
 
 // TODO should this be a class? Benchmark required
 internal record class BTree2Header<T>(
-    NativeContext Context,
+    NativeReadContext Context,
     Func<T> DecodeKey,
     BTree2Type Type,
     ushort Depth,
@@ -16,7 +16,7 @@ internal record class BTree2Header<T>(
     private byte _version;
 
     public static BTree2Header<T> Decode(
-        NativeContext context,
+        NativeReadContext context,
         Func<T> decodeKey
     )
     {

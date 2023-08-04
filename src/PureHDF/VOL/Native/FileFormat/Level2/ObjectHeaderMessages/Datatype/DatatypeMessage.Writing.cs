@@ -27,7 +27,7 @@ internal partial record class DatatypeMessage : Message
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
     public static (DatatypeMessage, EncodeDelegate<T>) Create<T>(
-        WriteContext context,
+        NativeWriteContext context,
         Memory<T> topLevelData,
         bool isScalar
     )
@@ -79,7 +79,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForScalar_SpecialEncode<T>(
-        WriteContext context,
+        NativeWriteContext context,
         int stringLength = default)
     {
         var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength);
@@ -91,7 +91,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForScalar(
-        WriteContext context,
+        NativeWriteContext context,
         Type type,
         int stringLength = default)
     {
@@ -196,7 +196,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForBool(
-        WriteContext context)
+        NativeWriteContext context)
     {
         var (baseMessage, _) = GetTypeInfoForScalar(context, typeof(byte));
 
@@ -214,7 +214,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForEnum(
-        WriteContext context,
+        NativeWriteContext context,
         Type type)
     {
         var underlyingType = Enum.GetUnderlyingType(type);
@@ -267,7 +267,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForValueType(
-        WriteContext context,
+        NativeWriteContext context,
         Type type)
     {
         var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
@@ -319,7 +319,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForReferenceLikeType(
-        WriteContext context,
+        NativeWriteContext context,
         Type type)
     {
         CompoundBitFieldDescription bitfield;
@@ -460,7 +460,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForVariableLengthSequence(
-        WriteContext context,
+        NativeWriteContext context,
         Type baseType)
     {
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, baseType);
@@ -526,7 +526,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForVariableLengthString(
-        WriteContext context)
+        NativeWriteContext context)
     {
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, typeof(byte));
 
@@ -584,7 +584,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForFixedLengthString(
-        WriteContext context, int length)
+        NativeWriteContext context, int length)
     {
         var message = new DatatypeMessage(
 
@@ -845,7 +845,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelDictionary<T>(
-        WriteContext context,
+        NativeWriteContext context,
         IDictionary topLevelData)
     {
         var elementType = topLevelData.GetType().GenericTypeArguments[1];
@@ -900,7 +900,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelMemory<T>(
-        WriteContext context)
+        NativeWriteContext context)
     {
         var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T));
 
@@ -918,7 +918,7 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelUnmanagedMemory<T>(
-        WriteContext context) where T : struct
+        NativeWriteContext context) where T : struct
     {
         var (message, _) = GetTypeInfoForScalar(context, typeof(T));
 

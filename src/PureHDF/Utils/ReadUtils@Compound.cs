@@ -7,7 +7,7 @@ namespace PureHDF;
 internal static partial class ReadUtils
 {
     public static unsafe Memory<T> ReadCompound<T>(
-        NativeContext context,
+        NativeReadContext context,
         DatatypeMessage datatype,
         Span<byte> data,
         Memory<T> destination,
@@ -120,7 +120,7 @@ internal static partial class ReadUtils
     }
 
     public static Dictionary<string, object?>[] ReadCompound(
-        NativeContext context,
+        NativeReadContext context,
         DatatypeMessage datatype,
         Span<byte> data)
     {
@@ -134,7 +134,7 @@ internal static partial class ReadUtils
     }
 
     public static unsafe Memory<Dictionary<string, object?>> ReadCompound(
-        NativeContext context,
+        NativeReadContext context,
         DatatypeMessage datatype,
         Span<byte> data,
         Memory<Dictionary<string, object?>> destination)

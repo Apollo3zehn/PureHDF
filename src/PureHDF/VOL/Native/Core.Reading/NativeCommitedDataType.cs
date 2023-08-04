@@ -4,7 +4,7 @@ internal class NativeCommitedDatatype : NativeAttributableObject, IH5CommitedDat
 {
     #region Constructors
 
-    internal NativeCommitedDatatype(NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeCommitedDatatype(NativeReadContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
         Datatype = header.GetMessage<DatatypeMessage>();

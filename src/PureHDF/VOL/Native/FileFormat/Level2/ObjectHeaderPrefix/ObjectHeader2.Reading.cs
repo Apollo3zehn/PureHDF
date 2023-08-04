@@ -33,7 +33,7 @@ internal partial record class ObjectHeader2(
         }
     }
 
-    internal static ObjectHeader2 Decode(NativeContext context, byte version)
+    internal static ObjectHeader2 Decode(NativeReadContext context, byte version)
     {
         var driver = context.Driver;
 

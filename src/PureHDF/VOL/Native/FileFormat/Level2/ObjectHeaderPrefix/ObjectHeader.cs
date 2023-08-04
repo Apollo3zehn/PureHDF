@@ -32,7 +32,7 @@ internal abstract record class ObjectHeader(
             .Cast<T>();
     }
 
-    internal static ObjectHeader Construct(NativeContext context)
+    internal static ObjectHeader Construct(NativeReadContext context)
     {
         // get version
         var version = context.Driver.ReadByte();
@@ -54,7 +54,7 @@ internal abstract record class ObjectHeader(
     }
 
     private protected static List<HeaderMessage> ReadHeaderMessages(
-        NativeContext context,
+        NativeReadContext context,
         ulong objectHeaderAddress,
         ulong objectHeaderSize,
         byte version,
