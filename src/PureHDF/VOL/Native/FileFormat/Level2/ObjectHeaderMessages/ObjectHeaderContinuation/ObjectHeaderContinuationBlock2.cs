@@ -21,7 +21,7 @@ internal record class ObjectHeaderContinuationBlock2(
 
         // signature
         var signature = context.Driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, Signature);
+        MathUtils.ValidateSignature(signature, Signature);
 
         // TODO: H5OCache.c (L. 1595)  /* Gaps should only occur in chunks with no null messages */
         // TODO: read gap and checksum

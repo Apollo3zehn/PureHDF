@@ -22,18 +22,13 @@ internal abstract class H5D_Chunk : H5D_Base
 
     #region Constructors
 
-    public H5D_Chunk(NativeDataset dataset, H5DatasetAccess datasetAccess) :
-       base(dataset, datasetAccess)
+    public H5D_Chunk(NativeContext context, DatasetInfo dataset, H5DatasetAccess datasetAccess):
+       base(context, dataset, datasetAccess)
     {
         // H5Dchunk.c (H5D__chunk_set_info_real)
 
-        var chunkCacheFactory = datasetAccess.ChunkCacheFactory;
-
-        chunkCacheFactory ??= Dataset.File.ChunkCacheFactory;
-
-        _chunkCache = chunkCacheFactory();
-
-        _indexAddressIsUndefined = dataset.Context.Superblock.IsUndefinedAddress(dataset.DataLayoutMessage.Address);
+        _chunkCache = datasetAccess.ChunkCache ?? context.File.ChunkCacheFactory();
+        _indexAddressIsUndefined = context.Superblock.IsUndefinedAddress(dataset.Layout.Address);
     }
 
     #endregion
@@ -70,36 +65,36 @@ internal abstract class H5D_Chunk : H5D_Base
 
     #region Methods
 
-    public static H5D_Chunk Create(NativeDataset dataset, H5DatasetAccess datasetAccess)
+    public static H5D_Chunk Create(NativeContext context, DatasetInfo dataset, H5DatasetAccess datasetAccess)
     {
-        return dataset.DataLayoutMessage switch
+        return dataset.Layout switch
         {
-            DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(dataset, layout12, datasetAccess),
+            DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(context, dataset, layout12, datasetAccess),
 
             DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).IndexingTypeInformation switch
             {
                 // the current, maximum, and chunk dimension sizes are all the same
-                SingleChunkIndexingInformation => new H5Dataset_Chunk_Single_Chunk4(dataset, layout4, datasetAccess),
+                SingleChunkIndexingInformation => new H5Dataset_Chunk_Single_Chunk4(context, dataset, layout4, datasetAccess),
 
                 // fixed maximum dimension sizes
                 // no filter applied to the dataset
                 // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
-                ImplicitIndexingInformation => new H5D_Chunk4_Implicit(dataset, layout4, datasetAccess),
+                ImplicitIndexingInformation => new H5D_Chunk4_Implicit(context, dataset, layout4, datasetAccess),
 
                 // fixed maximum dimension sizes
-                FixedArrayIndexingInformation => new H5D_Chunk4_FixedArray(dataset, layout4, datasetAccess),
+                FixedArrayIndexingInformation => new H5D_Chunk4_FixedArray(context, dataset, layout4, datasetAccess),
 
                 // only one dimension of unlimited extent
-                ExtensibleArrayIndexingInformation => new H5D_Chunk4_ExtensibleArray(dataset, layout4, datasetAccess),
+                ExtensibleArrayIndexingInformation => new H5D_Chunk4_ExtensibleArray(context, dataset, layout4, datasetAccess),
 
                 // more than one dimension of unlimited extent
-                BTree2IndexingInformation => new H5D_Chunk4_BTree2(dataset, layout4, datasetAccess),
+                BTree2IndexingInformation => new H5D_Chunk4_BTree2(context, dataset, layout4, datasetAccess),
                 _ => throw new Exception("Unknown chunk indexing type.")
             },
 
-            DataLayoutMessage3 layout3 => new H5D_Chunk123_BTree1(dataset, layout3, datasetAccess),
+            DataLayoutMessage3 layout3 => new H5D_Chunk123_BTree1(context, dataset, layout3, datasetAccess),
 
-            _ => throw new Exception($"Data layout message type '{dataset.DataLayoutMessage.GetType().Name}' is not supported.")
+            _ => throw new Exception($"Data layout message type '{dataset.Layout.GetType().Name}' is not supported.")
         };
     }
 
@@ -110,9 +105,9 @@ internal abstract class H5D_Chunk : H5D_Base
         RawChunkDims = GetRawChunkDims();
         ChunkDims = RawChunkDims[..^1].ToArray();
         ChunkRank = (byte)ChunkDims.Length;
-        ChunkByteSize = Utils.CalculateSize(ChunkDims) * Dataset.DataTypeMessage.Size;
-        Dims = Dataset.DataspaceMessage.DimensionSizes;
-        MaxDims = Dataset.DataspaceMessage.DimensionMaxSizes;
+        ChunkByteSize = MathUtils.CalculateSize(ChunkDims) * Dataset.Type.Size;
+        Dims = Dataset.Space.DimensionSizes;
+        MaxDims = Dataset.Space.DimensionMaxSizes;
         TotalChunkCount = 1;
         TotalMaxChunkCount = 1;
 
@@ -121,13 +116,13 @@ internal abstract class H5D_Chunk : H5D_Base
 
         for (int i = 0; i < ChunkRank; i++)
         {
-            ScaledDims[i] = Utils.CeilDiv(Dims[i], ChunkDims[i]);
+            ScaledDims[i] = MathUtils.CeilDiv(Dims[i], ChunkDims[i]);
 
             if (MaxDims[i] == H5Constants.Unlimited)
                 ScaledMaxDims[i] = H5Constants.Unlimited;
 
             else
-                ScaledMaxDims[i] = Utils.CeilDiv(MaxDims[i], ChunkDims[i]);
+                ScaledMaxDims[i] = MathUtils.CeilDiv(MaxDims[i], ChunkDims[i]);
 
             TotalChunkCount *= ScaledDims[i];
 
@@ -170,17 +165,17 @@ internal abstract class H5D_Chunk : H5D_Base
         // TODO: This way, fill values will become part of the cache
         if (_indexAddressIsUndefined)
         {
-            if (Dataset.FillValueMessage.Value is not null)
-                buffer.AsSpan().Fill(Dataset.FillValueMessage.Value);
+            if (Dataset.FillValue.Value is not null)
+                buffer.AsSpan().Fill(Dataset.FillValue.Value);
         }
         else
         {
             var chunkInfo = GetChunkInfo(chunkIndices);
 
-            if (Dataset.Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
+            if (Context.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
-                if (Dataset.FillValueMessage.Value is not null)
-                    buffer.AsSpan().Fill(Dataset.FillValueMessage.Value);
+                if (Dataset.FillValue.Value is not null)
+                    buffer.AsSpan().Fill(Dataset.FillValue.Value);
             }
 
             else
@@ -199,17 +194,17 @@ internal abstract class H5D_Chunk : H5D_Base
         ulong rawChunkSize,
         uint filterMask) where TReader : IReader
     {
-        if (Dataset.InternalFilterPipeline is null)
+        if (Dataset.FilterPipeline is null)
         {
-            await reader.ReadDatasetAsync(Dataset.Context.Driver, buffer, offset).ConfigureAwait(false);
+            await reader.ReadDatasetAsync(Context.Driver, buffer, offset).ConfigureAwait(false);
         }
         else
         {
             using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
             var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-            await reader.ReadDatasetAsync(Dataset.Context.Driver, filterBuffer, offset).ConfigureAwait(false);
+            await reader.ReadDatasetAsync(Context.Driver, filterBuffer, offset).ConfigureAwait(false);
 
-            H5Filter.ExecutePipeline(Dataset.InternalFilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
+            H5Filter.ExecutePipeline(Dataset.FilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
         }
     }
 

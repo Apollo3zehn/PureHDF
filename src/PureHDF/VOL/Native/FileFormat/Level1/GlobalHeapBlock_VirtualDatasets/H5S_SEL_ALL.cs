@@ -39,7 +39,7 @@ internal record class H5S_SEL_ALL(
 
     public override LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates)
     {
-        var linearIndex = Utils.ToLinearIndex(coordinates, sourceDimensions);
+        var linearIndex = MathUtils.ToLinearIndex(coordinates, sourceDimensions);
         var maxCount = sourceDimensions[^1] - coordinates[^1];
 
         return new LinearIndexResult(
@@ -50,7 +50,7 @@ internal record class H5S_SEL_ALL(
 
     public override CoordinatesResult ToCoordinates(ulong[] sourceDimensions, ulong linearIndex)
     {
-        var coordinates = Utils.ToCoordinates(linearIndex, sourceDimensions);
+        var coordinates = MathUtils.ToCoordinates(linearIndex, sourceDimensions);
         var maxCount = sourceDimensions[^1] - coordinates[^1];
 
         // TODO theoretically this can fail

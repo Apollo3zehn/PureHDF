@@ -2,40 +2,40 @@
 
 internal class SymbolicLink
 {
+    #region Fields
+
+    private readonly string _name;
+    private readonly string _value;
+    private readonly string? _objectPath;
+    private readonly NativeFile _file;
+    private readonly NativeGroup _parent;
+
+    #endregion
+
     #region Constructors
 
-    public SymbolicLink(string name, string linkValue, NativeGroup parent)
+    public SymbolicLink(string name, string linkValue, NativeGroup parent, NativeFile file)
     {
-        Name = name;
-        Value = linkValue;
-        Parent = parent;
+        _name = name;
+        _value = linkValue;
+        _parent = parent;
+        _file = file;
     }
 
-    public SymbolicLink(LinkMessage linkMessage, NativeGroup parent)
+    public SymbolicLink(LinkMessage linkMessage, NativeGroup parent, NativeFile file)
     {
-        Name = linkMessage.LinkName;
+        _name = linkMessage.LinkName;
 
-        (Value, ObjectPath) = linkMessage.LinkInfo switch
+        (_value, _objectPath) = linkMessage.LinkInfo switch
         {
             SoftLinkInfo softLink => (softLink.Value, null),
             ExternalLinkInfo externalLink => (externalLink.FilePath, externalLink.FullObjectPath),
             _ => throw new Exception($"The link info type '{linkMessage.LinkInfo.GetType().Name}' is not supported.")
         };
 
-        Parent = parent;
+        _parent = parent;
+        _file = file;
     }
-
-    #endregion
-
-    #region Properties
-
-    public string Name { get; }
-
-    public string Value { get; }
-
-    public string? ObjectPath { get; }
-
-    public NativeGroup Parent { get; }
 
     #endregion
 
@@ -44,17 +44,17 @@ internal class SymbolicLink
     public NativeNamedReference GetTarget(H5LinkAccess linkAccess, bool useAsync)
     {
         // this file
-        if (string.IsNullOrWhiteSpace(ObjectPath))
+        if (string.IsNullOrWhiteSpace(_objectPath))
         {
             try
             {
-                var reference = Parent.InternalGet(Value, linkAccess);
-                reference.Name = Name;
+                var reference = _parent.InternalGet(_value, linkAccess);
+                reference.Name = _name;
                 return reference;
             }
             catch (Exception ex)
             {
-                return new NativeNamedReference(Name, Superblock.UndefinedAddress)
+                return new NativeNamedReference(_name, Superblock.UndefinedAddress)
                 {
                     Exception = ex
                 };
@@ -66,21 +66,21 @@ internal class SymbolicLink
         {
             try
             {
-                var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(Parent.File.FolderPath, Value, linkAccess) 
-                    ?? throw new Exception($"Could not find file {Value}.");
+                var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(_file.FolderPath, _value, linkAccess) 
+                    ?? throw new Exception($"Could not find file {_value}.");
 
                 var externalFile = NativeCache
-                    .GetNativeFile(Parent.Context.Driver, absoluteFilePath, useAsync: useAsync);
+                    .GetNativeFile(_parent.Context.Driver, absoluteFilePath, useAsync: useAsync);
 
 #if NETSTANDARD2_0
-                    return externalFile.InternalGet(ObjectPath!, linkAccess);
+                return externalFile.InternalGet(_objectPath!, linkAccess);
 #else
-                return externalFile.InternalGet(ObjectPath, linkAccess);
+                return externalFile.InternalGet(_objectPath, linkAccess);
 #endif
             }
             catch (Exception ex)
             {
-                return new NativeNamedReference(Name, Superblock.UndefinedAddress)
+                return new NativeNamedReference(_name, Superblock.UndefinedAddress)
                 {
                     Exception = ex
                 };

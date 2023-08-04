@@ -25,7 +25,7 @@ internal abstract record class FractalHeapId(
         // offset and length Size (for managed objects fractal heap id)
         var offsetSize = (ulong)Math.Ceiling(header.MaximumHeapSize / 8.0);
         // TODO: Is -1 correct?
-        var lengthSize = Utils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
+        var lengthSize = MathUtils.FindMinByteCount(header.MaximumDirectBlockSize - 1);
 
         // H5HF.c (H5HF_op)
         return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength, header.TinyObjectsAreExtended) switch

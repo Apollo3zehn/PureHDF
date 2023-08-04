@@ -2,13 +2,19 @@ namespace PureHDF;
 
 internal class H5DWrite
 {
-    private readonly H5DriverBase _driver;
+    private readonly WriteContext _context;
     private readonly DataLayoutMessage4 _layout;
+    private readonly H5Dataset _dataset;
+    private readonly IChunkCache? _chunkCache;
 
-    public H5DWrite(H5DriverBase driver, DataLayoutMessage4 layout)
+    public H5DWrite(WriteContext context, H5Dataset dataset, DataLayoutMessage4 layout)
     {
-        _driver = driver;
+        _context = context;
         _layout = layout;
+        _dataset = dataset;
+
+        if (dataset.ChunkDimensions is not null)
+            _chunkCache = dataset.DatasetAccess.ChunkCache ?? context.File.ChunkCacheFactory();
     }
 
     public virtual Task<IH5WriteStream> GetWriteStreamAsync<TReader>(
@@ -23,8 +29,8 @@ internal class H5DWrite
 
         else if (_layout.Properties is ContiguousStoragePropertyDescription contiguous)
         {
-            _driver.Seek((long)contiguous.Address, SeekOrigin.Begin);
-            IH5WriteStream target = new OffsetStream(_driver);
+            _context.Driver.Seek((long)contiguous.Address, SeekOrigin.Begin);
+            IH5WriteStream target = new OffsetStream(_context.Driver);
 
             return Task.FromResult(target);
         }
@@ -33,8 +39,24 @@ internal class H5DWrite
         {
             if (chunked.IndexingTypeInformation is ImplicitIndexingInformation @implicit)
             {
-                throw new NotImplementedException();
-                // Seek((long)chunked.Address, SeekOrigin.Begin);
+                // var chunk = _chunkCache!
+                //     .GetChunkAsync(
+                //         chunkIndices, 
+                //         () => 
+                //         {
+                //             var address = chunked.Address + ;
+                //             _context.Driver.Seek(address, SeekOrigin.Begin);
+
+                //             var buffer = ;
+                //             _context.Driver.ReadDataset(buffer);
+                //         }, 
+                //         (writeIndices, writeChunk) => throw new NotImplementedException())
+                //     .ConfigureAwait(false)
+                //     // TODO this is not clean
+                //     .GetAwaiter()
+                //     .GetResult();
+
+                throw new Exception();
             }
 
             else

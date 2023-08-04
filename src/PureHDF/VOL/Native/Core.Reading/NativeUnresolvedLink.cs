@@ -5,7 +5,7 @@ internal class NativeUnresolvedLink : NativeObject, IH5UnresolvedLink
     #region Constructors
 
     internal NativeUnresolvedLink(NativeNamedReference reference)
-        : base(default, reference)
+        : base(default!, reference)
     {
         Reason = reference.Exception;
     }

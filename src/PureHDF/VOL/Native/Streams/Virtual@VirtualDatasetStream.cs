@@ -55,7 +55,7 @@
             {
                 // 1. Linear index to coordinates in virtual dataset
                 var virtualLinearIndex = (ulong)_position;
-                var virtualCoordinates = Utils.ToCoordinates(virtualLinearIndex, _virtualDimensions);
+                var virtualCoordinates = MathUtils.ToCoordinates(virtualLinearIndex, _virtualDimensions);
 
                 // 2. Calculate linear index and max count
                 var virtualResult = default(LinearIndexResult);
@@ -178,10 +178,9 @@
                     if (file.LinkExists(entry.SourceDataset, linkAccess: default /* no link access available */))
                     {
                         var datasetAccess = _datasetAccess;
-                        var chunkCache = new SimpleChunkCache();
 
-                        if (_datasetAccess.ChunkCacheFactory is null)
-                            datasetAccess = _datasetAccess with { ChunkCacheFactory = () => chunkCache };
+                        if (_datasetAccess.ChunkCache is null)
+                            datasetAccess = _datasetAccess with { ChunkCache = new SimpleChunkCache() };
 
                         var dataset = (NativeDataset)file.Dataset(entry.SourceDataset);
 

@@ -19,6 +19,7 @@ internal static class H5Writer
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
         var writeContext = new WriteContext(
+            File: file,
             Driver: driver,
             FreeSpaceManager: freeSpaceManager,
             GlobalHeapManager: globalHeapManager,
@@ -62,7 +63,7 @@ internal static class H5Writer
 
         // link info message
         var linkInfoMessage = new LinkInfoMessage(
-            Context: default,
+            Context: default!,
             Flags: CreationOrderFlags.None,
             MaximumCreationIndex: default,
             FractalHeapAddress: Superblock.UndefinedAddress,
@@ -80,7 +81,7 @@ internal static class H5Writer
         if (group.Attributes.Any())
         {
             var attributeInfoMessage = new AttributeInfoMessage(
-                default,
+                default!,
                 Flags: CreationOrderFlags.None,
                 MaximumCreationIndex: default,
                 FractalHeapAddress: Superblock.UndefinedAddress,
@@ -177,23 +178,21 @@ internal static class H5Writer
         WriteContext context,
         object dataset)
     {
-        var (data, chunkDimensions) = dataset is H5Dataset h5Dataset1
-            ? (h5Dataset1.Data, h5Dataset1.ChunkDimensions)
-            : (dataset, default);
+        if (dataset is not H5Dataset h5Dataset)
+            h5Dataset = new H5Dataset(dataset);
 
-        var (elementType, isScalar) = WriteUtils.GetElementType(data);
+        var (elementType, isScalar) = WriteUtils.GetElementType(h5Dataset.Data);
 
         // TODO cache this
-        var method = _methodInfoEncodeDataset.MakeGenericMethod(data.GetType(), elementType);
+        var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Data.GetType(), elementType);
 
-        return (ulong)method.Invoke(default, new object?[] { context, dataset, data, chunkDimensions, isScalar })!;
+        return (ulong)method.Invoke(default, new object?[] { context, dataset, h5Dataset.Data, isScalar })!;
     }
 
     private static ulong InternalEncodeDataset<T, TElement>(
         WriteContext context,
-        object dataset,
+        H5Dataset dataset,
         T data,
-        uint[]? chunkDimensions,
         bool isScalar)
     {
         var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data!);
@@ -207,6 +206,8 @@ internal static class H5Writer
         var dataspace = dataset is H5Dataset h5Dataset
             ? DataspaceMessage.Create(dataDimensions, h5Dataset.Dimensions)
             : DataspaceMessage.Create(dataDimensions, default);
+
+        var chunkDimensions = dataset.ChunkDimensions;
 
         if (chunkDimensions is not null)
         {
@@ -293,7 +294,7 @@ internal static class H5Writer
         // encode data
 
         /* buffer provider */
-        var h5d = new H5DWrite(context.Driver, dataLayout);
+        var h5d = new H5DWrite(context, dataset, dataLayout);
         var reader = default(SyncReader);
 
         Task<IH5WriteStream> getTargetStreamAsync(ulong[] indices) => h5d.GetWriteStreamAsync(reader, indices);

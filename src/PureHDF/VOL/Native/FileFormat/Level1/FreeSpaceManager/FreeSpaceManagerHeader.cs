@@ -44,7 +44,7 @@ internal record class FreeSpaceManagerHeader(
 
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, FreeSpaceManagerHeader.Signature);
+        MathUtils.ValidateSignature(signature, FreeSpaceManagerHeader.Signature);
 
         // version
         var version = driver.ReadByte();

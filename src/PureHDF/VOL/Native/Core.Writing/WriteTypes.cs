@@ -14,6 +14,7 @@ internal record GlobalHeapCollectionState(
 };
 
 internal record WriteContext(
+    H5File File,
     H5DriverBase Driver,
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,

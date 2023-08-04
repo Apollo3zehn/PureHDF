@@ -4,8 +4,8 @@
     {
         #region Constructors
 
-        public H5D_Compact(NativeDataset dataset, H5DatasetAccess datasetAccess) :
-            base(dataset, datasetAccess)
+        public H5D_Compact(NativeContext context, DatasetInfo dataset, H5DatasetAccess datasetAccess) :
+            base(context, dataset, datasetAccess)
         {
             //
         }
@@ -20,20 +20,20 @@
 
         public override ulong[] GetChunkDims()
         {
-            return Dataset.DataspaceMessage.DimensionSizes;
+            return Dataset.Space.DimensionSizes;
         }
 
         public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             byte[] buffer;
 
-            if (Dataset.DataLayoutMessage is DataLayoutMessage12 layout12)
+            if (Dataset.Layout is DataLayoutMessage12 layout12)
             {
                 // TODO: untested
                 buffer = layout12.CompactData;
             }
 
-            else if (Dataset.DataLayoutMessage is DataLayoutMessage3 layout34)
+            else if (Dataset.Layout is DataLayoutMessage3 layout34)
             {
                 var compact = (CompactStoragePropertyDescription)layout34.Properties;
                 buffer = compact.InputData;
@@ -41,7 +41,7 @@
             
             else
             {
-                throw new Exception($"Data layout message type '{Dataset.DataLayoutMessage.GetType().Name}' is not supported.");
+                throw new Exception($"Data layout message type '{Dataset.Layout.GetType().Name}' is not supported.");
             }
 
             IH5ReadStream stream = new SystemMemoryStream(buffer);

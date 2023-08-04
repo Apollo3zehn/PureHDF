@@ -11,48 +11,22 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 {
     #region Fields
 
-    private readonly NativeFile? _file;
-    
     private readonly ObjectHeaderScratchPad? _scratchPad;
 
     #endregion
 
     #region Constructors
 
-    // Only for NativeFile constructor
-    internal NativeGroup(NativeContext context, NativeNamedReference reference, ObjectHeader header)
-       : base(context, reference, header)
-    {
-        //
-    }
-
-    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference)
+    internal NativeGroup(NativeContext context, NativeNamedReference reference)
        : base(context, reference)
     {
-        _file = file;
         _scratchPad = reference.ScratchPad;
     }
 
-    internal NativeGroup(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeGroup(NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
-        _file = file;
-    }
-
-    #endregion
-
-    #region Properties
-
-    internal NativeFile File
-    {
-        get
-        {
-            if (_file is null)
-                return (NativeFile)this;
-                
-            else
-                return _file;
-        }
+        //
     }
 
     #endregion
@@ -223,7 +197,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
 
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-        var current = isRooted ? File.Reference : Reference;
+        var current = isRooted ? Context.File.Reference : Reference;
 
         for (int i = 0; i < segments.Length; i++)
         {
@@ -242,11 +216,11 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     internal NativeNamedReference InternalGet(string path, H5LinkAccess linkAccess)
     {
         if (path == "/")
-            return File.Reference;
+            return Context.File.Reference;
 
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-        var current = isRooted ? File.Reference : Reference;
+        var current = isRooted ? Context.File.Reference : Reference;
 
         for (int i = 0; i < segments.Length; i++)
         {
@@ -615,15 +589,15 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     {
         return linkMessage.LinkInfo switch
         {
-            HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, File),
-            SoftLinkInfo soft => new SymbolicLink(linkMessage, this)
+            HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, Context.File),
+            SoftLinkInfo soft => new SymbolicLink(linkMessage, this, Context.File)
                 .GetTarget(linkAccess, useAsync: default),
 #if NET6_0_OR_GREATER
-            ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
+            ExternalLinkInfo external => new SymbolicLink(linkMessage, this, Context.File)
                 .GetTarget(linkAccess, useAsync: Context.Driver is H5FileHandleDriver driver && driver.IsAsync),
 #else
-                ExternalLinkInfo external => new SymbolicLink(linkMessage, this)
-                    .GetTarget(linkAccess, useAsync: default),
+            ExternalLinkInfo external => new SymbolicLink(linkMessage, this, Context.File)
+                .GetTarget(linkAccess, useAsync: default),
 #endif
 
             _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
@@ -638,13 +612,20 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     private NativeNamedReference GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
     {
         var name = heap.GetObjectName(entry.LinkNameOffset);
-        var reference = new NativeNamedReference(name, entry.HeaderAddress, File);
+        var reference = new NativeNamedReference(name, entry.HeaderAddress, Context.File);
 
         return entry.ScratchPad switch
         {
             ObjectHeaderScratchPad objectScratch => AddScratchPad(reference, objectScratch),
-            SymbolicLinkScratchPad linkScratch => new SymbolicLink(name, heap.GetObjectName(linkScratch.LinkValueOffset), this).GetTarget(linkAccess, useAsync: default),
+
+            SymbolicLinkScratchPad linkScratch => new SymbolicLink(
+                name, 
+                heap.GetObjectName(linkScratch.LinkValueOffset), 
+                this, 
+                Context.File).GetTarget(linkAccess, useAsync: default),
+
             _ when !Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
+
             _ => throw new Exception("Unknown object type.")
         };
     }

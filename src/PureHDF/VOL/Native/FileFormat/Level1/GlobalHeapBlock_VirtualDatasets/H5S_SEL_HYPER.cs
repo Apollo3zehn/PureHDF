@@ -98,7 +98,7 @@ internal record class H5S_SEL_HYPER(
                 if (success)
                 {
                     var blockLinearStartIndex = irregular.BlockLinearIndices[blockIndex];
-                    var blockLinearIndex = Utils.ToLinearIndex(blockCoordinates, blockDimensions);
+                    var blockLinearIndex = MathUtils.ToLinearIndex(blockCoordinates, blockDimensions);
 
                     linearIndex = blockLinearStartIndex + blockLinearIndex;
                     maxCount = blockDimensions[^1] - blockCoordinates[^1];
@@ -161,7 +161,7 @@ internal record class H5S_SEL_HYPER(
                 }
 
                 compactCoordinates[dimension] = actualCount * block + blockOffset;
-                linearIndex = Utils.ToLinearIndex(compactCoordinates, regular.CompactDimensions);
+                linearIndex = MathUtils.ToLinearIndex(compactCoordinates, regular.CompactDimensions);
                 maxCount = block - blockOffset;
             }
         }
@@ -220,7 +220,7 @@ internal record class H5S_SEL_HYPER(
                     }
 
                     // Compute block coordinates
-                    Utils.ToCoordinates(blockLinearIndex, blockDimensions, blockCoordinates);
+                    MathUtils.ToCoordinates(blockLinearIndex, blockDimensions, blockCoordinates);
 
                     // Compute absolute coordinates
                     for (var dimension = 0; dimension < rank; dimension++)
@@ -242,7 +242,7 @@ internal record class H5S_SEL_HYPER(
         {
             success = true;
 
-            var compactCoordinates = Utils.ToCoordinates(linearIndex, regular.CompactDimensions);
+            var compactCoordinates = MathUtils.ToCoordinates(linearIndex, regular.CompactDimensions);
 
             // find hyperslab parameters which envelops the provided linear index
             for (int dimension = 0; dimension < rank; dimension++)

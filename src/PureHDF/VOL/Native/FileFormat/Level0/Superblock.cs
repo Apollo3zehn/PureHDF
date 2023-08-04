@@ -23,7 +23,7 @@ internal abstract partial record class Superblock(
         }
         set
         {
-            if (!(1 <= value && value <= 8 && Utils.IsPowerOfTwo(value)))
+            if (!(1 <= value && value <= 8 && MathUtils.IsPowerOfTwo(value)))
                 throw new NotSupportedException("Superblock offsets size must be a power of two and in the range of 1..8.");
 
             _offsetsSize = value;
@@ -38,7 +38,7 @@ internal abstract partial record class Superblock(
         }
         set
         {
-            if (!(1 <= value && value <= 8 && Utils.IsPowerOfTwo(value)))
+            if (!(1 <= value && value <= 8 && MathUtils.IsPowerOfTwo(value)))
                 throw new NotSupportedException("Superblock lengths size must be a power of two and in the range of 1..8.");
 
             _lengthsSize = value;

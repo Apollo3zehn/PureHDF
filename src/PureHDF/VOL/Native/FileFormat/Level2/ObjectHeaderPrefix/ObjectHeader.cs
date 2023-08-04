@@ -41,7 +41,7 @@ internal abstract record class ObjectHeader(
         if (version != 1)
         {
             var signature = new byte[] { version }.Concat(context.Driver.ReadBytes(3)).ToArray();
-            Utils.ValidateSignature(signature, ObjectHeader2.Signature);
+            MathUtils.ValidateSignature(signature, ObjectHeader2.Signature);
             version = context.Driver.ReadByte();
         }
 

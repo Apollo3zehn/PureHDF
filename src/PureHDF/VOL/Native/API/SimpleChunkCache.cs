@@ -74,15 +74,19 @@ public class SimpleChunkCache : IChunkCache
     #region Methods
 
     /// <inheritdoc />
-    public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkLoader)
+    public async Task<Memory<byte>> GetChunkAsync(
+        ulong[] indices, 
+        Func<Task<Memory<byte>>> chunkReader, 
+        Func<ulong[], Memory<byte>, Task>? chunkWriter = default)
     {
         if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
         {
             chunkInfo.LastAccess = DateTime.Now;
         }
+
         else
         {
-            var buffer = await chunkLoader().ConfigureAwait(false);
+            var buffer = await chunkReader().ConfigureAwait(false);
             chunkInfo = new ChunkInfo(buffer) { LastAccess = DateTime.Now };
             var chunk = chunkInfo.Chunk;
 
@@ -90,7 +94,7 @@ public class SimpleChunkCache : IChunkCache
             {
                 while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
                 {
-                    Preempt();
+                    await PreemptAsync(chunkWriter);
                 }
 
                 ConsumedBytes += (ulong)chunk.Length;
@@ -101,11 +105,14 @@ public class SimpleChunkCache : IChunkCache
         return chunkInfo.Chunk;
     }
 
-    private void Preempt()
+    private async Task PreemptAsync(Func<ulong[], Memory<byte>, Task>? chunkWriter)
     {
         var entry = _chunkInfoMap
             .OrderBy(current => current.Value.LastAccess)
             .FirstOrDefault();
+
+        if (chunkWriter is not null)
+            await chunkWriter(entry.Key, entry.Value.Chunk);
 
         ConsumedBytes -= (ulong)entry.Value.Chunk.Length;
         _chunkInfoMap.Remove(entry.Key);

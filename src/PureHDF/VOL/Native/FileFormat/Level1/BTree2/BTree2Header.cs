@@ -24,7 +24,7 @@ internal record class BTree2Header<T>(
 
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, BTree2Header<T>.Signature);
+        MathUtils.ValidateSignature(signature, BTree2Header<T>.Signature);
 
         // version
         var version = driver.ReadByte();
@@ -74,7 +74,7 @@ internal record class BTree2Header<T>(
 
         /* Compute size to store # of records in each node */
         /* (uses leaf # of records because its the largest) */
-        var maxRecordCountSize = (byte)Utils.FindMinByteCount(nodeInfos[0].MaxRecordCount);
+        var maxRecordCountSize = (byte)MathUtils.FindMinByteCount(nodeInfos[0].MaxRecordCount);
 
         /* Initialize internal node info */
         if (depth > 0)
@@ -93,7 +93,7 @@ internal record class BTree2Header<T>(
                     SplitRecordCount: maxInternalRecordCount * splitPercent / 100,
                     MergeRecordCount: maxInternalRecordCount * mergePercent / 100,
                     CumulatedTotalRecordCount: cumulatedTotalRecordCount,
-                    CumulatedTotalRecordCountSize: (byte)Utils.FindMinByteCount(cumulatedTotalRecordCount)
+                    CumulatedTotalRecordCountSize: (byte)MathUtils.FindMinByteCount(cumulatedTotalRecordCount)
                 );
             }
         }

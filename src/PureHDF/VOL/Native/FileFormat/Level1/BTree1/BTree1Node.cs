@@ -24,7 +24,7 @@ internal readonly record struct BTree1Node<T>(
         var (driver, superblock) = context;
 
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, BTree1Node<T>.Signature);
+        MathUtils.ValidateSignature(signature, BTree1Node<T>.Signature);
 
         var nodeType = (BTree1NodeType)driver.ReadByte();
         var nodeLevel = driver.ReadByte();

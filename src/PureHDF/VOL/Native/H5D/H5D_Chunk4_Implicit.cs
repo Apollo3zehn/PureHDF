@@ -2,8 +2,8 @@
 {
     internal class H5D_Chunk4_Implicit : H5D_Chunk4
     {
-        public H5D_Chunk4_Implicit(NativeDataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
-            base(dataset, layout, datasetAccess)
+        public H5D_Chunk4_Implicit(NativeContext context, DatasetInfo dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
+            base(context, dataset, layout, datasetAccess)
         {
             //
         }
@@ -13,7 +13,7 @@
             var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
             var chunkOffset = chunkIndex * ChunkByteSize;
 
-            return new ChunkInfo(Dataset.DataLayoutMessage.Address + chunkOffset, ChunkByteSize, 0);
+            return new ChunkInfo(Dataset.Layout.Address + chunkOffset, ChunkByteSize, 0);
         }
     }
 }

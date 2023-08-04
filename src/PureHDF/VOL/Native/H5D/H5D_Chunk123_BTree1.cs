@@ -16,14 +16,14 @@ namespace PureHDF
 
         #region Constructors
 
-        public H5D_Chunk123_BTree1(NativeDataset dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
-            base(dataset, datasetAccess)
+        public H5D_Chunk123_BTree1(NativeContext context, DatasetInfo dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
+            base(context, dataset, datasetAccess)
         {
             _layout12 = layout;
         }
 
-        public H5D_Chunk123_BTree1(NativeDataset dataset, DataLayoutMessage3 layout, H5DatasetAccess datasetAccess) :
-            base(dataset, datasetAccess)
+        public H5D_Chunk123_BTree1(NativeContext context, DatasetInfo dataset, DataLayoutMessage3 layout, H5DatasetAccess datasetAccess) :
+            base(context, dataset, datasetAccess)
         {
             _layout3 = layout;
             _chunked3 = (ChunkedStoragePropertyDescription3)_layout3.Properties;
@@ -56,11 +56,11 @@ namespace PureHDF
             // load B-Tree 1
             if (!_btree1.HasValue)
             {
-                Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
+                Context.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
 
                 BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
-                _btree1 = BTree1Node<BTree1RawDataChunksKey>.Decode(Dataset.Context, decodeKey);
+                _btree1 = BTree1Node<BTree1RawDataChunksKey>.Decode(Context, decodeKey);
             }
 
             // get key and child address
@@ -87,7 +87,7 @@ namespace PureHDF
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
         {
-            return BTree1RawDataChunksKey.Decode(Dataset.Context.Driver, rank, rawChunkDims);
+            return BTree1RawDataChunksKey.Decode(Context.Driver, rank, rawChunkDims);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,10 +115,10 @@ namespace PureHDF
 
             else
             {
-                if (Utils.VectorCompare((byte)(rank + 1), indices, rightKey.ScaledChunkOffsets) >= 0)
+                if (MathUtils.VectorCompare((byte)(rank + 1), indices, rightKey.ScaledChunkOffsets) >= 0)
                     return 1;
 
-                else if (Utils.VectorCompare((byte)(rank + 1), indices, leftKey.ScaledChunkOffsets) < 0)
+                else if (MathUtils.VectorCompare((byte)(rank + 1), indices, leftKey.ScaledChunkOffsets) < 0)
                     return -1;
             }
 

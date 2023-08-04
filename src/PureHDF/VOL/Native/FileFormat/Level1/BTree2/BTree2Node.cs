@@ -17,7 +17,7 @@ internal abstract record class BTree2Node<T>(
     {
         // signature
         var actualSignature = driver.ReadBytes(4);
-        Utils.ValidateSignature(actualSignature, signature);
+        MathUtils.ValidateSignature(actualSignature, signature);
 
         // version
         version = driver.ReadByte();

@@ -22,7 +22,7 @@ internal readonly record struct SharedObjectHeaderMessageTable(
     {
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, Signature);
+        MathUtils.ValidateSignature(signature, Signature);
 
         //
         // TODO: implement this correctly

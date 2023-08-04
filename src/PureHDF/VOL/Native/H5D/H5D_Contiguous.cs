@@ -10,8 +10,8 @@
 
         #region Constructors
 
-        public H5D_Contiguous(NativeDataset dataset, H5DatasetAccess datasetAccess) :
-            base(dataset, datasetAccess)
+        public H5D_Contiguous(NativeContext context, DatasetInfo dataset, H5DatasetAccess datasetAccess) :
+            base(context, dataset, datasetAccess)
         {
             //
         }
@@ -27,23 +27,23 @@
 
         public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
-            var address = Dataset.DataLayoutMessage.Address;
+            var address = Dataset.Layout.Address;
 
             if (_stream is null)
             {
-                if (Dataset.Context.Superblock.IsUndefinedAddress(address))
+                if (Context.Superblock.IsUndefinedAddress(address))
                 {
-                    if (Dataset.InternalExternalFileList is not null)
-                        _stream = new ExternalFileListStream((NativeFile)Dataset.File, Dataset.InternalExternalFileList, DatasetAccess);
+                    if (Dataset.ExternalFileList is not null)
+                        _stream = new ExternalFileListStream(Context.File, Dataset.ExternalFileList, DatasetAccess);
 
                     else
-                        _stream = new UnsafeFillValueStream(Dataset.FillValueMessage.Value ?? new byte[] { 0 });
+                        _stream = new UnsafeFillValueStream(Dataset.FillValue.Value ?? new byte[] { 0 });
                 }
                 else
                 {
-                    Dataset.Context.Driver.Seek((long)address, SeekOrigin.Begin);
+                    Context.Driver.Seek((long)address, SeekOrigin.Begin);
 
-                    _stream = new OffsetStream(Dataset.Context.Driver);
+                    _stream = new OffsetStream(Context.Driver);
                 }
             }
 

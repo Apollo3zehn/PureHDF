@@ -21,26 +21,24 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Constructors
 
-    internal NativeDataset(NativeFile file, NativeContext context, NativeNamedReference reference, ObjectHeader header)
+    internal NativeDataset(NativeContext context, NativeNamedReference reference, ObjectHeader header)
         : base(context, reference, header)
     {
-        File = file;
-
         foreach (var message in Header.HeaderMessages)
         {
             var type = message.Data.GetType();
 
             if (typeof(DataLayoutMessage).IsAssignableFrom(type))
-                DataLayoutMessage = (DataLayoutMessage)message.Data;
+                InternalDataLayout = (DataLayoutMessage)message.Data;
 
             else if (type == typeof(DataspaceMessage))
-                DataspaceMessage = (DataspaceMessage)message.Data;
+                InternalDataspace = (DataspaceMessage)message.Data;
 
             else if (type == typeof(DatatypeMessage))
-                DataTypeMessage = (DatatypeMessage)message.Data;
+                InternalDataType = (DatatypeMessage)message.Data;
 
             else if (type == typeof(FillValueMessage))
-                FillValueMessage = (FillValueMessage)message.Data;
+                InternalFillValue = (FillValueMessage)message.Data;
 
             else if (type == typeof(FilterPipelineMessage))
                 InternalFilterPipeline = (FilterPipelineMessage)message.Data;
@@ -53,34 +51,34 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         }
 
         // check that required fields are set
-        if (DataLayoutMessage is null)
+        if (InternalDataLayout is null)
             throw new Exception("The data layout message is missing.");
 
-        if (DataspaceMessage is null)
+        if (InternalDataspace is null)
             throw new Exception("The dataspace message is missing.");
 
-        if (DataTypeMessage is null)
+        if (InternalDataType is null)
             throw new Exception("The data type message is missing.");
 
-        InternalElementDataType = DataTypeMessage.Properties.FirstOrDefault() switch
+        InternalElementDataType = InternalDataType.Properties.FirstOrDefault() switch
         {
             ArrayPropertyDescription array => array.BaseType,
-            _ => DataTypeMessage
+            _ => InternalDataType
         };
 
         // https://github.com/Apollo3zehn/PureHDF/issues/25
-        if (FillValueMessage is null)
+        if (InternalFillValue is null)
         {
             // The OldFillValueMessage is optional and so there might be no fill value
             // message at all although the newer message is being marked as required. The
             // workaround is to instantiate a new FillValueMessage with sensible defaults.
             // It is not 100% clear if these defaults are fine.
 
-            var allocationTime = DataLayoutMessage.LayoutClass == LayoutClass.Chunked
+            var allocationTime = InternalDataLayout.LayoutClass == LayoutClass.Chunked
                 ? SpaceAllocationTime.Incremental
                 : SpaceAllocationTime.Late;
 
-            FillValueMessage = FillValueMessage.Decode(allocationTime);
+            InternalFillValue = FillValueMessage.Decode(allocationTime);
         }
     }
 
@@ -88,14 +86,12 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Properties
 
-    internal NativeFile File { get; }
-
     /// <inheritdoc />
     public IH5Dataspace Space
     {
         get
         {
-            _space ??= new NativeDataspace(DataspaceMessage);
+            _space ??= new NativeDataspace(InternalDataspace);
 
             return _space;
         }
@@ -106,7 +102,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     {
         get
         {
-            _type ??= new NativeDataType(DataTypeMessage);
+            _type ??= new NativeDataType(InternalDataType);
 
             return _type;
         }
@@ -117,7 +113,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     {
         get
         {
-            _layout ??= new NativeDataLayout(DataLayoutMessage);
+            _layout ??= new NativeDataLayout(InternalDataLayout);
 
             return _layout;
         }
@@ -128,21 +124,21 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     {
         get
         {
-            _fillValue ??= new NativeFillValue(FillValueMessage);
+            _fillValue ??= new NativeFillValue(InternalFillValue);
 
             return _fillValue;
         }
     }
 
-    internal DataLayoutMessage DataLayoutMessage { get; }
+    internal DataLayoutMessage InternalDataLayout { get; }
 
-    internal DataspaceMessage DataspaceMessage { get; }
+    internal DataspaceMessage InternalDataspace { get; }
 
-    internal DatatypeMessage DataTypeMessage { get; }
+    internal DatatypeMessage InternalDataType { get; }
 
     internal DatatypeMessage InternalElementDataType { get; }
 
-    internal FillValueMessage FillValueMessage { get; } = default!;
+    internal FillValueMessage InternalFillValue { get; } = default!;
 
     internal FilterPipelineMessage? InternalFilterPipeline { get; }
 
@@ -742,7 +738,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     {
         // only allow size of T that matches bytesOfType or size of T = 1
         var sizeOfT = (ulong)Unsafe.SizeOf<TResult>();
-        var bytesOfType = DataTypeMessage.Size;
+        var bytesOfType = InternalDataType.Size;
 
         if (bytesOfType % sizeOfT != 0)
             throw new Exception("The size of the generic parameter must be a multiple of the HDF5 file internal data type size.");
@@ -759,9 +755,9 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 fileSelection: fileSelection,
                 datasetAccess: datasetAccess);
 
-        var fillValue = FillValueMessage.Value is null
+        var fillValue = InternalFillValue.Value is null
             ? default
-            : MemoryMarshal.Cast<byte, TResult>(FillValueMessage.Value)[0];
+            : MemoryMarshal.Cast<byte, TResult>(InternalFillValue.Value)[0];
 
         var result = await ReadCoreAsync(
             reader,
@@ -778,13 +774,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         ).ConfigureAwait(false);
 
         /* ensure correct endianness */
-        if (DataTypeMessage.BitField is IByteOrderAware byteOrderAware)
+        if (InternalDataType.BitField is IByteOrderAware byteOrderAware)
         {
             DataUtils.EnsureEndianness(
                 source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */,
                 destination: MemoryMarshal.AsBytes(result.AsSpan()),
                 byteOrderAware.ByteOrder,
-                DataTypeMessage.Size);
+                InternalDataType.Size);
         }
 
         return result;
@@ -801,9 +797,9 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         bool skipShuffle = false)
             where TReader : IReader
     {
-        var factor = DataTypeMessage.Properties.FirstOrDefault() switch
+        var factor = InternalDataType.Properties.FirstOrDefault() switch
         {
-            ArrayPropertyDescription array => (int)Utils.CalculateSize(array.DimensionSizes),
+            ArrayPropertyDescription array => (int)MathUtils.CalculateSize(array.DimensionSizes),
             _ => 1
         };
 
@@ -819,9 +815,9 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var fillValueArray = fillValueArrayOwner.Memory[..1];
         var fillValue = default(TResult);
 
-        if (FillValueMessage.Value is not null)
+        if (InternalFillValue.Value is not null)
         {
-            decoder(FillValueMessage.Value, fillValueArray);
+            decoder(InternalFillValue.Value, fillValueArray);
             fillValue = fillValueArray.Span[0];
         }
 
@@ -857,7 +853,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             where TReader : IReader
     {
         // fast path for null dataspace
-        if (DataspaceMessage.Type == DataspaceType.Null)
+        if (InternalDataspace.Type == DataspaceType.Null)
             return Array.Empty<TResult>();
 
         // for testing only
@@ -874,13 +870,23 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             }
         }
 
+        /* dataset info */
+        var datasetInfo = new DatasetInfo(
+            Space: InternalDataspace,
+            Type: InternalDataType,
+            Layout: InternalDataLayout,
+            FillValue: InternalFillValue,
+            FilterPipeline: InternalFilterPipeline,
+            ExternalFileList: InternalExternalFileList
+        );
+
         /* buffer provider */
-        using H5D_Base h5d = DataLayoutMessage.LayoutClass switch
+        using H5D_Base h5d = InternalDataLayout.LayoutClass switch
         {
             /* Compact: The array is stored in one contiguous block as part of
              * this object header message. 
              */
-            LayoutClass.Compact => new H5D_Compact(this, datasetAccess),
+            LayoutClass.Compact => new H5D_Compact(Context, datasetInfo, datasetAccess),
 
             /* Contiguous: The array is stored in one contiguous area of the file. 
             * This layout requires that the size of the array be constant: 
@@ -889,7 +895,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             * storage size of the array. The offset of an element from the 
             * beginning of the storage area is computed as in a C array.
             */
-            LayoutClass.Contiguous => new H5D_Contiguous(this, datasetAccess),
+            LayoutClass.Contiguous => new H5D_Contiguous(Context, datasetInfo, datasetAccess),
 
             /* Chunked: The array domain is regularly decomposed into chunks,
              * and each chunk is allocated and stored separately. This layout 
@@ -900,7 +906,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
              * calculated by traversing the chunk index that stores the chunk 
              * addresses. 
              */
-            LayoutClass.Chunked => H5D_Chunk.Create(this, datasetAccess),
+            LayoutClass.Chunked => H5D_Chunk.Create(Context, datasetInfo, datasetAccess),
 
             /* Virtual: This is only supported for version 4 of the Data Layout 
              * message. The message stores information that is used to locate 
@@ -908,16 +914,16 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
              * mapping information. The mapping associates the VDS to the source
              * dataset elements that are stored across a collection of HDF5 files.
              */
-            LayoutClass.VirtualStorage => new H5D_Virtual<TResult>(this, datasetAccess, fillValue, readVirtualDelegate),
+            LayoutClass.VirtualStorage => new H5D_Virtual<TResult>(Context, datasetInfo, datasetAccess, fillValue, readVirtualDelegate),
 
             /* default */
-            _ => throw new Exception($"The data layout class '{DataLayoutMessage.LayoutClass}' is not supported.")
+            _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
         };
 
         h5d.Initialize();
 
         /* dataset dims */
-        var datasetDims = GetDatasetDims();
+        var datasetDims = datasetInfo.GetDatasetDims();
 
         /* dataset chunk dims */
         var datasetChunkDims = h5d.GetChunkDims();
@@ -925,7 +931,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         /* file selection */
         if (fileSelection is null || fileSelection is AllSelection)
         {
-            switch (DataspaceMessage.Type)
+            switch (InternalDataspace.Type)
             {
                 case DataspaceType.Scalar:
                 case DataspaceType.Simple:
@@ -939,7 +945,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
                 case DataspaceType.Null:
                 default:
-                    throw new Exception($"Unsupported data space type '{DataspaceMessage.Type}'.");
+                    throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.");
             }
         }
 
@@ -955,7 +961,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
         /* target buffer */
-        var destinationElementCount = Utils.CalculateSize(memoryDims);
+        var destinationElementCount = MathUtils.CalculateSize(memoryDims);
         var destinationElementCountScaled = destinationElementCount * (ulong)factor;
 
         EnsureBuffer(destination, destinationElementCountScaled, out var optionalDestinationArray);
@@ -972,7 +978,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             GetSourceStreamAsync: chunkIndices => h5d.GetReadStreamAsync(reader, chunkIndices),
             GetTargetBuffer: _ => destinationMemory,
             Decoder: decoder,
-            SourceTypeSize: (int)DataTypeMessage.Size,
+            SourceTypeSize: (int)InternalDataType.Size,
             TargetTypeFactor: factor
         );
 
@@ -999,16 +1005,6 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         {
             throw new Exception("The provided target buffer is too small.");
         }
-    }
-
-    internal ulong[] GetDatasetDims()
-    {
-        return DataspaceMessage.Type switch
-        {
-            DataspaceType.Scalar => new ulong[] { 1 },
-            DataspaceType.Simple => DataspaceMessage.DimensionSizes,
-            _ => throw new Exception($"Unsupported data space type '{DataspaceMessage.Type}'.")
-        };
     }
 
     #endregion

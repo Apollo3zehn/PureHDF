@@ -4,8 +4,8 @@
     {
         private FixedArrayHeader? _header;
 
-        public H5D_Chunk4_FixedArray(NativeDataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
-            base(dataset, layout, datasetAccess)
+        public H5D_Chunk4_FixedArray(NativeContext context, DatasetInfo dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
+            base(context, dataset, layout, datasetAccess)
         {
             //
         }
@@ -18,14 +18,14 @@
             var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
 
             /* Check for filters on chunks */
-            if (Dataset.InternalFilterPipeline is not null)
+            if (Dataset.FilterPipeline is not null)
             {
-                var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
+                var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
                 var element = GetElement(chunkIndex, driver =>
                 {
                     return new FilteredDataBlockElement(
-                        Address: Dataset.Context.Superblock.ReadOffset(driver),
+                        Address: Context.Superblock.ReadOffset(driver),
                         ChunkSize: (uint)ReadUtils.ReadUlong(driver, chunkSizeLength),
                         FilterMask: driver.ReadUInt32()
                     );
@@ -40,7 +40,7 @@
                 var element = GetElement(chunkIndex, driver =>
                 {
                     return new DataBlockElement(
-                        Address: Dataset.Context.Superblock.ReadOffset(driver)
+                        Address: Context.Superblock.ReadOffset(driver)
                     );
                 });
 
@@ -54,14 +54,14 @@
         {
             if (_header is null)
             {
-                Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
-                _header = FixedArrayHeader.Decode(Dataset.Context);
+                Context.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+                _header = FixedArrayHeader.Decode(Context);
             }
 
             // H5FA.c (H5FA_get)
 
             /* Check if the fixed array data block has been already allocated on disk */
-            if (Dataset.Context.Superblock.IsUndefinedAddress(_header.DataBlockAddress))
+            if (Context.Superblock.IsUndefinedAddress(_header.DataBlockAddress))
             {
                 /* Call the class's 'fill' callback */
                 return null;
@@ -77,10 +77,10 @@
             // H5FA.c (H5FA_get)
 
             /* Get the data block */
-            Dataset.Context.Driver.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
+            Context.Driver.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
 
             var dataBlock = FixedArrayDataBlock<T>.Decode(
-                Dataset.Context,
+                Context,
                 header,
                 decode);
 
@@ -93,14 +93,14 @@
                 var bitMaskIndex = (int)pageIndex % 8;
 
                 /* Check if the page is defined yet */
-                if ((pageBitmapEntry & Utils.SequentialBitMask[bitMaskIndex]) > 0)
+                if ((pageBitmapEntry & MathUtils.SequentialBitMask[bitMaskIndex]) > 0)
                 {
                     /* Compute the element index */
                     var elementIndex = index % dataBlock.ElementsPerPage;
 
                     /* Compute the address of the data block */
                     var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                    var pageAddress = Dataset.Context.Driver.Position + (long)(pageIndex * pageSize);
+                    var pageAddress = Context.Driver.Position + (long)(pageIndex * pageSize);
 
                     /* Check for using last page, to set the number of elements on the page */
                     ulong elementCount;
@@ -112,10 +112,10 @@
                         elementCount = dataBlock.ElementsPerPage;
 
                     /* Protect the data block page */
-                    Dataset.Context.Driver.Seek(pageAddress, SeekOrigin.Begin);
+                    Context.Driver.Seek(pageAddress, SeekOrigin.Begin);
 
                     var page = DataBlockPage<T>.Decode(
-                        Dataset.Context.Driver,
+                        Context.Driver,
                         elementCount,
                         decode);
 

@@ -770,7 +770,7 @@ namespace PureHDF.Tests.Reading
             expected[61] = 19; expected[62] = 20; expected[63] = 21; expected[64] = 22; expected[65] = 23; expected[66] = 24;
 
             var actual = new int[10 * 10];
-            var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             var decodeInfo = new DecodeInfo<int>(
                 datasetDims,
@@ -890,7 +890,7 @@ namespace PureHDF.Tests.Reading
             expected[211] = 15;
 
             var actual = new int[5 * 6 * 11];
-            var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             IH5ReadStream getSourceStreamAsync(ulong[] indices) 
                 => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
@@ -1010,7 +1010,7 @@ namespace PureHDF.Tests.Reading
             };
 
             var expected = new int[11 * 11 * 12];
-            var scaledDatasetDims = datasetDims.Select((dim, i) => Utils.CeilDiv(dim, chunkDims[i])).ToArray();
+            var scaledDatasetDims = datasetDims.Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i])).ToArray();
 
             expected[277] = 1;
             expected[280] = 2;
@@ -1117,10 +1117,21 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var dataset = (NativeDataset)root.Dataset("/chunked/hyperslab");
 
+                var datasetInfo = new DatasetInfo(
+                    Space: dataset.InternalDataspace,
+                    Type: dataset.InternalDataType,
+                    Layout: dataset.InternalDataLayout,
+                    FillValue: dataset.InternalFillValue,
+                    FilterPipeline: dataset.InternalFilterPipeline,
+                    ExternalFileList: dataset.InternalExternalFileList
+                );
+
+                var context = new NativeContext(default!, default!);
+
                 /* get intermediate data (only for Matlab visualization) */
                 var intermediate = new int[datasetDims[0] * datasetDims[1] * datasetDims[2]];
 
-                var h5dIntermediate = H5D_Chunk.Create(dataset, default);
+                var h5dIntermediate = H5D_Chunk.Create(context, datasetInfo, default);
                 h5dIntermediate.Initialize();
 
                 var decodeInfoInterMediate = new DecodeInfo<int>(
@@ -1145,7 +1156,7 @@ namespace PureHDF.Tests.Reading
                 /* get actual data */
                 var actual = new int[memoryDims[0] * memoryDims[1]];
 
-                var h5d = H5D_Chunk.Create(dataset, default);
+                var h5d = H5D_Chunk.Create(context, datasetInfo, default);
                 h5d.Initialize();
 
                 var decodeInfo = new DecodeInfo<int>(

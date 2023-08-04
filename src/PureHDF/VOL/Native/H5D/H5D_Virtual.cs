@@ -13,22 +13,23 @@
         #region Constructors
 
         public H5D_Virtual(
-            NativeDataset dataset, 
+            NativeContext context,
+            DatasetInfo dataset, 
             H5DatasetAccess datasetAccess,
             TResult? fillValue,
             ReadVirtualDelegate<TResult> readVirtualDelegate) 
-            : base(dataset, datasetAccess)
+            : base(context, dataset, datasetAccess)
         {
             _fillValue = fillValue;
             _readVirtualDelegate = readVirtualDelegate;
 
-            var layoutMessage = (DataLayoutMessage4)dataset.DataLayoutMessage;
-            var collection = NativeCache.GetGlobalHeapObject(dataset.Context, layoutMessage.Address);
+            var layoutMessage = (DataLayoutMessage4)dataset.Layout;
+            var collection = NativeCache.GetGlobalHeapObject(context, layoutMessage.Address);
             var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
             var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
             using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
 
-            _block = VdsGlobalHeapBlock.Decode(localDriver, dataset.Context.Superblock);
+            _block = VdsGlobalHeapBlock.Decode(localDriver, context.Superblock);
 
             // https://docs.hdfgroup.org/archive/support/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
             // "A source dataset may have different rank and dimension sizes than the VDS. However, if a
@@ -37,7 +38,7 @@
 
             // -> for now unlimited dimensions will not be supported
 
-            foreach (var dimension in Dataset.DataspaceMessage.DimensionSizes)
+            foreach (var dimension in Dataset.Space.DimensionSizes)
             {
                 if (dimension == H5Constants.Unlimited)
                     throw new Exception("Virtual datasets with unlimited dimensions are not supported.");
@@ -54,15 +55,15 @@
 
         public override ulong[] GetChunkDims()
         {
-            return Dataset.DataspaceMessage.DimensionSizes;
+            return Dataset.Space.DimensionSizes;
         }
 
         public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
         {
             IH5ReadStream stream = new VirtualDatasetStream<TResult>(
-                (NativeFile)Dataset.File,
+                Context.File,
                 _block.VdsDatasetEntries, 
-                dimensions: Dataset.DataspaceMessage.DimensionSizes,
+                dimensions: Dataset.Space.DimensionSizes,
                 fillValue: _fillValue,
                 DatasetAccess,
                 _readVirtualDelegate

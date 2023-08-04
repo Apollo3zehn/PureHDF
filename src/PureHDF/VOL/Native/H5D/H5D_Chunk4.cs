@@ -4,8 +4,8 @@
     {
         #region Constructors
 
-        public H5D_Chunk4(NativeDataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
-            base(dataset, datasetAccess)
+        public H5D_Chunk4(NativeContext context, DatasetInfo dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess)
+            : base(context, dataset, datasetAccess)
         {
             Layout = layout;
             Chunked4 = (ChunkedStoragePropertyDescription4)layout.Properties;

@@ -49,7 +49,7 @@ internal struct NativeNamedReference
 
         else if (ScratchPad is not null)
         {
-            return new NativeGroup(File, File.Context, this);
+            return new NativeGroup(File.Context, this);
         }
 
         else
@@ -60,8 +60,8 @@ internal struct NativeNamedReference
 
             return objectHeader.ObjectType switch
             {
-                ObjectType.Group => new NativeGroup(File, context, this, objectHeader),
-                ObjectType.Dataset => new NativeDataset(File, context, this, objectHeader),
+                ObjectType.Group => new NativeGroup(context, this, objectHeader),
+                ObjectType.Dataset => new NativeDataset(context, this, objectHeader),
                 ObjectType.CommitedDatatype => new NativeCommitedDatatype(context, this, objectHeader),
                 _ => throw new Exception("Unknown object type.")
             };

@@ -49,7 +49,7 @@ internal readonly record struct GlobalHeapCollection(
 
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, Signature);
+        MathUtils.ValidateSignature(signature, Signature);
 
         // version
         var version = driver.ReadByte();

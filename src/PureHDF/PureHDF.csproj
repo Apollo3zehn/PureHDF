@@ -43,7 +43,7 @@
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Update="Filters/ShuffleSse2.cs">
       <DesignTime>True</DesignTime>

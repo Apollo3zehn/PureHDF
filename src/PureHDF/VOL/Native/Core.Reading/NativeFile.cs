@@ -168,6 +168,8 @@ public class NativeFile : NativeGroup, IDisposable
         var reference = new NativeNamedReference("/", address, file);
         file.Reference = reference;
 
+        context.File = file;
+
         return file;
     }
 

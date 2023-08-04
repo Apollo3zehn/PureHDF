@@ -161,7 +161,7 @@ internal record class CompoundPropertyDescription(
                 name = ReadUtils.ReadNullTerminatedString(driver, pad: false);
 
                 // member byte offset
-                var byteCount = Utils.FindMinByteCount(valueSize);
+                var byteCount = MathUtils.FindMinByteCount(valueSize);
 
                 if (!(1 <= byteCount && byteCount <= 8))
                     throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");
@@ -195,7 +195,7 @@ internal record class CompoundPropertyDescription(
     {
         // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
         var nameBytesCount = Name.Length + 1;
-        var byteCount = Utils.FindMinByteCount(typeSize);
+        var byteCount = MathUtils.FindMinByteCount(typeSize);
 
         var encodeSize =
             (ulong)nameBytesCount +
@@ -214,7 +214,7 @@ internal record class CompoundPropertyDescription(
         driver.Write((byte)0);
 
         // member byte offset
-        var byteCount = Utils.FindMinByteCount(typeSize);
+        var byteCount = MathUtils.FindMinByteCount(typeSize);
 
         if (!(1 <= byteCount && byteCount <= 8))
             throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");

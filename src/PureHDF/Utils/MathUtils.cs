@@ -3,7 +3,7 @@ using System.Text;
 
 namespace PureHDF;
 
-internal static partial class Utils
+internal static partial class MathUtils
 {
     public static void SwizzleCoords(ulong[] swizzledCoords, int unlimitedDim)
     {

@@ -34,7 +34,7 @@ static partial class ArrayExtensions
             dimensionSizes[index] = missingDimensionSize;
         }
 
-        var totalSize = (long)Utils.CalculateSize(dimensionSizes.Select(value => (ulong)value).ToArray());
+        var totalSize = (long)MathUtils.CalculateSize(dimensionSizes.Select(value => (ulong)value).ToArray());
 
         if (data.LongLength != totalSize)
             throw new Exception("The total number of elements in all dimensions of the reshaped array must be equal to the total number of elements of the current array.");

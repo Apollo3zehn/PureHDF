@@ -43,7 +43,7 @@ internal record class ExtensibleArrayIndexBlock<T>(
 
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
+        MathUtils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
 
         // version
         var version = driver.ReadByte();

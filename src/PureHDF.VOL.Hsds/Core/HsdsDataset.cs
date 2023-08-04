@@ -327,7 +327,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
         /* target buffer */
-        var destinationElementCount = Utils.CalculateSize(memoryDims);
+        var destinationElementCount = MathUtils.CalculateSize(memoryDims);
 
         EnsureBuffer(destination, destinationElementCount, out var optionalDestinationArray);
         var destinationMemory = optionalDestinationArray ?? destination;

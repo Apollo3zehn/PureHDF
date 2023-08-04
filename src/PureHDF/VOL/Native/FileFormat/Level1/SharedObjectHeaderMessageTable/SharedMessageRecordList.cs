@@ -12,7 +12,7 @@ internal readonly record struct SharedMessageRecordList(
     {
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, Signature);
+        MathUtils.ValidateSignature(signature, Signature);
 
         // share message records
         var sharedMessageRecords = new List<SharedMessageRecord>();

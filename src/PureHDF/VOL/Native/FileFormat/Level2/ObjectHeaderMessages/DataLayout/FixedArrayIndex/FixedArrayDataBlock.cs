@@ -55,7 +55,7 @@ internal record class FixedArrayDataBlock<T>(
 
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, FixedArrayDataBlock<T>.Signature);
+        MathUtils.ValidateSignature(signature, FixedArrayDataBlock<T>.Signature);
 
         // version
         var version = driver.ReadByte();

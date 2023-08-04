@@ -19,8 +19,8 @@
 
         #region Constructors
 
-        public H5D_Chunk4_ExtensibleArray(NativeDataset dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
-            base(dataset, layout, datasetAccess)
+        public H5D_Chunk4_ExtensibleArray(NativeContext context, DatasetInfo dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
+            base(context, dataset, layout, datasetAccess)
         {
             //
         }
@@ -33,7 +33,7 @@
         {
             base.Initialize();
 
-            _unlimitedDim = Dataset.DataspaceMessage.DimensionMaxSizes
+            _unlimitedDim = Dataset.Space.DimensionMaxSizes
                .ToList()
                .FindLastIndex(value => value == H5Constants.Unlimited);
 
@@ -44,18 +44,18 @@
             {
                 /* Get the swizzled chunk dimensions */
                 _swizzledChunkDims = ChunkDims.ToArray();
-                Utils.SwizzleCoords(_swizzledChunkDims, _unlimitedDim);
+                MathUtils.SwizzleCoords(_swizzledChunkDims, _unlimitedDim);
 
                 /* Get the swizzled number of chunks in each dimension */
                 var swizzledScaledDims = ScaledDims.ToArray();
-                Utils.SwizzleCoords(swizzledScaledDims, _unlimitedDim);
+                MathUtils.SwizzleCoords(swizzledScaledDims, _unlimitedDim);
 
                 /* Get the swizzled "down" sizes for each dimension */
                 // _swizzledDownChunkCounts = swizzledScaledDims.AccumulateReverse();
 
                 /* Get the swizzled max number of chunks in each dimension */
                 var swizzledScaledMaxDims = ScaledMaxDims.ToArray();
-                Utils.SwizzleCoords(swizzledScaledMaxDims, _unlimitedDim);
+                MathUtils.SwizzleCoords(swizzledScaledMaxDims, _unlimitedDim);
 
                 /* Get the swizzled max "down" sizes for each dimension */
                 _swizzledDownMaxChunkCounts = swizzledScaledMaxDims.AccumulateReverse();
@@ -79,11 +79,11 @@
                     swizzledCoords[i] = chunkIndices[i] * ChunkDims[i];
                 }
 
-                Utils.SwizzleCoords(swizzledCoords, _unlimitedDim);
+                MathUtils.SwizzleCoords(swizzledCoords, _unlimitedDim);
 
                 /* Calculate the index of this chunk */
                 var swizzledScaledDims = swizzledCoords
-                    .Select((swizzledCoord, i) => Utils.CeilDiv(swizzledCoord, _swizzledChunkDims[i]))
+                    .Select((swizzledCoord, i) => MathUtils.CeilDiv(swizzledCoord, _swizzledChunkDims[i]))
                     .ToArray();
 
                 chunkIndex = swizzledScaledDims.ToLinearIndexPrecomputed(_swizzledDownMaxChunkCounts);
@@ -95,14 +95,14 @@
             }
 
             /* Check for filters on chunks */
-            if (Dataset.InternalFilterPipeline is not null)
+            if (Dataset.FilterPipeline is not null)
             {
-                var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
+                var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
                 var element = GetElement(chunkIndex, driver =>
                 {
                     return new FilteredDataBlockElement(
-                        Address: Dataset.Context.Superblock.ReadOffset(driver),
+                        Address: Context.Superblock.ReadOffset(driver),
                         ChunkSize: (uint)ReadUtils.ReadUlong(driver, chunkSizeLength),
                         FilterMask: driver.ReadUInt32()
                     );
@@ -117,7 +117,7 @@
                 var element = GetElement(chunkIndex, driver =>
                 {
                     return new DataBlockElement(
-                        Address: Dataset.Context.Superblock.ReadOffset(driver)
+                        Address: Context.Superblock.ReadOffset(driver)
                     );
                 });
 
@@ -131,8 +131,8 @@
         {
             if (_header is null)
             {
-                Dataset.Context.Driver.Seek((long)Dataset.DataLayoutMessage.Address, SeekOrigin.Begin);
-                _header = ExtensibleArrayHeader.Decode(Dataset.Context);
+                Context.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+                _header = ExtensibleArrayHeader.Decode(Context);
             }
 
             // H5EA.c (H5EA_get)
@@ -153,20 +153,20 @@
         private T? LookupElement<T>(ExtensibleArrayHeader header, ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
         {
             // H5EA.c (H5EA__lookup_elmt)
-            var chunkSizeLength = Utils.ComputeChunkSizeLength(ChunkByteSize);
+            var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
             /* Check if we should create the index block */
-            if (Dataset.Context.Superblock.IsUndefinedAddress(header.IndexBlockAddress))
+            if (Context.Superblock.IsUndefinedAddress(header.IndexBlockAddress))
                 return null;
 
             /* Protect index block */
             if (_indexBlock is null)
             {
-                Dataset.Context.Driver.Seek((long)header.IndexBlockAddress, SeekOrigin.Begin);
+                Context.Driver.Seek((long)header.IndexBlockAddress, SeekOrigin.Begin);
 
                 _indexBlock = ExtensibleArrayIndexBlock<T>.Decode(
-                    Dataset.Context.Driver,
-                    Dataset.Context.Superblock,
+                    Context.Driver,
+                    Context.Superblock,
                     header,
                     decode);
             }
@@ -195,15 +195,15 @@
                         elementIndex / header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     /* Check if the data block has been allocated on disk yet */
-                    if (Dataset.Context.Superblock.IsUndefinedAddress(indexBlock.DataBlockAddresses[dataBlockIndex]))
+                    if (Context.Superblock.IsUndefinedAddress(indexBlock.DataBlockAddresses[dataBlockIndex]))
                         return null;
 
                     /* Protect data block */
-                    Dataset.Context.Driver.Seek((long)indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
+                    Context.Driver.Seek((long)indexBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
                     var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
 
                     var dataBlock = ExtensibleArrayDataBlock<T>.Decode(
-                        Dataset.Context,
+                        Context,
                         header,
                         elementsCount,
                         decode);
@@ -220,14 +220,14 @@
                     var secondaryBlockOffset = secondaryBlockIndex - indexBlock.SecondaryBlockDataBlockAddressCount;
 
                     /* Check if the super block has been allocated on disk yet */
-                    if (Dataset.Context.Superblock.IsUndefinedAddress(indexBlock.SecondaryBlockAddresses[secondaryBlockOffset]))
+                    if (Context.Superblock.IsUndefinedAddress(indexBlock.SecondaryBlockAddresses[secondaryBlockOffset]))
                         return null;
 
                     /* Protect super block */
-                    Dataset.Context.Driver.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
+                    Context.Driver.Seek((long)indexBlock.SecondaryBlockAddresses[secondaryBlockOffset], SeekOrigin.Begin);
 
                     var secondaryBlock = ExtensibleArraySecondaryBlock.Decode(
-                        Dataset.Context,
+                        Context,
                         header,
                         secondaryBlockIndex);
 
@@ -235,7 +235,7 @@
                     var dataBlockIndex = elementIndex / secondaryBlock.ElementCount;
 
                     /* Check if the data block has been allocated on disk yet */
-                    if (Dataset.Context.Superblock.IsUndefinedAddress(secondaryBlock.DataBlockAddresses[dataBlockIndex]))
+                    if (Context.Superblock.IsUndefinedAddress(secondaryBlock.DataBlockAddresses[dataBlockIndex]))
                         return null;
 
                     /* Adjust index to offset in data block */
@@ -258,7 +258,7 @@
                             // H5EA_METADATA_PREFIX_SIZE
                             4UL + 1UL + 1UL + 4UL +
                             // H5EA_DBLOCK_PREFIX_SIZE
-                            Dataset.Context.Superblock.OffsetsSize + header.ArrayOffsetsSize +
+                            Context.Superblock.OffsetsSize + header.ArrayOffsetsSize +
                             // H5EA_DBLOCK_SIZE
                             secondaryBlock.ElementCount * header.ElementSize +      /* Elements in data block */
                             secondaryBlock.DataBlockPageCount * 4;                  /* Checksum for each page */
@@ -270,14 +270,14 @@
                         var pageBitmapEntry = secondaryBlock.PageBitmap[pageIndex / 8];
                         var bitMaskIndex = (int)pageIndex % 8;
 
-                        if ((pageBitmapEntry & Utils.SequentialBitMask[bitMaskIndex]) == 0)
+                        if ((pageBitmapEntry & MathUtils.SequentialBitMask[bitMaskIndex]) == 0)
                             return null;
 
                         /* Protect data block page */
-                        Dataset.Context.Driver.Seek((long)dataBlockPageAddress, SeekOrigin.Begin);
+                        Context.Driver.Seek((long)dataBlockPageAddress, SeekOrigin.Begin);
 
                         var dataBlockPage = DataBlockPage<T>.Decode(
-                            Dataset.Context.Driver,
+                            Context.Driver,
                             header.DataBlockPageElementsCount,
                             decode);
 
@@ -287,10 +287,10 @@
                     else
                     {
                         /* Protect data block */
-                        Dataset.Context.Driver.Seek((long)secondaryBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
+                        Context.Driver.Seek((long)secondaryBlock.DataBlockAddresses[dataBlockIndex], SeekOrigin.Begin);
 
                         var dataBlock = ExtensibleArrayDataBlock<T>.Decode(
-                            Dataset.Context,
+                            Context,
                             header,
                             secondaryBlock.ElementCount,
                             decode);

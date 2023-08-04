@@ -32,7 +32,7 @@ internal readonly record struct SymbolTableNode(
 
         // signature
         var signature = driver.ReadBytes(4);
-        Utils.ValidateSignature(signature, Signature);
+        MathUtils.ValidateSignature(signature, Signature);
 
         // version
         var version = driver.ReadByte();
