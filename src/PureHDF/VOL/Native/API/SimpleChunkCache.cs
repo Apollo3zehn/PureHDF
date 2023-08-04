@@ -105,6 +105,19 @@ public class SimpleChunkCache : IChunkCache
         return chunkInfo.Chunk;
     }
 
+    /// <inheritdoc />
+    public async Task FlushAsync(Func<ulong[], Memory<byte>, Task>? chunkWriter = null)
+    {
+        foreach (var entry in _chunkInfoMap)
+        {
+            if (chunkWriter is not null)
+                await chunkWriter(entry.Key, entry.Value.Chunk);
+        }
+
+        _chunkInfoMap.Clear();
+        ConsumedBytes = 0;
+    }
+
     private async Task PreemptAsync(Func<ulong[], Memory<byte>, Task>? chunkWriter)
     {
         var entry = _chunkInfoMap

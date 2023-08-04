@@ -15,8 +15,8 @@ GROUP "/" {
             "Simple"           1;
             "Null"             2;
          } "Type";
-         H5T_VLEN { H5T_STD_U64LE} "DimensionSizes";
-         H5T_VLEN { H5T_STD_U64LE} "DimensionMaxSizes";
+         H5T_VLEN { H5T_STD_U64LE} "Dimensions";
+         H5T_VLEN { H5T_STD_U64LE} "MaxDimensions";
          H5T_VLEN { H5T_STD_U64LE} "PermutationIndices";
          H5T_STD_U8LE "Version";
       }

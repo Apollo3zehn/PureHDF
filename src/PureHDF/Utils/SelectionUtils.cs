@@ -154,7 +154,7 @@ internal static class SelectionUtils
             var currentOffset = (int)targetStep.Offset;
             var currentLength = (int)targetStep.Length;
 
-            while (currentSource.Length > 0)
+            while (currentLength > 0)
             {
                 /* load next source buffer */
                 if (currentSource.Length == 0)
@@ -196,23 +196,12 @@ internal static class SelectionUtils
                 }
 
                 // default; contiguous dataset (OffsetStream)
-                // else
-                // {
-                    // var sourceLength = length * decodeInfo.TargetTypeSize;
-
-                    // // TODO: do not copy if not necessary
-                    // using var rentedOwner = MemoryPool<byte>.Shared.Rent(sourceLength);
-                    // var rentedMemory = rentedOwner.Memory;
-
-                    // await writer.WriteDatasetAsync(
-                    //     sourceBuffer,
-                    //     rentedMemory[..sourceLength],
-                    //     currentOffset * decodeInfo.TargetTypeSize).ConfigureAwait(false);
-
-                    // decodeInfo.Converter(
-                    //     rentedMemory[..sourceLength],
-                    //     currentTarget[..targetLength]);
-                // }
+                else
+                {
+                    encodeInfo.Encoder(
+                        currentSource[..sourceLength],
+                        targetStream);
+                }
 
                 currentOffset += length;
                 currentLength -= length;

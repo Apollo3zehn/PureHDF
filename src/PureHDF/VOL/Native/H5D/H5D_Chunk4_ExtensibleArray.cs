@@ -33,7 +33,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
     {
         base.Initialize();
 
-        _unlimitedDim = Dataset.Space.DimensionMaxSizes
+        _unlimitedDim = Dataset.Space.MaxDimensions
             .ToList()
             .FindLastIndex(value => value == H5Constants.Unlimited);
 

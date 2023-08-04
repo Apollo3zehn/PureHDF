@@ -14,9 +14,9 @@ internal class NativeDataspace : IH5Dataspace
 
     public H5DataspaceType Type => (H5DataspaceType)_dataspace.Type;
 
-    public ulong[] Dimensions => _dataspace.DimensionSizes.ToArray();
+    public ulong[] Dimensions => _dataspace.Dimensions.ToArray();
 
-    public ulong[] MaxDimensions => _dataspace.DimensionMaxSizes.ToArray();
+    public ulong[] MaxDimensions => _dataspace.MaxDimensions.ToArray();
 
     #endregion
 

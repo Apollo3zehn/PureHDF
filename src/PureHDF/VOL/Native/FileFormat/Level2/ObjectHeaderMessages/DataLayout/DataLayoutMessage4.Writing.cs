@@ -6,6 +6,7 @@ internal partial record class DataLayoutMessage4
         NativeWriteContext context,
         EncodeDelegate<T> encode,
         ulong dataEncodeSize,
+        uint typeSize,
         Memory<T> data,
         uint[]? chunkDimensions)
     {
@@ -14,20 +15,19 @@ internal partial record class DataLayoutMessage4
 
         if (chunkDimensions is not null)
         {
-            // TODO: this works only for the implicit index
             var address = context.FreeSpaceManager.Allocate((long)dataEncodeSize);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Address: (ulong)address,
                 Rank: (byte)(chunkDimensions.Length + 1),
                 Flags: default,
-                DimensionSizes: chunkDimensions.Select(value => (ulong)value).ToArray(),
+                DimensionSizes: chunkDimensions.Select(value => (ulong)value).Concat(new ulong[] { typeSize }).ToArray(),
                 IndexingTypeInformation: new ImplicitIndexingInformation()
             );
 
             dataLayout = new DataLayoutMessage4(
                 LayoutClass: LayoutClass.Chunked,
-                Address: default,
+                Address: (ulong)address,
                 Properties: properties
             )
             {
@@ -89,7 +89,7 @@ internal partial record class DataLayoutMessage4
 
                 dataLayout = new DataLayoutMessage4(
                     LayoutClass: LayoutClass.Contiguous,
-                    Address: default,
+                    Address: (ulong)address,
                     Properties: properties
                 )
                 {

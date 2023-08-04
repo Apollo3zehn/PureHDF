@@ -185,7 +185,7 @@ internal static class H5Writer
         // TODO cache this
         var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Data.GetType(), elementType);
 
-        return (ulong)method.Invoke(default, new object?[] { context, dataset, h5Dataset.Data, isScalar })!;
+        return (ulong)method.Invoke(default, new object?[] { context, h5Dataset, h5Dataset.Data, isScalar })!;
     }
 
     private static ulong InternalEncodeDataset<T, TElement>(
@@ -210,12 +210,12 @@ internal static class H5Writer
 
         if (chunkDimensions is not null)
         {
-            if (dataspace.DimensionSizes.Length != chunkDimensions.Length)
+            if (dataspace.Dimensions.Length != chunkDimensions.Length)
                 throw new Exception("The rank of the chunk dimensions must be equal to the rank of the dataset dimensions.");
 
             for (int i = 0; i < dataspace.Rank; i++)
             {
-                if (chunkDimensions[i] > dataspace.DimensionSizes[i])
+                if (chunkDimensions[i] > dataspace.Dimensions[i])
                     throw new Exception("The chunk dimensions must be less than or equal to the dataset dimensions.");
             }
         }
@@ -225,7 +225,7 @@ internal static class H5Writer
 
         if (chunkDimensions is null)
         {
-            dataEncodeSize = datatype.Size * dataspace.DimensionSizes
+            dataEncodeSize = datatype.Size * dataspace.Dimensions
                 .Aggregate(1UL, (product, dimension) => product * dimension);
         }
 
@@ -239,7 +239,7 @@ internal static class H5Writer
             for (int dimension = 0; dimension < dataspace.Rank; dimension++)
             {
                 dataEncodeSize *= (ulong)Math
-                    .Ceiling(dataspace.DimensionSizes[dimension] / (double)chunkDimensions[dimension]);
+                    .Ceiling(dataspace.Dimensions[dimension] / (double)chunkDimensions[dimension]);
             }
 
             dataEncodeSize *= chunkSize * datatype.Size;
@@ -249,7 +249,8 @@ internal static class H5Writer
         var dataLayout = DataLayoutMessage4.Create(
             context, 
             encode, 
-            dataEncodeSize, 
+            dataEncodeSize,
+            datatype.Size,
             memoryData,
             chunkDimensions);
 
@@ -328,17 +329,22 @@ internal static class H5Writer
         var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
 
         /* file selection */
-        var fileDimensions = dataspace.DimensionSizes;
+        var fileDimensions = dataspace.Dimensions;
         var fileStarts = fileDimensions.ToArray();
         fileStarts.AsSpan().Clear();
 
         var fileSelection = new HyperslabSelection(rank: fileDimensions.Length, starts: fileStarts, blocks: fileDimensions);
 
+        /* file chunk dimensions */
+        var fileChunkDimensions = chunkDimensions is null
+            ? dataspace.Dimensions
+            : chunkDimensions.Select(dimension => (ulong)dimension).ToArray();
+
         var encodeInfo = new EncodeInfo<TElement>(
             SourceDims: memoryDimensions,
             SourceChunkDims: memoryDimensions,
             TargetDims: fileDimensions,
-            TargetChunkDims: chunkDimensions!.Select(dimension => (ulong)dimension).ToArray(),
+            TargetChunkDims: fileChunkDimensions,
             SourceSelection: memorySelection,
             TargetSelection: fileSelection,
             GetSourceBuffer: indiced => memoryData,
@@ -348,6 +354,7 @@ internal static class H5Writer
             SourceTypeFactor: 1
         );
 
+        /* encode data */
         SelectionUtils.EncodeAsync(reader, memorySelection.Rank, fileSelection.Rank, encodeInfo);
 
         // encode object header

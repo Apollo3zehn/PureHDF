@@ -45,7 +45,7 @@ internal partial record class AttributeMessage
 
         // attribute
         // TODO avoid creation of system memory stream too often
-        var dataEncodeSize = datatype.Size * dataspace.DimensionSizes
+        var dataEncodeSize = datatype.Size * dataspace.Dimensions
             .Aggregate(1UL, (product, dimension) => product * dimension); ;
 
         var buffer = new byte[dataEncodeSize];
@@ -76,7 +76,7 @@ internal partial record class AttributeMessage
             throw new Exception("Only version 3 attribute messages are supported.");
 
         var nameEncodeSize = Encoding.UTF8.GetBytes(Name).Length + 1;
-        var dataSize = Datatype.Size * Dataspace.DimensionSizes.Aggregate(1UL, (product, dimension) => product * dimension);
+        var dataSize = Datatype.Size * Dataspace.Dimensions.Aggregate(1UL, (product, dimension) => product * dimension);
 
         // TODO: make this more exact?
         if (dataSize > 64 * 1024)

@@ -68,8 +68,8 @@ public static class WritingTestData
                 Rank: 1,
                 Flags: DataspaceMessageFlags.DimensionMaxSizes | DataspaceMessageFlags.PermuationIndices,
                 Type: DataspaceType.Simple,
-                DimensionSizes: new ulong[] { 10, 20, 30 },
-                DimensionMaxSizes: new ulong[] { 20, 40, 60 },
+                Dimensions: new ulong[] { 10, 20, 30 },
+                MaxDimensions: new ulong[] { 20, 40, 60 },
                 PermutationIndices: null)
             {
                 Version = 1

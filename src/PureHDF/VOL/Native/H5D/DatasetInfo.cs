@@ -14,7 +14,7 @@ internal record DatasetInfo(
         return Space.Type switch
         {
             DataspaceType.Scalar => new ulong[] { 1 },
-            DataspaceType.Simple => Space.DimensionSizes,
+            DataspaceType.Simple => Space.Dimensions,
             _ => throw new Exception($"Unsupported data space type '{Space.Type}'.")
         };
     }

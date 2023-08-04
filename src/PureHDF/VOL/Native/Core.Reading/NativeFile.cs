@@ -235,11 +235,11 @@ public class NativeFile : NativeGroup, IDisposable
                 NativeCache.Clear(Context.Driver);
                 Context.Driver.Dispose();
 
-                if (_deleteOnClose && System.IO.File.Exists(Path))
+                if (_deleteOnClose && File.Exists(Path))
                 {
                     try
                     {
-                        System.IO.File.Delete(Path!);
+                        File.Delete(Path!);
                     }
                     catch
                     {

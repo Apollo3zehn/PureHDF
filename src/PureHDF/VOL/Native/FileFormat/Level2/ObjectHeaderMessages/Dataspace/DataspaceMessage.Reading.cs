@@ -4,8 +4,8 @@ internal partial record class DataspaceMessage(
     byte Rank,
     DataspaceMessageFlags Flags,
     DataspaceType Type,
-    ulong[] DimensionSizes,
-    ulong[] DimensionMaxSizes,
+    ulong[] Dimensions,
+    ulong[] MaxDimensions,
     ulong[]? PermutationIndices
 ) : Message
 {

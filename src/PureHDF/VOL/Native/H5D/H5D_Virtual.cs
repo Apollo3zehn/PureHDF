@@ -39,7 +39,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
 
         // -> for now unlimited dimensions will not be supported
 
-        foreach (var dimension in Dataset.Space.DimensionSizes)
+        foreach (var dimension in Dataset.Space.Dimensions)
         {
             if (dimension == H5Constants.Unlimited)
                 throw new Exception("Virtual datasets with unlimited dimensions are not supported.");
@@ -56,7 +56,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
 
     public override ulong[] GetChunkDims()
     {
-        return Dataset.Space.DimensionSizes;
+        return Dataset.Space.Dimensions;
     }
 
     public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
@@ -64,7 +64,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
         IH5ReadStream stream = new VirtualDatasetStream<TResult>(
             ReadContext.File,
             _block.VdsDatasetEntries, 
-            dimensions: Dataset.Space.DimensionSizes,
+            dimensions: Dataset.Space.Dimensions,
             fillValue: _fillValue,
             DatasetAccess,
             _readVirtualDelegate

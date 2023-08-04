@@ -21,8 +21,8 @@ internal partial record class DataspaceMessage
             Rank: (byte)dimensions.Length,
             Flags: DataspaceMessageFlags.None,
             Type: dataDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
-            DimensionSizes: dimensions,
-            DimensionMaxSizes: dimensions,
+            Dimensions: dimensions,
+            MaxDimensions: dimensions,
             PermutationIndices: default
         )
         {
@@ -69,14 +69,14 @@ internal partial record class DataspaceMessage
 
         for (int i = 0; i < Rank; i++)
         {
-            driver.Write(DimensionSizes[i]);
+            driver.Write(Dimensions[i]);
         }
 
         if (dimensionMaxSizesArePresent)
         {
             for (int i = 0; i < Rank; i++)
             {
-                driver.Write(DimensionMaxSizes[i]);
+                driver.Write(MaxDimensions[i]);
             }
         }
 

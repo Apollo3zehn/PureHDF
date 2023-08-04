@@ -31,8 +31,17 @@ internal abstract class H5D_Chunk : H5D_Base
     {
         // H5Dchunk.c (H5D__chunk_set_info_real)
 
-        _chunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
-        _indexAddressIsUndefined = readContext.Superblock.IsUndefinedAddress(dataset.Layout.Address);
+        if (readContext is null)
+        {
+            _chunkCache = datasetAccess.ChunkCache ?? writeContext.File.ChunkCacheFactory();
+            _indexAddressIsUndefined = true;
+        }
+
+        else
+        {
+            _chunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
+            _indexAddressIsUndefined = readContext.Superblock.IsUndefinedAddress(dataset.Layout.Address);
+        }
     }
 
     #endregion
@@ -114,8 +123,8 @@ internal abstract class H5D_Chunk : H5D_Base
         ChunkDims = RawChunkDims[..^1].ToArray();
         ChunkRank = (byte)ChunkDims.Length;
         ChunkByteSize = MathUtils.CalculateSize(ChunkDims) * Dataset.Type.Size;
-        Dims = Dataset.Space.DimensionSizes;
-        MaxDims = Dataset.Space.DimensionMaxSizes;
+        Dims = Dataset.Space.Dimensions;
+        MaxDims = Dataset.Space.MaxDimensions;
         TotalChunkCount = 1;
         TotalMaxChunkCount = 1;
 
@@ -169,7 +178,7 @@ internal abstract class H5D_Chunk : H5D_Base
             .GetChunkAsync(
                 chunkIndices, 
                 () => ReadChunkAsync(reader, chunkIndices),
-                (writeIndices, writeChunk) => throw new NotImplementedException())
+                WriteChunkAsync)
                 
             .ConfigureAwait(false);
 
@@ -181,6 +190,18 @@ internal abstract class H5D_Chunk : H5D_Base
     protected abstract ulong[] GetRawChunkDims();
 
     protected abstract ChunkInfo GetChunkInfo(ulong[] chunkIndices);
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        // TODO this is not pretty
+        _chunkCache
+            .FlushAsync(WriteContext is null ? null : WriteChunkAsync)
+            .ConfigureAwait(false)
+            .GetAwaiter()
+            .GetResult();
+    }
 
     private async Task<Memory<byte>> ReadChunkAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader
     {
@@ -222,6 +243,7 @@ internal abstract class H5D_Chunk : H5D_Base
         {
             await reader.ReadDatasetAsync(ReadContext.Driver, buffer, offset).ConfigureAwait(false);
         }
+        
         else
         {
             using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
@@ -230,6 +252,16 @@ internal abstract class H5D_Chunk : H5D_Base
 
             H5Filter.ExecutePipeline(Dataset.FilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
         }
+    }
+
+    private Task WriteChunkAsync(ulong[] chunkIndices, Memory<byte> chunk)
+    {
+        var chunkInfo = GetChunkInfo(chunkIndices);
+
+        WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+        WriteContext.Driver.Write(chunk.Span);
+
+        return Task.CompletedTask;
     }
 
     #endregion

@@ -54,12 +54,18 @@ internal class H5D_Contiguous : H5D_Base
 
     public override Task<IH5WriteStream> GetWriteStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
     {
-        var address = Dataset.Layout.Address;
-
-        if (_writeStream is null)
+        if (Dataset.Layout is DataLayoutMessage4 layout)
         {
-            ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
-            _writeStream = new OffsetStream(WriteContext.Driver);
+            if (_writeStream is null)
+            {
+                WriteContext.Driver.Seek((long)layout.Address, SeekOrigin.Begin);
+                _writeStream = new OffsetStream(WriteContext.Driver);
+            }
+        }
+
+        else
+        {
+            throw new Exception("Only data layout message version 4 is supported.");
         }
 
         return Task.FromResult(_writeStream);
