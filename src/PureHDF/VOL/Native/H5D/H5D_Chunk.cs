@@ -16,7 +16,7 @@ internal abstract class H5D_Chunk : H5D_Base
     #region Fields
 
     private readonly IChunkCache _chunkCache;
-    private readonly bool _indexAddressIsUndefined;
+    private readonly bool _readingChunkIndexAddressIsUndefined;
 
     #endregion
 
@@ -34,13 +34,14 @@ internal abstract class H5D_Chunk : H5D_Base
         if (readContext is null)
         {
             _chunkCache = datasetAccess.ChunkCache ?? writeContext.File.ChunkCacheFactory();
-            _indexAddressIsUndefined = true;
         }
 
         else
         {
             _chunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
-            _indexAddressIsUndefined = readContext.Superblock.IsUndefinedAddress(dataset.Layout.Address);
+            
+            _readingChunkIndexAddressIsUndefined = readContext.Superblock
+                .IsUndefinedAddress(dataset.Layout.Address);
         }
     }
 
@@ -207,17 +208,10 @@ internal abstract class H5D_Chunk : H5D_Base
     {
         var buffer = new byte[ChunkByteSize];
 
-        // TODO: This way, fill values will become part of the cache
-        if (_indexAddressIsUndefined)
+        if (ReadContext is not null)
         {
-            if (Dataset.FillValue.Value is not null)
-                buffer.AsSpan().Fill(Dataset.FillValue.Value);
-        }
-        else
-        {
-            var chunkInfo = GetChunkInfo(chunkIndices);
-
-            if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
+            // TODO: This way, fill values will become part of the cache
+            if (_readingChunkIndexAddressIsUndefined)
             {
                 if (Dataset.FillValue.Value is not null)
                     buffer.AsSpan().Fill(Dataset.FillValue.Value);
@@ -225,8 +219,30 @@ internal abstract class H5D_Chunk : H5D_Base
 
             else
             {
-                await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
+                var chunkInfo = GetChunkInfo(chunkIndices);
+
+                if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
+                {
+                    if (Dataset.FillValue.Value is not null)
+                        buffer.AsSpan().Fill(Dataset.FillValue.Value);
+                }
+
+                else
+                {
+                    await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
+                }
             }
+        }
+        
+        else if (WriteContext is not null)
+        {
+            var chunkInfo = GetChunkInfo(chunkIndices);
+            await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
+        }
+
+        else
+        {
+            throw new Exception("This should never happen.");
         }
 
         return buffer;

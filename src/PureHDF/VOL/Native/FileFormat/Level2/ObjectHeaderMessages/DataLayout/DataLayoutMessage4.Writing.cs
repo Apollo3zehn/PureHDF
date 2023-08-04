@@ -15,6 +15,7 @@ internal partial record class DataLayoutMessage4
 
         if (chunkDimensions is not null)
         {
+            #error This works only for the implicit index. Move allocation to e.g. H5D_Chunk4_FixedArray.
             var address = context.FreeSpaceManager.Allocate((long)dataEncodeSize);
 
             var properties = new ChunkedStoragePropertyDescription4(
