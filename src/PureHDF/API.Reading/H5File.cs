@@ -10,7 +10,7 @@ public partial class H5File
     /// <summary>
     /// Opens an HDF5 file for reading. Please see the <seealso href="https://learn.microsoft.com/en-us/dotnet/api/system.io.file.openread#remarks">Remarks</seealso> section for more information how the file is opened.
     /// </summary>
-    /// <param name="filePath">The file to open.</param>
+    /// <param name="filePath">The path of the file to open.</param>
     public static NativeFile OpenRead(string filePath)
     {
         return NativeFile.InternalOpenRead(filePath);
@@ -19,7 +19,7 @@ public partial class H5File
     /// <summary>
     /// Opens an HDF5 file.
     /// </summary>
-    /// <param name="filePath">The file to open.</param>
+    /// <param name="filePath">The path of the file to open.</param>
     /// <param name="mode">A <see cref="FileMode"/> value that specifies whether a file is created if one does not exist, and determines whether the contents of existing files are retained or overwritten.</param>
     /// <param name="fileAccess">A <see cref="FileAccess"/> value that specifies the operations that can be performed on the file.</param>
     /// <param name="fileShare">A <see cref="FileShare"/> value specifying the type of access other threads have to the file.</param>
@@ -32,11 +32,14 @@ public partial class H5File
     /// <summary>
     /// Opens an HDF5 stream.
     /// </summary>
-    /// <param name="stream">The stream to use.</param>
+    /// <param name="stream">The stream to use. It must be readable and seekable.</param>
     /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
     /// <returns></returns>
     public static NativeFile Open(Stream stream, bool leaveOpen = false)
     {
+        if (!stream.CanRead || !stream.CanSeek)
+            throw new Exception("The stream must be readble and seekable.");
+
         H5DriverBase driver;
 
 #if NET6_0_OR_GREATER

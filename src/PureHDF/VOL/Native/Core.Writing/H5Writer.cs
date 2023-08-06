@@ -7,10 +7,12 @@ internal static class H5Writer
     private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5Writer)
         .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    public static void Write(H5File file, string filePath, H5WriteOptions options)
+    public static void Write(H5File file, Stream stream, H5WriteOptions options)
     {
-        using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
-        using var driver = new H5StreamDriver(fileStream, leaveOpen: false);
+        if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
+            throw new Exception("The stream must be readble, writable and seekable.");
+
+        using var driver = new H5StreamDriver(stream, leaveOpen: false);
 
         var freeSpaceManager = new FreeSpaceManager();
         freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
