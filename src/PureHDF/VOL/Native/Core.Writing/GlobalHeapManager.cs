@@ -19,7 +19,7 @@ internal class GlobalHeapManager
     private ushort _index;
     private Memory<byte> _memory;
 
-    public GlobalHeapManager(H5SerializerOptions options, FreeSpaceManager freeSpaceManager, H5DriverBase driver)
+    public GlobalHeapManager(H5WriteOptions options, FreeSpaceManager freeSpaceManager, H5DriverBase driver)
     {
         if (options.GlobalHeapCollectionSize < MINIMUM_COLLECTION_SIZE)
             throw new Exception($"The minimum global heap collection size is {MINIMUM_COLLECTION_SIZE} bytes");

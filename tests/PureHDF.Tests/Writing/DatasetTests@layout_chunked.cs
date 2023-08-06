@@ -19,7 +19,7 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -59,7 +59,7 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -96,7 +96,7 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        void action() => file.Save(filePath);
+        void action() => file.Write(filePath);
 
         // Assert
         try
@@ -124,7 +124,7 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        void action() => file.Save(filePath);
+        void action() => file.Write(filePath);
 
         // Assert
         try

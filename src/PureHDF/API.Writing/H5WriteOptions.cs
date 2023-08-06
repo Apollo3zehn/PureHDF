@@ -17,7 +17,7 @@ namespace PureHDF;
 /// <param name="FieldStringLengthMapper">Maps a <see cref="FieldInfo"/> of type string to the desired string length.</param>
 /// <param name="PropertyNameMapper">Maps a <see cref="PropertyInfo"/> to the name of the HDF5 member.</param>
 /// <param name="PropertyStringLengthMapper">Maps a <see cref="PropertyInfo"/> of type string to the desired string length.</param>
-public record H5SerializerOptions(
+public record H5WriteOptions(
     int DefaultStringLength = default,
     int GlobalHeapCollectionSize = 4096,
     long GlobalHeapFlushThreshold = 4096 * 1024,

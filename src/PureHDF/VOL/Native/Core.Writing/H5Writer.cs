@@ -7,7 +7,7 @@ internal static class H5Writer
     private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5Writer)
         .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    public static void Serialize(H5File file, string filePath, H5SerializerOptions options)
+    public static void Write(H5File file, string filePath, H5WriteOptions options)
     {
         using var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
         using var driver = new H5StreamDriver(fileStream, leaveOpen: false);

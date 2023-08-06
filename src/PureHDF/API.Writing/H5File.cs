@@ -33,8 +33,8 @@ public partial class H5File : H5Group
     /// </summary>
     /// <param name="filePath">The name of the file.</param>
     /// <param name="options">Options to control serialization behavior.</param>
-    public void Save(string filePath, H5SerializerOptions? options = default)
+    public void Write(string filePath, H5WriteOptions? options = default)
     {
-        H5Writer.Serialize(this, filePath, options ?? new H5SerializerOptions());
+        H5Writer.Write(this, filePath, options ?? new H5WriteOptions());
     }
 }

@@ -5,7 +5,7 @@ internal record NativeWriteContext(
     H5DriverBase Driver,
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,
-    H5SerializerOptions SerializerOptions,
+    H5WriteOptions SerializerOptions,
     Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<object, ulong> ObjectToAddressMap
 );

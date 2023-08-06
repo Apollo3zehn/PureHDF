@@ -51,7 +51,7 @@ public class WritingTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         var expected = File

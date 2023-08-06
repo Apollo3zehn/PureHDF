@@ -18,7 +18,7 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -54,12 +54,12 @@ public partial class DatasetTests
 
         var filePath = Path.GetTempFileName();
 
-        var options = new H5SerializerOptions(
+        var options = new H5WriteOptions(
             PreferCompactDatasetLayout: false
         );
 
         // Act
-        file.Save(filePath, options);
+        file.Write(filePath, options);
 
         // Assert
         try

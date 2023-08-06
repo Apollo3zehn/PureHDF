@@ -33,14 +33,14 @@ public class AttributeTests
             return attribute is not null ? attribute.Name : default;
         }
 
-        var options = new H5SerializerOptions(
+        var options = new H5WriteOptions(
             IncludeStructProperties: type == typeof(WritingTestRecordStruct) || type == typeof(Dictionary<string, int>[]),
             FieldNameMapper: fieldNameMapper,
             PropertyNameMapper: propertyNameMapper
         );
 
         // Act
-        file.Save(filePath, options);
+        file.Write(filePath, options);
 
         // Assert
         try
@@ -97,12 +97,12 @@ public class AttributeTests
 
         var filePath = Path.GetTempFileName();
 
-        var options = new H5SerializerOptions(
+        var options = new H5WriteOptions(
             DefaultStringLength: 6
         );
 
         // Act
-        file.Save(filePath, options);
+        file.Write(filePath, options);
 
         // Assert
         try
@@ -147,14 +147,14 @@ public class AttributeTests
             return attribute is not null ? attribute.Length : default;
         }
 
-        var options = new H5SerializerOptions(
+        var options = new H5WriteOptions(
             DefaultStringLength: 3,
             FieldStringLengthMapper: fieldStringLengthMapper,
             PropertyStringLengthMapper: propertyStringLengthMapper
         );
 
         // Act
-        file.Save(filePath, options);
+        file.Write(filePath, options);
 
         // Assert
         try
@@ -200,7 +200,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -254,7 +254,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -309,7 +309,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -345,7 +345,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -382,7 +382,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -417,7 +417,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Save(filePath);
+        file.Write(filePath);
 
         // Assert
         try
@@ -453,7 +453,7 @@ public class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        void action() => file.Save(filePath);
+        void action() => file.Write(filePath);
 
         // Assert
         try
