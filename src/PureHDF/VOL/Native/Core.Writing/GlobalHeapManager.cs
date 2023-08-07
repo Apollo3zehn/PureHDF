@@ -31,7 +31,7 @@ internal class GlobalHeapManager
         _driver = driver;
     }
 
-    public (WritingGlobalHeapId, IH5WriteStream) AddObject(int size)
+    public (WritingGlobalHeapId, Memory<byte>) AddObject(int size)
     {
         // validation
         if (_collectionState is null)
@@ -84,9 +84,7 @@ internal class GlobalHeapManager
 
         return (
             globalHeapId,
-            // TODO this is a huge performance problem when there are many var length objects
-            // reuse the stream did not work because of nested Global Heap Id requests
-            new SystemMemoryStream(data)
+            data
         );
     }
 

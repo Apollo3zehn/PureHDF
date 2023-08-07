@@ -6,8 +6,7 @@ internal partial class SystemMemoryStream : IH5ReadStream
 
     public SystemMemoryStream(Memory<byte> memory)
     {
-        OriginalMemory = memory;
-        SlicedMemory = memory;
+        Reset(memory);
     }
 
     public long Position { get => _position; }
@@ -65,6 +64,13 @@ internal partial class SystemMemoryStream : IH5ReadStream
             default:
                 throw new NotSupportedException("Unknown seek origin.");
         }
+    }
+
+    public void Reset(Memory<byte> memory)
+    {
+        OriginalMemory = memory;
+        SlicedMemory = memory;
+        _position = 0;
     }
 
     public void Dispose()

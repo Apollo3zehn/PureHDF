@@ -26,7 +26,8 @@ internal static class H5Writer
             GlobalHeapManager: globalHeapManager,
             WriteOptions: options,
             TypeToMessageMap: new(),
-            ObjectToAddressMap: new()
+            ObjectToAddressMap: new(),
+            ShortlivedStream: new(memory: default)
         );
 
         // root group       
@@ -323,7 +324,7 @@ internal static class H5Writer
         var memoryDimensions = dataDimensions.Length == 0 
             ? new ulong[] { 1 } 
             : dataDimensions;
-            
+
         var memoryStarts = memoryDimensions.ToArray();
         memoryStarts.AsSpan().Clear();
 

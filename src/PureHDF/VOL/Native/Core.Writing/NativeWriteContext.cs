@@ -7,5 +7,6 @@ internal record NativeWriteContext(
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
     Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
-    Dictionary<object, ulong> ObjectToAddressMap
+    Dictionary<object, ulong> ObjectToAddressMap,
+    SystemMemoryStream ShortlivedStream
 );

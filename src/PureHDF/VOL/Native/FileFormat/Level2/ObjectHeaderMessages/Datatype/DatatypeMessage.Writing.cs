@@ -503,8 +503,13 @@ internal partial record class DatatypeMessage : Message
                 var totalLength = (int)typeSize * itemCount;
                 lengthArray[0] = itemCount;
 
-                (globalHeapId, var localTarget) = context.GlobalHeapManager
+                (globalHeapId, var memory) = context.GlobalHeapManager
                     .AddObject(totalLength);
+
+                /* Cannot use context.ShortlivedStream here because baseEncode could recursively call 
+                 * this method and then the ShortlivedStream would be reset too early.
+                 */
+                var localTarget = new SystemMemoryStream(memory);
 
                 // encode items
                 foreach (var item in enumerable)
@@ -563,12 +568,14 @@ internal partial record class DatatypeMessage : Message
 
                 lengthArray[0] = stringLength;
 
-                (globalHeapId, var localTarget) = context.GlobalHeapManager
+                (globalHeapId, var memory) = context.GlobalHeapManager
                     .AddObject(stringLength);
+
+                context.ShortlivedStream.Reset(memory);
 
                 // TODO can array creation be avoided here?
                 var bytes = Encoding.UTF8.GetBytes(stringData);
-                localTarget.WriteDataset(bytes);
+                context.ShortlivedStream.WriteDataset(bytes);
             }
 
             // encode variable length object
