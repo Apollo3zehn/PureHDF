@@ -410,15 +410,20 @@ Before you can use external filters, you need to register them using ```H5Filter
 This function could look like the following and should be adapted to your specific filter library:
 
 ```cs
-public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
+public static Func<FilterInfo, Memory<byte>> MyFilterFunc { get; } = info =>
 {
     // Decompressing
-    if (flags.HasFlag(H5FilterFlags.Decompress))
+    if (info.Flags.HasFlag(H5FilterFlags.Decompress))
     {
+        var resultBuffer = info.FinalBuffer.Equals(default)
+            ? new byte[info.SourceBuffer.Length]
+            : info.FinalBuffer;
+
         // pseudo code
-        byte[] decompressedData = MyFilter.Decompress(parameters, buffer.Span);
+        byte[] decompressedData = MyFilter.Decompress(info.Parameters, info.SourceBuffer, resultBuffer);
         return decompressedData;
     }
+
     // Compressing
     else
     {

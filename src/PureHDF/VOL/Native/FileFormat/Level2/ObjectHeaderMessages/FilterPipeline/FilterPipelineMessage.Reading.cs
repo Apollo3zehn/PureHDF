@@ -1,12 +1,10 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class FilterPipelineMessage(
-    List<FilterDescription> FilterDescriptions
+internal partial record class FilterPipelineMessage(
+    FilterDescription[] FilterDescriptions
 ) : Message
 {
     private byte _version;
-
-    private byte _filterCount;
 
     public required byte Version
     {
@@ -23,21 +21,6 @@ internal record class FilterPipelineMessage(
         }
     }
 
-    public required byte FilterCount
-    {
-        get
-        {
-            return _filterCount;
-        }
-        init
-        {
-            if (value > 32)
-                throw new FormatException($"An instance of type {nameof(FilterPipelineMessage)} can only contain a maximum of 32 filters.");
-
-            _filterCount = value;
-        }
-    }
-
     public static FilterPipelineMessage Decode(H5DriverBase driver)
     {
         // version
@@ -46,24 +29,26 @@ internal record class FilterPipelineMessage(
         // filter count
         var filterCount = driver.ReadByte();
 
+        if (filterCount > 32)
+            throw new FormatException($"An instance of type {nameof(FilterPipelineMessage)} can only contain a maximum of 32 filters.");
+
         // reserved
         if (version == 1)
             driver.ReadBytes(6);
 
         // filter descriptions
-        var filterDescriptions = new List<FilterDescription>(filterCount);
+        var filterDescriptions = new FilterDescription[filterCount];
 
         for (int i = 0; i < filterCount; i++)
         {
-            filterDescriptions.Add(FilterDescription.Decode(driver, version));
+            filterDescriptions[i] = FilterDescription.Decode(driver, version);
         }
 
         return new FilterPipelineMessage(
             FilterDescriptions: filterDescriptions
         )
         {
-            Version = version,
-            FilterCount = filterCount
+            Version = version
         };
     }
 }

@@ -414,7 +414,7 @@ public partial class DatasetTests
 #endif
 
     [Fact]
-    public void CanWrite_2D()
+    public void CanWrite_Space_2D()
     {
         // Arrange
         var file = new H5File();

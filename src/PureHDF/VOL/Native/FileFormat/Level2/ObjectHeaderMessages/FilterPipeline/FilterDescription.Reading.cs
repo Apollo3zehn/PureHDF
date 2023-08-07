@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal readonly record struct FilterDescription(
+internal readonly partial record struct FilterDescription(
     FilterIdentifier Identifier,
     FilterFlags Flags,
     string Name,

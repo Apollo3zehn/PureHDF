@@ -28,20 +28,14 @@ static partial class H5Filter
 
     static H5Filter()
     {
-        Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
-
-        Register(H5FilterID.Shuffle, "shuffle", ShuffleFilterFuncion);
-        Register(H5FilterID.Fletcher32, "fletcher", Fletcher32FilterFuncion);
-        Register(H5FilterID.Nbit, "nbit", NbitFilterFuncion);
-        Register(H5FilterID.ScaleOffset, "scaleoffset", ScaleOffsetFilterFuncion);
-        Register(H5FilterID.Deflate, "deflate", DeflateFilterFuncion);
+        ResetRegistrations();
     }
 
     #endregion
 
     #region Properties
 
-    internal static ConcurrentDictionary<FilterIdentifier, H5FilterRegistration> Registrations { get; set; }
+    internal static ConcurrentDictionary<FilterIdentifier, H5FilterRegistration> Registrations { get; set; } = default!;
 
     #endregion
 
@@ -55,8 +49,8 @@ static partial class H5Filter
     /// <param name="filterFunction">The filter function.</param>
     public static void Register(
         H5FilterID identifier,
-         string name, 
-         Func<FilterInfo, Memory<byte>> filterFunction)
+        string name, 
+        Func<FilterInfo, Memory<byte>> filterFunction)
     {
         var registration = new H5FilterRegistration(
             (FilterIdentifier)identifier, 
@@ -67,8 +61,22 @@ static partial class H5Filter
             .AddOrUpdate((FilterIdentifier)identifier, registration, (_, oldRegistration) => registration);
     }
 
+    /// <summary>
+    /// Resets the list of filter registrations to the default.
+    /// </summary>
+    public static void ResetRegistrations()
+    {
+        Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
+
+        Register(H5FilterID.Shuffle, "shuffle", ShuffleFilterFuncion);
+        Register(H5FilterID.Fletcher32, "fletcher", Fletcher32FilterFuncion);
+        Register(H5FilterID.Nbit, "nbit", NbitFilterFuncion);
+        Register(H5FilterID.ScaleOffset, "scaleoffset", ScaleOffsetFilterFuncion);
+        Register(H5FilterID.Deflate, "deflate", DeflateFilterFuncion);
+    }
+
     internal static void ExecutePipeline(
-        List<FilterDescription> pipeline,
+        FilterDescription[] pipeline,
         uint filterMask,
         H5FilterFlags flags,
         Memory<byte> filterBuffer,
@@ -79,7 +87,7 @@ static partial class H5Filter
         /* Read */
         if (flags.HasFlag(H5FilterFlags.Decompress))
         {
-            for (int i = pipeline.Count; i > 0; --i)
+            for (int i = pipeline.Length; i > 0; --i)
             {
                 /* check if filter should be skipped */
                 if (((filterMask >> i) & 0x0001) > 0)
@@ -207,6 +215,31 @@ static partial class H5Filter
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
+#if NET6_0_OR_GREATER
+            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
+
+            if (info.FinalBuffer.Equals(default))
+            {
+                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+                using var decompressionStream = new ZLibStream(sourceStream, CompressionMode.Decompress);
+
+                decompressionStream.CopyTo(decompressedStream);
+
+                return decompressedStream
+                    .GetBuffer()
+                    .AsMemory(0, (int)decompressedStream.Length);
+            }
+
+            else
+            {
+                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
+                using var decompressionStream = new ZLibStream(sourceStream, CompressionMode.Decompress);
+
+                decompressionStream.CopyTo(decompressedStream);
+
+                return info.FinalBuffer;
+            }
+#else
             using var sourceStream = new MemorySpanStream(info.SourceBuffer);
 
             // skip ZLIB header to get only the DEFLATE stream
@@ -233,13 +266,17 @@ static partial class H5Filter
 
                 return info.FinalBuffer;
             }
+#endif
         }
 
         // write
         else
         {
-            // https://github.com/dotnet/runtime/issues/2236
-            throw new Exception("The .NET deflate algorithm is not yet able to write ZLIB data.");
+#if NET6_0_OR_GREATER
+            throw new NotImplementedException();
+#else
+            throw new Exception(".NET 6+ is required for zLib write support.");
+#endif
         }
     }
 

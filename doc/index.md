@@ -201,13 +201,17 @@ The following code samples work for datasets as well as attributes.
 
     /* option 1 (faster) */
     var data = dataset.Read<MyNonNullableStruct>();
-    /* option 2 (slower, for more info see the link below after this code block) */
+
+    /* option 2 (slower): for more info see the link below after this code block */
     var data = dataset.ReadCompound<MyNullableStruct>();
 
-// class: reference
+    /* option 3 (slowest, no predefined struct required: for more info see the link below after this code block */
+    var data = dataset.ReadCompound();
 
-    var data = dataset.Read<H5ObjectReference>();
-    var firstRef = data.First();
+// class: reference @ object reference
+
+    var references = dataset.Read<NativeObjectReference1>();
+    var firstRef = references.First();
 
     /* NOTE: Dereferencing would be quite fast if the object's name
      * was known. Instead, the library searches recursively for the  
@@ -221,6 +225,13 @@ The following code samples work for datasets as well as attributes.
     /* option 1 (slower, use if you don't know the objects parent) */
     var firstObject = root.Get(firstRef);
 
+// class: reference @ region reference
+
+    var references = dataset.Read<NativeRegionReference1>();
+    var firstRef = references.First();
+    var selection = root.Get(firstRef);
+    var data = referencedDataset.Read<T>(fileSelection: selection);
+
 // class: enumerated
 
     enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
@@ -232,9 +243,13 @@ The following code samples work for datasets as well as attributes.
 
     var data = dataset.Read<MyEnum>();
 
-// class: variable length
+// class: variable length @ string
 
     var data = dataset.ReadString();
+
+// class: variable length @ sequence
+
+    var data = dataset.ReadVariableLength<T>();
 
 // class: array
 
@@ -395,15 +410,20 @@ Before you can use external filters, you need to register them using ```H5Filter
 This function could look like the following and should be adapted to your specific filter library:
 
 ```cs
-public static FilterFunc MyFilterFunc { get; } = (flags, parameters, buffer) =>
+public static Func<FilterInfo, Memory<byte>> MyFilterFunc { get; } = info =>
 {
     // Decompressing
-    if (flags.HasFlag(H5FilterFlags.Decompress))
+    if (info.Flags.HasFlag(H5FilterFlags.Decompress))
     {
+        var resultBuffer = info.FinalBuffer.Equals(default)
+            ? new byte[info.SourceBuffer.Length]
+            : info.FinalBuffer;
+
         // pseudo code
-        byte[] decompressedData = MyFilter.Decompress(parameters, buffer.Span);
+        byte[] decompressedData = MyFilter.Decompress(info.Parameters, info.SourceBuffer, resultBuffer);
         return decompressedData;
     }
+
     // Compressing
     else
     {
@@ -429,7 +449,7 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: H5FilterID.Deflate, 
     name: "deflate", 
-    filterFunc: H5DeflateISAL.FilterFunction);
+    filterFunction: H5DeflateISAL.FilterFunction);
 ```
 
 **Deflate (SharpZipLib)**
@@ -444,7 +464,7 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: H5FilterID.Deflate, 
     name: "deflate", 
-    filterFunc: H5DeflateSharpZipLib.FilterFunction);
+    filterFunction: H5DeflateSharpZipLib.FilterFunction);
 ```
 
 **Blosc / Blosc2**
@@ -460,7 +480,7 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: (H5FilterID)32001, 
     name: "blosc2", 
-    filterFunc: H5Blosc2.FilterFunction);
+    filterFunction: H5Blosc2.FilterFunction);
 ```
 
 **BZip2 (SharpZipLib)**
@@ -475,7 +495,20 @@ using PureHDF.Filters;
 H5Filter.Register(
     identifier: (H5FilterID)307, 
     name: "bzip2", 
-    filterFunc: H5BZip2SharpZipLib.FilterFunc);
+    filterFunction: H5BZip2SharpZipLib.FilterFunction);
+```
+
+**LZF**
+
+`dotnet add package PureHDF.Filters.LZF`
+
+```cs
+using PureHDF.Filters;
+
+H5Filter.Register(
+    identifier: (H5FilterID)32000,
+    name: "lzf", 
+    filterFunction: H5Lzf.FilterFunction);
 ```
 
 # 6. Reading Compound Data
@@ -582,30 +615,30 @@ var compoundData = dataset.ReadCompound<NullableStructWithCustomFieldName>(conve
 
 ## 6.3 Unknown structs
 
-You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `H5ObjectReference`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
+You have no idea how the struct in the H5 file looks like? Or it is so large that it is no fun to predefine it? In that case, you can fall back to the non-generic `dataset.ReadCompound()` which returns a `Dictionary<string, object?>[]` where the dictionary values can be anything from simple value types to arrays or nested dictionaries (or even `NativeObjectReference1`), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.
 
 The type mapping is as follows:
 
-| H5 type                        | .NET type                    |
-|--------------------------------|------------------------------|
-| fixed point, 1 byte,  unsigned | `byte`                       |
-| fixed point, 1 byte,    signed | `sbyte`                      |
-| fixed point, 2 bytes, unsigned | `ushort`                     |
-| fixed point, 2 bytes,   signed | `short`                      |
-| fixed point, 4 bytes, unsigned | `uint`                       |
-| fixed point, 4 bytes,   signed | `int`                        |
-| fixed point, 8 bytes, unsigned | `ulong`                      |
-| fixed point, 8 bytes,   signed | `long`                       |
-| floating point, 4 bytes        | `float `                     |
-| floating point, 8 bytes,       | `double`                     |
-| string                         | `string`                     |
-| bitfield                       | `byte[]`                     |
-| opaque                         | `byte[]`                     |
+| H5 type                        | .NET type                     |
+| ------------------------------ | ----------------------------- |
+| fixed point, 1 byte,  unsigned | `byte`                        |
+| fixed point, 1 byte,    signed | `sbyte`                       |
+| fixed point, 2 bytes, unsigned | `ushort`                      |
+| fixed point, 2 bytes,   signed | `short`                       |
+| fixed point, 4 bytes, unsigned | `uint`                        |
+| fixed point, 4 bytes,   signed | `int`                         |
+| fixed point, 8 bytes, unsigned | `ulong`                       |
+| fixed point, 8 bytes,   signed | `long`                        |
+| floating point, 4 bytes        | `float `                      |
+| floating point, 8 bytes,       | `double`                      |
+| string                         | `string`                      |
+| bitfield                       | `byte[]`                      |
+| opaque                         | `byte[]`                      |
 | compound                       | `Dictionary<string, object?>` |
-| reference                      | `H5ObjectReference`          |
-| enumerated                     | `<base type>`                |
-| variable length, type = string | `string`                     |
-| array                          | `<base type>[]`              |
+| reference                      | `NativeObjectReference1`      |
+| enumerated                     | `<base type>`                 |
+| variable length, type = string | `string`                      |
+| array                          | `<base type>[]`               |
 
 Not supported data types like `time` and `variable length type = sequence` will be represented as `null`.
 
@@ -646,7 +679,7 @@ Reading data from a dataset is thread-safe in the following cases, depending on 
 |         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                    |
 | ------- | -------------- | -------------------------------- | --------------------------------- |
 | .NET 4+ | x              | ✓                               | x                                 |
-| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
+| .NET 6+ | ✓              | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
 
 > The multi-threading support comes without significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
@@ -679,7 +712,11 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 
 ```
 
-## 8.2 Multi-Threading (FileStream) (.NET 6+)
+## 8.2 Multi-Threading (FileStream)
+
+| Requires  |
+| --------- |
+| `.NET 6+` |
 
 Starting with .NET 6, there is a new API to access files in a thread-safe way which PureHDF utilizes. The process to load data in parallel is similar to the memory-mapped file approach above:
 
@@ -704,7 +741,11 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 
 ```
 
-## 8.3 Async (.NET 6+)
+## 8.3 Async
+
+| Requires  |
+| --------- |
+| `.NET 6+` |
 
 PureHDF supports reading data asynchronously to allow the CPU work on other tasks while waiting for the result.
 
@@ -910,8 +951,14 @@ var myGroup = bindings.group1.Get();
 
 The following features are **not** (yet) supported:
 
-- Virtual datasets with **unlimited dimensions**
 - Filters: `N-bit`, `SZIP`
+- Virtual datasets: with **unlimited dimensions**
+- Data Types
+  - Reference: `Attribute reference`, `object reference 2`, `dataset region reference 2` (I was unable to produce sample files using `h5py` or `HDF.PInvoke1.10` - the feature seems to be too new)
+  - Variable-length data consisting of
+      - other variable length data
+      - unknown compound data
+      - strings
 
 # 13 Comparison Table
 

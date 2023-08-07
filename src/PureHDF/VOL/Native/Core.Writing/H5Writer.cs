@@ -223,6 +223,14 @@ internal static class H5Writer
             }
         }
 
+        // filter pipeline
+        var filterPipeline = default(FilterPipelineMessage);
+
+        var filterIds = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
+
+        if (chunkDimensions is not null && filterIds is not null && filterIds.Any())
+            filterPipeline = FilterPipelineMessage.Create(filterIds);
+
         // data encode size
         ulong dataEncodeSize;
 
@@ -275,6 +283,9 @@ internal static class H5Writer
             ToHeaderMessage(dataLayout),
             ToHeaderMessage(fillValueMessage)
         };
+
+        if (filterPipeline is not null)
+            headerMessages.Add(ToHeaderMessage(filterPipeline));
 
         // object header
         var objectHeader = new ObjectHeader2(

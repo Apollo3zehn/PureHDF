@@ -7,16 +7,13 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 #endif
 using Xunit;
-using Xunit.Abstractions;
 
 // TODO: Add test with additional filter (shuffle) to detect wrongly returned filter sizes
 
 namespace PureHDF.Tests.Reading.Filters
 {
-    public class FilterTests(ITestOutputHelper logger)
+    public class FilterTests
     {
-        private readonly ITestOutputHelper _logger = logger;
-
         [Theory]
 
         [InlineData("minbits_0", (byte)24, 24, 24, 24, 24, 24)]
@@ -159,6 +156,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = "./TestFiles/blosc.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
+            H5Filter.ResetRegistrations();
             H5Filter.Register(identifier: (H5FilterID)32001, name: "blosc2", filterFunction: H5Blosc2.FilterFunction);
 
             // Act
@@ -172,6 +170,7 @@ namespace PureHDF.Tests.Reading.Filters
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
             }
+            
             else
             {
                 var exception = Assert.Throws<Exception>(() => dataset.Read<int>());
@@ -229,6 +228,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = "./TestFiles/bzip2.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
+            H5Filter.ResetRegistrations();
             H5Filter.Register(identifier: (H5FilterID)307, name: "bzip2", filterFunction: H5BZip2SharpZipLib.FilterFunction);
 
             // Act
@@ -246,6 +246,8 @@ namespace PureHDF.Tests.Reading.Filters
             // Arrange
             var version = H5F.libver_t.LATEST;
             var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddFilteredDataset_Fletcher);
+
+            H5Filter.ResetRegistrations();
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
@@ -278,6 +280,8 @@ namespace PureHDF.Tests.Reading.Filters
                 "Intel_ISA_L_Inflate" => H5DeflateISAL.FilterFunction,
                 _ => throw new NotSupportedException($"The filter func ID {filterFuncId} is not supported.")
             };
+
+            H5Filter.ResetRegistrations();
 
             if (func is not null)
                 H5Filter.Register(H5FilterID.Deflate, "deflate", func);
@@ -558,7 +562,6 @@ namespace PureHDF.Tests.Reading.Filters
             var sw = Stopwatch.StartNew();
             EndiannessConverterGeneric.Convert(bytesOfType, actual_converted, actual);
             var generic = sw.Elapsed.TotalMilliseconds;
-            _logger.WriteLine($"Generic: {generic:F1} ms");
 
 #if NET5_0_OR_GREATER
             ///* SSE2 */
@@ -578,7 +581,6 @@ namespace PureHDF.Tests.Reading.Filters
                 actual = new byte[actual_converted.Length];
                 EndiannessConverterAvx2.Convert(bytesOfType, actual_converted, actual);
                 var avx2 = sw.Elapsed.TotalMilliseconds;
-                _logger.WriteLine($"AVX2: {avx2:F1} ms");
             }
 #endif
         }

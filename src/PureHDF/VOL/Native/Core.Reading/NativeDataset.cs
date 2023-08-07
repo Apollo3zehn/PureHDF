@@ -140,7 +140,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     internal FillValueMessage InternalFillValue { get; } = default!;
 
-    internal FilterPipelineMessage? InternalFilterPipeline { get; }
+    internal FilterPipelineMessage? InternalFilterPipeline { get; private set; }
 
     internal ObjectModificationMessage? InternalObjectModification { get; }
 
@@ -859,15 +859,11 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         // for testing only
         if (skipShuffle && InternalFilterPipeline is not null)
         {
-            var filtersToRemove = InternalFilterPipeline
-                .FilterDescriptions
-                .Where(description => description.Identifier == FilterIdentifier.Shuffle)
-                .ToList();
-
-            foreach (var filter in filtersToRemove)
-            {
-                InternalFilterPipeline.FilterDescriptions.Remove(filter);
-            }
+            InternalFilterPipeline = InternalFilterPipeline with {
+                FilterDescriptions = InternalFilterPipeline.FilterDescriptions
+                    .Where(description => description.Identifier != FilterIdentifier.Shuffle)
+                    .ToArray()
+            };
         }
 
         /* dataset info */

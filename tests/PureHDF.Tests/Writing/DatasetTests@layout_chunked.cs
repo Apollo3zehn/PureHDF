@@ -1,5 +1,6 @@
 ﻿using Xunit;
 using System.Reflection;
+using PureHDF.Filters;
 
 namespace PureHDF.Tests.Writing;
 
@@ -74,11 +75,69 @@ public partial class DatasetTests
 
             using var h5File = H5File.OpenRead(filePath);
             var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
+
+            Assert.Null(nativeDataset.InternalFilterPipeline);
+
             var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
             var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
 
             Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
             Assert.Equal(typeof(ImplicitIndexingInformation), properties.IndexingTypeInformation.GetType());
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public void CanWrite_Chunked_fixed_array_filtered_2d()
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+
+        var file = new H5File
+        {
+            ["chunked"] = new H5Dataset(
+                data,
+                dimensions: new[] { 10UL, 10UL },
+                chunkDimensions: new[] { 3U, 4U })
+        };
+
+        var filePath = Path.GetTempFileName();
+       
+        var options = new H5WriteOptions(
+            Filters: new[] { 
+                H5FilterID.Shuffle, 
+                H5FilterID.Deflate
+            }
+        );
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText("DumpFiles/layout_chunked_fixed_array_filtered_2d.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+
+            using var h5File = H5File.OpenRead(filePath);
+            var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
+
+            Assert.NotNull(nativeDataset.InternalFilterPipeline);
+
+            var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
+            var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
+
+            Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
+            Assert.Equal(typeof(FixedArrayIndexingInformation), properties.IndexingTypeInformation.GetType());
         }
         finally
         {
