@@ -15,7 +15,8 @@ internal abstract class H5D_Chunk : H5D_Base
 
     #region Fields
 
-    private readonly IChunkCache _chunkCache;
+    private readonly IReadingChunkCache _readingChunkCache = default!;
+    private readonly IWritingChunkCache _writingChunkCache = default!;
     private readonly bool _readingChunkIndexAddressIsUndefined;
 
     #endregion
@@ -33,12 +34,12 @@ internal abstract class H5D_Chunk : H5D_Base
 
         if (readContext is null)
         {
-            _chunkCache = datasetAccess.ChunkCache ?? writeContext.File.ChunkCacheFactory();
+            _writingChunkCache = datasetAccess.WritingChunkCache ?? (writeContext.WriteOptions.ChunkCacheFactory ?? H5WriteOptions.DefaultChunkCacheFactory)();
         }
 
         else
         {
-            _chunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
+            _readingChunkCache = datasetAccess.ReadingChunkCache ?? readContext.File.ChunkCacheFactory();
             
             _readingChunkIndexAddressIsUndefined = readContext.Superblock
                 .IsUndefinedAddress(dataset.Layout.Address);
@@ -163,8 +164,12 @@ internal abstract class H5D_Chunk : H5D_Base
 
     public override async Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
     {
-        var buffer = await _chunkCache
-            .GetChunkAsync(chunkIndices, () => ReadChunkAsync(reader, chunkIndices))
+        var buffer = await _readingChunkCache
+
+            .GetChunkAsync(
+                chunkIndices, 
+                chunkReader: () => ReadChunkAsync(reader, chunkIndices))
+                
             .ConfigureAwait(false);
 
         var stream = new SystemMemoryStream(buffer);
@@ -172,16 +177,13 @@ internal abstract class H5D_Chunk : H5D_Base
         return stream;
     }
 
-    public override async Task<IH5WriteStream> GetWriteStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
     {
-        var buffer = await _chunkCache
-
-            .GetChunkAsync(
-                chunkIndices, 
-                () => ReadChunkAsync(reader, chunkIndices),
-                WriteChunkAsync)
-                
-            .ConfigureAwait(false);
+        var buffer = _writingChunkCache
+            .GetChunk(
+                chunkIndices,
+                chunkAllocator: () => new byte[ChunkByteSize],
+                chunkWriter: WriteChunk);
 
         var stream = new SystemMemoryStream(buffer);
 
@@ -196,22 +198,26 @@ internal abstract class H5D_Chunk : H5D_Base
     {
         base.Dispose(disposing);
 
-        // TODO this is not pretty
-        _chunkCache
-            .FlushAsync(WriteContext is null ? null : WriteChunkAsync)
-            .ConfigureAwait(false)
-            .GetAwaiter()
-            .GetResult();
+        if (WriteContext is not null)
+            _writingChunkCache.Flush(WriteChunk);
     }
 
     private async Task<Memory<byte>> ReadChunkAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader
     {
         var buffer = new byte[ChunkByteSize];
 
-        if (ReadContext is not null)
+        // TODO: This way, fill values will become part of the cache
+        if (_readingChunkIndexAddressIsUndefined)
         {
-            // TODO: This way, fill values will become part of the cache
-            if (_readingChunkIndexAddressIsUndefined)
+            if (Dataset.FillValue.Value is not null)
+                buffer.AsSpan().Fill(Dataset.FillValue.Value);
+        }
+
+        else
+        {
+            var chunkInfo = GetChunkInfo(chunkIndices);
+
+            if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
                 if (Dataset.FillValue.Value is not null)
                     buffer.AsSpan().Fill(Dataset.FillValue.Value);
@@ -219,30 +225,8 @@ internal abstract class H5D_Chunk : H5D_Base
 
             else
             {
-                var chunkInfo = GetChunkInfo(chunkIndices);
-
-                if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
-                {
-                    if (Dataset.FillValue.Value is not null)
-                        buffer.AsSpan().Fill(Dataset.FillValue.Value);
-                }
-
-                else
-                {
-                    await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
-                }
+                await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
             }
-        }
-        
-        else if (WriteContext is not null)
-        {
-            var chunkInfo = GetChunkInfo(chunkIndices);
-            await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
-        }
-
-        else
-        {
-            throw new Exception("This should never happen.");
         }
 
         return buffer;
@@ -270,14 +254,12 @@ internal abstract class H5D_Chunk : H5D_Base
         }
     }
 
-    private Task WriteChunkAsync(ulong[] chunkIndices, Memory<byte> chunk)
+    private void WriteChunk(ulong[] chunkIndices, Memory<byte> chunk)
     {
         var chunkInfo = GetChunkInfo(chunkIndices);
 
         WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
         WriteContext.Driver.Write(chunk.Span);
-
-        return Task.CompletedTask;
     }
 
     #endregion

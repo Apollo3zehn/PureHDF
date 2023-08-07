@@ -10,9 +10,7 @@ internal abstract record class StoragePropertyDescription(
 };
 
 internal record class CompactStoragePropertyDescription(
-    byte[] InputData,
-    Action<H5DriverBase> EncodeData,
-    ushort EncodeDataSize
+    byte[] Data
 ) : StoragePropertyDescription(Superblock.UndefinedAddress)
 {
     public static CompactStoragePropertyDescription Decode(H5DriverBase driver)
@@ -20,9 +18,7 @@ internal record class CompactStoragePropertyDescription(
         var size = driver.ReadUInt16();
 
         return new CompactStoragePropertyDescription(
-            InputData: driver.ReadBytes(size),
-            EncodeData: default!,
-            EncodeDataSize: default!
+            Data: driver.ReadBytes(size)
         );
     }
 
@@ -30,7 +26,7 @@ internal record class CompactStoragePropertyDescription(
     {
         var encodeSize =
             sizeof(ushort) +
-            EncodeDataSize;
+            Data.Length;
 
         return (ushort)encodeSize;
     }
@@ -38,10 +34,10 @@ internal record class CompactStoragePropertyDescription(
     public override void Encode(H5DriverBase driver)
     {
         // version
-        driver.Write(EncodeDataSize);
+        driver.Write((ushort)Data.Length);
 
         // data
-        EncodeData.Invoke(driver);
+        driver.Write(Data);
     }
 }
 

@@ -2,32 +2,6 @@
 
 public partial class H5File : H5Group
 {
-    private Func<IChunkCache>? _chunkCacheFactory;
-    
-    /// <summary>
-    /// The default chunk cache factory.
-    /// </summary>
-    public static Func<IChunkCache> DefaultChunkCacheFactory { get; } = () => new SimpleChunkCache();
-
-    /// <summary>
-    /// Gets or sets the current chunk cache factory.
-    /// </summary>
-    public Func<IChunkCache> ChunkCacheFactory
-    {
-        get
-        {
-            if (_chunkCacheFactory is not null)
-                return _chunkCacheFactory;
-
-            else
-                return DefaultChunkCacheFactory;
-        }
-        set
-        {
-            _chunkCacheFactory = value;
-        }
-    }
-
     /// <summary>
     /// Creates a new file, write the contents to the file, and then closes the file. If the target file already exists, it is overwritten.
     /// </summary>

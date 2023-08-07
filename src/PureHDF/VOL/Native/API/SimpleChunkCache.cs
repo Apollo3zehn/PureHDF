@@ -7,7 +7,7 @@
 /// <summary>
 /// A simple chunk cache.
 /// </summary>
-public class SimpleChunkCache : IChunkCache
+public class SimpleChunkCache : IReadingChunkCache, IWritingChunkCache
 {
     #region Records
 
@@ -74,10 +74,7 @@ public class SimpleChunkCache : IChunkCache
     #region Methods
 
     /// <inheritdoc />
-    public async Task<Memory<byte>> GetChunkAsync(
-        ulong[] indices, 
-        Func<Task<Memory<byte>>> chunkReader, 
-        Func<ulong[], Memory<byte>, Task>? chunkWriter = default)
+    public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkReader)
     {
         if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
         {
@@ -94,7 +91,7 @@ public class SimpleChunkCache : IChunkCache
             {
                 while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
                 {
-                    await PreemptAsync(chunkWriter);
+                    Preempt(chunkWriter: default);
                 }
 
                 ConsumedBytes += (ulong)chunk.Length;
@@ -106,26 +103,58 @@ public class SimpleChunkCache : IChunkCache
     }
 
     /// <inheritdoc />
-    public async Task FlushAsync(Func<ulong[], Memory<byte>, Task>? chunkWriter = null)
+    public Memory<byte> GetChunk(
+        ulong[] indices, 
+        Func<Memory<byte>> chunkAllocator, 
+        Action<ulong[], Memory<byte>> chunkWriter)
+    {
+        if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
+        {
+            chunkInfo.LastAccess = DateTime.Now;
+        }
+
+        else
+        {
+            var buffer = chunkAllocator();
+            chunkInfo = new ChunkInfo(buffer) { LastAccess = DateTime.Now };
+            var chunk = chunkInfo.Chunk;
+
+            if ((ulong)chunk.Length <= ByteCount)
+            {
+                while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
+                {
+                    Preempt(chunkWriter);
+                }
+
+                ConsumedBytes += (ulong)chunk.Length;
+                _chunkInfoMap[indices] = chunkInfo;
+            }
+        }
+
+        return chunkInfo.Chunk;
+    }
+
+    /// <inheritdoc />
+    public void Flush(Action<ulong[], Memory<byte>>? chunkWriter = null)
     {
         foreach (var entry in _chunkInfoMap)
         {
             if (chunkWriter is not null)
-                await chunkWriter(entry.Key, entry.Value.Chunk);
+                chunkWriter(entry.Key, entry.Value.Chunk);
         }
 
         _chunkInfoMap.Clear();
         ConsumedBytes = 0;
     }
 
-    private async Task PreemptAsync(Func<ulong[], Memory<byte>, Task>? chunkWriter)
+    private void Preempt(Action<ulong[], Memory<byte>>? chunkWriter)
     {
         var entry = _chunkInfoMap
             .OrderBy(current => current.Value.LastAccess)
             .FirstOrDefault();
 
         if (chunkWriter is not null)
-            await chunkWriter(entry.Key, entry.Value.Chunk);
+            chunkWriter(entry.Key, entry.Value.Chunk);
 
         ConsumedBytes -= (ulong)entry.Value.Chunk.Length;
         _chunkInfoMap.Remove(entry.Key);

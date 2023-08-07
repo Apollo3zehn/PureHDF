@@ -188,6 +188,6 @@ internal static class WriteUtils
     {
         Span<T> sourceArray = stackalloc T[] { (T)source };
 
-        target.Write(MemoryMarshal.AsBytes(sourceArray));
+        target.WriteDataset(MemoryMarshal.AsBytes(sourceArray));
     }
 }

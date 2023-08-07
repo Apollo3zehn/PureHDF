@@ -24,7 +24,7 @@ internal record EncodeInfo<T>(
     Selection SourceSelection,
     Selection TargetSelection,
     Func<ulong[], Memory<T>> GetSourceBuffer,
-    Func<ulong[], Task<IH5WriteStream>> GetTargetStreamAsync,
+    Func<ulong[], IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
     int TargetTypeSize,
     int SourceTypeFactor
@@ -95,11 +95,10 @@ internal static class SelectionUtils
         }
     }
 
-    public static Task EncodeAsync<TSource, TReader>(
-        TReader reader,
+    public static void Encode<TSource>(
         int sourceRank,
         int targetRank,
-        EncodeInfo<TSource> encodeInfo) where TReader : IReader
+        EncodeInfo<TSource> encodeInfo)
     {
         /* validate selections */
         if (encodeInfo.SourceSelection.TotalElementCount != encodeInfo.TargetSelection.TotalElementCount)
@@ -120,14 +119,13 @@ internal static class SelectionUtils
             .GetEnumerator();
 
         /* select method */
-        return EncodeStreamAsync(reader, sourceWalker, targetWalker, encodeInfo);
+        EncodeStream(sourceWalker, targetWalker, encodeInfo);
     }
 
-    private async static Task EncodeStreamAsync<TResult, TReader>(
-        TReader reader,
+    private static void EncodeStream<TResult>(
         IEnumerator<RelativeStep> sourceWalker,
         IEnumerator<RelativeStep> targetWalker,
-        EncodeInfo<TResult> encodeInfo) where TReader : IReader
+        EncodeInfo<TResult> encodeInfo)
     {
         /* initialize source walker */
         var sourceBuffer = default(Memory<TResult>);
@@ -147,7 +145,7 @@ internal static class SelectionUtils
             if (targetStream is null /* if stream not assigned yet */ ||
                 !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
             {
-                targetStream = await encodeInfo.GetTargetStreamAsync(targetStep.Chunk).ConfigureAwait(false);
+                targetStream = encodeInfo.GetTargetStream(targetStep.Chunk);
                 lastTargetChunk = targetStep.Chunk;
             }
 
@@ -181,27 +179,11 @@ internal static class SelectionUtils
                 var length = Math.Min(currentLength, currentSource.Length / encodeInfo.SourceTypeFactor);
                 var sourceLength = length * encodeInfo.SourceTypeFactor;
 
-                // optimization; chunked / compact dataset (SystemMemoryStream)
-                if (targetStream is SystemMemoryStream systemMemoryStream)
-                {
-                    systemMemoryStream.Seek(currentOffset * encodeInfo.TargetTypeSize, SeekOrigin.Begin);
+                targetStream.Seek(currentOffset * encodeInfo.TargetTypeSize, SeekOrigin.Begin);
 
-                    var currentTarget = systemMemoryStream.SlicedMemory;
-                    var targetLength = length * encodeInfo.TargetTypeSize;
-
-                    // TODO, currently 'currentTarget' is unused
-                    encodeInfo.Encoder.Invoke(
-                        source: currentSource[..sourceLength],
-                        target: systemMemoryStream);
-                }
-
-                // default; contiguous dataset (OffsetStream)
-                else
-                {
-                    encodeInfo.Encoder(
-                        currentSource[..sourceLength],
-                        targetStream);
-                }
+                encodeInfo.Encoder(
+                    currentSource[..sourceLength],
+                    targetStream);
 
                 currentOffset += length;
                 currentLength -= length;

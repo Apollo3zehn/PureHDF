@@ -230,7 +230,7 @@ The following code samples work for datasets as well as attributes.
     var references = dataset.Read<NativeRegionReference1>();
     var firstRef = references.First();
     var selection = root.Get(firstRef);
-    var data = referencedDataset.Read(fileSelection: selection);
+    var data = referencedDataset.Read<T>(fileSelection: selection);
 
 // class: enumerated
 

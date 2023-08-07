@@ -6,5 +6,5 @@ internal interface IH5WriteStream : IDisposable
 
     void Seek(long offset, SeekOrigin origin);
 
-    void Write(Span<byte> buffer);
+    void WriteDataset(Span<byte> buffer);
 }

@@ -2,7 +2,7 @@
 
 namespace PureHDF.VFD;
 
-internal abstract partial class H5DriverBase
+internal abstract partial class H5DriverBase : IH5WriteStream
 {
     public void Write<T>(T value) where T : unmanaged
     {
@@ -11,6 +11,8 @@ internal abstract partial class H5DriverBase
     }
 
     public abstract void Write(Span<byte> data);
+
+    public abstract void WriteDataset(Span<byte> buffer);
 
     public abstract void SetLength(long endAddress);
 }

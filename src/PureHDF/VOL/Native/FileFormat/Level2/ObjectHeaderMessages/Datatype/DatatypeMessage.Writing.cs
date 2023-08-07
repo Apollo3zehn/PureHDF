@@ -96,7 +96,7 @@ internal partial record class DatatypeMessage : Message
         int stringLength = default)
     {
         if (stringLength == default)
-            stringLength = context.SerializerOptions.DefaultStringLength;
+            stringLength = context.WriteOptions.DefaultStringLength;
 
         var cache = context.TypeToMessageMap;
 
@@ -180,7 +180,7 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType
-                => context.SerializerOptions.IncludeStructProperties
+                => context.WriteOptions.IncludeStructProperties
                     ? GetTypeInfoForReferenceLikeType(context, type)
                     : GetTypeInfoForValueType(context, type),
 
@@ -207,7 +207,7 @@ internal partial record class DatatypeMessage : Message
                 ((bool)source) ? (byte)1 : (byte)0
             };
 
-            target.Write(buffer);
+            target.WriteDataset(buffer);
         }
 
         return (baseMessage, encode);
@@ -278,7 +278,7 @@ internal partial record class DatatypeMessage : Message
             var fieldInfo = fieldInfos[i];
             var underlyingType = fieldInfo.FieldType;
             var (fieldMessage, _) = GetTypeInfoForScalar(context, underlyingType);
-            var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
+            var fieldNameMapper = context.WriteOptions.FieldNameMapper;
 
             properties[i] = new CompoundPropertyDescription(
                 Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
@@ -326,12 +326,12 @@ internal partial record class DatatypeMessage : Message
 
         var offset = 0U;
         var isValueType = type.IsValueType;
-        var defaultStringLength = context.SerializerOptions.DefaultStringLength;
+        var defaultStringLength = context.WriteOptions.DefaultStringLength;
 
         // fields
         var includeFields = isValueType
-            ? context.SerializerOptions.IncludeStructFields
-            : context.SerializerOptions.IncludeClassFields;
+            ? context.WriteOptions.IncludeStructFields
+            : context.WriteOptions.IncludeClassFields;
 
         var fieldInfos = includeFields
             ? type.GetFields(BindingFlags.Public | BindingFlags.Instance)
@@ -341,13 +341,13 @@ internal partial record class DatatypeMessage : Message
             ? new ElementEncodeDelegate[fieldInfos.Length]
             : Array.Empty<ElementEncodeDelegate>();
 
-        var fieldNameMapper = context.SerializerOptions.FieldNameMapper;
-        var fieldStringLengthMapper = context.SerializerOptions.FieldStringLengthMapper;
+        var fieldNameMapper = context.WriteOptions.FieldNameMapper;
+        var fieldStringLengthMapper = context.WriteOptions.FieldStringLengthMapper;
 
         // properties
         var includeProperties = isValueType
-            ? context.SerializerOptions.IncludeStructProperties
-            : context.SerializerOptions.IncludeClassProperties;
+            ? context.WriteOptions.IncludeStructProperties
+            : context.WriteOptions.IncludeClassProperties;
 
         var propertyInfos = type
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -358,8 +358,8 @@ internal partial record class DatatypeMessage : Message
             ? new ElementEncodeDelegate[propertyInfos.Length]
             : Array.Empty<ElementEncodeDelegate>();
 
-        var propertyNameMapper = context.SerializerOptions.PropertyNameMapper;
-        var propertyStringLengthMapper = context.SerializerOptions.PropertyStringLengthMapper;
+        var propertyNameMapper = context.WriteOptions.PropertyNameMapper;
+        var propertyStringLengthMapper = context.WriteOptions.PropertyStringLengthMapper;
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
@@ -514,12 +514,12 @@ internal partial record class DatatypeMessage : Message
             }
 
             // encode variable length object
-            target.Write(MemoryMarshal.AsBytes(lengthArray));
+            target.WriteDataset(MemoryMarshal.AsBytes(lengthArray));
 
             Span<WritingGlobalHeapId> gheapIdArray
                 = stackalloc WritingGlobalHeapId[] { globalHeapId };
 
-            target.Write(MemoryMarshal.AsBytes(gheapIdArray));
+            target.WriteDataset(MemoryMarshal.AsBytes(gheapIdArray));
         }
 
         return (message, encode);
@@ -568,16 +568,16 @@ internal partial record class DatatypeMessage : Message
 
                 // TODO can array creation be avoided here?
                 var bytes = Encoding.UTF8.GetBytes(stringData);
-                localTarget.Write(bytes);
+                localTarget.WriteDataset(bytes);
             }
 
             // encode variable length object
-            target.Write(MemoryMarshal.AsBytes(lengthArray));
+            target.WriteDataset(MemoryMarshal.AsBytes(lengthArray));
 
             Span<WritingGlobalHeapId> gheapIdArray
                 = stackalloc WritingGlobalHeapId[] { globalHeapId };
 
-            target.Write(MemoryMarshal.AsBytes(gheapIdArray));
+            target.WriteDataset(MemoryMarshal.AsBytes(gheapIdArray));
         }
 
         return (message, encode);
@@ -611,7 +611,7 @@ internal partial record class DatatypeMessage : Message
             var truncate = Math.Min(stringBytes.Length, length);
             stringBytes = stringBytes[..truncate];
 
-            target.Write(stringBytes);
+            target.WriteDataset(stringBytes);
 
             var padding = length - stringBytes.Length;
 
@@ -621,13 +621,13 @@ internal partial record class DatatypeMessage : Message
                 {
                     Span<byte> paddingBuffer = stackalloc byte[padding];
                     paddingBuffer.Clear();
-                    target.Write(paddingBuffer);
+                    target.WriteDataset(paddingBuffer);
                 }
 
                 else
                 {
                     using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
-                    target.Write(paddingBufferOwner.Memory.Span[..padding]);
+                    target.WriteDataset(paddingBufferOwner.Memory.Span[..padding]);
                 }
             }
         }
@@ -751,7 +751,7 @@ internal partial record class DatatypeMessage : Message
         static void encode(object source, IH5WriteStream target)
         {
             Span<Half> data = stackalloc Half[] { (Half)source };
-            target.Write(MemoryMarshal.AsBytes(data));
+            target.WriteDataset(MemoryMarshal.AsBytes(data));
         };
 
         return (message, encode);
@@ -795,7 +795,7 @@ internal partial record class DatatypeMessage : Message
         static void encode(object source, IH5WriteStream target)
         {
             Span<float> data = stackalloc float[] { (float)source };
-            target.Write(MemoryMarshal.AsBytes(data));
+            target.WriteDataset(MemoryMarshal.AsBytes(data));
         };
 
         return (message, encode);
@@ -838,7 +838,7 @@ internal partial record class DatatypeMessage : Message
         static void encode(object source, IH5WriteStream target)
         {
             Span<double> data = stackalloc double[] { (double)source };
-            target.Write(MemoryMarshal.AsBytes(data));
+            target.WriteDataset(MemoryMarshal.AsBytes(data));
         };
 
         return (message, encode);
@@ -923,7 +923,7 @@ internal partial record class DatatypeMessage : Message
         var (message, _) = GetTypeInfoForScalar(context, typeof(T));
 
         static void encode(Memory<T> source, IH5WriteStream target)
-            => target.Write(MemoryMarshal.AsBytes(source.Span));
+            => target.WriteDataset(MemoryMarshal.AsBytes(source.Span));
 
         return (message, encode);
     }

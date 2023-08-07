@@ -28,8 +28,7 @@ internal abstract class H5D_Base : IDisposable
     public abstract Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) 
         where TReader : IReader;
 
-    public abstract Task<IH5WriteStream> GetWriteStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
-        where TReader : IReader;
+    public abstract IH5WriteStream GetWriteStream(ulong[] chunkIndices);
 
     protected virtual void Dispose(bool disposing)
     {

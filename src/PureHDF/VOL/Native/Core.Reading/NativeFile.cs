@@ -12,7 +12,7 @@ public class NativeFile : NativeGroup, IDisposable
 
     private readonly bool _deleteOnClose;
     
-    private Func<IChunkCache>? _chunkCacheFactory;
+    private Func<IReadingChunkCache>? _chunkCacheFactory;
 
     #endregion
 
@@ -37,7 +37,7 @@ public class NativeFile : NativeGroup, IDisposable
     /// <summary>
     /// The default chunk cache factory.
     /// </summary>
-    public static Func<IChunkCache> DefaultChunkCacheFactory { get; } = () => new SimpleChunkCache();
+    public static Func<IReadingChunkCache> DefaultChunkCacheFactory { get; } = () => new SimpleChunkCache();
 
     /// <summary>
     /// Gets the path of the opened HDF5 file if loaded from the file system.
@@ -47,7 +47,7 @@ public class NativeFile : NativeGroup, IDisposable
     /// <summary>
     /// Gets or sets the current chunk cache factory.
     /// </summary>
-    public Func<IChunkCache> ChunkCacheFactory
+    public Func<IReadingChunkCache> ChunkCacheFactory
     {
         get
         {

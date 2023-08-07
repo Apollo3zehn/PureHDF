@@ -2,20 +2,18 @@
 
 internal partial record class DataLayoutMessage4
 {
-    public static DataLayoutMessage4 Create<T>(
+    public static DataLayoutMessage4 Create(
         NativeWriteContext context,
-        EncodeDelegate<T> encode,
         ulong dataEncodeSize,
         uint typeSize,
-        Memory<T> data,
         uint[]? chunkDimensions)
     {
-        var preferCompact = context.SerializerOptions.PreferCompactDatasetLayout;
+        var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
         var dataLayout = default(DataLayoutMessage4);
 
         if (chunkDimensions is not null)
         {
-            #error This works only for the implicit index. Move allocation to e.g. H5D_Chunk4_FixedArray.
+            // #error This works only for the implicit index. Move allocation to e.g. H5D_Chunk4_FixedArray.
             var address = context.FreeSpaceManager.Allocate((long)dataEncodeSize);
 
             var properties = new ChunkedStoragePropertyDescription4(
@@ -54,13 +52,9 @@ internal partial record class DataLayoutMessage4
                 var localWriter = new SystemMemoryStream(buffer);
 
                 var properties = new CompactStoragePropertyDescription(
-                    InputData: default!,
-                    EncodeData: driver => 
-                    {
-                        encode(data, localWriter);
-                        driver.Write(buffer);
-                    },
-                    EncodeDataSize: (ushort)dataEncodeSize
+                    Data: dataEncodeSize == 0
+                        ? Array.Empty<byte>()
+                        : new byte[dataEncodeSize]
                 );
 
                 dataLayout = new DataLayoutMessage4(

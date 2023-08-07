@@ -2,8 +2,8 @@
 
 internal partial class OffsetStream : IH5ReadStream, IH5WriteStream
 {
-    public void Write(Span<byte> buffer)
+    public void WriteDataset(Span<byte> buffer)
     {
-        _driver.Write(buffer);
+        _driver.WriteDataset(buffer);
     }
 }

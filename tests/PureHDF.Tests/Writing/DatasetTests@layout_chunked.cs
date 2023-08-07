@@ -73,7 +73,12 @@ public partial class DatasetTests
             Assert.Equal(expected, actual);
 
             using var h5File = H5File.OpenRead(filePath);
-            Assert.Equal(H5DataLayoutClass.Chunked, h5File.Dataset("chunked").Layout.Class);
+            var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
+            var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
+            var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
+
+            Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
+            Assert.Equal(typeof(ImplicitIndexingInformation), properties.IndexingTypeInformation.GetType());
         }
         finally
         {

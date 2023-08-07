@@ -52,7 +52,7 @@ internal class H5D_Contiguous : H5D_Base
         return Task.FromResult(_readStream);
     }
 
-    public override Task<IH5WriteStream> GetWriteStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
     {
         if (Dataset.Layout is DataLayoutMessage4 layout)
         {
@@ -68,7 +68,7 @@ internal class H5D_Contiguous : H5D_Base
             throw new Exception("Only data layout message version 4 is supported.");
         }
 
-        return Task.FromResult(_writeStream);
+        return _writeStream;
     }
 
     #endregion

@@ -20,7 +20,7 @@ internal class H5D_Compact : H5D_Base
 
     public override ulong[] GetChunkDims()
     {
-        return Dataset.Space.Dimensions;
+        return Dataset.GetDatasetDims();
     }
 
     public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
@@ -36,7 +36,7 @@ internal class H5D_Compact : H5D_Base
         else if (Dataset.Layout is DataLayoutMessage3 layout34)
         {
             var compact = (CompactStoragePropertyDescription)layout34.Properties;
-            buffer = compact.InputData;
+            buffer = compact.Data;
         }
         
         else
@@ -49,7 +49,7 @@ internal class H5D_Compact : H5D_Base
         return Task.FromResult(stream);
     }
 
-    public override Task<IH5WriteStream> GetWriteStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
     {
         byte[] buffer;
 
@@ -62,7 +62,7 @@ internal class H5D_Compact : H5D_Base
         else if (Dataset.Layout is DataLayoutMessage3 layout34)
         {
             var compact = (CompactStoragePropertyDescription)layout34.Properties;
-            buffer = compact.InputData;
+            buffer = compact.Data;
         }
         
         else
@@ -70,9 +70,7 @@ internal class H5D_Compact : H5D_Base
             throw new Exception($"Data layout message type '{Dataset.Layout.GetType().Name}' is not supported.");
         }
 
-        IH5WriteStream stream = new SystemMemoryStream(buffer);
-
-        return Task.FromResult(stream);
+        return new SystemMemoryStream(buffer);
     }
 
     #endregion

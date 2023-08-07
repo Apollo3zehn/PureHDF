@@ -7,6 +7,11 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         throw new NotImplementedException();
     }
 
+    public override void WriteDataset(Span<byte> buffer)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void SetLength(long endAddress)
     {
         throw new NotImplementedException();

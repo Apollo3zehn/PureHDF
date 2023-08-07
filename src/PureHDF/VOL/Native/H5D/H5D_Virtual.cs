@@ -73,7 +73,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
         return Task.FromResult(stream);
     }
 
-    public override Task<IH5WriteStream> GetWriteStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
     {
         throw new NotImplementedException();
     }
