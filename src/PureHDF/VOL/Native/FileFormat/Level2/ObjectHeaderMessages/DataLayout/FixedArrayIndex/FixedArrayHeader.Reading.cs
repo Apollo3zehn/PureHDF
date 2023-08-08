@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal record class FixedArrayHeader(
+internal partial record class FixedArrayHeader(
     Superblock Superblock,
     ClientID ClientID,
     byte EntrySize,

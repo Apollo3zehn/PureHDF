@@ -267,8 +267,9 @@ internal static class H5Writer
         // data layout
         var dataLayout = DataLayoutMessage4.Create(
             context, 
-            dataEncodeSize,
+            (long)dataEncodeSize,
             datatype.Size,
+            isFiltered: filterPipeline is not null,
             chunkDimensions);
 
         // fill value

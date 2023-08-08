@@ -4,8 +4,9 @@ internal partial record class DataLayoutMessage4
 {
     public static DataLayoutMessage4 Create(
         NativeWriteContext context,
-        ulong dataEncodeSize,
+        long dataEncodeSize,
         uint typeSize,
+        bool isFiltered,
         uint[]? chunkDimensions)
     {
         var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
@@ -13,15 +14,24 @@ internal partial record class DataLayoutMessage4
 
         if (chunkDimensions is not null)
         {
-            // #error This works only for the implicit index. Move allocation to e.g. H5D_Chunk4_FixedArray.
-            var address = context.FreeSpaceManager.Allocate((long)dataEncodeSize);
+            (var indexingInformation, var encodeSize) = isFiltered
+                ? (
+                    (IndexingInformation)new FixedArrayIndexingInformation(PageBits: 0), 
+                    FixedArrayHeader.ENCODE_SIZE
+                )
+                : (
+                    new ImplicitIndexingInformation(), 
+                    dataEncodeSize
+                );
+
+            var address = context.FreeSpaceManager.Allocate(encodeSize);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Address: (ulong)address,
                 Rank: (byte)(chunkDimensions.Length + 1),
                 Flags: default,
                 DimensionSizes: chunkDimensions.Select(value => (ulong)value).Concat(new ulong[] { typeSize }).ToArray(),
-                IndexingTypeInformation: new ImplicitIndexingInformation()
+                IndexingInformation: indexingInformation
             );
 
             dataLayout = new DataLayoutMessage4(
@@ -75,11 +85,11 @@ internal partial record class DataLayoutMessage4
             /* create contiguous dataset */
             if (dataLayout == default)
             {
-                var address = context.FreeSpaceManager.Allocate((long)dataEncodeSize);
+                var address = context.FreeSpaceManager.Allocate(dataEncodeSize);
 
                 var properties = new ContiguousStoragePropertyDescription(
                     Address: (ulong)address,
-                    Size: dataEncodeSize
+                    Size: (ulong)dataEncodeSize
                 );
 
                 dataLayout = new DataLayoutMessage4(

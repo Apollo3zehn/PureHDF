@@ -82,7 +82,7 @@ public partial class DatasetTests
             var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
 
             Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
-            Assert.Equal(typeof(ImplicitIndexingInformation), properties.IndexingTypeInformation.GetType());
+            Assert.Equal(typeof(ImplicitIndexingInformation), properties.IndexingInformation.GetType());
         }
         finally
         {
@@ -137,7 +137,7 @@ public partial class DatasetTests
             var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
 
             Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
-            Assert.Equal(typeof(FixedArrayIndexingInformation), properties.IndexingTypeInformation.GetType());
+            Assert.Equal(typeof(FixedArrayIndexingInformation), properties.IndexingInformation.GetType());
         }
         finally
         {

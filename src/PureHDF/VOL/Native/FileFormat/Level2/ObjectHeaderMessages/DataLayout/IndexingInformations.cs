@@ -77,12 +77,13 @@ internal record class FixedArrayIndexingInformation(
 
     public override ushort GetEncodeSize()
     {
-        throw new NotImplementedException();
+        return sizeof(byte);
     }
 
     public override void Encode(H5DriverBase driver)
     {
-        throw new NotImplementedException();
+        // page bits
+        driver.Write(PageBits);
     }
 }
 

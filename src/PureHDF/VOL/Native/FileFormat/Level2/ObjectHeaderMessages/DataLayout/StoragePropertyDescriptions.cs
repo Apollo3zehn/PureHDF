@@ -127,7 +127,7 @@ internal record class ChunkedStoragePropertyDescription4(
     byte Rank,
     ChunkedStoragePropertyFlags Flags,
     ulong[] DimensionSizes,
-    IndexingInformation IndexingTypeInformation
+    IndexingInformation IndexingInformation
 ) : ChunkedStoragePropertyDescription(Address, Rank)
 {
     public static ChunkedStoragePropertyDescription4 Decode(NativeReadContext context)
@@ -173,7 +173,7 @@ internal record class ChunkedStoragePropertyDescription4(
             Rank: rank,
             Flags: flags,
             DimensionSizes: dimensionSizes,
-            IndexingTypeInformation: indexingTypeInformation
+            IndexingInformation: indexingTypeInformation
         );
     }
 
@@ -185,7 +185,7 @@ internal record class ChunkedStoragePropertyDescription4(
             sizeof(byte) +
             sizeof(ulong) * Rank +
             sizeof(byte) +
-            IndexingTypeInformation.GetEncodeSize() +
+            IndexingInformation.GetEncodeSize() +
             sizeof(ulong);
 
         return (ushort)encodeSize;
@@ -211,20 +211,20 @@ internal record class ChunkedStoragePropertyDescription4(
         driver.Write((ulong)4);
 
         // chunk indexing type
-        var indexingType = IndexingTypeInformation switch
+        var indexingType = IndexingInformation switch
         {
             SingleChunkIndexingInformation => ChunkIndexingType.SingleChunk,
             ImplicitIndexingInformation => ChunkIndexingType.Implicit,
             FixedArrayIndexingInformation => ChunkIndexingType.FixedArray,
             ExtensibleArrayIndexingInformation => ChunkIndexingType.ExtensibleArray,
             BTree2IndexingInformation => ChunkIndexingType.BTree2,
-            _ => throw new NotSupportedException($"The chunk indexing type '{IndexingTypeInformation.GetType()}' is not supported.")
+            _ => throw new NotSupportedException($"The chunk indexing type '{IndexingInformation.GetType()}' is not supported.")
         };
 
         driver.Write((byte)indexingType);
 
         // indexing type information
-        IndexingTypeInformation.Encode(driver);
+        IndexingInformation.Encode(driver);
 
         // address
         driver.Write(Address);

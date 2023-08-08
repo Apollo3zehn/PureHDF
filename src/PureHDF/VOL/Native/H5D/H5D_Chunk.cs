@@ -90,7 +90,7 @@ internal abstract class H5D_Chunk : H5D_Base
         {
             DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(readContext, writeContext, dataset, layout12, datasetAccess),
 
-            DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).IndexingTypeInformation switch
+            DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).IndexingInformation switch
             {
                 // the current, maximum, and chunk dimension sizes are all the same
                 SingleChunkIndexingInformation => new H5Dataset_Chunk_Single_Chunk4(readContext, writeContext, dataset, layout4, datasetAccess),
