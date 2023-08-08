@@ -157,7 +157,7 @@ namespace PureHDF.Tests.Reading.Filters
             var expected = Enumerable.Range(0, 1000).ToArray();
 
             H5Filter.ResetRegistrations();
-            H5Filter.Register(identifier: (H5FilterID)32001, name: "blosc2", filterFunction: H5Blosc2.FilterFunction);
+            H5Filter.Register(new Blosc2Filter());
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -194,10 +194,7 @@ namespace PureHDF.Tests.Reading.Filters
             var filePath = "./TestFiles/lzf.h5";
             var expected = Enumerable.Range(0, 1000).ToArray();
 
-            H5Filter.Register(
-                identifier: (H5FilterID)32000, 
-                name: "lzf", 
-                filterFunction: H5Lzf.FilterFunction);
+            H5Filter.Register(new LzfFilter());
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -229,7 +226,7 @@ namespace PureHDF.Tests.Reading.Filters
             var expected = Enumerable.Range(0, 1000).ToArray();
 
             H5Filter.ResetRegistrations();
-            H5Filter.Register(identifier: (H5FilterID)307, name: "bzip2", filterFunction: H5BZip2SharpZipLib.FilterFunction);
+            H5Filter.Register(new BZip2SharpZipLibFilter());
 
             // Act
             using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -261,11 +258,11 @@ namespace PureHDF.Tests.Reading.Filters
 
         [Theory]
         [InlineData("MicrosoftDeflateStream")]
-        [InlineData("SharpZipLibInflater")]
+        [InlineData("DeflateSharpZipLibFilter")]
 #if NET5_0_OR_GREATER
         // https://iobservable.net/blog/2013/08/06/clr-limitations/
         // "It seems that the maximum array base element size is limited to 64KB."
-        [InlineData("Intel_ISA_L_Inflate")]
+        [InlineData("DeflateISALFilter")]
 #endif
         public void CanDefilterZLib(string filterFuncId)
         {
@@ -273,18 +270,18 @@ namespace PureHDF.Tests.Reading.Filters
             var version = H5F.libver_t.LATEST;
             var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddFilteredDataset_ZLib);
 
-            Func<FilterInfo, Memory<byte>>? func = filterFuncId switch
+            IH5Filter? filter = filterFuncId switch
             {
                 "MicrosoftDeflateStream" => null, /* default */
-                "SharpZipLibInflater" => H5DeflateSharpZipLib.FilterFunction,
-                "Intel_ISA_L_Inflate" => H5DeflateISAL.FilterFunction,
-                _ => throw new NotSupportedException($"The filter func ID {filterFuncId} is not supported.")
+                "DeflateSharpZipLibFilter" => new DeflateSharpZipLibFilter(),
+                "DeflateISALFilter" => new DeflateISALFilter(),
+                _ => throw new NotSupportedException($"The filter with ID {filterFuncId} is not supported.")
             };
 
             H5Filter.ResetRegistrations();
 
-            if (func is not null)
-                H5Filter.Register(H5FilterID.Deflate, "deflate", func);
+            if (filter is not null)
+                H5Filter.Register(filter);
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
@@ -361,7 +358,7 @@ namespace PureHDF.Tests.Reading.Filters
 
             // Act
             var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
-            ShuffleGeneric.Unshuffle(bytesOfType, MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), actual);
+            ShuffleGeneric.DoUnshuffle(bytesOfType, MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), actual);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -414,7 +411,7 @@ namespace PureHDF.Tests.Reading.Filters
 
             // Act
             var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
-            ShuffleAvx2.Unshuffle(bytesOfType, MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), actual);
+            ShuffleAvx2.DoUnshuffle(bytesOfType, MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), actual);
 
             // Assert
             Assert.True(actual.AsSpan().SequenceEqual(expected));
@@ -467,7 +464,7 @@ namespace PureHDF.Tests.Reading.Filters
 
             // Act
             var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
-            ShuffleAvx2.Unshuffle(bytesOfType, MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), actual);
+            ShuffleAvx2.DoUnshuffle(bytesOfType, MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), actual);
 
             // Assert
             Assert.True(actual.AsSpan().SequenceEqual(expected));

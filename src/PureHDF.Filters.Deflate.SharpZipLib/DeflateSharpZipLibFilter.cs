@@ -4,15 +4,18 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 namespace PureHDF.Filters;
 
 /// <summary>
-/// Contains a function to enable support for the Deflate filter based on SharpZipLib.
+/// Deflate filter based on SharpZipLib.
 /// </summary>
-public static class H5DeflateSharpZipLib
+public class DeflateSharpZipLibFilter : IH5Filter
 {
-    /// <summary>
-    /// The Deflate filter function.
-    /// </summary>
-    /// <param name="info">The filter info.</param>
-    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
+    /// <inheritdoc />
+    public H5FilterID Id => H5FilterID.Deflate;
+
+    /// <inheritdoc />
+    public string Name => "deflate";
+
+    /// <inheritdoc />
+    public Memory<byte> Filter(FilterInfo info)
     {
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
@@ -52,5 +55,11 @@ public static class H5DeflateSharpZipLib
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
+    }
+
+    /// <inheritdoc />
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
     }
 }

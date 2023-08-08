@@ -4,15 +4,18 @@ using Blosc2.PInvoke;
 namespace PureHDF.Filters;
 
 /// <summary>
-/// Contains a function to enable support for the hardware accelerated Blosc2 filter.
+/// BZip2 filter based on SharpZipLib.
 /// </summary>
-public static class H5Blosc2
+public class Blosc2Filter : IH5Filter
 {
-    /// <summary>
-    /// The Blosc2 filter function.
-    /// </summary>
-    /// <param name="info">The filter info.</param>
-    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
+    /// <inheritdoc />
+    public H5FilterID Id => (H5FilterID)32001;
+
+    /// <inheritdoc />
+    public string Name => "blosc1";
+
+    /// <inheritdoc />
+    public unsafe Memory<byte> Filter(FilterInfo info)
     {
         // adapted from https://github.com/Blosc/hdf5-blosc/blob/bd8ee59708f366ac561153858735165d3a543b18/src/blosc_filter.c#L145-L272
         int status = 0;
@@ -88,5 +91,11 @@ public static class H5Blosc2
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
+    }
+
+    /// <inheritdoc />
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
     }
 }

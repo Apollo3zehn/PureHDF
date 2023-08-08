@@ -1,15 +1,18 @@
 ﻿namespace PureHDF.Filters;
 
 /// <summary>
-/// Contains a function to enable support for the LZF filter.
+/// LZF filter.
 /// </summary>
-public static class H5Lzf
+public class LzfFilter : IH5Filter
 {
-    /// <summary>
-    /// The LZF filter function.
-    /// </summary>
-    /// <param name="info">The filter info.</param>
-    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
+    /// <inheritdoc />
+    public H5FilterID Id => (H5FilterID)32000;
+
+    /// <inheritdoc />
+    public string Name => "lzf";
+
+    /// <inheritdoc />
+    public Memory<byte> Filter(FilterInfo info)
     {
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
@@ -41,6 +44,12 @@ public static class H5Lzf
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
+    }
+
+    /// <inheritdoc />
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
     }
 
     // https://github.com/h5py/h5py/blob/7e769ee3e229848e1fd74eb56382cb7b82c97ed0/lzf/lzf/lzf_d.c

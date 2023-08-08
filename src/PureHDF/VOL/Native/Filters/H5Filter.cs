@@ -35,7 +35,7 @@ static partial class H5Filter
 
     #region Properties
 
-    internal static ConcurrentDictionary<FilterIdentifier, H5FilterRegistration> Registrations { get; set; } = default!;
+    internal static ConcurrentDictionary<FilterIdentifier, IH5Filter> Registrations { get; set; } = default!;
 
     #endregion
 
@@ -44,35 +44,26 @@ static partial class H5Filter
     /// <summary>
     /// Registers a new filter.
     /// </summary>
-    /// <param name="identifier">The filter identifier.</param>
-    /// <param name="name">The filter name.</param>
-    /// <param name="filterFunction">The filter function.</param>
+    /// <param name="filter">The filter.</param>
     public static void Register(
-        H5FilterID identifier,
-        string name, 
-        Func<FilterInfo, Memory<byte>> filterFunction)
+        IH5Filter filter)
     {
-        var registration = new H5FilterRegistration(
-            (FilterIdentifier)identifier, 
-            name, 
-            filterFunction);
-
         Registrations
-            .AddOrUpdate((FilterIdentifier)identifier, registration, (_, oldRegistration) => registration);
+            .AddOrUpdate((FilterIdentifier)filter.Id, filter, (_, existingFilter) => filter);
     }
 
     /// <summary>
-    /// Resets the list of filter registrations to the default.
+    /// Restores the default list of filter registrations.
     /// </summary>
     public static void ResetRegistrations()
     {
-        Registrations = new ConcurrentDictionary<FilterIdentifier, H5FilterRegistration>();
+        Registrations = new ConcurrentDictionary<FilterIdentifier, IH5Filter>();
 
-        Register(H5FilterID.Shuffle, "shuffle", ShuffleFilterFuncion);
-        Register(H5FilterID.Fletcher32, "fletcher", Fletcher32FilterFuncion);
-        Register(H5FilterID.Nbit, "nbit", NbitFilterFuncion);
-        Register(H5FilterID.ScaleOffset, "scaleoffset", ScaleOffsetFilterFuncion);
-        Register(H5FilterID.Deflate, "deflate", DeflateFilterFuncion);
+        Register(new ShuffleFilter());
+        Register(new Fletcher32Filter());
+        Register(new NbitFilter());
+        Register(new ScaleOffsetFilter());
+        Register(new DeflateFilter());
     }
 
     internal static void ExecutePipeline(
@@ -113,7 +104,7 @@ static partial class H5Filter
                         SourceBuffer: filterBuffer,
                         FinalBuffer: isLast ? resultBuffer : default);
 
-                    filterBuffer = registration.FilterFunction(filterInfo);
+                    filterBuffer = registration.Filter(filterInfo);
                 }
                 catch (Exception ex)
                 {
@@ -137,10 +128,17 @@ static partial class H5Filter
     }
 
     #endregion
+}
 
-    #region Built-in filters
+#region Built-in filters
 
-    private static Memory<byte> ShuffleFilterFuncion(FilterInfo info)
+internal class ShuffleFilter : IH5Filter
+{
+    public H5FilterID Id => H5FilterID.Shuffle;
+
+    public string Name => "shuffle";
+
+    public Memory<byte> Filter(FilterInfo info)
     {
         var resultBuffer = info.FinalBuffer.Equals(default)
             ? new byte[info.SourceBuffer.Length]
@@ -148,16 +146,28 @@ static partial class H5Filter
 
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-            ShuffleFilter.Unshuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
+            Shuffle.DoUnshuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
 
         // write
         else
-            ShuffleFilter.Shuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
+            Shuffle.DoShuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
 
         return resultBuffer;
     }
 
-    private static Memory<byte> Fletcher32FilterFuncion(FilterInfo info)
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+internal class Fletcher32Filter : IH5Filter
+{
+    public H5FilterID Id => H5FilterID.Fletcher32;
+
+    public string Name => "fletcher";
+
+    public Memory<byte> Filter(FilterInfo info)
     {
         // H5Zfletcher32.c (H5Z_filter_fletcher32)
 
@@ -167,7 +177,7 @@ static partial class H5Filter
             var bufferWithoutChecksum = info.SourceBuffer[0..^4];
 
             /* Do checksum if it's enabled for read; otherwise skip it
-             * to save performance. */
+            * to save performance. */
             if (!info.Flags.HasFlag(H5FilterFlags.SkipEdc))
             {
                 /* Get the stored checksum */
@@ -191,12 +201,36 @@ static partial class H5Filter
         }
     }
 
-    private static Memory<byte> NbitFilterFuncion(FilterInfo info)
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+internal class NbitFilter : IH5Filter
+{
+    public H5FilterID Id => H5FilterID.Nbit;
+
+    public string Name => "nbit";
+
+    public Memory<byte> Filter(FilterInfo info)
     {
         throw new Exception($"The filter '{FilterIdentifier.Nbit}' is not yet supported by PureHDF.");
     }
 
-    private static Memory<byte> ScaleOffsetFilterFuncion(FilterInfo info)
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+internal class ScaleOffsetFilter : IH5Filter
+{
+    public H5FilterID Id => H5FilterID.ScaleOffset;
+
+    public string Name => "scaleoffset";
+
+    public Memory<byte> Filter(FilterInfo info)
     {
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
@@ -207,7 +241,19 @@ static partial class H5Filter
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
 
-    private static Memory<byte> DeflateFilterFuncion(FilterInfo info)
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+internal class DeflateFilter : IH5Filter
+{
+    public H5FilterID Id => H5FilterID.Deflate;
+
+    public string Name => "deflate";
+
+    public Memory<byte> Filter(FilterInfo info)
     {
         // Span-based (non-stream) compression APIs
         // https://github.com/dotnet/runtime/issues/39327
@@ -280,5 +326,10 @@ static partial class H5Filter
         }
     }
 
-    #endregion
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
+    }
 }
+
+#endregion

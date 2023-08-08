@@ -4,7 +4,7 @@ namespace PureHDF.Filters
 {
     internal static class ShuffleGeneric
     {
-        public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        public static unsafe void DoShuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {
             fixed (byte* src = source, dest = destination)
             {
@@ -12,7 +12,7 @@ namespace PureHDF.Filters
             }
         }
 
-        public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        public static unsafe void DoUnshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {
             fixed (byte* src = source, dest = destination)
             {

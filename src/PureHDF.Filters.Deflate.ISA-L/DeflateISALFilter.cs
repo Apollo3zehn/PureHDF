@@ -5,21 +5,24 @@ using ISA_L.PInvoke;
 namespace PureHDF.Filters;
 
 /// <summary>
-/// Contains a function to enable support for the hardware accelerated Deflate filter based on Intel ISA-L.
+/// Hardware accelerated Deflate filter based on Intel ISA-L.
 /// </summary>
-public static class H5DeflateISAL
+public class DeflateISALFilter : IH5Filter
 {
     private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
 
     private static readonly ThreadLocal<IntPtr> _state_ptr = new(
         valueFactory: CreateState,
         trackAllValues: false);
+        
+    /// <inheritdoc />
+    public H5FilterID Id => H5FilterID.Deflate;
 
-    /// <summary>
-    /// The hardware accelerated Deflate filter function based on Intel ISA-L.
-    /// </summary>
-    /// <param name="info">The filter info.</param>
-    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
+    /// <inheritdoc />
+    public string Name => "deflate";
+
+    /// <inheritdoc />
+    public unsafe Memory<byte> Filter(FilterInfo info)
     {
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
@@ -85,6 +88,12 @@ public static class H5DeflateISAL
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
+    }
+
+    /// <inheritdoc />
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
     }
 
     private static unsafe IntPtr CreateState()

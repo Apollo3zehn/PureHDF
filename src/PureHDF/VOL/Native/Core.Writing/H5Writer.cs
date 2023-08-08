@@ -209,7 +209,9 @@ internal static class H5Writer
             ? DataspaceMessage.Create(dataDimensions, h5Dataset.Dimensions)
             : DataspaceMessage.Create(dataDimensions, default);
 
-        var chunkDimensions = dataset.ChunkDimensions;
+        var chunkDimensions = isScalar
+            ? default
+            : dataset.ChunkDimensions;
 
         if (chunkDimensions is not null)
         {
@@ -226,10 +228,19 @@ internal static class H5Writer
         // filter pipeline
         var filterPipeline = default(FilterPipelineMessage);
 
-        var filterIds = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
+        if (chunkDimensions is not null)
+        {
+            var filterIds = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
 
-        if (chunkDimensions is not null && filterIds is not null && filterIds.Any())
-            filterPipeline = FilterPipelineMessage.Create(filterIds);
+            if (filterIds is not null)
+            {
+                // TODO this is only a workaround
+                var filterSetting = filterIds.ToDictionary(filterId => filterId, filterId => default(Dictionary<string, object>));
+                
+                if (filterIds.Any())
+                    filterPipeline = FilterPipelineMessage.Create(dataset, filterSetting);
+            }
+        }
 
         // data encode size
         ulong dataEncodeSize;

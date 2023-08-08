@@ -446,10 +446,7 @@ public static Func<FilterInfo, Memory<byte>> MyFilterFunc { get; } = info =>
 ```cs
 using PureHDF.Filters;
 
-H5Filter.Register(
-    identifier: H5FilterID.Deflate, 
-    name: "deflate", 
-    filterFunction: H5DeflateISAL.FilterFunction);
+H5Filter.Register(new DeflateISALFilter());
 ```
 
 **Deflate (SharpZipLib)**
@@ -461,10 +458,7 @@ H5Filter.Register(
 ```cs
 using PureHDF.Filters;
 
-H5Filter.Register(
-    identifier: H5FilterID.Deflate, 
-    name: "deflate", 
-    filterFunction: H5DeflateSharpZipLib.FilterFunction);
+H5Filter.Register(new DeflateSharpZipLibFilter());
 ```
 
 **Blosc / Blosc2**
@@ -477,10 +471,7 @@ H5Filter.Register(
 ```cs
 using PureHDF.Filters;
 
-H5Filter.Register(
-    identifier: (H5FilterID)32001, 
-    name: "blosc2", 
-    filterFunction: H5Blosc2.FilterFunction);
+H5Filter.Register(new Blosc2Filter());
 ```
 
 **BZip2 (SharpZipLib)**
@@ -492,10 +483,7 @@ H5Filter.Register(
 ```cs
 using PureHDF.Filters;
 
-H5Filter.Register(
-    identifier: (H5FilterID)307, 
-    name: "bzip2", 
-    filterFunction: H5BZip2SharpZipLib.FilterFunction);
+H5Filter.Register(new BZip2SharpZipLibFilter());
 ```
 
 **LZF**
@@ -505,10 +493,7 @@ H5Filter.Register(
 ```cs
 using PureHDF.Filters;
 
-H5Filter.Register(
-    identifier: (H5FilterID)32000,
-    name: "lzf", 
-    filterFunction: H5Lzf.FilterFunction);
+H5Filter.Register(new LzfFilter());
 ```
 
 # 6. Reading Compound Data

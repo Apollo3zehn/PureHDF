@@ -3,15 +3,18 @@
 namespace PureHDF.Filters;
 
 /// <summary>
-/// Contains a function to enable support for the BZip2 filter based on SharpZipLib.
+/// BZip2 filter based on SharpZipLib.
 /// </summary>
-public static class H5BZip2SharpZipLib
+public class BZip2SharpZipLibFilter : IH5Filter
 {
-    /// <summary>
-    /// The BZip2 filter function.
-    /// </summary>
-    /// <param name="info">The filter info.</param>
-    public unsafe static Memory<byte> FilterFunction(FilterInfo info)
+    /// <inheritdoc />
+    public H5FilterID Id => (H5FilterID)307;
+
+    /// <inheritdoc />
+    public string Name => "bzip2";
+
+    /// <inheritdoc />
+    public Memory<byte> Filter(FilterInfo info)
     {
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
@@ -44,5 +47,11 @@ public static class H5BZip2SharpZipLib
         {
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
         }
+    }
+
+    /// <inheritdoc />
+    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    {
+        throw new NotImplementedException();
     }
 }
