@@ -18,7 +18,7 @@ namespace PureHDF;
 /// <param name="PropertyNameMapper">Maps a <see cref="PropertyInfo"/> to the name of the HDF5 member.</param>
 /// <param name="PropertyStringLengthMapper">Maps a <see cref="PropertyInfo"/> of type string to the desired string length.</param>
 /// <param name="ChunkCacheFactory">The chunk cache factory to be used for datasets that have no chunk cache assigned. If <see langword="null"/>, the <see cref="DefaultChunkCacheFactory"/> will be used.</param>
-/// <param name="Filters">The identifiers of the filters to be applied to datasets that have no explicit filters assigned.</param>
+/// <param name="Filters">A list of filters and their options to be applied to datasets that have no explicit filters assigned.</param>
 public record H5WriteOptions(
     int DefaultStringLength = default,
     int GlobalHeapCollectionSize = 4096,
@@ -33,7 +33,7 @@ public record H5WriteOptions(
     Func<PropertyInfo, string?>? PropertyNameMapper = default,
     Func<PropertyInfo, int?>? PropertyStringLengthMapper = default,
     Func<IWritingChunkCache>? ChunkCacheFactory = default,
-    ICollection<H5FilterID>? Filters = default
+    List<H5Filter>? Filters = default
 )
 {
     /// <summary>

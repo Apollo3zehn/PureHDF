@@ -230,15 +230,12 @@ internal static class H5Writer
 
         if (chunkDimensions is not null)
         {
-            var filterIds = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
+            var filters = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
 
-            if (filterIds is not null)
-            {
-                // TODO this is only a workaround
-                var filterSetting = filterIds.ToDictionary(filterId => filterId, filterId => default(Dictionary<string, object>));
-                
-                if (filterIds.Any())
-                    filterPipeline = FilterPipelineMessage.Create(dataset, filterSetting);
+            if (filters is not null)
+            {               
+                if (filters.Any())
+                    filterPipeline = FilterPipelineMessage.Create(dataset, datatype.Size, filters);
             }
         }
 

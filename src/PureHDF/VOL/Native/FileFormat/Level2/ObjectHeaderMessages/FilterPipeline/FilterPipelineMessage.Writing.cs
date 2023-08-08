@@ -3,15 +3,16 @@
 internal partial record class FilterPipelineMessage
 {
     public static FilterPipelineMessage Create(
-        H5Dataset dataset, 
-        Dictionary<H5FilterID, Dictionary<string, object>?> filters)
+        H5Dataset dataset,
+        uint typeSize,
+        List<H5Filter> filters)
     {
         if (filters.Count > 32)
             throw new FormatException($"An instance of type {nameof(FilterPipelineMessage)} can only contain a maximum of 32 filters.");
 
-        var filterDescriptions = filters.Select(entry =>
+        var filterDescriptions = filters.Select(filter =>
         {
-            var filterId = entry.Key;
+            var filterId = filter.FilterId;
 
             if (!H5Filter.Registrations.TryGetValue((FilterIdentifier)filterId, out var registration))
                 throw new Exception($"The filter with id {filterId} has not been registered.");
@@ -20,9 +21,7 @@ internal partial record class FilterPipelineMessage
                 Identifier: (FilterIdentifier)registration.Id,
                 Flags: FilterFlags.None,
                 Name: registration.Name,
-                ClientData: entry.Value is null ? 
-                    Array.Empty<uint>() : 
-                    registration.GetParameters(dataset, entry.Value)
+                ClientData: registration.GetParameters(dataset, typeSize, filter.Options)
             );
         }).ToArray();
 

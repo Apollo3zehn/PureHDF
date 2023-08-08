@@ -20,9 +20,11 @@ public record class FilterInfo(
     Memory<byte> FinalBuffer);
 
 /// <summary>
-/// A class to manage filters.
+/// A filter with associated options.
 /// </summary>
-static partial class H5Filter
+/// <param name="FilterId">The filter id.</param>
+/// <param name="Options">Optional filter options.</param>
+public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Options = default)
 {
     #region Constructors
 
@@ -155,9 +157,12 @@ internal class ShuffleFilter : IH5Filter
         return resultBuffer;
     }
 
-    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
-        throw new NotImplementedException();
+        if (typeSize == 0)
+            throw new Exception("The type size must be > 0.");
+
+        return new uint[] { typeSize };
     }
 }
 
@@ -201,7 +206,7 @@ internal class Fletcher32Filter : IH5Filter
         }
     }
 
-    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
@@ -218,7 +223,7 @@ internal class NbitFilter : IH5Filter
         throw new Exception($"The filter '{FilterIdentifier.Nbit}' is not yet supported by PureHDF.");
     }
 
-    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
@@ -241,7 +246,7 @@ internal class ScaleOffsetFilter : IH5Filter
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
 
-    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
@@ -293,8 +298,8 @@ internal class DeflateFilter : IH5Filter
 
             if (info.FinalBuffer.Equals(default))
             {
-                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
                 using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
+                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
 
                 decompressionStream.CopyTo(decompressedStream);
 
@@ -305,8 +310,8 @@ internal class DeflateFilter : IH5Filter
 
             else
             {
-                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
                 using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
+                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
 
                 decompressionStream.CopyTo(decompressedStream);
 
@@ -319,16 +324,24 @@ internal class DeflateFilter : IH5Filter
         else
         {
 #if NET6_0_OR_GREATER
-            throw new NotImplementedException();
+            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
+            using var compressionStream = new ZLibStream(sourceStream, CompressionMode.Compress);
+            using var compressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+
+            compressionStream.CopyTo(compressedStream);
+
+            return compressedStream
+                .GetBuffer()
+                .AsMemory(0, (int)compressedStream.Length);
 #else
-            throw new Exception(".NET 6+ is required for zLib write support.");
+            throw new Exception(".NET 6+ is required for zlib compression support.");
 #endif
         }
     }
 
-    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
-        throw new NotImplementedException();
+        return Array.Empty<uint>();
     }
 }
 

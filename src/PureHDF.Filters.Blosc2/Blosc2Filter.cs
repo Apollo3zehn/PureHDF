@@ -94,7 +94,7 @@ public class Blosc2Filter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, Dictionary<string, object> options)
+    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
