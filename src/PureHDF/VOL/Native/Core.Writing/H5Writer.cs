@@ -320,7 +320,7 @@ internal static class H5Writer
             Type: datatype,
             Layout: dataLayout,
             FillValue: fillValueMessage,
-            FilterPipeline: default,
+            FilterPipeline: filterPipeline,
             ExternalFileList: default
         );
 

@@ -2,7 +2,7 @@
 
 namespace PureHDF.VOL.Native;
 
-internal record class FixedArrayDataBlock<T>(
+internal partial record class FixedArrayDataBlock<T>(
     ClientID ClientID,
     ulong HeaderAddress,
     byte[] PageBitmap,
@@ -10,7 +10,7 @@ internal record class FixedArrayDataBlock<T>(
     ulong ElementsPerPage,
     ulong PageCount,
     ulong LastPageElementCount
-)
+) where T : DataBlockElement
 {
     private byte _version;
 

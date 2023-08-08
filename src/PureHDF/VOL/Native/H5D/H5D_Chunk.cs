@@ -60,6 +60,8 @@ internal abstract class H5D_Chunk : H5D_Base
 
     public ulong ChunkByteSize { get; private set; }
 
+    public uint ChunkSizeLength { get; private set; }
+
     public ulong[] Dims { get; private set; } = default!;
 
     public ulong[] MaxDims { get; private set; } = default!;
@@ -125,6 +127,7 @@ internal abstract class H5D_Chunk : H5D_Base
         ChunkDims = RawChunkDims[..^1].ToArray();
         ChunkRank = (byte)ChunkDims.Length;
         ChunkByteSize = MathUtils.CalculateSize(ChunkDims) * Dataset.Type.Size;
+        ChunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
         Dims = Dataset.Space.Dimensions;
         MaxDims = Dataset.Space.MaxDimensions;
         TotalChunkCount = 1;
@@ -192,7 +195,9 @@ internal abstract class H5D_Chunk : H5D_Base
 
     protected abstract ulong[] GetRawChunkDims();
 
-    protected abstract ChunkInfo GetChunkInfo(ulong[] chunkIndices);
+    protected abstract ChunkInfo GetReadChunkInfo(ulong[] chunkIndices);
+
+    protected abstract ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize);
 
     protected override void Dispose(bool disposing)
     {
@@ -215,7 +220,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
         else
         {
-            var chunkInfo = GetChunkInfo(chunkIndices);
+            var chunkInfo = GetReadChunkInfo(chunkIndices);
 
             if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
@@ -256,7 +261,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     private void WriteChunk(ulong[] chunkIndices, Memory<byte> chunk)
     {
-        var chunkInfo = GetChunkInfo(chunkIndices);
+        var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)chunk.Length);
 
         WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
         WriteContext.Driver.Write(chunk.Span);

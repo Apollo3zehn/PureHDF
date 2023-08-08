@@ -14,7 +14,13 @@ internal record class FilteredDataBlockElement(
     ulong Address,
     uint ChunkSize,
     uint FilterMask
-) : DataBlockElement(Address);
+) : DataBlockElement(Address)
+{
+    public const int ENCODE_SIZE = 
+        sizeof(ulong) +
+        sizeof(uint) +
+        sizeof(uint);
+}
 
 internal record struct DataBlockPage<T>(
     T[] Elements

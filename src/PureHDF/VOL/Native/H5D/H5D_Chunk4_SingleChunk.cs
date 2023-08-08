@@ -8,8 +8,13 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
     {
         return new ChunkInfo(Dataset.Layout.Address, ChunkByteSize, 0);
+    }
+
+    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize)
+    {
+        throw new NotImplementedException();
     }
 }

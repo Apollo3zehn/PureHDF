@@ -51,7 +51,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             throw new Exception("No layout information found.");
     }
 
-    protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
     {
         // load B-Tree 1
         if (!_btree1.HasValue)
@@ -78,6 +78,11 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
         return success
             ? new ChunkInfo(userData.ChildAddress, userData.ChunkSize, userData.FilterMask)
             : ChunkInfo.None;
+    }
+
+    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize)
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

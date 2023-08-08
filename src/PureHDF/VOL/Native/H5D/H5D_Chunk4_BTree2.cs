@@ -22,7 +22,7 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
 
     #region Methods
 
-    protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
     {
         if (Dataset.FilterPipeline is null)
         {
@@ -69,6 +69,11 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
                 ? new ChunkInfo(record.Address, record.ChunkSize, record.FilterMask)
                 : ChunkInfo.None;
         }
+    }
+
+    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize)
+    {
+        throw new NotImplementedException();
     }
 
     #endregion

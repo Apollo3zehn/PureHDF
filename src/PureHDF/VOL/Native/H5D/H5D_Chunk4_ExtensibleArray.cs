@@ -62,7 +62,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
     {
         // H5Dearray.c (H5D__earray_idx_get_addr)
 
@@ -125,6 +125,11 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 ? new ChunkInfo(element.Address, ChunkByteSize, 0)
                 : ChunkInfo.None;
         }
+    }
+
+    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize)
+    {
+        throw new NotImplementedException();
     }
 
     private T? GetElement<T>(ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement

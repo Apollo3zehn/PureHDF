@@ -11,4 +11,9 @@ internal partial record class FixedArrayHeader
         sizeof(ulong) +
         sizeof(ulong) +
         sizeof(uint);
+
+    internal void Encode(H5DriverBase driver)
+    {
+        throw new NotImplementedException();
+    }
 }
