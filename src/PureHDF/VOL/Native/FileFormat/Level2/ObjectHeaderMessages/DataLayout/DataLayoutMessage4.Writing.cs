@@ -17,7 +17,7 @@ internal partial record class DataLayoutMessage4
             (var indexingInformation, var encodeSize) = isFiltered
                 ? (
                     (IndexingInformation)new FixedArrayIndexingInformation(PageBits: 0), 
-                    FixedArrayHeader.ENCODE_SIZE
+                    (long)FixedArrayHeader.ENCODE_SIZE
                 )
                 : (
                     new ImplicitIndexingInformation(), 

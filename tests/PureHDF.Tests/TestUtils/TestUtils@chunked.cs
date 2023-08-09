@@ -54,7 +54,7 @@ namespace PureHDF.Tests
             var length = (ulong)SharedTestData.MediumData.Length / 4;
             var dims = new ulong[] { length, 4 };
 
-            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 3 });
+            _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 4 });
 
             if (withShuffle)
                 _ = H5P.set_shuffle(dcpl_id);

@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Buffers;
+
+namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
@@ -50,7 +52,9 @@ internal partial record class ObjectHeader2
         WriteHeaderMessages(driver, withCreationOrder);
 
         // checksum
-        var checksumData = new byte[encodeSize - sizeof(uint)];
+        var encodeSizeWithoutChecksum = (int)(encodeSize - sizeof(uint));
+        using var buffer = MemoryPool<byte>.Shared.Rent(encodeSizeWithoutChecksum);
+        var checksumData = buffer.Memory.Span[..encodeSizeWithoutChecksum];
 
         driver.Seek(address, SeekOrigin.Begin);
         driver.Read(checksumData);

@@ -16,7 +16,7 @@ internal record class FilteredDataBlockElement(
     uint FilterMask
 ) : DataBlockElement(Address)
 {
-    public const int ENCODE_SIZE = 
+    public const byte ENCODE_SIZE = 
         sizeof(ulong) +
         sizeof(uint) +
         sizeof(uint);

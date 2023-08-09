@@ -26,7 +26,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
             {
                 return new FilteredDataBlockElement(
                     Address: ReadContext.Superblock.ReadOffset(driver),
-                    ChunkSize: (uint)ReadUtils.ReadUlong(driver, ChunkByteSize),
+                    ChunkSize: (uint)ReadUtils.ReadUlong(driver, ChunkSizeLength),
                     FilterMask: driver.ReadUInt32()
                 );
             });
@@ -91,38 +91,74 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
             {
                 var elements = new FilteredDataBlockElement[_writeChunkInfos.Count];
 
+                for (int i = 0; i < _writeChunkInfos.Count; i++)
+                {
+                    var chunkInfo = _writeChunkInfos[i];
+
+                    elements[i] = new FilteredDataBlockElement(
+                        Address: chunkInfo.Address,
+                        ChunkSize: (uint)chunkInfo.Size,
+                        FilterMask: chunkInfo.FilterMask
+                    );
+                }
+
+                /* H5FA__cache_hdr_serialize (H5FAcache.c) */
+                var entriesCount = (ulong)_writeChunkInfos.Count;
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+                var pageBits = (byte)Math.Ceiling(Math.Log(entriesCount, newBase: 2));
+#else
+                var pageBits = (byte)Math.Ceiling(Math.Log2(entriesCount));
+#endif
+                var entrySize = FilteredDataBlockElement.ENCODE_SIZE;
+                var (_, pageCount, pageBitmapSize) = GetInfo(pageBits, entriesCount);
+
                 var dataBlock = new FixedArrayDataBlock<FilteredDataBlockElement>(
                     ClientID: ClientID.FilteredDatasetChunks,
                     HeaderAddress: Layout.Address, 
                     PageBitmap: Array.Empty<byte>(),
                     Elements: elements,
                     ElementsPerPage: default,
-                    PageCount: default,
+                    PageCount: pageCount,
                     LastPageElementCount: default
                 )
                 {
                     Version = 0
                 };
 
-                var dataBlockEncodeSize = dataBlock.GetEncodeSize();
+                var dataBlockEncodeSize = dataBlock.GetEncodeSize(pageCount, pageBitmapSize, entrySize);
                 var dataBlockAddress = WriteContext.FreeSpaceManager.Allocate((long)dataBlockEncodeSize);
 
                 var header = new FixedArrayHeader(
                     Superblock: default!,
                     ClientID: ClientID.FilteredDatasetChunks,
-                    EntrySize: FilteredDataBlockElement.ENCODE_SIZE,
-                    PageBits: 0,
-                    EntriesCount: (ulong)_writeChunkInfos.Count,
+                    EntrySize: entrySize,
+                    PageBits: pageBits,
+                    EntriesCount: entriesCount,
                     DataBlockAddress: (ulong)dataBlockAddress)
                 {
                     Version = 0
                 };
 
+                // header
                 WriteContext.Driver.Seek((long)Layout.Address, SeekOrigin.Begin);
                 header.Encode(WriteContext.Driver);
 
+                // data block
                 WriteContext.Driver.Seek(dataBlockAddress, SeekOrigin.Begin);
-                dataBlock.Encode(WriteContext.Driver);
+
+                dataBlock.Encode(
+                    driver: WriteContext.Driver, 
+                    encode: (driver, element) =>
+                {
+                    // Address
+                    driver.Write(element.Address);
+
+                    // Chunk Size
+                    WriteUtils.WriteUlongArbitrary(driver, element.ChunkSize, ChunkSizeLength);
+
+                    // Filter Mask
+                    driver.Write(element.FilterMask);
+                });
             }
 
             else
@@ -130,6 +166,25 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 throw new Exception("This should never happen.");
             }
         }
+    }
+
+    private static (ulong, ulong, ulong) GetInfo(byte pageBits, ulong entriesCount)
+    {
+        // H5FAdblock.c (H5FA__dblock_alloc)
+        var elementsPerPage = 1UL << pageBits;
+        var pageCount = 0UL;
+        var pageBitmapSize = 0UL;
+
+        if (entriesCount > elementsPerPage)
+        {
+            /* Compute number of pages */
+            pageCount = (entriesCount + elementsPerPage - 1) / elementsPerPage;
+
+            /* Compute size of 'page init' flag array, in bytes */
+            pageBitmapSize = (pageCount + 7) / 8;
+        }
+
+        return (elementsPerPage, pageCount, pageBitmapSize);
     }
 
     private T? GetElement<T>(ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
@@ -161,9 +216,14 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         /* Get the data block */
         ReadContext.Driver.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
 
+        var (elementsPerPage, pageCount, pageBitmapSize) = GetInfo(header.PageBits, header.EntriesCount);
+
         var dataBlock = FixedArrayDataBlock<T>.Decode(
             ReadContext,
-            header,
+            elementsPerPage,
+            pageCount,
+            pageBitmapSize,
+            header.EntriesCount,
             decode);
 
         /* Check for paged data block */

@@ -33,25 +33,13 @@ internal partial record class FixedArrayDataBlock<T>(
 
     public static FixedArrayDataBlock<T> Decode(
         NativeReadContext context,
-        FixedArrayHeader header,
+        ulong elementsPerPage, 
+        ulong pageCount, 
+        ulong pageBitmapSize,
+        ulong entriesCount,
         Func<H5DriverBase, T> decode)
     {
         var (driver, superblock) = context;
-
-        // H5FAdblock.c (H5FA__dblock_alloc)
-        var elementsPerPage = 1UL << header.PageBits;
-        var pageCount = 0UL;
-
-        var pageBitmapSize = 0UL;
-
-        if (header.EntriesCount > elementsPerPage)
-        {
-            /* Compute number of pages */
-            pageCount = (header.EntriesCount + elementsPerPage - 1) / elementsPerPage;
-
-            /* Compute size of 'page init' flag array, in bytes */
-            pageBitmapSize = (pageCount + 7) / 8;
-        }
 
         // signature
         var signature = driver.ReadBytes(4);
@@ -82,7 +70,7 @@ internal partial record class FixedArrayDataBlock<T>(
             pageBitmap = Array.Empty<byte>();
 
             elements = Enumerable
-                .Range(0, (int)header.EntriesCount)
+                .Range(0, (int)entriesCount)
                 .Select(i => decode(driver))
                 .ToArray();
         }
@@ -91,9 +79,9 @@ internal partial record class FixedArrayDataBlock<T>(
         var _ = driver.ReadUInt32();
 
         // last page element count
-        var lastPageElementCount = header.EntriesCount % elementsPerPage == 0
+        var lastPageElementCount = entriesCount % elementsPerPage == 0
             ? elementsPerPage
-            : header.EntriesCount % elementsPerPage;
+            : entriesCount % elementsPerPage;
 
         return new FixedArrayDataBlock<T>(
             ClientID: clientID,
