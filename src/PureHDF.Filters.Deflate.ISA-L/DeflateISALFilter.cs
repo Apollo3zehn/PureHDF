@@ -27,7 +27,7 @@ public class DeflateISALFilter : IH5Filter
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var buffer = info.SourceBuffer;
+            var buffer = info.Buffer;
             var state = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
 
             ISAL.isal_inflate_reset(_state_ptr.Value);
@@ -35,10 +35,7 @@ public class DeflateISALFilter : IH5Filter
             buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
 
             var length = 0;
-
-            var inflated = info.FinalBuffer.Equals(default)
-                ? new byte[info.ChunkSize]
-                : info.FinalBuffer;
+            var inflated = new byte[info.ChunkSize].AsMemory();
 
             var sourceBuffer = buffer.Span;
             var targetBuffer = inflated.Span;

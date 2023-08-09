@@ -19,27 +19,14 @@ public class BZip2SharpZipLibFilter : IH5Filter
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
+            using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* minimum size to expect */);
 
-            if (info.FinalBuffer.Equals(default))
-            {
-                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+            BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
 
-                BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
-
-                return decompressedStream
-                    .GetBuffer()
-                    .AsMemory(0, (int)decompressedStream.Length);
-            }
-
-            else
-            {
-                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
-
-                BZip2.Decompress(sourceStream, decompressedStream, isStreamOwner: false);
-
-                return info.FinalBuffer;
-            }
+            return decompressedStream
+                .GetBuffer()
+                .AsMemory(0, (int)decompressedStream.Length);
         }
 
         /* We're compressing */

@@ -9,15 +9,13 @@ namespace PureHDF.Filters;
 /// <param name="Flags">The filter flags.</param>
 /// <param name="Parameters">The filter parameters.</param>
 /// <param name="ChunkSize">The chunk size.</param>
-/// <param name="SourceBuffer">The source buffer.</param>
-/// <param name="FinalBuffer">The final buffer. The final buffer is non-default if the current filter is the last one in the pipeline.</param>
+/// <param name="Buffer">The source buffer.</param>
 /// <returns>The target buffer.</returns>
 public record class FilterInfo(
     H5FilterFlags Flags,
     uint[] Parameters,
     int ChunkSize,
-    Memory<byte> SourceBuffer,
-    Memory<byte> FinalBuffer);
+    Memory<byte> Buffer);
 
 /// <summary>
 /// A filter with associated options.
@@ -26,6 +24,15 @@ public record class FilterInfo(
 /// <param name="Options">Optional filter options.</param>
 public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Options = default)
 {
+    #region Constants
+
+    /// <summary>
+    /// The deflate compression level options key.
+    /// </summary>
+    public const string DEFLATE_COMPRESSION_LEVEL = "deflate-compression-level";
+
+    #endregion
+
     #region Constructors
 
     static H5Filter()
@@ -68,12 +75,12 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
         Register(new DeflateFilter());
     }
 
-    internal static void ExecutePipeline(
+    internal static Memory<byte> ExecutePipeline(
         FilterDescription[] pipeline,
         uint filterMask,
         H5FilterFlags flags,
-        Memory<byte> filterBuffer,
-        Memory<byte> resultBuffer)
+        int chunkSize,
+        Memory<byte> buffer)
     {
         // H5Z.c (H5Z_pipeline)
 
@@ -95,38 +102,61 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
                 }
 
                 var tmpFlags = (H5FilterFlags)((ushort)flags | (ushort)filter.Flags);
-                var isLast = i == 1;
 
                 try
                 {
                     var filterInfo = new FilterInfo(
                         Flags: tmpFlags,
                         Parameters: filter.ClientData,
-                        ChunkSize: resultBuffer.Length,
-                        SourceBuffer: filterBuffer,
-                        FinalBuffer: isLast ? resultBuffer : default);
+                        ChunkSize: chunkSize,
+                        Buffer: buffer);
 
-                    filterBuffer = registration.Filter(filterInfo);
+                    buffer = registration.Filter(filterInfo);
                 }
                 catch (Exception ex)
                 {
                     throw new Exception("Filter pipeline failed.", ex);
                 }
             }
-
-            /* skip data copying if possible */
-            if (!filterBuffer.Equals(resultBuffer))
-            {
-                filterBuffer[0..resultBuffer.Length]
-                    .CopyTo(resultBuffer);
-            }
         }
 
         /* Write */
         else
         {
-            throw new Exception("Writing data chunks is not yet supported by PureHDF.");
+            for (int i = 0; i < pipeline.Length; i++)
+            {
+                /* check if filter should be skipped */
+                if (((filterMask >> i) & 0x0001) > 0)
+                    continue;
+
+                var filter = pipeline[i];
+
+                if (!Registrations.TryGetValue(filter.Identifier, out var registration))
+                {
+                    var filterName = string.IsNullOrWhiteSpace(filter.Name) ? "unnamed filter" : filter.Name;
+                    throw new Exception($"Could not find filter '{filterName}' with ID '{filter.Identifier}'. Make sure the filter has been registered using H5Filter.Register(...).");
+                }
+
+                var tmpFlags = (H5FilterFlags)((ushort)flags | (ushort)filter.Flags);
+
+                try
+                {
+                    var filterInfo = new FilterInfo(
+                        Flags: tmpFlags,
+                        Parameters: filter.ClientData,
+                        ChunkSize: chunkSize,
+                        Buffer: buffer);
+
+                    buffer = registration.Filter(filterInfo);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Filter pipeline failed.", ex);
+                }
+            }
         }
+
+        return buffer;
     }
 
     #endregion
@@ -142,17 +172,16 @@ internal class ShuffleFilter : IH5Filter
 
     public Memory<byte> Filter(FilterInfo info)
     {
-        var resultBuffer = info.FinalBuffer.Equals(default)
-            ? new byte[info.SourceBuffer.Length]
-            : info.FinalBuffer;
+        var sourceBuffer = info.Buffer;
+        var resultBuffer = new byte[info.Buffer.Length].AsMemory();
 
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-            Shuffle.DoUnshuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
+            Shuffle.DoUnshuffle((int)info.Parameters[0], sourceBuffer.Span, resultBuffer.Span);
 
         // write
         else
-            Shuffle.DoShuffle((int)info.Parameters[0], info.SourceBuffer.Span, resultBuffer.Span);
+            Shuffle.DoShuffle((int)info.Parameters[0], sourceBuffer.Span, resultBuffer.Span);
 
         return resultBuffer;
     }
@@ -179,14 +208,14 @@ internal class Fletcher32Filter : IH5Filter
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var bufferWithoutChecksum = info.SourceBuffer[0..^4];
+            var bufferWithoutChecksum = info.Buffer[0..^4];
 
             /* Do checksum if it's enabled for read; otherwise skip it
             * to save performance. */
             if (!info.Flags.HasFlag(H5FilterFlags.SkipEdc))
             {
                 /* Get the stored checksum */
-                var storedFletcher_bytes = info.SourceBuffer.Span[^4..];
+                var storedFletcher_bytes = info.Buffer.Span[^4..];
                 var storedFletcher = BitConverter.ToUInt32(storedFletcher_bytes.ToArray(), 0);
 
                 /* Compute checksum */
@@ -239,7 +268,7 @@ internal class ScaleOffsetFilter : IH5Filter
     {
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-            return ScaleOffsetGeneric.Decompress(info.SourceBuffer, info.Parameters);
+            return ScaleOffsetGeneric.Decompress(info.Buffer, info.Parameters);
 
         // write
         else
@@ -267,56 +296,29 @@ internal class DeflateFilter : IH5Filter
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
 #if NET6_0_OR_GREATER
-            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
+            using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* minimum size to expect */);
+            using var decompressionStream = new ZLibStream(sourceStream, CompressionMode.Decompress);
 
-            if (info.FinalBuffer.Equals(default))
-            {
-                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
-                using var decompressionStream = new ZLibStream(sourceStream, CompressionMode.Decompress);
+            decompressionStream.CopyTo(decompressedStream);
 
-                decompressionStream.CopyTo(decompressedStream);
-
-                return decompressedStream
-                    .GetBuffer()
-                    .AsMemory(0, (int)decompressedStream.Length);
-            }
-
-            else
-            {
-                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
-                using var decompressionStream = new ZLibStream(sourceStream, CompressionMode.Decompress);
-
-                decompressionStream.CopyTo(decompressedStream);
-
-                return info.FinalBuffer;
-            }
+            return decompressedStream
+                .GetBuffer()
+                .AsMemory(0, (int)decompressedStream.Length);
 #else
-            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
 
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
 
-            if (info.FinalBuffer.Equals(default))
-            {
-                using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
-                using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+            using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
+            using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* minimum size to expect */);
 
-                decompressionStream.CopyTo(decompressedStream);
+            decompressionStream.CopyTo(decompressedStream);
 
-                return decompressedStream
-                    .GetBuffer()
-                    .AsMemory(0, (int)decompressedStream.Length);
-            }
-
-            else
-            {
-                using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
-                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
-
-                decompressionStream.CopyTo(decompressedStream);
-
-                return info.FinalBuffer;
-            }
+            return decompressedStream
+                .GetBuffer()
+                .AsMemory(0, (int)decompressedStream.Length);
 #endif
         }
 
@@ -324,11 +326,24 @@ internal class DeflateFilter : IH5Filter
         else
         {
 #if NET6_0_OR_GREATER
-            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
-            using var compressionStream = new ZLibStream(sourceStream, CompressionMode.Compress);
-            using var compressedStream = new MemoryStream(capacity: info.ChunkSize /* growable stream */);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
+            using var compressedStream = new MemoryStream(capacity: info.ChunkSize /* maximum size to expect */);
 
-            compressionStream.CopyTo(compressedStream);
+            var compressionLevelValue = (int)info.Parameters[0];
+
+            /* workaround for https://forum.hdfgroup.org/t/is-deflate-filter-compression-level-1-default-supported/11416 */
+            if (compressionLevelValue == 6)
+                compressionLevelValue = -1;
+
+            var compressionLevel = GetCompressionLevel(unchecked(compressionLevelValue));
+
+            using (var compressionStream = new ZLibStream(
+                compressedStream, 
+                compressionLevel,
+                leaveOpen: true))
+            {
+                sourceStream.CopyTo(compressionStream);
+            };
 
             return compressedStream
                 .GetBuffer()
@@ -341,8 +356,54 @@ internal class DeflateFilter : IH5Filter
 
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
-        return Array.Empty<uint>();
+#if NET6_0_OR_GREATER
+        var value = GetCompressionLevelValue(options);
+
+        /* workaround for https://forum.hdfgroup.org/t/is-deflate-filter-compression-level-1-default-supported/11416 */
+        if (value == -1)
+            value = 6;
+
+        return new uint[] { unchecked((uint)value) };
+#else
+        throw new Exception(".NET 6+ is required for zlib compression support.");
+#endif
     }
+
+    private static int GetCompressionLevelValue(Dictionary<string, object>? options)
+    {
+        if (
+            options is not null && 
+            options.TryGetValue(H5Filter.DEFLATE_COMPRESSION_LEVEL, out var objectValue))
+        {
+            if (objectValue is int value)
+                return value;
+
+            else
+                throw new Exception($"The value of the filter parameter '{H5Filter.DEFLATE_COMPRESSION_LEVEL}' must be of type System.Int32.");
+        }
+
+        else
+        {
+            /* would be the natural value but the HDF group's HDF5 library does not support the compression level -1. */
+            return -1;
+        }
+    }
+
+#if NET6_0_OR_GREATER
+    private static CompressionLevel GetCompressionLevel(int value)
+    {
+        // H5Pset_deflate() (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html#gaf1f569bfc54552bdb9317d2b63318a0d)
+        // http://www.zlib.net/manual.html#Constants
+        return value switch
+        {
+            0 => CompressionLevel.NoCompression,
+            1 => CompressionLevel.Fastest,
+            9 => CompressionLevel.SmallestSize,
+            -1 => CompressionLevel.Optimal,
+            _ => throw new Exception("Only compression levels 0, 1, 9 or -1 are supported. Note that the HDF group's HDF5 library does not support the compression level -1."),
+        };
+    }
+#endif
 }
 
 #endregion

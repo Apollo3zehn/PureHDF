@@ -49,7 +49,7 @@ public class Blosc2Filter : IH5Filter
         }
 
         /* We're decompressing */
-        Memory<byte> resultBuffer = default;
+        var buffer = default(Memory<byte>);
 
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
@@ -61,21 +61,19 @@ public class Blosc2Filter : IH5Filter
             *  size.
             */
 
-            fixed (byte* srcPtr = info.SourceBuffer.Span)
+            fixed (byte* srcPtr = info.Buffer.Span)
             {
                 Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
 
-                resultBuffer = info.FinalBuffer.Equals(default)
-                    ? new byte[outbuf_size]
-                    : info.FinalBuffer;
+                buffer = new byte[outbuf_size];
 
-                fixed (byte* destPtr = resultBuffer.Span)
+                fixed (byte* destPtr = buffer.Span)
                 {
                     status = Blosc.blosc2_decompress(
                         src: new IntPtr(srcPtr), 
-                        srcsize: info.SourceBuffer.Length, 
+                        srcsize: info.Buffer.Length, 
                         dest: new IntPtr(destPtr), 
-                        destsize: (int)outbuf_size);
+                        destsize: buffer.Length);
 
                     /* decompression failed */
                     if (status <= 0)
@@ -83,7 +81,7 @@ public class Blosc2Filter : IH5Filter
                 }
             }
 
-            return resultBuffer;
+            return buffer;
         }
 
         /* We're compressing */

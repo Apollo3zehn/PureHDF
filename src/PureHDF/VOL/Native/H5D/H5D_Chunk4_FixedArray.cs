@@ -51,7 +51,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize)
+    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
     {
         /* Check for filters on chunks */
         ChunkInfo chunkInfo;
@@ -60,8 +60,8 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         {
             chunkInfo = new ChunkInfo(
                 Address: (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize),
-                Size: 0,
-                FilterMask: 0
+                Size: chunkSize,
+                FilterMask: filterMask
             );
         }
 
@@ -89,6 +89,10 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         {
             if (Dataset.FilterPipeline is not null)
             {
+                var layout = (DataLayoutMessage4)Dataset.Layout;
+                var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
+                var indexingInformation = (FixedArrayIndexingInformation)properties.IndexingInformation;
+                var pageBits = indexingInformation.PageBits;
                 var elements = new FilteredDataBlockElement[_writeChunkInfos.Count];
 
                 for (int i = 0; i < _writeChunkInfos.Count; i++)
@@ -104,12 +108,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
                 /* H5FA__cache_hdr_serialize (H5FAcache.c) */
                 var entriesCount = (ulong)_writeChunkInfos.Count;
-#if NETSTANDARD2_0 || NETSTANDARD2_1
-                var pageBits = (byte)Math.Ceiling(Math.Log(entriesCount, newBase: 2));
-#else
-                var pageBits = (byte)Math.Ceiling(Math.Log2(entriesCount));
-#endif
-                var entrySize = FilteredDataBlockElement.ENCODE_SIZE;
+                var entrySize = FilteredDataBlockElement.GetEncodeSize(ChunkSizeLength);
                 var (_, pageCount, pageBitmapSize) = GetInfo(pageBits, entriesCount);
 
                 var dataBlock = new FixedArrayDataBlock<FilteredDataBlockElement>(

@@ -6,6 +6,11 @@
 public enum H5FilterFlags : ushort
 {
     /// <summary>
+    /// No filter flags.
+    /// </summary>
+    None = 0,
+
+    /// <summary>
     /// A flag which indicates if the provided buffer should be decompressed.
     /// </summary>
     Decompress = 0x0100,

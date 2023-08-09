@@ -20,7 +20,7 @@ public class DeflateSharpZipLibFilter : IH5Filter
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            using var sourceStream = new MemorySpanStream(info.SourceBuffer);
+            using var sourceStream = new MemorySpanStream(info.Buffer);
 
             // skip ZLIB header to get only the DEFLATE stream
             sourceStream.Seek(2, SeekOrigin.Begin);
@@ -30,24 +30,12 @@ public class DeflateSharpZipLibFilter : IH5Filter
                 IsStreamOwner = false
             };
 
-            if (info.FinalBuffer.Equals(default))
-            {
-                using var decompressedStream = new MemoryStream(info.ChunkSize /* minimum size to expect */);
-                decompressionStream.CopyTo(decompressedStream);
+            using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* minimum size to expect */);
+            decompressionStream.CopyTo(decompressedStream);
 
-                return decompressedStream
-                    .GetBuffer()
-                    .AsMemory(0, (int)decompressedStream.Length);
-            }
-
-            else
-            {
-                using var decompressedStream = new MemorySpanStream(info.FinalBuffer);
-
-                decompressionStream.CopyTo(decompressedStream);
-
-                return info.FinalBuffer;
-            }
+            return decompressedStream
+                .GetBuffer()
+                .AsMemory(0, (int)decompressedStream.Length);
         }
 
         /* We're compressing */

@@ -80,7 +80,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             : ChunkInfo.None;
     }
 
-    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize)
+    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
     {
         throw new NotImplementedException();
     }

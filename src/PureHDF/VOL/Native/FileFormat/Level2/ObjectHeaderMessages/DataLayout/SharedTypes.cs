@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal enum ClientID
+internal enum ClientID : byte
 {
     NonFilteredDatasetChunks = 0,
     FilteredDatasetChunks = 1
@@ -16,10 +16,15 @@ internal record class FilteredDataBlockElement(
     uint FilterMask
 ) : DataBlockElement(Address)
 {
-    public const byte ENCODE_SIZE = 
-        sizeof(ulong) +
-        sizeof(uint) +
-        sizeof(uint);
+    public static byte GetEncodeSize(uint chunkSizeLength)
+    {
+        var encodeSize =
+            sizeof(ulong) +
+            chunkSizeLength +
+            sizeof(uint);
+
+        return (byte)encodeSize;
+    }
 }
 
 internal record struct DataBlockPage<T>(

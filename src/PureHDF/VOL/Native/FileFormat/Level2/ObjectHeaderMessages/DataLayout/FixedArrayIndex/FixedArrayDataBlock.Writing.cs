@@ -7,13 +7,14 @@ internal partial record class FixedArrayDataBlock<T>
     public ulong GetEncodeSize(ulong pageCount, ulong pageBitmapSize, byte entrySize)
     {
         var encodeSize =
-            8 +
+            4 +
             sizeof(byte) +
             sizeof(byte) +
             sizeof(ulong) +
-            pageCount > 0
+            (pageCount > 0
                 ? (long)pageBitmapSize
-                : Elements.Length * entrySize;
+                : Elements.Length * entrySize) +
+            sizeof(uint);
 
         return (ulong)encodeSize;
     }

@@ -239,41 +239,17 @@ internal static class H5Writer
             }
         }
 
-        // data encode size
-        ulong dataEncodeSize;
-
-        if (chunkDimensions is null)
-        {
-            dataEncodeSize = datatype.Size * dataspace.Dimensions
-                .Aggregate(1UL, (product, dimension) => product * dimension);
-        }
-
-        else
-        {
-            var chunkSize = chunkDimensions
-                .Aggregate(1UL, (product, dimension) => product * dimension);
-
-            dataEncodeSize = 1;
-
-            for (int dimension = 0; dimension < dataspace.Rank; dimension++)
-            {
-                dataEncodeSize *= (ulong)Math
-                    .Ceiling(dataspace.Dimensions[dimension] / (double)chunkDimensions[dimension]);
-            }
-
-            dataEncodeSize *= chunkSize * datatype.Size;
-        }
-        
         // data layout
         var dataLayout = DataLayoutMessage4.Create(
             context, 
-            (long)dataEncodeSize,
-            datatype.Size,
+            typeSize: datatype.Size,
             isFiltered: filterPipeline is not null,
-            chunkDimensions);
+            dataDimensions: dataspace.Dimensions,
+            chunkDimensions: chunkDimensions);
 
         // fill value
-        var fillValue = new byte[datatype.Size]; /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
+        /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
+        var fillValue = new byte[datatype.Size];
 
         var fillValueMessage = new FillValueMessage(
             AllocationTime: SpaceAllocationTime.Early,

@@ -18,22 +18,19 @@ public class LzfFilter : IH5Filter
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
             uint status = 0;
-
             var targetSize = info.Parameters[2];
 
             while (status == 0)
             {
-                var target = info.FinalBuffer.Equals(default)
-                    ? new byte[(int)targetSize]
-                    : info.FinalBuffer;
+                var buffer = new byte[(int)targetSize].AsMemory();
 
-                status = Decompress(info.SourceBuffer.Span, target.Span);
+                status = Decompress(info.Buffer.Span, buffer.Span);
 
                 if (status == 0)
-                    targetSize += (uint)info.SourceBuffer.Length;
+                    targetSize += (uint)info.Buffer.Length;
 
                 else
-                    return target.Slice(0, (int)status);
+                    return buffer.Slice(0, (int)status);
             }
             
             throw new Exception("This should never happen.");

@@ -197,7 +197,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     protected abstract ChunkInfo GetReadChunkInfo(ulong[] chunkIndices);
 
-    protected abstract ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize);
+    protected abstract ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask);
 
     protected override void Dispose(bool disposing)
     {
@@ -207,15 +207,20 @@ internal abstract class H5D_Chunk : H5D_Base
             _writingChunkCache.Flush(WriteChunk);
     }
 
-    private async Task<Memory<byte>> ReadChunkAsync<TReader>(TReader reader, ulong[] chunkIndices) where TReader : IReader
+    private async Task<Memory<byte>> ReadChunkAsync<TReader>(
+        TReader reader, 
+        ulong[] chunkIndices) 
+        where TReader : IReader
     {
-        var buffer = new byte[ChunkByteSize];
+        Memory<byte> chunk;
 
         // TODO: This way, fill values will become part of the cache
         if (_readingChunkIndexAddressIsUndefined)
         {
+            chunk = new byte[ChunkByteSize];
+
             if (Dataset.FillValue.Value is not null)
-                buffer.AsSpan().Fill(Dataset.FillValue.Value);
+                chunk.Span.Fill(Dataset.FillValue.Value);
         }
 
         else
@@ -224,47 +229,74 @@ internal abstract class H5D_Chunk : H5D_Base
 
             if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
+                chunk = new byte[ChunkByteSize];
+
                 if (Dataset.FillValue.Value is not null)
-                    buffer.AsSpan().Fill(Dataset.FillValue.Value);
+                    chunk.Span.Fill(Dataset.FillValue.Value);
             }
 
             else
             {
-                await ReadChunkAsync(reader, buffer, (long)chunkInfo.Address, chunkInfo.Size, chunkInfo.FilterMask).ConfigureAwait(false);
+                if (Dataset.FilterPipeline is null)
+                {
+                    chunk = new byte[ChunkByteSize];
+
+                    await reader
+                        .ReadDatasetAsync(ReadContext.Driver, chunk, (long)chunkInfo.Address)
+                        .ConfigureAwait(false);
+                }
+                
+                else
+                {
+                    var rawChunkSize = (int)chunkInfo.Size;
+                    using var filterBufferOwner = MemoryPool<byte>.Shared.Rent(rawChunkSize);
+                    var buffer = filterBufferOwner.Memory[0..rawChunkSize];
+
+                    await reader
+                        .ReadDatasetAsync(ReadContext.Driver, buffer, (long)chunkInfo.Address)
+                        .ConfigureAwait(false);
+
+                    chunk = H5Filter.ExecutePipeline(
+                        Dataset.FilterPipeline.FilterDescriptions,
+                        chunkInfo.FilterMask, 
+                        H5FilterFlags.Decompress,
+                        (int)ChunkByteSize,
+                        buffer);
+                }
             }
         }
 
-        return buffer;
+        return chunk;
     }
 
-    private async Task ReadChunkAsync<TReader>(
-        TReader reader,
-        Memory<byte> buffer,
-        long offset,
-        ulong rawChunkSize,
-        uint filterMask) where TReader : IReader
+    private void WriteChunk(
+        ulong[] chunkIndices, 
+        Memory<byte> chunk)
     {
         if (Dataset.FilterPipeline is null)
         {
-            await reader.ReadDatasetAsync(ReadContext.Driver, buffer, offset).ConfigureAwait(false);
+            var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)chunk.Length, 0);
+
+            WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+            WriteContext.Driver.Write(chunk.Span);
         }
         
         else
         {
-            using var filterBufferOwner = MemoryPool<byte>.Shared.Rent((int)rawChunkSize);
-            var filterBuffer = filterBufferOwner.Memory[0..(int)rawChunkSize];
-            await reader.ReadDatasetAsync(ReadContext.Driver, filterBuffer, offset).ConfigureAwait(false);
+            var filterMask = 0U;
 
-            H5Filter.ExecutePipeline(Dataset.FilterPipeline.FilterDescriptions, filterMask, H5FilterFlags.Decompress, filterBuffer, buffer);
+            var buffer = H5Filter.ExecutePipeline(
+                Dataset.FilterPipeline.FilterDescriptions, 
+                filterMask, 
+                H5FilterFlags.None,
+                (int)ChunkByteSize,
+                chunk);
+
+            var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)buffer.Length, filterMask);
+
+            WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+            WriteContext.Driver.Write(buffer.Span);
         }
-    }
-
-    private void WriteChunk(ulong[] chunkIndices, Memory<byte> chunk)
-    {
-        var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)chunk.Length);
-
-        WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-        WriteContext.Driver.Write(chunk.Span);
     }
 
     #endregion

@@ -4,9 +4,9 @@ internal partial record class DataLayoutMessage4
 {
     public static DataLayoutMessage4 Create(
         NativeWriteContext context,
-        long dataEncodeSize,
         uint typeSize,
         bool isFiltered,
+        ulong[] dataDimensions,
         uint[]? chunkDimensions)
     {
         var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
@@ -14,15 +14,33 @@ internal partial record class DataLayoutMessage4
 
         if (chunkDimensions is not null)
         {
-            (var indexingInformation, var encodeSize) = isFiltered
-                ? (
-                    (IndexingInformation)new FixedArrayIndexingInformation(PageBits: 0), 
-                    (long)FixedArrayHeader.ENCODE_SIZE
-                )
-                : (
-                    new ImplicitIndexingInformation(), 
-                    dataEncodeSize
-                );
+            var dataBlockSize = chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension);
+            var chunkCount = 1UL;
+
+            for (int dimension = 0; dimension < chunkDimensions.Length; dimension++)
+            {
+                chunkCount *= (ulong)Math
+                    .Ceiling(dataDimensions[dimension] / (double)chunkDimensions[dimension]);
+            }
+
+            (IndexingInformation indexingInformation, long encodeSize) = isFiltered
+                ? 
+                    (
+                        new FixedArrayIndexingInformation(
+                            /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+                            PageBits: (byte)Math.Ceiling(Math.Log(chunkCount, newBase: 2))
+#else
+                            PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
+#endif
+                        ), 
+                        FixedArrayHeader.ENCODE_SIZE
+                    )
+                : 
+                    (
+                        (IndexingInformation)new ImplicitIndexingInformation(), 
+                        (long)(chunkCount * dataBlockSize * typeSize)
+                    );
 
             var address = context.FreeSpaceManager.Allocate(encodeSize);
 
@@ -30,7 +48,12 @@ internal partial record class DataLayoutMessage4
                 Address: (ulong)address,
                 Rank: (byte)(chunkDimensions.Length + 1),
                 Flags: default,
-                DimensionSizes: chunkDimensions.Select(value => (ulong)value).Concat(new ulong[] { typeSize }).ToArray(),
+
+                DimensionSizes: chunkDimensions
+                    .Select(value => (ulong)value)
+                    .Concat(new ulong[] { typeSize })
+                    .ToArray(),
+
                 IndexingInformation: indexingInformation
             );
 
@@ -46,6 +69,9 @@ internal partial record class DataLayoutMessage4
 
         else
         {
+            var dataBlockSize = dataDimensions.Aggregate(1UL, (product, dimension) => product * dimension);
+            var dataEncodeSize = (long)(dataBlockSize * typeSize);
+
             // TODO: The ushort.MaxValue limit is not stated in the specification but
             // makes sense because of the size field of the Compact Storage Property
             // Description.
