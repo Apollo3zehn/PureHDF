@@ -109,8 +109,8 @@ public partial class DatasetTests
        
         var options = new H5WriteOptions(
             Filters: new() { 
-                new H5Filter(H5FilterID.Shuffle),
-                new H5Filter(H5FilterID.Deflate)
+                H5FilterID.Shuffle,
+                H5FilterID.Deflate
             }
         );
 

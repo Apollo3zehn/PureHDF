@@ -33,6 +33,16 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
 
     #endregion
 
+    #region Operators
+
+    /// <summary>
+    /// Converts a <see cref="H5FilterID"/> into a <see cref="H5Filter"/> instance with default filter options.
+    /// </summary>
+    /// <param name="filterId"></param>
+    public static implicit operator H5Filter(H5FilterID filterId) => new(filterId);
+
+    #endregion
+
     #region Constructors
 
     static H5Filter()
