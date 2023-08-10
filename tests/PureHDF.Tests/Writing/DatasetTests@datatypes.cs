@@ -12,7 +12,7 @@ public partial class DatasetTests
 
     [Theory]
     [MemberData(nameof(CommonData))]
-    public void CanWriteCommon(object data)
+    public void CanWrite_Common(object data)
     {
         // Arrange
         var type = data.GetType();
@@ -91,7 +91,7 @@ public partial class DatasetTests
 
     [Theory]
     [MemberData(nameof(CommonData_FixedLengthString))]
-    public void CanWriteCommon_DefaultFixedLengthString(object data)
+    public void CanWrite_Common_DefaultFixedLengthString(object data)
     {
         // Arrange
         var type = data.GetType();
@@ -132,7 +132,7 @@ public partial class DatasetTests
 
     [Theory]
     [MemberData(nameof(CommonData_FixedLengthStringMapper))]
-    public void CanWriteCommon_FixedLengthStringMapper(object data)
+    public void CanWrite_Common_FixedLengthStringMapper(object data)
     {
         // Arrange
         var type = data.GetType();

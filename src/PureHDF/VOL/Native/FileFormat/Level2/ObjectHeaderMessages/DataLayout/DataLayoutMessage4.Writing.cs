@@ -23,43 +23,70 @@ internal partial record class DataLayoutMessage4
                     .Ceiling(dataDimensions[dimension] / (double)chunkDimensions[dimension]);
             }
 
-            (IndexingInformation indexingInformation, long encodeSize) = isFiltered
-                ? 
-                    (
-                        new FixedArrayIndexingInformation(
-                            /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
-#if NETSTANDARD2_0 || NETSTANDARD2_1
-                            PageBits: (byte)Math.Ceiling(Math.Log(chunkCount, newBase: 2))
-#else
-                            PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
-#endif
-                        ), 
-                        FixedArrayHeader.ENCODE_SIZE
-                    )
-                : 
-                    (
-                        (IndexingInformation)new ImplicitIndexingInformation(), 
-                        (long)(chunkCount * dataBlockSize * typeSize)
-                    );
+            (IndexingInformation IndexingInformation, long EncodeSize, ChunkedStoragePropertyFlags Flags) indexInfo;
 
-            var address = context.FreeSpaceManager.Allocate(encodeSize);
+            if (chunkCount == 1)
+            {
+                /* FilteredChunkSize and encode size will be set later, see also H5D__single_idx_insert (H5DSingle.c) */
+                var indexingInformation = new SingleChunkIndexingInformation(ChunkFilters: default);
+
+                var flags = isFiltered
+                    ? ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER
+                    : ChunkedStoragePropertyFlags.None;
+
+                indexInfo = (
+                    indexingInformation, 
+                    0,
+                    flags);
+            }
+
+            else
+            {
+                indexInfo = isFiltered
+                    ? 
+                        (
+                            new FixedArrayIndexingInformation(
+                                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
+#if NETSTANDARD2_0 || NETSTANDARD2_1
+                                PageBits: (byte)Math.Ceiling(Math.Log(chunkCount, newBase: 2))
+#else
+                                PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
+#endif
+                            ), 
+                            FixedArrayHeader.ENCODE_SIZE,
+                            ChunkedStoragePropertyFlags.None
+                        )
+                    : 
+                        (
+                            new ImplicitIndexingInformation(), 
+                            (long)(chunkCount * dataBlockSize * typeSize),
+                            ChunkedStoragePropertyFlags.None
+                        );
+            }
+
+            /* some indexes can only be allocated later */
+            var address = indexInfo.EncodeSize == 0
+                ? Superblock.UndefinedAddress
+                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize);
 
             var properties = new ChunkedStoragePropertyDescription4(
-                Address: (ulong)address,
                 Rank: (byte)(chunkDimensions.Length + 1),
-                Flags: default,
+                Flags: indexInfo.Flags,
 
                 DimensionSizes: chunkDimensions
                     .Select(value => (ulong)value)
                     .Concat(new ulong[] { typeSize })
                     .ToArray(),
 
-                IndexingInformation: indexingInformation
-            );
+                IndexingInformation: indexInfo.IndexingInformation
+            )
+            {
+                Address = address
+            };
 
             dataLayout = new DataLayoutMessage4(
                 LayoutClass: LayoutClass.Chunked,
-                Address: (ulong)address,
+                Address: properties.Address,
                 Properties: properties
             )
             {
@@ -91,7 +118,10 @@ internal partial record class DataLayoutMessage4
                     Data: dataEncodeSize == 0
                         ? Array.Empty<byte>()
                         : new byte[dataEncodeSize]
-                );
+                )
+                {
+                    Address = Superblock.UndefinedAddress
+                };
 
                 dataLayout = new DataLayoutMessage4(
                     LayoutClass: LayoutClass.Compact,
@@ -114,9 +144,11 @@ internal partial record class DataLayoutMessage4
                 var address = context.FreeSpaceManager.Allocate(dataEncodeSize);
 
                 var properties = new ContiguousStoragePropertyDescription(
-                    Address: (ulong)address,
                     Size: (ulong)dataEncodeSize
-                );
+                )
+                {
+                    Address = (ulong)address
+                };
 
                 dataLayout = new DataLayoutMessage4(
                     LayoutClass: LayoutClass.Contiguous,

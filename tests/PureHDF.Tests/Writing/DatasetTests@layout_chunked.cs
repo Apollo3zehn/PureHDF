@@ -6,6 +6,68 @@ namespace PureHDF.Tests.Writing;
 
 public partial class DatasetTests
 {
+    private void CheckIndexType<T>(string filePath, bool filtered) where T : IndexingInformation
+    {
+        using var h5File = H5File.OpenRead(filePath);
+        var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
+
+        if (filtered)
+            Assert.NotNull(nativeDataset.InternalFilterPipeline);
+        
+        else
+            Assert.Null(nativeDataset.InternalFilterPipeline);
+
+        var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
+        var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
+
+        Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
+        Assert.Equal(typeof(T), properties.IndexingInformation.GetType());
+    }
+
+    [Fact]
+    public void CanWrite_Chunked_single_chunk()
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+
+        var file = new H5File
+        {
+            ["chunked"] = new H5Dataset(
+                data,
+                dimensions: new[] { (ulong)data.Length },
+                chunks: new[] { (uint)data.Length })
+        };
+
+        var filePath = Path.GetTempFileName();
+       
+        var options = new H5WriteOptions(
+            Filters: new() {
+                DeflateFilter.Id
+            }
+        );
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText("DumpFiles/layout_chunked_1d.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+            CheckIndexType<SingleChunkIndexingInformation>(filePath, filtered: true);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     [Fact]
     public void CanWrite_Chunked_implicit()
     {
@@ -28,13 +90,11 @@ public partial class DatasetTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText("DumpFiles/layout_chunked_implicit.dump")
+                .ReadAllText("DumpFiles/layout_chunked_1d.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
-
-            using var h5File = H5File.OpenRead(filePath);
-            Assert.Equal(H5DataLayoutClass.Chunked, h5File.Dataset("chunked").Layout.Class);
+            CheckIndexType<ImplicitIndexingInformation>(filePath, filtered: false);
         }
         finally
         {
@@ -68,21 +128,11 @@ public partial class DatasetTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText("DumpFiles/layout_chunked_implicit_2d.dump")
+                .ReadAllText("DumpFiles/layout_chunked_2d.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
-
-            using var h5File = H5File.OpenRead(filePath);
-            var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
-
-            Assert.Null(nativeDataset.InternalFilterPipeline);
-
-            var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
-            var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
-
-            Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
-            Assert.Equal(typeof(ImplicitIndexingInformation), properties.IndexingInformation.GetType());
+            CheckIndexType<ImplicitIndexingInformation>(filePath, filtered: false);
         }
         finally
         {
@@ -123,21 +173,11 @@ public partial class DatasetTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText("DumpFiles/layout_chunked_fixed_array_filtered_2d.dump")
+                .ReadAllText("DumpFiles/layout_chunked_2d.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
-
-            using var h5File = H5File.OpenRead(filePath);
-            var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
-
-            Assert.NotNull(nativeDataset.InternalFilterPipeline);
-
-            var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
-            var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
-
-            Assert.Equal(H5DataLayoutClass.Chunked, nativeDataset.Layout.Class);
-            Assert.Equal(typeof(FixedArrayIndexingInformation), properties.IndexingInformation.GetType());
+            CheckIndexType<FixedArrayIndexingInformation>(filePath, filtered: true);
         }
         finally
         {

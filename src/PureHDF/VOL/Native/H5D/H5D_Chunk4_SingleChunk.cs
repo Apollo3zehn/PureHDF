@@ -10,11 +10,23 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
 
     protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
     {
-        return new ChunkInfo(Dataset.Layout.Address, ChunkByteSize, 0);
+        var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
+
+        var chunkSize = single.FilteredChunkSize == 0
+            ? ChunkByteSize
+            : single.FilteredChunkSize;
+
+        return new ChunkInfo(Dataset.Layout.Address, chunkSize, single.ChunkFilters);
     }
 
     protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
     {
-        throw new NotImplementedException();
+        /* see also H5D__single_idx_insert (H5DSingle.c) */
+        Chunked4.Address = (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize);
+        
+        var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
+        single.FilteredChunkSize = chunkSize;
+
+        return new ChunkInfo(Chunked4.Address, chunkSize, filterMask);
     }
 }

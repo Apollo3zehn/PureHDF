@@ -19,14 +19,13 @@ internal static class WriteUtils
 
     public static void WriteUlongArbitrary(H5DriverBase driver, ulong value, ulong size)
     {
-        switch (size)
-        {
-            case 1: driver.Write((byte)value); break;
-            case 2: driver.Write((ushort)value); break;
-            case 4: driver.Write((uint)value); break;
-            case 8: driver.Write(value); break;
-            default: throw new Exception($"The size {size} is not supported.");
-        }
+        if (size > 8)
+            throw new Exception($"The size {size} is not supported.");
+
+        Span<ulong> valueArray = stackalloc ulong[] { value };
+        var valueBytes = MemoryMarshal.AsBytes(valueArray);
+        
+        driver.Write(valueBytes[0..(int)size]);
     }
 
     public static int GetEnumerableLength(IEnumerable data)

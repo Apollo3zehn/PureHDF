@@ -3,6 +3,7 @@ using HDF.PInvoke;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Reflection;
 #if NET5_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
@@ -120,7 +121,7 @@ public class FilterTests
         var filePath = "./TestFiles/scaleoffset.h5";
 
         // Act
-        using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset(datasetName);
 
         var actual = dataset.Read<T>();
@@ -160,7 +161,7 @@ public class FilterTests
         H5Filter.Register(new Blosc2Filter());
 
         // Act
-        using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset(datasetName);
 
         if (shouldSucceed)
@@ -197,7 +198,7 @@ public class FilterTests
         H5Filter.Register(new LzfFilter());
 
         // Act
-        using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset("/lzf");
         var actual = dataset.Read<int>();
 
@@ -229,7 +230,7 @@ public class FilterTests
         H5Filter.Register(new BZip2SharpZipLibFilter());
 
         // Act
-        using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset("bzip2");
         var actual = dataset.Read<int>();
 
@@ -242,16 +243,37 @@ public class FilterTests
     {
         // Arrange
         var data = SharedTestData.SmallData;
-        var expected = 4178925075U;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(
+                data, 
+                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+        };
+
+        var filePath = Path.GetTempFileName();
 
         H5Filter.ResetRegistrations();
 
         // Act
-        var actual = Fletcher32Generic
-            .Fletcher32(MemoryMarshal.AsBytes<int>(data));
+        file.Write(filePath);
 
         // Assert
-        Assert.Equal(expected, actual);
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/filtered.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 
     [Fact]
@@ -274,25 +296,82 @@ public class FilterTests
     }
 
     [Theory]
-    [InlineData("MicrosoftDeflateStream")]
+    [InlineData("DeflateDotnetFilter")]
+    [InlineData("DeflateSharpZipLibFilter")]
+    public void CanFilterZlib(string implementation)
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(
+                data, 
+                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                DeflateFilter.Id
+            }
+        );
+
+        IH5Filter? filter = implementation switch
+        {
+            "DeflateDotnetFilter" => null, /* default */
+            "DeflateSharpZipLibFilter" => new DeflateSharpZipLibFilter(),
+            "DeflateISALFilter" => new DeflateISALFilter(),
+            _ => throw new NotSupportedException($"The filter with ID {implementation} is not supported.")
+        };
+
+        H5Filter.ResetRegistrations();
+
+        if (filter is not null)
+            H5Filter.Register(filter);
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/filtered.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
+    }
+
+    [Theory]
+    [InlineData("DeflateDotnetFilter")]
     [InlineData("DeflateSharpZipLibFilter")]
 #if NET5_0_OR_GREATER
     // https://iobservable.net/blog/2013/08/06/clr-limitations/
     // "It seems that the maximum array base element size is limited to 64KB."
     [InlineData("DeflateISALFilter")]
 #endif
-    public void CanDefilterZLib(string filterFuncId)
+    public void CanDefilterZLib(string implementation)
     {
         // Arrange
         var version = H5F.libver_t.LATEST;
         var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddFilteredDataset_ZLib);
 
-        IH5Filter? filter = filterFuncId switch
+        IH5Filter? filter = implementation switch
         {
-            "MicrosoftDeflateStream" => null, /* default */
+            "DeflateDotnetFilter" => null, /* default */
             "DeflateSharpZipLibFilter" => new DeflateSharpZipLibFilter(),
             "DeflateISALFilter" => new DeflateISALFilter(),
-            _ => throw new NotSupportedException($"The filter with ID {filterFuncId} is not supported.")
+            _ => throw new NotSupportedException($"The filter with ID {implementation} is not supported.")
         };
 
         H5Filter.ResetRegistrations();
@@ -311,6 +390,52 @@ public class FilterTests
     }
 
     [Fact]
+    public void CanFilterMultiple()
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(
+                data, 
+                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+        };
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                Fletcher32Filter.Id,
+                ShuffleFilter.Id,
+                DeflateFilter.Id
+            }
+        );
+
+        var filePath = Path.GetTempFileName();
+
+        H5Filter.ResetRegistrations();
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/filtered.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
+    }
+
+    [Fact]
     public void CanDefilterMultiple()
     {
         // Arrange
@@ -325,6 +450,44 @@ public class FilterTests
 
         // Assert
         Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
+    }
+
+        [Fact]
+    public void ThrowsForInvalidFilterId()
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(
+                data, 
+                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+        };
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                99
+            }
+        );
+
+        var filePath = Path.GetTempFileName();
+
+        H5Filter.ResetRegistrations();
+
+        // Act
+        void action() => file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            Assert.Throws<TargetInvocationException>(action);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 
     // TODO: 16 byte and arbitrary number of bytes tests missing

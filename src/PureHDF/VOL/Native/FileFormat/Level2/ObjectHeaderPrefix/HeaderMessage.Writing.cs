@@ -32,7 +32,6 @@ internal readonly partial record struct HeaderMessage
         else if (Version == 2)
             driver.Write((byte)Type);
 
-
         // data size (fake)
         var dataEncodeSize = Data.GetEncodeSize();
         driver.Write(dataEncodeSize);

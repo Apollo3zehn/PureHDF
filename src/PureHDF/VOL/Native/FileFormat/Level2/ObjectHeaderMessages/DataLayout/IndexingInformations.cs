@@ -2,17 +2,18 @@
 
 internal abstract record class IndexingInformation()
 {
-    public abstract ushort GetEncodeSize();
+    public abstract ushort GetEncodeSize(ChunkedStoragePropertyFlags flags);
     
-    public abstract void Encode(H5DriverBase driver);
+    public abstract void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags);
 };
 
 
 internal record class SingleChunkIndexingInformation(
-    ulong FilteredChunkSize,
     uint ChunkFilters
 ) : IndexingInformation
 {
+    public ulong FilteredChunkSize { get; set; }
+
     public static SingleChunkIndexingInformation Decode(NativeReadContext context, ChunkedStoragePropertyFlags flags)
     {
         var filteredChunkSize = default(ulong);
@@ -30,30 +31,49 @@ internal record class SingleChunkIndexingInformation(
         }
 
         return new SingleChunkIndexingInformation(
-            FilteredChunkSize: filteredChunkSize,
             ChunkFilters: chunkFilters
-        );
+        )
+        {
+            FilteredChunkSize = filteredChunkSize
+        };
     }
 
-    public override ushort GetEncodeSize()
+    public override ushort GetEncodeSize(ChunkedStoragePropertyFlags flags)
     {
-        throw new NotImplementedException();
+        if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
+        {
+            return
+                sizeof(ulong) +
+                sizeof(uint);
+        }
+    
+        else
+        {
+            return 0;
+        }
     }
 
-    public override void Encode(H5DriverBase driver)
+    public override void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags)
     {
-        throw new NotImplementedException();
+        if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
+        {
+            // filtered chunk size
+            driver.Write(FilteredChunkSize);
+
+            // chunk filters
+            driver.Write(ChunkFilters);
+        }
     }
 }
 
 internal record class ImplicitIndexingInformation : IndexingInformation
 {
-    public override ushort GetEncodeSize()
+    public override ushort GetEncodeSize(ChunkedStoragePropertyFlags flags)
     {
         return 0;
     }
 
-    public override void Encode(H5DriverBase driver)
+    public override void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags)
     {
         return;
     }
@@ -75,12 +95,12 @@ internal record class FixedArrayIndexingInformation(
         );
     }
 
-    public override ushort GetEncodeSize()
+    public override ushort GetEncodeSize(ChunkedStoragePropertyFlags flags)
     {
         return sizeof(byte);
     }
 
-    public override void Encode(H5DriverBase driver)
+    public override void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags)
     {
         // page bits
         driver.Write(PageBits);
@@ -136,12 +156,12 @@ internal record class ExtensibleArrayIndexingInformation(
         );
     }
     
-    public override ushort GetEncodeSize()
+    public override ushort GetEncodeSize(ChunkedStoragePropertyFlags flags)
     {
         throw new NotImplementedException();
     }
 
-    public override void Encode(H5DriverBase driver)
+    public override void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags)
     {
         throw new NotImplementedException();
     }
@@ -162,12 +182,12 @@ internal record class BTree2IndexingInformation(
         );
     }
 
-    public override ushort GetEncodeSize()
+    public override ushort GetEncodeSize(ChunkedStoragePropertyFlags flags)
     {
         throw new NotImplementedException();
     }
 
-    public override void Encode(H5DriverBase driver)
+    public override void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags)
     {
         throw new NotImplementedException();
     }

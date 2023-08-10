@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.IO.Compression;
+using System.Runtime.InteropServices;
 
 namespace PureHDF.Filters;
 
@@ -263,8 +264,10 @@ public class Fletcher32Filter : IH5Filter
             info.Buffer.CopyTo(resultBuffer);
 
             /* Copy checksum */
-            Span<byte> fletcherBuffer = stackalloc byte[4];
-            fletcherBuffer.CopyTo(resultBuffer.Span[^4..]);
+            Span<uint> fletcherBuffer = stackalloc uint[] { fletcher };
+            
+            MemoryMarshal.AsBytes(fletcherBuffer)
+                .CopyTo(resultBuffer.Span[^4..]);
 
             return resultBuffer;
         }
@@ -273,7 +276,7 @@ public class Fletcher32Filter : IH5Filter
     /// <inheritdoc />
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
-        throw new NotImplementedException();
+        return Array.Empty<uint>();
     }
 }
 
@@ -468,7 +471,6 @@ public class DeflateFilter : IH5Filter
 
         else
         {
-            /* would be the natural value but the HDF group's HDF5 library does not support the compression level -1. */
             return -1;
         }
     }

@@ -1,9 +1,11 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal abstract record class StoragePropertyDescription(
-    ulong Address
+    //
 )
 {
+    public required ulong Address { get; set; }
+
     public abstract ushort GetEncodeSize();
 
     public abstract void Encode(H5DriverBase driver);
@@ -11,7 +13,7 @@ internal abstract record class StoragePropertyDescription(
 
 internal record class CompactStoragePropertyDescription(
     byte[] Data
-) : StoragePropertyDescription(Superblock.UndefinedAddress)
+) : StoragePropertyDescription
 {
     public static CompactStoragePropertyDescription Decode(H5DriverBase driver)
     {
@@ -19,7 +21,10 @@ internal record class CompactStoragePropertyDescription(
 
         return new CompactStoragePropertyDescription(
             Data: driver.ReadBytes(size)
-        );
+        )
+        {
+            Address = Superblock.UndefinedAddress
+        };
     }
 
     public override ushort GetEncodeSize()
@@ -42,18 +47,25 @@ internal record class CompactStoragePropertyDescription(
 }
 
 internal record class ContiguousStoragePropertyDescription(
-    ulong Address,
     ulong Size
-) : StoragePropertyDescription(Address)
+) : StoragePropertyDescription
 {
     public static ContiguousStoragePropertyDescription Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        // address
+        var address = superblock.ReadOffset(driver);
+
+        // 
+        var size = superblock.ReadLength(driver);
+
         return new ContiguousStoragePropertyDescription(
-            Address: superblock.ReadOffset(driver),
-            Size: superblock.ReadLength(driver)
-        );
+            Size: size
+        )
+        {
+            Address = address
+        };
     }
 
     public override ushort GetEncodeSize()
@@ -76,15 +88,13 @@ internal record class ContiguousStoragePropertyDescription(
 }
 
 internal abstract record class ChunkedStoragePropertyDescription(
-    ulong Address,
     byte Rank
-) : StoragePropertyDescription(Address);
+) : StoragePropertyDescription;
 
 internal record class ChunkedStoragePropertyDescription3(
-    ulong Address,
     byte Rank,
     uint[] DimensionSizes
-) : ChunkedStoragePropertyDescription(Address, Rank)
+) : ChunkedStoragePropertyDescription(Rank)
 {
     public static ChunkedStoragePropertyDescription3 Decode(NativeReadContext context)
     {
@@ -105,10 +115,12 @@ internal record class ChunkedStoragePropertyDescription3(
         }
 
         return new ChunkedStoragePropertyDescription3(
-            Address: address,
             Rank: rank,
             DimensionSizes: dimensionSizes
-        );
+        )
+        {
+            Address = address
+        };
     }
 
     public override ushort GetEncodeSize()
@@ -123,13 +135,12 @@ internal record class ChunkedStoragePropertyDescription3(
 }
 
 internal record class ChunkedStoragePropertyDescription4(
-    ulong Address,
     byte Rank,
     ChunkedStoragePropertyFlags Flags,
     ulong[] DimensionSizes,
     IndexingInformation IndexingInformation
-) : ChunkedStoragePropertyDescription(Address, Rank)
-{
+) : ChunkedStoragePropertyDescription(Rank)
+{   
     public static ChunkedStoragePropertyDescription4 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
@@ -169,12 +180,14 @@ internal record class ChunkedStoragePropertyDescription4(
         var address = superblock.ReadOffset(driver);
 
         return new ChunkedStoragePropertyDescription4(
-            Address: address,
             Rank: rank,
             Flags: flags,
             DimensionSizes: dimensionSizes,
             IndexingInformation: indexingTypeInformation
-        );
+        )
+        {
+            Address = address
+        };
     }
 
     public override ushort GetEncodeSize()
@@ -185,7 +198,7 @@ internal record class ChunkedStoragePropertyDescription4(
             sizeof(byte) +
             sizeof(ulong) * Rank +
             sizeof(byte) +
-            IndexingInformation.GetEncodeSize() +
+            IndexingInformation.GetEncodeSize(Flags) +
             sizeof(ulong);
 
         return (ushort)encodeSize;
@@ -224,7 +237,7 @@ internal record class ChunkedStoragePropertyDescription4(
         driver.Write((byte)indexingType);
 
         // indexing type information
-        IndexingInformation.Encode(driver);
+        IndexingInformation.Encode(driver, Flags);
 
         // address
         driver.Write(Address);
@@ -232,18 +245,25 @@ internal record class ChunkedStoragePropertyDescription4(
 }
 
 internal record class VirtualStoragePropertyDescription(
-    ulong Address,
     uint Index
-) : StoragePropertyDescription(Address)
+) : StoragePropertyDescription
 {
     public static VirtualStoragePropertyDescription Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        // address
+        var address = superblock.ReadOffset(driver);
+
+        // index
+        var index = driver.ReadUInt32();
+
         return new VirtualStoragePropertyDescription(
-            Address: superblock.ReadOffset(driver),
-            Index: driver.ReadUInt32()
-        );
+            Index: index
+        )
+        {
+            Address = address
+        };
     }
 
     public override ushort GetEncodeSize()
