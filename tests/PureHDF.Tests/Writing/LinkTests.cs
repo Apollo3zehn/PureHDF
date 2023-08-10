@@ -2,7 +2,7 @@
 
 namespace PureHDF.Tests.Writing;
 
-public class GroupTests
+public class LinkTests
 {
     [Fact]
     public void CanWrite_Mass()
@@ -24,7 +24,7 @@ public class GroupTests
         var actual = TestUtils.DumpH5File(filePath);
 
         var expected = File
-            .ReadAllText("DumpFiles/group_mass.dump")
+            .ReadAllText("DumpFiles/links_mass.dump")
             .Replace("<file-path>", filePath);
 
         Assert.Equal(expected, actual);
@@ -79,7 +79,7 @@ public class GroupTests
         var actual = TestUtils.DumpH5File(filePath);
 
         var expected = File
-            .ReadAllText("DumpFiles/group_complex.dump")
+            .ReadAllText("DumpFiles/links_complex.dump")
             .Replace("<file-path>", filePath);
 
         Assert.Equal(expected, actual);
