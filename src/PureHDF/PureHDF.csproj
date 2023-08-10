@@ -42,6 +42,10 @@
       <LastGenOutput>ShuffleAvx2.cs</LastGenOutput>
       <Generator>TextTemplatingFileGenerator</Generator>
     </None>
+    <None Update="VOL\Native\Filters\ShuffleAvx2.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ShuffleAvx2.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -55,6 +59,15 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ShuffleAvx2.tt</DependentUpon>
     </Compile>
+    <Compile Update="VOL\Native\Filters\ShuffleAvx2.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ShuffleAvx2.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>
