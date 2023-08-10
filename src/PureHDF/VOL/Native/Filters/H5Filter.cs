@@ -20,26 +20,17 @@ public record class FilterInfo(
 /// <summary>
 /// A filter with associated options.
 /// </summary>
-/// <param name="FilterId">The filter id.</param>
+/// <param name="Id">The filter identifier.</param>
 /// <param name="Options">Optional filter options.</param>
-public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Options = default)
+public record class H5Filter(ushort Id, Dictionary<string, object>? Options = default)
 {
-    #region Constants
-
-    /// <summary>
-    /// The deflate compression level options key.
-    /// </summary>
-    public const string DEFLATE_COMPRESSION_LEVEL = "deflate-compression-level";
-
-    #endregion
-
     #region Operators
 
     /// <summary>
-    /// Converts a <see cref="H5FilterID"/> into a <see cref="H5Filter"/> instance with default filter options.
+    /// Converts a filter identifier into a <see cref="H5Filter"/> instance with default filter options.
     /// </summary>
     /// <param name="filterId"></param>
-    public static implicit operator H5Filter(H5FilterID filterId) => new(filterId);
+    public static implicit operator H5Filter(ushort filterId) => new(filterId);
 
     #endregion
 
@@ -54,7 +45,7 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
 
     #region Properties
 
-    internal static ConcurrentDictionary<FilterIdentifier, IH5Filter> Registrations { get; set; } = default!;
+    internal static ConcurrentDictionary<ushort, IH5Filter> Registrations { get; set; } = default!;
 
     #endregion
 
@@ -68,7 +59,7 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
         IH5Filter filter)
     {
         Registrations
-            .AddOrUpdate((FilterIdentifier)filter.Id, filter, (_, existingFilter) => filter);
+            .AddOrUpdate(filter.FilterId, filter, (_, existingFilter) => filter);
     }
 
     /// <summary>
@@ -76,7 +67,7 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
     /// </summary>
     public static void ResetRegistrations()
     {
-        Registrations = new ConcurrentDictionary<FilterIdentifier, IH5Filter>();
+        Registrations = new ConcurrentDictionary<ushort, IH5Filter>();
 
         Register(new ShuffleFilter());
         Register(new Fletcher32Filter());
@@ -174,12 +165,23 @@ public record class H5Filter(H5FilterID FilterId, Dictionary<string, object>? Op
 
 #region Built-in filters
 
-internal class ShuffleFilter : IH5Filter
+/// <summary>
+/// Hardware-accelerated Shuffle filter.
+/// </summary>
+public class ShuffleFilter : IH5Filter
 {
-    public H5FilterID Id => H5FilterID.Shuffle;
+    /// <summary>
+    /// The Shuffle filter identifier.
+    /// </summary>
+    public const ushort Id = 2;
 
+    /// <inheritdoc />
+    public ushort FilterId => Id;
+
+    /// <inheritdoc />
     public string Name => "shuffle";
 
+    /// <inheritdoc />
     public Memory<byte> Filter(FilterInfo info)
     {
         var sourceBuffer = info.Buffer;
@@ -196,6 +198,7 @@ internal class ShuffleFilter : IH5Filter
         return resultBuffer;
     }
 
+    /// <inheritdoc />
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         if (typeSize == 0)
@@ -205,12 +208,23 @@ internal class ShuffleFilter : IH5Filter
     }
 }
 
-internal class Fletcher32Filter : IH5Filter
+/// <summary>
+/// Fletcher-32 checksum filter.
+/// </summary>
+public class Fletcher32Filter : IH5Filter
 {
-    public H5FilterID Id => H5FilterID.Fletcher32;
+    /// <summary>
+    /// The Fletcher-32 filter identifier.
+    /// </summary>
+    public const ushort Id = 3;
 
+    /// <inheritdoc />
+    public ushort FilterId => Id;
+
+    /// <inheritdoc />
     public string Name => "fletcher";
 
+    /// <inheritdoc />
     public Memory<byte> Filter(FilterInfo info)
     {
         // H5Zfletcher32.c (H5Z_filter_fletcher32)
@@ -245,35 +259,59 @@ internal class Fletcher32Filter : IH5Filter
         }
     }
 
+    /// <inheritdoc />
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
 }
 
-internal class NbitFilter : IH5Filter
+/// <summary>
+/// N-Bit filter.
+/// </summary>
+public class NbitFilter : IH5Filter
 {
-    public H5FilterID Id => H5FilterID.Nbit;
+    /// <summary>
+    /// The N-Bit filter identifier.
+    /// </summary>
+    public const ushort Id = 5;
 
+    /// <inheritdoc />
+    public ushort FilterId => Id;
+
+    /// <inheritdoc />
     public string Name => "nbit";
 
+    /// <inheritdoc />
     public Memory<byte> Filter(FilterInfo info)
     {
-        throw new Exception($"The filter '{FilterIdentifier.Nbit}' is not yet supported by PureHDF.");
+        throw new Exception($"The filter '{nameof(NbitFilter)}' is not yet supported by PureHDF.");
     }
 
+    /// <inheritdoc />
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
-        throw new NotImplementedException();
+        throw new Exception($"The filter '{nameof(NbitFilter)}' is not yet supported by PureHDF.");
     }
 }
 
-internal class ScaleOffsetFilter : IH5Filter
+/// <summary>
+/// Scale-Offset filter.
+/// </summary>
+public class ScaleOffsetFilter : IH5Filter
 {
-    public H5FilterID Id => H5FilterID.ScaleOffset;
+    /// <summary>
+    /// The Scale-Offset identifier.
+    /// </summary>
+    public const ushort Id = 6;
 
+    /// <inheritdoc />
+    public ushort FilterId => Id;
+
+    /// <inheritdoc />
     public string Name => "scaleoffset";
 
+    /// <inheritdoc />
     public Memory<byte> Filter(FilterInfo info)
     {
         // read
@@ -285,18 +323,41 @@ internal class ScaleOffsetFilter : IH5Filter
             throw new Exception("Writing data chunks is not yet supported by PureHDF.");
     }
 
+    /// <inheritdoc />
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
 }
 
-internal class DeflateFilter : IH5Filter
+#if NET6_0_OR_GREATER
+/// <summary>
+/// Deflate filter based on <see cref="ZLibStream"/>.
+/// </summary>
+#else
+/// <summary>
+/// Deflate filter based on <see cref="DeflateStream"/>.
+/// </summary>
+#endif
+public class DeflateFilter : IH5Filter
 {
-    public H5FilterID Id => H5FilterID.Deflate;
+    /// <summary>
+    /// The compression level options key.
+    /// </summary>
+    public const string COMPRESSION_LEVEL = "compression-level";
 
+    /// <summary>
+    /// The Deflate filter identifier.
+    /// </summary>
+    public const ushort Id = 1;
+
+    /// <inheritdoc />
+    public ushort FilterId => Id;
+
+    /// <inheritdoc />
     public string Name => "deflate";
 
+    /// <inheritdoc />
     public Memory<byte> Filter(FilterInfo info)
     {
         // Span-based (non-stream) compression APIs
@@ -364,6 +425,7 @@ internal class DeflateFilter : IH5Filter
         }
     }
 
+    /// <inheritdoc />
     public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
     {
 #if NET6_0_OR_GREATER
@@ -383,13 +445,13 @@ internal class DeflateFilter : IH5Filter
     {
         if (
             options is not null && 
-            options.TryGetValue(H5Filter.DEFLATE_COMPRESSION_LEVEL, out var objectValue))
+            options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
         {
             if (objectValue is int value)
                 return value;
 
             else
-                throw new Exception($"The value of the filter parameter '{H5Filter.DEFLATE_COMPRESSION_LEVEL}' must be of type System.Int32.");
+                throw new Exception($"The value of the filter parameter '{COMPRESSION_LEVEL}' must be of type System.Int32.");
         }
 
         else

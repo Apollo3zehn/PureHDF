@@ -7,8 +7,13 @@ namespace PureHDF.Filters;
 /// </summary>
 public class BZip2SharpZipLibFilter : IH5Filter
 {
+    /// <summary>
+    /// The BZip2 filter identifier.
+    /// </summary>
+    public const ushort Id = 307;
+
     /// <inheritdoc />
-    public H5FilterID Id => (H5FilterID)307;
+    public ushort FilterId => Id;
 
     /// <inheritdoc />
     public string Name => "bzip2";

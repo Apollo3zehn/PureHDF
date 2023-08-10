@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal readonly partial record struct FilterDescription(
-    FilterIdentifier Identifier,
+    ushort Identifier,
     FilterFlags Flags,
     string Name,
     uint[] ClientData
@@ -10,14 +10,14 @@ internal readonly partial record struct FilterDescription(
     public static FilterDescription Decode(H5DriverBase driver, byte version)
     {
         // filter identifier
-        var identifier = (FilterIdentifier)driver.ReadInt16();
+        var identifier = driver.ReadUInt16();
 
         // name length
         var nameLength = version switch
         {
             1 => driver.ReadUInt16(),
-            2 when (ushort)identifier >= 256 => driver.ReadUInt16(),
-            2 when (ushort)identifier < 256 => 0,
+            2 when identifier >= 256 => driver.ReadUInt16(),
+            2 when identifier < 256 => 0,
             _ => throw new NotSupportedException($"Only version 1 or 2 instances of the {nameof(FilterDescription)} type are supported.")
         };
 

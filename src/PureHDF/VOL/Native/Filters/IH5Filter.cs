@@ -8,7 +8,7 @@ public interface IH5Filter
     /// <summary>
     /// The filter identifier.
     /// </summary>
-    H5FilterID Id { get; }
+    ushort FilterId { get; }
 
     /// <summary>
     /// The filter name.

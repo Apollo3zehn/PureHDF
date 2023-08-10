@@ -12,13 +12,13 @@ internal partial record class FilterPipelineMessage
 
         var filterDescriptions = filters.Select(filter =>
         {
-            var filterId = filter.FilterId;
+            var filterId = filter.Id;
 
-            if (!H5Filter.Registrations.TryGetValue((FilterIdentifier)filterId, out var registration))
+            if (!H5Filter.Registrations.TryGetValue(filterId, out var registration))
                 throw new Exception($"The filter with id {filterId} has not been registered.");
 
             return new FilterDescription(
-                Identifier: (FilterIdentifier)registration.Id,
+                Identifier: registration.FilterId,
                 Flags: FilterFlags.None,
                 Name: registration.Name,
                 ClientData: registration.GetParameters(dataset, typeSize, filter.Options)

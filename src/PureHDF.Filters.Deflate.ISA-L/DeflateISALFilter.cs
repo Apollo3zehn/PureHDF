@@ -9,6 +9,11 @@ namespace PureHDF.Filters;
 /// </summary>
 public class DeflateISALFilter : IH5Filter
 {
+    /// <summary>
+    /// The Deflate filter identifier.
+    /// </summary>
+    public const ushort Id = DeflateFilter.Id;
+
     private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
 
     private static readonly ThreadLocal<IntPtr> _state_ptr = new(
@@ -16,7 +21,7 @@ public class DeflateISALFilter : IH5Filter
         trackAllValues: false);
         
     /// <inheritdoc />
-    public H5FilterID Id => H5FilterID.Deflate;
+    public ushort FilterId => Id;
 
     /// <inheritdoc />
     public string Name => "deflate";

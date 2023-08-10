@@ -8,8 +8,13 @@ namespace PureHDF.Filters;
 /// </summary>
 public class DeflateSharpZipLibFilter : IH5Filter
 {
+    /// <summary>
+    /// The deflate filter identifier.
+    /// </summary>
+    public const ushort Id = DeflateFilter.Id;
+
     /// <inheritdoc />
-    public H5FilterID Id => H5FilterID.Deflate;
+    public ushort FilterId => Id;
 
     /// <inheritdoc />
     public string Name => "deflate";

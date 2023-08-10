@@ -108,9 +108,9 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
        
         var options = new H5WriteOptions(
-            Filters: new() { 
-                H5FilterID.Shuffle,
-                H5FilterID.Deflate
+            Filters: new() {
+                ShuffleFilter.Id,
+                DeflateFilter.Id
             }
         );
 

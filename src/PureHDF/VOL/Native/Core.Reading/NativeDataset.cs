@@ -861,7 +861,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         {
             InternalFilterPipeline = InternalFilterPipeline with {
                 FilterDescriptions = InternalFilterPipeline.FilterDescriptions
-                    .Where(description => description.Identifier != FilterIdentifier.Shuffle)
+                    .Where(description => description.Identifier != ShuffleFilter.Id)
                     .ToArray()
             };
         }

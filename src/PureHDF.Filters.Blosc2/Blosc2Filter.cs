@@ -4,12 +4,17 @@ using Blosc2.PInvoke;
 namespace PureHDF.Filters;
 
 /// <summary>
-/// BZip2 filter based on SharpZipLib.
+/// Blosc2 filter.
 /// </summary>
 public class Blosc2Filter : IH5Filter
 {
+    /// <summary>
+    /// The Blosc2 filter identifier.
+    /// </summary>
+    public const ushort Id = 32001;
+
     /// <inheritdoc />
-    public H5FilterID Id => (H5FilterID)32001;
+    public ushort FilterId => Id;
 
     /// <inheritdoc />
     public string Name => "blosc1";

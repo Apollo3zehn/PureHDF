@@ -5,8 +5,13 @@
 /// </summary>
 public class LzfFilter : IH5Filter
 {
+    /// <summary>
+    /// The LZF filter identifier.
+    /// </summary>
+    public const ushort Id = 32000;
+
     /// <inheritdoc />
-    public H5FilterID Id => (H5FilterID)32000;
+    public ushort FilterId => Id;
 
     /// <inheritdoc />
     public string Name => "lzf";
