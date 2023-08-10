@@ -5,10 +5,10 @@
 <# 
 	using var webClient = new WebClient();
 
-    var url1 = "https://raw.githubusercontent.com/Blosc/c-blosc2/master/blosc/shuffle-avx2.c";
+    var url1 = "https://raw.githubusercontent.com/Blosc/c-blosc2/main/blosc/shuffle-avx2.c";
     var csstring = webClient.DownloadString(url1); 
     
-    var url2 = "https://raw.githubusercontent.com/Blosc/c-blosc2/master/LICENSES/BLOSC.txt";
+    var url2 = "https://raw.githubusercontent.com/Blosc/c-blosc2/main/LICENSE.txt";
     var license = webClient.DownloadString(url2);
 
     // methods
@@ -103,13 +103,13 @@ using System.Runtime.Intrinsics.X86;
 
 namespace PureHDF.Filters
 {
-    public static class ShuffleAvx2
+    internal static class ShuffleAvx2
     {
         public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
         {
             fixed (byte* src = source, dest = destination)
             {
-                ShuffleAvx2.shuffle_avx2(bytesOfType, source.Length, src, dest);
+                shuffle_avx2(bytesOfType, source.Length, src, dest);
             }
         }
 
@@ -117,7 +117,7 @@ namespace PureHDF.Filters
         {
             fixed (byte* src = source, dest = destination)
             {
-                ShuffleAvx2.unshuffle_avx2(bytesOfType, source.Length, src, dest);
+                unshuffle_avx2(bytesOfType, source.Length, src, dest);
             }
         }
 
