@@ -1,27 +1,27 @@
 HDF5 "<file-path>" {
 GROUP "/" {
-   ATTRIBUTE "attribute_1_fixed_point_signed" {
+   ATTRIBUTE "fixed_point_signed" {
       DATATYPE  H5T_STD_I32LE
       DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
       (0): 1, -2, 3
       }
    }
-   ATTRIBUTE "attribute_1_fixed_point_unsigned" {
+   ATTRIBUTE "fixed_point_unsigned" {
       DATATYPE  H5T_STD_U32LE
       DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
       (0): 1, 2, 3
       }
    }
-   ATTRIBUTE "attribute_1_floating_point_32" {
+   ATTRIBUTE "floating_point_32" {
       DATATYPE  H5T_IEEE_F32LE
       DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
       (0): 1.1, -2.2e+36, 3.3
       }
    }
-   ATTRIBUTE "attribute_1_floating_point_64" {
+   ATTRIBUTE "floating_point_64" {
       DATATYPE  H5T_IEEE_F64LE
       DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
@@ -36,14 +36,14 @@ GROUP "/" {
       }
    }
    GROUP "group_0" {
-      ATTRIBUTE "attribute_g0_0" {
+      ATTRIBUTE "attr" {
          DATATYPE  H5T_IEEE_F64LE
          DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
          DATA {
          (0): 2, 3.1, 4.2
          }
       }
-      DATASET "dataset_g0_0" {
+      DATASET "dset" {
          DATATYPE  H5T_IEEE_F32LE
          DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
          DATA {
@@ -53,14 +53,14 @@ GROUP "/" {
    }
    GROUP "group_1" {
       GROUP "group_0" {
-         ATTRIBUTE "attribute_g0_0" {
+         ATTRIBUTE "attr" {
             DATATYPE  H5T_IEEE_F64LE
             DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
             DATA {
             (0): 2, 3.1, 4.2
             }
          }
-         DATASET "dataset_g0_0" {
+         DATASET "dset" {
             DATATYPE  H5T_IEEE_F32LE
             DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
             DATA {

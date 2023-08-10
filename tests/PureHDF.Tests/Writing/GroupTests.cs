@@ -34,43 +34,39 @@ public class GroupTests
     public void CanWrite_Complex()
     {
         // Arrange
-        var dataset_g0_0 = new H5Dataset(data: new float[] { 1.1f, 2.2f })
-        {
-            Attributes = new Dictionary<string, object>
-            {
-                ["implicit_attribute"] = new int[] { -2, -3, -4 }
-            }
-        };
-
-        var dataset_0 = new H5Dataset(data: new float[] { 1.1f });
-
         var group_0 = new H5Group
         {
-            ["dataset_g0_0"] = dataset_g0_0,
-
-            Attributes = new Dictionary<string, object>
+            ["dset"] = new H5Dataset(data: new float[] { 1.1f, 2.2f })
             {
-                ["attribute_g0_0"] = new double[] { 2.0, 3.1, 4.2 }
-            }
-        };
+                Attributes = new()
+                {
+                    ["attr"] = new int[] { -2, -3, -4 }
+                }
+            },
 
-        var group_1 = new H5Group
-        {
-            ["group_0"] = group_0
+            Attributes = new()
+            {
+                ["attr"] = new double[] { 2.0, 3.1, 4.2 }
+            }
         };
 
         var file = new H5File
         {
             ["group_0"] = group_0,
-            ["group_1"] = group_1,
-            ["dataset_0"] = dataset_0,
 
-            Attributes = new Dictionary<string, object>
+            ["group_1"] = new H5Group
             {
-                ["attribute_1_fixed_point_unsigned"] = new uint[] { 1, 2, 3 },
-                ["attribute_1_fixed_point_signed"] = new int[] { 1, -2, 3 },
-                ["attribute_1_floating_point_32"] = new float[] { 1.1f, -2.2e36f, 3.3f },
-                ["attribute_1_floating_point_64"] = new double[] { 1.1, -2.2e36, 3.3 }
+                ["group_0"] = group_0
+            },
+
+            ["dataset_0"] = new float[] { 1.1f },
+
+            Attributes = new()
+            {
+                ["fixed_point_unsigned"] = new uint[] { 1, 2, 3 },
+                ["fixed_point_signed"] = new int[] { 1, -2, 3 },
+                ["floating_point_32"] = new float[] { 1.1f, -2.2e36f, 3.3f },
+                ["floating_point_64"] = new double[] { 1.1, -2.2e36, 3.3 }
             }
         };
 
@@ -81,7 +77,7 @@ public class GroupTests
 
         // Assert
         var actual = TestUtils.DumpH5File(filePath);
-        
+
         var expected = File
             .ReadAllText("DumpFiles/group_complex.dump")
             .Replace("<file-path>", filePath);
