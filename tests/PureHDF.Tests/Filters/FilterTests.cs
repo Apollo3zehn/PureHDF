@@ -238,6 +238,23 @@ public class FilterTests
     }
 
     [Fact]
+    public void CanFilterFletcher()
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+        var expected = 4178925075U;
+
+        H5Filter.ResetRegistrations();
+
+        // Act
+        var actual = Fletcher32Generic
+            .Fletcher32(MemoryMarshal.AsBytes<int>(data));
+
+        // Assert
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
     public void CanDefilterFletcher()
     {
         // Arrange

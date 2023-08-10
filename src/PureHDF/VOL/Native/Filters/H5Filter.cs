@@ -255,7 +255,18 @@ public class Fletcher32Filter : IH5Filter
         // write
         else
         {
-            throw new Exception("Writing data chunks is not yet supported by PureHDF.");
+            /* Compute checksum */
+            var fletcher = Fletcher32Generic.Fletcher32(info.Buffer.Span);
+
+            /* Copy original data */
+            var resultBuffer = new byte[info.Buffer.Length + sizeof(uint)].AsMemory();
+            info.Buffer.CopyTo(resultBuffer);
+
+            /* Copy checksum */
+            Span<byte> fletcherBuffer = stackalloc byte[4];
+            fletcherBuffer.CopyTo(resultBuffer.Span[^4..]);
+
+            return resultBuffer;
         }
     }
 
