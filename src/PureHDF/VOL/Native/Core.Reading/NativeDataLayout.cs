@@ -12,7 +12,7 @@ internal class NativeDataLayout : IH5DataLayout
 
     public H5DataLayoutClass Class => (H5DataLayoutClass)_dataLayout.LayoutClass;
 
-    public ulong[] ChunkDimensions
+    public ulong[] Chunks
     {
         get
         {

@@ -13,5 +13,5 @@ public interface IH5DataLayout
     /// <summary>
     /// Gets the chunk dimensions.
     /// </summary>
-    ulong[] ChunkDimensions { get; }
+    ulong[] Chunks { get; }
 }
