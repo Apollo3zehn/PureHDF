@@ -441,6 +441,7 @@ public class DeflateFilter : IH5Filter
 #endif
     }
 
+#if NET6_0_OR_GREATER
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
@@ -461,7 +462,6 @@ public class DeflateFilter : IH5Filter
         }
     }
 
-#if NET6_0_OR_GREATER
     private static CompressionLevel GetCompressionLevel(int value)
     {
         // H5Pset_deflate() (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html#gaf1f569bfc54552bdb9317d2b63318a0d)
