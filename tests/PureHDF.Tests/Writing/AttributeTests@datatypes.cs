@@ -208,7 +208,7 @@ public partial class AttributeTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText($"DumpFiles/data_{type.Name}.dump")
+                .ReadAllText($"DumpFiles/data___f__AnonymousType0`4.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
