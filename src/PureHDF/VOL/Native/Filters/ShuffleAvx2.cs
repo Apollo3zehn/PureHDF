@@ -104,10 +104,11 @@ namespace PureHDF.Filters
              most to least significant (i.e., their order is reversed when compared to
              loading the mask from an array). */
           var shmask = Vector256.Create((byte)
-              0x0f, 0x0d, 0x0b, 0x09, 0x07, 0x05, 0x03, 0x01,
-              0x0e, 0x0c, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x00,
-              0x0f, 0x0d, 0x0b, 0x09, 0x07, 0x05, 0x03, 0x01,
-              0x0e, 0x0c, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x00);
+              0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e,
+              0x01, 0x03, 0x05, 0x07, 0x09, 0x0b, 0x0d, 0x0f,
+              0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e,
+              0x01, 0x03, 0x05, 0x07, 0x09, 0x0b, 0x0d, 0x0f
+          );
         
           for (j = 0; j < vectorizable_elements; j += sizeof(Vector256<byte>)) {
             /* Fetch 32 elements (64 bytes) then transpose bytes, words and double words. */
@@ -126,7 +127,7 @@ namespace PureHDF.Filters
             /* Store the result vectors */
             byte* dest_for_jth_element = dest + j;
             for (k = 0; k < 2; k++) {
-              Avx2.Store((dest_for_jth_element + (k * total_elements)), ymm1[k]);
+              Avx.Store((dest_for_jth_element + (k * total_elements)), ymm1[k]);
             }
           }
         }
@@ -145,7 +146,7 @@ namespace PureHDF.Filters
              most to least significant (i.e., their order is reversed when compared to
              loading the mask from an array). */
           var mask = Vector256.Create((int)
-              0x07, 0x03, 0x06, 0x02, 0x05, 0x01, 0x04, 0x00);
+              0x00, 0x04, 0x01, 0x05, 0x02, 0x06, 0x03, 0x07);
         
           for (i = 0; i < vectorizable_elements; i += sizeof(Vector256<byte>)) {
             /* Fetch 32 elements (128 bytes) then transpose bytes and words. */

@@ -77,6 +77,12 @@
     csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi32\((.*?), (.*?)\)", m => $"Avx2.UnpackHigh({m.Groups[1]}.AsInt32(), {m.Groups[2]}.AsInt32()).AsByte()");
     csstring = Regex.Replace(csstring, @"_mm256_unpackhi_epi64\((.*?), (.*?)\)", m => $"Avx2.UnpackHigh({m.Groups[1]}.AsInt64(), {m.Groups[2]}.AsInt64()).AsByte()");
 
+    // reverse parameters
+    csstring = csstring.Replace("0x0f, 0x0d, 0x0b, 0x09, 0x07, 0x05, 0x03, 0x01", "0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e");
+    csstring = csstring.Replace("0x0e, 0x0c, 0x0a, 0x08, 0x06, 0x04, 0x02, 0x00", "0x01, 0x03, 0x05, 0x07, 0x09, 0x0b, 0x0d, 0x0f");
+
+    csstring = csstring.Replace("0x07, 0x03, 0x06, 0x02, 0x05, 0x01, 0x04, 0x00", "0x00, 0x04, 0x01, 0x05, 0x02, 0x06, 0x03, 0x07");
+
     // remove unnecessary blocks
     csstring = Regex.Replace(csstring, @"/\*.*?Author.*?\\*}", "", RegexOptions.Singleline);
     csstring = Regex.Replace(csstring, @"/\* The next is useful for debugging purposes \*/.*?}", "", RegexOptions.Singleline);

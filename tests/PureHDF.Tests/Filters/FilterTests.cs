@@ -328,9 +328,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanShuffleGeneric<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -374,9 +372,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanUnshuffleGeneric<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -420,9 +416,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanShuffleAvx2<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -469,9 +463,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanUnshuffleAvx2<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -514,9 +506,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanShuffleSse2<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -560,9 +550,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanUnshuffleSse2<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -627,9 +615,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-#pragma warning disable IDE0060
     public void CanConvertEndiannessAvx2<T>(T dummy, int length)
-#pragma warning restore IDE0060
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
