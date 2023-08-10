@@ -4,7 +4,7 @@ using Xunit;
 
 namespace PureHDF.Tests.Writing;
 
-public class AttributeTests
+public partial class AttributeTests
 {
     public static IList<object[]> CommonData { get; } = WritingTestData.Common;
     public static IList<object[]> CommonData_FixedLengthString { get; } = WritingTestData.Common_FixedLengthString;
@@ -12,7 +12,7 @@ public class AttributeTests
 
     [Theory]
     [MemberData(nameof(CommonData))]
-    public void CanWriteCommon(object data)
+    public void CanWrite_Common(object data)
     {
         // Arrange
         var type = data.GetType();
@@ -88,7 +88,7 @@ public class AttributeTests
 
     [Theory]
     [MemberData(nameof(CommonData_FixedLengthString))]
-    public void CanWriteCommon_DefaultFixedLengthString(object data)
+    public void CanWrite_Common_DefaultFixedLengthString(object data)
     {
         // Arrange
         var type = data.GetType();
@@ -126,7 +126,7 @@ public class AttributeTests
 
     [Theory]
     [MemberData(nameof(CommonData_FixedLengthStringMapper))]
-    public void CanWriteCommon_FixedLengthStringMapper(object data)
+    public void CanWrite_Common_FixedLengthStringMapper(object data)
     {
         // Arrange
         var type = data.GetType();

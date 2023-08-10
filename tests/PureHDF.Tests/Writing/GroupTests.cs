@@ -2,10 +2,36 @@
 
 namespace PureHDF.Tests.Writing;
 
-public class WritingTests
+public class GroupTests
 {
     [Fact]
-    public void CanWrite()
+    public void CanWrite_Mass()
+    {
+        // Arrange
+        var file = new H5File();
+
+        for (int i = 0; i < 1000; i++)
+        {
+            file[i.ToString()] = new H5Group();
+        }
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText("DumpFiles/group_mass.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void CanWrite_Complex()
     {
         // Arrange
         var dataset_g0_0 = new H5Dataset(data: new float[] { 1.1f, 2.2f })
@@ -54,11 +80,11 @@ public class WritingTests
         file.Write(filePath);
 
         // Assert
-        var expected = File
-            .ReadAllText("DumpFiles/writer.dump")
-            .Replace("<file-path>", filePath);
-
         var actual = TestUtils.DumpH5File(filePath);
+        
+        var expected = File
+            .ReadAllText("DumpFiles/group_complex.dump")
+            .Replace("<file-path>", filePath);
 
         Assert.Equal(expected, actual);
     }
