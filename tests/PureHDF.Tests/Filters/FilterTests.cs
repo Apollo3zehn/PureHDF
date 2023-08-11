@@ -246,17 +246,21 @@ public class FilterTests
 
         var file = new H5File()
         {
-            ["filtered"] = new H5Dataset(
-                data, 
-                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+            ["filtered"] = new H5Dataset(data)
         };
 
         var filePath = Path.GetTempFileName();
 
+        var options = new H5WriteOptions(
+            Filters: new() {
+                Fletcher32Filter.Id
+            }
+        );
+
         H5Filter.ResetRegistrations();
 
         // Act
-        file.Write(filePath);
+        file.Write(filePath, options);
 
         // Assert
         try
@@ -305,9 +309,7 @@ public class FilterTests
 
         var file = new H5File()
         {
-            ["filtered"] = new H5Dataset(
-                data, 
-                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+            ["filtered"] = new H5Dataset(data)
         };
 
         var filePath = Path.GetTempFileName();
@@ -397,9 +399,7 @@ public class FilterTests
 
         var file = new H5File()
         {
-            ["filtered"] = new H5Dataset(
-                data, 
-                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+            ["filtered"] = new H5Dataset(data)
         };
 
         var options = new H5WriteOptions(
@@ -452,7 +452,7 @@ public class FilterTests
         Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
     }
 
-        [Fact]
+    [Fact]
     public void ThrowsForInvalidFilterId()
     {
         // Arrange
@@ -460,9 +460,7 @@ public class FilterTests
 
         var file = new H5File()
         {
-            ["filtered"] = new H5Dataset(
-                data, 
-                chunks: new uint[] { (uint)SharedTestData.SmallData.Length })
+            ["filtered"] = new H5Dataset(data)
         };
 
         var options = new H5WriteOptions(

@@ -209,10 +209,37 @@ internal static class H5Writer
             ? DataspaceMessage.Create(dataDimensions, h5Dataset.Dimensions)
             : DataspaceMessage.Create(dataDimensions, default);
 
-        var chunkDimensions = isScalar
-            ? default
-            : dataset.ChunkDimensions;
+        // chunk dimensions / filters
+        var chunkDimensions = default(uint[]);
+        var filters = default(List<H5Filter>);
 
+        if (!isScalar)
+        {
+            chunkDimensions = dataset.ChunkDimensions;
+
+            var localFilters = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
+
+            // at least one filter is configured - ensure chunked layout
+            if (localFilters is not null && localFilters.Any())
+            {
+                if (chunkDimensions is null)
+                {
+                    chunkDimensions = dataspace.Dimensions
+                        .Select(value => (uint)value)
+                        .ToArray();
+                }
+
+                filters = localFilters;
+            }
+        }
+
+        // filter pipeline
+        var filterPipeline = default(FilterPipelineMessage);
+
+        if (filters is not null)
+            filterPipeline = FilterPipelineMessage.Create(dataset, datatype.Size, filters);
+
+        // data layout
         if (chunkDimensions is not null)
         {
             if (dataspace.Dimensions.Length != chunkDimensions.Length)
@@ -225,21 +252,6 @@ internal static class H5Writer
             }
         }
 
-        // filter pipeline
-        var filterPipeline = default(FilterPipelineMessage);
-
-        if (chunkDimensions is not null)
-        {
-            var filters = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
-
-            if (filters is not null)
-            {               
-                if (filters.Any())
-                    filterPipeline = FilterPipelineMessage.Create(dataset, datatype.Size, filters);
-            }
-        }
-
-        // data layout
         var dataLayout = DataLayoutMessage4.Create(
             context, 
             typeSize: datatype.Size,
