@@ -74,7 +74,7 @@ public class DeflateSharpZipLibFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         var value = GetCompressionLevelValue(options);
 
@@ -98,7 +98,7 @@ public class DeflateSharpZipLibFilter : IH5Filter
                 return value;
 
             else
-                throw new Exception($"The value of the filter parameter '{COMPRESSION_LEVEL}' must be of type System.Int32.");
+                throw new Exception($"The value of the filter parameter '{COMPRESSION_LEVEL}' must be of type {nameof(Int32)}.");
         }
 
         else

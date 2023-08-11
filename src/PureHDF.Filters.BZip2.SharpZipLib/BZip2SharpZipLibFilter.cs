@@ -62,7 +62,7 @@ public class BZip2SharpZipLibFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         // block size parameter:    https://github.com/nexusformat/HDF5-External-Filter-Plugins/blob/49e3b65eca772bca77af13ba047d8b577673afba/BZIP2/src/H5Zbzip2.c#L176
         // block size parameter:    https://github.com/PyTables/PyTables/blob/2db63857e1f01d62414c40f75911337c29c246f7/src/H5Zbzip2.c#L153
@@ -89,7 +89,7 @@ public class BZip2SharpZipLibFilter : IH5Filter
                 return value;
 
             else
-                throw new Exception($"The value of the filter parameter '{BLOCK_SIZE}' must be of type System.Int32.");
+                throw new Exception($"The value of the filter parameter '{BLOCK_SIZE}' must be of type {nameof(Int32)}.");
         }
 
         else

@@ -65,15 +65,20 @@ jobs:
           dotnet build -c Release src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj
           dotnet build -c Release src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj
 
-      # run writing tests separately because H5Dump seems to interfere with the 
-      # reading tests ("The process cannot access the file '/tmp/tmpXXXXX.tmp' because it is being used by another process")
+      # - run writing tests separately because h5dump seems to interfere with the 
+      #   reading tests ("The process cannot access the file '/tmp/tmpXXXXX.tmp' because it is being used by another process")
+      # - interestingly new "CanFilterXXX" tests also interfere with the reading tests (h5dump is used here, too)
+      # -> this needs to be investigated 
 
       - name: Test (common)
         # temporarily disable HSDS tests until the service is available again (GET http://hsdshdflab.hdfgroup.org?domain=/shared/tall.h5)
-        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
 
       - name: Test (writing)
         run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Writing"
+
+      - name: Test (filters)
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Filters"
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3

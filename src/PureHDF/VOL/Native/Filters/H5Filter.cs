@@ -200,7 +200,7 @@ public class ShuffleFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         if (typeSize == 0)
             throw new Exception("The type size must be > 0.");
@@ -274,7 +274,7 @@ public class Fletcher32Filter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         return Array.Empty<uint>();
     }
@@ -303,7 +303,7 @@ public class NbitFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         throw new Exception($"The filter '{nameof(NbitFilter)}' is not yet supported by PureHDF.");
     }
@@ -338,7 +338,7 @@ public class ScaleOffsetFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }
@@ -440,7 +440,7 @@ public class DeflateFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
 #if NET6_0_OR_GREATER
         var value = GetCompressionLevelValue(options);
@@ -469,7 +469,7 @@ public class DeflateFilter : IH5Filter
                 return value;
 
             else
-                throw new Exception($"The value of the filter parameter '{COMPRESSION_LEVEL}' must be of type System.Int32.");
+                throw new Exception($"The value of the filter parameter '{COMPRESSION_LEVEL}' must be of type {nameof(Int32)}.");
         }
 
         else

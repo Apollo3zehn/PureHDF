@@ -93,7 +93,7 @@ public class DeflateISALFilter : IH5Filter
     }
 
     /// <inheritdoc />
-    public uint[] GetParameters(H5Dataset dataset, uint typeSize, Dictionary<string, object>? options)
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
         throw new NotImplementedException();
     }

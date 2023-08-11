@@ -36,7 +36,7 @@
             "args": [
                 "test",
                 "--filter",
-                "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+                "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -48,6 +48,17 @@
                 "test",
                 "--filter",
                 "FullyQualifiedName~PureHDF.Tests.Writing"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: filters",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--filter",
+                "FullyQualifiedName~PureHDF.Tests.Filters"
             ],
             "problemMatcher": "$msCompile"
         }

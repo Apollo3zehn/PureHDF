@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using Blosc2.PInvoke;
 #if NET5_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
@@ -128,6 +129,47 @@ public class FilterTests
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
+    }
+
+    [Fact]
+    public void CanFilterBlosc2()
+    {
+        // Arrange
+        var expected = SharedTestData.SmallData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(expected)
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                Blosc2Filter.Id
+            }
+        );
+
+        H5Filter.ResetRegistrations();
+        H5Filter.Register(new Blosc2Filter());
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var h5File = H5File.OpenRead(filePath);
+            var dataset = h5File.Dataset("filtered");
+            var actual = dataset.Read<int>();
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
     }
 
     [Theory]

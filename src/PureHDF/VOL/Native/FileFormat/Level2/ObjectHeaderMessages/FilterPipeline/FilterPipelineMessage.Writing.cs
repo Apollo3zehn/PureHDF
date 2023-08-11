@@ -5,6 +5,7 @@ internal partial record class FilterPipelineMessage
     public static FilterPipelineMessage Create(
         H5Dataset dataset,
         uint typeSize,
+        uint[] chunkDimensions,
         List<H5Filter> filters)
     {
         if (filters.Count > 32)
@@ -21,7 +22,7 @@ internal partial record class FilterPipelineMessage
                 Identifier: registration.FilterId,
                 Flags: FilterFlags.None,
                 Name: registration.Name,
-                ClientData: registration.GetParameters(dataset, typeSize, filter.Options)
+                ClientData: registration.GetParameters(chunkDimensions, typeSize, filter.Options)
             );
         }).ToArray();
 

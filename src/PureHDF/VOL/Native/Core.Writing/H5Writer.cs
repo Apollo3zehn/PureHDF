@@ -215,7 +215,7 @@ internal static class H5Writer
 
         if (!isScalar)
         {
-            chunkDimensions = dataset.ChunkDimensions;
+            chunkDimensions = dataset.Chunks;
 
             var localFilters = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
 
@@ -237,7 +237,11 @@ internal static class H5Writer
         var filterPipeline = default(FilterPipelineMessage);
 
         if (filters is not null)
-            filterPipeline = FilterPipelineMessage.Create(dataset, datatype.Size, filters);
+            filterPipeline = FilterPipelineMessage.Create(
+                dataset, 
+                datatype.Size, 
+                chunkDimensions!, 
+                filters);
 
         // data layout
         if (chunkDimensions is not null)
