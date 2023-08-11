@@ -113,7 +113,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
                 var dataBlock = new FixedArrayDataBlock<FilteredDataBlockElement>(
                     ClientID: ClientID.FilteredDatasetChunks,
-                    HeaderAddress: Layout.Address, 
+                    HeaderAddress: Chunked4.Address, 
                     PageBitmap: Array.Empty<byte>(),
                     Elements: elements,
                     ElementsPerPage: default,
@@ -139,7 +139,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 };
 
                 // header
-                WriteContext.Driver.Seek((long)Layout.Address, SeekOrigin.Begin);
+                WriteContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
                 header.Encode(WriteContext.Driver);
 
                 // data block
@@ -190,7 +190,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
     {
         if (_header is null)
         {
-            ReadContext.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+            ReadContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
             _header = FixedArrayHeader.Decode(ReadContext);
         }
 

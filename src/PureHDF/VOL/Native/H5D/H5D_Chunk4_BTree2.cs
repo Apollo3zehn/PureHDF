@@ -28,7 +28,7 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
         {
             if (_btree2_no_filter is null)
             {
-                ReadContext.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+                ReadContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
 
                 BTree2Record10 decodeKey() => DecodeRecord10(ChunkRank);
 
@@ -50,7 +50,7 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
         {
             if (_btree2_filter is null)
             {
-                ReadContext.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+                ReadContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
                 var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
                 BTree2Record11 decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);

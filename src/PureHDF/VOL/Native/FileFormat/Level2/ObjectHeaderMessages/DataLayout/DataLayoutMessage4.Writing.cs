@@ -86,7 +86,6 @@ internal partial record class DataLayoutMessage4
 
             dataLayout = new DataLayoutMessage4(
                 LayoutClass: LayoutClass.Chunked,
-                Address: properties.Address,
                 Properties: properties
             )
             {
@@ -125,7 +124,6 @@ internal partial record class DataLayoutMessage4
 
                 dataLayout = new DataLayoutMessage4(
                     LayoutClass: LayoutClass.Compact,
-                    Address: default,
                     Properties: properties
                 )
                 {
@@ -152,7 +150,6 @@ internal partial record class DataLayoutMessage4
 
                 dataLayout = new DataLayoutMessage4(
                     LayoutClass: LayoutClass.Contiguous,
-                    Address: (ulong)address,
                     Properties: properties
                 )
                 {

@@ -25,7 +25,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
         _readVirtualDelegate = readVirtualDelegate;
 
         var layoutMessage = (DataLayoutMessage4)dataset.Layout;
-        var collection = NativeCache.GetGlobalHeapObject(readContext, layoutMessage.Address);
+        var collection = NativeCache.GetGlobalHeapObject(readContext, ((VirtualStoragePropertyDescription)layoutMessage.Properties).Address);
         var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
         var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
         using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);

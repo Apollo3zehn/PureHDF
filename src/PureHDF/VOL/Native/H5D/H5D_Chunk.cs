@@ -40,9 +40,16 @@ internal abstract class H5D_Chunk : H5D_Base
         else
         {
             _readingChunkCache = datasetAccess.ReadingChunkCache ?? readContext.File.ChunkCacheFactory();
-            
+
+            var address = Dataset.Layout switch
+            {
+                DataLayoutMessage12 layout12 => layout12.Address,
+                DataLayoutMessage3 layout3 => ((ChunkedStoragePropertyDescription)layout3.Properties).Address,
+                _ => throw new Exception($"The layout {Dataset.Layout} is not supported.")
+            };
+
             _readingChunkIndexAddressIsUndefined = readContext.Superblock
-                .IsUndefinedAddress(dataset.Layout.Address);
+                .IsUndefinedAddress(address);
         }
     }
 

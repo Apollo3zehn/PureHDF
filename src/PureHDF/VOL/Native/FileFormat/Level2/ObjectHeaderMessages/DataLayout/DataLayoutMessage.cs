@@ -1,8 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal abstract record class DataLayoutMessage(
-    LayoutClass LayoutClass,
-    ulong Address)
+    LayoutClass LayoutClass)
     : Message
 {
     public static DataLayoutMessage Construct(NativeReadContext context)

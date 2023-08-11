@@ -16,7 +16,7 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
             ? ChunkByteSize
             : single.FilteredChunkSize;
 
-        return new ChunkInfo(Dataset.Layout.Address, chunkSize, single.ChunkFilters);
+        return new ChunkInfo(Chunked4.Address, chunkSize, single.ChunkFilters);
     }
 
     protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)

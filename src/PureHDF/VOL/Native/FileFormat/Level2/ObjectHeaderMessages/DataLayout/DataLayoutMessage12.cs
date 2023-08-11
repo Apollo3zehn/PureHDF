@@ -6,7 +6,7 @@ internal record class DataLayoutMessage12(
     byte Rank,
     uint[] DimensionSizes,
     byte[] CompactData
-) : DataLayoutMessage(LayoutClass, Address)
+) : DataLayoutMessage(LayoutClass)
 {
     private byte _version;
 

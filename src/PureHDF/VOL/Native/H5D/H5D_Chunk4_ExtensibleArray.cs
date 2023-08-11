@@ -136,7 +136,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
     {
         if (_header is null)
         {
-            ReadContext.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+            ReadContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
             _header = ExtensibleArrayHeader.Decode(ReadContext);
         }
 

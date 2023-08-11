@@ -2,9 +2,8 @@
 
 internal record class DataLayoutMessage3(
     LayoutClass LayoutClass,
-    ulong Address,
     StoragePropertyDescription Properties
-) : DataLayoutMessage(LayoutClass, Address)
+) : DataLayoutMessage(LayoutClass)
 {
     private byte _version;
 
@@ -40,11 +39,8 @@ internal record class DataLayoutMessage3(
         };
 
         // address
-        var address = properties.Address;
-
         return new DataLayoutMessage3(
             LayoutClass: layoutClass,
-            Address: address,
             Properties: properties
         )
         {

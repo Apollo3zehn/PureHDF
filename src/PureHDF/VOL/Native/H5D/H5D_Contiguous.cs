@@ -28,10 +28,10 @@ internal class H5D_Contiguous : H5D_Base
 
     public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
     {
-        var address = Dataset.Layout.Address;
-
         if (_readStream is null)
         {
+            var address = GetAddress();
+
             if (ReadContext.Superblock.IsUndefinedAddress(address))
             {
                 if (Dataset.ExternalFileList is not null)
@@ -54,11 +54,11 @@ internal class H5D_Contiguous : H5D_Base
 
     public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
     {
-        if (Dataset.Layout is DataLayoutMessage4 layout)
+        if (Dataset.Layout is DataLayoutMessage4)
         {
             if (_writeStream is null)
             {
-                WriteContext.Driver.Seek((long)layout.Address, SeekOrigin.Begin);
+                WriteContext.Driver.Seek((long)GetAddress(), SeekOrigin.Begin);
                 _writeStream = new OffsetStream(WriteContext.Driver);
             }
         }
@@ -69,6 +69,16 @@ internal class H5D_Contiguous : H5D_Base
         }
 
         return _writeStream;
+    }
+
+    private ulong GetAddress()
+    {
+        return Dataset.Layout switch
+        {
+            DataLayoutMessage12 layout12 => layout12.Address,
+            DataLayoutMessage3 layout3 => ((ContiguousStoragePropertyDescription)layout3.Properties).Address,
+            _ => throw new Exception($"The layout {Dataset.Layout} is not supported.")
+        };
     }
 
     #endregion

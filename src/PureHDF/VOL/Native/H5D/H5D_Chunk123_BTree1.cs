@@ -56,7 +56,11 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
         // load B-Tree 1
         if (!_btree1.HasValue)
         {
-            ReadContext.Driver.Seek((long)Dataset.Layout.Address, SeekOrigin.Begin);
+            var address = _layout12 is null
+                ? ((ChunkedStoragePropertyDescription3)_layout3!.Properties).Address
+                : _layout12.Address;
+
+            ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
 
             BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 

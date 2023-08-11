@@ -2,9 +2,8 @@
 
 internal partial record class DataLayoutMessage4(
     LayoutClass LayoutClass,
-    ulong Address,
     StoragePropertyDescription Properties
-) : DataLayoutMessage3(LayoutClass, Address, Properties)
+) : DataLayoutMessage3(LayoutClass, Properties)
 {
     internal static new DataLayoutMessage4 Decode(NativeReadContext context, byte version)
     {
@@ -28,7 +27,6 @@ internal partial record class DataLayoutMessage4(
 
         return new DataLayoutMessage4(
             LayoutClass: layoutClass,
-            Address: address,
             Properties: properties
         )
         {
