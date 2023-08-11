@@ -356,7 +356,7 @@ public class ScaleOffsetFilter : IH5Filter
 public class DeflateFilter : IH5Filter
 {
     /// <summary>
-    /// The compression level options key.
+    /// The compression level options key. The compression level must be one of [-1, 0, 1, 9] and the default is -1.
     /// </summary>
     public const string COMPRESSION_LEVEL = "compression-level";
 
@@ -448,6 +448,9 @@ public class DeflateFilter : IH5Filter
         /* workaround for https://forum.hdfgroup.org/t/is-deflate-filter-compression-level-1-default-supported/11416 */
         if (value == -1)
             value = 6;
+
+        if (value < -1 || value > 9)
+            throw new Exception("The compression level must be one of [-1, 0, 1, 9].");
 
         return new uint[] { unchecked((uint)value) };
 #else

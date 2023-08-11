@@ -207,6 +207,47 @@ public class FilterTests
     }
 
     [Fact]
+    public void CanFilterBZip2()
+    {
+        // Arrange
+        var expected = SharedTestData.SmallData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(expected)
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                BZip2SharpZipLibFilter.Id
+            }
+        );
+
+        H5Filter.ResetRegistrations();
+        H5Filter.Register(new BZip2SharpZipLibFilter());
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var h5File = H5File.OpenRead(filePath);
+            var dataset = h5File.Dataset("filtered");
+            var actual = dataset.Read<int>();
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
+    }
+
+    [Fact]
     public void CanDefilterBZip2()
     {
         // # Works only with Linux! On Windows, deflate is used instead.
@@ -488,6 +529,75 @@ public class FilterTests
         }
     }
 
+    [Fact]
+    public void CanShuffle()
+    {
+        // Arrange
+        var data = SharedTestData.SmallData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(data)
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                ShuffleFilter.Id
+            }
+        );
+
+        H5Filter.ResetRegistrations();
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/filtered.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
+    }
+
+    [Fact]
+    public void CanUnshuffle()
+    {
+        var version = H5F.libver_t.LATEST;
+        var length = 100;
+        var bytesOfType = sizeof(int);
+
+        var expected = Enumerable
+            .Range(0, 100 * bytesOfType)
+            .Select(value => unchecked((byte)value))
+            .ToArray();
+
+        var filePath = TestUtils.PrepareTestFile(version, fileId =>
+            TestUtils.AddFilteredDataset_Shuffle(fileId, bytesOfType, length, expected));
+
+        H5Filter.ResetRegistrations();
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var parent = root.Group("filtered");
+        var dataset = parent.Dataset($"shuffle_{bytesOfType}");
+        var actual = dataset.Read<byte>();
+
+        // Assert
+        Assert.True(actual.SequenceEqual(expected));
+    }
+
     // TODO: 16 byte and arbitrary number of bytes tests missing
     [Theory]
     [InlineData((byte)1, 1001)]
@@ -550,7 +660,7 @@ public class FilterTests
     [InlineData((long)8, 438)]
     [InlineData((long)8, 439)]
 #pragma warning disable xUnit1026
-    public void CanUnshuffleGeneric<T>(T dummy, int length)
+    public void CanUnshuffleGeneric<T>(T _, int length)
 #pragma warning restore xUnit1026
         where T : unmanaged
     {
@@ -599,7 +709,6 @@ public class FilterTests
         where T : unmanaged
     {
         // Arrange
-
         var bytesOfType = Unsafe.SizeOf<T>();
 
         var actual_unshuffled = Enumerable

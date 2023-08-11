@@ -28,7 +28,13 @@ internal readonly partial record struct FilterDescription(
         var clientDataValueCount = driver.ReadUInt16();
 
         // name
-        var name = nameLength > 0 ? ReadUtils.ReadNullTerminatedString(driver, pad: true) : string.Empty;
+        var name = (nameLength, version) switch
+        {
+            (0, _) => string.Empty,
+            (_, 1) => ReadUtils.ReadNullTerminatedString(driver, pad: true),
+            (_, 2) => ReadUtils.ReadFixedLengthString(driver, nameLength),
+            _ => throw new Exception($"Filter pipeline version {version} is not supported.")
+        };
 
         // client data
         var clientData = new uint[clientDataValueCount];

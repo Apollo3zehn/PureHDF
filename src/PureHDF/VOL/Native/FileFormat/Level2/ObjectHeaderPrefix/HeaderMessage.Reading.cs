@@ -109,7 +109,7 @@ internal readonly partial record struct HeaderMessage(
         var paddingBytes = dataSize - (driverPosition2 - driverPosition1);
 
         if (paddingBytes < 0)
-            throw new Exception();
+            throw new Exception("Unexpected HDF5 file data.");
 
         context.Driver.ReadBytes((int)paddingBytes);
 

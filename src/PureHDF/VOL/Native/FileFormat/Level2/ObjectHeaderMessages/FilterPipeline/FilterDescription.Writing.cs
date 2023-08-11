@@ -7,14 +7,14 @@ internal readonly partial record struct FilterDescription
 {
     public ushort GetEncodeSize()
     {
-        var isUnknown = (ushort)Identifier >= ushort.MaxValue;
+        var isUnknown = Identifier >= byte.MaxValue;
 
         var size =
             sizeof(ushort) +
             (isUnknown ? 2 : 0) +
             sizeof(ushort) +
             sizeof(ushort) +
-            (isUnknown ? Name.Length + 1 : 0) +
+            (isUnknown ? Name.Length : 0) +
             sizeof(uint) * ClientData.Length;
             
         return (ushort)size;
@@ -23,7 +23,7 @@ internal readonly partial record struct FilterDescription
     public void Encode(H5DriverBase driver)
     {
         var identifierBytes = default(byte[]);
-        var isUnknown = (ushort)Identifier >= ushort.MaxValue;
+        var isUnknown = Identifier >= byte.MaxValue;
 
         // filter identification value
         driver.Write(Identifier);
@@ -43,10 +43,7 @@ internal readonly partial record struct FilterDescription
 
         // name
         if (identifierBytes is not null)
-        {
             driver.Write(identifierBytes);
-            driver.Write(0);
-        }
 
         // client data
         driver.Write(MemoryMarshal.AsBytes<uint>(ClientData));
