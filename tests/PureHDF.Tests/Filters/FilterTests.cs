@@ -620,9 +620,6 @@ public class FilterTests
             destination: MemoryMarshal.AsBytes<T>(actual));
 
         // Assert
-        var eb = MemoryMarshal.AsBytes<T>(expected);
-        var ab = MemoryMarshal.AsBytes<T>(actual);
-
         Assert.True(expected.SequenceEqual(actual));
     }
 

@@ -64,7 +64,7 @@ public class DeflateSharpZipLibFilter : IH5Filter
                 IsStreamOwner = false
             })
             {
-                sourceStream.CopyTo(compressedStream);
+                sourceStream.CopyTo(compressionStream);
             };
 
             return compressedStream

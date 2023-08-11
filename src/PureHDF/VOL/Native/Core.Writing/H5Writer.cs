@@ -301,7 +301,7 @@ internal static class H5Writer
         );
 
         /* buffer provider */
-        using H5D_Base h5d = dataLayout.LayoutClass switch
+        using (H5D_Base h5d = dataLayout.LayoutClass switch
         {
             LayoutClass.Compact => new H5D_Compact(default!, context, datasetInfo, dataset.DatasetAccess),
             LayoutClass.Contiguous => new H5D_Contiguous(default!, context, datasetInfo, dataset.DatasetAccess),
@@ -309,51 +309,56 @@ internal static class H5Writer
 
             /* default */
             _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
-        };
+        })
+        {
+            h5d.Initialize();
 
-        h5d.Initialize();
+            /* buffer provider */
+            IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
 
-        /* buffer provider */
-        IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
+            /* memory selection */
+            var memoryDimensions = dataDimensions.Length == 0 
+                ? new ulong[] { 1 } 
+                : dataDimensions;
 
-        /* memory selection */
-        var memoryDimensions = dataDimensions.Length == 0 
-            ? new ulong[] { 1 } 
-            : dataDimensions;
+            var memoryStarts = memoryDimensions.ToArray();
+            memoryStarts.AsSpan().Clear();
 
-        var memoryStarts = memoryDimensions.ToArray();
-        memoryStarts.AsSpan().Clear();
+            var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
 
-        var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
+            /* file dims */
+            var fileDims = datasetInfo.GetDatasetDims();
 
-        /* file dims */
-        var fileDims = datasetInfo.GetDatasetDims();
+            /* file chunk dims */
+            var fileChunkDims = h5d.GetChunkDims();
 
-        /* file chunk dims */
-        var fileChunkDims = h5d.GetChunkDims();
+            /* file selection */
+            var fileStarts = fileDims.ToArray();
+            fileStarts.AsSpan().Clear();
 
-        /* file selection */
-        var fileStarts = fileDims.ToArray();
-        fileStarts.AsSpan().Clear();
+            var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
 
-        var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
+            var encodeInfo = new EncodeInfo<TElement>(
+                SourceDims: memoryDimensions,
+                SourceChunkDims: memoryDimensions,
+                TargetDims: fileDims,
+                TargetChunkDims: fileChunkDims,
+                SourceSelection: memorySelection,
+                TargetSelection: fileSelection,
+                GetSourceBuffer: indiced => memoryData,
+                GetTargetStream: getTargetStream,
+                Encoder: encode,
+                TargetTypeSize: (int)datatype.Size,
+                SourceTypeFactor: 1
+            );
 
-        var encodeInfo = new EncodeInfo<TElement>(
-            SourceDims: memoryDimensions,
-            SourceChunkDims: memoryDimensions,
-            TargetDims: fileDims,
-            TargetChunkDims: fileChunkDims,
-            SourceSelection: memorySelection,
-            TargetSelection: fileSelection,
-            GetSourceBuffer: indiced => memoryData,
-            GetTargetStream: getTargetStream,
-            Encoder: encode,
-            TargetTypeSize: (int)datatype.Size,
-            SourceTypeFactor: 1
-        );
+            /* encode data */
+            SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
 
-        /* encode data */
-        SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
+        /* Note: This using statement ensures that the chunk cache is flushed and all 
+         * chunk sizes / addresses are known, before encoding the object header.
+         */
+        }
 
         // encode object header
         var address = objectHeader.Encode(context);
