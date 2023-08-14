@@ -224,6 +224,51 @@ public class FilterTests
     }
 
     [Fact]
+    public void CanFilterLZF()
+    {
+        /* The LZF filter implementation has also been validated 
+         * against h5py using a simple python script.
+         */
+
+        // Arrange
+        var expected = SharedTestData.MediumData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(expected)
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new H5WriteOptions(
+            Filters: new() {
+                LzfFilter.Id
+            }
+        );
+
+        H5Filter.ResetRegistrations();
+        H5Filter.Register(new LzfFilter());
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var h5File = H5File.OpenRead(filePath);
+            var dataset = h5File.Dataset("filtered");
+            var actual = dataset.Read<int>();
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);   
+        }
+    }
+
+    [Fact]
     public void CanDefilterLZF()
     {
         // import h5py
@@ -252,7 +297,7 @@ public class FilterTests
     public void CanFilterBZip2()
     {
         // Arrange
-        var expected = SharedTestData.SmallData;
+        var expected = SharedTestData.MediumData;
 
         var file = new H5File()
         {
