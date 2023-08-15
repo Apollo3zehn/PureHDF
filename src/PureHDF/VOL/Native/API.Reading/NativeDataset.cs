@@ -902,7 +902,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
              * calculated by traversing the chunk index that stores the chunk 
              * addresses. 
              */
-            LayoutClass.Chunked => H5D_Chunk.Create(Context, default!, datasetInfo, datasetAccess),
+            LayoutClass.Chunked => H5D_Chunk.Create(Context, default!, datasetInfo, datasetAccess, default),
 
             /* Virtual: This is only supported for version 4 of the Data Layout 
              * message. The message stores information that is used to locate 

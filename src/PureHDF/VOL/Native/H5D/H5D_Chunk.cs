@@ -27,19 +27,20 @@ internal abstract class H5D_Chunk : H5D_Base
         NativeReadContext readContext, 
         NativeWriteContext writeContext, 
         DatasetInfo dataset, 
-        H5DatasetAccess datasetAccess)
+        H5DatasetAccess datasetAccess,
+        H5DatasetCreation datasetCreation)
         : base(readContext, writeContext, dataset, datasetAccess)
     {
         // H5Dchunk.c (H5D__chunk_set_info_real)
 
         if (readContext is null)
         {
-            _writingChunkCache = datasetAccess.WritingChunkCache ?? (writeContext.WriteOptions.ChunkCacheFactory ?? H5WriteOptions.DefaultChunkCacheFactory)();
+            _writingChunkCache = datasetCreation.ChunkCache ?? (writeContext.WriteOptions.ChunkCacheFactory ?? H5WriteOptions.DefaultChunkCacheFactory)();
         }
 
         else
         {
-            _readingChunkCache = datasetAccess.ReadingChunkCache ?? readContext.File.ChunkCacheFactory();
+            _readingChunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
 
             var address = Dataset.Layout switch
             {
@@ -93,34 +94,35 @@ internal abstract class H5D_Chunk : H5D_Base
         NativeReadContext readContext, 
         NativeWriteContext writeContext, 
         DatasetInfo dataset, 
-        H5DatasetAccess datasetAccess)
+        H5DatasetAccess datasetAccess,
+        H5DatasetCreation datasetCreation)
     {
         return dataset.Layout switch
         {
-            DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(readContext, writeContext, dataset, layout12, datasetAccess),
+            DataLayoutMessage12 layout12 => new H5D_Chunk123_BTree1(readContext, writeContext, dataset, layout12, datasetAccess, datasetCreation),
 
             DataLayoutMessage4 layout4 => ((ChunkedStoragePropertyDescription4)layout4.Properties).IndexingInformation switch
             {
                 // the current, maximum, and chunk dimension sizes are all the same
-                SingleChunkIndexingInformation => new H5Dataset_Chunk_Single_Chunk4(readContext, writeContext, dataset, layout4, datasetAccess),
+                SingleChunkIndexingInformation => new H5Dataset_Chunk_Single_Chunk4(readContext, writeContext, dataset, layout4, datasetAccess, datasetCreation),
 
                 // fixed maximum dimension sizes
                 // no filter applied to the dataset
                 // the timing for the space allocation of the dataset chunks is H5P_ALLOC_TIME_EARLY
-                ImplicitIndexingInformation => new H5D_Chunk4_Implicit(readContext, writeContext, dataset, layout4, datasetAccess),
+                ImplicitIndexingInformation => new H5D_Chunk4_Implicit(readContext, writeContext, dataset, layout4, datasetAccess, datasetCreation),
 
                 // fixed maximum dimension sizes
-                FixedArrayIndexingInformation => new H5D_Chunk4_FixedArray(readContext, writeContext, dataset, layout4, datasetAccess),
+                FixedArrayIndexingInformation => new H5D_Chunk4_FixedArray(readContext, writeContext, dataset, layout4, datasetAccess, datasetCreation),
 
                 // only one dimension of unlimited extent
-                ExtensibleArrayIndexingInformation => new H5D_Chunk4_ExtensibleArray(readContext, writeContext, dataset, layout4, datasetAccess),
+                ExtensibleArrayIndexingInformation => new H5D_Chunk4_ExtensibleArray(readContext, writeContext, dataset, layout4, datasetAccess, datasetCreation),
 
                 // more than one dimension of unlimited extent
-                BTree2IndexingInformation => new H5D_Chunk4_BTree2(readContext, writeContext, dataset, layout4, datasetAccess),
+                BTree2IndexingInformation => new H5D_Chunk4_BTree2(readContext, writeContext, dataset, layout4, datasetAccess, datasetCreation),
                 _ => throw new Exception("Unknown chunk indexing type.")
             },
 
-            DataLayoutMessage3 layout3 => new H5D_Chunk123_BTree1(readContext, writeContext, dataset, layout3, datasetAccess),
+            DataLayoutMessage3 layout3 => new H5D_Chunk123_BTree1(readContext, writeContext, dataset, layout3, datasetAccess, datasetCreation),
 
             _ => throw new Exception($"Data layout message type '{dataset.Layout.GetType().Name}' is not supported.")
         };

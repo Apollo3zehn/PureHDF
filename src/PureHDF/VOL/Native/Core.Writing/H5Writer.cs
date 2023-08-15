@@ -217,7 +217,7 @@ internal static class H5Writer
         {
             chunkDimensions = dataset.Chunks;
 
-            var localFilters = dataset.DatasetAccess.Filters ?? context.WriteOptions.Filters;
+            var localFilters = dataset.DatasetCreation.Filters ?? context.WriteOptions.Filters;
 
             // at least one filter is configured - ensure chunked layout
             if (localFilters is not null && localFilters.Any())
@@ -319,9 +319,9 @@ internal static class H5Writer
         /* buffer provider */
         using (H5D_Base h5d = dataLayout.LayoutClass switch
         {
-            LayoutClass.Compact => new H5D_Compact(default!, context, datasetInfo, dataset.DatasetAccess),
-            LayoutClass.Contiguous => new H5D_Contiguous(default!, context, datasetInfo, dataset.DatasetAccess),
-            LayoutClass.Chunked => H5D_Chunk.Create(default!, context, datasetInfo, dataset.DatasetAccess),
+            LayoutClass.Compact => new H5D_Compact(default!, context, datasetInfo, default),
+            LayoutClass.Contiguous => new H5D_Contiguous(default!, context, datasetInfo, default),
+            LayoutClass.Chunked => H5D_Chunk.Create(default!, context, datasetInfo, default, dataset.DatasetCreation),
 
             /* default */
             _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")

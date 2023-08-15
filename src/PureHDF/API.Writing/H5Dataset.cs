@@ -11,17 +11,17 @@ public class H5Dataset : H5AttributableObject
     /// <param name="data">The dataset data.</param>
     /// <param name="dimensions">The dataset dimensions.</param>
     /// <param name="chunks">The dataset's chunk dimensions.</param>
-    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="datasetCreation">The dataset creation properties.</param>
     public H5Dataset(
         object data,
         ulong[]? dimensions = default,
         uint[]? chunks = default,
-        H5DatasetAccess datasetAccess = default)
+        H5DatasetCreation datasetCreation = default)
     {
         Data = data;
         Dimensions = dimensions;
         Chunks = chunks;
-        DatasetAccess = datasetAccess;
+        DatasetCreation = datasetCreation;
     }
 
     internal object Data { get; init; }
@@ -30,5 +30,5 @@ public class H5Dataset : H5AttributableObject
 
     internal uint[]? Chunks { get; init; }
 
-    internal H5DatasetAccess DatasetAccess { get; init; }
+    internal H5DatasetCreation DatasetCreation { get; init; }
 }

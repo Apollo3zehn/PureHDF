@@ -7,24 +7,14 @@
 /// <summary>
 /// A simple chunk cache.
 /// </summary>
-public class SimpleChunkCache : IReadingChunkCache, IWritingChunkCache
+public partial class SimpleChunkCache : IReadingChunkCache
 {
-    #region Records
-
     private record ChunkInfo(Memory<byte> Chunk)
     {
         public DateTime LastAccess { get; set; }
     }
 
-    #endregion
-
-    #region Fields
-
     private readonly Dictionary<ulong[], ChunkInfo> _chunkInfoMap;
-
-    #endregion
-
-    #region Constructors
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SimpleChunkCache"/> class.
@@ -45,10 +35,6 @@ public class SimpleChunkCache : IReadingChunkCache, IWritingChunkCache
         _chunkInfoMap = new Dictionary<ulong[], ChunkInfo>(new ArrayEqualityComparer());
     }
 
-    #endregion
-
-    #region Properties
-
     /// <summary>
     /// Gets the number of chunks that can be hold in the cache at the same time.
     /// </summary>
@@ -68,10 +54,6 @@ public class SimpleChunkCache : IReadingChunkCache, IWritingChunkCache
     /// Gets the number of consumed bytes of the chunk cache.
     /// </summary>
     public ulong ConsumedBytes { get; private set; }
-
-    #endregion
-
-    #region Methods
 
     /// <inheritdoc />
     public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkReader)
@@ -100,51 +82,6 @@ public class SimpleChunkCache : IReadingChunkCache, IWritingChunkCache
         }
 
         return chunkInfo.Chunk;
-    }
-
-    /// <inheritdoc />
-    public Memory<byte> GetChunk(
-        ulong[] indices, 
-        Func<Memory<byte>> chunkAllocator, 
-        Action<ulong[], Memory<byte>> chunkWriter)
-    {
-        if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
-        {
-            chunkInfo.LastAccess = DateTime.Now;
-        }
-
-        else
-        {
-            var buffer = chunkAllocator();
-            chunkInfo = new ChunkInfo(buffer) { LastAccess = DateTime.Now };
-            var chunk = chunkInfo.Chunk;
-
-            if ((ulong)chunk.Length <= ByteCount)
-            {
-                while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
-                {
-                    Preempt(chunkWriter);
-                }
-
-                ConsumedBytes += (ulong)chunk.Length;
-                _chunkInfoMap[indices] = chunkInfo;
-            }
-        }
-
-        return chunkInfo.Chunk;
-    }
-
-    /// <inheritdoc />
-    public void Flush(Action<ulong[], Memory<byte>>? chunkWriter = null)
-    {
-        foreach (var entry in _chunkInfoMap)
-        {
-            if (chunkWriter is not null)
-                chunkWriter(entry.Key, entry.Value.Chunk);
-        }
-
-        _chunkInfoMap.Clear();
-        ConsumedBytes = 0;
     }
 
     private void Preempt(Action<ulong[], Memory<byte>>? chunkWriter)
@@ -197,6 +134,4 @@ public class SimpleChunkCache : IReadingChunkCache, IWritingChunkCache
             return result;
         }
     }
-
-    #endregion
 }

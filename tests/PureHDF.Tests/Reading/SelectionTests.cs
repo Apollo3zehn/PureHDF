@@ -1131,7 +1131,7 @@ namespace PureHDF.Tests.Reading
                 /* get intermediate data (only for Matlab visualization) */
                 var intermediate = new int[datasetDims[0] * datasetDims[1] * datasetDims[2]];
 
-                var h5dIntermediate = H5D_Chunk.Create(context, default!, datasetInfo, default);
+                var h5dIntermediate = H5D_Chunk.Create(context, default!, datasetInfo, default, default);
                 h5dIntermediate.Initialize();
 
                 var decodeInfoInterMediate = new DecodeInfo<int>(
@@ -1156,7 +1156,7 @@ namespace PureHDF.Tests.Reading
                 /* get actual data */
                 var actual = new int[memoryDims[0] * memoryDims[1]];
 
-                var h5d = H5D_Chunk.Create(context, default!, datasetInfo, default);
+                var h5d = H5D_Chunk.Create(context, default!, datasetInfo, default, default);
                 h5d.Initialize();
 
                 var decodeInfo = new DecodeInfo<int>(

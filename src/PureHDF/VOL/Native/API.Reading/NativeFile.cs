@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 /// <summary>
 /// A native HDF5 file object. This is the entry-point to work with HDF5 files.

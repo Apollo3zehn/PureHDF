@@ -16,14 +16,26 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
 
     #region Constructors
 
-    public H5D_Chunk123_BTree1(NativeReadContext readContext, NativeWriteContext writeContext, DatasetInfo dataset, DataLayoutMessage12 layout, H5DatasetAccess datasetAccess) :
-        base(readContext, writeContext, dataset, datasetAccess)
+    public H5D_Chunk123_BTree1(
+        NativeReadContext readContext, 
+        NativeWriteContext writeContext, 
+        DatasetInfo dataset, 
+        DataLayoutMessage12 layout, 
+        H5DatasetAccess datasetAccess,
+        H5DatasetCreation datasetCreation) :
+        base(readContext, writeContext, dataset, datasetAccess, datasetCreation)
     {
         _layout12 = layout;
     }
 
-    public H5D_Chunk123_BTree1(NativeReadContext readContext, NativeWriteContext writeContext, DatasetInfo dataset, DataLayoutMessage3 layout, H5DatasetAccess datasetAccess) :
-        base(readContext, writeContext, dataset, datasetAccess)
+    public H5D_Chunk123_BTree1(
+        NativeReadContext readContext, 
+        NativeWriteContext writeContext, 
+        DatasetInfo dataset, 
+        DataLayoutMessage3 layout, 
+        H5DatasetAccess datasetAccess,
+        H5DatasetCreation datasetCreation) :
+        base(readContext, writeContext, dataset, datasetAccess, datasetCreation)
     {
         _layout3 = layout;
         _chunked3 = (ChunkedStoragePropertyDescription3)_layout3.Properties;

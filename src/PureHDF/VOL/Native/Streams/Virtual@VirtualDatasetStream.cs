@@ -179,8 +179,8 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                 {
                     var datasetAccess = _datasetAccess;
 
-                    if (_datasetAccess.ReadingChunkCache is null)
-                        datasetAccess = _datasetAccess with { ReadingChunkCache = new SimpleChunkCache() };
+                    if (_datasetAccess.ChunkCache is null)
+                        datasetAccess = _datasetAccess with { ChunkCache = new SimpleChunkCache() };
 
                     var dataset = (NativeDataset)file.Dataset(entry.SourceDataset);
 

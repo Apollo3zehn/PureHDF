@@ -2,7 +2,7 @@
 
 // using System.Runtime.InteropServices;
 
-// namespace PureHDF;
+// namespace PureHDF.VOL.Native;
 
 // /// <summary>
 // /// An HDF5 attribute reference.

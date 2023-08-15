@@ -6,8 +6,14 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
     private List<ChunkInfo>? _writeChunkInfos;
 
-    public H5D_Chunk4_FixedArray(NativeReadContext readContext, NativeWriteContext writeContext, DatasetInfo dataset, DataLayoutMessage4 layout, H5DatasetAccess datasetAccess) :
-        base(readContext, writeContext, dataset, layout, datasetAccess)
+    public H5D_Chunk4_FixedArray(
+        NativeReadContext readContext,
+        NativeWriteContext writeContext, 
+        DatasetInfo dataset, 
+        DataLayoutMessage4 layout, 
+        H5DatasetAccess datasetAccess,
+        H5DatasetCreation datasetCreation) :
+        base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)
     {
         //
     }
