@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace PureHDF;
+namespace PureHDF.Filters;
 
 // https://portal.hdfgroup.org/display/HDF5/HDF5+User's+Guide: 5.6.2. Using the Scale - offset Filter
 // https://forum.hdfgroup.org/t/scale-offset-filter-and-special-float-values-nan-infinity/3379

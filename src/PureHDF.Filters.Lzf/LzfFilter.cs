@@ -3,9 +3,13 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.Filters;
 
-/* Compiling: Clone h5py 3.9.0 and then run:
- *
- *  gcc -g *.c \
+/* Compiling: 
+ * 1. Clone h5py 3.9.0:
+ * 2. Change constants:
+ *      - VERY_FAST 0
+ *      - ULTRA_FAST 0
+ *      - INIT_HTAB 1
+ * 3. Run: gcc -g *.c \
  *    -o test \
  *    -lhdf5 \
  *    -L<Path to HDF5>/lib/ \
@@ -105,7 +109,10 @@ public class LzfFilter : IH5Filter
         // var htab = htab_rented.Memory.Span;
         // htab_rented.Memory.Span.Clear();
 
-        var htab_allocated = Marshal.AllocHGlobal(sizeof(byte*) * (1 << HLOG));
+        var htabSize = sizeof(byte*) * (1 << HLOG);
+        var htab_allocated = Marshal.AllocHGlobal(htabSize);
+        new Span<byte>((void*)htab_allocated, htabSize).Clear();
+
         var htab = (byte**)htab_allocated;
 
         try
@@ -134,14 +141,8 @@ public class LzfFilter : IH5Filter
                 while (ip < in_end - 2)
                 {
                     hval = NEXT(hval, ip);
-                    var __hslot = (byte**)IDX(hval);
                     hslot = htab + IDX(hval);
                     @ref = *hslot; *hslot = ip;
-
-                    var diff = ip - _ip;
-                    var __ip = ip;
-                    var __ref = @ref;
-                    var a = (ulong)ip - (ulong)@ref - 1;
 
                     if
                     (

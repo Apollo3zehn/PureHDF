@@ -1,4 +1,4 @@
-namespace PureHDF;
+namespace PureHDF.Filters;
 
 /// <summary>
 /// Represents an HDF5 filter.
