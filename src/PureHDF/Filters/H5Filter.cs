@@ -334,7 +334,7 @@ public class ScaleOffsetFilter : IH5Filter
 
         // write
         else
-            throw new Exception("Writing data chunks is not yet supported by PureHDF.");
+            throw new Exception("PureHDF does not yet support the scale-offset filter to compress data.");
     }
 
     /// <inheritdoc />
