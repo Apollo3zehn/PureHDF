@@ -430,6 +430,11 @@ public class FilterTests
     [Theory]
     [InlineData("DeflateDotnetFilter")]
     [InlineData("DeflateSharpZipLibFilter")]
+#if NET5_0_OR_GREATER
+    // https://iobservable.net/blog/2013/08/06/clr-limitations/
+    // "It seems that the maximum array base element size is limited to 64KB."
+    [InlineData("DeflateISALFilter")]
+#endif
     public void CanFilterZlib(string implementation)
     {
         // Arrange

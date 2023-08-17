@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ISA_L.PInvoke;
 
@@ -10,16 +11,26 @@ namespace PureHDF.Filters;
 public class DeflateISALFilter : IH5Filter
 {
     /// <summary>
+    /// The compression level options key. The compression level must be in the range of 0..3 and the default is 0. See https://python-isal.readthedocs.io/en/stable/#differences-with-zlib-and-gzip-modules for more info about the compression levels.
+    /// </summary>
+    public const string COMPRESSION_LEVEL = "compression-level";
+
+    /// <summary>
     /// The Deflate filter identifier.
     /// </summary>
     public const ushort Id = DeflateFilter.Id;
 
     private static readonly int _state_length = Unsafe.SizeOf<inflate_state>();
+    private static readonly int _stream_length = Unsafe.SizeOf<isal_zstream>();
 
     private static readonly ThreadLocal<IntPtr> _state_ptr = new(
         valueFactory: CreateState,
         trackAllValues: false);
         
+    private static readonly ThreadLocal<IntPtr> _stream_ptr = new(
+        valueFactory: CreateStream,
+        trackAllValues: false);
+
     /// <inheritdoc />
     public ushort FilterId => Id;
 
@@ -29,13 +40,15 @@ public class DeflateISALFilter : IH5Filter
     /// <inheritdoc />
     public unsafe Memory<byte> Filter(FilterInfo info)
     {
+        var buffer = info.Buffer;
+
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-            var buffer = info.Buffer;
-            var state = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
+            var stateSpan = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
+            ref inflate_state state = ref stateSpan[0];
 
-            ISAL.isal_inflate_reset(_state_ptr.Value);
+            ISAL.isal_inflate_init(_state_ptr.Value);
 
             buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
 
@@ -47,25 +60,25 @@ public class DeflateISALFilter : IH5Filter
 
             fixed (byte* ptrIn = sourceBuffer)
             {
-                state[0].next_in = ptrIn;
-                state[0].avail_in = (uint)sourceBuffer.Length;
+                state.next_in = ptrIn;
+                state.avail_in = (uint)sourceBuffer.Length;
 
                 while (true)
                 {
                     fixed (byte* ptrOut = targetBuffer)
                     {
-                        state[0].next_out = ptrOut;
-                        state[0].avail_out = (uint)targetBuffer.Length;
+                        state.next_out = ptrOut;
+                        state.avail_out = (uint)targetBuffer.Length;
 
                         var status = ISAL.isal_inflate(_state_ptr.Value);
 
                         if (status != inflate_return_values.ISAL_DECOMP_OK)
                             throw new Exception($"Error encountered while decompressing: {status}.");
 
-                        length += targetBuffer.Length - (int)state[0].avail_out;
+                        length += targetBuffer.Length - (int)state.avail_out;
 
-                        if (state[0].block_state != isal_block_state.ISAL_BLOCK_FINISH && /* not done */
-                            state[0].avail_out == 0 /* and work to do */)
+                        if (state.block_state != isal_block_state.ISAL_BLOCK_FINISH &&
+                            state.avail_out == 0)
                         {
                             // double array size
                             var tmp = inflated;
@@ -88,14 +101,87 @@ public class DeflateISALFilter : IH5Filter
         /* We're compressing */
         else
         {
-            throw new Exception("Writing data chunks is not yet supported by PureHDF.");
+            var streamSpan = new Span<isal_zstream>(_stream_ptr.Value.ToPointer(), _stream_length);
+            ref isal_zstream stream = ref streamSpan[0];
+
+            ISAL.isal_deflate_init(_stream_ptr.Value);
+
+            var length = 0;
+            var deflated = new byte[info.ChunkSize].AsMemory();
+
+            var sourceBuffer = buffer.Span;
+            var targetBuffer = deflated.Span;
+
+            var level = info.Parameters[0];
+
+            var levelBufferSize = level switch
+            {
+                0 => Constants.ISAL_DEF_LVL0_DEFAULT,
+                1 => Constants.ISAL_DEF_LVL1_DEFAULT,
+                2 => Constants.ISAL_DEF_LVL2_DEFAULT,
+                3 => Constants.ISAL_DEF_LVL3_DEFAULT,
+                _ => throw new Exception($"The level {level} is not supported.")
+            };
+
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent(levelBufferSize);
+            var levelBuffer = memoryOwner.Memory.Span.Slice(0, levelBufferSize);
+
+            fixed (byte* ptrIn = sourceBuffer, ptrLevel = levelBuffer)
+            {
+                stream.level = level;
+                stream.level_buf = ptrLevel;
+                stream.level_buf_size = (uint)levelBufferSize;
+
+                stream.gzip_flag = Constants.IGZIP_ZLIB;
+
+                stream.next_in = ptrIn;
+                stream.avail_in = (uint)sourceBuffer.Length;
+                stream.end_of_stream = 1;
+
+                while (true)
+                {
+                    fixed (byte* ptrOut = targetBuffer)
+                    {
+                        stream.next_out = ptrOut;
+                        stream.avail_out = (uint)targetBuffer.Length;
+
+                        var status = ISAL.isal_deflate(_stream_ptr.Value);
+
+                        if (status != inflate_return_values.ISAL_DECOMP_OK)
+                            throw new Exception($"Error encountered while compressing: {status}.");
+
+                        length += targetBuffer.Length - (int)stream.avail_out;
+
+                        if (stream.avail_in > 0 && stream.avail_out == 0)
+                        {
+                            // double array size
+                            var tmp = deflated;
+                            deflated = new byte[tmp.Length * 2];
+                            tmp.CopyTo(deflated);
+                            targetBuffer = deflated.Span.Slice(tmp.Length);
+                        }
+                        
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return deflated.Slice(0, length);
         }
     }
 
     /// <inheritdoc />
     public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
-        throw new NotImplementedException();
+        var value = GetCompressionLevelValue(options);
+
+        if (value < 0 || value > 3)
+            throw new Exception("The compression level must be in the range of 0..3.");
+
+        return new uint[] { unchecked((uint)value) };
     }
 
     private static unsafe IntPtr CreateState()
@@ -104,5 +190,32 @@ public class DeflateISALFilter : IH5Filter
         new Span<byte>(ptr.ToPointer(), _state_length).Clear();
 
         return ptr;
+    }
+
+    private static unsafe IntPtr CreateStream()
+    {
+        var ptr = Marshal.AllocHGlobal(Unsafe.SizeOf<isal_zstream>());
+        new Span<byte>(ptr.ToPointer(), _stream_length).Clear();
+
+        return ptr;
+    }
+
+    private static int GetCompressionLevelValue(Dictionary<string, object>? options)
+    {
+        if (
+            options is not null && 
+            options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
+        {
+            if (objectValue is int value)
+                return value;
+
+            else
+                throw new Exception($"The value of the filter parameter '{COMPRESSION_LEVEL}' must be of type {nameof(Int32)}.");
+        }
+
+        else
+        {
+            return 0;
+        }
     }
 }

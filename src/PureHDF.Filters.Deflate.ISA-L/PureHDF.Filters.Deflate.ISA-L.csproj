@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-      <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />
+      <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0" />
   </ItemGroup>
 
   <ItemGroup>
