@@ -11,7 +11,8 @@ internal static class ScaleOffsetGeneric
     #region Decompression
 
     public static Memory<byte> Decompress(
-        Memory<byte> data, uint[] parametersBuffer)
+        Memory<byte> data, 
+        uint[] parametersBuffer)
     {
         // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
 
@@ -127,7 +128,10 @@ internal static class ScaleOffsetGeneric
     }
 
     private static void DecompressAll(
-        Span<byte> output, Span<byte> input, Parameters parameters, uint minbits)
+        Span<byte> output,
+        Span<byte> input, 
+        Parameters parameters, 
+        uint minbits)
     {
         /* j: index of buffer,
            buf_len: number of bits to be filled in current byte */
@@ -234,7 +238,10 @@ internal static class ScaleOffsetGeneric
     #region Postdecompression
 
     private static unsafe void PostdecompressByte(
-        Span<byte> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        Span<byte> output, 
+        Parameters parameters, 
+        uint minbits, 
+        byte[] minvalRaw)
     {
         byte minval = minvalRaw[0];
         byte maxval = BitConverter.GetBytes((1UL << (int)minbits) - 1UL)[0];
@@ -261,7 +268,10 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressSByte(
-        Span<sbyte> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        Span<sbyte> output, 
+        Parameters parameters, 
+        uint minbits,
+        byte[] minvalRaw)
     {
         sbyte minval = (sbyte)minvalRaw[0];
         sbyte maxval = (sbyte)BitConverter.GetBytes((1UL << (int)minbits) - 1UL)[0];
@@ -288,7 +298,10 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressInteger<T>(
-        Span<T> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        Span<T> output, 
+        Parameters parameters, 
+        uint minbits, 
+        byte[] minvalRaw)
         where T : struct
     {
         T minval = MemoryMarshal.Cast<byte, T>(minvalRaw)[0];
@@ -316,7 +329,10 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressFloat32(
-        Span<float> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        Span<float> output, 
+        Parameters parameters, 
+        uint minbits, 
+        byte[] minvalRaw)
     {
         var minval = MemoryMarshal.Cast<byte, float>(minvalRaw)[0];
         var maxval = MemoryMarshal.Cast<byte, float>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
@@ -349,7 +365,10 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressFloat64(
-        Span<double> output, Parameters parameters, uint minbits, byte[] minvalRaw)
+        Span<double> output, 
+        Parameters parameters, 
+        uint minbits, 
+        byte[] minvalRaw)
     {
         var minval = MemoryMarshal.Cast<byte, double>(minvalRaw)[0];
         var maxval = MemoryMarshal.Cast<byte, double>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
@@ -385,8 +404,7 @@ internal static class ScaleOffsetGeneric
 
     #region Helpers
 
-    private static Parameters ValidateAndPrepareParameters(
-        uint[] parametersBuffer)
+    private static Parameters ValidateAndPrepareParameters(uint[] parametersBuffer)
     {
         // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
 
@@ -404,6 +422,7 @@ internal static class ScaleOffsetGeneric
             if (parameters.ByteOrder == ByteOrder.BigEndian)
                 need_convert = true;
         }
+
         else
         {
             if (parameters.ByteOrder == ByteOrder.LittleEndian)
@@ -429,9 +448,8 @@ internal static class ScaleOffsetGeneric
         return parameters;
     }
 
-    private static T GetFillValue<T>(
-        Span<uint> parameters)
-         where T : struct
+    private static T GetFillValue<T>(Span<uint> parameters)
+        where T : struct
     {
         var i = 0;
         var copySize = sizeof(uint);
@@ -452,8 +470,7 @@ internal static class ScaleOffsetGeneric
                 _cd_value[0] = parameters[i];
 
                 MemoryMarshal
-                    .AsBytes(_cd_value)
-[..copySize]
+                    .AsBytes(_cd_value)[..copySize]
                     .CopyTo(slicedFillValue);
 
                 /* Next field */
