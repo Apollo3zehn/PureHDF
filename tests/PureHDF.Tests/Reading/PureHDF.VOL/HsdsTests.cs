@@ -1,3 +1,27 @@
+// Integrate below steps into Github Actions to reenable HSDS tests
+
+// // https://github.com/HDFGroup/hsds/tree/ae1e926502dcbd023b9b20ba981cad54086a64e7#quick-start
+// // https://github.com/HDFGroup/hsds/blob/ae1e926502dcbd023b9b20ba981cad54086a64e7/docs/post_install.md#test-data-setup
+
+// # terminal 1
+// pip install hsds h5py h5pyd
+
+// mkdir data
+// mkdir data/hsdstest
+// echo "admin:admin" > passwd.txt
+
+// hsds \
+//     --root_dir data \
+//     --password_file passwd.txt \
+//     --host localhost \
+//     --port 5101
+
+// # terminal 2
+// hstouch -u admin -p admin -e http://localhost:5101 /shared/
+
+// wget https://s3.amazonaws.com/hdfgroup/data/hdf5test/tall.h5
+// hsload  -u admin -p admin -e http://localhost:5101 tall.h5 /shared/
+
 using PureHDF.VOL.Hsds;
 using Xunit;
 
