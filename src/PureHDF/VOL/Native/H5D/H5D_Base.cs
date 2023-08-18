@@ -14,13 +14,13 @@ internal abstract class H5D_Base : IDisposable
         DatasetAccess = datasetAccess;
     }
 
-    public NativeReadContext ReadContext { get; }
-
-    public NativeWriteContext WriteContext { get; }
-
     public DatasetInfo Dataset { get; }
 
-    public H5DatasetAccess DatasetAccess { get; }
+    protected NativeReadContext ReadContext { get; }
+
+    protected NativeWriteContext WriteContext { get; }
+
+    protected H5DatasetAccess DatasetAccess { get; }
 
     public virtual void Initialize()
     {

@@ -5,7 +5,10 @@ namespace PureHDF;
 partial class H5NativeWriter
 {
     private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5NativeWriter)
-        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic)!;
+        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+    private static readonly MethodInfo _methodInfoWriteDataset = typeof(H5NativeWriter)
+        .GetMethod(nameof(InternalWriteDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
@@ -26,7 +29,7 @@ partial class H5NativeWriter
             FreeSpaceManager: freeSpaceManager,
             GlobalHeapManager: globalHeapManager,
             WriteOptions: options,
-            DatasetToH5DMap: new(),
+            DatasetToInfoMap: new(),
             TypeToMessageMap: new(),
             ObjectToAddressMap: new(),
             ShortlivedStream: new(memory: default)
@@ -341,51 +344,9 @@ partial class H5NativeWriter
             h5d.Initialize();
 
             if (!memoryData.Equals(default))
-            {
-                /* buffer provider */
-                IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
+                WriteData(h5d, encode, memoryData);
 
-                /* memory selection */
-                var memoryDimensions = dataspace.Dimensions.Length == 0 
-                    ? new ulong[] { 1 } 
-                    : dataspace.Dimensions;
-
-                var memoryStarts = memoryDimensions.ToArray();
-                memoryStarts.AsSpan().Clear();
-
-                var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
-
-                /* file dims */
-                var fileDims = datasetInfo.GetDatasetDims();
-
-                /* file chunk dims */
-                var fileChunkDims = h5d.GetChunkDims();
-
-                /* file selection */
-                var fileStarts = fileDims.ToArray();
-                fileStarts.AsSpan().Clear();
-
-                var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
-
-                var encodeInfo = new EncodeInfo<TElement>(
-                    SourceDims: memoryDimensions,
-                    SourceChunkDims: memoryDimensions,
-                    TargetDims: fileDims,
-                    TargetChunkDims: fileChunkDims,
-                    SourceSelection: memorySelection,
-                    TargetSelection: fileSelection,
-                    GetSourceBuffer: indiced => memoryData,
-                    GetTargetStream: getTargetStream,
-                    Encoder: encode,
-                    TargetTypeSize: (int)datatype.Size,
-                    SourceTypeFactor: 1
-                );
-
-                /* encode data */
-                SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
-            }
-
-            Context.DatasetToH5DMap[dataset] = h5d;
+            Context.DatasetToInfoMap[dataset] = (h5d, encode);
 
         /* Note: This using statement ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.
@@ -396,6 +357,68 @@ partial class H5NativeWriter
         var address = objectHeader.Encode(Context);
 
         return address;
+    }
+
+    private static void InternalWriteDataset<T, TElement>(
+        H5D_Base h5d,
+        EncodeDelegate<TElement> encode,
+        T data)
+    {
+        var (memoryData, _) = WriteUtils.ToMemory<T, TElement>(data);
+
+        WriteData(h5d, encode, memoryData);
+    }
+
+    private static void WriteData<TElement>(
+        H5D_Base h5d,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData)
+    {
+        var datasetInfo = h5d.Dataset;
+        var dataspace = datasetInfo.Space;
+        var datatype = datasetInfo.Type;
+
+        /* buffer provider */
+        IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
+
+        /* memory selection */
+        var memoryDimensions = dataspace.Dimensions.Length == 0 
+            ? new ulong[] { 1 } 
+            : dataspace.Dimensions;
+
+        var memoryStarts = memoryDimensions.ToArray();
+        memoryStarts.AsSpan().Clear();
+
+        var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
+
+        /* file dims */
+        var fileDims = datasetInfo.GetDatasetDims();
+
+        /* file chunk dims */
+        var fileChunkDims = h5d.GetChunkDims();
+
+        /* file selection */
+        var fileStarts = fileDims.ToArray();
+        fileStarts.AsSpan().Clear();
+
+        var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
+
+        var encodeInfo = new EncodeInfo<TElement>(
+            SourceDims: memoryDimensions,
+            SourceChunkDims: memoryDimensions,
+            TargetDims: fileDims,
+            TargetChunkDims: fileChunkDims,
+            SourceSelection: memorySelection,
+            TargetSelection: fileSelection,
+            GetSourceBuffer: indiced => memoryData,
+            GetTargetStream: getTargetStream,
+            Encoder: encode,
+            TargetTypeSize: (int)datatype.Size,
+            SourceTypeFactor: 1
+        );
+
+        /* encode data */
+        SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)

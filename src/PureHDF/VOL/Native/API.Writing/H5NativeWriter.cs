@@ -13,10 +13,15 @@ public partial class H5NativeWriter : IDisposable
     /// <param name="data">The data to write.</param>
     public void WriteDataset<T>(H5Dataset<T> dataset, T data)
     {
-        if (!Context.DatasetToH5DMap.TryGetValue(dataset, out var h5d))
+        if (!Context.DatasetToInfoMap.TryGetValue(dataset, out var info))
             throw new Exception("The provided dataset does not belong to this file.");
 
-        
+        var (elementType, _) = WriteUtils.GetElementType(dataset.Type);
+
+        // TODO cache this
+        var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
+
+        method.Invoke(this, new object?[] { info.H5D, info.Encode, data });
     }
 
     #region IDisposable
