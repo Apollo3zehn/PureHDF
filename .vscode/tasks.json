@@ -36,7 +36,7 @@
             "args": [
                 "test",
                 "--filter",
-                "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+                "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL.HsdsTests"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -59,6 +59,15 @@
                 "test",
                 "--filter",
                 "FullyQualifiedName~PureHDF.Tests.Filters"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: HSDS",
+            "command": "bash",
+            "type": "process",
+            "args": [
+                "tests/PureHDF.Tests/Reading/PureHDF.VOL/run-hsds-tests.sh"
             ],
             "problemMatcher": "$msCompile"
         }

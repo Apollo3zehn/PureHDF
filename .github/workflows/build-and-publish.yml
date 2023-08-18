@@ -71,14 +71,16 @@ jobs:
       # -> this needs to be investigated 
 
       - name: Test (common)
-        # temporarily disable HSDS tests until the service is available again (GET http://hsdshdflab.hdfgroup.org?domain=/shared/tall.h5)
-        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL"
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL.HsdsTests"
 
       - name: Test (writing)
         run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Writing"
 
       - name: Test (filters)
         run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Filters"
+
+      - name: Test (HSDS)
+        run: bash tests/PureHDF.Tests/Reading/PureHDF.VOL/run-hsds-tests.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
