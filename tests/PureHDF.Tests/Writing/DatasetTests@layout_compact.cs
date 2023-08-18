@@ -46,16 +46,20 @@ public partial class DatasetTests
     {
         // Arrange
         var data = SharedTestData.SmallData;
+        var dataset = new H5Dataset<int[]>(dimensions: new ulong[] { 10 });
 
         var file = new H5File
         {
-            ["compact"] = new H5Dataset<int[]>(dimensions: new ulong[] { 10 })
+            ["compact"] = dataset
         };
 
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Write(filePath);
+        using (var writer = file.BeginWrite(filePath))
+        {
+            writer.WriteDataset(dataset, data);
+        }
 
         // Assert
         try

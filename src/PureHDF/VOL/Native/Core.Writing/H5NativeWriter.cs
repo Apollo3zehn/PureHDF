@@ -2,17 +2,18 @@ using System.Reflection;
 
 namespace PureHDF;
 
-internal static class H5Writer
+partial class H5NativeWriter
 {
-    private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5Writer)
-        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5NativeWriter)
+        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic)!;
 
-    public static void Write(H5File file, Stream stream, H5WriteOptions options)
+    internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
+        // TODO readable is only required for checksums, maybe this requirement can be lifted by renting Memory<byte> and calculate the checksum over that memory
         if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
             throw new Exception("The stream must be readble, writable and seekable.");
 
-        using var driver = new H5StreamDriver(stream, leaveOpen: false);
+        var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
         var freeSpaceManager = new FreeSpaceManager();
         freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
@@ -25,20 +26,34 @@ internal static class H5Writer
             FreeSpaceManager: freeSpaceManager,
             GlobalHeapManager: globalHeapManager,
             WriteOptions: options,
+            DatasetToH5DMap: new(),
             TypeToMessageMap: new(),
             ObjectToAddressMap: new(),
             ShortlivedStream: new(memory: default)
         );
 
+        File = file;
+        Stream = stream;
+        Context = writeContext;
+    }
+
+    internal H5File File { get; }
+
+    internal Stream Stream { get; }
+
+    internal NativeWriteContext Context { get; }
+
+    internal void Write()
+    {
         // root group       
-        driver.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
-        var rootGroupAddress = EncodeGroup(writeContext, file);
+        Context.Driver.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
+        var rootGroupAddress = EncodeGroup(File);
 
         // global heap collections
-        globalHeapManager.Encode();
+        Context.GlobalHeapManager.Encode();
 
         // superblock
-        var endOfFileAddress = (ulong)driver.Length;
+        var endOfFileAddress = (ulong)Context.Driver.Length;
 
         var superblock = new Superblock23(
             Driver: default!,
@@ -53,12 +68,11 @@ internal static class H5Writer
             LengthsSize = sizeof(ulong)
         };
 
-        driver.Seek(0, SeekOrigin.Begin);
-        superblock.Encode(driver);
+        Context.Driver.Seek(0, SeekOrigin.Begin);
+        superblock.Encode(Context.Driver);
     }
 
-    private static ulong EncodeGroup(
-        NativeWriteContext context,
+    private ulong EncodeGroup(
         H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
@@ -100,7 +114,7 @@ internal static class H5Writer
         // attribute messages
         foreach (var entry in group.Attributes)
         {
-            var attributeMessage = AttributeMessage.Create(context, entry.Key, entry.Value);
+            var attributeMessage = AttributeMessage.Create(Context, entry.Key, entry.Value);
 
             headerMessages.Add(ToHeaderMessage(attributeMessage));
         }
@@ -111,28 +125,28 @@ internal static class H5Writer
 
             if (entry.Value is H5Group childGroup)
             {
-                if (!context.ObjectToAddressMap.TryGetValue(childGroup, out linkAddress))
+                if (!Context.ObjectToAddressMap.TryGetValue(childGroup, out linkAddress))
                 {
-                    linkAddress = EncodeGroup(context, childGroup);
-                    context.ObjectToAddressMap[childGroup] = linkAddress;
+                    linkAddress = EncodeGroup(childGroup);
+                    Context.ObjectToAddressMap[childGroup] = linkAddress;
                 }
             }
 
             else if (entry.Value is H5Dataset dataset)
             {
-                if (!context.ObjectToAddressMap.TryGetValue(dataset, out linkAddress))
+                if (!Context.ObjectToAddressMap.TryGetValue(dataset, out linkAddress))
                 {
-                    linkAddress = EncodeDataset(context, dataset);
-                    context.ObjectToAddressMap[dataset] = linkAddress;
+                    linkAddress = EncodeDataset(dataset);
+                    Context.ObjectToAddressMap[dataset] = linkAddress;
                 }
             }
 
             else if (entry.Value is object objectDataset)
             {
-                if (!context.ObjectToAddressMap.TryGetValue(objectDataset, out linkAddress))
+                if (!Context.ObjectToAddressMap.TryGetValue(objectDataset, out linkAddress))
                 {
-                    linkAddress = EncodeDataset(context, objectDataset);
-                    context.ObjectToAddressMap[objectDataset] = linkAddress;
+                    linkAddress = EncodeDataset(objectDataset);
+                    Context.ObjectToAddressMap[objectDataset] = linkAddress;
                 }
             }
 
@@ -171,13 +185,12 @@ internal static class H5Writer
         };
 
         // encode object header
-        var address = objectHeader.Encode(context);
+        var address = objectHeader.Encode(Context);
 
         return address;
     }
 
-    private static ulong EncodeDataset(
-        NativeWriteContext context,
+    private ulong EncodeDataset(
         object dataset)
     {
         if (dataset is not H5Dataset h5Dataset)
@@ -188,11 +201,10 @@ internal static class H5Writer
         // TODO cache this
         var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Type, elementType);
 
-        return (ulong)method.Invoke(default, new object?[] { context, h5Dataset, h5Dataset.Data, isScalar })!;
+        return (ulong)method.Invoke(this, new object?[] { h5Dataset, h5Dataset.Data, isScalar })!;
     }
 
-    private static ulong InternalEncodeDataset<T, TElement>(
-        NativeWriteContext context,
+    private ulong InternalEncodeDataset<T, TElement>(
         H5Dataset dataset,
         T data,
         bool isScalar)
@@ -201,7 +213,7 @@ internal static class H5Writer
 
         // datatype
         var (datatype, encode) = 
-            DatatypeMessage.Create(context, memoryData, isScalar);
+            DatatypeMessage.Create(Context, memoryData, isScalar);
 
         // dataspace
         var dataspace = dataset is H5Dataset h5Dataset
@@ -216,7 +228,7 @@ internal static class H5Writer
         {
             chunkDimensions = dataset.Chunks;
 
-            var localFilters = dataset.DatasetCreation.Filters ?? context.WriteOptions.Filters;
+            var localFilters = dataset.DatasetCreation.Filters ?? Context.WriteOptions.Filters;
 
             // at least one filter is configured - ensure chunked layout
             if (localFilters is not null && localFilters.Any())
@@ -256,7 +268,7 @@ internal static class H5Writer
         }
 
         var dataLayout = DataLayoutMessage4.Create(
-            context, 
+            Context, 
             typeSize: datatype.Size,
             isFiltered: filterPipeline is not null,
             dataDimensions: dataspace.Dimensions,
@@ -318,9 +330,9 @@ internal static class H5Writer
         /* buffer provider */
         using (H5D_Base h5d = dataLayout.LayoutClass switch
         {
-            LayoutClass.Compact => new H5D_Compact(default!, context, datasetInfo, default),
-            LayoutClass.Contiguous => new H5D_Contiguous(default!, context, datasetInfo, default),
-            LayoutClass.Chunked => H5D_Chunk.Create(default!, context, datasetInfo, default, dataset.DatasetCreation),
+            LayoutClass.Compact => new H5D_Compact(default!, Context, datasetInfo, default),
+            LayoutClass.Contiguous => new H5D_Contiguous(default!, Context, datasetInfo, default),
+            LayoutClass.Chunked => H5D_Chunk.Create(default!, Context, datasetInfo, default, dataset.DatasetCreation),
 
             /* default */
             _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
@@ -373,13 +385,15 @@ internal static class H5Writer
                 SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
             }
 
+            Context.DatasetToH5DMap[dataset] = h5d;
+
         /* Note: This using statement ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.
          */
         }
 
         // encode object header
-        var address = objectHeader.Encode(context);
+        var address = objectHeader.Encode(Context);
 
         return address;
     }
