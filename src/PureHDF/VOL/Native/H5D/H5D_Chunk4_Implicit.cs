@@ -22,7 +22,7 @@ internal class H5D_Chunk4_Implicit : H5D_Chunk4
         return new ChunkInfo(Chunked4.Address + chunkOffset, ChunkByteSize, 0);
     }
 
-    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
     {
         return GetReadChunkInfo(chunkIndices);
     }

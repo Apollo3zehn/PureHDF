@@ -4,8 +4,6 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 {
     private FixedArrayHeader? _header;
 
-    private List<ChunkInfo>? _writeChunkInfos;
-
     public H5D_Chunk4_FixedArray(
         NativeReadContext readContext,
         NativeWriteContext writeContext, 
@@ -57,7 +55,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
     {
         /* Check for filters on chunks */
         ChunkInfo chunkInfo;
@@ -76,14 +74,6 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
             throw new Exception("This should never happen.");
         }
 
-        _writeChunkInfos ??= new();
-
-        if (_writeChunkInfos.Contains(chunkInfo))
-            throw new Exception("Chunks can only be written once. Consider increasing the size of the chunk cache to avoid chunks written to disk too early.");
-
-        else
-            _writeChunkInfos.Add(chunkInfo);
-
         return chunkInfo;
     }
 
@@ -91,7 +81,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
     {
         base.Dispose(disposing);
 
-        if (WriteContext is not null && _writeChunkInfos is not null)
+        if (WriteContext is not null)
         {
             if (Dataset.FilterPipeline is not null)
             {
@@ -99,11 +89,11 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
                 var indexingInformation = (FixedArrayIndexingInformation)properties.IndexingInformation;
                 var pageBits = indexingInformation.PageBits;
-                var elements = new FilteredDataBlockElement[_writeChunkInfos.Count];
+                var elements = new FilteredDataBlockElement[WriteChunkInfos.Length];
 
-                for (int i = 0; i < _writeChunkInfos.Count; i++)
+                for (int i = 0; i < WriteChunkInfos.Length; i++)
                 {
-                    var chunkInfo = _writeChunkInfos[i];
+                    var chunkInfo = WriteChunkInfos[i];
 
                     elements[i] = new FilteredDataBlockElement(
                         Address: chunkInfo.Address,
@@ -113,7 +103,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 }
 
                 /* H5FA__cache_hdr_serialize (H5FAcache.c) */
-                var entriesCount = (ulong)_writeChunkInfos.Count;
+                var entriesCount = (ulong)WriteChunkInfos.Length;
                 var entrySize = FilteredDataBlockElement.GetEncodeSize(ChunkSizeLength);
                 var (_, pageCount, pageBitmapSize) = GetInfo(pageBits, entriesCount);
 

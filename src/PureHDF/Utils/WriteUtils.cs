@@ -63,10 +63,8 @@ internal static class WriteUtils
             type.GetElementType() is not null;
     }
 
-    public static (Type ElementType, bool IsScalar) GetElementType(object data)
+    public static (Type ElementType, bool IsScalar) GetElementType(Type type)
     {
-        var type = data.GetType();
-
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
             return (type, true);
 
@@ -83,9 +81,12 @@ internal static class WriteUtils
             return (type, true);
     }
 
-    public static (Memory<TElement>, ulong[]) ToMemory<T, TElement>(object data)
+    public static (Memory<TElement>, ulong[]?) ToMemory<T, TElement>(object? data)
     {
         var type = typeof(T);
+
+        if (data is null)
+            return default;
 
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
             return ElementToMemory((TElement)data);

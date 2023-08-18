@@ -18,7 +18,7 @@ internal partial record class AttributeMessage
             ? h5Attribute1.Data
             : attribute;
 
-        var (elementType, isScalar) = WriteUtils.GetElementType(data);
+        var (elementType, isScalar) = WriteUtils.GetElementType(data.GetType());
 
         // TODO cache this
         var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(data.GetType(), elementType);

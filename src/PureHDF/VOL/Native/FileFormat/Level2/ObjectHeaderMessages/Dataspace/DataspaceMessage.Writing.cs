@@ -3,10 +3,17 @@
 internal partial record class DataspaceMessage
 {
     public static DataspaceMessage Create(
-        ulong[] dataDimensions,
+        ulong[]? dataDimensions,
         ulong[]? dimensions)
     {
-        dimensions ??= dataDimensions;
+        if (dataDimensions is null)
+            dataDimensions = dimensions;
+
+        else if (dimensions is null)
+            dimensions = dataDimensions;
+
+        if (dataDimensions is null || dimensions is null)
+            throw new Exception("This should never happen.");
 
         var dimensionsTotalSize = dimensions
             .Aggregate(1UL, (x, y) => x * y);

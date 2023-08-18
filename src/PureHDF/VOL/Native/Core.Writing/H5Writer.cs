@@ -183,10 +183,10 @@ internal static class H5Writer
         if (dataset is not H5Dataset h5Dataset)
             h5Dataset = new H5Dataset(dataset);
 
-        var (elementType, isScalar) = WriteUtils.GetElementType(h5Dataset.Data);
+        var (elementType, isScalar) = WriteUtils.GetElementType(h5Dataset.Type);
 
         // TODO cache this
-        var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Data.GetType(), elementType);
+        var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Type, elementType);
 
         return (ulong)method.Invoke(default, new object?[] { context, h5Dataset, h5Dataset.Data, isScalar })!;
     }
@@ -197,8 +197,7 @@ internal static class H5Writer
         T data,
         bool isScalar)
     {
-        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data!);
-        var type = memoryData.GetType();
+        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data);
 
         // datatype
         var (datatype, encode) = 
@@ -329,47 +328,50 @@ internal static class H5Writer
         {
             h5d.Initialize();
 
-            /* buffer provider */
-            IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
+            if (!memoryData.Equals(default))
+            {
+                /* buffer provider */
+                IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
 
-            /* memory selection */
-            var memoryDimensions = dataDimensions.Length == 0 
-                ? new ulong[] { 1 } 
-                : dataDimensions;
+                /* memory selection */
+                var memoryDimensions = dataspace.Dimensions.Length == 0 
+                    ? new ulong[] { 1 } 
+                    : dataspace.Dimensions;
 
-            var memoryStarts = memoryDimensions.ToArray();
-            memoryStarts.AsSpan().Clear();
+                var memoryStarts = memoryDimensions.ToArray();
+                memoryStarts.AsSpan().Clear();
 
-            var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
+                var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
 
-            /* file dims */
-            var fileDims = datasetInfo.GetDatasetDims();
+                /* file dims */
+                var fileDims = datasetInfo.GetDatasetDims();
 
-            /* file chunk dims */
-            var fileChunkDims = h5d.GetChunkDims();
+                /* file chunk dims */
+                var fileChunkDims = h5d.GetChunkDims();
 
-            /* file selection */
-            var fileStarts = fileDims.ToArray();
-            fileStarts.AsSpan().Clear();
+                /* file selection */
+                var fileStarts = fileDims.ToArray();
+                fileStarts.AsSpan().Clear();
 
-            var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
+                var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
 
-            var encodeInfo = new EncodeInfo<TElement>(
-                SourceDims: memoryDimensions,
-                SourceChunkDims: memoryDimensions,
-                TargetDims: fileDims,
-                TargetChunkDims: fileChunkDims,
-                SourceSelection: memorySelection,
-                TargetSelection: fileSelection,
-                GetSourceBuffer: indiced => memoryData,
-                GetTargetStream: getTargetStream,
-                Encoder: encode,
-                TargetTypeSize: (int)datatype.Size,
-                SourceTypeFactor: 1
-            );
+                var encodeInfo = new EncodeInfo<TElement>(
+                    SourceDims: memoryDimensions,
+                    SourceChunkDims: memoryDimensions,
+                    TargetDims: fileDims,
+                    TargetChunkDims: fileChunkDims,
+                    SourceSelection: memorySelection,
+                    TargetSelection: fileSelection,
+                    GetSourceBuffer: indiced => memoryData,
+                    GetTargetStream: getTargetStream,
+                    Encoder: encode,
+                    TargetTypeSize: (int)datatype.Size,
+                    SourceTypeFactor: 1
+                );
 
-            /* encode data */
-            SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
+                /* encode data */
+                SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
+            }
 
         /* Note: This using statement ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.

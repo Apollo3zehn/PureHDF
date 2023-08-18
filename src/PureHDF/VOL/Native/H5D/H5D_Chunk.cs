@@ -6,7 +6,7 @@ internal abstract class H5D_Chunk : H5D_Base
 {
     #region Types
 
-    protected record ChunkInfo(ulong Address, ulong Size, uint FilterMask)
+    protected record struct ChunkInfo(ulong Address, ulong Size, uint FilterMask)
     {
         public static ChunkInfo None { get; } = new ChunkInfo(Superblock.UndefinedAddress, 0, 0);
     }
