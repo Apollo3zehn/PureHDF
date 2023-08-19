@@ -202,6 +202,12 @@ internal abstract class H5D_Chunk : H5D_Base
         return stream;
     }
 
+    public void FlushChunkCache()
+    {
+        if (WriteContext is not null)
+            _writingChunkCache.Flush(WriteChunk);
+    }
+
     protected abstract ulong[] GetRawChunkDims();
 
     protected abstract ChunkInfo GetReadChunkInfo(ulong[] chunkIndices);
@@ -212,8 +218,7 @@ internal abstract class H5D_Chunk : H5D_Base
     {
         base.Dispose(disposing);
 
-        if (WriteContext is not null)
-            _writingChunkCache.Flush(WriteChunk);
+        FlushChunkCache();
     }
 
     private async Task<Memory<byte>> ReadChunkAsync<TReader>(

@@ -38,10 +38,11 @@ internal record class CompactStoragePropertyDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-        // version
+        // size
         driver.Write((ushort)Data.Length);
 
         // data
+        Address = (ulong)driver.Position;
         driver.Write(Data);
     }
 }

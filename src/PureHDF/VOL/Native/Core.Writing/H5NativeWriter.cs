@@ -10,6 +10,8 @@ partial class H5NativeWriter
     private static readonly MethodInfo _methodInfoWriteDataset = typeof(H5NativeWriter)
         .GetMethod(nameof(InternalWriteDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    private ulong _rootGroupAddress;
+
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
         // TODO readable is only required for checksums, maybe this requirement can be lifted by renting Memory<byte> and calculate the checksum over that memory
@@ -50,29 +52,10 @@ partial class H5NativeWriter
     {
         // root group       
         Context.Driver.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
-        var rootGroupAddress = EncodeGroup(File);
+        _rootGroupAddress = EncodeGroup(File);
 
         // global heap collections
         Context.GlobalHeapManager.Encode();
-
-        // superblock
-        var endOfFileAddress = (ulong)Context.Driver.Length;
-
-        var superblock = new Superblock23(
-            Driver: default!,
-            Version: 3,
-            FileConsistencyFlags: default,
-            BaseAddress: 0,
-            ExtensionAddress: Superblock.UndefinedAddress,
-            EndOfFileAddress: endOfFileAddress,
-            RootGroupObjectHeaderAddress: rootGroupAddress)
-        {
-            OffsetsSize = sizeof(ulong),
-            LengthsSize = sizeof(ulong)
-        };
-
-        Context.Driver.Seek(0, SeekOrigin.Begin);
-        superblock.Encode(Context.Driver);
     }
 
     private ulong EncodeGroup(
@@ -271,9 +254,11 @@ partial class H5NativeWriter
         }
 
         var dataLayout = DataLayoutMessage4.Create(
-            Context, 
+            Context,
             typeSize: datatype.Size,
             isFiltered: filterPipeline is not null,
+            /* compact data must be written immediately because of object header checksum */
+            allowCompact: data is not null,
             dataDimensions: dataspace.Dimensions,
             chunkDimensions: chunkDimensions);
 
@@ -331,7 +316,7 @@ partial class H5NativeWriter
         );
 
         /* buffer provider */
-        using (H5D_Base h5d = dataLayout.LayoutClass switch
+        H5D_Base h5d = dataLayout.LayoutClass switch
         {
             LayoutClass.Compact => new H5D_Compact(default!, Context, datasetInfo, default),
             LayoutClass.Contiguous => new H5D_Contiguous(default!, Context, datasetInfo, default),
@@ -339,19 +324,20 @@ partial class H5NativeWriter
 
             /* default */
             _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
-        })
-        {
-            h5d.Initialize();
+        };
 
-            if (!memoryData.Equals(default))
-                WriteData(h5d, encode, memoryData);
+        h5d.Initialize();
 
-            Context.DatasetToInfoMap[dataset] = (h5d, encode);
+        if (!memoryData.Equals(default))
+            WriteData(h5d, encode, memoryData);
 
-        /* Note: This using statement ensures that the chunk cache is flushed and all 
+        Context.DatasetToInfoMap[dataset] = (h5d, encode);
+
+        /* Note: Eensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.
          */
-        }
+        if (h5d is H5D_Chunk chunk)
+            chunk.FlushChunkCache();
 
         // encode object header
         var address = objectHeader.Encode(Context);
@@ -389,7 +375,10 @@ partial class H5NativeWriter
         var memoryStarts = memoryDimensions.ToArray();
         memoryStarts.AsSpan().Clear();
 
-        var memorySelection = new HyperslabSelection(rank: memoryDimensions.Length, starts: memoryStarts, blocks: memoryDimensions);
+        var memorySelection = new HyperslabSelection(
+            rank: memoryDimensions.Length, 
+            starts: memoryStarts,
+            blocks: memoryDimensions);
 
         /* file dims */
         var fileDims = datasetInfo.GetDatasetDims();

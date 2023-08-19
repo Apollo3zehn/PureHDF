@@ -46,7 +46,7 @@ public partial class DatasetTests
     {
         // Arrange
         var data = SharedTestData.SmallData;
-        var dataset = new H5Dataset<int[]>(dimensions: new ulong[] { 100 });
+        var dataset = new H5Dataset<int[]>(dimensions: new ulong[] { (ulong)data.Length });
 
         var file = new H5File
         {
@@ -58,7 +58,7 @@ public partial class DatasetTests
         // Act
         using (var writer = file.BeginWrite(filePath))
         {
-            writer.WriteDataset(dataset, data);
+            writer.Write(dataset, data);
         }
 
         // Assert
@@ -73,7 +73,11 @@ public partial class DatasetTests
             Assert.Equal(expected, actual);
 
             using var h5File = H5File.OpenRead(filePath);
-            Assert.Equal(H5DataLayoutClass.Compact, h5File.Dataset("compact").Layout.Class);
+
+            /* special case: compact is not supported for deferred writing
+             * because of the object header checksum 
+             */
+            Assert.Equal(H5DataLayoutClass.Contiguous, h5File.Dataset("compact").Layout.Class);
         }
         finally
         {

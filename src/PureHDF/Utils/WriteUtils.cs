@@ -99,7 +99,9 @@ internal static class WriteUtils
                     : ArrayNDToMemory<TElement>((Array)data);
 
         else if (IsMemory(type))
-            return ((Memory<TElement>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
+            return data.Equals(default(T))
+                ? default
+                : ((Memory<TElement>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
 
         else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
             return EnumerableToMemory((IEnumerable<TElement>)data);

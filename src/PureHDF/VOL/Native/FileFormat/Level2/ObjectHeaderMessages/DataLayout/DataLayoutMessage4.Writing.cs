@@ -6,6 +6,7 @@ internal partial record class DataLayoutMessage4
         NativeWriteContext context,
         uint typeSize,
         bool isFiltered,
+        bool allowCompact,
         ulong[] dataDimensions,
         uint[]? chunkDimensions)
     {
@@ -107,7 +108,7 @@ internal partial record class DataLayoutMessage4
             // message fields."
 
             /* try to create compact dataset */
-            if (preferCompact && dataEncodeSize <= ushort.MaxValue)
+            if (preferCompact && dataEncodeSize <= ushort.MaxValue && allowCompact)
             {
                 // TODO avoid creation of system memory stream too often
                 var buffer = new byte[dataEncodeSize];

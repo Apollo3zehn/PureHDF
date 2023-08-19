@@ -42,6 +42,47 @@ public partial class DatasetTests
     }
 
     [Fact]
+    public void CanWrite_Contiguous_Deferred()
+    {
+        // Arrange
+        var data = SharedTestData.HugeData.AsMemory(0, ushort.MaxValue + 1);
+        var dataset = new H5Dataset<Memory<int>>(dimensions: new ulong[] { (ulong)data.Length });
+
+        var file = new H5File
+        {
+            ["contiguous"] = dataset
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        using (var writer = file.BeginWrite(filePath))
+        {
+            writer.Write(dataset, data);
+        }
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText("DumpFiles/layout_contiguous.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.StartsWith(expected, actual);
+
+            using var h5File = H5File.OpenRead(filePath);
+            Assert.Equal(H5DataLayoutClass.Contiguous, h5File.Dataset("contiguous").Layout.Class);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
     public void CanWrite_Contiguous_Prefer()
     {
         // Arrange
