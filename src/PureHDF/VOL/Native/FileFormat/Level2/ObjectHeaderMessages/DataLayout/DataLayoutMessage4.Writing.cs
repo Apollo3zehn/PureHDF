@@ -26,8 +26,7 @@ internal partial record class DataLayoutMessage4
 
             (IndexingInformation IndexingInformation, long EncodeSize, ChunkedStoragePropertyFlags Flags) indexInfo;
 
-            /* single chunk indexing only works for non-filtered data or for non-deferred filtered data*/
-            if (chunkCount == 1 && !(isFiltered && isDeferred))
+            if (chunkCount == 1)
             {
                 /* FilteredChunkSize and encode size will be set later, see also H5D__single_idx_insert (H5DSingle.c) */
                 var indexingInformation = new SingleChunkIndexingInformation(ChunkFilters: default);

@@ -2,6 +2,8 @@
 
 internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
 {
+    private bool _isDirty { get; set; }
+
     public H5Dataset_Chunk_Single_Chunk4(
         NativeReadContext readContext, 
         NativeWriteContext writeContext, 
@@ -18,11 +20,15 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
     {
         base.Dispose(disposing);
 
-        /* encode single chunk information again in case it has changed */
-        var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
+        // TODO the data below has already been written in the case of non-deferred dataset
+        if (_isDirty)
+        {
+            var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
 
-        WriteContext.Driver.Seek(single.Address, SeekOrigin.Begin);
-        single.Encode(WriteContext.Driver, Chunked4.Flags);
+            WriteContext.Driver.Seek(single.Address, SeekOrigin.Begin);
+            single.Encode(WriteContext.Driver, Chunked4.Flags);
+            #error continue here
+        }
     }
 
     protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
@@ -43,6 +49,8 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
         
         var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
         single.FilteredChunkSize = chunkSize;
+
+        _isDirty = true;
 
         return new ChunkInfo(Chunked4.Address, chunkSize, filterMask);
     }
