@@ -14,6 +14,8 @@ internal record class SingleChunkIndexingInformation(
 {
     public ulong FilteredChunkSize { get; set; }
 
+    public long Address { get; private set; }
+
     public static SingleChunkIndexingInformation Decode(NativeReadContext context, ChunkedStoragePropertyFlags flags)
     {
         var filteredChunkSize = default(ulong);
@@ -57,6 +59,8 @@ internal record class SingleChunkIndexingInformation(
     {
         if (flags.HasFlag(ChunkedStoragePropertyFlags.SINGLE_INDEX_WITH_FILTER))
         {
+            Address = driver.Position;
+
             // filtered chunk size
             driver.Write(FilteredChunkSize);
 

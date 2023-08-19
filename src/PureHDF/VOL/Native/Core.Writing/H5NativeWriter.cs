@@ -257,8 +257,8 @@ partial class H5NativeWriter
             Context,
             typeSize: datatype.Size,
             isFiltered: filterPipeline is not null,
-            /* compact data must be written immediately because of object header checksum */
-            allowCompact: data is not null,
+            /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
+            isDeferred: data is null,
             dataDimensions: dataspace.Dimensions,
             chunkDimensions: chunkDimensions);
 

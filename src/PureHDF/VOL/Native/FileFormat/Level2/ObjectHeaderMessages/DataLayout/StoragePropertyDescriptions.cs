@@ -42,7 +42,6 @@ internal record class CompactStoragePropertyDescription(
         driver.Write((ushort)Data.Length);
 
         // data
-        Address = (ulong)driver.Position;
         driver.Write(Data);
     }
 }

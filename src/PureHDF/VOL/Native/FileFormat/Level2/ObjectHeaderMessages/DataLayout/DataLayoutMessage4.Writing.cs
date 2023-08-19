@@ -6,7 +6,7 @@ internal partial record class DataLayoutMessage4
         NativeWriteContext context,
         uint typeSize,
         bool isFiltered,
-        bool allowCompact,
+        bool isDeferred,
         ulong[] dataDimensions,
         uint[]? chunkDimensions)
     {
@@ -26,7 +26,8 @@ internal partial record class DataLayoutMessage4
 
             (IndexingInformation IndexingInformation, long EncodeSize, ChunkedStoragePropertyFlags Flags) indexInfo;
 
-            if (chunkCount == 1)
+            /* single chunk indexing only works for non-filtered data or for non-deferred filtered data*/
+            if (chunkCount == 1 && !(isFiltered && isDeferred))
             {
                 /* FilteredChunkSize and encode size will be set later, see also H5D__single_idx_insert (H5DSingle.c) */
                 var indexingInformation = new SingleChunkIndexingInformation(ChunkFilters: default);
@@ -108,7 +109,7 @@ internal partial record class DataLayoutMessage4
             // message fields."
 
             /* try to create compact dataset */
-            if (preferCompact && dataEncodeSize <= ushort.MaxValue && allowCompact)
+            if (preferCompact && dataEncodeSize <= ushort.MaxValue && !isDeferred)
             {
                 // TODO avoid creation of system memory stream too often
                 var buffer = new byte[dataEncodeSize];

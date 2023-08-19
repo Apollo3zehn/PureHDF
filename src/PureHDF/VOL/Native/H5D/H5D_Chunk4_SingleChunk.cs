@@ -14,6 +14,17 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
         //
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        /* encode single chunk information again in case it has changed */
+        var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
+
+        WriteContext.Driver.Seek(single.Address, SeekOrigin.Begin);
+        single.Encode(WriteContext.Driver, Chunked4.Flags);
+    }
+
     protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
     {
         var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;

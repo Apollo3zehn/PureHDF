@@ -108,7 +108,11 @@ public partial class DatasetTests
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
-            CheckIndexType<SingleChunkIndexingInformation>(filePath, filtered: true);
+            
+            /* special case: single chunk indexing is not supported for
+             * deferred writing because of the object header checksum 
+             */
+            CheckIndexType<FixedArrayIndexingInformation>(filePath, filtered: true);
         }
         finally
         {
