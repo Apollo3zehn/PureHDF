@@ -3,33 +3,14 @@
 internal partial record class DataspaceMessage
 {
     public static DataspaceMessage Create(
-        ulong[]? dataDimensions,
-        ulong[]? dimensions)
+        ulong[] fileDimensions)
     {
-        if (dataDimensions is null)
-            dataDimensions = dimensions;
-
-        else if (dimensions is null)
-            dimensions = dataDimensions;
-
-        if (dataDimensions is null || dimensions is null)
-            throw new Exception("This should never happen.");
-
-        var dimensionsTotalSize = dimensions
-            .Aggregate(1UL, (x, y) => x * y);
-
-        var dataDimensionsTotalSize = dataDimensions
-            .Aggregate(1UL, (x, y) => x * y);
-
-        if (dataDimensions.Any() && dimensionsTotalSize != dataDimensionsTotalSize)
-            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
-
         var dataspace = new DataspaceMessage(
-            Rank: (byte)dimensions.Length,
+            Rank: (byte)fileDimensions.Length,
             Flags: DataspaceMessageFlags.None,
-            Type: dataDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
-            Dimensions: dimensions,
-            MaxDimensions: dimensions,
+            Type: fileDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
+            Dimensions: fileDimensions,
+            MaxDimensions: fileDimensions,
             PermutationIndices: default
         )
         {

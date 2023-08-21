@@ -14,8 +14,8 @@ internal partial record class AttributeMessage
         string name, 
         object attribute)
     {
-        var data = attribute is H5Attribute h5Attribute1
-            ? h5Attribute1.Data
+        var data = attribute is H5Attribute h5Attribute
+            ? h5Attribute.Data
             : attribute;
 
         var (elementType, isScalar) = WriteUtils.GetElementType(data.GetType());
@@ -33,15 +33,35 @@ internal partial record class AttributeMessage
         object data,
         bool isScalar)
     {
-        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data!);
+        var (memoryData, memoryDims) 
+            = WriteUtils.ToMemory<T, TElement>(data ?? throw new Exception("This should never happen."));
+
         var type = memoryData.GetType();
 
+        /* datatype */
         var (datatype, encode) = 
             DatatypeMessage.Create(context, memoryData, isScalar);
 
-        var dataspace = attribute is H5Attribute h5Attribute2
-            ? DataspaceMessage.Create(dataDimensions, h5Attribute2.Dimensions)
-            : DataspaceMessage.Create(dataDimensions, default);
+        /* dataspace */
+        var dataspace = attribute is H5Attribute h5Attribute
+
+            ? DataspaceMessage.Create(
+                fileDimensions: h5Attribute.Dimensions ?? memoryDims 
+                    ?? throw new Exception("This should never happen."))
+
+            : DataspaceMessage.Create(
+                fileDimensions: memoryDims
+                    ?? throw new Exception("This should never happen."));
+
+        /* validation */
+        var fileTotalSize = dataspace.Dimensions
+            .Aggregate(1UL, (x, y) => x * y);
+
+        var memoryTotalSize = (memoryDims ?? throw new Exception("This should never happen."))
+            .Aggregate(1UL, (x, y) => x * y);
+
+        if (memoryDims.Any() && fileTotalSize != memoryTotalSize)
+            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
 
         // attribute
         // TODO avoid creation of system memory stream too often

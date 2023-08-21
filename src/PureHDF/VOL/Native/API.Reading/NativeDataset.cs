@@ -927,22 +927,15 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         /* file selection */
         if (fileSelection is null || fileSelection is AllSelection)
         {
-            switch (InternalDataspace.Type)
+            fileSelection = InternalDataspace.Type switch
             {
-                case DataspaceType.Scalar:
-                case DataspaceType.Simple:
+                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
+                    rank: datasetDims.Length,
+                    starts: new ulong[datasetDims.Length],
+                    blocks: datasetDims),
 
-                    var starts = datasetDims.ToArray();
-                    starts.AsSpan().Clear();
-
-                    fileSelection = new HyperslabSelection(rank: datasetDims.Length, starts: starts, blocks: datasetDims);
-
-                    break;
-
-                case DataspaceType.Null:
-                default:
-                    throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.");
-            }
+                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
+            };
         }
 
         /* memory dims */
@@ -954,7 +947,10 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         memoryDims ??= new ulong[] { sourceElementCount };
 
         /* memory selection */
-        memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
+        memorySelection ??= new HyperslabSelection(
+            rank: memoryDims.Length, 
+            starts: new ulong[memoryDims.Length], 
+            blocks: memoryDims);
 
         /* target buffer */
         var destinationElementCount = MathUtils.CalculateSize(memoryDims);
@@ -963,7 +959,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         EnsureBuffer(destination, destinationElementCountScaled, out var optionalDestinationArray);
         var destinationMemory = optionalDestinationArray ?? destination;
 
-        /* copy info */
+        /* decode info */
         var decodeInfo = new DecodeInfo<TResult>(
             datasetDims,
             datasetChunkDims,
@@ -979,7 +975,11 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         );
 
         await SelectionUtils
-            .DecodeAsync(reader, datasetChunkDims.Length, memoryDims.Length, decodeInfo)
+            .DecodeAsync(
+                reader, 
+                datasetChunkDims.Length, 
+                memoryDims.Length, 
+                decodeInfo)
             .ConfigureAwait(false);
 
         return optionalDestinationArray;

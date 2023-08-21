@@ -11,7 +11,13 @@ public partial class H5NativeWriter : IDisposable
     /// <typeparam name="T">The data type.</typeparam>
     /// <param name="dataset">The dataset to write data to.</param>
     /// <param name="data">The data to write.</param>
-    public void Write<T>(H5Dataset<T> dataset, T data)
+    /// <param name="memorySelection">The memory selection.</param>
+    /// <param name="fileSelection">The file selection.</param>
+    public void Write<T>(
+        H5Dataset<T> dataset, 
+        T data,
+        Selection? memorySelection = default,
+        Selection? fileSelection = default)
     {
         if (!Context.DatasetToInfoMap.TryGetValue(dataset, out var info))
             throw new Exception("The provided dataset does not belong to this file.");
@@ -21,7 +27,14 @@ public partial class H5NativeWriter : IDisposable
         // TODO cache this
         var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        method.Invoke(this, new object?[] { info.H5D, info.Encode, data });
+        method.Invoke(this, new object?[] 
+        { 
+            info.H5D, 
+            info.Encode, 
+            data,
+            memorySelection,
+            fileSelection
+        });
     }
 
     #region IDisposable

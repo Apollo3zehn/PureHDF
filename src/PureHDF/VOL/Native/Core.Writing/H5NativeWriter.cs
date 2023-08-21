@@ -196,16 +196,23 @@ partial class H5NativeWriter
         T data,
         bool isScalar)
     {
-        var (memoryData, dataDimensions) = WriteUtils.ToMemory<T, TElement>(data);
+        var (memoryData, memoryDims) = WriteUtils.ToMemory<T, TElement>(data);
 
         // datatype
-        var (datatype, encode) = 
+        var (datatype, encode) =
             DatatypeMessage.Create(Context, memoryData, isScalar);
 
         // dataspace
         var dataspace = dataset is H5Dataset h5Dataset
-            ? DataspaceMessage.Create(dataDimensions, h5Dataset.Dimensions)
-            : DataspaceMessage.Create(dataDimensions, default);
+
+            ? DataspaceMessage.Create(
+                fileDimensions: 
+                    h5Dataset.Dimensions ?? memoryDims ?? 
+                    throw new Exception("This should never happen."))
+
+            : DataspaceMessage.Create(
+                fileDimensions: memoryDims ??
+                    throw new Exception("This should never happen."));
 
         // chunk dimensions / filters
         var chunkDimensions = default(uint[]);
@@ -236,9 +243,9 @@ partial class H5NativeWriter
 
         if (filters is not null)
             filterPipeline = FilterPipelineMessage.Create(
-                dataset, 
-                datatype.Size, 
-                chunkDimensions!, 
+                dataset,
+                datatype.Size,
+                chunkDimensions!,
                 filters);
 
         // data layout
@@ -330,11 +337,19 @@ partial class H5NativeWriter
         h5d.Initialize();
 
         if (!memoryData.Equals(default))
-            WriteData(h5d, encode, memoryData);
+        {
+            WriteData(
+                h5d,
+                encode,
+                memoryData,
+                dataset.MemorySelection,
+                dataset.FileSelection,
+                memoryDims ?? throw new Exception("This should never happen."));
+        }
 
         Context.DatasetToInfoMap[dataset] = (h5d, encode);
 
-        /* Note: Eensures that the chunk cache is flushed and all 
+        /* Note: Ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.
          */
         if (h5d is H5D_Chunk chunk)
@@ -352,17 +367,31 @@ partial class H5NativeWriter
     private static void InternalWriteDataset<T, TElement>(
         H5D_Base h5d,
         EncodeDelegate<TElement> encode,
-        T data)
+        T data,
+        Selection? memorySelection,
+        Selection? fileSelection)
     {
-        var (memoryData, _) = WriteUtils.ToMemory<T, TElement>(data);
+        var (memoryData, memoryDims) = WriteUtils.ToMemory<T, TElement>(data);
 
-        WriteData(h5d, encode, memoryData);
+        if (!memoryData.Equals(default))
+        {
+            WriteData(
+                h5d,
+                encode,
+                memoryData,
+                fileSelection,
+                memorySelection,
+                memoryDims ?? throw new Exception("This should never happen."));
+        }
     }
 
     private static void WriteData<TElement>(
         H5D_Base h5d,
         EncodeDelegate<TElement> encode,
-        Memory<TElement> memoryData)
+        Memory<TElement> memoryData,
+        Selection? memorySelection,
+        Selection? fileSelection,
+        ulong[] memoryDims)
     {
         var datasetInfo = h5d.Dataset;
         var dataspace = datasetInfo.Space;
@@ -371,36 +400,54 @@ partial class H5NativeWriter
         /* buffer provider */
         IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
 
+        /* memory dims */
+        memoryDims = h5d.Dataset.Space.Type switch
+        {
+            DataspaceType.Scalar => new ulong[] { 1 },
+            DataspaceType.Simple => memoryDims,
+            _ => throw new Exception($"Unsupported data space type '{h5d.Dataset.Space.Type}'.")
+        };
+
         /* memory selection */
-        var memoryDimensions = dataspace.Dimensions.Length == 0 
-            ? new ulong[] { 1 } 
-            : dataspace.Dimensions;
+        if (memorySelection is null || memorySelection is AllSelection)
+        {
+            memorySelection = h5d.Dataset.Space.Type switch
+            {
+                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
+                    rank: memoryDims.Length,
+                    starts: new ulong[memoryDims.Length],
+                    blocks: memoryDims),
 
-        var memoryStarts = memoryDimensions.ToArray();
-        memoryStarts.AsSpan().Clear();
+                _ => throw new Exception($"Unsupported data space type '{h5d.Dataset.Space.Type}'.")
+            };
+        }
 
-        var memorySelection = new HyperslabSelection(
-            rank: memoryDimensions.Length, 
-            starts: memoryStarts,
-            blocks: memoryDimensions);
+        /* dataset dims */
+        var datasetDims = datasetInfo.GetDatasetDims();
 
-        /* file dims */
-        var fileDims = datasetInfo.GetDatasetDims();
-
-        /* file chunk dims */
-        var fileChunkDims = h5d.GetChunkDims();
+        /* dataset chunk dims */
+        var datasetChunkDims = h5d.GetChunkDims();
 
         /* file selection */
-        var fileStarts = fileDims.ToArray();
-        fileStarts.AsSpan().Clear();
+        if (fileSelection is null || fileSelection is AllSelection)
+        {
+            fileSelection = h5d.Dataset.Space.Type switch
+            {
+                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
+                    rank: datasetDims.Length,
+                    starts: new ulong[datasetDims.Length],
+                    blocks: datasetDims),
 
-        var fileSelection = new HyperslabSelection(rank: fileDims.Length, starts: fileStarts, blocks: fileDims);
+                _ => throw new Exception($"Unsupported data space type '{h5d.Dataset.Space.Type}'.")
+            };
+        }
 
+        /* encode info */
         var encodeInfo = new EncodeInfo<TElement>(
-            SourceDims: memoryDimensions,
-            SourceChunkDims: memoryDimensions,
-            TargetDims: fileDims,
-            TargetChunkDims: fileChunkDims,
+            SourceDims: memoryDims,
+            SourceChunkDims: memoryDims,
+            TargetDims: datasetDims,
+            TargetChunkDims: datasetChunkDims,
             SourceSelection: memorySelection,
             TargetSelection: fileSelection,
             GetSourceBuffer: indiced => memoryData,
@@ -411,7 +458,10 @@ partial class H5NativeWriter
         );
 
         /* encode data */
-        SelectionUtils.Encode(memorySelection.Rank, fileSelection.Rank, encodeInfo);
+        SelectionUtils.Encode(
+            memoryDims.Length,
+            datasetChunkDims.Length,
+            encodeInfo);
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)
