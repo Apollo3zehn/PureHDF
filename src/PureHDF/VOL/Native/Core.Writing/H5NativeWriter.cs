@@ -203,16 +203,14 @@ partial class H5NativeWriter
             DatatypeMessage.Create(Context, memoryData, isScalar);
 
         // dataspace
-        var dataspace = dataset is H5Dataset h5Dataset
+        var fileDimensions = dataset.FileDims is null
+            ? dataset.MemorySelection is null
+                ? memoryDims ?? throw new Exception("This should never happen.")
+                : new ulong[] { dataset.MemorySelection.TotalElementCount }
+            : dataset.FileDims;
 
-            ? DataspaceMessage.Create(
-                fileDimensions: 
-                    h5Dataset.Dimensions ?? memoryDims ?? 
-                    throw new Exception("This should never happen."))
-
-            : DataspaceMessage.Create(
-                fileDimensions: memoryDims ??
-                    throw new Exception("This should never happen."));
+        var dataspace = DataspaceMessage.Create(
+            fileDimensions: fileDimensions);
 
         // chunk dimensions / filters
         var chunkDimensions = default(uint[]);

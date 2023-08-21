@@ -46,7 +46,7 @@ public partial class DatasetTests
     {
         // Arrange
         var data = SharedTestData.HugeData.AsMemory(0, ushort.MaxValue + 1);
-        var dataset = new H5Dataset<Memory<int>>(dimensions: new ulong[] { (ulong)data.Length });
+        var dataset = new H5Dataset<Memory<int>>(fileDims: new ulong[] { (ulong)data.Length });
 
         var file = new H5File
         {

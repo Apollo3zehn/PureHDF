@@ -34,7 +34,7 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                dimensions: new[] { (ulong)data.Length },
+                fileDims: new[] { (ulong)data.Length },
                 chunks: new[] { (uint)data.Length })
         };
 
@@ -75,7 +75,7 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            dimensions: new ulong[] { (ulong)data.Length },
+            fileDims: new ulong[] { (ulong)data.Length },
             chunks: new[] { (uint)data.Length }
         );
 
@@ -159,7 +159,7 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            dimensions: new ulong[] { (ulong)data.Length }, 
+            fileDims: new ulong[] { (ulong)data.Length }, 
             chunks: new[] { 10U }
         );
 
@@ -205,7 +205,7 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                dimensions: new[] { 10UL, 10UL },
+                fileDims: new[] { 10UL, 10UL },
                 chunks: new[] { 3U, 4U })
         };
 
@@ -243,7 +243,7 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                dimensions: new[] { 10UL, 10UL },
+                fileDims: new[] { 10UL, 10UL },
                 chunks: new[] { 3U, 4U })
         };
 
@@ -285,7 +285,7 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            dimensions: new[] { 10UL, 10UL },
+            fileDims: new[] { 10UL, 10UL },
             chunks: new[] { 3U, 4U }
         );
 

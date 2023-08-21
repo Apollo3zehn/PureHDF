@@ -46,7 +46,7 @@ public partial class DatasetTests
     {
         // Arrange
         var data = SharedTestData.SmallData;
-        var dataset = new H5Dataset<int[]>(dimensions: new ulong[] { (ulong)data.Length });
+        var dataset = new H5Dataset<int[]>(fileDims: new ulong[] { (ulong)data.Length });
 
         var file = new H5File
         {

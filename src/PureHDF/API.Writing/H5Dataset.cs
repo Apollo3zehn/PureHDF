@@ -9,25 +9,25 @@ public class H5Dataset : H5AttributableObject
     /// Initializes a new instance of the <see cref="H5Dataset"/> class.
     /// </summary>
     /// <param name="data">The dataset data.</param>
-    /// <param name="dimensions">The dataset dimensions.</param>
     /// <param name="chunks">The dataset's chunk dimensions.</param>
     /// <param name="memorySelection">The memory selection.</param>
     /// <param name="fileSelection">The file selection.</param>
+    /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
     public H5Dataset(
         object data,
-        ulong[]? dimensions = default,
         uint[]? chunks = default,
         Selection? memorySelection = default,
         Selection? fileSelection = default,
+        ulong[]? fileDims = default,
         H5DatasetCreation datasetCreation = default) 
         : this(
             data.GetType(), 
             data, 
-            dimensions, 
-            chunks, 
+            chunks,
             memorySelection,
             fileSelection,
+            fileDims, 
             datasetCreation)
     {
         //
@@ -36,32 +36,32 @@ public class H5Dataset : H5AttributableObject
     internal H5Dataset(
         Type type,
         object? data,
-        ulong[]? dimensions,
         uint[]? chunks,
         Selection? memorySelection,
         Selection? fileSelection,
+        ulong[]? fileDims,
         H5DatasetCreation datasetCreation)
     {
         Type = type;
         Data = data;
-        Dimensions = dimensions;
         Chunks = chunks;
         MemorySelection = memorySelection;
         FileSelection = fileSelection;
+        FileDims = fileDims;
         DatasetCreation = datasetCreation;
     }
 
     internal Type Type { get; init; }
 
     internal object? Data { get; }
-    
-    internal ulong[]? Dimensions { get; }
 
     internal uint[]? Chunks { get; }
 
     internal Selection? MemorySelection { get; }
     
     internal Selection? FileSelection { get; }
+
+    internal ulong[]? FileDims { get; }
 
     internal H5DatasetCreation DatasetCreation { get; }
 }
@@ -75,20 +75,20 @@ public class H5Dataset<T> : H5Dataset
     /// <summary>
     /// Initializes a new instance of the <see cref="H5Dataset"/> class.
     /// </summary>
-    /// <param name="dimensions">The dataset dimensions.</param>
+    /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
     /// <param name="chunks">The dataset's chunk dimensions.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
     public H5Dataset(
-        ulong[] dimensions,
+        ulong[] fileDims,
         uint[]? chunks = default,
         H5DatasetCreation datasetCreation = default)
         : base(
             typeof(T), 
             default, 
-            dimensions, 
             chunks, 
             default,
             default,
+            fileDims, 
             datasetCreation)
     {
         //
