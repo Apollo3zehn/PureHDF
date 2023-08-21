@@ -1,4 +1,6 @@
-﻿namespace PureHDF;
+﻿using System.Buffers;
+
+namespace PureHDF;
 
 internal abstract class H5D_Chunk4 : H5D_Chunk
 {
@@ -43,6 +45,31 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             {
                 WriteChunkInfos[i].Address = Superblock.UndefinedAddress;
             }
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        if (Chunked4.IsDirty)
+        {
+            // Encode ChunkedStoragePropertyDescriptions
+            WriteContext.Driver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
+            Chunked4.Encode(WriteContext.Driver);
+
+            // Update object header checksum
+            var (objectHeaderAddress, length) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+            var lengthWithoutChecksum = length - sizeof(uint);
+            using var memorOwner = MemoryPool<byte>.Shared.Rent(lengthWithoutChecksum);
+            var checksumData = memorOwner.Memory.Span.Slice(0, lengthWithoutChecksum);
+
+            WriteContext.Driver.Seek(objectHeaderAddress, SeekOrigin.Begin);
+            WriteContext.Driver.Read(checksumData);
+
+            var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+
+            WriteContext.Driver.Write(checksum);
         }
     }
 

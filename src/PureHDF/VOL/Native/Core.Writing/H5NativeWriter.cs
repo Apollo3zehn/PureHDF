@@ -32,7 +32,7 @@ partial class H5NativeWriter
             GlobalHeapManager: globalHeapManager,
             WriteOptions: options,
             DatasetToInfoMap: new(),
-            DatasetToObjectHeaderMap: new(),
+            DatasetInfoToObjectHeaderMap: new(),
             TypeToMessageMap: new(),
             ObjectToAddressMap: new(),
             ShortlivedStream: new(memory: default)
@@ -344,7 +344,7 @@ partial class H5NativeWriter
         var address = objectHeader.Encode(Context);
         var end = (ulong)Context.Driver.Position;
 
-        Context.DatasetToObjectHeaderMap[dataset] = (address, end - address);
+        Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)address, (int)(end - address));
 
         return address;
     }

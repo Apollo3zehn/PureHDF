@@ -140,7 +140,11 @@ internal record class ChunkedStoragePropertyDescription4(
     ulong[] DimensionSizes,
     IndexingInformation IndexingInformation
 ) : ChunkedStoragePropertyDescription(Rank)
-{   
+{
+    public long EncodeAddress { get; private set; }
+
+    public bool IsDirty { get; set; }
+
     public static ChunkedStoragePropertyDescription4 Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
@@ -206,6 +210,8 @@ internal record class ChunkedStoragePropertyDescription4(
 
     public override void Encode(H5DriverBase driver)
     {
+        EncodeAddress = driver.Position;
+
         // flags
         driver.Write((byte)Flags);
 
@@ -241,6 +247,8 @@ internal record class ChunkedStoragePropertyDescription4(
 
         // address
         driver.Write(Address);
+
+        IsDirty = false;
     }
 }
 
