@@ -25,7 +25,7 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 7. [Reading Multidimensional Data](#7-reading-multidimensional-data)
 8. [Concurrency](#8-concurrency)
 9. [Amazon S3](#9-amazon-s3)
-10. [Highly Scalable Data Service (HSDS)](#10-highly-scalable-data-service-HSDS)
+10. [Highly Scalable Data Service (HSDS)](#10-highly-scalable-data-service-hsds)
 11. [Intellisense](#11-intellisense)
 12. [Unsupported Features](#12-unsupported-features)
 13. [Comparison Table](#13-comparison-table)

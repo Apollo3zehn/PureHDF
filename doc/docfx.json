@@ -5,7 +5,8 @@
         {
           "src": "../",
           "files": [
-            "src/**.csproj"
+            "src/PureHDF/PureHDF.csproj",
+            "src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj"
           ]
         }
       ],
@@ -13,21 +14,29 @@
       "filter": "filterConfig.yml",
       "properties": {
         "TargetFramework": "net70"
-      }
+      },
+      "includePrivateMembers": false,
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "noRestore": false,
+      "namespaceLayout": "flattened",
+      "memberLayout": "samePage",
+      "EnumSortOrder": "alphabetic",
+      "allowCompilationErrors": false
     }
   ],
   "build": {
     "content": [
       {
         "files": [
-          "*.md",
-          "toc.yml"
+          "api/**.yml",
+          "api/index.md"
         ]
       },
       {
         "files": [
-          "api/**.yml",
-          "api/index.md"
+          "toc.yml",
+          "*.md"
         ]
       }
     ],
@@ -38,7 +47,7 @@
         ]
       }
     ],
-    "dest": "_site",
+    "output": "_site",
     "globalMetadata": {
       "_appTitle": "PureHDF",
       "_appFooter": "Copyright © 2023 Vincent Wilms",
@@ -46,7 +55,12 @@
       "_appLogoPath": "images/icon.svg"
     },
     "fileMetadataFiles": [],
-    "template":["default","templates/material"],
-    "markdownEngineName": "markdig"
+    "template": [
+      "default",
+      "modern"
+    ],
+    "postProcessors": [],
+    "keepFileLink": false,
+    "disableGitFeatures": false
   }
 }

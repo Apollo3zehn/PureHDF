@@ -90,6 +90,7 @@ public interface IH5Dataset : IH5AttributableObject
     /// <summary>
     /// Reads the variable-length sequence data.
     /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
@@ -163,6 +164,7 @@ public interface IH5Dataset : IH5AttributableObject
     /// <summary>
     /// Reads the variable-length sequence data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
     /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>

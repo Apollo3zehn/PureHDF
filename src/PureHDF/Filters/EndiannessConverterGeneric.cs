@@ -2,17 +2,8 @@
 
 namespace PureHDF.Filters;
 
-/// <summary>
-/// A helper class to convert the endianness of data using hardware acceleration if available.
-/// </summary>
-public static class EndiannessConverterGeneric
+internal static class EndiannessConverterGeneric
 {
-    /// <summary>
-    /// Converts the endianness of the given source buffer into the destination buffer.
-    /// </summary>
-    /// <param name="bytesOfType">The number of bytes of the underlying data type.</param>
-    /// <param name="source">The source buffer.</param>
-    /// <param name="destination">The destination buffer.</param>
     public unsafe static void Convert(int bytesOfType, Span<byte> source, Span<byte> destination)
     {
         // Actually, only the generic algorithm requires a dedicated destination buffer.
@@ -25,7 +16,7 @@ public static class EndiannessConverterGeneric
         // Concluding, it is easier to work with independent source and destination buffers.
         fixed (byte* src = source, dest = destination)
         {
-            EndiannessConverterGeneric.Convert(bytesOfType, 0, source.Length, src, dest);
+            Convert(bytesOfType, 0, source.Length, src, dest);
         }
     }
 

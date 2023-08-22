@@ -11,7 +11,7 @@ internal class EndiannessConverterAvx2
     {
         fixed (byte* src = source, dest = destination)
         {
-            EndiannessConverterAvx2.Convert(bytesOfType, source.Length, src, dest);
+            Convert(bytesOfType, source.Length, src, dest);
         }
     }
 
