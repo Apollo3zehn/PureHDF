@@ -1,0 +1,437 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IH5Attribute
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IH5Attribute
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.IH5Attribute">
+
+
+
+  <h1 id="PureHDF_IH5Attribute" data-uid="PureHDF.IH5Attribute" class="text-break">
+    Interface IH5Attribute
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>An HDF5 attribute.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IH5Attribute</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_IH5Attribute_Name_" data-uid="PureHDF.IH5Attribute.Name*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_Name" data-uid="PureHDF.IH5Attribute.Name">
+  Name
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the attribute name.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string Name { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5Attribute_Space_" data-uid="PureHDF.IH5Attribute.Space*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_Space" data-uid="PureHDF.IH5Attribute.Space">
+  Space
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the data space.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IH5Dataspace Space { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5Dataspace.html">IH5Dataspace</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5Attribute_Type_" data-uid="PureHDF.IH5Attribute.Type*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_Type" data-uid="PureHDF.IH5Attribute.Type">
+  Type
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IH5DataType Type { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5DataType.html">IH5DataType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_IH5Attribute_ReadCompound_" data-uid="PureHDF.IH5Attribute.ReadCompound*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_ReadCompound" data-uid="PureHDF.IH5Attribute.ReadCompound">
+  ReadCompound()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the compound data. This is the slowest but most flexible option to read compound data as no prior type knowledge is required.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">Dictionary&lt;string, object?&gt;[] ReadCompound()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;[]</dt>
+    <dd><p>The read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5Attribute_ReadCompound_" data-uid="PureHDF.IH5Attribute.ReadCompound*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_ReadCompound__1_System_Func_System_Reflection_FieldInfo_System_String__" data-uid="PureHDF.IH5Attribute.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String})">
+  ReadCompound&lt;T&gt;(Func&lt;FieldInfo, string?&gt;?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the compound data. The type parameter <code class="typeparamref">T</code> must match the <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/struct">struct</a> constraint. Nested fields with nullable references are not supported.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T[] ReadCompound&lt;T&gt;(Func&lt;FieldInfo, string?&gt;? getName = null) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>getName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>An optional function to map the field names of <code class="typeparamref">T</code> to the member names of the HDF5 compound type.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt>T[]</dt>
+    <dd><p>The read data as array of <code class="typeparamref">T</code>.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5Attribute_ReadString_" data-uid="PureHDF.IH5Attribute.ReadString*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_ReadString" data-uid="PureHDF.IH5Attribute.ReadString">
+  ReadString()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the string data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">string[] ReadString()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>[]</dt>
+    <dd><p>The read data as array of <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5Attribute_ReadVariableLength_" data-uid="PureHDF.IH5Attribute.ReadVariableLength*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_ReadVariableLength__1_PureHDF_Selection_PureHDF_Selection_System_UInt64___" data-uid="PureHDF.IH5Attribute.ReadVariableLength``1(PureHDF.Selection,PureHDF.Selection,System.UInt64[])">
+  ReadVariableLength&lt;T&gt;(Selection?, Selection?, ulong[]?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the variable-length sequence data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T[]?[] ReadVariableLength&lt;T&gt;(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : struct</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt>T[][]</dt>
+    <dd><p>The read data as jagged array of <code class="typeparamref">T</code>.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5Attribute_Read_" data-uid="PureHDF.IH5Attribute.Read*"></a>
+
+  <h3 id="PureHDF_IH5Attribute_Read__1" data-uid="PureHDF.IH5Attribute.Read``1">
+  Read&lt;T&gt;()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data. The type parameter <code class="typeparamref">T</code> must match the <a href="https://learn.microsoft.com/dotnet/csharp/programming-guide/generics/constraints-on-type-parameters#unmanaged-constraint">unmanaged</a> constraint.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">T[] Read&lt;T&gt;() where T : unmanaged</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt>T[]</dt>
+    <dd><p>The read data as array of <code class="typeparamref">T</code>.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

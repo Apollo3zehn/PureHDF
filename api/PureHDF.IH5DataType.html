@@ -1,0 +1,521 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IH5DataType
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IH5DataType
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.IH5DataType">
+
+
+
+  <h1 id="PureHDF_IH5DataType" data-uid="PureHDF.IH5DataType" class="text-break">
+    Interface IH5DataType
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>An HDF5 data type.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IH5DataType</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_IH5DataType_Array_" data-uid="PureHDF.IH5DataType.Array*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Array" data-uid="PureHDF.IH5DataType.Array">
+  Array
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the array data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IArrayType Array { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IArrayType.html">IArrayType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_BitField_" data-uid="PureHDF.IH5DataType.BitField*"></a>
+
+  <h3 id="PureHDF_IH5DataType_BitField" data-uid="PureHDF.IH5DataType.BitField">
+  BitField
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the bitfield data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IBitFieldType BitField { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IBitFieldType.html">IBitFieldType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_Class_" data-uid="PureHDF.IH5DataType.Class*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Class" data-uid="PureHDF.IH5DataType.Class">
+  Class
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the data type class.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">H5DataTypeClass Class { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.H5DataTypeClass.html">H5DataTypeClass</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_Compound_" data-uid="PureHDF.IH5DataType.Compound*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Compound" data-uid="PureHDF.IH5DataType.Compound">
+  Compound
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the compound data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">ICompoundType Compound { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.ICompoundType.html">ICompoundType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_Enumeration_" data-uid="PureHDF.IH5DataType.Enumeration*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Enumeration" data-uid="PureHDF.IH5DataType.Enumeration">
+  Enumeration
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the enumeration data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IEnumerationType Enumeration { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IEnumerationType.html">IEnumerationType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_FixedPoint_" data-uid="PureHDF.IH5DataType.FixedPoint*"></a>
+
+  <h3 id="PureHDF_IH5DataType_FixedPoint" data-uid="PureHDF.IH5DataType.FixedPoint">
+  FixedPoint
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the fixed-point data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IFixedPointType FixedPoint { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IFixedPointType.html">IFixedPointType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_FloatingPoint_" data-uid="PureHDF.IH5DataType.FloatingPoint*"></a>
+
+  <h3 id="PureHDF_IH5DataType_FloatingPoint" data-uid="PureHDF.IH5DataType.FloatingPoint">
+  FloatingPoint
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the floating-point data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IFloatingPointType FloatingPoint { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IFloatingPointType.html">IFloatingPointType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_Opaque_" data-uid="PureHDF.IH5DataType.Opaque*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Opaque" data-uid="PureHDF.IH5DataType.Opaque">
+  Opaque
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the opaque data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IOpaqueType Opaque { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IOpaqueType.html">IOpaqueType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_Reference_" data-uid="PureHDF.IH5DataType.Reference*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Reference" data-uid="PureHDF.IH5DataType.Reference">
+  Reference
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the reference data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IReferenceType Reference { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IReferenceType.html">IReferenceType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_Size_" data-uid="PureHDF.IH5DataType.Size*"></a>
+
+  <h3 id="PureHDF_IH5DataType_Size" data-uid="PureHDF.IH5DataType.Size">
+  Size
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the size of the data type in bytes.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">int Size { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_String_" data-uid="PureHDF.IH5DataType.String*"></a>
+
+  <h3 id="PureHDF_IH5DataType_String" data-uid="PureHDF.IH5DataType.String">
+  String
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the string data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IStringType String { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IStringType.html">IStringType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_IH5DataType_VariableLength_" data-uid="PureHDF.IH5DataType.VariableLength*"></a>
+
+  <h3 id="PureHDF_IH5DataType_VariableLength" data-uid="PureHDF.IH5DataType.VariableLength">
+  VariableLength
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the variable-length data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">IVariableLengthType VariableLength { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IVariableLengthType.html">IVariableLengthType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

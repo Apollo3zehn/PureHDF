@@ -1,2509 +1,900 @@
 {
   "homepages": [],
   "source_base_path": "/home/runner/work/PureHDF/PureHDF/doc",
-  "xrefmap": [
-    "xrefmap.yml",
-    ".NET Standard 2.0.xrefmap.yml",
-    ".NET Standard 2.1.xrefmap.yml",
-    ".NET 5.xrefmap.yml",
-    ".NET 6.xrefmap.yml"
-  ],
+  "xrefmap": "xrefmap.yml",
   "files": [
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.ArrayExtensions.yml",
+      "source_relative_path": "api/PureHDF.AllSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.ArrayExtensions.html",
-          "hash": "8hDWegNMT5EyveFlRLtUdqybwR9IPwsi+tCtN4M8tOE="
+          "relative_path": "api/PureHDF.AllSelection.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.DelegateSelection.yml",
+      "source_relative_path": "api/PureHDF.ArrayExtensions.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.DelegateSelection.html",
-          "hash": "sj+vleoYCUHy1OJ50P/w1gQVikMsbyVm9urgYDN4C10="
+          "relative_path": "api/PureHDF.ArrayExtensions.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.EndiannessConverterGeneric.yml",
+      "source_relative_path": "api/PureHDF.CompoundMember.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.EndiannessConverterGeneric.html",
-          "hash": "SVd21rCqnCMxqw29BPiZTckUJmMrtOi8iGuA48/4Vg4="
+          "relative_path": "api/PureHDF.CompoundMember.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.FilterFunc.yml",
+      "source_relative_path": "api/PureHDF.DelegateSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.FilterFunc.html",
-          "hash": "uGkIRT1f/OC+ljyAoVloFx301z73zkk+gj8Ufk8h0uM="
+          "relative_path": "api/PureHDF.DelegateSelection.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5AttributableObject.yml",
+      "source_relative_path": "api/PureHDF.Filters.BZip2SharpZipLibFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5AttributableObject.html",
-          "hash": "2zqogsmMOx5bs97MQqUwILLMkN2nQ7T3CYWRR3NzRoI="
+          "relative_path": "api/PureHDF.Filters.BZip2SharpZipLibFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Attribute.yml",
+      "source_relative_path": "api/PureHDF.Filters.Blosc2Filter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Attribute.html",
-          "hash": "STMCjElVHz1oDZVW7Q0fRXooEHG1ZeFaCRvpXPmFYyc="
+          "relative_path": "api/PureHDF.Filters.Blosc2Filter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5CommitedDatatype.yml",
+      "source_relative_path": "api/PureHDF.Filters.Blosc2ShuffleMode.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5CommitedDatatype.html",
-          "hash": "SJ6MbsAti7chsqXuBRaBAMvb7ICNcnbfK6Z6m6ML5rY="
+          "relative_path": "api/PureHDF.Filters.Blosc2ShuffleMode.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Constants.yml",
+      "source_relative_path": "api/PureHDF.Filters.DeflateFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Constants.html",
-          "hash": "W6rZeOSZWgcQKOF1ed5vXjBQP7Igs88DDakWwigQSuw="
+          "relative_path": "api/PureHDF.Filters.DeflateFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataLayout.yml",
+      "source_relative_path": "api/PureHDF.Filters.DeflateISALFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataLayout.html",
-          "hash": "saDYc+5X6oAhivtU53KQY+SI0IE66n1e41HySd7yxqA="
+          "relative_path": "api/PureHDF.Filters.DeflateISALFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataLayoutClass.yml",
+      "source_relative_path": "api/PureHDF.Filters.DeflateSharpZipLibFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataLayoutClass.html",
-          "hash": "NISAeGxEpa/MDCrdiTwIbQucoi4+VI8w6PEh/1RMGmc="
+          "relative_path": "api/PureHDF.Filters.DeflateSharpZipLibFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.ArrayType.yml",
+      "source_relative_path": "api/PureHDF.Filters.FilterInfo.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.ArrayType.html",
-          "hash": "cIEKyzKikLuByFYOM6zfvHOQW/5NWTZ6+9QZsLUurJ8="
+          "relative_path": "api/PureHDF.Filters.FilterInfo.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.BitFieldType.yml",
+      "source_relative_path": "api/PureHDF.Filters.Fletcher32Filter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.BitFieldType.html",
-          "hash": "53FafVkHlA5FN3N1cVaTKEFxed1rfUT7qUo4epZARFk="
+          "relative_path": "api/PureHDF.Filters.Fletcher32Filter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.CompoundType.CompoundMember.yml",
+      "source_relative_path": "api/PureHDF.Filters.H5Filter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "DnlCcDiFophqdicq+BPGPEv+KoRHKTCcOs4W3D8VhNI="
+          "relative_path": "api/PureHDF.Filters.H5Filter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.CompoundType.yml",
+      "source_relative_path": "api/PureHDF.Filters.H5FilterFlags.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.CompoundType.html",
-          "hash": "F7TtyIn+iOWuqurxV89kIID5Y7DGr38xw2ub4gtTP1g="
+          "relative_path": "api/PureHDF.Filters.H5FilterFlags.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.EnumerationType.yml",
+      "source_relative_path": "api/PureHDF.Filters.IH5Filter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "EFFvnrEAKdIuUaOIHdPPtQto9hSUr70yS1wAwuJ5GR8="
+          "relative_path": "api/PureHDF.Filters.IH5Filter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.FixedPointType.yml",
+      "source_relative_path": "api/PureHDF.Filters.LzfFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.FixedPointType.html",
-          "hash": "s0b4COLFPrSIRpvNZwTV89G8TPi9wB0tnfVZMnFOSpw="
+          "relative_path": "api/PureHDF.Filters.LzfFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.FloatingPointType.yml",
+      "source_relative_path": "api/PureHDF.Filters.NbitFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.FloatingPointType.html",
-          "hash": "s3lzGXX0n9HTnE88OiApGQ/KdmgJJeUGFO9E+IggpiU="
+          "relative_path": "api/PureHDF.Filters.NbitFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.OpaqueType.yml",
+      "source_relative_path": "api/PureHDF.Filters.ScaleOffsetFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "u0iLGjw1QHfZoJaY4Xj8C9fxE0xpxVb7ejPmdXVMGQg="
+          "relative_path": "api/PureHDF.Filters.ScaleOffsetFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.ReferenceType.yml",
+      "source_relative_path": "api/PureHDF.Filters.ShuffleFilter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "th6y0zrgnPEN1J6DNQr6bf3GgissnEje0/M8ZLv/HFc="
+          "relative_path": "api/PureHDF.Filters.ShuffleFilter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.StringType.yml",
+      "source_relative_path": "api/PureHDF.Filters.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.StringType.html",
-          "hash": "labxpbPs7y0Qx9n7stBB37p1DiPTMQOLvWe7zPPF5SI="
+          "relative_path": "api/PureHDF.Filters.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.VariableLengthType.yml",
+      "source_relative_path": "api/PureHDF.H5AttributableObject.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "niDDC9FIes2KBejRFoniEuJZhBLPDn/pKldJp0lyLt8="
+          "relative_path": "api/PureHDF.H5AttributableObject.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataType.yml",
+      "source_relative_path": "api/PureHDF.H5Attribute.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataType.html",
-          "hash": "FVrpeH4aAqJZ3wzQRw0HGKTasIbAhsLotuG+yRhyDKw="
+          "relative_path": "api/PureHDF.H5Attribute.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataTypeClass.yml",
+      "source_relative_path": "api/PureHDF.H5Constants.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataTypeClass.html",
-          "hash": "z6UwO+mFjIrjUsjj3NOgUTzFVJbZo7FOthszsP/bMcE="
+          "relative_path": "api/PureHDF.H5Constants.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Dataset.yml",
+      "source_relative_path": "api/PureHDF.H5DataLayoutClass.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Dataset.html",
-          "hash": "EJ9N3aoT72tL6m2nvb00nOFd/qXVAZ8uCPaLjs2z7mo="
+          "relative_path": "api/PureHDF.H5DataLayoutClass.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DatasetAccess.yml",
+      "source_relative_path": "api/PureHDF.H5DataTypeClass.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DatasetAccess.html",
-          "hash": "UubfXaUuWbzCg2H7iWWvqCSciceB7cQcW8/YUtnP3b8="
+          "relative_path": "api/PureHDF.H5DataTypeClass.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Dataspace.yml",
+      "source_relative_path": "api/PureHDF.H5Dataset-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Dataspace.html",
-          "hash": "PWZwc4VUu8xnZcfRS3+fGAyM0da4KOS0DwXxMZSugCs="
+          "relative_path": "api/PureHDF.H5Dataset-1.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5DataspaceType.yml",
+      "source_relative_path": "api/PureHDF.H5Dataset.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5DataspaceType.html",
-          "hash": "Q44NT2Kz/7Zu98N+ltLpb4xf5XPWePejRlx7A+wxfE0="
+          "relative_path": "api/PureHDF.H5Dataset.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5File.yml",
+      "source_relative_path": "api/PureHDF.H5DataspaceType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5File.html",
-          "hash": "ksxC5y5Fynk0pelL70hILwvJRRaOuv1vrU7Hz0Ibeus="
+          "relative_path": "api/PureHDF.H5DataspaceType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5FillValue.yml",
+      "source_relative_path": "api/PureHDF.H5File.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5FillValue.html",
-          "hash": "PiA3hcl30kztNdfQeTbGDBOI7sah3x9tP8kdpLp/VwU="
+          "relative_path": "api/PureHDF.H5File.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Filter.yml",
+      "source_relative_path": "api/PureHDF.H5Group.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Filter.html",
-          "hash": "2ZOqSnDeHfRZ2Jmf3WqzrAUqr6FQsKxtQqMgmbwDCK8="
+          "relative_path": "api/PureHDF.H5Group.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5FilterFlags.yml",
+      "source_relative_path": "api/PureHDF.H5NameAttribute.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5FilterFlags.html",
-          "hash": "J2E9a8+bkQO4dIaYxqlAODkO3bQx4Nkjdua6T/2pJbw="
+          "relative_path": "api/PureHDF.H5NameAttribute.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5FilterID.yml",
+      "source_relative_path": "api/PureHDF.H5NativeWriter.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5FilterID.html",
-          "hash": "//xUXCF5OMn/HjXyCgPwLwG5o/S1H8FzM32gMvrgNPA="
+          "relative_path": "api/PureHDF.H5NativeWriter.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Group.yml",
+      "source_relative_path": "api/PureHDF.H5NullDataset-1.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Group.html",
-          "hash": "N6Q+at8gdlub5S1OasKfGVx5rGGZhXtCGo/TdZMGJAM="
+          "relative_path": "api/PureHDF.H5NullDataset-1.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5LinkAccess.yml",
+      "source_relative_path": "api/PureHDF.H5Object.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5LinkAccess.html",
-          "hash": "og7W67Cy7Pk+64lNF5VHzf68ny8ns5/0qzfzGvWzfY0="
+          "relative_path": "api/PureHDF.H5Object.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5NameAttribute.yml",
+      "source_relative_path": "api/PureHDF.H5SourceGeneratorAttribute.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5NameAttribute.html",
-          "hash": "ZaY8bCb3yZoO6TbQ24JtfAJGkFZID0B4/QS5eIsJ86o="
+          "relative_path": "api/PureHDF.H5SourceGeneratorAttribute.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5Object.yml",
+      "source_relative_path": "api/PureHDF.H5StringLengthAttribute.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5Object.html",
-          "hash": "ANFR05rO5FQOEbLolBRYxmlxuIJorGtPKflTgPM8t8M="
+          "relative_path": "api/PureHDF.H5StringLengthAttribute.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5ObjectReference.yml",
+      "source_relative_path": "api/PureHDF.H5WriteOptions.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5ObjectReference.html",
-          "hash": "z+fu48VHM2KhtqMKf6IJGLXq9NbG3z3WV1fbDh12rKo="
+          "relative_path": "api/PureHDF.H5WriteOptions.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5RegionReference.yml",
+      "source_relative_path": "api/PureHDF.HyperslabSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5RegionReference.html",
-          "hash": "Z54iJG4SWSQcvWYr98bx2vW28HS6dOCjxienpnAFJrI="
+          "relative_path": "api/PureHDF.HyperslabSelection.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5SourceGeneratorAttribute.yml",
+      "source_relative_path": "api/PureHDF.IArrayType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5SourceGeneratorAttribute.html",
-          "hash": "plcSTP258azdMcMeuJncI9Q11BAXHSNsEVGl43DsZSw="
+          "relative_path": "api/PureHDF.IArrayType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.H5UnresolvedLink.yml",
+      "source_relative_path": "api/PureHDF.IBitFieldType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.H5UnresolvedLink.html",
-          "hash": "wkO3UGM1WsffKfRWZ7wgtdwJxboJjqh9slMF1GZz8LA="
+          "relative_path": "api/PureHDF.IBitFieldType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.HyperslabSelection.yml",
+      "source_relative_path": "api/PureHDF.ICompoundType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.HyperslabSelection.html",
-          "hash": "BdIcBoS4q/4IwupakFauZ0zc2XCtOokmzMCfM9/YjbA="
+          "relative_path": "api/PureHDF.ICompoundType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.IChunkCache.yml",
+      "source_relative_path": "api/PureHDF.IDatasetStream.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.IChunkCache.html",
-          "hash": "o3AbpTK9aqIkwVztXo0kQFdONS/rF3vn7UIAVZ0U+Lc="
+          "relative_path": "api/PureHDF.IDatasetStream.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.PointSelection.yml",
+      "source_relative_path": "api/PureHDF.IEnumerationType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.PointSelection.html",
-          "hash": "a7eYOpOJkH1oPCljtOhsmsrbFChi6YZfhSzZ94rLYX4="
+          "relative_path": "api/PureHDF.IEnumerationType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.Selection.yml",
+      "source_relative_path": "api/PureHDF.IFixedPointType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.Selection.html",
-          "hash": "mGa3O461Eb5mNJXUGeXJRq0Roi0tX6AJ52lLCFOkilI="
+          "relative_path": "api/PureHDF.IFixedPointType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.SimpleChunkCache.yml",
+      "source_relative_path": "api/PureHDF.IFloatingPointType.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.SimpleChunkCache.html",
-          "hash": "dyk2vRnQIHwkIIfWmcU8E/Mm89ceL8GIHNxriDvR4VQ="
+          "relative_path": "api/PureHDF.IFloatingPointType.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.Step.yml",
+      "source_relative_path": "api/PureHDF.IH5AttributableObject.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.Step.html",
-          "hash": "hyRsd2gWEMN9+gqyXQT98sS89XG2DucTsWveXWMHQaI="
+          "relative_path": "api/PureHDF.IH5AttributableObject.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/net50/PureHDF.yml",
+      "source_relative_path": "api/PureHDF.IH5Attribute.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/PureHDF.html",
-          "hash": "Qs+XMB0eUXlzb+ghA04bIlE0QELgitBy7Dakvi+FIdU="
+          "relative_path": "api/PureHDF.IH5Attribute.html"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5CommitedDatatype.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5CommitedDatatype.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5DataLayout.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5DataLayout.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5DataType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5DataType.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5Dataset.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5Dataset.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5DatasetExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5DatasetExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5Dataspace.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5Dataspace.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5FillValue.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5FillValue.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5Group.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5Group.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5GroupExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5GroupExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5Object.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5Object.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5UnresolvedLink.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5UnresolvedLink.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IOpaqueType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IOpaqueType.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IReferenceType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IReferenceType.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IStringType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IStringType.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IVariableLengthType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IVariableLengthType.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IrregularHyperslabSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IrregularHyperslabSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.NoneSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.NoneSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.PointSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Selection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Selection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Step.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Step.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VFD.AmazonS3.AmazonS3Stream.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VFD.AmazonS3.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VFD.AmazonS3.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Hsds.HsdsConnector.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Hsds.HsdsConnector.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Hsds.IHsdsConnector.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Hsds.IHsdsConnector.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Hsds.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Hsds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.H5DatasetAccess.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.H5DatasetAccess.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.H5DatasetCreation.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.H5DatasetCreation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.H5LinkAccess.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.H5LinkAccess.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.IReadingChunkCache.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.IReadingChunkCache.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.IWritingChunkCache.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.IWritingChunkCache.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeAttributableObject.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeAttributableObject.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeDataset.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeDataset.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeFile.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeFile.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeGroup.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeGroup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeGroupExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeGroupExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeObject.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeObject.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeObjectReference1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeObjectReference1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.NativeRegionReference1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.NativeRegionReference1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.SimpleChunkCache.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.SimpleChunkCache.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.html"
+        }
+      },
+      "version": ""
     },
     {
       "type": "Toc",
-      "source_relative_path": "api/net50/toc.yml",
+      "source_relative_path": "api/toc.yml",
       "output": {
         ".html": {
-          "relative_path": "api/net50/toc.html",
-          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
         }
       },
-      "is_incremental": false,
-      "version": ".NET 5",
-      "group": ".NET 5"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.ArrayExtensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.ArrayExtensions.html",
-          "hash": "weEW4a0sr40effmzqBY5pdDyl1YImol7HeegVxdQ+Ts="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.DelegateSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.DelegateSelection.html",
-          "hash": "niyN4vMhjS2X/FdBVo77svIVdWQLqnCtmDeFi9cwkm4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.EndiannessConverterGeneric.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.EndiannessConverterGeneric.html",
-          "hash": "JS5vbk1xiVhCD/8sm3ZQTwPOKGcb+FlIrpvfReWDK+E="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.FilterFunc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.FilterFunc.html",
-          "hash": "mATalLIJpQcHdS9mEBwAaSFnuM8GA3pKyu8QiPSkdm0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5AttributableObject.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5AttributableObject.html",
-          "hash": "A+MzJPFpilAzoWkX+1yZbYew5lsTmOkoe9nk3j68WpQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Attribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Attribute.html",
-          "hash": "TG/QZm3cPRrXQ95XCw6BldP0bFSlbhQ9jutu08hZAMw="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5CommitedDatatype.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5CommitedDatatype.html",
-          "hash": "dhtNOpQRlpoCk3H5BSN5xA7QoydnfoX0LzMUY0Zsrd0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Constants.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Constants.html",
-          "hash": "Q7jfaIH1SylyzQjsQcvNbe2R9MvJC2g8T3EsUF3xJsU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataLayout.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataLayout.html",
-          "hash": "SIjyvVD5xt6yciwM35hIqRIKksmoyLYacW1Mze3qigs="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataLayoutClass.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataLayoutClass.html",
-          "hash": "X18b1kwbls//SIlw2GZG0e56v28YjO/7UTf1R+F0ds8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.ArrayType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.ArrayType.html",
-          "hash": "jw27GTfj4obrJrQU29j5YTg850LNlX6EooVsx7REGPI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.BitFieldType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.BitFieldType.html",
-          "hash": "J8urC8HPY1NgIY49zFLqfSEZSGUzOScEwPs5HfV1VCo="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.CompoundType.CompoundMember.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "ucD1PWXkIVs3+E3+Dxepxm8dXPWRLccsZIg5ULNbI5A="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.CompoundType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.CompoundType.html",
-          "hash": "BJr87O5G8DFdWc/68Cobu3XCoAovvKJZUTQDwiW4298="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.EnumerationType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "Nq509fsXFf11xcOlCZOX5nOOOyEYpV9b1kgJnyU8Gb8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.FixedPointType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.FixedPointType.html",
-          "hash": "XTqD7+OoZpW9/sbYX12uPDIuzwQxw1zmfzFENrHJxoY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.FloatingPointType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.FloatingPointType.html",
-          "hash": "SZHbFMBHQbNynKHpkT6nEpkD95RujfFWLY+0fMHX+lg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.OpaqueType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "FnC201cZD0+sUPobSTJkLjId0uXQt/TxHw6aRbZHDzM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.ReferenceType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "pX7XT3PXEFX+70exXd/uxN05ETGJ51rMxaJK+tCvL1E="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.StringType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.StringType.html",
-          "hash": "hqU7ENXIe4ofbX7kvlLDAzZB0jXkp7Ev8JFWO4v8ROU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.VariableLengthType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "DyTn9FuG3S93v/Np4pjRQb9FIvDMRDLKCrqNZF2T0rM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataType.html",
-          "hash": "uWg+jHSSo8GDh5qquFIWkhPZVHpyhtDZpatmNpBBmyg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataTypeClass.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataTypeClass.html",
-          "hash": "bFEZRoz+NdlETkutZBtARXxtmIdRr37FH0lC+22vFYM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Dataset.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Dataset.html",
-          "hash": "YsnVLSfdrIXeWrwPlwkQWpOqppUmhQ8WZzNcWCJiJZg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DatasetAccess.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DatasetAccess.html",
-          "hash": "KmpoHwAB5fg5LwG+Yq9bbHfSHVv2JsO1TAkc3Sfy/Ck="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Dataspace.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Dataspace.html",
-          "hash": "P++H9YaksiVYkHxVFs1ZFgAOJrnZAULYZ1x41Vty2Ec="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5DataspaceType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5DataspaceType.html",
-          "hash": "8z63WMU+E1NmzanztrwPsXLtZTfee6vERlPb59lg+NA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5File.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5File.html",
-          "hash": "De9AtKTT4lohCAE7/a2uM+X1SZ/g/1ZE6StgI54LsWg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5FillValue.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5FillValue.html",
-          "hash": "brGO8kT1WzXerCTsyXm0bVbSzE3Us6wsK8VK0/ZFLjA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Filter.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Filter.html",
-          "hash": "MKC1LAgYj3aKZ2PCMtjW09ZEY3RhH5+ZtNPeqR6tuLI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5FilterFlags.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5FilterFlags.html",
-          "hash": "8EbbS87v6XeB6epBvMV3uTFqVbRE5eGdiV76PaNUS3g="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5FilterID.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5FilterID.html",
-          "hash": "j3NW7mO/EbhEzqT2oSwjLTzR3uZ8Ctu6lx6ebVGsPLA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Group.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Group.html",
-          "hash": "o5XFAH6bUZxlila3ehbw3AKJZtmWN3ekGcv+7tnZnmE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5LinkAccess.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5LinkAccess.html",
-          "hash": "d5FTdCMYp/Gxzsf9X9JHypABFYbD4dRV8l/6JTRFqdg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5NameAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5NameAttribute.html",
-          "hash": "Rd68OoFOEhmiiATv5Ag9qYtk7YttRFdpwVC3bw3rK9g="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5Object.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5Object.html",
-          "hash": "WR2iKnhu13+qxmGvOUHcVZ5+jgVM2WUVzPz9n59NFG0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5ObjectReference.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5ObjectReference.html",
-          "hash": "kvuUlwA+O8IGHOgu3B2jxcJ+m4scmGNyHjNLqaenADU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5RegionReference.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5RegionReference.html",
-          "hash": "dCaqMTgFiS7G60MhfsWwdqeQAWw4KNgl0iMIA7QCCWc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5SourceGeneratorAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5SourceGeneratorAttribute.html",
-          "hash": "JecW6iXoV/yrjo9ut47AmzAUvE9TkkJusd/n19yJxe4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.H5UnresolvedLink.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.H5UnresolvedLink.html",
-          "hash": "oxULk94zJNb1Jxk/zZj71s3OplGWcE0eVi0PsELXjoc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.HyperslabSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.HyperslabSelection.html",
-          "hash": "RzsOZyvjwPNiW20hIFb3n9S4l36zNxU838pK7r/X9ag="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.IChunkCache.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.IChunkCache.html",
-          "hash": "aSvrRzm9EEhjcdfu3X+DOPjCrwuTv5SUEL8I5raTkn0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.PointSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.PointSelection.html",
-          "hash": "ESJLBG2yzE3TJlMvHmqCSiqpL4qExsq5JoJT3o4nQrY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.Selection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.Selection.html",
-          "hash": "s1/rOSDl8bgTXmJ1LMjxzXlJiLZQpqPQQkoYnRvlIpU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.SimpleChunkCache.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.SimpleChunkCache.html",
-          "hash": "dSDkzbuIWs1jDvbR/x6xFI0QHVrB15uwJxLyOoXYD9M="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.Step.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.Step.html",
-          "hash": "xPZkI0899gT+AeFvVYd0E3PmxRGXhJlpcjGBvzNJRbk="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/net60/PureHDF.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/PureHDF.html",
-          "hash": "D6VgZ+Zurx6ZPfLW3OUxfPmu4Y6Wl6KQWSX3XBrQ9D4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "Toc",
-      "source_relative_path": "api/net60/toc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/net60/toc.html",
-          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET 6",
-      "group": ".NET 6"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.ArrayExtensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.ArrayExtensions.html",
-          "hash": "xZC7O7JDV5T4mjv09VcP9uoKtlSKspbWwchrrha2KVA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.DelegateSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.DelegateSelection.html",
-          "hash": "j62INrcGQaCZA9YyL6v1Or0AdghiWnj+d/hxOoOQx9k="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.EndiannessConverterGeneric.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.EndiannessConverterGeneric.html",
-          "hash": "0baNZIS4E73bMy0HcECIinicyW9WseuspHlAqD28HeE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.FilterFunc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.FilterFunc.html",
-          "hash": "DbVyvM8qAlD7QvS5gzuHo+h0go+CPmjbxt1dm42wyMA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5AttributableObject.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5AttributableObject.html",
-          "hash": "EMhoOCIHiuX4VbJEWGwlXVIj4YWVX96pqJOwkTL/y80="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Attribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Attribute.html",
-          "hash": "5mpaHBmVQHmWOTIEJVzWHYiE+I0kkos6Ht5MyDtxpVQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5CommitedDatatype.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5CommitedDatatype.html",
-          "hash": "hWRGrz+b8DzMl8HZSw2vSAAuefHNWEVewv3hRHxednw="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Constants.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Constants.html",
-          "hash": "AfddDgYcg3zRhSxc1il+ojCjrT84zldN9qb/JpaNlPg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataLayout.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataLayout.html",
-          "hash": "CEmZ0XopHT9pbGPqd3DjuXoLFTnvf081KVE5r/Gs+58="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataLayoutClass.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataLayoutClass.html",
-          "hash": "M2oXEsQdWlOO4rPatqnhCGSLNON/WyPd35/RbkmpJi4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.ArrayType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.ArrayType.html",
-          "hash": "DAFtGUuccmS99W9PW0BbFwFXqlh4ikmqkHoUM68NwbE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.BitFieldType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.BitFieldType.html",
-          "hash": "4fU3N+9tDQ4Qs4UWo+3q3Cr/12tuw6PNzZB79In2lD0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.CompoundType.CompoundMember.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "Ys2MBLTKUCB9i0z69++KKgK7FD129waQdJYjoiIQNaY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.CompoundType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.CompoundType.html",
-          "hash": "L4dZ4twh2TNOKN5rE3xYteYqBnFJ6m7dcXUxBV+Hd0w="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.EnumerationType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "l6nDX1Pc405DhE0F+FMml1zWSGdhL4NTxzRifX2iouM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.FixedPointType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.FixedPointType.html",
-          "hash": "I3vS81pNMDQs3mAY2nGljM06Fu9qJYPjGfKDsOCCq2A="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.FloatingPointType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.FloatingPointType.html",
-          "hash": "14dSNJb6T5lgm2242bKWDs2aoZZA2f3sU7MkCqgl0Yg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.OpaqueType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "EZH/zmUx+HtBm2dFaJJd3pErKKnfsmV0IkkmEeQdZFA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.ReferenceType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "h9S+/evRt0UkckWBoIwayNaGY8jZlVfrn66IywcmMrM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.StringType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.StringType.html",
-          "hash": "BamWcKJJGOPI8a5htL+WrlB7QLkUDW/Ao77/jGIljbk="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.VariableLengthType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "vWGBPKs63oWHUJJq4eoUGHiD1lfO1a4wbuym8jJ1O94="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataType.html",
-          "hash": "BkMA53eurG+9/z5XRja9I291RW6qi2QD8f3AJyLBwV0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataTypeClass.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataTypeClass.html",
-          "hash": "ROWlIKMKR1vL4V4mrW8t/hLN1MAcJi5Cdn1w/bz8Uk8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Dataset.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Dataset.html",
-          "hash": "s0i72ycGvNvtBDHyMTVWIkr/TO1jTGHMww3FD0OTYYM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DatasetAccess.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DatasetAccess.html",
-          "hash": "Azy7IURy62rS3xxWf5AmwlzlneThDFqa2gzd2jQ9K34="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Dataspace.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Dataspace.html",
-          "hash": "u9poS2BDJJFNIE9bvowZ76hl++NzUj+rAZbokx8i0MI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5DataspaceType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5DataspaceType.html",
-          "hash": "Oa8f4nRSk5yozAL8YpJnlSn6bTOj6XXLUJMe6mM34hc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5File.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5File.html",
-          "hash": "eoe69M+toCublFQsvVfSwpXXSl7LauUhO134S5tcDx8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5FillValue.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5FillValue.html",
-          "hash": "FtvgAkNVqx1iZMY3cwkMQUum29LSkFW5MG6VaA7dkGQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Filter.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Filter.html",
-          "hash": "X59sSGam7tCldBFWlRuue2QVa4WLSb5EmsGJyZNW/ko="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5FilterFlags.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5FilterFlags.html",
-          "hash": "FS7zWVmd1b9AXZLFBoUT3PQOwwHpqcLDXswVd42HIak="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5FilterID.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5FilterID.html",
-          "hash": "sdTorqG7Ak0rAArHGy+HU0LEUrMozxDCnBi/rgSTQQY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Group.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Group.html",
-          "hash": "n/xGZA4Ur1K1BUa6kgT/flIUOd+KwmBa1c1qCq8Y0Jk="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5LinkAccess.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5LinkAccess.html",
-          "hash": "CUkMo3gOojrd9ngGSZm6tXhMxPf9RVeA7Ng1plpKHi0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5NameAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5NameAttribute.html",
-          "hash": "kT4yee9KrAiiGl6SMqrIypP/bkKiK4kohu4mimErVPI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5Object.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5Object.html",
-          "hash": "VdE+YiMx/Et6yTzaElgVnLRglwgmdFfHkEBq/JQtiRg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5ObjectReference.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5ObjectReference.html",
-          "hash": "pbD66/cRwZqOEZYCLFfHEqUQwH9iXKPInIgO8q1ryAA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5RegionReference.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5RegionReference.html",
-          "hash": "Mu0eYjeNbMz2iEdyxCEczd6EDI0VftSM+Try1XGblX0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5SourceGeneratorAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5SourceGeneratorAttribute.html",
-          "hash": "npTsmFp8tvXf/hUXvrIwU3FWYavM9BSQC9zr/Ehidu8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.H5UnresolvedLink.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.H5UnresolvedLink.html",
-          "hash": "kxr1PeMSJHtSGdW//uxjVpvDdUKjLwJjk2h/0STQlss="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.HyperslabSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.HyperslabSelection.html",
-          "hash": "KkxV6mbaa36i10okEZs4nRHqK2XuxPgfv7k9qbKF4jc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.IChunkCache.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.IChunkCache.html",
-          "hash": "z1chsIwKW7P4Swkj7nz2ctatN2PEN+mYP0cLgZIZE4o="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.PointSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.PointSelection.html",
-          "hash": "ZaW4eoiVB/MJ4koZ0ZwqPYV8XR60vwOwIp7UKtOOgl8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.Selection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.Selection.html",
-          "hash": "VW6DgaIQEsIOFFOdsHXWmgfd0MVicvqj31EbCe/TaX4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.SimpleChunkCache.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.SimpleChunkCache.html",
-          "hash": "0mwpw2T7ybGRVpAwlZ40VvGKnfM1ytvDjVoL9CFJwkI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.Step.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.Step.html",
-          "hash": "DqnilrdN6JR2tOytUX/RhjMQ6UYgdyINO6e8k66yMpU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.0/PureHDF.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/PureHDF.html",
-          "hash": "4VUhq2hjSlEn6tHLtGUdIzY+KZMhKIol9ncqayNOEUU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "Toc",
-      "source_relative_path": "api/netstandard2.0/toc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.0/toc.html",
-          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.0",
-      "group": ".NET Standard 2.0"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.ArrayExtensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.ArrayExtensions.html",
-          "hash": "oC3iDJvV1fqqgVQ38oLmCW/R+JXmlrMYohOatmfHskk="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.DelegateSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.DelegateSelection.html",
-          "hash": "CmkdSZ5ecJEu1ubo5t31C+QijOeDZ2hxjP8u/bkF8bs="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.EndiannessConverterGeneric.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.EndiannessConverterGeneric.html",
-          "hash": "fXoFo/h5AJebX81/j2FCnnK3Y1vhSFalU/vSzlk69Zg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.FilterFunc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.FilterFunc.html",
-          "hash": "rUB+64HlptdTgVDbTyvYnaT4krXaSlM+/UZrja7u+Cs="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5AttributableObject.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5AttributableObject.html",
-          "hash": "QR23ZhNUxKkfDaCUqU/ymcY9UOtkUy2hqFxz1ipbZqE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Attribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Attribute.html",
-          "hash": "YThCqFuQ/v8on4T+Q10IArBBI9mcskAe+KJ8GM3suyU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5CommitedDatatype.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5CommitedDatatype.html",
-          "hash": "BFA5CHlE9Ut3OW4+h8XZbGTR5xbhYoxQkVNuuEGHfHE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Constants.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Constants.html",
-          "hash": "WWlt+DRV7pn5NomkrvxntbGt4kmjxTKcslDlJ047FJM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataLayout.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataLayout.html",
-          "hash": "UzzcIvVEvLlaIIA21CFBolO+PfdFSYBbmN27MQJG0vo="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataLayoutClass.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataLayoutClass.html",
-          "hash": "4Vo5bqb9ZLJa5XWemfMXCjHaleVHqbEmMZJdwSlQV6I="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.ArrayType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.ArrayType.html",
-          "hash": "uiT+2tSWmrw0fBKWop++cwDukKgekra0elJRavEqby4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.BitFieldType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.BitFieldType.html",
-          "hash": "cNTVCNfGWCO4D3R3XblXDbjm30SVNi5Es0vkHIQZ+8w="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.CompoundType.CompoundMember.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.CompoundType.CompoundMember.html",
-          "hash": "hrWcAZnoWs/VmpxNY6sv2u38kPO1mb+u/ubY7GUt1gc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.CompoundType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.CompoundType.html",
-          "hash": "Ly/eHAionlO3k1GP5IhEwDz0kwo1skX6tzFXbShRVeM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.EnumerationType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.EnumerationType.html",
-          "hash": "vghV2V9NtntPAUVyNXM1hFZWlaTJ+n1ULimf80chsDI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.FixedPointType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.FixedPointType.html",
-          "hash": "IodI7yB3XHJMR7nRG0/QPVUfcPE9FinJl56+k7EShEU="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.FloatingPointType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.FloatingPointType.html",
-          "hash": "UE16KDENTpFzWgAuAyu9uo5lgTdjZZMxi64clRdL5BI="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.OpaqueType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.OpaqueType.html",
-          "hash": "tawbaqTqtUleiZKuONBcm4B238SJZaHwBgZRSDA/roY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.ReferenceType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.ReferenceType.html",
-          "hash": "D5mZyDh6Oa8kiwRpkGXx80c+vt4VJri2aBnNz0MuKQc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.StringType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.StringType.html",
-          "hash": "NybA4cR8YCOISjFu16/U6eHdMMrcza7UyJ+ypjtWN7E="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.VariableLengthType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.VariableLengthType.html",
-          "hash": "ysrTnJs+NhdLlmdFxl7nW3scLIWTXhEpYhZ7y2eVhHg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataType.html",
-          "hash": "XO2T5zaO3SuBUwX7lOEHI7urM/oL3WH5Fly/Np5dwNo="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataTypeClass.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataTypeClass.html",
-          "hash": "/pozpETzxWlAEmOZm9NE2tio5dkuBVP3wyvt04L23xc="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Dataset.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Dataset.html",
-          "hash": "ql8xxvQiQ7byn77iF+yZZXvTwD1VOjLi7Rf9QPHg5GA="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DatasetAccess.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DatasetAccess.html",
-          "hash": "b5oaEury9SSNqa3scE3us22TbxEcbr8fqVaSl3Nvkrk="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Dataspace.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Dataspace.html",
-          "hash": "Ui0Se8acqO8EGm1tKi0zUHuIomjp0aqdhoDg5C/cvnE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5DataspaceType.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5DataspaceType.html",
-          "hash": "beUNXmbFBbSvDw+Qvnnrh4Ss0jV+mGDnEnFq0LSkKWE="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5File.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5File.html",
-          "hash": "QNtdi+HtuUReGWn++ykIJSv8IgC+mpkZ+3cL7k8VdNY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5FillValue.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5FillValue.html",
-          "hash": "8T+s5X2NcAi+whV6/g+FTEbkI37LjRougwRBefzlmpQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Filter.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Filter.html",
-          "hash": "l0OSzvf40mzhGhev9M/gKMLn0lSFD0utr1YwMdKIxa8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5FilterFlags.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5FilterFlags.html",
-          "hash": "HEKBdY7qQFZxZmly0nUGqgf9K5wwXuAliPAXyUnSAnM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5FilterID.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5FilterID.html",
-          "hash": "dUCwosMSBIRRshYhFGEyEW/4kqybC4dDhI+L3DfAc7w="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Group.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Group.html",
-          "hash": "jMY2Bb/tl0qEejWC775iKpcN4KCK/RCHoIC7V0Y6AI0="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5LinkAccess.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5LinkAccess.html",
-          "hash": "hr6rNsz2H/KiHOYyGzwX4Q55FPNZIe7BTwuzj+Wk3Js="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5NameAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5NameAttribute.html",
-          "hash": "gw4X5V3wTiE2vM/ljnj2zVBqY6Vo+hsWNRI1lQ7ReiY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5Object.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5Object.html",
-          "hash": "uiaiTrEjJbIzDXUlpaHT36THJiWuzwB3oQXxbKpYpUY="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5ObjectReference.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5ObjectReference.html",
-          "hash": "3GYWVa80Nlt5Gtt2xvJRdCdFfM7IRI9+U7CkakxxW4s="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5RegionReference.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5RegionReference.html",
-          "hash": "Qg67FiolPHANByfwNAKvLnWbdbXQEG+ixpAU93+ohTg="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5SourceGeneratorAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5SourceGeneratorAttribute.html",
-          "hash": "UYchaQqEqRMTyLsdOQtK1AVagK5g+QWrr8IxshJA4FQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.H5UnresolvedLink.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.H5UnresolvedLink.html",
-          "hash": "J8ndP5tg+SHVJCRK9pT8xGVZoLW4UGbTpXNh1hDnV2M="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.HyperslabSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.HyperslabSelection.html",
-          "hash": "V2Bp2a+ppdJHC8BKoKSIVTo+iLkuFoaD/Ca44gQa0Wk="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.IChunkCache.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.IChunkCache.html",
-          "hash": "JcBhbv6IT60u3k0gDafWGs9AETLmm3QgOKT54/7PexM="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.PointSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.PointSelection.html",
-          "hash": "vgjQd+7rr09/JvZdo1AfqsBQ+N7i/dMojVD56y2xLx4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.Selection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.Selection.html",
-          "hash": "aVbXz1bLozBVIk+sPlSJ5rBivdP0UbYugVxbFwotsA4="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.SimpleChunkCache.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.SimpleChunkCache.html",
-          "hash": "HNj3hz644R/jjVofVvkzvnnu3x0LbBk9vJpjR0WMf1E="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.Step.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.Step.html",
-          "hash": "kKd/THfO64o19bmM+G1yJVIJcQo8uNjnAlx40MemaoQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/netstandard2.1/PureHDF.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/PureHDF.html",
-          "hash": "JCYxTpMUKlZ80WZGuyM46MVQ8rR9hYwhQWDCjpJjJm8="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
-    },
-    {
-      "type": "Toc",
-      "source_relative_path": "api/netstandard2.1/toc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/netstandard2.1/toc.html",
-          "hash": "JS4H7Ryp68eQyHAVgVDLO1mDciOdauqJnvQZzq9+Iaw="
-        }
-      },
-      "is_incremental": false,
-      "version": ".NET Standard 2.1",
-      "group": ".NET Standard 2.1"
+      "version": ""
     },
     {
       "type": "Resource",
@@ -2513,29 +904,16 @@
           "relative_path": "images/hdfview.png"
         }
       },
-      "is_incremental": false,
       "version": ""
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/icon.ico",
+      "source_relative_path": "images/icon.svg",
       "output": {
         "resource": {
-          "relative_path": "images/icon.ico"
+          "relative_path": "images/icon.svg"
         }
       },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/icon.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/icon.png"
-        }
-      },
-      "is_incremental": false,
       "version": ""
     },
     {
@@ -2546,18 +924,16 @@
           "relative_path": "images/intellisense.png"
         }
       },
-      "is_incremental": false,
       "version": ""
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/logo.svg",
+      "source_relative_path": "images/nuget.png",
       "output": {
         "resource": {
-          "relative_path": "images/logo.svg"
+          "relative_path": "images/nuget.png"
         }
       },
-      "is_incremental": false,
       "version": ""
     },
     {
@@ -2565,176 +941,29 @@
       "source_relative_path": "index.md",
       "output": {
         ".html": {
-          "relative_path": "index.html",
-          "hash": "/jaf0KTDqQnxNA/GOdTBZipO2j7fr7wihWCVuy83xhQ="
+          "relative_path": "index.html"
         }
       },
-      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html"
+        },
+        ".json": {
+          "relative_path": "toc.json"
+        }
+      },
       "version": ""
     }
   ],
-  "incremental_info": [
-    {
-      "status": {
-        "can_incremental": false,
-        "details": "Cannot build incrementally because last build info is missing.",
-        "incrementalPhase": "build",
-        "total_file_count": 0,
-        "skipped_file_count": 0,
-        "full_build_reason_code": "NoAvailableBuildCache"
-      },
-      "processors": {
-        "ConceptualDocumentProcessor": {
-          "can_incremental": false,
-          "incrementalPhase": "build",
-          "total_file_count": 1,
-          "skipped_file_count": 0
-        },
-        "ResourceDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor ResourceDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build",
-          "total_file_count": 0,
-          "skipped_file_count": 0
-        }
-      }
-    },
-    {
-      "status": {
-        "can_incremental": false,
-        "details": "Cannot build incrementally because last build info is missing.",
-        "incrementalPhase": "build",
-        "total_file_count": 0,
-        "skipped_file_count": 0,
-        "full_build_reason_code": "NoAvailableBuildCache"
-      },
-      "processors": {
-        "ManagedReferenceDocumentProcessor": {
-          "can_incremental": false,
-          "incrementalPhase": "build",
-          "total_file_count": 47,
-          "skipped_file_count": 0
-        },
-        "TocDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build",
-          "total_file_count": 0,
-          "skipped_file_count": 0
-        }
-      }
-    },
-    {
-      "status": {
-        "can_incremental": false,
-        "details": "Cannot build incrementally because last build info is missing.",
-        "incrementalPhase": "build",
-        "total_file_count": 0,
-        "skipped_file_count": 0,
-        "full_build_reason_code": "NoAvailableBuildCache"
-      },
-      "processors": {
-        "ManagedReferenceDocumentProcessor": {
-          "can_incremental": false,
-          "incrementalPhase": "build",
-          "total_file_count": 47,
-          "skipped_file_count": 0
-        },
-        "TocDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build",
-          "total_file_count": 0,
-          "skipped_file_count": 0
-        }
-      }
-    },
-    {
-      "status": {
-        "can_incremental": false,
-        "details": "Cannot build incrementally because last build info is missing.",
-        "incrementalPhase": "build",
-        "total_file_count": 0,
-        "skipped_file_count": 0,
-        "full_build_reason_code": "NoAvailableBuildCache"
-      },
-      "processors": {
-        "ManagedReferenceDocumentProcessor": {
-          "can_incremental": false,
-          "incrementalPhase": "build",
-          "total_file_count": 47,
-          "skipped_file_count": 0
-        },
-        "TocDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build",
-          "total_file_count": 0,
-          "skipped_file_count": 0
-        }
-      }
-    },
-    {
-      "status": {
-        "can_incremental": false,
-        "details": "Cannot build incrementally because last build info is missing.",
-        "incrementalPhase": "build",
-        "total_file_count": 0,
-        "skipped_file_count": 0,
-        "full_build_reason_code": "NoAvailableBuildCache"
-      },
-      "processors": {
-        "ManagedReferenceDocumentProcessor": {
-          "can_incremental": false,
-          "incrementalPhase": "build",
-          "total_file_count": 47,
-          "skipped_file_count": 0
-        },
-        "TocDocumentProcessor": {
-          "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
-          "incrementalPhase": "build",
-          "total_file_count": 0,
-          "skipped_file_count": 0
-        }
-      }
-    },
-    {
-      "status": {
-        "can_incremental": false,
-        "details": "Cannot support incremental post processing, the reason is: last post processor info is null.",
-        "incrementalPhase": "postProcessing",
-        "total_file_count": 0,
-        "skipped_file_count": 0
-      },
-      "processors": {}
-    }
-  ],
-  "version_info": {
-    ".NET Standard 2.0": {},
-    ".NET Standard 2.1": {},
-    ".NET 5": {},
-    ".NET 6": {}
-  },
+  "version_info": {},
   "groups": [
     {
       "xrefmap": "xrefmap.yml"
-    },
-    {
-      "name": ".NET Standard 2.0",
-      "xrefmap": ".NET Standard 2.0.xrefmap.yml"
-    },
-    {
-      "name": ".NET Standard 2.1",
-      "xrefmap": ".NET Standard 2.1.xrefmap.yml"
-    },
-    {
-      "name": ".NET 5",
-      "xrefmap": ".NET 5.xrefmap.yml"
-    },
-    {
-      "name": ".NET 6",
-      "xrefmap": ".NET 6.xrefmap.yml"
     }
   ]
 }

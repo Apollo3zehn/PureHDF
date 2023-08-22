@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Interface IHsdsConnector
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Interface IHsdsConnector
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.VOL.Hsds.IHsdsConnector">
+
+
+
+  <h1 id="PureHDF_VOL_Hsds_IHsdsConnector" data-uid="PureHDF.VOL.Hsds.IHsdsConnector" class="text-break">
+    Interface IHsdsConnector
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.VOL.html">VOL</a>.<a class="xref" href="PureHDF.VOL.Hsds.html">Hsds</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.VOL.Hsds.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Represents an HDF5 file object stored in the Highly Scalable Data Service (HSDS).</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IHsdsConnector : IH5Group, IH5AttributableObject, IH5Object, IDisposable</code></pre>
+  </div>
+
+
+
+
+
+
+
+  <dl class="typelist derived">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="PureHDF.IH5Group.html#PureHDF_IH5Group_LinkExists_System_String_">IH5Group.LinkExists(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5Group.html#PureHDF_IH5Group_LinkExistsAsync_System_String_System_Threading_CancellationToken_">IH5Group.LinkExistsAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5Group.html#PureHDF_IH5Group_Get_System_String_">IH5Group.Get(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5Group.html#PureHDF_IH5Group_GetAsync_System_String_System_Threading_CancellationToken_">IH5Group.GetAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5Group.html#PureHDF_IH5Group_Children">IH5Group.Children()</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5Group.html#PureHDF_IH5Group_ChildrenAsync_System_Threading_CancellationToken_">IH5Group.ChildrenAsync(CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_Attributes">IH5AttributableObject.Attributes()</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributesAsync_System_Threading_CancellationToken_">IH5AttributableObject.AttributesAsync(CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_Attribute_System_String_">IH5AttributableObject.Attribute(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeAsync_System_String_System_Threading_CancellationToken_">IH5AttributableObject.AttributeAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeExists_System_String_">IH5AttributableObject.AttributeExists(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeExistsAsync_System_String_System_Threading_CancellationToken_">IH5AttributableObject.AttributeExistsAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.IH5Object.html#PureHDF_IH5Object_Name">IH5Object.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable.dispose">IDisposable.Dispose()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
