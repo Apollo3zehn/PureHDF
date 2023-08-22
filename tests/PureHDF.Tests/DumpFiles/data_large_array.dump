@@ -1,0 +1,86 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "Byte[]" {
+      DATATYPE  H5T_STD_U8LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+   <type> "Double[]" {
+      DATATYPE  H5T_IEEE_F64LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11
+      }
+   }
+   <type> "Int16[]" {
+      DATATYPE  H5T_STD_I16LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   <type> "Int32[]" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   <type> "Int64[]" {
+      DATATYPE  H5T_STD_I64LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   <type> "SByte[]" {
+      DATATYPE  H5T_STD_I8LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11
+      }
+   }
+   <type> "Single[]" {
+      DATATYPE  H5T_IEEE_F32LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11
+      }
+   }
+   <type> "TestEnum[]" {
+      DATATYPE  H5T_ENUM {
+         H5T_STD_I16LE;
+         "a"                0;
+         "c"                2;
+         "b"                -1;
+      }
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): a, b, c, c, c, a, b, b, b, c, c, 63:00
+      }
+   }
+   <type> "UInt16[]" {
+      DATATYPE  H5T_STD_U16LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+   <type> "UInt32[]" {
+      DATATYPE  H5T_STD_U32LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+   <type> "UInt64[]" {
+      DATATYPE  H5T_STD_U64LE
+      DATASPACE  SIMPLE { ( 12 ) / ( 12 ) }
+      DATA {
+      (0): 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+      }
+   }
+}
+}

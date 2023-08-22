@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 namespace PureHDF.VOL.Hsds;
 
-internal record struct CacheEntryKey(string ParentId, string LinkName);
+internal readonly record struct CacheEntryKey(string ParentId, string LinkName);
 
 internal class ObjectCache
 {

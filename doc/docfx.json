@@ -5,7 +5,14 @@
         {
           "src": "../",
           "files": [
-            "src/**.csproj"
+            "artifacts/bin/PureHDF/Release/net7.0/PureHDF.dll",
+            "artifacts/bin/PureHDF.Filters.Blosc2/Release/netstandard2.0/PureHDF.Filters.Blosc2.dll",
+            "artifacts/bin/PureHDF.Filters.BZip2.SharpZipLib/Release/netstandard2.0/PureHDF.Filters.BZip2.SharpZipLib.dll",
+            "artifacts/bin/PureHDF.Filters.Deflate.ISA-L/Release/netstandard2.0/PureHDF.Filters.Deflate.ISA-L.dll",
+            "artifacts/bin/PureHDF.Filters.Deflate.SharpZipLib/Release/netstandard2.0/PureHDF.Filters.Deflate.SharpZipLib.dll",
+            "artifacts/bin/PureHDF.Filters.Lzf/Release/netstandard2.0/PureHDF.Filters.Lzf.dll",
+            "artifacts/bin/PureHDF.VFD.AmazonS3/Release/netstandard2.1/PureHDF.VFD.AmazonS3.dll",
+            "artifacts/bin/PureHDF.VOL.Hsds/Release/net6.0/PureHDF.VOL.Hsds.dll"
           ]
         }
       ],
@@ -13,21 +20,29 @@
       "filter": "filterConfig.yml",
       "properties": {
         "TargetFramework": "net70"
-      }
+      },
+      "includePrivateMembers": false,
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "noRestore": false,
+      "namespaceLayout": "flattened",
+      "memberLayout": "samePage",
+      "EnumSortOrder": "alphabetic",
+      "allowCompilationErrors": false
     }
   ],
   "build": {
     "content": [
       {
         "files": [
-          "*.md",
-          "toc.yml"
+          "api/**.yml",
+          "api/index.md"
         ]
       },
       {
         "files": [
-          "api/**.yml",
-          "api/index.md"
+          "toc.yml",
+          "*.md"
         ]
       }
     ],
@@ -38,7 +53,7 @@
         ]
       }
     ],
-    "dest": "_site",
+    "output": "_site",
     "globalMetadata": {
       "_appTitle": "PureHDF",
       "_appFooter": "Copyright © 2023 Vincent Wilms",
@@ -46,7 +61,12 @@
       "_appLogoPath": "images/icon.svg"
     },
     "fileMetadataFiles": [],
-    "template":["default","templates/material"],
-    "markdownEngineName": "markdig"
+    "template": [
+      "default",
+      "modern"
+    ],
+    "postProcessors": [],
+    "keepFileLink": false,
+    "disableGitFeatures": false
   }
 }

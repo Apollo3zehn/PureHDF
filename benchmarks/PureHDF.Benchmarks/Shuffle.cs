@@ -34,7 +34,7 @@ namespace Benchmark
                 .Select(i => 0L)
                 .ToArray();
 
-            ShuffleAvx2.Shuffle(
+            ShuffleAvx2.DoShuffle(
                 _bytesOfType, 
                 MemoryMarshal.AsBytes<long>(source),
                 MemoryMarshal.AsBytes<long>(destination));
@@ -53,7 +53,7 @@ namespace Benchmark
         [Benchmark(Baseline = true)]
         public Memory<long> Generic()
         {
-            ShuffleGeneric.Unshuffle(
+            ShuffleGeneric.DoUnshuffle(
                 _bytesOfType,
                 MemoryMarshal.AsBytes<long>(_shuffledData), 
                 MemoryMarshal.AsBytes<long>(_unshuffledData));
@@ -64,7 +64,7 @@ namespace Benchmark
         [Benchmark]
         public Memory<long> SSE2()
         {
-            ShuffleSse2.Unshuffle(
+            ShuffleSse2.DoUnshuffle(
                 _bytesOfType,
                 MemoryMarshal.AsBytes<long>(_shuffledData), 
                 MemoryMarshal.AsBytes<long>(_unshuffledData));
@@ -75,7 +75,7 @@ namespace Benchmark
         [Benchmark]
         public Memory<long> AVX2()
         {
-            ShuffleAvx2.Unshuffle(
+            ShuffleAvx2.DoUnshuffle(
                 _bytesOfType,
                 MemoryMarshal.AsBytes<long>(_shuffledData), 
                 MemoryMarshal.AsBytes<long>(_unshuffledData));

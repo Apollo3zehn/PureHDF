@@ -4,9 +4,14 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TargetFrameworks>net7.0;net6.0;</TargetFrameworks>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <LangVersion>Preview</LangVersion>
 
     <!-- to make P/Invoke target file happy -->
     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <DefineConstants>CI</DefineConstants>
   </PropertyGroup>
  
   <ItemGroup>
@@ -32,6 +37,9 @@
 
   <ItemGroup>
     <None Update="TestFiles/*.*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="DumpFiles/*.*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

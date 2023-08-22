@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "List`1" {
+      DATATYPE  H5T_STD_U8LE
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      DATA {
+      (0): 1, 0, 1
+      }
+   }
+}
+}

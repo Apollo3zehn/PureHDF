@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 [Flags]
-internal enum MessageFlags : ushort
+internal enum MessageFlags : byte
 {
     NoFlags = 0,
     Constant = 1,

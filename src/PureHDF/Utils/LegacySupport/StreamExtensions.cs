@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace PureHDF;
 
 // source adapted from https://github.com/dotnet/runtime/blob/main/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamExtensions.netstandard.cs
-internal static class StreamExtensions
+internal static partial class StreamExtensions
 {
     public static int Read(this Stream stream, Span<byte> buffer)
     {
@@ -44,6 +44,11 @@ internal static class StreamExtensions
                 }
             }
         }
+    }
+
+    public static void Write(this Stream stream, Span<byte> buffer)
+    {
+        stream.Write(buffer.ToArray());
     }
 }
 

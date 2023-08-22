@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 
 namespace PureHDF;
 
@@ -33,29 +34,33 @@ static partial class ArrayExtensions
             dimensionSizes[index] = missingDimensionSize;
         }
 
-        var totalSize = (long)Utils.CalculateSize(dimensionSizes.Select(value => (ulong)value).ToArray());
+        var totalSize = (long)MathUtils.CalculateSize(dimensionSizes.Select(value => (ulong)value).ToArray());
 
         if (data.LongLength != totalSize)
             throw new Exception("The total number of elements in all dimensions of the reshaped array must be equal to the total number of elements of the current array.");
     }
 
-    private static unsafe void CopyData<T>(T[] source, void* target)
+#if NET6_0_OR_GREATER
+        private static unsafe void CopyData<T>(Span<T> source, Array target)
         where T : unmanaged
     {
-        // TODO: Unsafe.CopyBlock:
-        //
-        // var multiDimArray = new int[4,7];
-        // var flatArray = Unsafe.As<int[]>(multiDimArray); 
-        // => this works partially ... the flatArray length is 28 ...
-        // but the first 4 bytes of multiDimArray are 4, 7, 0, 0. So 
-        // we cannot access the last 4 bytes of the actua array.
+        var sourceBytes = MemoryMarshal.AsBytes(source);
 
-        var sourceBytes = MemoryMarshal.AsBytes(source.AsSpan());
-        var bytePtr = (byte*)target;
+        var targetSpan = MemoryMarshal.CreateSpan(
+            reference: ref MemoryMarshal.GetArrayDataReference(target), 
+            length: target.Length * Unsafe.SizeOf<T>());
 
-        for (int i = 0; i < sourceBytes.Length; i++)
-        {
-            bytePtr[i] = sourceBytes[i];
-        }
+        sourceBytes.CopyTo(targetSpan);
     }
+#else
+    private static unsafe void CopyData<T>(Span<T> source, void* target)
+        where T : unmanaged
+    {
+        var sourceBytes = MemoryMarshal.AsBytes(source);
+        var targetSpan = new Span<byte>(target, source.Length * Unsafe.SizeOf<T>());
+
+        sourceBytes.CopyTo(targetSpan);
+    }
+#endif
+
 }

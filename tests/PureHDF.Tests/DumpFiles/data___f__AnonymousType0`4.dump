@@ -1,0 +1,32 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "<>f__AnonymousType0`4" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_STD_I32LE "Numerical";
+         H5T_STD_U8LE "Boolean";
+         H5T_ENUM {
+            H5T_STD_I32LE;
+            "Read"             1;
+            "Write"            2;
+            "ReadWrite"        3;
+         } "Enum";
+         H5T_COMPOUND {
+            H5T_STD_I32LE "A";
+            H5T_IEEE_F64LE "B";
+         } "Anonymous";
+      }
+      DATASPACE  SCALAR
+      DATA {
+      (0): {
+            1,
+            1,
+            Read,
+            {
+               1,
+               9.81
+            }
+         }
+      }
+   }
+}
+}

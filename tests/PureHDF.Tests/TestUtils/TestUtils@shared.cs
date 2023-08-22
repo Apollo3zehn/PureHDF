@@ -1,6 +1,6 @@
-using HDF.PInvoke;
 using System.Runtime.InteropServices;
 using System.Text;
+using HDF.PInvoke;
 
 namespace PureHDF.Tests
 {
@@ -10,7 +10,7 @@ namespace PureHDF.Tests
         {
             var dims = new ulong[] { 2, 2, 3 };
 
-            foreach (var entry in TestData.NumericalData)
+            foreach (var entry in ReadingTestData.NumericalReadData)
             {
                 var attributeData = (Array)entry[1];
 
@@ -39,16 +39,16 @@ namespace PureHDF.Tests
 
         public static unsafe void AddBitField(long fileId, ContainerType container)
         {
-            Add(container, fileId, "bitfield", "bitfield", H5T.STD_B16LE, TestData.BitfieldData.AsSpan());
+            Add(container, fileId, "bitfield", "bitfield", H5T.STD_B16LE, ReadingTestData.BitfieldData.AsSpan());
         }
 
         public static unsafe void AddOpaque(long fileId, ContainerType container)
         {
-            var length = (ulong)TestData.SmallData.Length * 2;
+            var length = (ulong)SharedTestData.SmallData.Length * 2;
             var typeId = H5T.create(H5T.class_t.OPAQUE, new IntPtr(2));
             _ = H5T.set_tag(typeId, "Opaque Test Tag");
 
-            Add(container, fileId, "opaque", "opaque", typeId, TestData.SmallData.AsSpan(), length);
+            Add(container, fileId, "opaque", "opaque", typeId, SharedTestData.SmallData.AsSpan(), length);
 
             _ = H5T.close(typeId);
         }
@@ -60,7 +60,7 @@ namespace PureHDF.Tests
             var typeId = H5T.array_create(H5T.NATIVE_INT32, 2, new ulong[] { 4, 5 });
             var dims = new ulong[] { 2, 3 };
 
-            fixed (void* dataPtr = TestData.ArrayDataValue)
+            fixed (void* dataPtr = ReadingTestData.ArrayDataValue)
             {
                 Add(container, fileId, "array", "value", typeId, dataPtr, dims);
             }
@@ -81,7 +81,7 @@ namespace PureHDF.Tests
             var offset = 0;
             var offsets = new List<int>();
 
-            var dataVarChar = TestData.ArrayDataVariableLengthString
+            var dataVarChar = ReadingTestData.ArrayDataVariableLengthString
                 .Cast<string>()
                 .SelectMany(value => 
                 {
@@ -114,12 +114,11 @@ namespace PureHDF.Tests
         {
             var dims = new ulong[] { 2, 1 };
 
-            Prepare_nullable_struct((typeId, dataPtr) => 
-            {
-                var typeIdArray = H5T.array_create(typeId, 2, new ulong[] { 2, 3 });
-                Add(container, fileId, "array", "nullable_struct", typeIdArray, dataPtr.ToPointer(), dims);
-                _ = H5T.close(typeIdArray);
-            });
+            using var nullableStruct = Prepare_nullable_struct();
+
+            var typeIdArray = H5T.array_create(nullableStruct.TypeId, 2, new ulong[] { 2, 3 });
+            Add(container, fileId, "array", "nullable_struct", typeIdArray, nullableStruct.Ptr.ToPointer(), dims);
+            _ = H5T.close(typeIdArray);
         }
 
         public static unsafe void AddObjectReference(long fileId, ContainerType container)
@@ -128,7 +127,7 @@ namespace PureHDF.Tests
 
             AddNumerical(fileId, ContainerType.Dataset);
 
-            var length = (ulong)TestData.NumericalData.Count;
+            var length = (ulong)ReadingTestData.NumericalReadData.Count;
             var data = new ulong[length];
 
             fixed (ulong* ptr = data)
@@ -140,7 +139,7 @@ namespace PureHDF.Tests
                     res = H5R.create(new IntPtr(ptr + i), referenceGroupId, $"D{i + 1}", H5R.type_t.OBJECT, -1);
                 }
 
-                Add(container, fileId, "reference", "object_reference", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
+                Add(container, fileId, "reference", "object", H5T.STD_REF_OBJ, new IntPtr(ptr).ToPointer(), length);
 
                 res = H5G.close(referenceGroupId);
             }
@@ -150,40 +149,67 @@ namespace PureHDF.Tests
         {
             long res;
 
-            AddSmall(fileId, ContainerType.Dataset);
+            var dims = new ulong[] { 3, 4, 5 };
+            Add(ContainerType.Dataset, fileId, "reference", "referenced", H5T.NATIVE_INT32, SharedTestData.SmallData.AsSpan(), dims);
 
-            var length = 1UL;
-            var data = new ulong[length];
+            var length = 5;
+            var data = new NativeRegionReference1[length];
 
-            fixed (ulong* ptr = data)
+            fixed (NativeRegionReference1* ptr = data)
             {
-                var referenceGroupId = H5G.open(fileId, "small");
-                var spaceId = H5S.create_simple(1, new ulong[] { length }, null);
-                var coordinates = new ulong[] { 2, 4, 6, 8 };
-                res = H5S.select_elements(spaceId, H5S.seloper_t.SET, new IntPtr(4), coordinates);
-                res = H5R.create(new IntPtr(ptr), referenceGroupId, "small", H5R.type_t.DATASET_REGION, spaceId);
+                var referenceGroupId = H5G.open(fileId, "reference");
+                var referencedDatasetId = H5D.open(referenceGroupId, "referenced");
+                var referencedSpaceId = H5D.get_space(referencedDatasetId);
 
-                Add(container, fileId, "reference", "region_reference", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), length);
+                // none selection
+                res = H5S.select_none(referencedSpaceId);
+                res = H5R.create(new IntPtr(ptr + 0), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
 
-                res = H5S.close(spaceId);
+                // point selection
+                var coordinates = new ulong[]
+                {
+                    0, 0, 2, // 2
+                    1, 1, 2, // 27
+                    2, 3, 4, // 59
+                    2, 2, 0, // 50
+                };
+
+                res = H5S.select_elements(referencedSpaceId, H5S.seloper_t.SET, new IntPtr(4), coordinates);
+                res = H5R.create(new IntPtr(ptr + 1), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                // regular hyperslab selection (this does not really work - an irregular hyperslab is being created)
+                res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: new ulong[] { 0, 0, 0 }, stride: new ulong[] { 1, 1, 3 }, count: new ulong[] { 1, 1, 2 }, block: new ulong[] { 1, 1, 2 }); // 0, 1, 3, 4
+                res = H5R.create(new IntPtr(ptr + 2), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                // irregular hyperslab selection
+                res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: new ulong[] { 0, 0, 0 }, stride: new ulong[] { 1, 1, 3 }, count: new ulong[] { 1, 1, 2 }, block: new ulong[] { 1, 1, 2 }); // 0, 1, 3, 4
+                res = H5R.create(new IntPtr(ptr + 3), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                // all selection
+                res = H5S.select_all(referencedSpaceId);
+                res = H5R.create(new IntPtr(ptr + 4), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
+
+                //
+                Add(container, fileId, "reference", "region", H5T.STD_REF_DSETREG, new IntPtr(ptr).ToPointer(), (ulong)length);
+
+                res = H5D.close(referencedDatasetId);
+                res = H5S.close(referencedSpaceId);
                 res = H5G.close(referenceGroupId);
             }
         }
 
-        public static unsafe void AddStruct(long fileId, ContainerType container)
+        public static unsafe void AddStruct(long fileId, ContainerType container, bool includeH5NameAttribute = false)
         {
-            long res;
-
             var dims = new ulong[] { 2, 2, 3 }; /* "extendible contiguous non-external dataset not allowed" */
 
             // non-nullable struct
             var typeId = GetHdfTypeIdFromType(typeof(TestStructL1));
-            Add(container, fileId, "struct", "nonnullable", typeId, TestData.NonNullableStructData.AsSpan(), dims);
-            res = H5T.close(typeId);
+            Add(container, fileId, "struct", "nonnullable", typeId, ReadingTestData.NonNullableStructData.AsSpan(), dims);
+            _ = H5T.close(typeId);
 
             // nullable struct
-            Prepare_nullable_struct((typeId, dataPtr) 
-                => Add(container, fileId, "struct", "nullable", typeId, dataPtr.ToPointer(), dims));
+            using var nullableStruct = Prepare_nullable_struct(includeH5NameAttribute);
+            Add(container, fileId, "struct", "nullable", nullableStruct.TypeId, nullableStruct.Ptr.ToPointer(), dims);
         }
 
         public static unsafe void AddString(long fileId, ContainerType container)
@@ -297,13 +323,14 @@ namespace PureHDF.Tests
 
             res = H5T.close(typeIdVar_spacepad);
 
-            // variable length string attribute (UTF8)
+            // variable length string (UTF8)
             var typeIdVarUTF8 = H5T.copy(H5T.C_S1);
             res = H5T.set_size(typeIdVarUTF8, H5T.VARIABLE);
             res = H5T.set_cset(typeIdVarUTF8, H5T.cset_t.UTF8);
             res = H5T.set_strpad(typeIdVarUTF8, H5T.str_t.NULLPAD);
 
             var dataVarUTF8 = new string[] { "00", "111", "22", "33", "44", "55", "66", "77", "  ", "ÄÄ", "的的", "!!" };
+
             var dataVarCharUTF8 = dataVarUTF8
                .SelectMany(value => Encoding.UTF8.GetBytes(value + '\0'))
                .ToArray();
@@ -326,41 +353,70 @@ namespace PureHDF.Tests
             }
         }
 
-        public static unsafe void AddVariableLengthSequence(long fileId, ContainerType container)
+        public static unsafe void AddVariableLengthSequence_Simple(long fileId, ContainerType container)
         {
-            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L1621-L1642
-            // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
-            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/test/tarray.c#L1113
-            // https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Tpublic.h#L234-L241
+            // based on: https://svn.ssec.wisc.edu/repos/geoffc/C/HDF5/Examples_by_API/h5ex_t_vlen.c
 
-            // typedef struct {
-            //     size_t len; /**< Length of VL data (in base type units) */
-            //     void  *p;   /**< Pointer to VL data */
-            // } hvl_t;
-
-            var dims = new ulong[] { 10 };
+            var dims = new ulong[] { 3 };
             var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
 
-            var dataVar = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
-            var dataVarChar = dataVar
-               .SelectMany(value => Encoding.ASCII.GetBytes(value + '\0'))
-               .ToArray();
+            // data 1 (countdown)
+            var data1 = new int[3];
 
-            fixed (byte* dataVarPtr = dataVarChar)
+            for (int i = 0; i < data1.Length; i++)
+                data1[i] = data1.Length - i;
+
+            // data 2 (Fibonacci sequence)
+            var data2 = new int[12];
+
+            data2[0] = 1;
+            data2[1] = 1;
+
+            for (int i = 2; i < data2.Length; i++)
+                data2[i] = data2[i - 1] + data2[i - 2];
+
+            // data 3 (empty)
+
+            //
+
+            fixed (int* data1Ptr = data1, data2Ptr = data2)
             {
-                var basePtr = new IntPtr(dataVarPtr);
-
-                var addresses = new IntPtr[]
+                // vlen data
+                var vlenData = new H5T.hvl_t[] 
                 {
-                    IntPtr.Add(basePtr, 0), IntPtr.Add(basePtr, 4), IntPtr.Add(basePtr, 7), IntPtr.Add(basePtr, 10),
-                    IntPtr.Add(basePtr, 13), IntPtr.Add(basePtr, 16), IntPtr.Add(basePtr, 19), IntPtr.Add(basePtr, 22),
-                    IntPtr.Add(basePtr, 25), IntPtr.Add(basePtr, 28), IntPtr.Add(basePtr, 31), IntPtr.Add(basePtr, 34)
+                    new H5T.hvl_t() { len = (nint)data1.Length, p = (nint)data1Ptr },
+                    new H5T.hvl_t() { len = (nint)data2.Length, p = (nint)data2Ptr }
                 };
 
-                fixed (void* dataVarAddressesPtr = addresses)
+                fixed (void* vlenDataPtr = vlenData)
                 {
-                    Add(container, fileId, "sequence", "variable", typeId, dataVarAddressesPtr, dims);
+                    Add(container, fileId, "sequence", "variable_simple", typeId, vlenDataPtr, dims);
                 }
+            }
+
+            _ = H5T.close(typeId);
+        }
+
+        public static unsafe void AddVariableLengthSequence_NullableStruct(long fileId, ContainerType container)
+        {
+            using var data = Prepare_nullable_struct();
+
+            var dims = new ulong[] { 2 };
+            var typeId = H5T.vlen_create(data.TypeId);
+
+            // vlen data
+            var vlenData = new H5T.hvl_t[] 
+            {
+                // struct data
+                new H5T.hvl_t() { len = (nint)data.Ptrs.Count, p = (nint)data.Ptr },
+
+                // empty
+                new H5T.hvl_t() { len = IntPtr.Zero, p = IntPtr.Zero },
+            };
+
+            fixed (void* vlenDataPtr = vlenData)
+            {
+                Add(container, fileId, "sequence", "variable_nullable_struct", typeId, vlenDataPtr, dims);
             }
 
             _ = H5T.close(typeId);
@@ -379,12 +435,12 @@ namespace PureHDF.Tests
                     var acpl_id = H5P.create(H5P.ATTRIBUTE_CREATE);
                     _ = H5P.set_char_encoding(acpl_id, H5T.cset_t.UTF8);
                     var name = "字形碼 / 字形码, Zìxíngmǎ";
-                    Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
+                    Add(container, fileId, "mass_attributes", name, typeId, ReadingTestData.NonNullableStructData.AsSpan(), dims, cpl: acpl_id);
                 }
                 else
                 {
                     var name = $"mass_{i:D4}";
-                    Add(container, fileId, "mass_attributes", name, typeId, TestData.NonNullableStructData.AsSpan(), dims);
+                    Add(container, fileId, "mass_attributes", name, typeId, ReadingTestData.NonNullableStructData.AsSpan(), dims);
                 }
             }
 
@@ -393,7 +449,7 @@ namespace PureHDF.Tests
 
         public static unsafe void AddSmall(long fileId, ContainerType container)
         {
-            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, TestData.SmallData.AsSpan());
+            Add(container, fileId, "small", "small", H5T.NATIVE_INT32, SharedTestData.SmallData.AsSpan());
         }
 
         public static unsafe void AddDataWithSharedDataType(long fileId, ContainerType container)
@@ -429,10 +485,10 @@ namespace PureHDF.Tests
             if (H5I.is_valid(typeId) > 0) { _ = H5T.close(typeId); }
         }
 
-        private static unsafe void Prepare_nullable_struct(Action<long, IntPtr> action)
+        private static unsafe DisposableStruct Prepare_nullable_struct(bool includeH5NameAttribute = false)
         {
-            var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray));
-            var data = TestData.NullableStructData;
+            var typeId = GetHdfTypeIdFromType(typeof(TestStructStringAndArray), includeH5NameAttribute: includeH5NameAttribute);
+            var data = ReadingTestData.NullableStructData;
 
             // There is also Unsafe.SizeOf<T>() to calculate managed size instead of native size.
             // Is only relevant when Marshal.XX methods are replaced by other code.
@@ -445,7 +501,8 @@ namespace PureHDF.Tests
             data.Cast<ValueType>().ToList().ForEach(x =>
             {
                 var sourcePtr = Marshal.AllocHGlobal(elementSize);
-                Marshal.StructureToPtr(x, sourcePtr, false);
+                // TODO why not write directly into dataPtr? Is this blocked by Marshal.DestroyStructure?
+                Marshal.StructureToPtr(x, sourcePtr, fDeleteOld: false);
 
                 ptrs.Add(sourcePtr);
                 var source = new Span<byte>(sourcePtr.ToPointer(), elementSize);
@@ -455,16 +512,40 @@ namespace PureHDF.Tests
                 counter++;
             });
 
-            action(typeId, dataPtr);
+            return new DisposableStruct(dataPtr, ptrs, typeId);
+        }
 
-            Marshal.FreeHGlobal(dataPtr);
+        private record class DisposableStruct(IntPtr Ptr, List<nint> Ptrs, long TypeId) : IDisposable
+        {
+            private bool _disposedValue;
 
-            foreach (var srcPtr in ptrs)
+            protected virtual void Dispose(bool disposing)
             {
-                Marshal.DestroyStructure<TestStructStringAndArray>(srcPtr);
+                if (!_disposedValue)
+                {
+                    Marshal.FreeHGlobal(Ptr);
+
+                    foreach (var ptr in Ptrs)
+                    {
+                        Marshal.DestroyStructure<TestStructStringAndArray>(ptr);
+                    }
+
+                    _ = H5T.close(TypeId);
+
+                    _disposedValue = true;
+                }
             }
 
-            _ = H5T.close(typeId);
+            ~DisposableStruct()
+            {
+                Dispose(disposing: false);
+            }
+
+            public void Dispose()
+            {
+                Dispose(disposing: true);
+                GC.SuppressFinalize(this);
+            }
         }
     }
 }

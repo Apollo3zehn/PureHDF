@@ -5,12 +5,6 @@ namespace PureHDF;
 
 internal static class ChecksumUtils
 {
-    public static uint JenkinsLookup3(string key)
-    {
-        var bytes = Encoding.UTF8.GetBytes(key);
-        return ChecksumUtils.JenkinsLookup3Internal(bytes, 0);
-    }
-
     /*
     -------------------------------------------------------------------------------
     H5_lookup3_mix -- mix 3 32-bit values reversibly.
@@ -64,12 +58,12 @@ internal static class ChecksumUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void JenkinsLookup3Mix(ref uint a, ref uint b, ref uint c)
     {
-        a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 4); c += b;
-        b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 6); a += c;
-        c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 8); b += a;
-        a -= c; a ^= ChecksumUtils.JenkinsLookup3Rot(c, 16); c += b;
-        b -= a; b ^= ChecksumUtils.JenkinsLookup3Rot(a, 19); a += c;
-        c -= b; c ^= ChecksumUtils.JenkinsLookup3Rot(b, 4); b += a;
+        a -= c; a ^= JenkinsLookup3Rot(c, 4); c += b;
+        b -= a; b ^= JenkinsLookup3Rot(a, 6); a += c;
+        c -= b; c ^= JenkinsLookup3Rot(b, 8); b += a;
+        a -= c; a ^= JenkinsLookup3Rot(c, 16); c += b;
+        b -= a; b ^= JenkinsLookup3Rot(a, 19); a += c;
+        c -= b; c ^= JenkinsLookup3Rot(b, 4); b += a;
     }
 
     /*
@@ -100,13 +94,13 @@ internal static class ChecksumUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void JenkinsLookup3Final(ref uint a, ref uint b, ref uint c)
     {
-        c ^= b; c -= ChecksumUtils.JenkinsLookup3Rot(b, 14);
-        a ^= c; a -= ChecksumUtils.JenkinsLookup3Rot(c, 11);
-        b ^= a; b -= ChecksumUtils.JenkinsLookup3Rot(a, 25);
-        c ^= b; c -= ChecksumUtils.JenkinsLookup3Rot(b, 16);
-        a ^= c; a -= ChecksumUtils.JenkinsLookup3Rot(c, 4);
-        b ^= a; b -= ChecksumUtils.JenkinsLookup3Rot(a, 14);
-        c ^= b; c -= ChecksumUtils.JenkinsLookup3Rot(b, 24);
+        c ^= b; c -= JenkinsLookup3Rot(b, 14);
+        a ^= c; a -= JenkinsLookup3Rot(c, 11);
+        b ^= a; b -= JenkinsLookup3Rot(a, 25);
+        c ^= b; c -= JenkinsLookup3Rot(b, 16);
+        a ^= c; a -= JenkinsLookup3Rot(c, 4);
+        b ^= a; b -= JenkinsLookup3Rot(a, 14);
+        c ^= b; c -= JenkinsLookup3Rot(b, 24);
     }
 
     /*
@@ -135,7 +129,7 @@ internal static class ChecksumUtils
     acceptable.  Do NOT use for cryptographic purposes.
     -------------------------------------------------------------------------------
     */
-    private static unsafe uint JenkinsLookup3Internal(byte[] bytes, uint initialValue)
+    public static unsafe uint JenkinsLookup3(ReadOnlySpan<byte> bytes, uint initialValue = 0)
     {
         uint a, b, c;
 
@@ -162,7 +156,7 @@ internal static class ChecksumUtils
                 c += ((uint)k[9]) << 8;
                 c += ((uint)k[10]) << 16;
                 c += ((uint)k[11]) << 24;
-                ChecksumUtils.JenkinsLookup3Mix(ref a, ref b, ref c);
+                JenkinsLookup3Mix(ref a, ref b, ref c);
                 length -= 12;
                 k += 12;
             }

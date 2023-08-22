@@ -3,7 +3,3 @@ apiRules:
 - exclude:
       uidRegex: ^System\.Object
       type: Type
-
-- exclude:
-      uidRegex: ^PureHDF\.SourceGenerator
-      type: Type

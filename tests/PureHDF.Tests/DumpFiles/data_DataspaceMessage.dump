@@ -1,0 +1,37 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "DataspaceMessage" {
+      DATATYPE  H5T_COMPOUND {
+         H5T_STD_U8LE "Rank";
+         H5T_ENUM {
+            H5T_STD_U8LE;
+            "None"             0;
+            "DimensionMaxSizes" 1;
+            "PermuationIndices" 2;
+         } "Flags";
+         H5T_ENUM {
+            H5T_STD_U8LE;
+            "Scalar"           0;
+            "Simple"           1;
+            "Null"             2;
+         } "Type";
+         H5T_VLEN { H5T_STD_U64LE} "Dimensions";
+         H5T_VLEN { H5T_STD_U64LE} "MaxDimensions";
+         H5T_VLEN { H5T_STD_U64LE} "PermutationIndices";
+         H5T_STD_U8LE "Version";
+      }
+      DATASPACE  SCALAR
+      DATA {
+      (0): {
+            1,
+            0x03,
+            Simple,
+            (10, 20, 30),
+            (20, 40, 60),
+            (),
+            1
+         }
+      }
+   }
+}
+}

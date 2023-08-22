@@ -1,13 +1,58 @@
-using HDF.PInvoke;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using HDF.PInvoke;
 using Xunit.Abstractions;
 
 namespace PureHDF.Tests
 {
     public partial class TestUtils
     {
+        public static string? DumpH5File(string filePath)
+        {
+            var dump = default(string);
+
+            var h5dumpProcess = new Process 
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "h5dump",
+                    Arguments = filePath,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true
+                }
+            };
+
+            h5dumpProcess.Start();
+
+            while (!h5dumpProcess.StandardOutput.EndOfStream)
+            {
+                var line = h5dumpProcess.StandardOutput.ReadLine();
+
+                if (dump is null)
+                    dump = line;
+
+                else
+                    dump += Environment.NewLine + line;
+            }
+
+            while (!h5dumpProcess.StandardError.EndOfStream)
+            {
+                var line = h5dumpProcess.StandardError.ReadLine();
+
+                if (dump is null)
+                    dump = line;
+
+                else
+                    dump += Environment.NewLine + line;
+            }
+
+            return dump;
+        }
+
         public static async Task RunForAllVersionsAsync(Func<H5F.libver_t, Task> action)
         {
             var versions = new H5F.libver_t[]
@@ -84,15 +129,15 @@ namespace PureHDF.Tests
 
         public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong length, long cpl = 0, long apl = 0)
         {
-            var dims0 = new ulong[] { length };
-            Add(container, fileId, groupName, elementName, typeId, dataPtr, dims0, dims0, cpl, apl);
+            var dims = new ulong[] { length };
+            Add(container, fileId, groupName, elementName, typeId, dataPtr, dims, dims, cpl, apl);
         }
 
-        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims0, ulong[]? dims1 = default, long cpl = 0, long apl = 0)
+        public static unsafe void Add(ContainerType container, long fileId, string groupName, string elementName, long typeId, void* dataPtr, ulong[] dims, ulong[]? maxDims = default, long cpl = 0, long apl = 0)
         {
-            dims1 ??= dims0;
+            maxDims ??= dims;
 
-            var spaceId = H5S.create_simple(dims0.Length, dims0, dims1);
+            var spaceId = H5S.create_simple(dims.Length, dims, maxDims);
             Add(container, fileId, groupName, elementName, typeId, dataPtr, spaceId, cpl, apl);
             _ = H5S.close(spaceId);
         }
@@ -160,7 +205,7 @@ namespace PureHDF.Tests
             }
         }
 
-        private static long GetHdfTypeIdFromType(Type type, ulong? arrayLength = default)
+        private static long GetHdfTypeIdFromType(Type type, ulong? arrayLength = default, bool includeH5NameAttribute = false)
         {
             if (type == typeof(bool))
                 return H5T.NATIVE_UINT8;
@@ -188,6 +233,46 @@ namespace PureHDF.Tests
 
             else if (type == typeof(long))
                 return H5T.NATIVE_INT64;
+
+#if NET7_0_OR_GREATER
+            else if (type == typeof(UInt128))
+            {
+                var typeId = H5T.copy(H5T.NATIVE_UINT64);
+                _ = H5T.set_size(typeId, 16);
+                _ = H5T.set_precision(typeId, 128);
+
+                return typeId;
+            }
+
+            else if (type == typeof(Int128))
+            {
+                var typeId = H5T.copy(H5T.NATIVE_INT64);
+                _ = H5T.set_size(typeId, 16);
+                _ = H5T.set_precision(typeId, 128);
+                
+                return typeId;
+            }
+#endif
+
+#if NET5_0_OR_GREATER
+            else if (type == typeof(Half))
+            {
+                var typeId = H5T.copy(H5T.NATIVE_FLOAT);
+
+                _ = H5T.set_fields(typeId,
+                    spos: (nint)15,
+                    epos: (nint)10,
+                    esize: (nint)5,
+                    mpos: (nint)0,
+                    msize: (nint)10);
+
+                _ = H5T.set_ebias(typeId, (nint)15);
+                _ = H5T.set_precision(typeId, (nint)16);
+                _ = H5T.set_size(typeId, (nint)2);                
+
+                return typeId;
+            }
+#endif
 
             else if (type == typeof(float))
                 return H5T.NATIVE_FLOAT;
@@ -247,7 +332,11 @@ namespace PureHDF.Tests
                         : null;
 
                     var fieldType = GetHdfTypeIdFromType(fieldInfo.FieldType, arraySize);
-                    var nameAttribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+
+                    var nameAttribute = includeH5NameAttribute
+                        ? fieldInfo.GetCustomAttribute<H5NameAttribute>(true)
+                        : default;
+
                     var hdfFieldName = nameAttribute is not null ? nameAttribute.Name : fieldInfo.Name;
 
                     _ = H5T.insert(typeId, hdfFieldName, Marshal.OffsetOf(type, fieldInfo.Name), fieldType);

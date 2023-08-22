@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   DATASET "selection" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SIMPLE { ( 8 ) / ( 8 ) }
+      DATA {
+      (0): 3, 3, 2, 2, 1, 1, 0, 0
+      }
+   }
+}
+}

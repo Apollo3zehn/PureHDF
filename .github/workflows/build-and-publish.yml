@@ -35,6 +35,24 @@ jobs:
         if: ${{ env.IS_RELEASE == 'true' }}
         run: python build/create_tag_body.py
 
+      - name: Cache HDF5 installer
+        id: cache-primes
+        uses: actions/cache@v3
+        with:
+          path: hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
+          key: hdf5-installer
+
+      - name: Download HDF5 installer
+        if: steps.cache-primes.outputs.cache-hit != 'true'
+        run: wget -q https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.14/hdf5-1.14.1/bin/unix/hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
+
+      - name: Install
+        run: |
+          tar -xzf hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
+          hdf/HDF5-1.14.1-Linux.sh --prefix=hdf --skip-license
+          sudo ln -s $(pwd)/hdf/HDF_Group/HDF5/1.14.1/bin/h5dump /usr/bin/h5dump
+          h5dump --version
+
       - name: Build
         run: |
           dotnet build -c Release src/PureHDF/PureHDF.csproj
@@ -47,8 +65,22 @@ jobs:
           dotnet build -c Release src/PureHDF.VFD.AmazonS3/PureHDF.VFD.AmazonS3.csproj
           dotnet build -c Release src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj
 
-      - name: Test
-        run: dotnet test -c Release /p:BuildProjectReferences=false
+      # - run writing tests separately because h5dump seems to interfere with the 
+      #   reading tests ("The process cannot access the file '/tmp/tmpXXXXX.tmp' because it is being used by another process")
+      # - interestingly new "CanFilterXXX" tests also interfere with the reading tests (h5dump is used here, too)
+      # -> this needs to be investigated 
+
+      - name: Test (common)
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL.HsdsTests"
+
+      - name: Test (writing)
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Writing"
+
+      - name: Test (filters)
+        run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Filters"
+
+      - name: Test (HSDS)
+        run: bash tests/PureHDF.Tests/Reading/PureHDF.VOL/run-hsds-tests.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -60,7 +92,7 @@ jobs:
 
       - name: Prepare GitHub Pages
         run: |
-          dotnet tool install -g docfx --version 2.61.0
+          dotnet tool install -g docfx --version 2.70.1
           docfx doc/docfx.json 
           touch doc/_site/.nojekyll
         if: github.ref == 'refs/heads/master'

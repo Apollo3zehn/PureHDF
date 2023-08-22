@@ -1,2 +1,5 @@
-- name: Api Documentation
+- name: Introduction
+  href: /
+
+- name: PureHDF API
   href: api/

@@ -19,7 +19,7 @@ internal class HsdsDataLayout : IH5DataLayout
 
     public H5DataLayoutClass Class { get; }
 
-    public ulong[] ChunkDimensions
+    public ulong[] Chunks
     {
         get
         {

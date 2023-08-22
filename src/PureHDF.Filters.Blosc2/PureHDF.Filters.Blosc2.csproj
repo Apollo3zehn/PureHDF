@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Enables hardware accelerated Blosc filter support for PureHDF</Description>
+    <Description>Enables hardware accelerated Blosc filter support for PureHDF.</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 Blosc Blosc2</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.0</TargetFramework>

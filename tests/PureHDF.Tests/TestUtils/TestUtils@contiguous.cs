@@ -7,12 +7,12 @@ namespace PureHDF.Tests
     {
         public static unsafe void AddContiguousDataset(long fileId)
         {
-            Add(ContainerType.Dataset, fileId, "contiguous", "contiguous", H5T.NATIVE_INT32, TestData.HugeData.AsSpan());
+            Add(ContainerType.Dataset, fileId, "contiguous", "contiguous", H5T.NATIVE_INT32, SharedTestData.HugeData.AsSpan());
         }
 
         public static unsafe void AddContiguousDatasetWithFillValueAndAllocationLate(long fileId, int fillValue)
         {
-            var length = (ulong)TestData.MediumData.Length;
+            var length = (ulong)SharedTestData.MediumData.Length;
             var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
             _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
@@ -57,10 +57,10 @@ namespace PureHDF.Tests
             if (File.Exists(pathC))
                 File.Delete(pathC);
 
-            _ = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((TestData.MediumData.Length - 40) * bytesoftype));
+            _ = H5P.set_external(dcpl_id, pathC, new IntPtr(0), (ulong)((SharedTestData.MediumData.Length - 40) * bytesoftype));
 
             // write data
-            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, TestData.MediumData.AsSpan(), cpl: dcpl_id);
+            Add(ContainerType.Dataset, fileId, "external", datasetName, H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), cpl: dcpl_id);
 
             // truncate file b
             using (var fileStream2 = File.OpenWrite(pathB))

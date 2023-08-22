@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Enables hardware accelerated Deflate filter support for PureHDF (based on Intel ISA-L)</Description>
+    <Description>Enables hardware accelerated Deflate filter support for PureHDF (based on Intel ISA-L).</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 Deflate Intel ISAL-L</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-      <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />
+      <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0" />
   </ItemGroup>
 
   <ItemGroup>

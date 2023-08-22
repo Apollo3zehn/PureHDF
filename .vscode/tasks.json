@@ -28,6 +28,48 @@
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: common",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--filter",
+                "FullyQualifiedName!~PureHDF.Tests.Writing & FullyQualifiedName!~PureHDF.Tests.Filters & FullyQualifiedName!~PureHDF.Tests.Reading.VOL.HsdsTests"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: writing",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--filter",
+                "FullyQualifiedName~PureHDF.Tests.Writing"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: filters",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "test",
+                "--filter",
+                "FullyQualifiedName~PureHDF.Tests.Filters"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "tests: HSDS",
+            "command": "bash",
+            "type": "process",
+            "args": [
+                "tests/PureHDF.Tests/Reading/PureHDF.VOL/run-hsds-tests.sh"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
