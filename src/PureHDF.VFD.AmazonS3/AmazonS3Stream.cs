@@ -7,7 +7,7 @@ using Amazon.S3.Model;
 namespace PureHDF.VFD.AmazonS3;
 
 /// <summary>
-/// A stream reads data from Amazon S3.
+/// A stream that reads data from Amazon S3.
 /// </summary>
 public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
 {

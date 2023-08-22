@@ -92,7 +92,7 @@ jobs:
 
       - name: Prepare GitHub Pages
         run: |
-          dotnet tool install -g docfx --version 2.61.0
+          dotnet tool install -g docfx --version 2.70.1
           docfx doc/docfx.json 
           touch doc/_site/.nojekyll
         if: github.ref == 'refs/heads/master'

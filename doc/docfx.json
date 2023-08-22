@@ -5,8 +5,14 @@
         {
           "src": "../",
           "files": [
-            "src/PureHDF/PureHDF.csproj",
-            "src/PureHDF.VOL.Hsds/PureHDF.VOL.Hsds.csproj"
+            "artifacts/bin/PureHDF/Release/net7.0/PureHDF.dll",
+            "artifacts/bin/PureHDF.Filters.Blosc2/Release/netstandard2.0/PureHDF.Filters.Blosc2.dll",
+            "artifacts/bin/PureHDF.Filters.BZip2.SharpZipLib/Release/netstandard2.0/PureHDF.Filters.BZip2.SharpZipLib.dll",
+            "artifacts/bin/PureHDF.Filters.Deflate.ISA-L/Release/netstandard2.0/PureHDF.Filters.Deflate.ISA-L.dll",
+            "artifacts/bin/PureHDF.Filters.Deflate.SharpZipLib/Release/netstandard2.0/PureHDF.Filters.Deflate.SharpZipLib.dll",
+            "artifacts/bin/PureHDF.Filters.Lzf/Release/netstandard2.0/PureHDF.Filters.Lzf.dll",
+            "artifacts/bin/PureHDF.VFD.AmazonS3/Release/netstandard2.1/PureHDF.VFD.AmazonS3.dll",
+            "artifacts/bin/PureHDF.VOL.Hsds/Release/net6.0/PureHDF.VOL.Hsds.dll"
           ]
         }
       ],
