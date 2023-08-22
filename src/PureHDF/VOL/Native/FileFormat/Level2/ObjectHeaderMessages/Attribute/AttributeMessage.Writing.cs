@@ -46,11 +46,11 @@ internal partial record class AttributeMessage
         var dataspace = attribute is H5Attribute h5Attribute
 
             ? DataspaceMessage.Create(
-                fileDimensions: h5Attribute.Dimensions ?? memoryDims 
+                fileDims: h5Attribute.Dimensions ?? memoryDims 
                     ?? throw new Exception("This should never happen."))
 
             : DataspaceMessage.Create(
-                fileDimensions: memoryDims
+                fileDims: memoryDims
                     ?? throw new Exception("This should never happen."));
 
         /* validation */

@@ -3,21 +3,37 @@
 internal partial record class DataspaceMessage
 {
     public static DataspaceMessage Create(
-        ulong[] fileDimensions)
+        ulong[]? fileDims)
     {
-        var dataspace = new DataspaceMessage(
-            Rank: (byte)fileDimensions.Length,
-            Flags: DataspaceMessageFlags.None,
-            Type: fileDimensions.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
-            Dimensions: fileDimensions,
-            MaxDimensions: fileDimensions,
-            PermutationIndices: default
-        )
+        if (fileDims is null)
         {
-            Version = 2
-        };
+            return new DataspaceMessage(
+                Rank: 0,
+                Flags: DataspaceMessageFlags.None,
+                Type: DataspaceType.Null,
+                Dimensions: Array.Empty<ulong>(),
+                MaxDimensions: Array.Empty<ulong>(),
+                PermutationIndices: default
+            )
+            {
+                Version = 2
+            };
+        }
 
-        return dataspace;
+        else
+        {
+            return new DataspaceMessage(
+                Rank: (byte)fileDims.Length,
+                Flags: DataspaceMessageFlags.None,
+                Type: fileDims.Any() ? DataspaceType.Simple : DataspaceType.Scalar,
+                Dimensions: fileDims,
+                MaxDimensions: fileDims,
+                PermutationIndices: default
+            )
+            {
+                Version = 2
+            };
+        }
     }
 
     public override ushort GetEncodeSize()

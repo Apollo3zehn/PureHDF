@@ -203,14 +203,20 @@ partial class H5NativeWriter
             DatatypeMessage.Create(Context, memoryData, isScalar);
 
         // dataspace
-        var fileDimensions = dataset.FileDims is null
-            ? dataset.MemorySelection is null || dataset.MemorySelection is AllSelection
-                ? memoryDims ?? throw new Exception("This should never happen.")
-                : new ulong[] { dataset.MemorySelection.TotalElementCount }
-            : dataset.FileDims;
+        var fileDims = dataset.FileDims;
+
+        if (fileDims is null)
+        {
+            if (memoryDims is not null)
+            {
+                fileDims = dataset.MemorySelection is null || dataset.MemorySelection is AllSelection
+                    ? memoryDims
+                    : new ulong[] { dataset.MemorySelection.TotalElementCount };
+            }
+        }
 
         var dataspace = DataspaceMessage.Create(
-            fileDimensions: fileDimensions);
+            fileDims: fileDims);
 
         // chunk dimensions / filters
         var chunkDimensions = default(uint[]);

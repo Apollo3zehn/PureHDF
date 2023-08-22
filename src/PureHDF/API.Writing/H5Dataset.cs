@@ -1,3 +1,5 @@
+using Microsoft.VisualBasic;
+
 namespace PureHDF;
 
 /// <summary>
@@ -90,6 +92,29 @@ public class H5Dataset<T> : H5Dataset
             default,
             fileDims, 
             datasetCreation)
+    {
+        //
+    }
+}
+
+/// <summary>
+/// A null space dataset.
+/// </summary>
+/// <typeparam name="T">The type of the data.</typeparam>
+public class H5NullDataset<T> : H5Dataset
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="H5NullDataset{T}"/> class.
+    /// </summary>
+    public H5NullDataset()
+        : base(
+            typeof(T), 
+            data: null,
+            default,
+            default,
+            default,
+            fileDims: null, 
+            default)
     {
         //
     }

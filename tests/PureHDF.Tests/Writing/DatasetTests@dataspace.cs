@@ -5,6 +5,38 @@ namespace PureHDF.Tests.Writing;
 public partial class DatasetTests
 {
     [Fact]
+    public void CanWrite_Space_Null()
+    {
+        // Arrange
+        var file = new H5File();
+
+        file["Null"] = new H5NullDataset<int[]>();
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/space_null.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
     public void CanWrite_Space_2D()
     {
         // Arrange
@@ -25,7 +57,7 @@ public partial class DatasetTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText($"DumpFiles/data_2D.dump")
+                .ReadAllText($"DumpFiles/space_2D.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "DATASET");
 

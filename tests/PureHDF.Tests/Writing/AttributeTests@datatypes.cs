@@ -425,7 +425,7 @@ public partial class AttributeTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText($"DumpFiles/data_2D.dump")
+                .ReadAllText($"DumpFiles/space_2D.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
