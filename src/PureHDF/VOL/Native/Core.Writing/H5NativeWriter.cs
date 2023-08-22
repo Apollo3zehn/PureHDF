@@ -204,7 +204,7 @@ partial class H5NativeWriter
 
         // dataspace
         var fileDimensions = dataset.FileDims is null
-            ? dataset.MemorySelection is null
+            ? dataset.MemorySelection is null || dataset.MemorySelection is AllSelection
                 ? memoryDims ?? throw new Exception("This should never happen.")
                 : new ulong[] { dataset.MemorySelection.TotalElementCount }
             : dataset.FileDims;
@@ -340,8 +340,8 @@ partial class H5NativeWriter
                 h5d,
                 encode,
                 memoryData,
-                dataset.MemorySelection,
                 dataset.FileSelection,
+                dataset.MemorySelection,
                 memoryDims ?? throw new Exception("This should never happen."));
         }
 
@@ -387,8 +387,8 @@ partial class H5NativeWriter
         H5D_Base h5d,
         EncodeDelegate<TElement> encode,
         Memory<TElement> memoryData,
-        Selection? memorySelection,
         Selection? fileSelection,
+        Selection? memorySelection,
         ulong[] memoryDims)
     {
         var datasetInfo = h5d.Dataset;
