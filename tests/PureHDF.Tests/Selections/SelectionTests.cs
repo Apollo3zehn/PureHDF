@@ -1,9 +1,9 @@
-﻿using System.ComponentModel;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using HDF.PInvoke;
+using PureHDF.Selections;
 using Xunit;
 
-namespace PureHDF.Tests.Reading
+namespace PureHDF.Tests.Selections
 {
     public class SelectionTests
     {

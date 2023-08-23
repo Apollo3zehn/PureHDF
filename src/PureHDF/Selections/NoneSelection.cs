@@ -1,4 +1,4 @@
-namespace PureHDF;
+namespace PureHDF.Selections;
 
 /// <summary>
 /// This selection selects no elements in the dataset.

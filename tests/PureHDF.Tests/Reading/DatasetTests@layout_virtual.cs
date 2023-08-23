@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using HDF.PInvoke;
+using PureHDF.Selections;
 using Xunit;
 
 namespace PureHDF.Tests.Reading

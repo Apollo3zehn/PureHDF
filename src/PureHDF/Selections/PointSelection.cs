@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.Selections;
 
 /// <summary>
 /// A selection which uses a collection of points to select the data.

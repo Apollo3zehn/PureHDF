@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using PureHDF.Selections;
+using Xunit;
 
 namespace PureHDF.Tests.Writing;
 

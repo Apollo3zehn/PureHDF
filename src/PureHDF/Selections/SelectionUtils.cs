@@ -1,6 +1,6 @@
 using System.Buffers;
 
-namespace PureHDF;
+namespace PureHDF.Selections;
 
 internal record DecodeInfo<T>(
     ulong[] SourceDims,

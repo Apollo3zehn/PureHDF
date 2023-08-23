@@ -1,4 +1,4 @@
-namespace PureHDF;
+namespace PureHDF.Selections;
 
 /// <summary>
 /// A regular hyperslab is a selection of elements from a hyper rectangle.

@@ -1,5 +1,5 @@
 using BenchmarkDotNet.Attributes;
-using PureHDF;
+using PureHDF.Selections;
 
 namespace Benchmark
 {
