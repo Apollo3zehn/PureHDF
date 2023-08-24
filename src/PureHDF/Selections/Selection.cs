@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.Selections;
 
 /// <summary>
 /// A base class which represents a selection.

@@ -1,4 +1,6 @@
-﻿namespace PureHDF;
+﻿using PureHDF.Selections;
+
+namespace PureHDF;
 
 internal delegate Task ReadVirtualDelegate<TResult>(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
 

@@ -1,3 +1,5 @@
+using PureHDF.Selections;
+
 namespace PureHDF;
 
 /// <summary>

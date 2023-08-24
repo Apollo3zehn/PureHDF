@@ -78,6 +78,7 @@ using System.IO.Pipelines;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks.Schedulers;
 using PureHDF;
+using PureHDF.Selections;
 
 const ulong CHUNK_SIZE = 1 * 1024 * 1024 * 100 / 4; // 4 bytes per value
 const ulong CHUNK_COUNT = 10;

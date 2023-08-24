@@ -1,4 +1,4 @@
-namespace PureHDF;
+namespace PureHDF.Selections;
 
 /// <summary>
 /// An irregular hyperslab is a selection of elements from a hyper rectangle.

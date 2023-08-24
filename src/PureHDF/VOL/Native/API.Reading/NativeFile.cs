@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using PureHDF.Selections;
+using System.Runtime.CompilerServices;
 
 namespace PureHDF.VOL.Native;
 

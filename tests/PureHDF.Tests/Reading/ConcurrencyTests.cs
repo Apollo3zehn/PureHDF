@@ -2,6 +2,7 @@
 
 using System.IO.MemoryMappedFiles;
 using HDF.PInvoke;
+using PureHDF.Selections;
 using Xunit;
 
 namespace PureHDF.Tests.Reading

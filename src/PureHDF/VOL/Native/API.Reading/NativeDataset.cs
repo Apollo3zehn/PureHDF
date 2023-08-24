@@ -1,3 +1,4 @@
+using PureHDF.Selections;
 using System.Buffers;
 using System.Reflection;
 using System.Runtime.CompilerServices;

@@ -1,3 +1,4 @@
+using PureHDF.Selections;
 using System.Linq.Expressions;
 
 namespace PureHDF;

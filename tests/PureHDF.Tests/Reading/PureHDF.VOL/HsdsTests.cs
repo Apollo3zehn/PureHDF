@@ -1,4 +1,5 @@
 using PureHDF.VOL.Hsds;
+using PureHDF.Selections;
 using Xunit;
 
 namespace PureHDF.Tests.Reading.VOL;

@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.Selections;
 
 /// <summary>
 /// A selection which uses a delegate to get the information about how to walk through the data.

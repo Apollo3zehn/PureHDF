@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using Hsds.Api;
+using PureHDF.Selections;
 using PureHDF.VOL.Native;
 
 namespace PureHDF.VOL.Hsds;

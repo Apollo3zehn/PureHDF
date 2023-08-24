@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using Hsds.Api;
+using PureHDF.Selections;
 
 namespace PureHDF.VOL.Hsds;
 
