@@ -34,7 +34,6 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                fileDims: new[] { (ulong)data.Length },
                 chunks: new[] { (uint)data.Length })
         };
 
