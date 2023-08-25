@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Reading API | PureHDF </title>
+      <title>Reading | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Reading API | PureHDF ">
+      <meta name="title" content="Reading | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -72,7 +72,7 @@
         </div>
 
         <article data-uid="">
-<h1 id="reading-api">Reading API</h1>
+<h1 id="reading">Reading</h1>
 
 <ol>
 <li><a href="#1-objects">Objects</a></li>
@@ -416,85 +416,7 @@ var selection = new DelegateSelection(totalElementCount: 11, Walker);
 <p>will simply skip the first 5 elements and return the rest of the dataset.</p>
 <p>This way of building a hyperslab / selection has been implemented in an efford to provide a more .NET-like experience when working with data.</p>
 <h1 id="5-filters">5. Filters</h1>
-<h2 id="51-built-in-filters">5.1 Built-in Filters</h2>
-<ul>
-<li>Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)</li>
-<li>Fletcher32</li>
-<li>Deflate (zlib)</li>
-<li>Scale-Offset</li>
-</ul>
-<p><sup>1</sup> NET Standard 2.1 and above</p>
-<h2 id="52-external-filters">5.2 External Filters</h2>
-<p>Before you can use external filters, you need to register them using <code>H5Filter.Register(...)</code>. This method accepts a filter identifier, a filter name and the actual filter function.</p>
-<p>This function could look like the following and should be adapted to your specific filter library:</p>
-<pre><code class="lang-cs">public static Func&lt;FilterInfo, Memory&lt;byte&gt;&gt; MyFilterFunc { get; } = info =&gt;
-{
-    // Decompressing
-    if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-    {
-        var resultBuffer = info.FinalBuffer.Equals(default)
-            ? new byte[info.SourceBuffer.Length]
-            : info.FinalBuffer;
-
-        // pseudo code
-        byte[] decompressedData = MyFilter.Decompress(info.Parameters, info.SourceBuffer, resultBuffer);
-        return decompressedData;
-    }
-
-    // Compressing
-    else
-    {
-        throw new Exception(&quot;Writing data chunks is not yet supported by PureHDF.&quot;);
-    }
-};
-
-</code></pre>
-<h2 id="53-supported-external-filters">5.3 Supported External Filters</h2>
-<p><strong>Deflate (Intel ISA-L)</strong></p>
-<ul>
-<li>based on <a href="https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/">Intrinsics.ISA-L.PInvoke</a></li>
-<li>hardware accelerated: <code>SSE2</code> / <code>AVX2</code> / <code>AVX512</code></li>
-<li><a href="https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md">benchmark results</a></li>
-</ul>
-<p><code>dotnet add package PureHDF.Filters.Deflate.ISA-L</code></p>
-<pre><code class="lang-cs">using PureHDF.Filters;
-
-H5Filter.Register(new DeflateISALFilter());
-</code></pre>
-<p><strong>Deflate (SharpZipLib)</strong></p>
-<ul>
-<li>based on <a href="https://www.nuget.org/packages/SharpZipLib">SharpZipLib</a></li>
-</ul>
-<p><code>dotnet add package PureHDF.Filters.Deflate.SharpZipLib</code></p>
-<pre><code class="lang-cs">using PureHDF.Filters;
-
-H5Filter.Register(new DeflateSharpZipLibFilter());
-</code></pre>
-<p><strong>Blosc / Blosc2</strong></p>
-<ul>
-<li>based on <a href="https://www.nuget.org/packages/Blosc2.PInvoke">Blosc2.PInvoke</a></li>
-<li>hardware accelerated: <code>SSE2</code> / <code>AVX2</code></li>
-</ul>
-<p><code>dotnet add package PureHDF.Filters.Blosc2</code></p>
-<pre><code class="lang-cs">using PureHDF.Filters;
-
-H5Filter.Register(new Blosc2Filter());
-</code></pre>
-<p><strong>BZip2 (SharpZipLib)</strong></p>
-<ul>
-<li>based on <a href="https://www.nuget.org/packages/SharpZipLib">SharpZipLib</a></li>
-</ul>
-<p><code>dotnet add package PureHDF.Filters.BZip2.SharpZipLib</code></p>
-<pre><code class="lang-cs">using PureHDF.Filters;
-
-H5Filter.Register(new BZip2SharpZipLibFilter());
-</code></pre>
-<p><strong>LZF</strong></p>
-<p><code>dotnet add package PureHDF.Filters.LZF</code></p>
-<pre><code class="lang-cs">using PureHDF.Filters;
-
-H5Filter.Register(new LzfFilter());
-</code></pre>
+<p>Many of the standard HDF5 filters are supported. Please see the <a href="filters.html">Filters</a> section for more details about the available filters.</p>
 <h1 id="6-reading-compound-data">6. Reading Compound Data</h1>
 <p>There are three ways to read structs which are explained in the following sections. Here is an overview:</p>
 <table>

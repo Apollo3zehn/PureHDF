@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Filters | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Filters | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/articles/filters.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="filters">Filters</h1>
+
+<h2 id="built-in">Built-in</h2>
+<ul>
+<li>Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)</li>
+<li>Fletcher32</li>
+<li>Deflate (zlib)</li>
+<li>Scale-Offset</li>
+</ul>
+<h2 id="external">External</h2>
+<p>External filters must be registered to PureHDF before they can be used. You can register a filter by first installing the respective nuget package and then instantiate the filter class. If, for instance, you would like to add support for the <code>C-Blosc2</code> filter, run <code>dotnet add package PureHDF.Filters.Blosc2</code> to add the nuget package to your project and then register it:</p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new Blosc2Filter());
+</code></pre>
+<p>If you would like to add your own filter implementation, just create a new class which derives from the <code>IH5Filter</code> interface as shown below. The <code>IH5Filter.GetParameters</code> method needs to be implemented only if the filter is used to <code>compress</code> data.</p>
+<pre><code class="lang-cs">public class MyFilter : IH5Filter
+{
+    public ushort FilterId =&gt; &lt;your filter ID&gt;;
+    public string Name =&gt; &quot;&lt;your filter name&gt;&quot;;
+
+    public Memory&lt;byte&gt; Filter(FilterInfo info)
+    {
+        throw new NotImplementedException();
+    }
+
+    public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary&lt;string, object&gt;? options)
+    {
+        throw new NotImplementedException();
+    }
+}
+</code></pre>
+<blockquote>
+<p>Note: For <code>reading</code>, the filter will be selected automatically by the library as long as it is registered with the correct ID.</p>
+</blockquote>
+<blockquote>
+<p>Note: For <code>writing</code>, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the <code>H5WriteOptions.Filters</code> list). See <a href="writing.html">writing</a> for more details.</p>
+</blockquote>
+<h2 id="supported-filters-overview">Supported Filters Overview</h2>
+<p>based on <a href="https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0">ZLibStream</a></p>
+<table>
+<thead>
+<tr>
+<th>Filter</th>
+<th>Compress</th>
+<th>Decompress</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shuffle</td>
+<td>✓</td>
+<td>✓</td>
+<td>hardware-accelerated</td>
+</tr>
+<tr>
+<td>Fletcher-32</td>
+<td>✓</td>
+<td>✓</td>
+<td></td>
+</tr>
+<tr>
+<td>N-Bit</td>
+<td>-</td>
+<td>-</td>
+<td></td>
+</tr>
+<tr>
+<td>Scale-Offset</td>
+<td>-</td>
+<td>✓</td>
+<td></td>
+</tr>
+<tr>
+<td>Deflate</td>
+<td>✓</td>
+<td>✓</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF.Filters.Blosc2">C-Blosc2</a></td>
+<td>✓</td>
+<td>✓</td>
+<td>native, hardware-accelerated</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF.Filters.BZip2.SharpZipLib">BZip2 (SharpZipLib)</a></td>
+<td>✓</td>
+<td>✓</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF.Filters.Deflate.ISA-L">Deflate (ISA-L)</a></td>
+<td>✓</td>
+<td>✓</td>
+<td>native, hardware-accelerated</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF.Filters.Deflate.SharpZipLib">Deflate (SharpZipLib)</a></td>
+<td>✓</td>
+<td>✓</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF.Filters.LZF">LZF</a></td>
+<td>✓</td>
+<td>✓</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="external-filter-details">External Filter Details</h2>
+<p><strong>C-Blosc2</strong></p>
+<ul>
+<li>based on <a href="https://www.nuget.org/packages/Blosc2.PInvoke">Blosc2.PInvoke</a></li>
+<li>hardware accelerated: <code>SSE2</code> / <code>AVX2</code></li>
+</ul>
+<p><code>dotnet add package PureHDF.Filters.Blosc2</code></p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new Blosc2Filter());
+</code></pre>
+<p><strong>bzip2 (SharpZipLib)</strong></p>
+<ul>
+<li>based on <a href="https://www.nuget.org/packages/SharpZipLib">SharpZipLib</a></li>
+</ul>
+<p><code>dotnet add package PureHDF.Filters.BZip2.SharpZipLib</code></p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new BZip2SharpZipLibFilter());
+</code></pre>
+<p><strong>Deflate (Intel ISA-L)</strong></p>
+<ul>
+<li>based on <a href="https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/">Intrinsics.ISA-L.PInvoke</a></li>
+<li>hardware accelerated: <code>SSE2</code> / <code>AVX2</code> / <code>AVX512</code></li>
+<li><a href="https://github.com/Apollo3zehn/PureHDF/blob/master/benchmarks/PureHDF.Benchmarks/Inflate.md">benchmark results</a></li>
+</ul>
+<p><code>dotnet add package PureHDF.Filters.Deflate.ISA-L</code></p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new DeflateISALFilter());
+</code></pre>
+<p><strong>Deflate (SharpZipLib)</strong></p>
+<ul>
+<li>based on <a href="https://www.nuget.org/packages/SharpZipLib">SharpZipLib</a></li>
+</ul>
+<p><code>dotnet add package PureHDF.Filters.Deflate.SharpZipLib</code></p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new DeflateSharpZipLibFilter());
+</code></pre>
+<p><strong>LZF</strong></p>
+<p><code>dotnet add package PureHDF.Filters.LZF</code></p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new LzfFilter());
+</code></pre>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/articles/filters.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

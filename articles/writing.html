@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Writing API | PureHDF </title>
+      <title>Writing | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Writing API | PureHDF ">
+      <meta name="title" content="Writing | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -72,7 +72,7 @@
         </div>
 
         <article data-uid="">
-<h1 id="writing-api">Writing API</h1>
+<h1 id="writing">Writing</h1>
 
 <p>The first step is to create a new <code>H5File</code> instance:</p>
 <pre><code class="lang-cs">var file = new H5File();
@@ -117,15 +117,30 @@
 <p>The last step is to write the defined file to the drive:</p>
 <pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;);
 </code></pre>
-<p><strong>Dimensions</strong>
-If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. <code>int[,]</code>), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality like this:</p>
-<pre><code class="lang-cs">var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
+<h2 id="dimensions">Dimensions</h2>
+<p>If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. <code>int[,]</code>), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality (or <code>reshape</code>) like this:</p>
+<pre><code class="lang-cs">// Create a 100x100 dataset - the data itself must be an
+// array-like type with a total of 100x100 = 10.000 elements. */
+var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
 </code></pre>
-<p><strong>Chunks</strong></p>
+<p>Here is a quick example how to use a multidimensional array to determine the shape of the dataset:</p>
+<pre><code class="lang-cs">// Create a 3x3 dataset - no `fileDims` parameter required
+var data = new int[,] 
+{
+    { 0, 1, 2 },
+    { 3, 4, 5 },
+    { 6, 7, 8 }
+};
+
+var dataset = new H5Dataset(data);
+</code></pre>
+<h2 id="chunks">Chunks</h2>
 <p>To chunk data, give the <code>H5Dataset</code> some chunk dimensions:</p>
 <pre><code class="lang-cs">var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
 </code></pre>
-<p><strong>Filters</strong></p>
+<p>When no chunks and no filters are specified, the data will be written as compact or contiguous datasets, depending on the total size.</p>
+<h2 id="filters">Filters</h2>
+<p>Many of the standard HDF5 filters are supported. Please see the <a href="filters.html">Filters</a> section for more details about the available filters.</p>
 <p>Filters can be configured either for all datasets or for a specific dataset.</p>
 <p>If you like to configure them for all datasets, create an instance of the <code>H5WriteOptions</code> class and add some filters to the pipeline:</p>
 <pre><code class="lang-cs">var options = new H5WriteOptions(
@@ -146,9 +161,7 @@ If you do not specify the dimensions, they will be derived from the data being p
 
 var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
 </code></pre>
-<p><strong>External filters</strong></p>
-<p>External filters need to be registered first as shown in the documentation for the reading API.</p>
-<h1 id="todo">TODO</h1>
+<h2 id="todo">TODO</h2>
 <ul>
 <li>deferred writing</li>
 <li>slicing</li>

@@ -908,6 +908,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "articles/filters.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/filters.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "articles/reading.md",
       "output": {
         ".html": {
