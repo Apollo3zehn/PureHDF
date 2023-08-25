@@ -80,7 +80,7 @@ var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
 
 **Filters**
 
-Filters can be configure either for all datasets or for a specific dataset.
+Filters can be configured either for all datasets or for a specific dataset.
 
 If you like to configure them for all datasets, create an instance of the `H5WriteOptions` class and add some filters to the pipeline:
 
