@@ -55,11 +55,13 @@ var group = new H5Group();
 
 If the group should have some datasets, just add them using the dictionary collection initializer - just like with a normal dictionary:
 
+```cs
 var group = new H5Group()
 {
     ["numerical-dataset"] = new double[] { 2.0, 3.1, 4.2 },
     ["string-dataset"] = new string[] { "One", "Two", "Three" }
 }
+```
 
 Datasets and attributes can both be created either by instantiating their specific class (`H5Dataset`, `H5Attribute`) or by just providing some kind of data. This data can be nearly anything: arrays, scalars, numerical values, strings, anonymous types, enums, complex objects, structs, bool values, etc. However, whenever you want to provide more details like the dimensionality of the attribute or dataset, the chunk layout or the filters to be applied to a dataset, you need to instantiate the appropriate class.
 
