@@ -1,3 +1,5 @@
+# Writing API
+
 The first step is to create a new `H5File` instance:
 
 ```cs
