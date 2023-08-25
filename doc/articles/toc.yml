@@ -3,3 +3,6 @@
 
 - name: Writing
   href: writing.md
+
+- name: Filters
+  href: filters.md

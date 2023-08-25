@@ -1,4 +1,4 @@
-# Writing API
+# Writing
 
 The first step is to create a new `H5File` instance:
 
@@ -63,14 +63,31 @@ The last step is to write the defined file to the drive:
 file.Write("path/to/file.h5");
 ```
 
-**Dimensions**
-If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. `int[,]`), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality like this:
+## Dimensions
+
+If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. `int[,]`), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality (or `reshape`) like this:
 
 ```cs
+// Create a 100x100 dataset - the data itself must be an
+// array-like type with a total of 100x100 = 10.000 elements. */
 var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
 ```
 
-**Chunks**
+Here is a quick example how to use a multidimensional array to determine the shape of the dataset:
+
+```cs
+// Create a 3x3 dataset - no `fileDims` parameter required
+var data = new int[,] 
+{
+    { 0, 1, 2 },
+    { 3, 4, 5 },
+    { 6, 7, 8 }
+};
+
+var dataset = new H5Dataset(data);
+```
+
+## Chunks
 
 To chunk data, give the `H5Dataset` some chunk dimensions:
 
@@ -78,7 +95,11 @@ To chunk data, give the `H5Dataset` some chunk dimensions:
 var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
 ```
 
-**Filters**
+When no chunks and no filters are specified, the data will be written as compact or contiguous datasets, depending on the total size.
+
+## Filters
+
+Many of the standard HDF5 filters are supported. Please see the [Filters](filters.md) section for more details about the available filters.
 
 Filters can be configured either for all datasets or for a specific dataset.
 
@@ -110,10 +131,6 @@ var datasetCreation = new H5DatasetCreation(Filters: new() {
 var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
 ```
 
-**External filters**
-
-External filters need to be registered first as shown in the documentation for the reading API.
-
-# TODO
+## TODO
 - deferred writing
 - slicing
