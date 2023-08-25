@@ -126,7 +126,7 @@ If you do not specify the dimensions, they will be derived from the data being p
 <pre><code class="lang-cs">var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
 </code></pre>
 <p><strong>Filters</strong></p>
-<p>Filters can be configure either for all datasets or for a specific dataset.</p>
+<p>Filters can be configured either for all datasets or for a specific dataset.</p>
 <p>If you like to configure them for all datasets, create an instance of the <code>H5WriteOptions</code> class and add some filters to the pipeline:</p>
 <pre><code class="lang-cs">var options = new H5WriteOptions(
     Filters: new() {
