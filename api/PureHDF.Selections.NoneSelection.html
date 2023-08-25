@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class Selection
+      <title>Class NoneSelection
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class Selection
+      <meta name="title" content="Class NoneSelection
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
@@ -73,26 +73,26 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.Selection">
+        <article data-uid="PureHDF.Selections.NoneSelection">
 
 
 
-  <h1 id="PureHDF_Selection" data-uid="PureHDF.Selection" class="text-break">
-    Class Selection
+  <h1 id="PureHDF_Selections_NoneSelection" data-uid="PureHDF.Selections.NoneSelection" class="text-break">
+    Class NoneSelection
   
   </h1>
 
   <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.Selections.html">Selections</a></dd></dl>
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>A base class which represents a selection.</p>
+  <div class="markdown summary"><p>This selection selects no elements in the dataset.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public abstract class Selection</code></pre>
+    <pre><code class="lang-csharp hljs">public class NoneSelection : Selection</code></pre>
   </div>
 
 
@@ -102,22 +102,12 @@
     <dt>Inheritance</dt>
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-      <div><span class="xref">Selection</span></div>
+      <div><a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></div>
+      <div><span class="xref">NoneSelection</span></div>
     </dd>
   </dl>
 
 
-  <dl class="typelist derived">
-    <dt>Derived</dt>
-    <dd>
-      <div><a class="xref" href="PureHDF.AllSelection.html">AllSelection</a></div>
-      <div><a class="xref" href="PureHDF.DelegateSelection.html">DelegateSelection</a></div>
-      <div><a class="xref" href="PureHDF.HyperslabSelection.html">HyperslabSelection</a></div>
-      <div><a class="xref" href="PureHDF.IrregularHyperslabSelection.html">IrregularHyperslabSelection</a></div>
-      <div><a class="xref" href="PureHDF.NoneSelection.html">NoneSelection</a></div>
-      <div><a class="xref" href="PureHDF.PointSelection.html">PointSelection</a></div>
-    </dd>
-  </dl>
 
 
 
@@ -129,18 +119,19 @@
 </h2>
 
 
-  <a id="PureHDF_Selection__ctor_" data-uid="PureHDF.Selection.#ctor*"></a>
+  <a id="PureHDF_Selections_NoneSelection__ctor_" data-uid="PureHDF.Selections.NoneSelection.#ctor*"></a>
 
-  <h3 id="PureHDF_Selection__ctor" data-uid="PureHDF.Selection.#ctor">
-  Selection()
+  <h3 id="PureHDF_Selections_NoneSelection__ctor" data-uid="PureHDF.Selections.NoneSelection.#ctor">
+  NoneSelection()
   
   </h3>
 
-  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.Selections.NoneSelection.html">NoneSelection</a> instance.</p>
+</div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">protected Selection()</code></pre>
+    <pre><code class="lang-csharp hljs">public NoneSelection()</code></pre>
   </div>
 
 
@@ -159,9 +150,9 @@
 </h2>
 
 
-  <a id="PureHDF_Selection_TotalElementCount_" data-uid="PureHDF.Selection.TotalElementCount*"></a>
+  <a id="PureHDF_Selections_NoneSelection_TotalElementCount_" data-uid="PureHDF.Selections.NoneSelection.TotalElementCount*"></a>
 
-  <h3 id="PureHDF_Selection_TotalElementCount" data-uid="PureHDF.Selection.TotalElementCount">
+  <h3 id="PureHDF_Selections_NoneSelection_TotalElementCount" data-uid="PureHDF.Selections.NoneSelection.TotalElementCount">
   TotalElementCount
   
   </h3>
@@ -171,7 +162,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public abstract ulong TotalElementCount { get; }</code></pre>
+    <pre><code class="lang-csharp hljs">public override ulong TotalElementCount { get; }</code></pre>
   </div>
 
 
@@ -195,9 +186,9 @@
 </h2>
 
 
-  <a id="PureHDF_Selection_Walk_" data-uid="PureHDF.Selection.Walk*"></a>
+  <a id="PureHDF_Selections_NoneSelection_Walk_" data-uid="PureHDF.Selections.NoneSelection.Walk*"></a>
 
-  <h3 id="PureHDF_Selection_Walk_System_UInt64___" data-uid="PureHDF.Selection.Walk(System.UInt64[])">
+  <h3 id="PureHDF_Selections_NoneSelection_Walk_System_UInt64___" data-uid="PureHDF.Selections.NoneSelection.Walk(System.UInt64[])">
   Walk(ulong[])
   
   </h3>
@@ -207,7 +198,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public abstract IEnumerable&lt;Step&gt; Walk(ulong[] limits)</code></pre>
+    <pre><code class="lang-csharp hljs">public override IEnumerable&lt;Step&gt; Walk(ulong[] limits)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>

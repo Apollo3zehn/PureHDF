@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class PointSelection
+      <title>Class DelegateSelection
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class PointSelection
+      <meta name="title" content="Class DelegateSelection
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
@@ -73,26 +73,26 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.PointSelection">
+        <article data-uid="PureHDF.Selections.DelegateSelection">
 
 
 
-  <h1 id="PureHDF_PointSelection" data-uid="PureHDF.PointSelection" class="text-break">
-    Class PointSelection
+  <h1 id="PureHDF_Selections_DelegateSelection" data-uid="PureHDF.Selections.DelegateSelection" class="text-break">
+    Class DelegateSelection
   
   </h1>
 
   <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.Selections.html">Selections</a></dd></dl>
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>A selection which uses a collection of points to select the data.</p>
+  <div class="markdown summary"><p>A selection which uses a delegate to get the information about how to walk through the data.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class PointSelection : Selection</code></pre>
+    <pre><code class="lang-csharp hljs">public class DelegateSelection : Selection</code></pre>
   </div>
 
 
@@ -102,8 +102,8 @@
     <dt>Inheritance</dt>
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-      <div><a class="xref" href="PureHDF.Selection.html">Selection</a></div>
-      <div><span class="xref">PointSelection</span></div>
+      <div><a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></div>
+      <div><span class="xref">DelegateSelection</span></div>
     </dd>
   </dl>
 
@@ -119,25 +119,28 @@
 </h2>
 
 
-  <a id="PureHDF_PointSelection__ctor_" data-uid="PureHDF.PointSelection.#ctor*"></a>
+  <a id="PureHDF_Selections_DelegateSelection__ctor_" data-uid="PureHDF.Selections.DelegateSelection.#ctor*"></a>
 
-  <h3 id="PureHDF_PointSelection__ctor_System_UInt64_0__0___" data-uid="PureHDF.PointSelection.#ctor(System.UInt64[0:,0:])">
-  PointSelection(ulong[,])
+  <h3 id="PureHDF_Selections_DelegateSelection__ctor_System_UInt64_System_Func_System_UInt64___System_Collections_Generic_IEnumerable_PureHDF_Step___" data-uid="PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Step}})">
+  DelegateSelection(ulong, Func&lt;ulong[], IEnumerable&lt;Step&gt;&gt;)
   
   </h3>
 
-  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.PointSelection.html">PointSelection</a> class.</p>
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.Selections.DelegateSelection.html">DelegateSelection</a> class.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public PointSelection(ulong[,] points)</code></pre>
+    <pre><code class="lang-csharp hljs">public DelegateSelection(ulong totalElementCount, Func&lt;ulong[], IEnumerable&lt;Step&gt;&gt; walker)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>points</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[,]</dt>
-    <dd><p>The points to be selected.</p>
+    <dt><code>totalElementCount</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>The total number of elements which is used to preallocate the returned buffer.</p>
+</dd>
+    <dt><code>walker</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[], <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.Step.html">Step</a>&gt;&gt;</dt>
+    <dd><p>The user-defined walker delegate.</p>
 </dd>
   </dl>
 
@@ -156,9 +159,9 @@
 </h2>
 
 
-  <a id="PureHDF_PointSelection_TotalElementCount_" data-uid="PureHDF.PointSelection.TotalElementCount*"></a>
+  <a id="PureHDF_Selections_DelegateSelection_TotalElementCount_" data-uid="PureHDF.Selections.DelegateSelection.TotalElementCount*"></a>
 
-  <h3 id="PureHDF_PointSelection_TotalElementCount" data-uid="PureHDF.PointSelection.TotalElementCount">
+  <h3 id="PureHDF_Selections_DelegateSelection_TotalElementCount" data-uid="PureHDF.Selections.DelegateSelection.TotalElementCount">
   TotalElementCount
   
   </h3>
@@ -192,9 +195,9 @@
 </h2>
 
 
-  <a id="PureHDF_PointSelection_Walk_" data-uid="PureHDF.PointSelection.Walk*"></a>
+  <a id="PureHDF_Selections_DelegateSelection_Walk_" data-uid="PureHDF.Selections.DelegateSelection.Walk*"></a>
 
-  <h3 id="PureHDF_PointSelection_Walk_System_UInt64___" data-uid="PureHDF.PointSelection.Walk(System.UInt64[])">
+  <h3 id="PureHDF_Selections_DelegateSelection_Walk_System_UInt64___" data-uid="PureHDF.Selections.DelegateSelection.Walk(System.UInt64[])">
   Walk(ulong[])
   
   </h3>

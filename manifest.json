@@ -5,16 +5,6 @@
   "files": [
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.AllSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.AllSelection.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.ArrayExtensions.yml",
       "output": {
         ".html": {
@@ -29,16 +19,6 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.CompoundMember.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.DelegateSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.DelegateSelection.html"
         }
       },
       "version": ""
@@ -375,16 +355,6 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.HyperslabSelection.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.HyperslabSelection.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.IArrayType.yml",
       "output": {
         ".html": {
@@ -625,40 +595,80 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.IrregularHyperslabSelection.yml",
+      "source_relative_path": "api/PureHDF.Selections.AllSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.IrregularHyperslabSelection.html"
+          "relative_path": "api/PureHDF.Selections.AllSelection.html"
         }
       },
       "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.NoneSelection.yml",
+      "source_relative_path": "api/PureHDF.Selections.DelegateSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.NoneSelection.html"
+          "relative_path": "api/PureHDF.Selections.DelegateSelection.html"
         }
       },
       "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.PointSelection.yml",
+      "source_relative_path": "api/PureHDF.Selections.HyperslabSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.PointSelection.html"
+          "relative_path": "api/PureHDF.Selections.HyperslabSelection.html"
         }
       },
       "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.Selection.yml",
+      "source_relative_path": "api/PureHDF.Selections.IrregularHyperslabSelection.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.Selection.html"
+          "relative_path": "api/PureHDF.Selections.IrregularHyperslabSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Selections.NoneSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Selections.NoneSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Selections.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Selections.PointSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Selections.Selection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Selections.Selection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Selections.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Selections.html"
         }
       },
       "version": ""
@@ -892,6 +902,39 @@
         },
         ".json": {
           "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/reading.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/reading.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "articles/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "articles/toc.html"
+        },
+        ".json": {
+          "relative_path": "articles/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/writing.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/writing.html"
         }
       },
       "version": ""

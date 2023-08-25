@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Writing API | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Writing API | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/articles/writing.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="writing-api">Writing API</h1>
+
+<p>The first step is to create a new <code>H5File</code> instance:</p>
+<pre><code class="lang-cs">var file = new H5File();
+</code></pre>
+<p>A <code>H5File</code> derives from the <code>H5Group</code> type because it represents the root group. <code>H5Group</code> implements the <code>IDictionary</code> interface, where the keys represent the links in an HDF5 file and the value determines the type of the link: either it is another <code>H5Group</code> or a <code>H5Dataset</code>.</p>
+<p>You can create an empty group like this:</p>
+<pre><code class="lang-cs">var group = new H5Group();
+</code></pre>
+<p>If the group should have some datasets, just add them using the dictionary collection initializer - just like with a normal dictionary:</p>
+<pre><code class="lang-cs">var group = new H5Group()
+{
+    [&quot;numerical-dataset&quot;] = new double[] { 2.0, 3.1, 4.2 },
+    [&quot;string-dataset&quot;] = new string[] { &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot; }
+}
+</code></pre>
+<p>Datasets and attributes can both be created either by instantiating their specific class (<code>H5Dataset</code>, <code>H5Attribute</code>) or by just providing some kind of data. This data can be nearly anything: arrays, scalars, numerical values, strings, anonymous types, enums, complex objects, structs, bool values, etc. However, whenever you want to provide more details like the dimensionality of the attribute or dataset, the chunk layout or the filters to be applied to a dataset, you need to instantiate the appropriate class.</p>
+<p>But first, let's see how to add attributes. Attributes cannot be added directly using the dictionary collection initializer because that is only for datasets. However, every <code>H5Group</code> has an <code>Attribute</code> property which accepts our attributes:</p>
+<pre><code class="lang-cs">var group = new H5Group()
+{
+    Attributes = new()
+    {
+        [&quot;numerical-attribute&quot;] = new double[] { 2.0, 3.1, 4.2 },
+        [&quot;string-attribute&quot;] = new string[] { &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot; }
+    }
+}
+</code></pre>
+<p>The full example with the root group, a subgroup, two datasets and two attributes looks like this:</p>
+<pre><code class="lang-cs">var file = new H5File()
+{
+    [&quot;my-group&quot;] = new H5Group()
+    {
+        [&quot;numerical-dataset&quot;] = new double[] { 2.0, 3.1, 4.2 },
+        [&quot;string-dataset&quot;] = new string[] { &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot; },
+        Attributes = new()
+        {
+            [&quot;numerical-attribute&quot;] = new double[] { 2.0, 3.1, 4.2 },
+            [&quot;string-attribute&quot;] = new string[] { &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot; }
+        }
+    }
+};
+</code></pre>
+<p>The last step is to write the defined file to the drive:</p>
+<pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;);
+</code></pre>
+<p><strong>Dimensions</strong>
+If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. <code>int[,]</code>), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality like this:</p>
+<pre><code class="lang-cs">var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
+</code></pre>
+<p><strong>Chunks</strong></p>
+<p>To chunk data, give the <code>H5Dataset</code> some chunk dimensions:</p>
+<pre><code class="lang-cs">var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
+</code></pre>
+<p><strong>Filters</strong></p>
+<p>Filters can be configure either for all datasets or for a specific dataset.</p>
+<p>If you like to configure them for all datasets, create an instance of the <code>H5WriteOptions</code> class and add some filters to the pipeline:</p>
+<pre><code class="lang-cs">var options = new H5WriteOptions(
+    Filters: new() {
+        ShuffleFilter.Id,
+        DeflateFilter.Id
+    }
+);
+</code></pre>
+<p>Then pass the options to the <code>H5File.Write</code> method:</p>
+<pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;, options);
+</code></pre>
+<p>Use the filters parameter to configure the filter pipeline for a single dataset:</p>
+<pre><code class="lang-cs">var datasetCreation = new H5DatasetCreation(Filters: new() {
+    ShuffleFilter.Id,
+    DeflateFilter.Id
+})
+
+var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
+</code></pre>
+<p><strong>External filters</strong></p>
+<p>External filters need to be registered first as shown in the documentation for the reading API.</p>
+<h1 id="todo">TODO</h1>
+<ul>
+<li>deferred writing</li>
+<li>slicing</li>
+</ul>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/articles/writing.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
