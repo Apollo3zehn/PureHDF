@@ -1,4 +1,4 @@
-# Reading API
+# Reading
 
 1. [Objects](#1-objects)
 2. [Attributes](#2-attributes)
@@ -379,105 +379,7 @@ This way of building a hyperslab / selection has been implemented in an efford t
 
 # 5. Filters
 
-## 5.1 Built-in Filters
-- Shuffle (hardware accelerated<sup>1</sup>, SSE2/AVX2)
-- Fletcher32
-- Deflate (zlib)
-- Scale-Offset
-
-<sup>1</sup> NET Standard 2.1 and above
-
-## 5.2 External Filters
-Before you can use external filters, you need to register them using ```H5Filter.Register(...)```. This method accepts a filter identifier, a filter name and the actual filter function.
-
-This function could look like the following and should be adapted to your specific filter library:
-
-```cs
-public static Func<FilterInfo, Memory<byte>> MyFilterFunc { get; } = info =>
-{
-    // Decompressing
-    if (info.Flags.HasFlag(H5FilterFlags.Decompress))
-    {
-        var resultBuffer = info.FinalBuffer.Equals(default)
-            ? new byte[info.SourceBuffer.Length]
-            : info.FinalBuffer;
-
-        // pseudo code
-        byte[] decompressedData = MyFilter.Decompress(info.Parameters, info.SourceBuffer, resultBuffer);
-        return decompressedData;
-    }
-
-    // Compressing
-    else
-    {
-        throw new Exception("Writing data chunks is not yet supported by PureHDF.");
-    }
-};
-
-```
-
-## 5.3 Supported External Filters
-
-**Deflate (Intel ISA-L)**
-
-- based on [Intrinsics.ISA-L.PInvoke](https://www.nuget.org/packages/Intrinsics.ISA-L.PInvoke/)
-- hardware accelerated: `SSE2` / `AVX2` / `AVX512`
-- [benchmark results](https://github.com/Apollo3zehn/PureHDF/tree/master/benchmarks/PureHDF.Benchmarks/InflateComparison.md)
-
-`dotnet add package PureHDF.Filters.Deflate.ISA-L`
-
-```cs
-using PureHDF.Filters;
-
-H5Filter.Register(new DeflateISALFilter());
-```
-
-**Deflate (SharpZipLib)**
-
-- based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib)
-
-`dotnet add package PureHDF.Filters.Deflate.SharpZipLib`
-
-```cs
-using PureHDF.Filters;
-
-H5Filter.Register(new DeflateSharpZipLibFilter());
-```
-
-**Blosc / Blosc2**
-
-- based on [Blosc2.PInvoke](https://www.nuget.org/packages/Blosc2.PInvoke)
-- hardware accelerated: `SSE2` / `AVX2`
-
-`dotnet add package PureHDF.Filters.Blosc2`
-
-```cs
-using PureHDF.Filters;
-
-H5Filter.Register(new Blosc2Filter());
-```
-
-**BZip2 (SharpZipLib)**
-
-- based on [SharpZipLib](https://www.nuget.org/packages/SharpZipLib)
-
-`dotnet add package PureHDF.Filters.BZip2.SharpZipLib`
-
-```cs
-using PureHDF.Filters;
-
-H5Filter.Register(new BZip2SharpZipLibFilter());
-```
-
-**LZF**
-
-`dotnet add package PureHDF.Filters.LZF`
-
-```cs
-using PureHDF.Filters;
-
-H5Filter.Register(new LzfFilter());
-```
+Many of the standard HDF5 filters are supported. Please see the [Filters](filters.md) section for more details about the available filters.
 
 # 6. Reading Compound Data
 

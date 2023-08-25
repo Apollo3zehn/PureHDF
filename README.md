@@ -108,7 +108,7 @@ See the [docs](https://apollo3zehn.github.io/PureHDF/articles/writing.html) to l
 
 The tests of PureHDF are executed against `.NET 6` and `.NET 7` so these two runtimes are required. Please note that due to an currently unknown reason the writing tests cannot be run in parallel to other tests because some unrelated temp files are in use although they should not be and thus cannot be accessed by the unit tests.
 
-To run tests and you are using Visual Studio Code as your IDE, you can simply execute one of the predefined test tasks by selecting `Run Tasks` from the global menu (`Ctrl+Shift+P`). The following test tasks are predefined:
+If you are using Visual Studio Code as your IDE, you can simply execute one of the predefined test tasks by selecting `Run Tasks` from the global menu (`Ctrl+Shift+P`). The following test tasks are predefined:
 
 - `tests: common`
 - `tests: writing`
