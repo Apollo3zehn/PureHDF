@@ -458,8 +458,7 @@ partial class H5NativeWriter
             GetSourceBuffer: indiced => memoryData,
             GetTargetStream: getTargetStream,
             Encoder: encode,
-            TargetTypeSize: (int)datatype.Size,
-            SourceTypeFactor: 1
+            TargetTypeSize: (int)datatype.Size
         );
 
         /* encode data */

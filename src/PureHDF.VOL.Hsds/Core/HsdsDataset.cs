@@ -50,14 +50,6 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 
     public IH5FillValue FillValue => throw new NotImplementedException();
 
-    public byte[] Read(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null)
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
     public T[] Read<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
@@ -67,27 +59,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             .GetAwaiter()
             .GetResult()!;
     }
-
-    public void Read<T>(
-        Memory<T> buffer,
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null) where T : unmanaged
-    {
-        ReadCoreValueAsync(buffer, useAsync: false, fileSelection, memorySelection, memoryDims)
-            .GetAwaiter()
-            .GetResult();
-    }
-
-    public Task<byte[]> ReadAsync(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
+    
     public Task<T[]> ReadAsync<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
@@ -95,81 +67,6 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         CancellationToken cancellationToken = default) where T : unmanaged
     {
         return ReadCoreValueAsync<T>(default, useAsync: true, fileSelection, memorySelection, memoryDims, cancellationToken)!;
-    }
-
-    public Task ReadAsync<T>(
-        Memory<T> buffer,
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where T : unmanaged
-    {
-        return ReadCoreValueAsync(buffer, useAsync: true, fileSelection, memorySelection, memoryDims, cancellationToken)!;
-    }
-
-    public T[] ReadCompound<T>(
-        Func<FieldInfo, string?>? getName = null,
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null) where T : struct
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public Dictionary<string, object?>[] ReadCompound(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null)
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public Task<T[]> ReadCompoundAsync<T>(
-        Func<FieldInfo, string?>? getName = null,
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where T : struct
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public Task<Dictionary<string, object?>[]> ReadCompoundAsync(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public string?[] ReadString(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null)
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public Task<string?[]> ReadStringAsync(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    // TODO: does this API make sense? Can we have variable length data in HSDS?
-
-    public T[]?[] ReadVariableLength<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : struct
-    {
-        throw new NotImplementedException();
-    }
-
-    public Task<T[]?[]> ReadVariableLengthAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default) where T : struct
-    {
-        throw new NotImplementedException();
     }
 
     private async Task<TResult[]?> ReadCoreValueAsync<TResult>(

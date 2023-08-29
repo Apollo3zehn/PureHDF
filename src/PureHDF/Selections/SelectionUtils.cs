@@ -11,9 +11,8 @@ internal record DecodeInfo<T>(
     Selection TargetSelection,
     Func<ulong[], Task<IH5ReadStream>> GetSourceStreamAsync,
     Func<ulong[], Memory<T>> GetTargetBuffer,
-    Action<Memory<byte>, Memory<T>> Decoder,
-    int SourceTypeSize,
-    int TargetTypeFactor
+    DecodeDelegate<T> Decoder,
+    int SourceTypeSize
 );
 
 internal record EncodeInfo<T>(
@@ -26,8 +25,7 @@ internal record EncodeInfo<T>(
     Func<ulong[], Memory<T>> GetSourceBuffer,
     Func<ulong[], IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
-    int TargetTypeSize,
-    int SourceTypeFactor
+    int TargetTypeSize
 );
 
 internal readonly struct RelativeStep
@@ -171,13 +169,13 @@ internal static class SelectionUtils
                     }
 
                     currentSource = sourceBuffer.Slice(
-                        (int)sourceStep.Offset * encodeInfo.SourceTypeFactor,
-                        (int)sourceStep.Length * encodeInfo.SourceTypeFactor);
+                        (int)sourceStep.Offset,
+                        (int)sourceStep.Length);
                 }
 
                 /* copy */
-                var length = Math.Min(currentLength, currentSource.Length / encodeInfo.SourceTypeFactor);
-                var sourceLength = length * encodeInfo.SourceTypeFactor;
+                var length = Math.Min(currentLength, currentSource.Length);
+                var sourceLength = length;
 
                 targetStream.Seek(currentOffset * encodeInfo.TargetTypeSize, SeekOrigin.Begin);
 
@@ -270,55 +268,30 @@ internal static class SelectionUtils
                     }
 
                     currentTarget = targetBuffer.Slice(
-                        (int)targetStep.Offset * decodeInfo.TargetTypeFactor,
-                        (int)targetStep.Length * decodeInfo.TargetTypeFactor);
+                        (int)targetStep.Offset,
+                        (int)targetStep.Length);
                 }
 
                 /* copy */
-                var length = Math.Min(currentLength, currentTarget.Length / decodeInfo.TargetTypeFactor);
-                var targetLength = length * decodeInfo.TargetTypeFactor;
 
-                // specialization; virtual dataset (VirtualDatasetStream)
-                if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
-                {
-                    virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
+                // // specialization; virtual dataset (VirtualDatasetStream)
+                // if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
+                // {
+                //     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
 
-                    await virtualDatasetStream
-                        .ReadVirtualAsync(currentTarget[..targetLength])
-                        .ConfigureAwait(false);
-                }
+                //     await virtualDatasetStream
+                //         .ReadVirtualAsync(currentTarget[..targetLength])
+                //         .ConfigureAwait(false);
+                // }
 
-                // optimization; chunked / compact dataset (SystemMemoryStream)
-                else if (sourceStream is SystemMemoryStream systemMemoryStream)
-                {
-                    systemMemoryStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
+                var length = Math.Min(currentLength, currentTarget.Length);
+                var targetLength = length;
 
-                    var currentSource = systemMemoryStream.SlicedMemory;
-                    var sourceLength = length * decodeInfo.SourceTypeSize;
+                sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
-                    decodeInfo.Decoder(
-                        currentSource[..sourceLength],
-                        currentTarget[..targetLength]);
-                }
-
-                // default; contiguous dataset (OffsetStream, ExternalFileListStream (wrapping a SlotStream), UnsafeFillValueStream)
-                else
-                {
-                    var sourceLength = length * decodeInfo.SourceTypeSize;
-
-                    // TODO: do not copy if not necessary
-                    using var rentedOwner = MemoryPool<byte>.Shared.Rent(sourceLength);
-                    var rentedMemory = rentedOwner.Memory;
-
-                    await reader.ReadDatasetAsync(
-                        sourceStream,
-                        rentedMemory[..sourceLength],
-                        currentOffset * decodeInfo.SourceTypeSize).ConfigureAwait(false);
-
-                    decodeInfo.Decoder(
-                        rentedMemory[..sourceLength],
-                        currentTarget[..targetLength]);
-                }
+                decodeInfo.Decoder(
+                    sourceStream,
+                    currentTarget[..targetLength]);
 
                 currentOffset += length;
                 currentLength -= length;
