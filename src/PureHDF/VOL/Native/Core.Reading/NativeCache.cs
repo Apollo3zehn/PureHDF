@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal static class NativeCache
 {

@@ -76,7 +76,7 @@ public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixtur
         // Act
         var actual = _connector
             .Attribute("attr1")
-            .Read<int>();
+            .Read<int[]>();
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));

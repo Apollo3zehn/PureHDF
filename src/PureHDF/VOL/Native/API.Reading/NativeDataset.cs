@@ -812,12 +812,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 fileSelection: fileSelection,
                 datasetAccess: datasetAccess);
 
-        using var fillValueArrayOwner = MemoryPool<TResult>.Shared.Rent(1);
-        var fillValueArray = fillValueArrayOwner.Memory[..1];
         var fillValue = default(TResult);
 
         if (InternalFillValue.Value is not null)
         {
+            using var fillValueArrayOwner = MemoryPool<TResult>.Shared.Rent(1);
+            var fillValueArray = fillValueArrayOwner.Memory[..1];
+
             decoder(InternalFillValue.Value, fillValueArray);
             fillValue = fillValueArray.Span[0];
         }

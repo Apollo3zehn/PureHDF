@@ -11,10 +11,7 @@ internal static class WriteUtils
     private static readonly MethodInfo _methodInfoUnmanagedArrayToMemory = typeof(WriteUtils)
         .GetMethod(nameof(UnmanagedArrayToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-    private static readonly MethodInfo _methodInfoEnumerableToMemory = typeof(WriteUtils)
-        .GetMethod(nameof(EnumerableToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    public static MethodInfo MethodInfoElement { get; } = typeof(WriteUtils)
+    public static MethodInfo MethodInfoEncodeUnmanagedElement { get; } = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     public static void WriteUlongArbitrary(H5DriverBase driver, ulong value, ulong size)
@@ -49,29 +46,15 @@ internal static class WriteUtils
         return count;
     }
 
-    public static bool IsMemory(Type type)
-    {
-        return 
-            type.IsGenericType && 
-            typeof(Memory<>).Equals(type.GetGenericTypeDefinition());
-    }
-
-    public static bool IsArray(Type type)
-    {
-        return
-            type.IsArray &&
-            type.GetElementType() is not null;
-    }
-
     public static (Type ElementType, bool IsScalar) GetElementType(Type type)
     {
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
             return (type, true);
 
-        else if (IsArray(type))
+        else if (DataUtils.IsArray(type))
             return (type.GetElementType()!, false);
 
-        else if (IsMemory(type))
+        else if (DataUtils.IsMemory(type))
             return (type.GenericTypeArguments[0], false);
 
         else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
@@ -91,14 +74,14 @@ internal static class WriteUtils
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
             return ElementToMemory((TElement)data);
 
-        else if (IsArray(type))
+        else if (DataUtils.IsArray(type))
             return type.GetElementType()!.IsValueType
                 ? InvokeUnmanagedArrayToMemory<TElement>(data)
                 : ((Array)data).Rank == 1
                     ? Array1DToMemory((TElement[])data)
                     : ArrayNDToMemory<TElement>((Array)data);
 
-        else if (IsMemory(type))
+        else if (DataUtils.IsMemory(type))
             return data.Equals(default(T))
                 ? default
                 : ((Memory<TElement>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });

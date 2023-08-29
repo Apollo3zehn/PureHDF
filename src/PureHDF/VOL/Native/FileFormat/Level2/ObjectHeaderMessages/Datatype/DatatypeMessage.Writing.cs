@@ -11,8 +11,6 @@ namespace PureHDF.VOL.Native;
 // - https://github.com/SergeyTeplyakov/ObjectLayoutInspector?
 // - https://stackoverflow.com/a/56512720
 
-internal delegate void ElementEncodeDelegate(object source, IH5WriteStream target);
-
 internal partial record class DatatypeMessage : Message
 {
     private static readonly MethodInfo _methodInfoGetTypeInfoForTopLevelUnmanagedMemory = typeof(DatatypeMessage)
@@ -124,7 +122,7 @@ internal partial record class DatatypeMessage : Message
                     .MakeGenericType(type.GenericTypeArguments)),
 
             /* array */
-            Type when type.IsArray && type.GetElementType() is not null
+            Type when DataUtils.IsArray(type)
                 => GetTypeInfoForVariableLengthSequence(context, type.GetElementType()!),
 
             /* generic IEnumerable */
@@ -307,7 +305,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
@@ -670,7 +668,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
@@ -709,7 +707,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)

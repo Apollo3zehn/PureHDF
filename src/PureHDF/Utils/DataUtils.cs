@@ -52,4 +52,18 @@ internal static class DataUtils
             .Cast<byte, T>(data)
             .ToArray();
     }
+
+    public static bool IsMemory(Type type)
+    {
+        return 
+            type.IsGenericType && 
+            typeof(Memory<>).Equals(type.GetGenericTypeDefinition());
+    }
+
+    public static bool IsArray(Type type)
+    {
+        return
+            type.IsArray &&
+            type.GetElementType() is not null;
+    }
 }

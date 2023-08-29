@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal struct FieldProperties
 {

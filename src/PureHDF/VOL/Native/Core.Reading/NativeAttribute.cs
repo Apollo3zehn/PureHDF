@@ -1,8 +1,4 @@
-﻿using PureHDF.Selections;
-using System.Reflection;
-using System.Runtime.InteropServices;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal class NativeAttribute : IH5Attribute
 {
@@ -58,25 +54,8 @@ internal class NativeAttribute : IH5Attribute
 
     #region Methods
 
-    public T[] Read<T>()
-        where T : unmanaged
+    public T Read<T>()
     {
-        switch (Message.Datatype.Class)
-        {
-            case DatatypeMessageClass.FixedPoint:
-            case DatatypeMessageClass.FloatingPoint:
-            case DatatypeMessageClass.BitField:
-            case DatatypeMessageClass.Opaque:
-            case DatatypeMessageClass.Compound:
-            case DatatypeMessageClass.Reference:
-            case DatatypeMessageClass.Enumerated:
-            case DatatypeMessageClass.Array:
-                break;
-
-            default:
-                throw new Exception($"This method can only be used with one of the following type classes: '{DatatypeMessageClass.FixedPoint}', '{DatatypeMessageClass.FloatingPoint}', '{DatatypeMessageClass.BitField}', '{DatatypeMessageClass.Opaque}', '{DatatypeMessageClass.Compound}', '{DatatypeMessageClass.Reference}', '{DatatypeMessageClass.Enumerated}' and '{DatatypeMessageClass.Array}'.");
-        }
-
         var buffer = Message.InputData;
         var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
         var destination = buffer;
@@ -85,52 +64,12 @@ internal class NativeAttribute : IH5Attribute
         if (byteOrderAware is not null)
             DataUtils.EnsureEndianness(source, destination.Span, byteOrderAware.ByteOrder, Message.Datatype.Size);
 
-        return MemoryMarshal
-            .Cast<byte, T>(Message.InputData.Span)
-            .ToArray();
+        var decoder = Message.Datatype.GetDecodeInfo<T>(_context);
+
+        
+
+        throw new Exception();
     }
-
-    public T[] ReadCompound<T>(Func<FieldInfo, string?>? getName = default)
-        where T : struct
-    {
-        getName ??= fieldInfo => fieldInfo.Name;
-
-        var elementCount = Message.InputData.Length / InternalElementDataType.Size;
-        var result = new T[elementCount];
-
-        ReadUtils.ReadCompound<T>(_context, InternalElementDataType, Message.InputData.Span, result, getName);
-
-        return result;
-    }
-
-    public Dictionary<string, object?>[] ReadCompound()
-    {
-        var elementCount = Message.InputData.Length / InternalElementDataType.Size;
-        var result = new Dictionary<string, object?>[elementCount];
-
-        ReadUtils.ReadCompound(_context, InternalElementDataType, Message.InputData.Span, result);
-
-        return result;
-    }
-
-    public string[] ReadString()
-    {
-        return ReadUtils.ReadString(_context, InternalElementDataType, Message.InputData.Span);
-    }
-
-    public T[]?[] ReadVariableLength<T>(
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null) where T : struct
-    {
-        var elementCount = Message.InputData.Length / InternalElementDataType.Size;
-        var result = new T[elementCount][];
-
-        ReadUtils.ReadVariableLengthSequence<T>(_context, InternalElementDataType, Message.InputData.Span, result);
-
-        return result;
-    }
-
 
     internal AttributeMessage Message { get; }
 

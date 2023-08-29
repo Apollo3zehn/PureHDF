@@ -1,7 +1,13 @@
+using System.Reflection;
+using System.Runtime.InteropServices;
+
 namespace PureHDF;
 
 internal static partial class ReadUtils
 {
+    public static MethodInfo MethodInfoDecodeUnmanagedElement { get; } = typeof(ReadUtils)
+        .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     public static ulong ReadUlong(H5DriverBase driver, ulong size)
     {
         return size switch
@@ -27,5 +33,43 @@ internal static partial class ReadUtils
         }
 
         return result;
+    }
+
+        public static bool CanDecodeFromCompound(Type type)
+    {
+        if (type.IsValueType)
+            return !(type.IsPrimitive || type.IsEnum);
+
+        else
+            return !type.IsArray;
+    }
+
+    public static bool CanDecodeToUnmanaged(
+        Type type,
+        int fileTypeSize)
+    {
+        if (DataUtils.IsReferenceOrContainsReferences(type))
+            return false;
+
+        var actualType = type switch
+        {
+            _ when type.IsEnum => Enum.GetUnderlyingType(type),
+            _ when type == typeof(bool) => typeof(byte),
+            _ => type
+        };
+
+        var typeSize = Marshal.SizeOf(actualType);
+
+        return
+            typeSize == fileTypeSize;
+    }
+
+    // Decode unmanaged element
+    public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : unmanaged
+    {
+        Span<T> sourceArray = stackalloc T[] { (T)source };
+        source.ReadDataset(MemoryMarshal.AsBytes(sourceArray));
+
+        return sourceArray[0];
     }
 }
