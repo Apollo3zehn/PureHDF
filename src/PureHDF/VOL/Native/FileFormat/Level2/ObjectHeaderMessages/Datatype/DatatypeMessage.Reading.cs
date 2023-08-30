@@ -457,10 +457,23 @@ internal partial record class DatatypeMessage(
 
             using var memoryOwner = MemoryPool<byte>.Shared.Rent((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
+
+            source.ReadDataset(memory);
+
             var value = ReadUtils.ReadFixedLengthString(memory.Span);
+            value = trim(value);
 
             return value;
         }
+
+        return decode;
+    }
+
+    private static DecodeDelegate<T> GetDecodeInfoForArray<T>(Array data) 
+        where T : struct
+    {
+        static void decode(IH5ReadStream source, Memory<T> target)
+            => source.ReadDataset(target.Cast<T, byte>());
 
         return decode;
     }
@@ -480,15 +493,6 @@ internal partial record class DatatypeMessage(
                 targetSpan[i] = (T)elementDecode(source);
             }
         };
-
-        return decode;
-    }
-
-    private static DecodeDelegate<T> GetDecodeInfoForArray<T>(Array data) 
-        where T : struct
-    {
-        static void decode(IH5ReadStream source, Memory<T> target)
-            => source.ReadDataset(target.Cast<T, byte>());
 
         return decode;
     }

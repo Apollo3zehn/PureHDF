@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Xunit;
 
@@ -17,14 +18,15 @@ namespace PureHDF.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddDataspaceScalar(fileId, ContainerType.Attribute));
+                var expected = -1.2234234e-3;
 
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Attribute("scalar");
-                var actual = attribute.Read<double[]>();
+                var actual = attribute.Read<double>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
+                Assert.Equal(expected, actual);
             });
         }
 
@@ -39,10 +41,11 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Attribute("null");
-                var actual = attribute.Read<double[]>();
+
+                void action() => attribute.Read<double[]>();
 
                 // Assert
-                Assert.True(actual.Length == 0);
+                Assert.Throws<TargetInvocationException>(action);
             });
         }
 
@@ -180,6 +183,22 @@ namespace PureHDF.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Attribute));
+                var expected = MemoryMarshal.AsBytes<int>(SharedTestData.SmallData).ToArray();
+
+                // Act
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var attribute = root.Group("opaque").Attribute("opaque");
+                var actual = attribute.Read<byte[]>();
+
+                // Assert
+                Assert.True(actual.SequenceEqual(expected));
+                Assert.Equal("Opaque Test Tag", attribute.Type.Opaque.Tag);
+            });
+
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Attribute));
 
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
@@ -188,6 +207,7 @@ namespace PureHDF.Tests.Reading
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.SmallData));
+                Assert.Equal("Opaque Test Tag", attribute.Type.Opaque.Tag);
             });
         }
 
@@ -202,6 +222,9 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("value");
+
+                var actual2 = attribute
+                    .Read<int[,]>();
 
                 var actual = attribute
                     .Read<int[]>()

@@ -11,7 +11,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 {
     #region Fields
 
-    private static readonly MethodInfo _methodInfoReadCoreAsync = typeof(H5NativeWriter)
+    private static readonly MethodInfo _methodInfoReadCoreAsync = typeof(NativeDataset)
         .GetMethod(nameof(ReadCoreAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
     private IH5Dataspace? _space;
@@ -266,7 +266,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         return result;
     }
 
-    internal async Task<TResult?> ReadCoreAsync<TResult, TElement, TReader>(
+    internal async Task<TResult> ReadCoreAsync<TResult, TElement, TReader>(
         TReader reader,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
@@ -290,7 +290,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
         // fast path for null dataspace
         if (InternalDataspace.Type == DataspaceType.Null)
-            return default;
+            throw new Exception("Datasets with null dataspace cannot be read.");
 
         // for testing only
         if (skipShuffle && InternalFilterPipeline is not null)
@@ -389,7 +389,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             blocks: memoryDims);
 
         /* target buffer */
-        var targetElementCount = MathUtils.CalculateSize(memoryDims);
+        var targetElementCount = MathUtils.CalculateSize(memoryDims, InternalDataspace.Type);
         var targetBuffer = new TElement[targetElementCount];
 
         /* decode info */

@@ -152,6 +152,7 @@ namespace PureHDF.Tests.Reading
             {
                 // Arrange
                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddOpaque(fileId, ContainerType.Dataset));
+                var expected = MemoryMarshal.AsBytes<int>(SharedTestData.SmallData).ToArray();
 
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
@@ -159,7 +160,8 @@ namespace PureHDF.Tests.Reading
                 var actual = dataset.Read<byte[]>();
 
                 // Assert
-                Assert.True(actual.SequenceEqual(MemoryMarshal.AsBytes<int>(SharedTestData.SmallData).ToArray()));
+                Assert.True(actual.SequenceEqual(expected));
+                Assert.Equal("Opaque Test Tag", dataset.Type.Opaque.Tag);
             });
         }
 
