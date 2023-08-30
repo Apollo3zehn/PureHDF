@@ -17,7 +17,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("contiguous");
                 var dataset = parent.Dataset("contiguous");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.HugeData));
@@ -44,7 +44,7 @@ namespace PureHDF.Tests.Reading
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var group = root.Group("fillvalue");
             var dataset = group.Dataset($"{LayoutClass.Contiguous}");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.Equal(expected, actual);
@@ -65,7 +65,7 @@ namespace PureHDF.Tests.Reading
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var group = root.Group("fillvalue");
             var dataset = group.Dataset($"{LayoutClass.Contiguous}");
-            var actual = await dataset.ReadAsync<int>();
+            var actual = await dataset.ReadAsync<int[]>();
 
             // Assert
             Assert.Equal(expected, actual);
@@ -92,7 +92,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("external");
                 var dataset = parent.Dataset("external_file");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));
@@ -121,7 +121,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("external");
                 var dataset = parent.Dataset("external_file");
-                var actual = await dataset.ReadAsync<int>();
+                var actual = await dataset.ReadAsync<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected));

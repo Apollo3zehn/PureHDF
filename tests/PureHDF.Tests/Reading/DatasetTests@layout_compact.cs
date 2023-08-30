@@ -16,7 +16,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("compact");
                 var dataset = parent.Dataset("compact");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.SmallData));
@@ -44,7 +44,7 @@ namespace PureHDF.Tests.Reading
                 using var root = H5File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 var parent = root;
                 var dataset = parent.Dataset("DS1");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(expected.Cast<int>()));

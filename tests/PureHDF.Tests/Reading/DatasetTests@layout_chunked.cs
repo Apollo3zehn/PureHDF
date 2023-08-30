@@ -25,7 +25,7 @@ namespace PureHDF.Tests.Reading
                     using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                     var parent = root.Group("chunked");
                     var dataset = parent.Dataset("chunked");
-                    var actual = dataset.Read<int>();
+                    var actual = dataset.Read<int[]>();
 
                     // Assert
                     Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -46,7 +46,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_single_chunk");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -64,7 +64,7 @@ namespace PureHDF.Tests.Reading
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("chunked");
             var dataset = parent.Dataset("chunked_implicit");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -83,7 +83,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_fixed_array");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -103,7 +103,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_fixed_array_paged");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -123,7 +123,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_extensible_array_elements");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -143,7 +143,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_extensible_array_data_blocks");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -163,7 +163,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_extensible_array_secondary_blocks");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -183,7 +183,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
                 var dataset = parent.Dataset("chunked_btree2");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -206,7 +206,7 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var group = root.Group("fillvalue");
                 var dataset = group.Dataset($"{LayoutClass.Chunked}");
-                var actual = dataset.Read<int>();
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.Equal(expected, actual);

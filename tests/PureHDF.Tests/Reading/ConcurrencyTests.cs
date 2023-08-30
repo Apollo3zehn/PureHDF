@@ -42,7 +42,7 @@ namespace PureHDF.Tests.Reading
 
                 var task = Task.Run(async () =>
                 {
-                    var actual = await dataset.ReadAsync<int>(fileSelection);
+                    var actual = await dataset.ReadAsync<int[]>(fileSelection);
 
                     // Assert
                     var slicedData = SharedTestData.HugeData.AsSpan(localIndex * CHUNK_SIZE, CHUNK_SIZE).ToArray();
@@ -83,7 +83,7 @@ namespace PureHDF.Tests.Reading
                     block: CHUNK_SIZE
                 );
 
-                var actual = dataset.Read<int>(fileSelection);
+                var actual = dataset.Read<int[]>(fileSelection);
 
                 // Assert
                 var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
@@ -115,7 +115,7 @@ namespace PureHDF.Tests.Reading
                     block: CHUNK_SIZE
                 );
 
-                var actual = dataset.Read<int>(fileSelection);
+                var actual = dataset.Read<int[]>(fileSelection);
 
                 // Assert
                 var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();

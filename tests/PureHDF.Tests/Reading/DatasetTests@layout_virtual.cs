@@ -20,7 +20,7 @@ namespace PureHDF.Tests.Reading
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
-            var actual = dataset.Read<int>(selection);
+            var actual = dataset.Read<int[]>(selection);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -40,7 +40,7 @@ namespace PureHDF.Tests.Reading
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
             var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
-            var actual = await dataset.ReadAsync<int>(selection);
+            var actual = await dataset.ReadAsync<int[]>(selection);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -102,7 +102,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -134,7 +134,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -165,7 +165,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -233,7 +233,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -272,7 +272,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -303,7 +303,7 @@ namespace PureHDF.Tests.Reading
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
             var dataset = root.Dataset("vds");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));

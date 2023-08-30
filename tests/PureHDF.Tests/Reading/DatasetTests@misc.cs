@@ -74,7 +74,7 @@ namespace PureHDF.Tests.Reading
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var dataset = root.Dataset($"/misc/half_size");
 
-            var actual_ushort = dataset.Read<ushort>(
+            var actual_ushort = dataset.Read<ushort[]>(
                 fileSelection: fileSeletion, 
                 memorySelection: memorySelection, 
                 memoryDims: memoryDims);

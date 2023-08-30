@@ -184,7 +184,7 @@ namespace PureHDF.Tests
         public static bool ReadAndCompare<T>(IH5Dataset dataset, T[] expected)
             where T : unmanaged
         {
-            var actual = dataset.Read<T>();
+            var actual = dataset.Read<T[]>();
             return actual.SequenceEqual(expected);
         }
 

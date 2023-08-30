@@ -1,16 +1,16 @@
 using System.Buffers;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using Hsds.Api;
 using PureHDF.Selections;
-using PureHDF.VOL.Native;
 
 namespace PureHDF.VOL.Hsds;
 
 internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 {
+    private static readonly MethodInfo _methodInfoReadCoreAsync = typeof(HsdsDataset)
+        .GetMethod(nameof(ReadCoreAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
     private IH5Dataspace? _space;
     private IH5DataType? _type;
     private IH5DataLayout? _layout;
@@ -50,88 +50,67 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 
     public IH5FillValue FillValue => throw new NotImplementedException();
 
-    public T[] Read<T>(
+    public T Read<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
-        ulong[]? memoryDims = null) where T : unmanaged
+        ulong[]? memoryDims = null)
     {
-        return ReadCoreValueAsync<T>(default, useAsync: false, fileSelection, memorySelection, memoryDims)
-            .GetAwaiter()
-            .GetResult()!;
-    }
-    
-    public Task<T[]> ReadAsync<T>(
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where T : unmanaged
-    {
-        return ReadCoreValueAsync<T>(default, useAsync: true, fileSelection, memorySelection, memoryDims, cancellationToken)!;
-    }
+        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
+            throw new Exception("Only types which meet the unmanaged constraint are supported.");
 
-    private async Task<TResult[]?> ReadCoreValueAsync<TResult>(
-        Memory<TResult> destination,
-        bool useAsync,
-        Selection? fileSelection = null,
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where TResult : unmanaged
-    {
-        // TODO: enable this block of code and make use of "factor" (see NativeDataset.cs)
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
-        // only allow size of T that matches bytesOfType or size of T = 1
-        // var sizeOfT = (ulong)Unsafe.SizeOf<TResult>();
-        // var bytesOfType = DataTypeMessage.Size;
+        // TODO cache this
+        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
 
-        // if (bytesOfType % sizeOfT != 0)
-        //     throw new Exception("The size of the generic parameter must be a multiple of the HDF5 file internal data type size.");
-
-        // var factor = (int)(bytesOfType / sizeOfT);
-
-        var result = await ReadCoreAsync(
-            destination,
-            useAsync,
+        var result = ((Task<T>)method.Invoke(this, new object?[] 
+        {
+            false /* useAsync */,
             fileSelection,
             memorySelection,
             memoryDims,
-            cancellationToken).ConfigureAwait(false);
+            default(CancellationToken)
+        })!).GetAwaiter().GetResult();
 
-        /* ensure correct endianness */
-        if (Type.Class == H5DataTypeClass.FixedPoint) // TODO are there other types that are byte order aware?
+        return result;
+    }
+    
+    public async Task<T> ReadAsync<T>(
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
+            throw new Exception("Only types which meet the unmanaged constraint are supported.");
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        // TODO cache this
+        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
+
+        var result = await (Task<T>)method.Invoke(this, new object?[] 
         {
-            ByteOrder byteOrder;
-
-            // TODO: is this reliable?
-            if (_dataset.Type.Base!.EndsWith("LE"))
-                byteOrder = ByteOrder.LittleEndian;
-
-            else if (_dataset.Type.Base!.EndsWith("BE"))
-                byteOrder = ByteOrder.BigEndian;
-
-            else
-                byteOrder = ByteOrder.VaxEndian;
-
-            DataUtils.EnsureEndianness(
-                source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */,
-                destination: MemoryMarshal.AsBytes(result.AsSpan()),
-                byteOrder,
-                (uint)Unsafe.SizeOf<TResult>()); // TODO: this is not 100% correct, it should be this.Type.Size.
-        }
+            true /* useAsync */,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            cancellationToken
+        })!;
 
         return result;
     }
 
-    private async Task<TResult[]?> ReadCoreAsync<TResult>(
-        Memory<TResult> destination,
+    private async Task<TResult?> ReadCoreAsync<TResult, TElement, TReader>(
         bool useAsync,
         Selection? fileSelection = null,
         Selection? memorySelection = null,
         ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where TResult : unmanaged
+        CancellationToken cancellationToken = default) where TElement : unmanaged
     {
         // fast path for null dataspace
         if (Space.Type == H5DataspaceType.Null)
-            return Array.Empty<TResult>();
+            return default;
 
         /* file selection */
         if (fileSelection is null)
@@ -225,10 +204,8 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
         /* target buffer */
-        var destinationElementCount = MathUtils.CalculateSize(memoryDims);
-
-        EnsureBuffer(destination, destinationElementCount, out var optionalDestinationArray);
-        var destinationMemory = optionalDestinationArray ?? destination;
+        var targetElementCount = MathUtils.CalculateSize(memoryDims);
+        var targetBuffer = new TElement[targetElementCount];
 
         // TODO make use of selections
         var streamResponse =
@@ -247,28 +224,32 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             ? await streamResponse.Content.ReadAsStreamAsync(cancellationToken)
             : streamResponse.Content.ReadAsStream(cancellationToken);
 
-        var byteMemory = destinationMemory.Cast<TResult, byte>();
+        var byteMemory = targetBuffer.AsMemory().Cast<TElement, byte>();
         await ReadExactlyAsync(stream, buffer: byteMemory, useAsync: useAsync, cancellationToken);
 
-        return optionalDestinationArray;
-    }
+        // /* ensure correct endianness */
+        // if (Type.Class == H5DataTypeClass.FixedPoint) // TODO are there other types that are byte order aware?
+        // {
+        //     ByteOrder byteOrder;
 
-    internal static void EnsureBuffer<TResult>(Memory<TResult> destination, ulong destinationElementCount, out TResult[]? newArray)
-    {
-        newArray = default;
+        //     // TODO: is this reliable?
+        //     if (_dataset.Type.Base!.EndsWith("LE"))
+        //         byteOrder = ByteOrder.LittleEndian;
 
-        // user did not provide buffer
-        if (destination.Equals(default))
-        {
-            // create the buffer
-            newArray = new TResult[destinationElementCount];
-        }
+        //     else if (_dataset.Type.Base!.EndsWith("BE"))
+        //         byteOrder = ByteOrder.BigEndian;
 
-        // user provided buffer is too small
-        else if (destination.Length < (int)destinationElementCount)
-        {
-            throw new Exception("The provided target buffer is too small.");
-        }
+        //     else
+        //         byteOrder = ByteOrder.VaxEndian;
+
+        //     DataUtils.EnsureEndianness(
+        //         source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */,
+        //         destination: MemoryMarshal.AsBytes(result.AsSpan()),
+        //         byteOrder,
+        //         (uint)Unsafe.SizeOf<TResult>()); // TODO: this is not 100% correct, it should be this.Type.Size.
+        // }
+
+        return ReadUtils.FromArray<TResult, TElement>(targetBuffer);
     }
 
     private static async Task ReadExactlyAsync(Stream stream, Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken)

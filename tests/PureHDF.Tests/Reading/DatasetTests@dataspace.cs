@@ -15,7 +15,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Dataset("scalar");
-                var actual = attribute.Read<double>();
+                var actual = attribute.Read<double[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(new double[] { -1.2234234e-3 }));
@@ -33,7 +33,7 @@ namespace PureHDF.Tests.Reading
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("dataspace").Dataset("null");
-                var actual = attribute.Read<double>();
+                var actual = attribute.Read<double[]>();
 
                 // Assert
                 Assert.True(actual.Length == 0);

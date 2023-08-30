@@ -35,7 +35,7 @@ public interface IH5Dataset : IH5AttributableObject
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
-    T Read<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : unmanaged;
+    T Read<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
 
     /// <summary>
     /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
@@ -46,5 +46,5 @@ public interface IH5Dataset : IH5AttributableObject
     /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>A task which returns the read data as array of <typeparamref name="T"/>.</returns>
-    Task<T> ReadAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default) where T : unmanaged;
+    Task<T> ReadAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default);
 }

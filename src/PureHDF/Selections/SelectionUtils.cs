@@ -1,5 +1,3 @@
-using System.Buffers;
-
 namespace PureHDF.Selections;
 
 internal record DecodeInfo<T>(

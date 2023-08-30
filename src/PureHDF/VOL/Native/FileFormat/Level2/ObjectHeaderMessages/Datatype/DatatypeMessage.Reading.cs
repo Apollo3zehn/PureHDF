@@ -1,5 +1,7 @@
 ﻿using System.Buffers;
+using System.Buffers.Binary;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -213,6 +215,7 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
+        // TODO: cache
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[1];
 
@@ -239,20 +242,26 @@ internal partial record class DatatypeMessage(
 
         var elementType = type.GetElementType()!;
 
-        var lengths = property.DimensionSizes
+#warning When the encode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
+        var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
 
+        var elementCount = dims.Aggregate(1, (product, dim) => product * dim);
         var elementDecode = property.BaseType.GetDecodeInfoForScalar(context, elementType);
 
         object? decode(IH5ReadStream source)
         {
-            var array = Array.CreateInstance(elementType, lengths);
-            
-            for (int i = 0; i < length; i++)
+            var array = Array.CreateInstance(elementType, dims);
+            var coordinates = ArrayPool<int>.Shared.Rent(property.Rank);
+
+            for (int linearIndex = 0; linearIndex < elementCount; linearIndex++)
             {
-                array.SetValue(xx, elementDecode(source));
+                linearIndex.ToCoordinates(dims, coordinates);    
+                array.SetValue(elementDecode(source), coordinates);
             }
+
+            ArrayPool<int>.Shared.Return(coordinates);
 
             return array;
         }
@@ -307,13 +316,23 @@ internal partial record class DatatypeMessage(
             //     void  *p;   /**< Pointer to VL data */
             // } hvl_t;
 
-            var length = source.ReadUInt32();
+            /* read data into rented buffer */
+            var totalSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
+            var buffer = memoryOwner.Memory[0..totalSize];
+
+            source.ReadDataset(buffer);
+
+            /* Read global heap ID (Skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read)) */
+            var length = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
+            buffer = buffer.Slice(sizeof(uint));
+
             var array = Array.CreateInstance(elementType, length);
             var memory = new UnmanagedArrayMemoryManager<byte>(array).Memory;
 
             for (int i = 0; i < length; i++)
             {
-                var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, localDriver);
+                var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
 
                 if (globalHeapId.Equals(default))
                     continue;
@@ -371,10 +390,17 @@ internal partial record class DatatypeMessage(
                 _ => throw new Exception("Unsupported padding type.")
             };
 
-            /* Skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
-            var _ = source.ReadUInt32();
+            /* read data into rented buffer */
+            var totalSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
+            var buffer = memoryOwner.Memory[0..totalSize];
 
-            var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, source);
+            source.ReadDataset(buffer);
+
+            /* Read global heap ID (Skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read)) */
+            buffer = buffer.Slice(sizeof(uint));
+
+            var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
 
             if (globalHeapId.Equals(default))
                 return default(string);
@@ -417,8 +443,6 @@ internal partial record class DatatypeMessage(
             if (BitField is not StringBitFieldDescription bitField)
                 throw new Exception("String bit field description must not be null.");
 
-            var position = 0;
-
             Func<string, string> trim = bitField.PaddingType switch
             {
 #if NETSTANDARD2_0
@@ -431,7 +455,9 @@ internal partial record class DatatypeMessage(
                 _ => throw new Exception("Unsupported padding type.")
             };
 
-            var value = ReadUtils.ReadFixedLengthString(source[position..(position + (int)Size)]);
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent((int)Size);
+            var memory = memoryOwner.Memory[0..(int)Size];
+            var value = ReadUtils.ReadFixedLengthString(memory.Span);
 
             return value;
         }

@@ -183,13 +183,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     public T Read<T>(
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
-        ulong[]? memoryDims = null) where T : unmanaged
+        ulong[]? memoryDims = null)
     {
         return Read<T>(default, fileSelection, memorySelection, memoryDims);
     }
 
     /// <summary>
-    /// Reads the data. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// Reads the data.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="datasetAccess">The dataset access properties.</param>
@@ -201,7 +201,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default) where T : unmanaged
+        ulong[]? memoryDims = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
@@ -226,13 +226,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         Selection? fileSelection = null, 
         Selection? memorySelection = null, 
         ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where T : unmanaged
+        CancellationToken cancellationToken = default)
     {
         return ReadAsync<T>(default, fileSelection, memorySelection, memoryDims, cancellationToken);
     }
 
     /// <summary>
-    /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="datasetAccess">The dataset access properties.</param>
@@ -246,7 +246,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         Selection? fileSelection = default,
         Selection? memorySelection = default,
         ulong[]? memoryDims = default,
-        CancellationToken cancellationToken = default) where T : unmanaged
+        CancellationToken cancellationToken = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 

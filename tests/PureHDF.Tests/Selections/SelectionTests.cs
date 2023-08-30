@@ -18,9 +18,6 @@ namespace PureHDF.Tests.Selections
         //   dataset consisting of a 5x4 fixed-size array cannot be defined with 10x10 chunks.
         // https://support.hdfgroup.org/images/tutr-subset2.png
 
-        private static void Converter(Memory<byte> source, Memory<int> target) 
-            => source.Span.CopyTo(MemoryMarshal.AsBytes(target.Span));
-
         [Fact]
         public void CanWalk_NoneSelection()
         {
@@ -575,8 +572,7 @@ namespace PureHDF.Tests.Selections
                 default!,
                 default!,
                 default!,
-                0,
-                1
+                0
             );
 
             // Act
@@ -625,8 +621,7 @@ namespace PureHDF.Tests.Selections
                 indices => default!,
                 indices => default,
                 Decoder: default!,
-                SourceTypeSize: 4,
-                TargetTypeFactor: 1
+                SourceTypeSize: 4
             );
 
             // Act
@@ -669,8 +664,7 @@ namespace PureHDF.Tests.Selections
                 indices => default!,
                 indices => default,
                 Decoder: default!,
-                SourceTypeSize: 4,
-                TargetTypeFactor: 1
+                SourceTypeSize: 4
             );
 
             // Act
@@ -782,9 +776,8 @@ namespace PureHDF.Tests.Selections
                 memorySelection,
                 indices => Task.FromResult((IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)])),
                 indices => actual,
-                Converter,
-                SourceTypeSize: 4,
-                TargetTypeFactor: 1
+                (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+                SourceTypeSize: 4
             );
 
             // Act
@@ -905,9 +898,8 @@ namespace PureHDF.Tests.Selections
                 targetSelection,
                 indices => Task.FromResult(getSourceStreamAsync(indices)),
                 indices => actual,
-                Converter,
-                SourceTypeSize: 4,
-                TargetTypeFactor: 1
+                (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+                SourceTypeSize: 4
             );
 
             // Act
@@ -1040,9 +1032,8 @@ namespace PureHDF.Tests.Selections
                 memorySelection,
                 indices => Task.FromResult(getSourceStreamAsync(indices)),
                 indices => actual,
-                Converter,
-                SourceTypeSize: 4,
-                TargetTypeFactor: 1
+                (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+                SourceTypeSize: 4
             );
 
             // Act
@@ -1144,9 +1135,8 @@ namespace PureHDF.Tests.Selections
                     datasetSelection,
                     indices => h5dIntermediate.GetReadStreamAsync(default(SyncReader), indices),
                     indices => intermediate,
-                    Converter,
-                    SourceTypeSize: 4,
-                    TargetTypeFactor: 1
+                    (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+                    SourceTypeSize: 4
                 );
 
                 SelectionUtils
@@ -1170,8 +1160,7 @@ namespace PureHDF.Tests.Selections
                     indices => h5d.GetReadStreamAsync(default(SyncReader), indices),
                     indices => actual,
                     Decoder: default!,
-                    SourceTypeSize: 4,
-                    TargetTypeFactor: 1
+                    SourceTypeSize: 4
                 );
 
                 // Act

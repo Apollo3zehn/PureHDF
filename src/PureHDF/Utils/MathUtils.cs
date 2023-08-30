@@ -65,6 +65,17 @@ internal static partial class MathUtils
         return coordinates;
     }
 
+    public static void ToCoordinates(this int linearIndex, Span<int> dimensions, Span<int> coordinates)
+    {
+        var rank = dimensions.Length;
+
+        for (int i = rank - 1; i >= 0; i--)
+        {
+            linearIndex = Math.DivRem(linearIndex, dimensions[i], out var coordinate);
+            coordinates[i] = coordinate;
+        }
+    }
+
     public static void ToCoordinates(this ulong linearIndex, Span<ulong> dimensions, Span<ulong> coordinates)
     {
         var rank = dimensions.Length;

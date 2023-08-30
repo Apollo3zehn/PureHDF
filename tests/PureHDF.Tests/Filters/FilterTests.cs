@@ -125,7 +125,7 @@ public class FilterTests
         using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset(datasetName);
 
-        var actual = dataset.Read<T>();
+        var actual = dataset.Read<T[]>();
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -161,7 +161,7 @@ public class FilterTests
         {
             var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             Assert.Equal(expected, actual);
         }
@@ -208,7 +208,7 @@ public class FilterTests
 
         if (shouldSucceed)
         {
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(expected.SequenceEqual(actual));
@@ -257,7 +257,7 @@ public class FilterTests
         {
             var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             Assert.Equal(expected, actual);
         }
@@ -287,7 +287,7 @@ public class FilterTests
         // Act
         using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset("/lzf");
-        var actual = dataset.Read<int>();
+        var actual = dataset.Read<int[]>();
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -323,7 +323,7 @@ public class FilterTests
         {
             var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
-            var actual = dataset.Read<int>();
+            var actual = dataset.Read<int[]>();
 
             Assert.Equal(expected, actual);
         }
@@ -360,7 +360,7 @@ public class FilterTests
         // Act
         using var root = H5File.OpenRead(filePath);
         var dataset = root.Dataset("bzip2");
-        var actual = dataset.Read<int>();
+        var actual = dataset.Read<int[]>();
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -421,7 +421,7 @@ public class FilterTests
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var parent = root.Group("filtered");
         var dataset = parent.Dataset("fletcher");
-        var actual = dataset.Read<int>();
+        var actual = dataset.Read<int[]>();
 
         // Assert
         Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -518,7 +518,7 @@ public class FilterTests
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var parent = root.Group("filtered");
         var dataset = parent.Dataset("deflate");
-        var actual = dataset.Read<int>();
+        var actual = dataset.Read<int[]>();
 
         // Assert
         Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -579,7 +579,7 @@ public class FilterTests
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var parent = root.Group("filtered");
         var dataset = parent.Dataset("multi");
-        var actual = dataset.Read<int>();
+        var actual = dataset.Read<int[]>();
 
         // Assert
         Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
@@ -684,7 +684,7 @@ public class FilterTests
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var parent = root.Group("filtered");
         var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-        var actual = dataset.Read<byte>();
+        var actual = dataset.Read<byte[]>();
 
         // Assert
         Assert.True(actual.SequenceEqual(expected));
@@ -1134,12 +1134,13 @@ public class FilterTests
         EndiannessConverter.Convert<int>(SharedTestData.MediumData, dataset_chunked_expected);
 
         // Act
-        var attribute_actual = attribute.Read<int>();
-        var dataset_compact_actual = dataset_compact.Read<int>();
-        var dataset_contiguous_actual = dataset_contiguous.Read<int>();
-        var dataset_chunked_actual = dataset_chunked.Read<int>();
+        var attribute_actual = attribute.Read<int[]>();
+        var dataset_compact_actual = dataset_compact.Read<int[]>();
+        var dataset_contiguous_actual = dataset_contiguous.Read<int[]>();
+        var dataset_chunked_actual = dataset_chunked.Read<int[]>();
 
         // Assert
+        Assert.True(attribute_actual.SequenceEqual(attribute_expected));
         Assert.True(dataset_compact_actual.SequenceEqual(dataset_compact_expected));
         Assert.True(dataset_contiguous_actual.SequenceEqual(dataset_contiguous_expected));
         Assert.True(dataset_chunked_actual.SequenceEqual(dataset_chunked_expected));
@@ -1160,7 +1161,7 @@ public class FilterTests
         var dataset = (NativeDataset)parent.Dataset($"shuffle_{bytesOfType}");
 
         var shuffled = dataset
-            .ReadCoreValueAsync<T, SyncReader>(default, null, skipShuffle: true)
+            .ReadCoreAsync<T[], T, SyncReader>(default, skipShuffle: true)
             .GetAwaiter()
             .GetResult()!;
 

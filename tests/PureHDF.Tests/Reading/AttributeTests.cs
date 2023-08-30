@@ -333,7 +333,7 @@ namespace PureHDF.Tests.Reading
                 static int[] Read(NativeFile root, IH5Dataset referenced, NativeRegionReference1 reference)
                 {
                     var selection = root.Get(reference);
-                    var actual = referenced.Read<int>(fileSelection: selection);
+                    var actual = referenced.Read<int[]>(fileSelection: selection);
 
                     return actual;
                 }

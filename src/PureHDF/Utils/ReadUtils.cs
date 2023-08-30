@@ -1,4 +1,7 @@
+using System.Buffers;
+using System.Buffers.Binary;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -8,6 +11,18 @@ internal static partial class ReadUtils
 {
     public static MethodInfo MethodInfoDecodeUnmanagedElement { get; } = typeof(ReadUtils)
         .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    public static ulong ReadUlong(Span<byte> buffer, ulong size)
+    {
+        return size switch
+        {
+            1 => buffer[0],
+            2 => BinaryPrimitives.ReadUInt16LittleEndian(buffer),
+            4 => BinaryPrimitives.ReadUInt32LittleEndian(buffer),
+            8 => BinaryPrimitives.ReadUInt64LittleEndian(buffer),
+            _ => ReadUlongArbitrary(buffer, size)
+        };
+    }
 
     public static ulong ReadUlong(H5DriverBase driver, ulong size)
     {
@@ -19,6 +34,22 @@ internal static partial class ReadUtils
             8 => driver.ReadUInt64(),
             _ => ReadUlongArbitrary(driver, size)
         };
+    }
+
+    private static ulong ReadUlongArbitrary(Span<byte> buffer, ulong size)
+    {
+        var result = 0UL;
+        var shift = 0;
+
+        for (ulong i = 0; i < size; i++)
+        {
+            var value = buffer[0];
+            buffer = buffer.Slice(1);
+            result += (ulong)(value << shift);
+            shift += 8;
+        }
+
+        return result;
     }
 
     private static ulong ReadUlongArbitrary(H5DriverBase driver, ulong size)
@@ -36,7 +67,7 @@ internal static partial class ReadUtils
         return result;
     }
 
-        public static bool CanDecodeFromCompound(Type type)
+    public static bool CanDecodeFromCompound(Type type)
     {
         if (type.IsValueType)
             return !(type.IsPrimitive || type.IsEnum);
@@ -78,10 +109,13 @@ internal static partial class ReadUtils
 
     public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : unmanaged
     {
-        Span<T> sourceArray = stackalloc T[] { (T)source };
-        source.ReadDataset(MemoryMarshal.AsBytes(sourceArray));
+        var bytesOfType = Unsafe.SizeOf<T>();
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(bytesOfType);
+        var buffer = memoryOwner.Memory.Slice(bytesOfType);
 
-        return sourceArray[0];
+        source.ReadDataset(buffer);
+
+        return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
 
     public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
