@@ -17,15 +17,17 @@ public static class IH5DatasetExtensions
     /// <returns>A queryable of type <typeparamref name="T"/>.</returns>
     public static IQueryable<T> AsQueryable<T>(this IH5Dataset dataset, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : unmanaged
     {
-        if (dataset.Space.Rank != 1)
-            throw new Exception("Querying data only works for 1-dimensional datasets.");
+        // if (dataset.Space.Rank != 1)
+        //     throw new Exception("Querying data only works for 1-dimensional datasets.");
 
-        var provider = new QueryProvider<T>(
-            datasetLength: dataset.Space.Dimensions[0],
-            executor: fileSelection => dataset.Read<T>(fileSelection, memorySelection, memoryDims));
+        // var provider = new QueryProvider<T>(
+        //     datasetLength: dataset.Space.Dimensions[0],
+        //     executor: fileSelection => dataset.Read<T>(fileSelection, memorySelection, memoryDims));
 
-        var queryable = new Queryable<T>(provider);
+        // var queryable = new Queryable<T>(provider);
 
-        return queryable;
+        // return queryable;
+
+        throw new NotImplementedException();
     }
 }

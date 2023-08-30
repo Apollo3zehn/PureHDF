@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace PureHDF;
 
@@ -64,12 +65,81 @@ internal static partial class ReadUtils
             typeSize == fileTypeSize;
     }
 
-    // Decode unmanaged element
+    public static TResult FromArray<TResult, TElement>(TElement[] data)
+    {
+        var type = typeof(TResult);
+
+        if (DataUtils.IsArray(type))
+            return (TResult)(object)data;
+
+        else
+            return (TResult)(object)data[0]!;
+    }
+
     public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : unmanaged
     {
         Span<T> sourceArray = stackalloc T[] { (T)source };
         source.ReadDataset(MemoryMarshal.AsBytes(sourceArray));
 
         return sourceArray[0];
+    }
+
+    public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+    {
+#if NETSTANDARD2_0
+            return encoding switch
+            {
+                CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
+                CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
+                _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+            };
+#else
+        return encoding switch
+        {
+            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
+            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
+            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+        };
+#endif
+    }
+
+    public static string ReadFixedLengthString(H5DriverBase driver, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+    {
+        var data = driver.ReadBytes(length);
+
+        return encoding switch
+        {
+            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
+            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
+            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+        };
+    }
+
+    public static string ReadNullTerminatedString(H5DriverBase driver, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+    {
+        var data = new List<byte>();
+        var byteValue = driver.ReadByte();
+
+        while (byteValue != '\0')
+        {
+            data.Add(byteValue);
+            byteValue = driver.ReadByte();
+        }
+
+        var destination = encoding switch
+        {
+            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
+            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
+            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+        };
+
+        if (pad)
+        {
+            // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
+            var paddingCount = (padSize - (destination.Length + 1) % padSize) % padSize;
+            driver.Seek(paddingCount, SeekOrigin.Current);
+        }
+
+        return destination;
     }
 }
