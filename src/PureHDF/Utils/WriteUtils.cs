@@ -8,9 +8,6 @@ namespace PureHDF;
 
 internal static class WriteUtils
 {
-    private static readonly MethodInfo _methodInfoUnmanagedArrayToMemory = typeof(WriteUtils)
-        .GetMethod(nameof(UnmanagedArrayToMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
     public static MethodInfo MethodInfoEncodeUnmanagedElement { get; } = typeof(WriteUtils)
         .GetMethod(nameof(EncodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
@@ -75,11 +72,9 @@ internal static class WriteUtils
             return ElementToMemory((TElement)data);
 
         else if (DataUtils.IsArray(type))
-            return type.GetElementType()!.IsValueType
-                ? InvokeUnmanagedArrayToMemory<TElement>(data)
-                : ((Array)data).Rank == 1
-                    ? Array1DToMemory((TElement[])data)
-                    : ArrayNDToMemory<TElement>((Array)data);
+            return ((Array)data).Rank == 1
+                ? Array1DToMemory((TElement[])data)
+                : ArrayNDToMemory<TElement>((Array)data);
 
         else if (DataUtils.IsMemory(type))
             return data.Equals(default(T))
@@ -136,31 +131,7 @@ internal static class WriteUtils
             dimensions[i] = (ulong)data.GetLongLength(i);
         }
 
-        var memory = data.Cast<T>().ToArray().AsMemory();
-
-        return (
-            memory,
-            dimensions
-        );
-    }
-
-    // Convert unmanaged array to memory
-    private static (Memory<T>, ulong[]) InvokeUnmanagedArrayToMemory<T>(object data)
-    {
-        var genericMethod = _methodInfoUnmanagedArrayToMemory.MakeGenericMethod(typeof(T));
-        return ((Memory<T>, ulong[]))genericMethod.Invoke(null, new object[] { data })!;
-    }
-
-    private static (Memory<T>, ulong[]) UnmanagedArrayToMemory<T>(Array data) where T : struct
-    {
-        var dimensions = new ulong[data.Rank];
-
-        for (int i = 0; i < data.Rank; i++)
-        {
-            dimensions[i] = (ulong)data.GetLongLength(i);
-        }
-
-        var memory = new UnmanagedArrayMemoryManager<T>(data).Memory;
+        var memory = new ArrayMemoryManager<T>(data).Memory;
 
         return (
             memory,

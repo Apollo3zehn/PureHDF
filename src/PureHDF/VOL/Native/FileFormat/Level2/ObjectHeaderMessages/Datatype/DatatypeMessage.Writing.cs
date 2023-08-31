@@ -123,6 +123,7 @@ internal partial record class DatatypeMessage : Message
 
             /* array */
             Type when DataUtils.IsArray(type)
+                /* there is no multi-dim variable-length sequence in HDF5 */
                 => GetTypeInfoForVariableLengthSequence(context, type.GetElementType()!),
 
             /* generic IEnumerable */

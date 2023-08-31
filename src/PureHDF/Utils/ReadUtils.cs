@@ -12,6 +12,12 @@ internal static partial class ReadUtils
     public static MethodInfo MethodInfoDecodeUnmanagedElement { get; } = typeof(ReadUtils)
         .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    public static MethodInfo MethodInfoDecodeArray { get; } = typeof(ReadUtils)
+        .GetMethod(nameof(DecodeArray), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    public static MethodInfo MethodInfoDecodeUnmanagedArray { get; } = typeof(ReadUtils)
+        .GetMethod(nameof(DecodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     public static ulong ReadUlong(Span<byte> buffer, ulong size)
     {
         return size switch
@@ -96,7 +102,7 @@ internal static partial class ReadUtils
             typeSize == fileTypeSize;
     }
 
-    public static TResult FromArray<TResult, TElement>(TElement[] data)
+    public static TResult FromArray<TResult, TElement>(Array data)
     {
         var type = typeof(TResult);
 
@@ -104,7 +110,7 @@ internal static partial class ReadUtils
             return (TResult)(object)data;
 
         else
-            return (TResult)(object)data[0]!;
+            return (TResult)data.GetValue(0)!;
     }
 
     public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : unmanaged
@@ -116,6 +122,30 @@ internal static partial class ReadUtils
         source.ReadDataset(buffer);
 
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
+    }
+
+    public static T DecodeArray<T>(IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
+    {
+        var array = Array.CreateInstance(typeof(T), dims);
+        var span = new ArrayMemoryManager<T>(array).Memory.Span;
+
+        for (int index = 0; index < array.Length; index++)
+        {
+            span[index] = (T)elementDecode(source)!;
+        }
+
+        return (T)(object)array;
+    }
+
+    public static T DecodeUnmanagedArray<T>(IH5ReadStream source, int[] dims)
+        where T : unmanaged
+    {
+        var array = Array.CreateInstance(typeof(T), dims);
+        var memory = new ArrayMemoryManager<T>(array).Memory;
+
+        source.ReadDataset(memory.Cast<T, byte>());
+
+        return (T)(object)array;
     }
 
     public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)

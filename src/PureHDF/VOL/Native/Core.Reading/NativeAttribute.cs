@@ -89,32 +89,18 @@ internal class NativeAttribute : IH5Attribute
         if (Message.Dataspace.Type == DataspaceType.Null)
             throw new Exception("Attributes with null dataspace cannot be read.");
 
+#warning ensure same element count for memory space and file space
+        Array array = typeof(TResult).IsArray
+            ? Array.CreateInstance(typeof(TElement), Message.Dataspace.Dimensions.Select(dim => (int)dim).ToArray())
+            : new TResult[1];
+
         var targetElementCount = MathUtils.CalculateSize(Space.Dimensions, Message.Dataspace.Type);
+        var targetBuffer = new ArrayMemoryManager<TElement>(array).Memory;
 
-#if NET6_0_OR_GREATER
+        var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
+        decoder(source, targetBuffer);
 
-        var array = Array.CreateInstance(
-            typeof(TElement), 
-            Space.Dimensions.Select(dim => (int)dim).ToArray());
-
-        var span = MemoryMarshal.CreateSpan(
-            reference: ref MemoryMarshal.GetArrayDataReference(array), 
-            length: array.Length * Unsafe.SizeOf<TElement>());
-
-        var b2 = Unsafe.As<TElement[]>(array);
-
-        var c = 1;
-
-#endif
-
-        throw new NotImplementedException();
-
-        // var targetBuffer = new UnmanagedArrayMemoryManager<TElement>(array).Memory;
-
-        // var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
-        // decoder(source, targetBuffer);
-
-        // return ReadUtils.FromArray<TResult, TElement>(targetBuffer);
+        return ReadUtils.FromArray<TResult, TElement>(array);
     }
 
     internal AttributeMessage Message { get; }

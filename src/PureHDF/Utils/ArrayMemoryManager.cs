@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF;
 
-internal class UnmanagedArrayMemoryManager<T> : MemoryManager<T> where T : struct
+internal class ArrayMemoryManager<T> : MemoryManager<T>
 {
     private readonly Array _array;
 
-    public UnmanagedArrayMemoryManager(Array array)
+    public ArrayMemoryManager(Array array)
     {
         _array = array;
     }
@@ -17,10 +17,10 @@ internal class UnmanagedArrayMemoryManager<T> : MemoryManager<T> where T : struc
     {
 #if NET6_0_OR_GREATER
         var span = MemoryMarshal.CreateSpan(
-            reference: ref MemoryMarshal.GetArrayDataReference(_array), 
-            length: _array.Length * Unsafe.SizeOf<T>());
+            reference: ref Unsafe.As<byte, T>(ref MemoryMarshal.GetArrayDataReference(_array)), 
+            length: _array.Length);
 
-        return MemoryMarshal.Cast<byte, T>(span);
+        return span;
 #else
         if (_array.Rank != 1)
             throw new Exception("Multi-dimensions arrays are only supported on .NET 6+.");

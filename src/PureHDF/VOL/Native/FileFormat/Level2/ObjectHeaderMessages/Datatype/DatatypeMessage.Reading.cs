@@ -216,7 +216,7 @@ internal partial record class DatatypeMessage(
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
         // TODO: cache
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = ReadUtils.MethodInfoDecodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[1];
 
         object? decode(IH5ReadStream source)
@@ -240,54 +240,52 @@ internal partial record class DatatypeMessage(
         if (Properties[0] is not ArrayPropertyDescription property)
             throw new Exception("Array properties must not be null.");
 
-        var elementType = type.GetElementType()!;
-
-#warning When the encode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
+#warning When the decode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
 
         var elementCount = dims.Aggregate(1, (product, dim) => product * dim);
-        var elementDecode = property.BaseType.GetDecodeInfoForScalar(context, elementType);
+        var elementDecode = property.BaseType.GetDecodeInfoForScalar(context, type);
+
+        // TODO: cache
+        var invokeEncodeArray = ReadUtils.MethodInfoDecodeArray.MakeGenericMethod(type);
+        var parameters = new object[2];
 
         object? decode(IH5ReadStream source)
         {
-            var array = Array.CreateInstance(elementType, dims);
-            var coordinates = ArrayPool<int>.Shared.Rent(property.Rank);
+            parameters[0] = source;
+            parameters[1] = dims;
+            parameters[2] = elementDecode;
 
-            for (int linearIndex = 0; linearIndex < elementCount; linearIndex++)
-            {
-                linearIndex.ToCoordinates(dims, coordinates);    
-                array.SetValue(elementDecode(source), coordinates);
-            }
-
-            ArrayPool<int>.Shared.Return(coordinates);
-
-            return array;
+            return invokeEncodeArray.Invoke(default, parameters);
         }
 
         return decode;
     }
 
-    private ElementDecodeDelegate GetDecodeInfoForUnmanagedArray(Type type)
+    private ElementDecodeDelegate GetDecodeInfoForUnmanagedArray(
+        Type type
+    )
     {
         if (Properties[0] is not ArrayPropertyDescription property)
             throw new Exception("Array properties must not be null.");
 
-        var elementType = type.GetElementType()!;
-
-        var lengths = property.DimensionSizes
+#warning When the decode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
+        var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
 
+        // TODO: cache
+        var invokeEncodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(type);
+        var parameters = new object[2];
+
         object? decode(IH5ReadStream source)
         {
-            var array = Array.CreateInstance(elementType, lengths);
-            var memory = new UnmanagedArrayMemoryManager<byte>(array).Memory;
+            parameters[0] = source;
+            parameters[1] = dims;
 
-            source.ReadDataset(memory);
-
-            return array;
+            return invokeEncodeUnmanagedArray.Invoke(default, parameters);
         }
 
         return decode;
@@ -328,7 +326,7 @@ internal partial record class DatatypeMessage(
             buffer = buffer.Slice(sizeof(uint));
 
             var array = Array.CreateInstance(elementType, length);
-            var memory = new UnmanagedArrayMemoryManager<byte>(array).Memory;
+            var memory = new ArrayMemoryManager<byte>(array).Memory;
 
             for (int i = 0; i < length; i++)
             {
