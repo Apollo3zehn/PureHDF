@@ -23,14 +23,4 @@ internal class DatasetInfo(
     public FilterPipelineMessage? FilterPipeline { get; } = FilterPipeline;
 
     public ExternalFileListMessage? ExternalFileList { get; } = ExternalFileList;
-
-    internal ulong[] GetDatasetDims()
-    {
-        return Space.Type switch
-        {
-            DataspaceType.Scalar => new ulong[] { 1 },
-            DataspaceType.Simple => Space.Dimensions,
-            _ => throw new Exception($"Unsupported data space type '{Space.Type}'.")
-        };
-    }
 };

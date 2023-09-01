@@ -135,7 +135,7 @@ internal abstract class H5D_Chunk : H5D_Base
         RawChunkDims = GetRawChunkDims();
         ChunkDims = RawChunkDims[..^1].ToArray();
         ChunkRank = (byte)ChunkDims.Length;
-        ChunkByteSize = MathUtils.CalculateSize(ChunkDims) * Dataset.Type.Size;
+        ChunkByteSize = ChunkDims.Aggregate(1UL, (product, dim) => product * dim) * Dataset.Type.Size;
         ChunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
         Dims = Dataset.Space.Dimensions;
         MaxDims = Dataset.Space.MaxDimensions;

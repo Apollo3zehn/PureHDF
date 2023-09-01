@@ -204,7 +204,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
 
         /* target buffer */
-        var targetElementCount = MathUtils.CalculateSize(memoryDims);
+        var targetElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
         var targetBuffer = new TElement[targetElementCount];
 
         // TODO make use of selections

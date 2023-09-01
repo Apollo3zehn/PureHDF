@@ -10,13 +10,13 @@ namespace PureHDF;
 internal static partial class ReadUtils
 {
     public static MethodInfo MethodInfoDecodeUnmanagedElement { get; } = typeof(ReadUtils)
-        .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.NonPublic | BindingFlags.Static)!;
+        .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.Public | BindingFlags.Static)!;
 
     public static MethodInfo MethodInfoDecodeArray { get; } = typeof(ReadUtils)
-        .GetMethod(nameof(DecodeArray), BindingFlags.NonPublic | BindingFlags.Static)!;
+        .GetMethod(nameof(DecodeArray), BindingFlags.Public | BindingFlags.Static)!;
 
     public static MethodInfo MethodInfoDecodeUnmanagedArray { get; } = typeof(ReadUtils)
-        .GetMethod(nameof(DecodeUnmanagedArray), BindingFlags.NonPublic | BindingFlags.Static)!;
+        .GetMethod(nameof(DecodeUnmanagedArray), BindingFlags.Public | BindingFlags.Static)!;
 
     public static ulong ReadUlong(Span<byte> buffer, ulong size)
     {
@@ -117,7 +117,7 @@ internal static partial class ReadUtils
     {
         var bytesOfType = Unsafe.SizeOf<T>();
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(bytesOfType);
-        var buffer = memoryOwner.Memory.Slice(bytesOfType);
+        var buffer = memoryOwner.Memory[..bytesOfType];
 
         source.ReadDataset(buffer);
 
@@ -151,12 +151,12 @@ internal static partial class ReadUtils
     public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
     {
 #if NETSTANDARD2_0
-            return encoding switch
-            {
-                CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
-                CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
-                _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
-            };
+        return encoding switch
+        {
+            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
+            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
+            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
+        };
 #else
         return encoding switch
         {

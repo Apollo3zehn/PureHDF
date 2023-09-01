@@ -35,7 +35,7 @@ internal class HsdsAttribute : IH5Attribute
         }
     }
 
-    public T Read<T>()
+    public T Read<T>(ulong[]? memoryDims = null)
     {
         if (!_attribute.Value.HasValue)
             throw new Exception("The attribute contains no data.");

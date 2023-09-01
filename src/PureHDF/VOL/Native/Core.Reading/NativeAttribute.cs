@@ -61,7 +61,7 @@ internal class NativeAttribute : IH5Attribute
 
     #region Methods
 
-    public T Read<T>()
+    public T Read<T>(ulong[]? memoryDims = null)
     {
         // var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
 
@@ -75,31 +75,67 @@ internal class NativeAttribute : IH5Attribute
 
         var source = new SystemMemoryStream(Message.InputData);
 
-        var result = (T)method.Invoke(this, new object[] 
+        var result = (T)method.Invoke(this, new object?[] 
         {
-            source 
+            source,
+            memoryDims
         })!;
 
         return result;
     }
 
-    private TResult ReadCore<TResult, TElement>(IH5ReadStream source)
+    private TResult ReadCore<TResult, TElement>(
+        IH5ReadStream source,
+        ulong[]? memoryDims = null)
     {
-        // fast path for null dataspace
+        var resultType = typeof(TResult);
+
+        /* fast path for null dataspace */
         if (Message.Dataspace.Type == DataspaceType.Null)
             throw new Exception("Attributes with null dataspace cannot be read.");
 
-#warning ensure same element count for memory space and file space
-        Array array = typeof(TResult).IsArray
-            ? Array.CreateInstance(typeof(TElement), Message.Dataspace.Dimensions.Select(dim => (int)dim).ToArray())
+        /* file element count */
+        var fileElementCount = Message.Dataspace.GetTotalElementCount();
+
+        /* memory dims */
+        if (resultType.IsArray)
+        {
+            var rank = resultType.GetArrayRank();
+
+            if (rank == 1)
+                memoryDims ??= new ulong[] { fileElementCount };
+
+            else if (rank == Message.Dataspace.Rank)
+                memoryDims ??= Message.Dataspace.GetDims();
+
+            else
+                throw new Exception("The rank of the memory space must the rank of the file space if no memory dimensions are provided.");
+        }
+
+        else
+        {
+            memoryDims ??= new ulong[] { fileElementCount };
+        }
+
+        /* memory element count */
+        var memoryElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
+
+        /* validation */
+        if (memoryElementCount != fileElementCount)
+            throw new Exception("The total file element count does not match the total memory element count.");
+
+        /* target array */
+        var array = resultType.IsArray
+            ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
             : new TResult[1];
 
-        var targetElementCount = MathUtils.CalculateSize(Space.Dimensions, Message.Dataspace.Type);
-        var targetBuffer = new ArrayMemoryManager<TElement>(array).Memory;
+        var resultBuffer = new ArrayMemoryManager<TElement>(array).Memory;
 
+        /* decode */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
-        decoder(source, targetBuffer);
+        decoder(source, resultBuffer);
 
+        /* convert & return */
         return ReadUtils.FromArray<TResult, TElement>(array);
     }
 

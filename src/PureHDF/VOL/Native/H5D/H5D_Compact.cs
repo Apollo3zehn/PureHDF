@@ -20,7 +20,7 @@ internal class H5D_Compact : H5D_Base
 
     public override ulong[] GetChunkDims()
     {
-        return Dataset.GetDatasetDims();
+        return Dataset.Space.GetDims();
     }
 
     public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)

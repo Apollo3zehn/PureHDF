@@ -315,47 +315,53 @@ internal partial record class DatatypeMessage(
             // } hvl_t;
 
             /* read data into rented buffer */
-            var totalSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
+            var lengthSize = sizeof(uint);
+            var globalHeapIdSize = context.Superblock.OffsetsSize + sizeof(uint);
+            var totalSize = lengthSize + globalHeapIdSize;
+            
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
             source.ReadDataset(buffer);
 
-            /* Read global heap ID (Skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read)) */
-            var length = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
-            buffer = buffer.Slice(sizeof(uint));
+            /* decode sequence length */
+            var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
+            buffer = buffer.Slice(lengthSize);
 
-            var array = Array.CreateInstance(elementType, length);
-            var memory = new ArrayMemoryManager<byte>(array).Memory;
+            /* decode global heap IDs and get associated data */
+            var array = Array.CreateInstance(elementType, sequenceLength);
+            var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
 
-            for (int i = 0; i < length; i++)
+            if (globalHeapId.Equals(default))
+                return default;
+
+            buffer = buffer.Slice(globalHeapIdSize);
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
+
+            if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
             {
-                var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
+                // TODO: cache short-lived stream?
+                var localSource = new SystemMemoryStream(globalHeapObject.ObjectData);
 
-                if (globalHeapId.Equals(default))
-                    continue;
-
-                var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
-
-                if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+                for (int i = 0; i < sequenceLength; i++)
                 {
-                    array.SetValue(elementDecode(source), i);
+                    array.SetValue(elementDecode(localSource), i);
                 }
-                
-                else
-                {
-                    // It would be more correct to just throw an exception 
-                    // when the object index is not found in the collection,
-                    // but that would make the tests following test fail
-                    // - CanReadDataset_Array_nullable_struct.
-                    // 
-                    // And it would make the user's life a bit more complicated
-                    // if the library cannot handle missing entries.
-                    continue;
-                }   
-            }
 
-            return array;
+                return array;
+            }
+            
+            else
+            {
+                // It would be more correct to just throw an exception 
+                // when the object index is not found in the collection,
+                // but that would make the tests following test fail
+                // - CanReadDataset_Array_nullable_struct.
+                // 
+                // And it would make the user's life a bit more complicated
+                // if the library cannot handle missing entries.
+                return default;
+            }
         }
 
         return decode;
@@ -395,13 +401,14 @@ internal partial record class DatatypeMessage(
 
             source.ReadDataset(buffer);
 
-            /* Read global heap ID (Skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read)) */
+            /* skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
             buffer = buffer.Slice(sizeof(uint));
 
+            /* decode global heap IDs and get associated data */
             var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
 
             if (globalHeapId.Equals(default))
-                return default(string);
+                return default;
 
             var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
 
@@ -421,7 +428,7 @@ internal partial record class DatatypeMessage(
                 // 
                 // And it would make the user's life a bit more complicated
                 // if the library cannot handle missing entries.
-                return default(string);
+                return default;
             }
         }
 

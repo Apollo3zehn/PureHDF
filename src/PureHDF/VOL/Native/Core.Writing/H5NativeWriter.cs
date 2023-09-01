@@ -428,7 +428,7 @@ partial class H5NativeWriter
         }
 
         /* dataset dims */
-        var datasetDims = datasetInfo.GetDatasetDims();
+        var datasetDims = datasetInfo.Space.GetDims();
 
         /* dataset chunk dims */
         var datasetChunkDims = h5d.GetChunkDims();

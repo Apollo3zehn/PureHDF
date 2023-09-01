@@ -288,11 +288,11 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         //     ? default
         //     : MemoryMarshal.Cast<byte, TResult>(InternalFillValue.Value)[0];
 
-        // fast path for null dataspace
+        /* fast path for null dataspace */
         if (InternalDataspace.Type == DataspaceType.Null)
             throw new Exception("Datasets with null dataspace cannot be read.");
 
-        // for testing only
+        /* for testing only */
         if (skipShuffle && InternalFilterPipeline is not null)
         {
             InternalFilterPipeline = InternalFilterPipeline with {
@@ -355,7 +355,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         h5d.Initialize();
 
         /* dataset dims */
-        var datasetDims = datasetInfo.GetDatasetDims();
+        var datasetDims = InternalDataspace.GetDims();
 
         /* dataset chunk dims */
         var datasetChunkDims = h5d.GetChunkDims();
@@ -389,7 +389,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             blocks: memoryDims);
 
         /* target buffer */
-        var targetElementCount = MathUtils.CalculateSize(memoryDims, InternalDataspace.Type);
+        var targetElementCount = InternalDataspace.GetTotalElementCount();
         var targetBuffer = new TElement[targetElementCount];
 
         /* decode info */

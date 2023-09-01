@@ -177,33 +177,4 @@ internal static partial class MathUtils
 
         return result;
     }
-
-    public static ulong CalculateSize(IEnumerable<uint> dimensionSizes, DataspaceType type = DataspaceType.Simple)
-    {
-        return CalculateSize(dimensionSizes.Select(value => (ulong)value), type);
-    }
-
-    public static ulong CalculateSize(IEnumerable<ulong> dimensionSizes, DataspaceType type = DataspaceType.Simple)
-    {
-        switch (type)
-        {
-            case DataspaceType.Scalar:
-                return 1;
-
-            case DataspaceType.Simple:
-
-                var totalSize = 0UL;
-
-                if (dimensionSizes.Any())
-                    totalSize = dimensionSizes.Aggregate((x, y) => x * y);
-
-                return totalSize;
-
-            case DataspaceType.Null:
-                return 0;
-
-            default:
-                throw new Exception($"The dataspace type '{type}' is not supported.");
-        }
-    }
 }

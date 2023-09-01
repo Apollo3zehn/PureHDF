@@ -95,7 +95,7 @@ internal partial record class AttributeMessage(
         }
 
         // data
-        var byteSize = MathUtils.CalculateSize(dataspace.Dimensions, dataspace.Type) * datatype.Size;
+        var byteSize = dataspace.GetTotalElementCount() * datatype.Size;
         var data = context.Driver.ReadBytes((int)byteSize);
 
         return new AttributeMessage(

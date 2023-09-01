@@ -24,6 +24,7 @@ public interface IH5Attribute
     /// Reads the data.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="memoryDims">The dimensions of the resulting buffer.</param>
     /// <returns>The read data of type <typeparamref name="T"/>.</returns>
-    T Read<T>();
+    T Read<T>(ulong[]? memoryDims = null);
 }
