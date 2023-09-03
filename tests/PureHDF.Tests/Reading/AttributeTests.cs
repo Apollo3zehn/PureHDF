@@ -223,15 +223,17 @@ namespace PureHDF.Tests.Reading
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var attribute = root.Group("array").Attribute("value");
 
-                var actual2 = attribute
-                    .Read<int[,]>();
-
                 var actual = attribute
-                    .Read<int[]>()
-                    .ToArray4D(2, 3, 4, 5);
+                    .Read<int[,][,]>();
 
-                var expected_casted = ReadingTestData.ArrayDataValue.Cast<int>().ToArray();
-                var actual_casted = actual.Cast<int>().ToArray();
+                var expected_casted = ReadingTestData.ArrayDataValue
+                    .Cast<int>()
+                    .ToArray();
+
+                var actual_casted = actual
+                    .Cast<int[,]>()
+                    .SelectMany(x => x.Cast<int>())
+                    .ToArray();
 
                 // Assert
                 Assert.True(actual_casted.SequenceEqual(expected_casted));
@@ -251,14 +253,19 @@ namespace PureHDF.Tests.Reading
                 var attribute = root.Group("array").Attribute("variable_length_string");
 
                 var actual = attribute
-                    .Read<string[]>();
+                    .Read<string[,][,]>();
 
-                var expected = ReadingTestData.ArrayDataVariableLengthString
+                var expected_casted = ReadingTestData.ArrayDataVariableLengthString
                     .Cast<string>()
                     .ToArray();
 
+                var actual_casted = actual
+                    .Cast<string[,]>()
+                    .SelectMany(x => x.Cast<string>())
+                    .ToArray();
+
                 // Assert
-                Assert.True(actual.SequenceEqual(expected));
+                Assert.True(actual_casted.SequenceEqual(expected_casted));
             });
         }
 

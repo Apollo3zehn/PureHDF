@@ -9,11 +9,14 @@ namespace PureHDF;
 
 internal static partial class ReadUtils
 {
+    public static MethodInfo MethodInfoSizeOf { get; } = typeof(ReadUtils)
+        .GetMethod(nameof(SizeOf), BindingFlags.Public | BindingFlags.Static)!;
+
     public static MethodInfo MethodInfoDecodeUnmanagedElement { get; } = typeof(ReadUtils)
         .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.Public | BindingFlags.Static)!;
 
-    public static MethodInfo MethodInfoDecodeArray { get; } = typeof(ReadUtils)
-        .GetMethod(nameof(DecodeArray), BindingFlags.Public | BindingFlags.Static)!;
+    public static MethodInfo MethodInfoDecodeReferenceArray { get; } = typeof(ReadUtils)
+        .GetMethod(nameof(DecodeReferenceArray), BindingFlags.Public | BindingFlags.Static)!;
 
     public static MethodInfo MethodInfoDecodeUnmanagedArray { get; } = typeof(ReadUtils)
         .GetMethod(nameof(DecodeUnmanagedArray), BindingFlags.Public | BindingFlags.Static)!;
@@ -113,6 +116,11 @@ internal static partial class ReadUtils
             return (TResult)data.GetValue(0)!;
     }
 
+    public static int SizeOf<T>() where T : unmanaged
+    {
+        return Unsafe.SizeOf<T>();
+    }
+
     public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : unmanaged
     {
         var bytesOfType = Unsafe.SizeOf<T>();
@@ -124,28 +132,28 @@ internal static partial class ReadUtils
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
 
-    public static T DecodeArray<T>(IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
+    public static object DecodeReferenceArray<TElement>(IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
     {
-        var array = Array.CreateInstance(typeof(T), dims);
-        var span = new ArrayMemoryManager<T>(array).Memory.Span;
+        var array = Array.CreateInstance(typeof(TElement), dims);
+        var span = new ArrayMemoryManager<TElement>(array).Memory.Span;
 
         for (int index = 0; index < array.Length; index++)
         {
-            span[index] = (T)elementDecode(source)!;
+            span[index] = (TElement)elementDecode(source)!;
         }
 
-        return (T)(object)array;
+        return array;
     }
 
-    public static T DecodeUnmanagedArray<T>(IH5ReadStream source, int[] dims)
-        where T : unmanaged
+    public static object DecodeUnmanagedArray<TElement>(IH5ReadStream source, int[] dims)
+        where TElement : unmanaged
     {
-        var array = Array.CreateInstance(typeof(T), dims);
-        var memory = new ArrayMemoryManager<T>(array).Memory;
+        var array = Array.CreateInstance(typeof(TElement), dims);
+        var memory = new ArrayMemoryManager<TElement>(array).Memory;
 
-        source.ReadDataset(memory.Cast<T, byte>());
+        source.ReadDataset(memory.Cast<TElement, byte>());
 
-        return (T)(object)array;
+        return array;
     }
 
     public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)

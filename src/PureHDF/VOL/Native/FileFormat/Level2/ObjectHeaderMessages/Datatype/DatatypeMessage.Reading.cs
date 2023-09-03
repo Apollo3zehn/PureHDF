@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Buffers.Binary;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -12,8 +13,8 @@ internal partial record class DatatypeMessage(
     DatatypePropertyDescription[] Properties
 ) : Message
 {
-    private static readonly MethodInfo _methodInfoGetDecodeInfoForTopLevelUnmanagedMemory = typeof(DatatypeMessage)
-        .GetMethod(nameof(GetDecodeInfoForTopLevelUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+    private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedMemory = typeof(DatatypeMessage)
+        .GetMethod(nameof(GetDecodeInfoForUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
     private byte _version;
 
@@ -114,17 +115,49 @@ internal partial record class DatatypeMessage(
         };
     }
 
+    public bool IsReferenceOrContainsReferences()
+    {
+        return Class switch
+        {
+            DatatypeMessageClass.FixedPoint => false,
+            DatatypeMessageClass.FloatingPoint => false,
+            DatatypeMessageClass.String => false,
+            DatatypeMessageClass.BitField => false,
+            DatatypeMessageClass.Opaque => false,
+            DatatypeMessageClass.Compound => Properties
+                .Cast<CompoundPropertyDescription>()
+                .Any(description => description.MemberTypeMessage.IsReferenceOrContainsReferences()),
+            DatatypeMessageClass.Reference => false,
+            DatatypeMessageClass.Enumerated => false,
+            DatatypeMessageClass.VariableLength => true,
+            DatatypeMessageClass.Array => ((ArrayPropertyDescription)Properties[0]).BaseType.IsReferenceOrContainsReferences(),
+            _ => throw new NotSupportedException($"The data type message class '{Class}' is not supported.")
+        };
+    }
+
     public DecodeDelegate<T> GetDecodeInfo<T>(
         NativeReadContext context) 
     {
-        var encodeInfo = DataUtils.IsReferenceOrContainsReferences(typeof(T))
-            ? GetDecodeInfoForTopLevelMemory<T>(context)
-            : (DecodeDelegate<T>)_methodInfoGetDecodeInfoForTopLevelUnmanagedMemory
-                // TODO cache
-                .MakeGenericMethod(typeof(T))
-                .Invoke(default, new object[] { })!;
+        var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(typeof(T));
+        var fileIsRef = IsReferenceOrContainsReferences();
 
-        return encodeInfo;
+        var memoryTypeSize = memoryIsRef
+            ? default
+            : Unsafe.SizeOf<T>();
+
+        var fileTypeSize = Size;
+
+        // according to type-mismatch-behavior.md
+        // TODO cache
+        return (memoryIsRef, fileIsRef) switch
+        {
+            (true, _) => GetDecodeInfoForReferenceMemory<T>(context),
+            (false, true) => throw new Exception("Unable to decode a reference type as value type."),
+            (false, false) when memoryTypeSize == fileTypeSize => (DecodeDelegate<T>)_methodInfoGetDecodeInfoForUnmanagedMemory
+                .MakeGenericMethod(typeof(T))
+                .Invoke(default, new object[] { })!,
+            _ => throw new Exception("Unable to decode values types of different type size.")
+        };
     }
 
     private ElementDecodeDelegate GetDecodeInfoForScalar(
@@ -152,9 +185,7 @@ internal partial record class DatatypeMessage(
                         : throw new Exception("Variable-length sequence data can only be decoded as array."),
 
             DatatypeMessageClass.Array => DataUtils.IsArray(type)
-                ? DataUtils.IsReferenceOrContainsReferences(type) 
-                    ? GetDecodeInfoForArray(context, type)
-                    : GetDecodeInfoForUnmanagedArray(type)
+                ? GetDecodeInfoForArray(context, type.GetElementType()!)
                 : throw new Exception("Array data can only be decoded as array."),
             
             /* compound */
@@ -235,7 +266,32 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForArray(
         NativeReadContext context,
-        Type type)
+        Type elementType)
+    {
+        var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(elementType);
+        var fileIsRef = IsReferenceOrContainsReferences();
+
+        // TODO cache
+        var memoryTypeSize = memoryIsRef
+            ? default
+            : (int)ReadUtils.MethodInfoSizeOf.MakeGenericMethod(elementType).Invoke(default, default)!;
+
+        var fileTypeSize = ((ArrayPropertyDescription)Properties[0]).BaseType.Size;
+
+        // according to type-mismatch-behavior.md
+        // TODO cache
+        return (memoryIsRef, fileIsRef) switch
+        {
+            (true, _) => GetDecodeInfoForReferenceArray(context, elementType),
+            (false, true) => throw new Exception("Unable to decode a reference type as value type."),
+            (false, false) when memoryTypeSize == fileTypeSize => GetDecodeInfoForUnmanagedArray(elementType),
+            _ => throw new Exception("Unable to decode values types of different type size.")
+        };
+    }
+
+    private ElementDecodeDelegate GetDecodeInfoForReferenceArray(
+        NativeReadContext context,
+        Type elementType)
     {
         if (Properties[0] is not ArrayPropertyDescription property)
             throw new Exception("Array properties must not be null.");
@@ -246,11 +302,11 @@ internal partial record class DatatypeMessage(
             .ToArray();
 
         var elementCount = dims.Aggregate(1, (product, dim) => product * dim);
-        var elementDecode = property.BaseType.GetDecodeInfoForScalar(context, type);
+        var elementDecode = property.BaseType.GetDecodeInfoForScalar(context, elementType);
 
         // TODO: cache
-        var invokeEncodeArray = ReadUtils.MethodInfoDecodeArray.MakeGenericMethod(type);
-        var parameters = new object[2];
+        var invokeEncodeArray = ReadUtils.MethodInfoDecodeReferenceArray.MakeGenericMethod(elementType);
+        var parameters = new object[3];
 
         object? decode(IH5ReadStream source)
         {
@@ -265,7 +321,7 @@ internal partial record class DatatypeMessage(
     }
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedArray(
-        Type type
+        Type elementType
     )
     {
         if (Properties[0] is not ArrayPropertyDescription property)
@@ -277,7 +333,7 @@ internal partial record class DatatypeMessage(
             .ToArray();
 
         // TODO: cache
-        var invokeEncodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(type);
+        var invokeDecodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(elementType);
         var parameters = new object[2];
 
         object? decode(IH5ReadStream source)
@@ -285,7 +341,7 @@ internal partial record class DatatypeMessage(
             parameters[0] = source;
             parameters[1] = dims;
 
-            return invokeEncodeUnmanagedArray.Invoke(default, parameters);
+            return invokeDecodeUnmanagedArray.Invoke(default, parameters);
         }
 
         return decode;
@@ -474,16 +530,7 @@ internal partial record class DatatypeMessage(
         return decode;
     }
 
-    private static DecodeDelegate<T> GetDecodeInfoForArray<T>(Array data) 
-        where T : struct
-    {
-        static void decode(IH5ReadStream source, Memory<T> target)
-            => source.ReadDataset(target.Cast<T, byte>());
-
-        return decode;
-    }
-
-    private DecodeDelegate<T> GetDecodeInfoForTopLevelMemory<T>(
+    private DecodeDelegate<T> GetDecodeInfoForReferenceMemory<T>(
         NativeReadContext context
     )
     {
@@ -502,7 +549,7 @@ internal partial record class DatatypeMessage(
         return decode;
     }
 
-    private static DecodeDelegate<T> GetDecodeInfoForTopLevelUnmanagedMemory<T>() 
+    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>() 
         where T : struct
     {
         static void decode(IH5ReadStream source, Memory<T> target)

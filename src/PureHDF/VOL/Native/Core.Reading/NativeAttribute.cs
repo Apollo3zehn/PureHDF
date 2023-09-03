@@ -89,6 +89,7 @@ internal class NativeAttribute : IH5Attribute
         ulong[]? memoryDims = null)
     {
         var resultType = typeof(TResult);
+        var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
 
         /* fast path for null dataspace */
         if (Message.Dataspace.Type == DataspaceType.Null)
@@ -132,7 +133,6 @@ internal class NativeAttribute : IH5Attribute
         var resultBuffer = new ArrayMemoryManager<TElement>(array).Memory;
 
         /* decode */
-        var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
         decoder(source, resultBuffer);
 
         /* convert & return */

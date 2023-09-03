@@ -22,6 +22,7 @@ internal static class DataUtils
         var isSimpleValueType = type.IsPrimitive || type.IsEnum;
         return !isSimpleValueType;
 #else
+        // TODO cache
         var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
         var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
         var method = typeof(RuntimeHelpers).GetMethod(name, flags)!;

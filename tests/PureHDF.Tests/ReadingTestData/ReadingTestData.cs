@@ -95,6 +95,8 @@
 
             ArrayDataValue = new int[2, 3, 4, 5];
 
+            var counter = 0;
+
             for (int i = 0; i < 2; i++)
             {
                 for (int j = 0; j < 3; j++)
@@ -103,7 +105,8 @@
                     {
                         for (int l = 0; l < 5; l++)
                         {
-                            ArrayDataValue[i, j, k, l] = i * j * j * k * l;
+                            ArrayDataValue[i, j, k, l] = counter;
+                            counter++;
                         }
                     }
                 }
@@ -111,7 +114,7 @@
 
             ArrayDataVariableLengthString = new string[2, 3, 4, 5];
 
-            var counter = 0;
+            counter = 0;
 
             for (int i = 0; i < 2; i++)
             {
