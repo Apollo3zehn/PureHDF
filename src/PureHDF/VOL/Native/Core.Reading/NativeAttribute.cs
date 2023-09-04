@@ -1,6 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
@@ -110,12 +108,13 @@ internal class NativeAttribute : IH5Attribute
                 memoryDims ??= Message.Dataspace.GetDims();
 
             else
-                throw new Exception("The rank of the memory space must the rank of the file space if no memory dimensions are provided.");
+                throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
         }
 
         else
         {
-            memoryDims ??= new ulong[] { fileElementCount };
+            if (memoryDims == null)
+                memoryDims = new ulong[] { 1 };
         }
 
         /* memory element count */

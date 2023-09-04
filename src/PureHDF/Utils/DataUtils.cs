@@ -1,20 +1,12 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace PureHDF;
 
 internal static class DataUtils
 {
-    static DataUtils()
-    {
-        MethodInfoCastToArray = typeof(DataUtils)
-            .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-            .Where(methodInfo => methodInfo.IsGenericMethod && methodInfo.Name == nameof(CastToArray))
-            .Single();
-    }
-
-    public static MethodInfo MethodInfoCastToArray { get; }
+    public static MethodInfo MethodInfoIsReferenceOrContainsReferences { get; } = typeof(RuntimeHelpers)
+        .GetMethod(nameof(IsReferenceOrContainsReferences), BindingFlags.Public | BindingFlags.Static)!;
 
     public static bool IsReferenceOrContainsReferences(Type type)
     {
@@ -23,10 +15,7 @@ internal static class DataUtils
         return !isSimpleValueType;
 #else
         // TODO cache
-        var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
-        var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
-        var method = typeof(RuntimeHelpers).GetMethod(name, flags)!;
-        var generic = method.MakeGenericMethod(type);
+        var generic = MethodInfoIsReferenceOrContainsReferences.MakeGenericMethod(type);
 
         return (bool)generic.Invoke(null, null)!;
 #endif
@@ -44,14 +33,6 @@ internal static class DataUtils
         {
             EndiannessConverter.Convert((int)bytesOfType, source, destination);
         }
-    }
-
-    // Warning: do not change the signature without also adapting the _methodInfo variable above
-    private static T[] CastToArray<T>(byte[] data) where T : unmanaged
-    {
-        return MemoryMarshal
-            .Cast<byte, T>(data)
-            .ToArray();
     }
 
     public static bool IsMemory(Type type)

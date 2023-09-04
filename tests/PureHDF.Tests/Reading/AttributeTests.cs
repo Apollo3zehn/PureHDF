@@ -87,50 +87,52 @@ namespace PureHDF.Tests.Reading
             });
         }
 
-        // [Fact]
-        // public void CanReadAttribute_NullableStruct()
-        // {
-        //     TestUtils.RunForAllVersions(version =>
-        //     {
-        //         // Arrange
-        //         var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
+        [Fact]
+        public void CanReadAttribute_NullableStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
-        //         // Act
-        //         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-        //         var attribute = root.Group("struct").Attribute("nullable");
+                // Act
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var attribute = root.Group("struct").Attribute("nullable");
 
-        //         static string converter(FieldInfo fieldInfo)
-        //         {
-        //             var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-        //             return attribute is not null ? attribute.Name : fieldInfo.Name;
-        //         }
+                static string converter(FieldInfo fieldInfo)
+                {
+                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    return attribute is not null ? attribute.Name : fieldInfo.Name;
+                }
 
-        //         var actual = attribute.Read<TestStructStringAndArray[]>(converter);
+                throw new NotImplementedException();
 
-        //         // Assert
-        //         Assert.Equal(JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), JsonSerializer.Serialize(actual, _options));
-        //     });
-        // }
+                // var actual = attribute.Read<TestStructStringAndArray[]>(converter);
 
-        // [Fact]
-        // public void CanReadAttribute_UnknownStruct()
-        // {
-        //     TestUtils.RunForAllVersions(version =>
-        //     {
-        //         // Arrange
-        //         var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
+                // // Assert
+                // Assert.Equal(JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), JsonSerializer.Serialize(actual, _options));
+            });
+        }
 
-        //         // Act
-        //         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-        //         var attribute = root.Group("struct").Attribute("nullable");
-        //         var actual = attribute.ReadCompound();
+        [Fact]
+        public void CanReadAttribute_UnknownStruct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
-        //         // Assert
-        //         Assert.Equal(
-        //             JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
-        //             JsonSerializer.Serialize(actual, _options));
-        //     });
-        // }
+                // Act
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var attribute = root.Group("struct").Attribute("nullable");
+                var actual = attribute.Read<Dictionary<string, object>[]>();
+
+                // Assert
+                Assert.Equal(
+                    JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
+                    JsonSerializer.Serialize(actual, _options));
+            });
+        }
 
         // Fixed-length string attribute (UTF8) is not supported because 
         // it is incompatible with variable byte length per character.
@@ -254,47 +256,47 @@ namespace PureHDF.Tests.Reading
             });
         }
 
-//         [Fact]
-//         public void CanReadAttribute_Array_nullable_struct()
-//         {
-//             TestUtils.RunForAllVersions(version =>
-//             {
-//                 // Arrange
-//                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Attribute));
+        [Fact]
+        public void CanReadAttribute_Array_nullable_struct()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Attribute));
 
-//                 // Act
-//                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-//                 var attribute = root.Group("array").Attribute("nullable_struct");
+                // Act
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var attribute = root.Group("array").Attribute("nullable_struct");
 
-//                 var actual_1 = attribute
-//                     .Read<TestStructStringAndArray[]>();
+                var actual_1 = attribute
+                    .Read<TestStructStringAndArray[,][,]>();
 
-//                 var actual_2 = attribute
-//                     .Read();
+                var actual_2 = attribute
+                    .Read<Dictionary<string, object>[,][,]>();
 
-//                 var expected = ReadingTestData.NullableStructData
-//                     .ToArray();
+                var expected = ReadingTestData.NullableStructData
+                    .ToArray();
 
-// // HACK: Probably a bug in C-lib
-//                 expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
-//                 expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
-//                 expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
-//                 expected[9].StringValue1 = default!; expected[9].StringValue2 = default!;
-//                 expected[10].StringValue1 = default!; expected[10].StringValue2 = default!;
-//                 expected[11].StringValue1 = default!; expected[11].StringValue2 = default!;
+// HACK: Probably a bug in C-lib
+                expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
+                expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
+                expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
+                expected[9].StringValue1 = default!; expected[9].StringValue2 = default!;
+                expected[10].StringValue1 = default!; expected[10].StringValue2 = default!;
+                expected[11].StringValue1 = default!; expected[11].StringValue2 = default!;
 
-//                 // Assert
-//                 var expectedJsonString = JsonSerializer.Serialize(expected, _options);
+                // Assert
+                var expectedJsonString = JsonSerializer.Serialize(expected, _options);
 
-//                 Assert.Equal(
-//                     expectedJsonString, 
-//                     JsonSerializer.Serialize(actual_1, _options));
+                Assert.Equal(
+                    expectedJsonString, 
+                    JsonSerializer.Serialize(actual_1, _options));
 
-//                 Assert.Equal(
-//                     expectedJsonString, 
-//                     JsonSerializer.Serialize(actual_2, _options));
-//             });
-//         }
+                Assert.Equal(
+                    expectedJsonString, 
+                    JsonSerializer.Serialize(actual_2, _options));
+            });
+        }
 
         [Fact]
         public void CanReadAttribute_Reference_Object()

@@ -116,12 +116,12 @@ internal static partial class ReadUtils
             return (TResult)data.GetValue(0)!;
     }
 
-    public static int SizeOf<T>() where T : unmanaged
+    public static int SizeOf<T>() where T : struct
     {
         return Unsafe.SizeOf<T>();
     }
 
-    public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : unmanaged
+    public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : struct
     {
         var bytesOfType = Unsafe.SizeOf<T>();
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(bytesOfType);

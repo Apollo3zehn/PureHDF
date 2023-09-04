@@ -84,21 +84,21 @@ namespace PureHDF.Tests.Reading
         [Fact]
         public void CanReadDataset_UnknownStruct()
         {
-            // TestUtils.RunForAllVersions(version =>
-            // {
-            //     // Arrange
-            //     var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
-            //     // Act
-            //     using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            //     var dataset = root.Dataset("/struct/nullable");
-            //     var actual = dataset.ReadCompound();
+                // Act
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var dataset = root.Dataset("/struct/nullable");
+                var actual = dataset.Read<Dictionary<string, object>[]>();
 
-            //     // Assert
-            //     Assert.Equal(
-            //         JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
-            //         JsonSerializer.Serialize(actual, _options));
-            // });
+                // Assert
+                Assert.Equal(
+                    JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
+                    JsonSerializer.Serialize(actual, _options));
+            });
         }
 
         // Fixed-length string dataset (UTF8) is not supported because 
@@ -215,40 +215,40 @@ namespace PureHDF.Tests.Reading
         {
             TestUtils.RunForAllVersions(version =>
             {
-//                 // Arrange
-//                 var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Dataset));
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Dataset));
 
-//                 // Act
-//                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-//                 var dataset = root.Group("array").Dataset("nullable_struct");
+                // Act
+                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var dataset = root.Group("array").Dataset("nullable_struct");
 
-//                 var actual_1 = dataset
-//                     .Read<TestStructStringAndArray[]>();
+                var actual_1 = dataset
+                    .Read<TestStructStringAndArray[,][,]>();
 
-//                 var actual_2 = dataset
-//                     .ReadCompound();
+                var actual_2 = dataset
+                    .Read<Dictionary<string, object>[,][,]>();
 
-//                 var expected = ReadingTestData.NullableStructData
-//                     .ToArray();
+                var expected = ReadingTestData.NullableStructData
+                    .ToArray();
 
-// // HACK: Probably a bug in C-lib
-//                 expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
-//                 expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
-//                 expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
-//                 expected[9].StringValue1 = default!; expected[9].StringValue2 = default!;
-//                 expected[10].StringValue1 = default!; expected[10].StringValue2 = default!;
-//                 expected[11].StringValue1 = default!; expected[11].StringValue2 = default!;
+// HACK: Probably a bug in C-lib
+                expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
+                expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
+                expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
+                expected[9].StringValue1 = default!; expected[9].StringValue2 = default!;
+                expected[10].StringValue1 = default!; expected[10].StringValue2 = default!;
+                expected[11].StringValue1 = default!; expected[11].StringValue2 = default!;
 
-//                 // Assert
-//                 var expectedJsonString = JsonSerializer.Serialize(expected, _options);
+                // Assert
+                var expectedJsonString = JsonSerializer.Serialize(expected, _options);
 
-//                 Assert.Equal(
-//                     expectedJsonString, 
-//                     JsonSerializer.Serialize(actual_1, _options));
+                Assert.Equal(
+                    expectedJsonString, 
+                    JsonSerializer.Serialize(actual_1, _options));
 
-//                 Assert.Equal(
-//                     expectedJsonString, 
-//                     JsonSerializer.Serialize(actual_2, _options));
+                Assert.Equal(
+                    expectedJsonString, 
+                    JsonSerializer.Serialize(actual_2, _options));
             });
         }
 
