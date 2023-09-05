@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.VOL.Native;
 
 internal class H5D_Contiguous : H5D_Base
 {

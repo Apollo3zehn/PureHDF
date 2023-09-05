@@ -1,4 +1,4 @@
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 /* Must be a normal class because of being a key in WriteContext.DatasetInfoToObjectHeaderMap! 
  * Otherwise the test CanWrite_Chunked_single_chunk_filtered_Deferred will fail 

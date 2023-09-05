@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal abstract class H5D_Chunk : H5D_Base
 {
@@ -35,12 +35,12 @@ internal abstract class H5D_Chunk : H5D_Base
 
         if (readContext is null)
         {
-            _writingChunkCache = datasetCreation.ChunkCache ?? (writeContext.WriteOptions.ChunkCacheFactory ?? H5WriteOptions.DefaultChunkCacheFactory)();
+            _writingChunkCache = datasetCreation.ChunkCache ?? ChunkCache.DefaultWritingChunkCacheFactory();
         }
 
         else
         {
-            _readingChunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
+            _readingChunkCache = datasetAccess.ChunkCache ?? ChunkCache.DefaultReadingChunkCacheFactory();
 
             var address = Dataset.Layout switch
             {

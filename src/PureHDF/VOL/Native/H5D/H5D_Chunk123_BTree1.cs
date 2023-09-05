@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal class H5D_Chunk123_BTree1 : H5D_Chunk
 {
