@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -304,6 +305,7 @@ internal partial record class DatatypeMessage(
         NativeReadContext context,
         Type? memoryType)
     {
+        /* read unknown compound */
         if (memoryType is null || memoryType == typeof(Dictionary<string, object?>))
         {
             var decodeSteps = Properties
@@ -350,10 +352,194 @@ internal partial record class DatatypeMessage(
             return (typeof(Dictionary<string, object?>), decode);
         }
 
+        /* read known compound */
         else
         {
-            throw new NotImplementedException();
+            var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(memoryType);
+            var fileIsRef = IsReferenceOrContainsReferences();
+
+            var memoryTypeSize = memoryIsRef
+                ? default
+                : DataUtils.UnmanagedSizeOf(memoryType);
+
+            var fileTypeSize = Size;
+
+            // according to type-mismatch-behavior.md
+            // TODO cache
+            var decode = (memoryIsRef, fileIsRef) switch
+            {
+                (true, _) => GetDecodeInfoForReferenceCompound(context, memoryType),
+                (false, true) => throw new Exception("Unable to decode a reference type as value type."),
+                (false, false) when memoryTypeSize == fileTypeSize => GetDecodeInfoForUnmanagedElement(memoryType),
+                _ => throw new Exception("Unable to decode values types of different type size.")
+            };
+
+            return (memoryType, decode);
         }
+    }
+
+    private ElementDecodeDelegate GetDecodeInfoForReferenceCompound(
+        NativeReadContext context,
+        Type type)
+    {
+        var isValueType = type.IsValueType;
+
+        if (!isValueType && type.GetConstructor(Type.EmptyTypes) is null)
+            throw new Exception("Only types with parameterless constructors are supported to decode compound data.");
+
+        var compoundProperties = Properties.Cast<CompoundPropertyDescription>().ToArray();
+        var decodeSteps = new DecodeStep[compoundProperties.Length];
+
+        // fields
+        var includeFields = isValueType
+            ? context.ReadOptions.IncludeStructFields
+            : context.ReadOptions.IncludeClassFields;
+
+        var fieldInfos = includeFields
+            ? type.GetFields(BindingFlags.Public | BindingFlags.Instance)
+            : Array.Empty<FieldInfo>();
+
+        // properties
+        var includeProperties = isValueType
+            ? context.ReadOptions.IncludeStructProperties
+            : context.ReadOptions.IncludeClassProperties;
+
+        var propertyInfos = includeProperties
+            ? type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(propertyInfo => propertyInfo.CanRead)
+                .ToArray()
+            : Array.Empty<PropertyInfo>();
+
+        if (includeFields)
+        {
+            var fieldNameMapper = context.ReadOptions.FieldNameMapper;
+
+            var fieldNameToInfoMap = fieldInfos.ToDictionary(
+                fieldInfo => fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
+                fieldInfo => fieldInfo
+            );
+
+            for (int i = 0; i < compoundProperties.Length; i++)
+            {
+                var compoundProp = compoundProperties[i];
+
+                if (fieldNameToInfoMap.TryGetValue(compoundProp.Name, out var fieldInfo))
+                {
+                    var elementDecode = compoundProp.MemberTypeMessage
+                        .GetDecodeInfoForScalar(context, fieldInfo.FieldType).Decode;
+
+                    decodeSteps[i] = new DecodeStep(
+                        SetValue: fieldInfo.SetValue,
+                        CompoundMemberOffset: compoundProp.MemberByteOffset,
+                        ElementDecode: elementDecode
+                    );
+                }
+            }
+        }
+
+        if (includeProperties)
+        {
+            var propertyNameMapper = context.ReadOptions.PropertyNameMapper;
+
+            var propertyNameToInfoMap = propertyInfos.ToDictionary(
+                propertyInfo => propertyNameMapper is null ? propertyInfo.Name : propertyNameMapper(propertyInfo) ?? propertyInfo.Name,
+                propertyInfo => propertyInfo
+            );
+
+            for (int i = 0; i < compoundProperties.Length; i++)
+            {
+                if (!compoundProperties[i].Equals(default))
+                    continue;
+
+                var compoundProp = compoundProperties[i];
+
+                if (propertyNameToInfoMap.TryGetValue(compoundProp.Name, out var propertyInfo))
+                {
+                    var elementDecode = compoundProp.MemberTypeMessage
+                        .GetDecodeInfoForScalar(context, propertyInfo.PropertyType).Decode;
+
+                    decodeSteps[i] = new DecodeStep(
+                        SetValue: propertyInfo.SetValue,
+                        CompoundMemberOffset: compoundProp.MemberByteOffset,
+                        ElementDecode: elementDecode
+                    );
+                }
+            }
+        }
+
+        // look for not mapped compound properties
+        var previousOffset = 0UL;
+
+        for (int i = 0; i < decodeSteps.Length; i++)
+        {
+            if (!decodeSteps[i].Equals(default))
+                continue;
+
+            var compoundProp = compoundProperties[i];
+
+            ElementDecodeDelegate elementDecode;
+
+            elementDecode = (IH5ReadStream source) => 
+            {
+                var nextOffset = i == compoundProperties.Length - 1
+                    ? Size
+                    : compoundProp.MemberByteOffset;
+
+                var offset = nextOffset - compoundProp.MemberByteOffset;
+
+                source.Seek((long)offset, SeekOrigin.Current);
+                return default;
+            };
+
+            decodeSteps[i] = new DecodeStep(
+                SetValue: default,
+                CompoundMemberOffset: compoundProp.MemberByteOffset,
+                ElementDecode: elementDecode
+            );
+
+            previousOffset = compoundProp.MemberByteOffset;
+        }
+
+#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
+        // decode
+        object? decode(IH5ReadStream source)
+        {
+            var result = Activator.CreateInstance(type)!;
+            var basePosition = source.Position;
+
+            foreach (var decodeStep in decodeSteps)
+            {
+                var (setValue, offset, decoder) = decodeStep;
+
+                // skip padding
+                var consumed = source.Position - basePosition;
+                var padding = (long)offset - consumed;
+
+                if (padding < 0)
+                    throw new Exception("This should never happen.");
+
+                if (padding > 0)
+                    source.Seek(padding, SeekOrigin.Current);
+
+                // decode
+                setValue?.Invoke(result, decoder(source));
+            }
+
+            // skip padding
+            var totalConsumed = source.Position - basePosition;
+            var totalPadding = Size - totalConsumed;
+
+            if (totalPadding < 0)
+                throw new Exception("This should never happen.");
+
+            if (totalPadding > 0)
+                source.Seek(totalPadding, SeekOrigin.Current);
+
+            return result;
+        }
+
+        return decode;
     }
 
     private (Type, ElementDecodeDelegate) GetDecodeInfoForArray(
@@ -369,10 +555,9 @@ internal partial record class DatatypeMessage(
         var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(elementType);
         var fileIsRef = IsReferenceOrContainsReferences();
 
-        // TODO cache
         var memoryTypeSize = memoryIsRef
             ? default
-            : (int)ReadUtils.MethodInfoSizeOf.MakeGenericMethod(elementType).Invoke(default, default)!;
+            : DataUtils.UnmanagedSizeOf(elementType);
 
         var fileTypeSize = ((ArrayPropertyDescription)Properties[0]).BaseType.Size;
 
@@ -397,7 +582,7 @@ internal partial record class DatatypeMessage(
         ElementDecodeDelegate elementDecode,
         ArrayPropertyDescription property)
     {
-#warning When the decode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
+#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
@@ -425,7 +610,7 @@ internal partial record class DatatypeMessage(
         ArrayPropertyDescription property
     )
     {
-#warning When the decode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
+#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
@@ -526,7 +711,7 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
     {
-#warning When the decode function below is cached, how do we ensure that the lengths are correct even if the same T but different HDF5 type is loaded?
+#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         var dims = new int[] { (int)Size };
 
         object? decode(IH5ReadStream source)

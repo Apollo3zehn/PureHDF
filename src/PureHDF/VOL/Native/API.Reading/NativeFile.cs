@@ -44,7 +44,10 @@ public class NativeFile : NativeGroup, IDisposable
 
     #region Methods
 
-    internal static NativeFile InternalOpenRead(string filePath, bool deleteOnClose = false)
+    internal static NativeFile InternalOpenRead(
+        string filePath,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
     {
         return InternalOpen(
             filePath,
@@ -52,7 +55,8 @@ public class NativeFile : NativeGroup, IDisposable
             FileAccess.Read,
             FileShare.Read,
             useAsync: false,
-            deleteOnClose: deleteOnClose);
+            deleteOnClose: deleteOnClose,
+            options: options);
     }
 
     internal static NativeFile InternalOpen(
@@ -61,7 +65,8 @@ public class NativeFile : NativeGroup, IDisposable
         FileAccess fileAccess,
         FileShare fileShare,
         bool useAsync = false,
-        bool deleteOnClose = false)
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
     {
         var absoluteFilePath = System.IO.Path.GetFullPath(filePath);
 
@@ -79,13 +84,18 @@ public class NativeFile : NativeGroup, IDisposable
         var driver = new H5StreamDriver(stream, leaveOpen: false);
 #endif
 
-        return InternalOpen(driver, absoluteFilePath, deleteOnClose);
+        return InternalOpen(
+            driver, 
+            absoluteFilePath, 
+            deleteOnClose,
+            options);
     }
 
     internal static NativeFile InternalOpen(
         H5DriverBase driver, 
         string absoluteFilePath,
-        bool deleteOnClose = false)
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
     {
         if (!BitConverter.IsLittleEndian)
             throw new Exception("This library only works on little endian systems.");
@@ -136,7 +146,14 @@ public class NativeFile : NativeGroup, IDisposable
         }
 
         driver.Seek((long)address, SeekOrigin.Begin);
-        var context = new NativeReadContext(driver, superblock);
+
+        var context = new NativeReadContext(
+            driver, 
+            superblock) 
+        { 
+            ReadOptions = options ?? new() 
+        };
+
         var header = ObjectHeader.Construct(context);
 
         var file = new NativeFile(context, default, header, absoluteFilePath, deleteOnClose);

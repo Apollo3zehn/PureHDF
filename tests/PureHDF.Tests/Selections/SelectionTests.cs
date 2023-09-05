@@ -1118,7 +1118,7 @@ namespace PureHDF.Tests.Selections
                     ExternalFileList: dataset.InternalExternalFileList
                 );
 
-                var context = new NativeReadContext(default!, default!);
+                var context = new NativeReadContext(default!, default!) { ReadOptions = default! };
 
                 /* get intermediate data (only for Matlab visualization) */
                 var intermediate = new int[datasetDims[0] * datasetDims[1] * datasetDims[2]];

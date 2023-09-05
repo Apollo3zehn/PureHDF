@@ -9,9 +9,6 @@ namespace PureHDF;
 
 internal static partial class ReadUtils
 {
-    public static MethodInfo MethodInfoSizeOf { get; } = typeof(ReadUtils)
-        .GetMethod(nameof(SizeOf), BindingFlags.Public | BindingFlags.Static)!;
-
     public static MethodInfo MethodInfoDecodeUnmanagedElement { get; } = typeof(ReadUtils)
         .GetMethod(nameof(DecodeUnmanagedElement), BindingFlags.Public | BindingFlags.Static)!;
 
@@ -92,17 +89,9 @@ internal static partial class ReadUtils
         if (DataUtils.IsReferenceOrContainsReferences(type))
             return false;
 
-        var actualType = type switch
-        {
-            _ when type.IsEnum => Enum.GetUnderlyingType(type),
-            _ when type == typeof(bool) => typeof(byte),
-            _ => type
-        };
+        var typeSize = DataUtils.UnmanagedSizeOf(type);
 
-        var typeSize = Marshal.SizeOf(actualType);
-
-        return
-            typeSize == fileTypeSize;
+        return typeSize == fileTypeSize;
     }
 
     public static TResult FromArray<TResult, TElement>(Array data)
@@ -114,11 +103,6 @@ internal static partial class ReadUtils
 
         else
             return (TResult)data.GetValue(0)!;
-    }
-
-    public static int SizeOf<T>() where T : struct
-    {
-        return Unsafe.SizeOf<T>();
     }
 
     public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : struct

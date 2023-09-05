@@ -74,7 +74,7 @@ internal record class Superblock01(
             LengthsSize = lengthsSize
         };
 
-        var context = new NativeReadContext(driver, superblock);
+        var context = new NativeReadContext(driver, superblock) { ReadOptions = new() };
         var rootGroupSymbolTableEntry = SymbolTableEntry.Decode(context);
 
         superblock.RootGroupSymbolTableEntry = rootGroupSymbolTableEntry;

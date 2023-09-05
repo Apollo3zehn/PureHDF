@@ -93,24 +93,32 @@ namespace PureHDF.Tests.Reading
             TestUtils.RunForAllVersions(version =>
             {
                 // Arrange
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
+                var filePath = TestUtils.PrepareTestFile(version, fileId 
+                    => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
                 // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+                var options = new H5ReadOptions()
+                {
+                    FieldNameMapper = fieldInfo =>
+                    {
+                        var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                        return attribute is not null ? attribute.Name : fieldInfo.Name;
+                    }
+                };
+
+                using var root = NativeFile.InternalOpenRead(
+                    filePath, 
+                    deleteOnClose: true, 
+                    options);
+                    
                 var attribute = root.Group("struct").Attribute("nullable");
 
-                static string converter(FieldInfo fieldInfo)
-                {
-                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return attribute is not null ? attribute.Name : fieldInfo.Name;
-                }
+                var actual = attribute.Read<TestStructStringAndArray[]>();
 
-                throw new NotImplementedException();
-
-                // var actual = attribute.Read<TestStructStringAndArray[]>(converter);
-
-                // // Assert
-                // Assert.Equal(JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), JsonSerializer.Serialize(actual, _options));
+                // Assert
+                Assert.Equal(
+                    JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), 
+                    JsonSerializer.Serialize(actual, _options));
             });
         }
 
@@ -269,10 +277,16 @@ namespace PureHDF.Tests.Reading
                 var attribute = root.Group("array").Attribute("nullable_struct");
 
                 var actual_1 = attribute
-                    .Read<TestStructStringAndArray[,][,]>();
+                    .Read<TestStructStringAndArray[,][,]>()
+                    .Cast<TestStructStringAndArray[,]>()
+                    .SelectMany(x => x.Cast<TestStructStringAndArray>())
+                    .ToArray();
 
                 var actual_2 = attribute
-                    .Read<Dictionary<string, object>[,][,]>();
+                    .Read<Dictionary<string, object>[,][,]>()
+                    .Cast<Dictionary<string, object>[,]>()
+                    .SelectMany(x => x.Cast<Dictionary<string, object>>())
+                    .ToArray();
 
                 var expected = ReadingTestData.NullableStructData
                     .ToArray();
@@ -289,7 +303,7 @@ namespace PureHDF.Tests.Reading
                 var expectedJsonString = JsonSerializer.Serialize(expected, _options);
 
                 Assert.Equal(
-                    expectedJsonString, 
+                    expectedJsonString,
                     JsonSerializer.Serialize(actual_1, _options));
 
                 Assert.Equal(

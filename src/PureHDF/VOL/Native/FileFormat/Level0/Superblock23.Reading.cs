@@ -43,18 +43,18 @@ internal partial record class Superblock23(
         };
     }
 
-    public ObjectHeader Extension
-    {
-        // sample file: https://github.com/jamesmudd/jhdf/issues/462
-        get
-        {
-            if (_extension is null)
-            {
-                Driver.Seek((long)ExtensionAddress, SeekOrigin.Begin);
-                _extension = ObjectHeader.Construct(new NativeReadContext(Driver, this));
-            }
+    // public ObjectHeader Extension
+    // {
+    //     // sample file: https://github.com/jamesmudd/jhdf/issues/462
+    //     get
+    //     {
+    //         if (_extension is null)
+    //         {
+    //             Driver.Seek((long)ExtensionAddress, SeekOrigin.Begin);
+    //             _extension = ObjectHeader.Construct(new NativeReadContext(Driver, this));
+    //         }
             
-            return _extension;
-        }
-    }
+    //         return _extension;
+    //     }
+    // }
 }

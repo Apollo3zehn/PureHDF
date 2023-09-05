@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace PureHDF;
 
@@ -47,5 +48,15 @@ internal static class DataUtils
         return
             type.IsArray &&
             type.GetElementType() is not null;
+    }
+
+    public static int UnmanagedSizeOf(Type type)
+    {
+        return type switch
+        {
+            _ when type.IsEnum => Marshal.SizeOf(Enum.GetUnderlyingType(type)),
+            _ when type == typeof(bool) => 1,
+            _ => Marshal.SizeOf(type)
+        };
     }
 }

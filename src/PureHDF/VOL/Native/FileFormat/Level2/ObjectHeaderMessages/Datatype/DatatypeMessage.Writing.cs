@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -342,25 +342,21 @@ internal partial record class DatatypeMessage : Message
             ? new ElementEncodeDelegate[fieldInfos.Length]
             : Array.Empty<ElementEncodeDelegate>();
 
-        var fieldNameMapper = context.WriteOptions.FieldNameMapper;
-        var fieldStringLengthMapper = context.WriteOptions.FieldStringLengthMapper;
-
         // properties
         var includeProperties = isValueType
             ? context.WriteOptions.IncludeStructProperties
             : context.WriteOptions.IncludeClassProperties;
 
-        var propertyInfos = type
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(propertyInfo => propertyInfo.CanRead)
-            .ToArray();
+        var propertyInfos = includeProperties
+            ? type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(propertyInfo => propertyInfo.CanRead)
+                .ToArray()
+            : Array.Empty<PropertyInfo>();
 
         var propertyEncodes = includeProperties
             ? new ElementEncodeDelegate[propertyInfos.Length]
             : Array.Empty<ElementEncodeDelegate>();
-
-        var propertyNameMapper = context.WriteOptions.PropertyNameMapper;
-        var propertyStringLengthMapper = context.WriteOptions.PropertyStringLengthMapper;
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
@@ -376,6 +372,9 @@ internal partial record class DatatypeMessage : Message
 
         if (includeFields)
         {
+            var fieldNameMapper = context.WriteOptions.FieldNameMapper;
+            var fieldStringLengthMapper = context.WriteOptions.FieldStringLengthMapper;
+
             for (int i = 0; i < fieldInfos.Length; i++)
             {
                 var fieldInfo = fieldInfos[i];
@@ -401,6 +400,9 @@ internal partial record class DatatypeMessage : Message
 
         if (includeProperties)
         {
+            var propertyNameMapper = context.WriteOptions.PropertyNameMapper;
+            var propertyStringLengthMapper = context.WriteOptions.PropertyStringLengthMapper;
+
             for (int i = 0; i < propertyInfos.Length; i++)
             {
                 var propertyInfo = propertyInfos[i];
