@@ -1,8 +1,4 @@
-﻿using System.Buffers;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text.Json;
-using HDF.PInvoke;
+﻿using HDF.PInvoke;
 using Xunit;
 
 namespace PureHDF.Tests.Reading;

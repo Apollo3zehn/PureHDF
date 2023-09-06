@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Xunit;
+﻿using Xunit;
 
 namespace PureHDF.Tests.Reading;
 

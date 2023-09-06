@@ -179,53 +179,6 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
 
-        /* result buffer / result array */
-        Memory<TElement> resultBuffer;
-        var resultArray = default(Array);
-
-        if (buffer is null || buffer.Equals(default(TResult)))
-        {
-            /* memory dims */
-            if (DataUtils.IsArray(resultType))
-            {
-                var rank = resultType.GetArrayRank();
-
-                if (rank == 1)
-                    memoryDims ??= new ulong[] { fileElementCount };
-
-                else if (rank == fileDims.Length)
-                    memoryDims ??= fileDims;
-
-                else
-                    throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
-            }
-
-            else
-            {
-                memoryDims ??= new ulong[] { 1 };
-            }
-
-            /* result buffer */
-            resultArray = DataUtils.IsArray(resultType)
-                ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
-                : new TResult[1];
-
-            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
-        }
-
-        else
-        {
-            /* result buffer */
-            (resultBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
-        }
-
-        /* memory element count */
-        var memoryElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
-
-        /* validation */
-        if (memoryElementCount != fileElementCount)
-            throw new Exception("The total file element count does not match the total memory element count.");
-
         /* file selection */
         if (fileSelection is null || fileSelection is AllSelection)
         {
@@ -306,6 +259,46 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             throw new Exception($"The selection of type {fileSelection.GetType().Name} is not supported.");
         }
 
+        /* result buffer / result array */
+        Memory<TElement> resultBuffer;
+        var resultArray = default(Array);
+
+        if (buffer is null || buffer.Equals(default(TResult)))
+        {
+            /* memory dims */
+            if (DataUtils.IsArray(resultType))
+            {
+                var rank = resultType.GetArrayRank();
+
+                if (rank == 1)
+                    memoryDims ??= new ulong[] { fileSelection.TotalElementCount };
+
+                else if (rank == fileDims.Length)
+                    memoryDims ??= fileDims;
+
+                else
+                    throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
+            }
+
+            else
+            {
+                memoryDims ??= new ulong[] { 1 };
+            }
+
+            /* result buffer */
+            resultArray = DataUtils.IsArray(resultType)
+                ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
+                : new TResult[1];
+
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
+        }
+
+        else
+        {
+            /* result buffer */
+            (resultBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
+        }
+
         /* memory selection */
         if (memorySelection is null || memorySelection is AllSelection)
         {
@@ -315,6 +308,10 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
                 starts: new ulong[memoryDims.Length],
                 blocks: memoryDims);
         }
+
+        /* validation */
+        if (memorySelection.TotalElementCount != fileSelection.TotalElementCount)
+            throw new Exception("The total file selection element count does not match the total memory selection element count.");
 
         /* decode */
         var streamResponse =

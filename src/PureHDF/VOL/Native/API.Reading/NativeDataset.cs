@@ -424,6 +424,30 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
 
+        /* dataset info */
+        var datasetInfo = new DatasetInfo(
+            Space: InternalDataspace,
+            Type: InternalDataType,
+            Layout: InternalDataLayout,
+            FillValue: InternalFillValue,
+            FilterPipeline: InternalFilterPipeline,
+            ExternalFileList: InternalExternalFileList
+        );
+
+        /* file selection */
+        if (fileSelection is null || fileSelection is AllSelection)
+        {
+            fileSelection = InternalDataspace.Type switch
+            {
+                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
+                    rank: fileDims.Length,
+                    starts: new ulong[fileDims.Length],
+                    blocks: fileDims),
+
+                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
+            };
+        }
+
         /* result buffer / result array */
         Memory<TElement> resultBuffer;
         var resultArray = default(Array);
@@ -436,7 +460,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 var rank = resultType.GetArrayRank();
 
                 if (rank == 1)
-                    memoryDims ??= new ulong[] { fileElementCount };
+                    memoryDims ??= new ulong[] { fileSelection.TotalElementCount };
 
                 else if (rank == fileDims.Length)
                     memoryDims ??= fileDims;
@@ -464,22 +488,18 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             (resultBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
         }
 
-        /* memory element count */
-        var memoryElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
+        /* memory selection */
+        if (memorySelection is null || memorySelection is AllSelection)
+        {
+            memorySelection = new HyperslabSelection(
+                rank: memoryDims.Length,
+                starts: new ulong[memoryDims.Length],
+                blocks: memoryDims);
+        }
 
         /* validation */
-        if (memoryElementCount != fileElementCount)
-            throw new Exception("The total file element count does not match the total memory element count.");
-
-        /* dataset info */
-        var datasetInfo = new DatasetInfo(
-            Space: InternalDataspace,
-            Type: InternalDataType,
-            Layout: InternalDataLayout,
-            FillValue: InternalFillValue,
-            FilterPipeline: InternalFilterPipeline,
-            ExternalFileList: InternalExternalFileList
-        );
+        if (memorySelection.TotalElementCount != fileSelection.TotalElementCount)
+            throw new Exception("The total file selection element count does not match the total memory selection element count.");
 
         /* fill value */
         var fillValue = default(TElement);
@@ -539,29 +559,6 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
         /* file chunk dimensions */
         var fileChunkDims = h5d.GetChunkDims();
-
-        /* file selection */
-        if (fileSelection is null || fileSelection is AllSelection)
-        {
-            fileSelection = InternalDataspace.Type switch
-            {
-                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
-                    rank: fileDims.Length,
-                    starts: new ulong[fileDims.Length],
-                    blocks: fileDims),
-
-                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
-            };
-        }
-
-        /* memory selection */
-        if (memorySelection is null || memorySelection is AllSelection)
-        {
-            memorySelection = new HyperslabSelection(
-                rank: memoryDims.Length,
-                starts: new ulong[memoryDims.Length],
-                blocks: memoryDims);
-        }
 
         /* decode */
         var decodeInfo = new DecodeInfo<TElement>(

@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             using var root = H5File.OpenRead(filePath);
-            var result = root.Dataset("sine").Read<double>();
+            var result = root.Dataset("sine").Read<double[]>();
         }
 
 #if NET6_0_OR_GREATER
@@ -25,7 +25,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             using var root = H5File.OpenRead(filePath);
-            var result = await root.Dataset("sine").ReadAsync<double>();
+            var result = await root.Dataset("sine").ReadAsync<double[]>();
         }
 #endif
 
@@ -37,7 +37,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             using var root = H5File.OpenRead(filePath);
-            var result = root.Dataset("sine").Read<double>();
+            var result = root.Dataset("sine").Read<double[]>();
         }
 
 #if NET6_0_OR_GREATER
@@ -49,7 +49,7 @@ namespace PureHDF.Tests.Reading
 
             // Act
             using var root = H5File.OpenRead(filePath);
-            var result = await root.Dataset("sine").ReadAsync<double>();
+            var result = await root.Dataset("sine").ReadAsync<double[]>();
         }
 #endif
 
