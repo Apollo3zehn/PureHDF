@@ -94,15 +94,45 @@ internal static partial class ReadUtils
         return typeSize == fileTypeSize;
     }
 
-    public static TResult FromArray<TResult, TElement>(Array data)
+    public static (Memory<TElement>, ulong[]) ToMemory<TResult, TElement>(TResult buffer)
+    {
+        var type = typeof(TResult);
+
+        if (DataUtils.IsMemory(type))
+        {
+            var memory = (Memory<TElement>)(object)buffer!;
+            return (memory, new ulong[] { (ulong)memory.Length });
+        }
+
+        else if (DataUtils.IsArray(type))
+        {
+            var array = (Array)(object)buffer!;
+            var memory = new ArrayMemoryManager<TElement>(array).Memory;
+
+            var dimensions = Enumerable
+                .Range(0, array.Rank)
+                .Select(dim => (ulong)array.GetLongLength(dim))
+                .ToArray();
+
+            return (memory, dimensions);
+        }
+
+        else
+        {
+            var memory = new TElement[] { (TElement)(object)buffer! };
+            return (memory, new ulong[] { 1 });
+        }
+    }
+
+    public static TResult FromArray<TResult, TElement>(Array buffer)
     {
         var type = typeof(TResult);
 
         if (DataUtils.IsArray(type))
-            return (TResult)(object)data;
+            return (TResult)(object)buffer;
 
         else
-            return (TResult)data.GetValue(0)!;
+            return (TResult)buffer.GetValue(0)!;
     }
 
     public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : struct

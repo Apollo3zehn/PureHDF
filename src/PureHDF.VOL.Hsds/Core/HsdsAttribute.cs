@@ -50,4 +50,9 @@ internal class HsdsAttribute : IH5Attribute
 
         return data;
     }
+
+    public void Read<T>(T buffer, ulong[]? memoryDims = null)
+    {
+        throw new NotImplementedException("This methods is not yet implemented on the HSDS attribute.");
+    }
 }

@@ -22,6 +22,20 @@ internal static class DataUtils
 #endif
     }
 
+    public static void CheckEndianness(ByteOrder byteOrder)
+    {
+        if (byteOrder == ByteOrder.VaxEndian)
+            throw new Exception("VAX-endian byte order is not supported.");
+
+        var isLittleEndian = BitConverter.IsLittleEndian;
+
+        if ((isLittleEndian && byteOrder != ByteOrder.LittleEndian) ||
+           (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
+        {
+            throw new Exception("Byte order conversion is not (yet) support by PureHDF.");
+        }
+    }
+
     public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)
     {
         if (byteOrder == ByteOrder.VaxEndian)

@@ -695,7 +695,7 @@ internal partial record class DatatypeMessage(
                 // It would be more correct to just throw an exception 
                 // when the object index is not found in the collection,
                 // but that would make the tests following test fail
-                // - CanReadDataset_Array_nullable_struct.
+                // - CanRead_Array_nullable_struct.
                 // 
                 // And it would make the user's life a bit more complicated
                 // if the library cannot handle missing entries.
@@ -779,7 +779,7 @@ internal partial record class DatatypeMessage(
                 // It would be more correct to just throw an exception 
                 // when the object index is not found in the collection,
                 // but that would make the tests following test fail
-                // - CanReadDataset_Array_nullable_struct.
+                // - CanRead_Array_nullable_struct.
                 // 
                 // And it would make the user's life a bit more complicated
                 // if the library cannot handle missing entries.

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace PureHDF.Tests.Reading;
 
-public partial class DatasetTests
+public partial class AttributeTests
 {
     private readonly JsonSerializerOptions _options = new()
     {
@@ -16,10 +16,10 @@ public partial class DatasetTests
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    public static IList<object[]> DatasetNumericalTestData { get; } = ReadingTestData.NumericalReadData;
+    public static IList<object[]> AttributeNumericalTestData { get; } = ReadingTestData.NumericalReadData;
 
     [Theory]
-    [MemberData(nameof(DatasetNumericalTestData))]
+    [MemberData(nameof(AttributeNumericalTestData))]
     public void CanRead_Numerical<T>(string name, T[] expected)
         where T : unmanaged
     {
@@ -27,12 +27,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddNumerical(fileId, ContainerType.Dataset));
+                => TestUtils.AddNumerical(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("numerical").Dataset(name);
-            var actual = dataset.Read<T[]>();
+            var attribute = root.Group("numerical").Attribute(name);
+            var actual = attribute.Read<T[]>();
 
             // Assert
             Assert.True(expected.SequenceEqual(actual));
@@ -46,12 +46,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddStruct(fileId, ContainerType.Dataset));
+                => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("struct").Dataset("nonnullable");
-            var actual = dataset.Read<TestStructL1[]>();
+            var attribute = root.Group("struct").Attribute("nonnullable");
+            var actual = attribute.Read<TestStructL1[]>();
 
             // Assert
             Assert.True(ReadingTestData.NonNullableStructData.SequenceEqual(actual));
@@ -65,15 +65,15 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
+                => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
             // Act
             var options = new H5ReadOptions()
             {
                 FieldNameMapper = fieldInfo =>
                 {
-                    var dataset = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return dataset is not null ? dataset.Name : fieldInfo.Name;
+                    var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    return attribute is not null ? attribute.Name : fieldInfo.Name;
                 }
             };
 
@@ -82,9 +82,9 @@ public partial class DatasetTests
                 deleteOnClose: true, 
                 options);
                 
-            var dataset = root.Group("struct").Dataset("nullable");
+            var attribute = root.Group("struct").Attribute("nullable");
 
-            var actual = dataset.Read<TestStructStringAndArray[]>();
+            var actual = attribute.Read<TestStructStringAndArray[]>();
 
             // Assert
             Assert.Equal(
@@ -100,12 +100,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddStruct(fileId, ContainerType.Dataset));
+                => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("struct").Dataset("nullable");
-            var actual = dataset.Read<Dictionary<string, object>[]>();
+            var attribute = root.Group("struct").Attribute("nullable");
+            var actual = attribute.Read<Dictionary<string, object>[]>();
 
             // Assert
             Assert.Equal(
@@ -121,15 +121,15 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
+                => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
             // Act
             var options = new H5ReadOptions()
             {
                 PropertyNameMapper = propertyInfo =>
                 {
-                    var dataset = propertyInfo.GetCustomAttribute<H5NameAttribute>(true);
-                    return dataset is not null ? dataset.Name : propertyInfo.Name;
+                    var attribute = propertyInfo.GetCustomAttribute<H5NameAttribute>(true);
+                    return attribute is not null ? attribute.Name : propertyInfo.Name;
                 },
                 IncludeClassFields = true
             };
@@ -139,9 +139,9 @@ public partial class DatasetTests
                 deleteOnClose: true, 
                 options);
                 
-            var dataset = root.Group("struct").Dataset("nullable");
+            var attribute = root.Group("struct").Attribute("nullable");
 
-            var actual = dataset.Read<TestObjectStringAndArray[]>();
+            var actual = attribute.Read<TestObjectStringAndArray[]>();
 
             // Assert
             Assert.Equal(
@@ -150,7 +150,7 @@ public partial class DatasetTests
         });
     }
 
-    // Fixed-length string dataset (UTF8) is not supported because 
+    // Fixed-length string attribute (UTF8) is not supported because 
     // it is incompatible with variable byte length per character.
     [Theory]
     [InlineData("fixed+nullterm", new string[] { "00", "11", "22", "3", "44 ", "555", "66 ", "77", "  ", "AA ", "ZZ ", "!!" })]
@@ -165,12 +165,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddString(fileId, ContainerType.Dataset));
+                => TestUtils.AddString(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("string").Dataset(name);
-            var actual = dataset.Read<string[]>();
+            var attribute = root.Group("string").Attribute(name);
+            var actual = attribute.Read<string[]>();
 
             // Assert
             Assert.True(expected.SequenceEqual(actual));
@@ -184,12 +184,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddBitField(fileId, ContainerType.Dataset));
+                => TestUtils.AddBitField(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("bitfield").Dataset("bitfield");
-            var actual = dataset.Read<TestBitfield[]>();
+            var attribute = root.Group("bitfield").Attribute("bitfield");
+            var actual = attribute.Read<TestBitfield[]>();
 
             // Assert
             Assert.True(ReadingTestData.BitfieldData.SequenceEqual(actual));
@@ -203,18 +203,18 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddOpaque(fileId, ContainerType.Dataset));
+                => TestUtils.AddOpaque(fileId, ContainerType.Attribute));
 
             var expected = MemoryMarshal.Cast<int, ushort>(SharedTestData.SmallData).ToArray();
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("opaque").Dataset("opaque");
-            var actual = dataset.Read<ushort[]>();
+            var attribute = root.Group("opaque").Attribute("opaque");
+            var actual = attribute.Read<ushort[]>();
 
             // Assert
             Assert.True(expected.SequenceEqual(actual));
-            Assert.Equal("Opaque Test Tag", dataset.Type.Opaque.Tag);
+            Assert.Equal("Opaque Test Tag", attribute.Type.Opaque.Tag);
         });
     }
 
@@ -225,13 +225,13 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddArray_value(fileId, ContainerType.Dataset));
+                => TestUtils.AddArray_value(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("array").Dataset("value");
+            var attribute = root.Group("array").Attribute("value");
 
-            var actual = dataset
+            var actual = attribute
                 .Read<int[,][,]>();
 
             var expected_casted = ReadingTestData.ArrayDataValue
@@ -255,13 +255,13 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Dataset));
+                => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("array").Dataset("variable_length_string");
+            var attribute = root.Group("array").Attribute("variable_length_string");
 
-            var actual = dataset
+            var actual = attribute
                 .Read<string[,][,]>();
 
             var expected_casted = ReadingTestData.ArrayDataVariableLengthString
@@ -285,19 +285,19 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Dataset));
+                => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("array").Dataset("nullable_struct");
+            var attribute = root.Group("array").Attribute("nullable_struct");
 
-            var actual_1 = dataset
+            var actual_1 = attribute
                 .Read<TestStructStringAndArray[,][,]>()
                 .Cast<TestStructStringAndArray[,]>()
                 .SelectMany(x => x.Cast<TestStructStringAndArray>())
                 .ToArray();
 
-            var actual_2 = dataset
+            var actual_2 = attribute
                 .Read<Dictionary<string, object>[,][,]>()
                 .Cast<Dictionary<string, object>[,]>()
                 .SelectMany(x => x.Cast<Dictionary<string, object>>())
@@ -334,12 +334,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddObjectReference(fileId, ContainerType.Dataset));
+                => TestUtils.AddObjectReference(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset_references = root.Group("reference").Dataset("object");
-            var references = dataset_references.Read<NativeObjectReference1[]>();
+            var attribute_references = root.Group("reference").Attribute("object");
+            var references = attribute_references.Read<NativeObjectReference1[]>();
 
             var dereferenced = references
                 .Select(reference => root.Get(reference))
@@ -370,13 +370,13 @@ public partial class DatasetTests
 
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
+                => TestUtils.AddRegionReference(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var dataset_referenced = root.Group("reference").Dataset("referenced");
-            var dataset_region = root.Group("reference").Dataset("region");
-            var references = dataset_region.Read<NativeRegionReference1[]>();
+            var attribute_region = root.Group("reference").Attribute("region");
+            var references = attribute_region.Read<NativeRegionReference1[]>();
 
             static int[] Read(NativeFile root, IH5Dataset referenced, NativeRegionReference1 reference)
             {
@@ -415,12 +415,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Dataset));
+                => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("sequence").Dataset("variable_simple");
-            var actual = dataset.Read<int[][]>();
+            var attribute = root.Group("sequence").Attribute("variable_simple");
+            var actual = attribute.Read<int[][]>();
 
             // Assert
             var expected1 = new int[] { 3, 2, 1 };
@@ -440,12 +440,12 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId   
-                => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Dataset));
+                => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Attribute));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset = root.Group("sequence").Dataset("variable_nullable_struct");
-            var actual = dataset.Read<TestStructStringAndArray[]?[]>();
+            var attribute = root.Group("sequence").Attribute("variable_nullable_struct");
+            var actual = attribute.Read<TestStructStringAndArray[]?[]>();
 
             // Assert
             var expected = new TestStructStringAndArray[]?[] { ReadingTestData.NullableStructData, default };
@@ -463,14 +463,14 @@ public partial class DatasetTests
         {
             // Arrange
             var filePath = TestUtils.PrepareTestFile(version, fileId 
-                => TestUtils.AddDataWithSharedDataType(fileId, ContainerType.Dataset));
+                => TestUtils.AddDataWithSharedDataType(fileId, ContainerType.Attribute));
 
             var expected = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-            var dataset_references = root.Group("shared_data_type").Dataset("shared_data_type");
-            var actual = dataset_references.Read<string[]>();
+            var attribute_references = root.Group("shared_data_type").Attribute("shared_data_type");
+            var actual = attribute_references.Read<string[]>();
 
             // Assert
             Assert.True(expected.SequenceEqual(actual));

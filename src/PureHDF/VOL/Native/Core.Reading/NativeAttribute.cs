@@ -59,13 +59,28 @@ internal class NativeAttribute : IH5Attribute
 
     #region Methods
 
-    public T Read<T>(ulong[]? memoryDims = null)
+    public void Read<T>(
+        T buffer,
+        ulong[]? memoryDims = null)
     {
-        // var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
-        // if (byteOrderAware is not null)
-        //     DataUtils.EnsureEndianness(source, destination.Span, byteOrderAware.ByteOrder, Message.Datatype.Size);
+        // TODO cache this
+        var method = _methodInfoReadCore.MakeGenericMethod(typeof(T), elementType);
 
+        var source = new SystemMemoryStream(Message.InputData);
+
+        method.Invoke(this, new object?[] 
+        {
+            buffer,
+            source,
+            memoryDims
+        });
+    }
+
+    public T Read<T>(
+        ulong[]? memoryDims = null)
+    {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
@@ -75,6 +90,7 @@ internal class NativeAttribute : IH5Attribute
 
         var result = (T)method.Invoke(this, new object?[] 
         {
+            default /* buffer */,
             source,
             memoryDims
         })!;
@@ -82,11 +98,20 @@ internal class NativeAttribute : IH5Attribute
         return result;
     }
 
-    private TResult ReadCore<TResult, TElement>(
+    private TResult? ReadCore<TResult, TElement>(
+        TResult buffer,
         IH5ReadStream source,
         ulong[]? memoryDims = null)
     {
         var resultType = typeof(TResult);
+
+        /* check endianness */
+        var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
+
+        if (byteOrderAware is not null)
+            DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
+
+        /* get decoder (succeeds only if decoding is possible) */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
 
         /* fast path for null dataspace */
@@ -96,25 +121,44 @@ internal class NativeAttribute : IH5Attribute
         /* file element count */
         var fileElementCount = Message.Dataspace.GetTotalElementCount();
 
-        /* memory dims */
-        if (resultType.IsArray)
+        /* target array */
+        Memory<TElement> resultBuffer;
+        var array = default(Array);
+
+        if (buffer is null || buffer.Equals(default(TResult)))
         {
-            var rank = resultType.GetArrayRank();
+            /* memory dims */
+            if (DataUtils.IsArray(resultType))
+            {
+                var rank = resultType.GetArrayRank();
 
-            if (rank == 1)
-                memoryDims ??= new ulong[] { fileElementCount };
+                if (rank == 1)
+                    memoryDims ??= new ulong[] { fileElementCount };
 
-            else if (rank == Message.Dataspace.Rank)
-                memoryDims ??= Message.Dataspace.GetDims();
+                else if (rank == Message.Dataspace.Rank)
+                    memoryDims ??= Message.Dataspace.GetDims();
+
+                else
+                    throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
+            }
 
             else
-                throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
+            {
+                memoryDims ??= new ulong[] { 1 };
+            }
+
+            /* result buffer */
+            array = DataUtils.IsArray(resultType)
+                ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
+                : new TResult[1];
+
+            resultBuffer = new ArrayMemoryManager<TElement>(array).Memory;
         }
 
         else
         {
-            if (memoryDims == null)
-                memoryDims = new ulong[] { 1 };
+            /* result buffer */
+            (resultBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
         }
 
         /* memory element count */
@@ -124,18 +168,13 @@ internal class NativeAttribute : IH5Attribute
         if (memoryElementCount != fileElementCount)
             throw new Exception("The total file element count does not match the total memory element count.");
 
-        /* target array */
-        var array = resultType.IsArray
-            ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
-            : new TResult[1];
-
-        var resultBuffer = new ArrayMemoryManager<TElement>(array).Memory;
-
         /* decode */
         decoder(source, resultBuffer);
 
-        /* convert & return */
-        return ReadUtils.FromArray<TResult, TElement>(array);
+        /* return */
+        return array is null
+            ? default
+            : ReadUtils.FromArray<TResult, TElement>(array);
     }
 
     internal AttributeMessage Message { get; }
