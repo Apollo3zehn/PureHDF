@@ -1,8 +1,11 @@
 using System.Buffers;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Hsds.Api;
 using PureHDF.Selections;
+using PureHDF.VOL.Native;
 
 namespace PureHDF.VOL.Hsds;
 
@@ -55,10 +58,10 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
-        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
-            throw new Exception("Only types which meet the struct constraint are supported.");
-
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        if (DataUtils.IsReferenceOrContainsReferences(elementType))
+            throw new Exception("Only types which meet the struct constraint are supported.");
 
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
@@ -82,10 +85,10 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
-        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
-            throw new Exception("Only types which meet the struct constraint are supported.");
-
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        if (DataUtils.IsReferenceOrContainsReferences(elementType))
+            throw new Exception("Only types which meet the struct constraint are supported.");
 
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
@@ -107,10 +110,10 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
-        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
-            throw new Exception("Only types which meet the struct constraint are supported.");
-
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        if (DataUtils.IsReferenceOrContainsReferences(elementType))
+            throw new Exception("Only types which meet the struct constraint are supported.");
 
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
@@ -135,10 +138,10 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         ulong[]? memoryDims = null, 
         CancellationToken cancellationToken = default)
     {
-        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
-            throw new Exception("Only types which meet the struct constraint are supported.");
-
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        if (DataUtils.IsReferenceOrContainsReferences(elementType))
+            throw new Exception("Only types which meet the struct constraint are supported.");
 
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
@@ -337,6 +340,28 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             buffer: byteMemory, 
             useAsync: useAsync,
             cancellationToken);
+
+        /* ensure correct endianness */
+        if (Type.Class == H5DataTypeClass.FixedPoint) // TODO are there other types that are byte order aware?
+        {
+            ByteOrder byteOrder;
+
+            // TODO: is this reliable?
+            if (_dataset.Type.Base!.EndsWith("LE"))
+                byteOrder = ByteOrder.LittleEndian;
+
+            else if (_dataset.Type.Base!.EndsWith("BE"))
+                byteOrder = ByteOrder.BigEndian;
+
+            else
+                byteOrder = ByteOrder.VaxEndian;
+
+            DataUtils.EnsureEndianness(
+                source: MemoryMarshal.AsBytes(byteMemory.Span).ToArray() /* make copy of array */,
+                destination: MemoryMarshal.AsBytes(byteMemory.Span),
+                byteOrder,
+                (uint)Unsafe.SizeOf<TElement>()); // TODO: this is not 100% correct, it should be this.Type.Size.
+        }
 
         /* return */
         return resultArray is null
