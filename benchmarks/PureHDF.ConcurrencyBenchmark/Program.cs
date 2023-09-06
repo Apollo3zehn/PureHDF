@@ -185,220 +185,212 @@ finally
 
 (double, TimeSpan) SyncBenchmark()
 {
-    throw new NotImplementedException();
+    var result = 0.0;
 
-    // var result = 0.0;
+    using var file = H5File.Open(
+        FILE_PATH,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read,
+        useAsync: false
+    );
 
-    // using var file = H5File.Open(
-    //     FILE_PATH,
-    //     FileMode.Open,
-    //     FileAccess.Read,
-    //     FileShare.Read,
-    //     useAsync: false
-    // );
+    var dataset = file.Dataset("chunked");
+    var buffer = new float[BUFFER_SIZE];
+    var stopwatch = Stopwatch.StartNew();
 
-    // var dataset = file.Dataset("chunked");
-    // var buffer = new float[BUFFER_SIZE];
-    // var stopwatch = Stopwatch.StartNew();
+    for (uint i = 0; i < SEGMENT_COUNT; i++)
+    {
+        var fileSelection = new HyperslabSelection(
+            start: i * BUFFER_SIZE,
+            block: BUFFER_SIZE
+        );
 
-    // for (uint i = 0; i < SEGMENT_COUNT; i++)
-    // {
-    //     var fileSelection = new HyperslabSelection(
-    //         start: i * BUFFER_SIZE,
-    //         block: BUFFER_SIZE
-    //     );
+        dataset.Read(buffer, fileSelection);
 
-    //     dataset.Read<float[]>(buffer, fileSelection);
+        result += ProcessData(buffer);
+    }
 
-    //     result += ProcessData(buffer);
-    // }
+    var elapsed_sync = stopwatch.Elapsed;
+    Console.WriteLine($"The sync benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
 
-    // var elapsed_sync = stopwatch.Elapsed;
-    // Console.WriteLine($"The sync benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
-
-    // return (result, elapsed_sync);
+    return (result, elapsed_sync);
 }
 
 async Task<(double, TimeSpan)> TaskBasedBenchmark(string name, Func<Func<Task>, Task> startTask)
 {
-    throw new NotImplementedException();
-    
-    // var result = 0.0;
+    var result = 0.0;
 
-    // using var file = H5File.Open(
-    //     FILE_PATH,
-    //     FileMode.Open,
-    //     FileAccess.Read,
-    //     FileShare.Read,
-    //     useAsync: true
-    // );
+    using var file = H5File.Open(
+        FILE_PATH,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read,
+        useAsync: true
+    );
 
-    // var dataset = file.Dataset("chunked");
-    // var stopwatch = Stopwatch.StartNew();
+    var dataset = file.Dataset("chunked");
+    var stopwatch = Stopwatch.StartNew();
 
-    // var options = new PipeOptions(
-    //     // avoid blocking!
-    //     // default is 65536 (https://github.com/dotnet/runtime/blob/55e1ac7c07df62c4108d4acedf78f77574470ce5/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/PipeOptions.cs#L48)
-    //     pauseWriterThreshold: 0,
-    //     useSynchronizationContext: false);
+    var options = new PipeOptions(
+        // avoid blocking!
+        // default is 65536 (https://github.com/dotnet/runtime/blob/55e1ac7c07df62c4108d4acedf78f77574470ce5/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/PipeOptions.cs#L48)
+        pauseWriterThreshold: 0,
+        useSynchronizationContext: false);
 
-    // var pipe = new Pipe(options);
-    // var reader = pipe.Reader;
-    // var writer = pipe.Writer;
+    var pipe = new Pipe(options);
+    var reader = pipe.Reader;
+    var writer = pipe.Writer;
 
-    // var readingAction = async () =>
-    // {
-    //     for (uint i = 0; i < SEGMENT_COUNT; i++)
-    //     {
-    //         var asyncBuffer = new CastMemoryManager<byte, float>(writer.GetMemory((int)BUFFER_BYTE_SIZE)).Memory;
+    var readingAction = async () =>
+    {
+        for (uint i = 0; i < SEGMENT_COUNT; i++)
+        {
+            var asyncBuffer = new CastMemoryManager<byte, float>(writer.GetMemory((int)BUFFER_BYTE_SIZE)).Memory;
 
-    //         var fileSelection = new HyperslabSelection(
-    //             start: i * BUFFER_SIZE,
-    //             block: BUFFER_SIZE
-    //         );
+            var fileSelection = new HyperslabSelection(
+                start: i * BUFFER_SIZE,
+                block: BUFFER_SIZE
+            );
 
-    //         await dataset.ReadAsync(asyncBuffer, fileSelection);
+            await dataset.ReadAsync(asyncBuffer, fileSelection);
 
-    //         writer.Advance((int)BUFFER_BYTE_SIZE);
-    //         await writer.FlushAsync();
-    //     }
+            writer.Advance((int)BUFFER_BYTE_SIZE);
+            await writer.FlushAsync();
+        }
 
-    //     await writer.CompleteAsync();
-    // };
+        await writer.CompleteAsync();
+    };
 
-    // var reading = startTask(readingAction);
-    // var processingTime = TimeSpan.Zero;
+    var reading = startTask(readingAction);
+    var processingTime = TimeSpan.Zero;
 
-    // var procssingAction = async () =>
-    // {
-    //     while (true)
-    //     {
-    //         var readResult = await reader.ReadAsync();
-    //         var buffer = readResult.Buffer;
+    var procssingAction = async () =>
+    {
+        while (true)
+        {
+            var readResult = await reader.ReadAsync();
+            var buffer = readResult.Buffer;
 
-    //         if (buffer.Length == 0)
-    //             break;
+            if (buffer.Length == 0)
+                break;
 
-    //         var processingTimeSw = Stopwatch.StartNew();
+            var processingTimeSw = Stopwatch.StartNew();
 
-    //         result += ProcessData(MemoryMarshal.Cast<byte, float>(buffer.First.Span));
-    //         processingTime += processingTimeSw.Elapsed;
+            result += ProcessData(MemoryMarshal.Cast<byte, float>(buffer.First.Span));
+            processingTime += processingTimeSw.Elapsed;
 
-    //         reader.AdvanceTo(
-    //             consumed: buffer.GetPosition((long)BUFFER_BYTE_SIZE),
-    //             examined: buffer.End);
-    //     }
+            reader.AdvanceTo(
+                consumed: buffer.GetPosition((long)BUFFER_BYTE_SIZE),
+                examined: buffer.End);
+        }
 
-    //     await reader.CompleteAsync();
-    // };
+        await reader.CompleteAsync();
+    };
 
-    // var processing = startTask(procssingAction);
+    var processing = startTask(procssingAction);
 
-    // await Task.WhenAll(reading, processing);
+    await Task.WhenAll(reading, processing);
 
-    // var elapsed = stopwatch.Elapsed;
-    // Console.WriteLine($"The {name} benchmark took {elapsed.TotalMilliseconds:F1} ms.");
-    // // Console.WriteLine($"The pure processing time was {processingTime.TotalMilliseconds:F1} ms.");
+    var elapsed = stopwatch.Elapsed;
+    Console.WriteLine($"The {name} benchmark took {elapsed.TotalMilliseconds:F1} ms.");
+    // Console.WriteLine($"The pure processing time was {processingTime.TotalMilliseconds:F1} ms.");
 
-    // return (result, elapsed);
+    return (result, elapsed);
 }
 
 (double, TimeSpan) MultiThreadedBenchmark_File()
 {
-    throw new NotImplementedException();
+    var result = 0.0;
+    var syncObject = new object();
 
-    // var result = 0.0;
-    // var syncObject = new object();
+    using var file = H5File.Open(
+        FILE_PATH,
+        FileMode.Open,
+        FileAccess.Read,
+        FileShare.Read,
+        useAsync: false
+    );
 
-    // using var file = H5File.Open(
-    //     FILE_PATH,
-    //     FileMode.Open,
-    //     FileAccess.Read,
-    //     FileShare.Read,
-    //     useAsync: false
-    // );
+    var dataset = file.Dataset("chunked");
 
-    // var dataset = file.Dataset("chunked");
+    /* The buffer has the size of a single chunk. The reason is
+     * that creating a very large buffer slows down the test
+     * dramatically (factor ~10). The test file is very large (1GB),
+     * and maybe this confuses the garbage collector. A definite
+     * cause could not be found. A real world application should
+     * rely on the MemoryPool to get an array and maybe limit the
+     * number of concurrent threads.
+     */
+    var buffer = new float[BUFFER_SIZE];
+    var stopwatch = Stopwatch.StartNew();
 
-    // /* The buffer has the size of a single chunk. The reason is
-    //  * that creating a very large buffer slows down the test
-    //  * dramatically (factor ~10). The test file is very large (1GB),
-    //  * and maybe this confuses the garbage collector. A definite
-    //  * cause could not be found. A real world application should
-    //  * rely on the MemoryPool to get an array and maybe limit the
-    //  * number of concurrent threads.
-    //  */
-    // var buffer = new float[BUFFER_SIZE];
-    // var stopwatch = Stopwatch.StartNew();
+    Parallel.For(0, (int)SEGMENT_COUNT, i =>
+    {
+        var fileSelection = new HyperslabSelection(
+            start: (ulong)i * BUFFER_SIZE,
+            block: BUFFER_SIZE
+        );
 
-    // Parallel.For(0, (int)SEGMENT_COUNT, i =>
-    // {
-    //     var fileSelection = new HyperslabSelection(
-    //         start: (ulong)i * BUFFER_SIZE,
-    //         block: BUFFER_SIZE
-    //     );
+        dataset.Read(buffer, fileSelection);
 
-    //     dataset.Read<float[]>(buffer, fileSelection);
+        var currentResult = ProcessData(buffer);
 
-    //     var currentResult = ProcessData(buffer);
+        lock (syncObject)
+        {
+            result += currentResult;
+        }
+    });
 
-    //     lock (syncObject)
-    //     {
-    //         result += currentResult;
-    //     }
-    // });
+    var elapsed_sync = stopwatch.Elapsed;
+    Console.WriteLine($"The file-based multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
 
-    // var elapsed_sync = stopwatch.Elapsed;
-    // Console.WriteLine($"The file-based multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
-
-    // return (result, elapsed_sync);
+    return (result, elapsed_sync);
 }
 
 (double, TimeSpan) MultiThreadedBenchmark_MMF()
 {
-    throw new NotImplementedException();
+    var result = 0.0;
+    var syncObject = new object();
 
-    // var result = 0.0;
-    // var syncObject = new object();
+    using var mmf = MemoryMappedFile.CreateFromFile(FILE_PATH);
+    using var accessor = mmf.CreateViewAccessor();
+    using var file = H5File.Open(accessor);
 
-    // using var mmf = MemoryMappedFile.CreateFromFile(FILE_PATH);
-    // using var accessor = mmf.CreateViewAccessor();
-    // using var file = H5File.Open(accessor);
+    var dataset = file.Dataset("chunked");
 
-    // var dataset = file.Dataset("chunked");
+    /* The buffer has the size of a single chunk. The reason is
+     * that creating a very large buffer slows down the test
+     * dramatically (factor ~10). The test file is very large (1GB),
+     * and maybe this confuses the garbage collector. A definite
+     * cause could not be found. A real world application should
+     * rely on the MemoryPool to get an array and maybe limit the
+     * number of concurrent threads.
+     */
+    var buffer = new float[BUFFER_SIZE];
+    var stopwatch = Stopwatch.StartNew();
 
-    // /* The buffer has the size of a single chunk. The reason is
-    //  * that creating a very large buffer slows down the test
-    //  * dramatically (factor ~10). The test file is very large (1GB),
-    //  * and maybe this confuses the garbage collector. A definite
-    //  * cause could not be found. A real world application should
-    //  * rely on the MemoryPool to get an array and maybe limit the
-    //  * number of concurrent threads.
-    //  */
-    // var buffer = new float[BUFFER_SIZE];
-    // var stopwatch = Stopwatch.StartNew();
+    Parallel.For(0, (int)SEGMENT_COUNT, i =>
+    {
+        var fileSelection = new HyperslabSelection(
+            start: (ulong)i * BUFFER_SIZE,
+            block: BUFFER_SIZE
+        );
 
-    // Parallel.For(0, (int)SEGMENT_COUNT, i =>
-    // {
-    //     var fileSelection = new HyperslabSelection(
-    //         start: (ulong)i * BUFFER_SIZE,
-    //         block: BUFFER_SIZE
-    //     );
+        dataset.Read(buffer, fileSelection);
 
-    //     dataset.Read<float[]>(buffer, fileSelection);
+        var currentResult = ProcessData(buffer);
 
-    //     var currentResult = ProcessData(buffer);
+        lock (syncObject)
+        {
+            result += currentResult;
+        }
+    });
 
-    //     lock (syncObject)
-    //     {
-    //         result += currentResult;
-    //     }
-    // });
+    var elapsed_sync = stopwatch.Elapsed;
+    Console.WriteLine($"The memory-mapped-file based multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
 
-    // var elapsed_sync = stopwatch.Elapsed;
-    // Console.WriteLine($"The memory-mapped-file based multi-threaded benchmark took {elapsed_sync.TotalMilliseconds:F1} ms.");
-
-    // return (result, elapsed_sync);
+    return (result, elapsed_sync);
 }
 
 double ProcessData(ReadOnlySpan<float> data)

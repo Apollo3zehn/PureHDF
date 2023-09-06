@@ -56,16 +56,17 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         ulong[]? memoryDims = null)
     {
         if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
-            throw new Exception("Only types which meet the unmanaged constraint are supported.");
+            throw new Exception("Only types which meet the struct constraint are supported.");
 
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
+        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
         var result = ((Task<T>)method.Invoke(this, new object?[] 
         {
             false /* useAsync */,
+            default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
@@ -73,6 +74,31 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         })!).GetAwaiter().GetResult();
 
         return result;
+    }
+
+    public void Read<T>(
+        T buffer, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null,
+        ulong[]? memoryDims = null)
+    {
+        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
+            throw new Exception("Only types which meet the struct constraint are supported.");
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        // TODO cache this
+        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
+
+        method.Invoke(this, new object?[] 
+        {
+            false /* useAsync */,
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            default(CancellationToken)
+        });
     }
     
     public async Task<T> ReadAsync<T>(
@@ -82,16 +108,17 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         CancellationToken cancellationToken = default)
     {
         if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
-            throw new Exception("Only types which meet the unmanaged constraint are supported.");
+            throw new Exception("Only types which meet the struct constraint are supported.");
 
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
+        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
         var result = await (Task<T>)method.Invoke(this, new object?[] 
         {
             true /* useAsync */,
+            default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
@@ -101,19 +128,106 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         return result;
     }
 
-    private async Task<TResult?> ReadCoreAsync<TResult, TElement, TReader>(
+    public Task ReadAsync<T>(
+        T buffer, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null, 
+        CancellationToken cancellationToken = default)
+    {
+        if (DataUtils.IsReferenceOrContainsReferences(typeof(T)))
+            throw new Exception("Only types which meet the struct constraint are supported.");
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        // TODO cache this
+        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
+
+        return (Task)method.Invoke(this, new object?[] 
+        {
+            true /* useAsync */,
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            cancellationToken
+        })!;
+    }
+
+    private async Task<TResult?> ReadCoreAsync<TResult, TElement>(
         bool useAsync,
+        TResult? buffer,
         Selection? fileSelection = null,
         Selection? memorySelection = null,
         ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) where TElement : unmanaged
+        CancellationToken cancellationToken = default) 
+            where TElement : struct
     {
-        // fast path for null dataspace
+        var resultType = typeof(TResult);
+        
+        /* fast path for null dataspace */
         if (Space.Type == H5DataspaceType.Null)
-            return default;
+            throw new Exception("Datasets with null dataspace cannot be read.");
+
+        /* file element count */
+        var fileElementCount = Space.GetTotalElementCount();
+
+        /* file dimensions */
+        var fileDims = Space.GetDims();
+
+        /* memory selection + dims validation */ 
+        if (memorySelection is not null && memoryDims is null)
+            throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
+
+        /* result buffer / result array */
+        Memory<TElement> resultBuffer;
+        var resultArray = default(Array);
+
+        if (buffer is null || buffer.Equals(default(TResult)))
+        {
+            /* memory dims */
+            if (DataUtils.IsArray(resultType))
+            {
+                var rank = resultType.GetArrayRank();
+
+                if (rank == 1)
+                    memoryDims ??= new ulong[] { fileElementCount };
+
+                else if (rank == fileDims.Length)
+                    memoryDims ??= fileDims;
+
+                else
+                    throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
+            }
+
+            else
+            {
+                memoryDims ??= new ulong[] { 1 };
+            }
+
+            /* result buffer */
+            resultArray = DataUtils.IsArray(resultType)
+                ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
+                : new TResult[1];
+
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
+        }
+
+        else
+        {
+            /* result buffer */
+            (resultBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
+        }
+
+        /* memory element count */
+        var memoryElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
+
+        /* validation */
+        if (memoryElementCount != fileElementCount)
+            throw new Exception("The total file element count does not match the total memory element count.");
 
         /* file selection */
-        if (fileSelection is null)
+        if (fileSelection is null || fileSelection is AllSelection)
         {
             switch (Space.Type)
             {
@@ -192,22 +306,17 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             throw new Exception($"The selection of type {fileSelection.GetType().Name} is not supported.");
         }
 
-        /* memory dims */
-        var sourceElementCount = fileSelection.TotalElementCount;
-
-        if (memorySelection is not null && memoryDims is null)
-            throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
-
-        memoryDims ??= new ulong[] { sourceElementCount };
-
         /* memory selection */
-        memorySelection ??= new HyperslabSelection(start: 0, block: sourceElementCount);
+        if (memorySelection is null || memorySelection is AllSelection)
+        {
+            // TODO make use of the memory selection
+            memorySelection = new HyperslabSelection(
+                rank: memoryDims.Length,
+                starts: new ulong[memoryDims.Length],
+                blocks: memoryDims);
+        }
 
-        /* target buffer */
-        var targetElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
-        var targetBuffer = new TElement[targetElementCount];
-
-        // TODO make use of selections
+        /* decode */
         var streamResponse =
 
             hyperSlabSelectString is null
@@ -224,32 +333,18 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             ? await streamResponse.Content.ReadAsStreamAsync(cancellationToken)
             : streamResponse.Content.ReadAsStream(cancellationToken);
 
-        var byteMemory = targetBuffer.AsMemory().Cast<TElement, byte>();
-        await ReadExactlyAsync(stream, buffer: byteMemory, useAsync: useAsync, cancellationToken);
+        var byteMemory = resultBuffer.Cast<TElement, byte>();
 
-        // /* ensure correct endianness */
-        // if (Type.Class == H5DataTypeClass.FixedPoint) // TODO are there other types that are byte order aware?
-        // {
-        //     ByteOrder byteOrder;
+        await ReadExactlyAsync(
+            stream, 
+            buffer: byteMemory, 
+            useAsync: useAsync,
+            cancellationToken);
 
-        //     // TODO: is this reliable?
-        //     if (_dataset.Type.Base!.EndsWith("LE"))
-        //         byteOrder = ByteOrder.LittleEndian;
-
-        //     else if (_dataset.Type.Base!.EndsWith("BE"))
-        //         byteOrder = ByteOrder.BigEndian;
-
-        //     else
-        //         byteOrder = ByteOrder.VaxEndian;
-
-        //     DataUtils.EnsureEndianness(
-        //         source: MemoryMarshal.AsBytes(result.AsSpan()).ToArray() /* make copy of array */,
-        //         destination: MemoryMarshal.AsBytes(result.AsSpan()),
-        //         byteOrder,
-        //         (uint)Unsafe.SizeOf<TResult>()); // TODO: this is not 100% correct, it should be this.Type.Size.
-        // }
-
-        return ReadUtils.FromArray<TResult, TElement>(targetBuffer);
+        /* return */
+        return resultArray is null
+            ? default
+            : ReadUtils.FromArray<TResult, TElement>(resultArray);
     }
 
     private static async Task ReadExactlyAsync(Stream stream, Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken)

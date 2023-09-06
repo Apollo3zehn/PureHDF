@@ -43,7 +43,10 @@ internal static class NativeCache
 
     private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
-    public static GlobalHeapCollection GetGlobalHeapObject(NativeReadContext context, ulong address)
+    public static GlobalHeapCollection GetGlobalHeapObject(
+        NativeReadContext context, 
+        ulong address,
+        bool restoreAddress = false)
     {
         if (!_globalHeapMap.TryGetValue(context.Driver, out var addressToCollectionMap))
         {
@@ -53,17 +56,18 @@ internal static class NativeCache
 
         if (!addressToCollectionMap.TryGetValue(address, out var collection))
         {
-            collection = ReadGlobalHeapCollection(context, address);
+            var position = context.Driver.Position;
+
+            context.Driver.Seek((long)address, SeekOrigin.Begin);
+            collection = GlobalHeapCollection.Decode(context);
+
             addressToCollectionMap[address] = collection;
+
+            if (restoreAddress)
+                context.Driver.Seek(position, SeekOrigin.Begin);
         }
 
         return collection;
-    }
-
-    private static GlobalHeapCollection ReadGlobalHeapCollection(NativeReadContext context, ulong address)
-    {
-        context.Driver.Seek((long)address, SeekOrigin.Begin);
-        return GlobalHeapCollection.Decode(context);
     }
 
     #endregion

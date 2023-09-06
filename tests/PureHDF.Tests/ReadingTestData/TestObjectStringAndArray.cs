@@ -9,10 +9,10 @@ public class TestObjectStringAndArray
     public float FloatValue { get; set; }
 
     [MarshalAs(UnmanagedType.LPStr)]
-    public string StringValue1;
+    public string StringValue1 = default!;
 
     [MarshalAs(UnmanagedType.LPStr)]
-    public string StringValue2;
+    public string StringValue2 = default!;
 
     public byte ByteValue { get; set; }
 
@@ -20,7 +20,7 @@ public class TestObjectStringAndArray
     public short ShortValueWithCustomName { get; set; }
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
-    public float[] FloatArray;
+    public float[] FloatArray = default!;
 
     public TestStructL2 L2Struct { get; set; }
 }

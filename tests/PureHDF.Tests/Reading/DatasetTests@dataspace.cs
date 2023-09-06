@@ -42,7 +42,7 @@ public partial class DatasetTests
             void action() => dataset.Read<double[]>();
 
             // Assert
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         });
     }   
 }

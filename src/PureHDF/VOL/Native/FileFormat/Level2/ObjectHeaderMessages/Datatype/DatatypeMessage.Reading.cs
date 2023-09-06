@@ -630,6 +630,19 @@ internal partial record class DatatypeMessage(
         return decode;
     }
     
+    private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
+    {
+#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
+        var dims = new int[] { (int)Size };
+
+        object? decode(IH5ReadStream source)
+        {
+            return ReadUtils.DecodeUnmanagedArray<byte>(source, dims);
+        }
+
+        return decode;
+    }
+
     private (Type, ElementDecodeDelegate) GetDecodeInfoForVariableLengthSequence(
         NativeReadContext context,
         Type? memoryType)
@@ -675,7 +688,11 @@ internal partial record class DatatypeMessage(
                 return default;
 
             buffer = buffer.Slice(globalHeapIdSize);
-            var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
+
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+                context, 
+                globalHeapId.CollectionAddress,
+                restoreAddress: true);
 
             if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
             {
@@ -707,19 +724,6 @@ internal partial record class DatatypeMessage(
             ?? throw new Exception($"Unable to find array type for element type {elementType}.");
 
         return (memoryType, decode);
-    }
-
-    private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
-    {
-#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
-        var dims = new int[] { (int)Size };
-
-        object? decode(IH5ReadStream source)
-        {
-            return ReadUtils.DecodeUnmanagedArray<byte>(source, dims);
-        }
-
-        return decode;
     }
 
     private ElementDecodeDelegate GetDecodeInfoForVariableLengthString(
@@ -765,7 +769,10 @@ internal partial record class DatatypeMessage(
             if (globalHeapId.Equals(default))
                 return default;
 
-            var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+                context, 
+                globalHeapId.CollectionAddress,
+                restoreAddress: true);
 
             if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
             {

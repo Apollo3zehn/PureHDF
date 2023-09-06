@@ -59,25 +59,6 @@ internal class NativeAttribute : IH5Attribute
 
     #region Methods
 
-    public void Read<T>(
-        T buffer,
-        ulong[]? memoryDims = null)
-    {
-        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
-
-        // TODO cache this
-        var method = _methodInfoReadCore.MakeGenericMethod(typeof(T), elementType);
-
-        var source = new SystemMemoryStream(Message.InputData);
-
-        method.Invoke(this, new object?[] 
-        {
-            buffer,
-            source,
-            memoryDims
-        });
-    }
-
     public T Read<T>(
         ulong[]? memoryDims = null)
     {
@@ -85,7 +66,6 @@ internal class NativeAttribute : IH5Attribute
 
         // TODO cache this
         var method = _methodInfoReadCore.MakeGenericMethod(typeof(T), elementType);
-
         var source = new SystemMemoryStream(Message.InputData);
 
         var result = (T)method.Invoke(this, new object?[] 
@@ -98,8 +78,26 @@ internal class NativeAttribute : IH5Attribute
         return result;
     }
 
+    public void Read<T>(
+        T buffer,
+        ulong[]? memoryDims = null)
+    {
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+
+        // TODO cache this
+        var method = _methodInfoReadCore.MakeGenericMethod(typeof(T), elementType);
+        var source = new SystemMemoryStream(Message.InputData);
+
+        method.Invoke(this, new object?[] 
+        {
+            buffer,
+            source,
+            memoryDims
+        });
+    }
+
     private TResult? ReadCore<TResult, TElement>(
-        TResult buffer,
+        TResult? buffer,
         IH5ReadStream source,
         ulong[]? memoryDims = null)
     {
@@ -111,19 +109,19 @@ internal class NativeAttribute : IH5Attribute
         if (byteOrderAware is not null)
             DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
 
-        /* get decoder (succeeds only if decoding is possible) */
-        var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
-
         /* fast path for null dataspace */
         if (Message.Dataspace.Type == DataspaceType.Null)
             throw new Exception("Attributes with null dataspace cannot be read.");
 
+        /* get decoder (succeeds only if decoding is possible) */
+        var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
+
         /* file element count */
         var fileElementCount = Message.Dataspace.GetTotalElementCount();
 
-        /* target array */
+        /* result buffer / result array */
         Memory<TElement> resultBuffer;
-        var array = default(Array);
+        var resultArray = default(Array);
 
         if (buffer is null || buffer.Equals(default(TResult)))
         {
@@ -148,11 +146,11 @@ internal class NativeAttribute : IH5Attribute
             }
 
             /* result buffer */
-            array = DataUtils.IsArray(resultType)
+            resultArray = DataUtils.IsArray(resultType)
                 ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
                 : new TResult[1];
 
-            resultBuffer = new ArrayMemoryManager<TElement>(array).Memory;
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
         }
 
         else
@@ -172,9 +170,9 @@ internal class NativeAttribute : IH5Attribute
         decoder(source, resultBuffer);
 
         /* return */
-        return array is null
+        return resultArray is null
             ? default
-            : ReadUtils.FromArray<TResult, TElement>(array);
+            : ReadUtils.FromArray<TResult, TElement>(resultArray);
     }
 
     internal AttributeMessage Message { get; }
