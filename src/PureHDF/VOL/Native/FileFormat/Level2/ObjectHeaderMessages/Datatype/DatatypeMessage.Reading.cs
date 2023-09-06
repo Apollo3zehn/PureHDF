@@ -449,7 +449,7 @@ internal partial record class DatatypeMessage(
 
             for (int i = 0; i < compoundProperties.Length; i++)
             {
-                if (!compoundProperties[i].Equals(default))
+                if (!decodeSteps[i].Equals(default))
                     continue;
 
                 var compoundProp = compoundProperties[i];

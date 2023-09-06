@@ -101,6 +101,42 @@ namespace PureHDF.Tests.Reading
             });
         }
 
+        [Fact]
+        public void CanReadAttribute_ComplexObject()
+        {
+            TestUtils.RunForAllVersions(version =>
+            {
+                // Arrange
+                var filePath = TestUtils.PrepareTestFile(version, fileId 
+                    => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
+
+                // Act
+                var options = new H5ReadOptions()
+                {
+                    PropertyNameMapper = propertyInfo =>
+                    {
+                        var attribute = propertyInfo.GetCustomAttribute<H5NameAttribute>(true);
+                        return attribute is not null ? attribute.Name : propertyInfo.Name;
+                    },
+                    IncludeClassFields = true
+                };
+
+                using var root = NativeFile.InternalOpenRead(
+                    filePath, 
+                    deleteOnClose: true, 
+                    options);
+                    
+                var dataset = root.Group("struct").Dataset("nullable");
+
+                var actual = dataset.Read<TestObjectStringAndArray[]>();
+
+                // Assert
+                Assert.Equal(
+                    JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options).OrderBy(c => c).ToArray(),
+                    JsonSerializer.Serialize(actual, _options).OrderBy(c => c).ToArray());
+            });
+        }
+
         // Fixed-length string dataset (UTF8) is not supported because 
         // it is incompatible with variable byte length per character.
         [Theory]

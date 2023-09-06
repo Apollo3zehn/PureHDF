@@ -2,9 +2,11 @@
 
 namespace PureHDF.Tests;
 
-public struct TestStructStringAndArray
+public class TestObjectStringAndArray
 {
-    public float FloatValue;
+    /* fields and properties are mixed to test both */
+
+    public float FloatValue { get; set; }
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string StringValue1;
@@ -12,13 +14,13 @@ public struct TestStructStringAndArray
     [MarshalAs(UnmanagedType.LPStr)]
     public string StringValue2;
 
-    public byte ByteValue;
+    public byte ByteValue { get; set; }
 
     [H5Name("ShortValue")]
-    public short ShortValueWithCustomName;
+    public short ShortValueWithCustomName { get; set; }
 
     [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
     public float[] FloatArray;
 
-    public TestStructL2 L2Struct;
+    public TestStructL2 L2Struct { get; set; }
 }
