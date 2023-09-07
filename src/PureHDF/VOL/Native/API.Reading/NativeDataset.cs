@@ -1,6 +1,7 @@
 using PureHDF.Selections;
 using System.Buffers;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace PureHDF.VOL.Native;
 
@@ -11,8 +12,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 {
     #region Fields
 
-    private static readonly MethodInfo _methodInfoReadCoreAsync = typeof(NativeDataset)
-        .GetMethod(nameof(ReadCoreAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly MethodInfo _methodInfoReadCorePreAsync = typeof(NativeDataset)
+        .GetMethod(nameof(ReadCorePreAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
@@ -152,33 +153,6 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     #region Methods
 
-    /// <summary>
-    /// Queries the data. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#43-experimental-iqueryable-1-dimensional-data-only">PureHDF</seealso>.
-    /// </summary>
-    /// <typeparam name="T">The type of the data to read.</typeparam>
-    /// <param name="datasetAccess">The dataset access properties.</param>
-    /// <param name="memorySelection">The selection within the destination memory.</param>
-    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
-    /// <returns>A queryable of type <typeparamref name="T"/>.</returns>
-    public IQueryable<T> AsQueryable<T>(
-        H5DatasetAccess datasetAccess,
-        Selection? memorySelection = default,
-        ulong[]? memoryDims = default) where T : unmanaged
-    {
-        // if (Space.Rank != 1)
-        //     throw new Exception("Querying data only works for 1-dimensional datasets.");
-
-        // var provider = new QueryProvider<T>(
-        //     datasetLength: Space.Dimensions[0],
-        //     executor: fileSelection => Read<T>(datasetAccess, fileSelection, memorySelection, memoryDims));
-
-        // var queryable = new Queryable<T>(provider);
-
-        // return queryable;
-
-        throw new NotImplementedException();
-    }
-
     /// <inheritdoc />
     public T Read<T>(
         Selection? fileSelection = null, 
@@ -225,7 +199,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(SyncReader));
+        var method = _methodInfoReadCorePreAsync.MakeGenericMethod(typeof(T), elementType, typeof(SyncReader));
 
         var result = ((Task<T>)method.Invoke(this, new object?[] 
         {
@@ -260,7 +234,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(SyncReader));
+        var method = _methodInfoReadCorePreAsync.MakeGenericMethod(typeof(T), elementType, typeof(SyncReader));
 
         method.Invoke(this, new object?[] 
         {
@@ -326,7 +300,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
+        var method = _methodInfoReadCorePreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
 
         var result = await (Task<T>)method.Invoke(this, new object?[] 
         {
@@ -363,7 +337,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
+        var method = _methodInfoReadCorePreAsync.MakeGenericMethod(typeof(T), elementType, typeof(AsyncReader));
 
         var result = await (Task<T>)method.Invoke(this, new object?[] 
         {
@@ -379,22 +353,21 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         return result;
     }
 
-    internal async Task<TResult?> ReadCoreAsync<TResult, TElement, TReader>(
-        TReader reader,
-        TResult? buffer,
-        Selection? fileSelection = default,
-        Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default,
-        bool skipShuffle = false)
-            where TReader : IReader
+    internal async Task<TResult?> ReadCorePreAsync<TResult, TElement, TReader>(
+    TReader reader,
+    TResult? buffer,
+    Selection? fileSelection = default,
+    Selection? memorySelection = default,
+    ulong[]? memoryDims = default,
+    H5DatasetAccess datasetAccess = default,
+    bool skipShuffle = false)
+        where TReader : IReader
     {
-        var resultType = typeof(TResult);
-
         /* for testing only */
         if (skipShuffle && InternalFilterPipeline is not null)
         {
-            InternalFilterPipeline = InternalFilterPipeline with {
+            InternalFilterPipeline = InternalFilterPipeline with
+            {
                 FilterDescriptions = InternalFilterPipeline.FilterDescriptions
                     .Where(description => description.Identifier != ShuffleFilter.Id)
                     .ToArray()
@@ -411,28 +384,12 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         if (InternalDataspace.Type == DataspaceType.Null)
             throw new Exception("Datasets with null dataspace cannot be read.");
 
-        /* get decoder (succeeds only if decoding is possible) */
-        var decoder = InternalDataType.GetDecodeInfo<TElement>(Context);
-
-        /* file element count */
-        var fileElementCount = InternalDataspace.GetTotalElementCount();
-
-        /* file dimensions */
-        var fileDims = InternalDataspace.GetDims();
-
-        /* memory selection + dims validation */ 
+        /* memory selection + dims validation */
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
 
-        /* dataset info */
-        var datasetInfo = new DatasetInfo(
-            Space: InternalDataspace,
-            Type: InternalDataType,
-            Layout: InternalDataLayout,
-            FillValue: InternalFillValue,
-            FilterPipeline: InternalFilterPipeline,
-            ExternalFileList: InternalExternalFileList
-        );
+        /* file dimensions */
+        var fileDims = InternalDataspace.GetDims();
 
         /* file selection */
         if (fileSelection is null || fileSelection is AllSelection)
@@ -454,6 +411,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
         if (buffer is null || buffer.Equals(default(TResult)))
         {
+            var resultType = typeof(TResult);
+
             /* memory dims */
             if (DataUtils.IsArray(resultType))
             {
@@ -501,19 +460,73 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         if (memorySelection.TotalElementCount != fileSelection.TotalElementCount)
             throw new Exception("The total file selection element count does not match the total memory selection element count.");
 
-        /* fill value */
-        var fillValue = default(TElement);
-        // var fillValue = InternalFillValue.Value is null
-        //     ? default
-        //     : MemoryMarshal.Cast<byte, TResult>(InternalFillValue.Value)[0];
+        /* decode */
+        await ReadCoreAsync(
+            reader,
+            resultBuffer,
+            fileSelection,
+            memorySelection,
+            fileDims,
+            memoryDims,
+            datasetAccess
+        );
 
-        /* read virtual delegate*/
+        /* return */
+        return resultArray is null
+            ? default
+            : ReadUtils.FromArray<TResult, TElement>(resultArray);
+    }
+
+    internal async Task ReadCoreAsync<TElement, TReader>(
+        TReader reader,
+        Memory<TElement> resultBuffer,
+        Selection fileSelection,
+        Selection memorySelection,
+        ulong[] fileDims,
+        ulong[] memoryDims,
+        H5DatasetAccess datasetAccess = default)
+            where TReader : IReader
+    {
+        /* get decoder (succeeds only if decoding is possible) */
+        var decoder = InternalDataType.GetDecodeInfo<TElement>(Context);
+
+        /* fill value */
+        TElement? fillValue;
+
+        if (InternalFillValue.Value is not null)
+        {
+            // TODO cache this
+            var target = new TElement[1];
+            var fillValueDecodeStream = new SystemMemoryStream(InternalFillValue.Value);
+            decoder.Invoke(fillValueDecodeStream, target);
+            fillValue = target[0];
+        }
+
+        else
+        {
+            fillValue = default;
+        }
+
+        /* read virtual delegate */
         Task readVirtualDelegate(NativeDataset dataset, Memory<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
-            => dataset.ReadCoreAsync<TResult, TElement, TReader>(
+            => dataset.ReadCoreAsync(
                 reader,
-                buffer: default,
+                resultBuffer: destination,
                 fileSelection: fileSelection,
+                memorySelection: new HyperslabSelection(0, (ulong)destination.Length),
+                fileDims: dataset.InternalDataspace.GetDims(),
+                memoryDims: new ulong[] { (ulong)destination.Length },
                 datasetAccess: datasetAccess);
+
+        /* dataset info */
+        var datasetInfo = new DatasetInfo(
+            Space: InternalDataspace,
+            Type: InternalDataType,
+            Layout: InternalDataLayout,
+            FillValue: InternalFillValue,
+            FilterPipeline: InternalFilterPipeline,
+            ExternalFileList: InternalExternalFileList
+        );
 
         /* buffer provider */
         using H5D_Base h5d = InternalDataLayout.LayoutClass switch
@@ -574,18 +587,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             SourceTypeSize: (int)InternalDataType.Size
         );
 
-        await SelectionUtils
+        await SelectionHelper
             .DecodeAsync(
                 reader, 
                 sourceRank: fileDims.Length, 
                 targetRank: memoryDims.Length, 
                 decodeInfo)
             .ConfigureAwait(false);
-
-        /* return */
-        return resultArray is null
-            ? default
-            : ReadUtils.FromArray<TResult, TElement>(resultArray);
     }
 
     #endregion

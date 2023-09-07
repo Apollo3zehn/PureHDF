@@ -352,31 +352,6 @@ static IEnumerable<Step> Walker(ulong[] datasetDimensions)
 var selection = new DelegateSelection(totalElementCount: 11, Walker);
 ```
 
-## 4.3 Experimental: IQueryable (1-dimensional data only)
-
-Another way to build the file selection is to invoke the `AsQueryable` method which can then be used as follows:
-
-```cs
-var result = dataset.AsQueryable<int>()
-    .Skip(5)    // start
-    .Stride(5)  // stride
-    .Repeat(2)  // count
-    .Take(3)    // block
-    .ToArray();
-```
-
-All methods are optional, i.e. the code
-
-```cs
-var result = dataset.AsQueryable<int>()
-    .Skip(5)
-    .ToArray();
-```
-
-will simply skip the first 5 elements and return the rest of the dataset.
-
-This way of building a hyperslab / selection has been implemented in an efford to provide a more .NET-like experience when working with data.
-
 # 5. Filters
 
 Many of the standard HDF5 filters are supported. Please see the [Filters](filters.md) section for more details about the available filters.
@@ -514,33 +489,7 @@ Not supported data types like `time` and `variable length type = sequence` will 
 
 ## 7 Reading Multidimensional Data
 
-### 7.1 Generic Method
-
-Sometimes you want to read the data as multidimensional arrays. In that case use one of the `T[]` overloads like `ToArray3D` (there are overloads up to 6D). Here is an example:
-
-```cs
-var data3D = dataset
-    .Read<int>()
-    .ToArray3D(new long[] { -1, 7, 2 });
-```
-
-The methods accepts a `long[]` with the new array dimensions. This feature works similar to Matlab's [reshape](https://de.mathworks.com/help/matlab/ref/reshape.html) function. A slightly adapted citation explains the behavior:
-> When you use `-1` to automatically calculate a dimension size, the dimensions that you *do* explicitly specify must divide evenly into the number of elements in the input array.
-
-### 7.2 High-Performance Method (2D only)
-
-The previously shown method (`ToArrayXD`) performs a copy operation. If you would like to avoid this, you might find the `Span2D` type interesting which is part of the CommunityToolkit.HighPerformance. To make use of it, run `dotnet add package CommunityToolkit.HighPerformance` and then use it like this:
-
-```cs
-using CommunityToolkit.HighPerformance;
-
-data2D = dataset
-    .Read<int>()
-    .AsSpan()
-    .AsSpan2D(height: 20, width: 10);
-```
-
-No data is being copied and you can work with the array similar to a normal `Span<T>`, i.e. you may want to [slice](https://learn.microsoft.com/en-us/windows/communitytoolkit/high-performance/span2d) through it.
+TBD
 
 # 8 Concurrency
 

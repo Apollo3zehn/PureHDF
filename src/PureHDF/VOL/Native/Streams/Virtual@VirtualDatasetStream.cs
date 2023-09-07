@@ -76,6 +76,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                     minimumMaxCount = virtualResult.MaxCount;
                     break;
                 }
+                
                 // continue searching for the minimum distance to the next selection
                 else if (virtualResult.MaxCount != 0)
                 {

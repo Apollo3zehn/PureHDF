@@ -27,7 +27,7 @@ namespace PureHDF.Tests.Selections
             var selection = new NoneSelection();
 
             // Act
-            var actual = SelectionUtils
+            var actual = SelectionHelper
                 .Walk(rank: 3, dims, chunkDims, selection)
                 .ToArray();
 
@@ -81,7 +81,7 @@ namespace PureHDF.Tests.Selections
             };
 
             // Act
-            var actual = SelectionUtils
+            var actual = SelectionHelper
                 .Walk(rank: 3, dims, chunkDims, selection)
                 .ToArray();
 
@@ -142,7 +142,7 @@ namespace PureHDF.Tests.Selections
             };
 
             // Act
-            var actual = SelectionUtils
+            var actual = SelectionHelper
                 .Walk(rank: 3, dims, chunkDims, selection)
                 .ToArray();
 
@@ -373,7 +373,7 @@ namespace PureHDF.Tests.Selections
             };
 
             // Act
-            var actual = SelectionUtils
+            var actual = SelectionHelper
                 .Walk(rank: 3, dims, chunkDims, selection)
                 .ToArray();
 
@@ -514,7 +514,7 @@ namespace PureHDF.Tests.Selections
             };
 
             // Act
-            var actual = SelectionUtils
+            var actual = SelectionHelper
                 .Walk(rank: 3, dims, chunkDims, selection)
                 .ToArray();
 
@@ -541,7 +541,7 @@ namespace PureHDF.Tests.Selections
             var selection = new HyperslabSelection(1, 4, 3, 3);
 
             // Act
-            void action() => _ = SelectionUtils.Walk(rank: 3, dims, chunkDims, selection).ToArray();
+            void action() => _ = SelectionHelper.Walk(rank: 3, dims, chunkDims, selection).ToArray();
 
             // Assert
             Assert.Throws<RankException>(action);
@@ -576,7 +576,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            void action() => SelectionUtils
+            void action() => SelectionHelper
                 .DecodeAsync(default(SyncReader), sourceRank: 2, targetRank: 2, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
@@ -625,7 +625,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            await SelectionUtils.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
+            await SelectionHelper.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert
         }
@@ -668,7 +668,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            await SelectionUtils.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
+            await SelectionHelper.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert        
         }
@@ -781,7 +781,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            SelectionUtils
+            SelectionHelper
                 .DecodeAsync(default(SyncReader), sourceRank: 2, targetRank: 2, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
@@ -903,7 +903,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            SelectionUtils
+            SelectionHelper
                 .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
@@ -1037,7 +1037,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            SelectionUtils
+            SelectionHelper
                 .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfo)
                 .GetAwaiter()
                 .GetResult();
@@ -1139,7 +1139,7 @@ namespace PureHDF.Tests.Selections
                     SourceTypeSize: 4
                 );
 
-                SelectionUtils
+                SelectionHelper
                     .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfoInterMediate)
                     .GetAwaiter()
                     .GetResult();
@@ -1164,7 +1164,7 @@ namespace PureHDF.Tests.Selections
                 );
 
                 // Act
-                SelectionUtils
+                SelectionHelper
                     .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 2, decodeInfo)
                     .GetAwaiter()
                     .GetResult();

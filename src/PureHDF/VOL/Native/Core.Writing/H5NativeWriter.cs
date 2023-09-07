@@ -462,7 +462,7 @@ partial class H5NativeWriter
         );
 
         /* encode data */
-        SelectionUtils.Encode(
+        SelectionHelper.Encode(
             memoryDims.Length,
             datasetChunkDims.Length,
             encodeInfo);

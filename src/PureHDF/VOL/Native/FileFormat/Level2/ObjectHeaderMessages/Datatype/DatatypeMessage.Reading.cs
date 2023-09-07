@@ -135,15 +135,15 @@ internal partial record class DatatypeMessage(
         };
     }
 
-    public DecodeDelegate<T> GetDecodeInfo<T>(
+    public DecodeDelegate<TElement> GetDecodeInfo<TElement>(
         NativeReadContext context) 
     {
-        var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(typeof(T));
+        var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(typeof(TElement));
         var fileIsRef = IsReferenceOrContainsReferences();
 
         var memoryTypeSize = memoryIsRef
             ? default
-            : Unsafe.SizeOf<T>();
+            : Unsafe.SizeOf<TElement>();
 
         var fileTypeSize = Size;
 
@@ -151,10 +151,10 @@ internal partial record class DatatypeMessage(
         // TODO cache
         return (memoryIsRef, fileIsRef) switch
         {
-            (true, _) => GetDecodeInfoForReferenceMemory<T>(context),
+            (true, _) => GetDecodeInfoForReferenceMemory<TElement>(context),
             (false, true) => throw new Exception("Unable to decode a reference type as value type."),
-            (false, false) when memoryTypeSize == fileTypeSize => (DecodeDelegate<T>)_methodInfoGetDecodeInfoForUnmanagedMemory
-                .MakeGenericMethod(typeof(T))
+            (false, false) when memoryTypeSize == fileTypeSize => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
+                .MakeGenericMethod(typeof(TElement))
                 .Invoke(default, new object[] { })!,
             _ => throw new Exception("Unable to decode values types of different type size.")
         };

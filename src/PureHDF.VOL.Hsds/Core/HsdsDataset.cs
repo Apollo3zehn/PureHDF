@@ -172,15 +172,12 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         if (Space.Type == H5DataspaceType.Null)
             throw new Exception("Datasets with null dataspace cannot be read.");
 
-        /* file element count */
-        var fileElementCount = Space.GetTotalElementCount();
-
-        /* file dimensions */
-        var fileDims = Space.GetDims();
-
         /* memory selection + dims validation */ 
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
+
+        /* file dimensions */
+        var fileDims = Space.GetDims();
 
         /* file selection */
         if (fileSelection is null || fileSelection is AllSelection)

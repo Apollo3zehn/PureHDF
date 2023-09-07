@@ -35,7 +35,7 @@ internal readonly struct RelativeStep
     public ulong Length { get; init; }
 }
 
-internal static class SelectionUtils
+internal static class SelectionHelper
 {
     public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
     {
@@ -244,6 +244,7 @@ internal static class SelectionUtils
                 lastSourceChunk = sourceStep.Chunk;
             }
 
+            var virtualDatasetStream = sourceStream as VirtualDatasetStream<TResult>;
             var currentOffset = (int)sourceStep.Offset;
             var currentLength = (int)sourceStep.Length;
 
@@ -272,24 +273,26 @@ internal static class SelectionUtils
 
                 /* copy */
 
-                // // specialization; virtual dataset (VirtualDatasetStream)
-                // if (sourceStream is VirtualDatasetStream<TResult> virtualDatasetStream)
-                // {
-                //     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
-
-                //     await virtualDatasetStream
-                //         .ReadVirtualAsync(currentTarget[..targetLength])
-                //         .ConfigureAwait(false);
-                // }
-
                 var length = Math.Min(currentLength, currentTarget.Length);
                 var targetLength = length;
 
-                sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
+                if (virtualDatasetStream is null) 
+                {
+                    sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
-                decodeInfo.Decoder(
-                    sourceStream,
-                    currentTarget[..targetLength]);
+                    decodeInfo.Decoder(
+                        sourceStream,
+                        currentTarget[..targetLength]);
+                }
+
+                else
+                {
+                    virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
+
+                    await virtualDatasetStream
+                        .ReadVirtualAsync(currentTarget[..targetLength])
+                        .ConfigureAwait(false);
+                }
 
                 currentOffset += length;
                 currentLength -= length;
