@@ -17,7 +17,6 @@ public struct TestStructStringAndArray
     [H5Name("ShortValue")]
     public short ShortValueWithCustomName;
 
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
     public float[] FloatArray;
 
     public TestStructL2 L2Struct;

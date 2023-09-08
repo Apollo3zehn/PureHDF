@@ -37,9 +37,11 @@ public class MyFilter : IH5Filter
 }
 ```
 
-> Note: For `reading`, the filter will be selected automatically by the library as long as it is registered with the correct ID.
+> [!NOTE]
+> For `reading`, the filter will be selected automatically by the library as long as it is registered with the correct ID.
 
-> Note: For `writing`, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the `H5WriteOptions.Filters` list). See [writing](writing.md) for more details.
+> [!NOTE]
+> For `writing`, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the `H5WriteOptions.Filters` list). See [writing](writing.md) for more details.
 
 ## Supported Filters Overview
 

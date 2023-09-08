@@ -19,7 +19,6 @@ public class TestObjectStringAndArray
     [H5Name("ShortValue")]
     public short ShortValueWithCustomName { get; set; }
 
-    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 3)]
     public float[] FloatArray = default!;
 
     public TestStructL2 L2Struct { get; set; }

@@ -1,0 +1,26 @@
+- name: Reading
+  href: index.md
+
+- name: Simple Data
+  href: simple.md
+
+- name: Complex Data
+  href: complex.md
+
+- name: External Files
+  href: external_files.md
+
+- name: Slicing
+  href: slicing.md
+
+- name: Concurrency
+  href: concurrency.md
+
+- name: Intellisense
+  href: intellisense.md
+
+- name: Amazon S3
+  href: amazon_s3.md
+
+- name: HSDS
+  href: hsds.md
