@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.VOL.Native;
 
 internal class SymbolicLink
 {
@@ -41,7 +41,7 @@ internal class SymbolicLink
 
     #region Methods
 
-    public NativeNamedReference GetTarget(H5LinkAccess linkAccess, bool useAsync)
+    public NativeNamedReference GetTarget(H5LinkAccess linkAccess)
     {
         // this file
         if (string.IsNullOrWhiteSpace(_objectPath))
@@ -70,7 +70,7 @@ internal class SymbolicLink
                     ?? throw new Exception($"Could not find file {_value}.");
 
                 var externalFile = NativeCache
-                    .GetNativeFile(_parent.Context.Driver, absoluteFilePath, useAsync: useAsync);
+                    .GetNativeFile(_parent.Context.Driver, absoluteFilePath);
 
 #if NETSTANDARD2_0
                 return externalFile.InternalGet(_objectPath!, linkAccess);

@@ -76,7 +76,7 @@ public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixtur
         // Act
         var actual = _connector
             .Attribute("attr1")
-            .Read<int>();
+            .Read<int[]>();
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -115,7 +115,7 @@ public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixtur
         // Act
         var actual = _connector
             .Dataset("/g1/g1.1/dset1.1.1")
-            .Read<int>();
+            .Read<int[]>();
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -138,7 +138,7 @@ public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixtur
         // Act
         var actual = _connector
             .Dataset("/g1/g1.1/dset1.1.1")
-            .Read<int>(fileSelection);
+            .Read<int[]>(fileSelection);
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -160,7 +160,7 @@ public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixtur
         // Act
         var actual = _connector
             .Dataset("/g1/g1.1/dset1.1.1")
-            .Read<int>(fileSelection);
+            .Read<int[]>(fileSelection);
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));

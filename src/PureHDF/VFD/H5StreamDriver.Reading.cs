@@ -60,25 +60,6 @@ internal partial class H5StreamDriver : H5DriverBase
         }
     }
 
-    public override async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        if (_stream is IDatasetStream datasetStream)
-        {
-            await datasetStream.ReadDatasetAsync(buffer, cancellationToken);
-        }
-
-        else
-        {
-            var remainingBuffer = buffer;
-
-            while (remainingBuffer.Length > 0)
-            {
-                var count = await _stream.ReadAsync(buffer, cancellationToken);
-                remainingBuffer = remainingBuffer[count..];
-            }
-        }
-    }
-
     public override void Read(Span<byte> buffer)
     {
         _stream.ReadExactly(buffer);

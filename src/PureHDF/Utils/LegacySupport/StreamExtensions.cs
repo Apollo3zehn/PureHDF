@@ -19,33 +19,6 @@ internal static partial class StreamExtensions
         return length;
     }
 
-    public static ValueTask<int> ReadAsync(this Stream stream, Memory<byte> buffer, CancellationToken cancellationToken = default)
-    {
-        if (MemoryMarshal.TryGetArray(buffer, out ArraySegment<byte> array))
-        {
-            return new ValueTask<int>(stream.ReadAsync(array.Array, array.Offset, array.Count, cancellationToken));
-        }
-        else
-        {
-            byte[] sharedBuffer = ArrayPool<byte>.Shared.Rent(buffer.Length);
-            return FinishReadAsync(stream.ReadAsync(sharedBuffer, 0, buffer.Length, cancellationToken), sharedBuffer, buffer);
-
-            static async ValueTask<int> FinishReadAsync(Task<int> readTask, byte[] localBuffer, Memory<byte> localDestination)
-            {
-                try
-                {
-                    int result = await readTask.ConfigureAwait(false);
-                    new Span<byte>(localBuffer, 0, result).CopyTo(localDestination.Span);
-                    return result;
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(localBuffer);
-                }
-            }
-        }
-    }
-
     public static void Write(this Stream stream, Span<byte> buffer)
     {
         stream.Write(buffer.ToArray());

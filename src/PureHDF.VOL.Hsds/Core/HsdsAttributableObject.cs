@@ -78,7 +78,7 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
             : Connector.Client.Attribute
                 .GetAttribute(Connector.DomainName, collection, Id, name);
 
-        return new HsdsAttribute(attribute, Connector.Client);
+        return new HsdsAttribute(attribute);
     }
 
     private async Task<IEnumerable<IH5Attribute>> GetAttributesAsync(bool useAsync, CancellationToken cancellationToken)
@@ -101,6 +101,6 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
                 .GetAttributes(collection, Id, Connector.DomainName);
 
         return getAttributesResponse.Attributes
-            .Select(attribute => new HsdsAttribute(attribute, Connector.Client));
+            .Select(attribute => new HsdsAttribute(attribute));
     }
 }

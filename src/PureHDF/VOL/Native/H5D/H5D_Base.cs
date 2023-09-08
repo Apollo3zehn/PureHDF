@@ -1,4 +1,4 @@
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal abstract class H5D_Base : IDisposable
 {
@@ -29,8 +29,7 @@ internal abstract class H5D_Base : IDisposable
 
     public abstract ulong[] GetChunkDims();
 
-    public abstract Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices) 
-        where TReader : IReader;
+    public abstract IH5ReadStream GetReadStream(ulong[] chunkIndices);
 
     public abstract IH5WriteStream GetWriteStream(ulong[] chunkIndices);
 

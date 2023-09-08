@@ -5,42 +5,42 @@ namespace PureHDF.Tests.Reading
     public class ChunkCacheTests
     {
         [Fact]
-        public async Task CanCacheChunk()
+        public void CanCacheChunk()
         {
             // Arrange
             var cache = new SimpleChunkCache();
 
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => Task.FromResult(new byte[1].AsMemory()));
+                cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[1].AsMemory());
             }
 
             // Act
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => throw new Exception());
+                cache.GetChunk(new ulong[] { (ulong)index }, () => throw new Exception());
             }
 
-            Task action() => cache.GetChunkAsync(new ulong[] { 1000 }, () => throw new Exception());
+            void action() => cache.GetChunk(new ulong[] { 1000 }, () => throw new Exception());
 
             // Assert
-            await Assert.ThrowsAsync<Exception>(action);
+            Assert.Throws<Exception>(action);
         }
 
         [Fact]
-        public async Task CanPreemptChunk_Slots()
+        public void CanPreemptChunk_Slots()
         {
             // Arrange
             var cache = new SimpleChunkCache();
 
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
-                await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => Task.FromResult(new byte[1].AsMemory()));
+                cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[1].AsMemory());
             }
 
             // Act
             var before = cache.ConsumedSlots;
-            await cache.GetChunkAsync(new ulong[] { 1000 }, () => Task.FromResult(new byte[1].AsMemory()));
+            cache.GetChunk(new ulong[] { 1000 }, () => new byte[1].AsMemory());
             var after = cache.ConsumedSlots;
 
             // Assert
@@ -49,16 +49,16 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public async Task CanPreemptChunk_Size()
+        public void CanPreemptChunk_Size()
         {
             // Arrange
             var cache = new SimpleChunkCache();
-            await cache.GetChunkAsync(new ulong[] { 0 }, () => Task.FromResult(new byte[1024 * 1024].AsMemory()));
+            cache.GetChunk(new ulong[] { 0 }, () => new byte[1024 * 1024].AsMemory());
 
             // Act
             var before_slots = cache.ConsumedSlots;
             var before_bytes = cache.ConsumedBytes;
-            await cache.GetChunkAsync(new ulong[] { 1 }, () => Task.FromResult(new byte[1].AsMemory()));
+            cache.GetChunk(new ulong[] { 1 }, () => new byte[1].AsMemory());
             var after_slots = cache.ConsumedSlots;
             var after_bytes = cache.ConsumedBytes;
 
@@ -70,7 +70,7 @@ namespace PureHDF.Tests.Reading
         }
 
         [Fact]
-        public async Task CanPreemptCorrectChunk()
+        public void CanPreemptCorrectChunk()
         {
             // Arrange
             var cache = new SimpleChunkCache();
@@ -78,24 +78,24 @@ namespace PureHDF.Tests.Reading
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
                 if (index == 25)
-                    await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => Task.FromResult(new byte[3].AsMemory()));
+                    cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[3].AsMemory());
 
                 else
-                    await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => Task.FromResult(new byte[2].AsMemory()));
+                    cache.GetChunk(new ulong[] { (ulong)index }, () => new byte[2].AsMemory());
             }
 
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            Thread.Sleep(TimeSpan.FromMilliseconds(100));
 
             for (int index = 0; index < cache.ChunkSlotCount; index++)
             {
                 if (index != 25)
-                    await cache.GetChunkAsync(new ulong[] { (ulong)index }, () => throw new Exception());
+                    cache.GetChunk(new ulong[] { (ulong)index }, () => throw new Exception());
             }
 
             var expected = (520UL * 2 + 1 * 3) - 3 + 2;
 
             // Act
-            await cache.GetChunkAsync(new ulong[] { 1000 }, () => Task.FromResult(new byte[2].AsMemory()));
+            cache.GetChunk(new ulong[] { 1000 }, () => new byte[2].AsMemory());
             var actual = cache.ConsumedBytes;
 
             // Assert

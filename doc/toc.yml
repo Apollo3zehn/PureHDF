@@ -1,5 +1,14 @@
-- name: Introduction
-  href: articles/
+- name: Welcome
+  href: index.md
+
+- name: Reading
+  href: reading/
+
+- name: Writing
+  href: writing.md
+
+- name: Filters
+  href: filters.md
 
 - name: PureHDF API
   href: api/

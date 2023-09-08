@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -10,8 +10,6 @@ namespace PureHDF.VOL.Native;
 // TODO: use this for generic structs
 // - https://github.com/SergeyTeplyakov/ObjectLayoutInspector?
 // - https://stackoverflow.com/a/56512720
-
-internal delegate void ElementEncodeDelegate(object source, IH5WriteStream target);
 
 internal partial record class DatatypeMessage : Message
 {
@@ -124,7 +122,8 @@ internal partial record class DatatypeMessage : Message
                     .MakeGenericType(type.GenericTypeArguments)),
 
             /* array */
-            Type when type.IsArray && type.GetElementType() is not null
+            Type when DataUtils.IsArray(type)
+                /* there is no multi-dim variable-length sequence in HDF5 */
                 => GetTypeInfoForVariableLengthSequence(context, type.GetElementType()!),
 
             /* generic IEnumerable */
@@ -307,7 +306,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.Compound
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
@@ -343,25 +342,21 @@ internal partial record class DatatypeMessage : Message
             ? new ElementEncodeDelegate[fieldInfos.Length]
             : Array.Empty<ElementEncodeDelegate>();
 
-        var fieldNameMapper = context.WriteOptions.FieldNameMapper;
-        var fieldStringLengthMapper = context.WriteOptions.FieldStringLengthMapper;
-
         // properties
         var includeProperties = isValueType
             ? context.WriteOptions.IncludeStructProperties
             : context.WriteOptions.IncludeClassProperties;
 
-        var propertyInfos = type
-            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(propertyInfo => propertyInfo.CanRead)
-            .ToArray();
+        var propertyInfos = includeProperties
+            ? type
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(propertyInfo => propertyInfo.CanRead)
+                .ToArray()
+            : Array.Empty<PropertyInfo>();
 
         var propertyEncodes = includeProperties
             ? new ElementEncodeDelegate[propertyInfos.Length]
             : Array.Empty<ElementEncodeDelegate>();
-
-        var propertyNameMapper = context.WriteOptions.PropertyNameMapper;
-        var propertyStringLengthMapper = context.WriteOptions.PropertyStringLengthMapper;
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
@@ -377,6 +372,9 @@ internal partial record class DatatypeMessage : Message
 
         if (includeFields)
         {
+            var fieldNameMapper = context.WriteOptions.FieldNameMapper;
+            var fieldStringLengthMapper = context.WriteOptions.FieldStringLengthMapper;
+
             for (int i = 0; i < fieldInfos.Length; i++)
             {
                 var fieldInfo = fieldInfos[i];
@@ -402,6 +400,9 @@ internal partial record class DatatypeMessage : Message
 
         if (includeProperties)
         {
+            var propertyNameMapper = context.WriteOptions.PropertyNameMapper;
+            var propertyStringLengthMapper = context.WriteOptions.PropertyStringLengthMapper;
+
             for (int i = 0; i < propertyInfos.Length; i++)
             {
                 var propertyInfo = propertyInfos[i];
@@ -670,7 +671,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
@@ -709,7 +710,7 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.FixedPoint
         };
 
-        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoElement.MakeGenericMethod(type);
+        var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)

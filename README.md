@@ -13,7 +13,7 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 
 The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html).
 
-## Please read the [docs](https://apollo3zehn.github.io/PureHDF/) for samples and API documentation.
+> Please read the [docs](https://apollo3zehn.github.io/PureHDF/) for samples and API documentation.
 
 # Quick Start
 
@@ -35,7 +35,7 @@ var dataset = group.Dataset("my-dataset");
 var datasetData = dataset.Read<double>();
 ```
 
-See the [docs](https://apollo3zehn.github.io/PureHDF/articles/reading.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
+See the [docs](https://apollo3zehn.github.io/PureHDF/reading.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
 
 ## Writing
 
@@ -102,7 +102,7 @@ The last step is to write the defined file to the drive:
 file.Write("path/to/file.h5");
 ```
 
-See the [docs](https://apollo3zehn.github.io/PureHDF/articles/writing.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
+See the [docs](https://apollo3zehn.github.io/PureHDF/writing.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
 
 # Development
 

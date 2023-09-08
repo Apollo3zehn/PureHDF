@@ -453,7 +453,7 @@ internal static class ScaleOffsetGeneric
     {
         var i = 0;
         var copySize = sizeof(uint);
-        var fillValue = new byte[Marshal.SizeOf<T>()];
+        var fillValue = new byte[Unsafe.SizeOf<T>()];
         var slicedFillValue = fillValue.AsSpan();
 
         if (BitConverter.IsLittleEndian)

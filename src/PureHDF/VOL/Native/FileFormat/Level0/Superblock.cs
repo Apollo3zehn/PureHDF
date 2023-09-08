@@ -61,6 +61,11 @@ internal abstract partial record class Superblock(
         };
     }
 
+    public ulong ReadOffset(Span<byte> buffer)
+    {
+        return ReadUtils.ReadUlong(buffer, OffsetsSize);
+    }
+
     public ulong ReadOffset(H5DriverBase driver)
     {
         return ReadUtils.ReadUlong(driver, OffsetsSize);

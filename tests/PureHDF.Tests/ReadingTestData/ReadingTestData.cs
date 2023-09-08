@@ -83,13 +83,19 @@
 
         static ReadingTestData()
         {
-            EnumData = new TestEnum[] { TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
-                                                 TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 };
+            EnumData = new TestEnum[] { 
+                TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
+                TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
+            };
 
-            BitfieldData = new TestBitfield[] { TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
-                                                         TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 };
+            BitfieldData = new TestBitfield[] { 
+                TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+                TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
+            };
 
             ArrayDataValue = new int[2, 3, 4, 5];
+
+            var counter = 0;
 
             for (int i = 0; i < 2; i++)
             {
@@ -99,7 +105,8 @@
                     {
                         for (int l = 0; l < 5; l++)
                         {
-                            ArrayDataValue[i, j, k, l] = i * j * j * k * l;
+                            ArrayDataValue[i, j, k, l] = counter;
+                            counter++;
                         }
                     }
                 }
@@ -107,7 +114,7 @@
 
             ArrayDataVariableLengthString = new string[2, 3, 4, 5];
 
-            var counter = 0;
+            counter = 0;
 
             for (int i = 0; i < 2; i++)
             {

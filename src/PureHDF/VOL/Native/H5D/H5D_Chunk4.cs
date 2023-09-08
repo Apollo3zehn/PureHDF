@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal abstract class H5D_Chunk4 : H5D_Chunk
 {
