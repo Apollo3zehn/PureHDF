@@ -30,7 +30,7 @@ public class AmazonS3Tests
 
         var dataset = file.Dataset("speed100m");
         var fileSelection = new HyperslabSelection(rank: 2, starts: new ulong[] { 0, 0 }, blocks: new ulong[] { 10, 1 });
-        var actual = dataset.Read<double>(fileSelection);
+        var actual = dataset.Read<double[]>(fileSelection);
 
         // Assert
         Assert.Collection(children,
