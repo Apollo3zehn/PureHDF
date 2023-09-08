@@ -2,7 +2,6 @@
 using System.Buffers.Binary;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -501,7 +500,6 @@ internal partial record class DatatypeMessage(
             previousOffset = compoundProp.MemberByteOffset;
         }
 
-#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         // decode
         object? decode(IH5ReadStream source)
         {
@@ -582,7 +580,6 @@ internal partial record class DatatypeMessage(
         ElementDecodeDelegate elementDecode,
         ArrayPropertyDescription property)
     {
-#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
@@ -610,7 +607,6 @@ internal partial record class DatatypeMessage(
         ArrayPropertyDescription property
     )
     {
-#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
@@ -632,7 +628,6 @@ internal partial record class DatatypeMessage(
     
     private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
     {
-#warning Cache only static decode methods! Other methods may depend on HDF5 type specifics
         var dims = new int[] { (int)Size };
 
         object? decode(IH5ReadStream source)
@@ -681,7 +676,7 @@ internal partial record class DatatypeMessage(
             buffer = buffer.Slice(lengthSize);
 
             /* decode global heap IDs and get associated data */
-            var array = Array.CreateInstance((Type?)elementType, sequenceLength);
+            var array = Array.CreateInstance(elementType, sequenceLength);
             var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
 
             if (globalHeapId.Equals(default))
@@ -848,7 +843,7 @@ internal partial record class DatatypeMessage(
 
             for (int i = 0; i < target.Length; i++)
             {
-                targetSpan[i] = (T)elementDecode(source);
+                targetSpan[i] = (T)elementDecode(source)!;
             }
         };
 
