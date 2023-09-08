@@ -19,13 +19,6 @@ internal partial class OffsetStream : IH5ReadStream
         _driver.ReadDataset(buffer);
     }
 
-#if NET6_0_OR_GREATER
-    public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        return _driver.ReadDatasetAsync(buffer, cancellationToken);
-    }
-#endif
-
     public void Seek(long offset, SeekOrigin origin)
     {
         switch (origin)

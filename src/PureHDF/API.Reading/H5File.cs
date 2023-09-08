@@ -28,14 +28,12 @@ public partial class H5File
     /// <param name="mode">A <see cref="FileMode"/> value that specifies whether a file is created if one does not exist, and determines whether the contents of existing files are retained or overwritten.</param>
     /// <param name="fileAccess">A <see cref="FileAccess"/> value that specifies the operations that can be performed on the file.</param>
     /// <param name="fileShare">A <see cref="FileShare"/> value specifying the type of access other threads have to the file.</param>
-    /// <param name="useAsync">A boolean which indicates if the file be opened with the <see cref="FileOptions.Asynchronous"/> flag.</param>
     /// <param name="options">Options to control decoding behavior.</param>
     public static NativeFile Open(
         string filePath, 
         FileMode mode, 
         FileAccess fileAccess, 
         FileShare fileShare, 
-        bool useAsync = false,
         H5ReadOptions? options = default)
     {
         return NativeFile.InternalOpen(
@@ -43,7 +41,6 @@ public partial class H5File
             mode, 
             fileAccess, 
             fileShare, 
-            useAsync: useAsync,
             options: options);
     }
 

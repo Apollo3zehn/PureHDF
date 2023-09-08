@@ -1162,12 +1162,9 @@ public class FilterTests
         var dataset = (NativeDataset)parent.Dataset($"shuffle_{bytesOfType}");
 
         var shuffled = dataset
-            .ReadCorePreAsync<T[], T, SyncReader>(
-                reader: default,
+            .ReadCorePre<T[], T>(
                 buffer: default,
-                skipShuffle: true)
-            .GetAwaiter()
-            .GetResult()!;
+                skipShuffle: true)!;
 
         return shuffled;
     }

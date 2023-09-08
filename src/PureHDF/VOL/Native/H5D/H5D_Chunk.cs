@@ -174,15 +174,12 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override async Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
     {
-        var buffer = await _readingChunkCache
-
-            .GetChunkAsync(
+        var buffer = _readingChunkCache
+            .GetChunk(
                 chunkIndices, 
-                chunkReader: () => ReadChunkAsync(reader, chunkIndices))
-                
-            .ConfigureAwait(false);
+                chunkReader: () => ReadChunk(chunkIndices));
 
         var stream = new SystemMemoryStream(buffer);
 
@@ -221,10 +218,8 @@ internal abstract class H5D_Chunk : H5D_Base
         FlushChunkCache();
     }
 
-    private async Task<Memory<byte>> ReadChunkAsync<TReader>(
-        TReader reader, 
-        ulong[] chunkIndices) 
-        where TReader : IReader
+    private Memory<byte> ReadChunk(
+        ulong[] chunkIndices)
     {
         Memory<byte> chunk;
 
@@ -255,9 +250,8 @@ internal abstract class H5D_Chunk : H5D_Base
                 {
                     chunk = new byte[ChunkByteSize];
 
-                    await reader
-                        .ReadDatasetAsync(ReadContext.Driver, chunk, (long)chunkInfo.Address)
-                        .ConfigureAwait(false);
+                    ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadContext.Driver.ReadDataset(chunk);
                 }
                 
                 else
@@ -266,9 +260,8 @@ internal abstract class H5D_Chunk : H5D_Base
                     using var filterBufferOwner = MemoryPool<byte>.Shared.Rent(rawChunkSize);
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
-                    await reader
-                        .ReadDatasetAsync(ReadContext.Driver, buffer, (long)chunkInfo.Address)
-                        .ConfigureAwait(false);
+                    ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadContext.Driver.ReadDataset(buffer);
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,

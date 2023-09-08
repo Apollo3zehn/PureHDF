@@ -7,7 +7,7 @@ internal record DecodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong[], Task<IH5ReadStream>> GetSourceStreamAsync,
+    Func<ulong[], IH5ReadStream> GetSourceStream,
     Func<ulong[], Memory<T>> GetTargetBuffer,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize
@@ -188,11 +188,10 @@ internal static class SelectionHelper
         }
     }
 
-    public static Task DecodeAsync<TResult, TReader>(
-        TReader reader,
+    public static void Decode<TResult>(
         int sourceRank,
         int targetRank,
-        DecodeInfo<TResult> decodeInfo) where TReader : IReader
+        DecodeInfo<TResult> decodeInfo)
     {
         /* validate selections */
         if (decodeInfo.SourceSelection.TotalElementCount != decodeInfo.TargetSelection.TotalElementCount)
@@ -213,14 +212,13 @@ internal static class SelectionHelper
             .GetEnumerator();
 
         /* select method */
-        return DecodeStreamAsync(reader, sourceWalker, targetWalker, decodeInfo);
+        DecodeStream(sourceWalker, targetWalker, decodeInfo);
     }
 
-    private async static Task DecodeStreamAsync<TResult, TReader>(
-        TReader reader,
+    private static void DecodeStream<TResult>(
         IEnumerator<RelativeStep> sourceWalker,
         IEnumerator<RelativeStep> targetWalker,
-        DecodeInfo<TResult> decodeInfo) where TReader : IReader
+        DecodeInfo<TResult> decodeInfo)
     {
         /* initialize source walker */
         var sourceStream = default(IH5ReadStream);
@@ -240,7 +238,7 @@ internal static class SelectionHelper
             if (sourceStream is null /* if stream not assigned yet */ ||
                 !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
             {
-                sourceStream = await decodeInfo.GetSourceStreamAsync(sourceStep.Chunk).ConfigureAwait(false);
+                sourceStream = decodeInfo.GetSourceStream(sourceStep.Chunk);
                 lastSourceChunk = sourceStep.Chunk;
             }
 
@@ -288,10 +286,9 @@ internal static class SelectionHelper
                 else
                 {
                     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
-
-                    await virtualDatasetStream
-                        .ReadVirtualAsync(currentTarget[..targetLength])
-                        .ConfigureAwait(false);
+                    
+                    virtualDatasetStream.ReadVirtual(
+                        currentTarget[..targetLength]);
                 }
 
                 currentOffset += length;

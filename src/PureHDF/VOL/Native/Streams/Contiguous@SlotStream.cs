@@ -42,26 +42,6 @@ internal class SlotStream : IH5ReadStream
         _position += length;
     }
 
-#if NET6_0_OR_GREATER
-    public async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        var length = (int)Math.Min(Length - Position, buffer.Length);
-
-        _stream = EnsureStream();
-
-        var actualLength = await _stream
-            .ReadAsync(buffer[..length], cancellationToken)
-            .ConfigureAwait(false);
-
-        // If file is shorter than slot: fill remaining buffer with zeros.
-        buffer
-            .Span[actualLength..length]
-            .Clear();
-
-        _position += length;
-    }
-#endif
-
     public void Seek(long offset, SeekOrigin origin)
     {
         switch (origin)
@@ -82,7 +62,6 @@ internal class SlotStream : IH5ReadStream
         }
     }
 
-    // TODO File should be opened asynchronously if this file is also opened asynchronously.
     private Stream EnsureStream()
     {
         if (_stream is null)

@@ -2,7 +2,7 @@
 
 namespace PureHDF;
 
-internal delegate Task ReadVirtualDelegate<TResult>(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
+internal delegate void ReadVirtualDelegate<TResult>(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
 
 internal class VirtualDatasetStream<TResult> : IH5ReadStream
 {
@@ -37,9 +37,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     public void ReadDataset(Memory<byte> buffer) => throw new NotImplementedException();
 
-    public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
-
-    public async ValueTask ReadVirtualAsync(Memory<TResult> buffer)
+    public void ReadVirtual(Memory<TResult> buffer)
     {
         // Overall algorithm:
         // - We get a linear index.
@@ -113,7 +111,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                         sourceDimensions, 
                         foundEntry.SourceSelection));
 
-                await _readVirtual(
+                _readVirtual(
                     dataset: sourceDatasetInfo.Dataset, 
                     destination: slicedBuffer, 
                     fileSelection: selection, 
@@ -171,7 +169,6 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
             if (filePath is not null)
             {
-                // TODO: File should be opened asynchronously if this file is also opened asynchronously.
                 var file = filePath == "."
                     // this file
                     ? _file

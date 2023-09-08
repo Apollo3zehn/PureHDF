@@ -26,27 +26,6 @@ public partial class DatasetTests
         Assert.True(actual.SequenceEqual(expected));
     }
 
-#if NET6_0_OR_GREATER
-    [Fact]
-    public async Task CanRead_Virtual_async()
-    {
-        // Arrange
-        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
-            => TestUtils.AddVirtualDataset(fileId, "virtual"));
-
-        var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
-
-        // Act
-        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
-        var dataset = root.Dataset("vds");
-        var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
-        var actual = await dataset.ReadAsync<int[]>(selection);
-
-        // Assert
-        Assert.True(actual.SequenceEqual(expected));
-    }
-#endif
-
     [Fact]
     public void CanRead_Virtual_source_point()
     {

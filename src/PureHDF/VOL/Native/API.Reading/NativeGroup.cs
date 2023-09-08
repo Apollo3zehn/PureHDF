@@ -32,7 +32,6 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     #endregion
 
     #region Methods
-    // TODO: properly implement async
 
     /// <inheritdoc />
     public bool LinkExists(string path)
@@ -43,7 +42,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     /// <inheritdoc />
     public Task<bool> LinkExistsAsync(string path, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(LinkExists(path));
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <summary>
@@ -57,18 +56,6 @@ public class NativeGroup : NativeAttributableObject, IH5Group
         return InternalLinkExists(path, linkAccess);
     }
 
-    /// <summary>
-    /// Checks if the link with the specified <paramref name="path"/> exist.
-    /// </summary>
-    /// <param name="path">The path of the link.</param>
-    /// <param name="linkAccess">The link access properties.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>A boolean which indicates if the link exists.</returns>
-    public Task<bool> LinkExistsAsync(string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(LinkExists(path, linkAccess));
-    }
-
     /// <inheritdoc />
     public IH5Object Get(string path)
     {
@@ -78,7 +65,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     /// <inheritdoc />
     public Task<IH5Object> GetAsync(string path, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(Get(path));
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <summary>
@@ -91,18 +78,6 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     {
         return InternalGet(path, linkAccess)
             .Dereference();
-    }
-
-    /// <summary>
-    /// Gets the object that is at the given <paramref name="path"/>.
-    /// </summary>
-    /// <param name="path">The path of the object.</param>
-    /// <param name="linkAccess">The link access properties.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>The requested object.</returns>
-    public Task<IH5Object> GetAsync(string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(Get(path, linkAccess));
     }
 
     /// <summary>
@@ -122,17 +97,6 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     /// Gets the object that is at the given <paramref name="reference"/>.
     /// </summary>
     /// <param name="reference">The reference of the object.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>The requested object.</returns>
-    public Task<IH5Object> GetAsync(NativeObjectReference1 reference, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(Get(reference));
-    }
-
-    /// <summary>
-    /// Gets the object that is at the given <paramref name="reference"/>.
-    /// </summary>
-    /// <param name="reference">The reference of the object.</param>
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
     public IH5Object Get(NativeObjectReference1 reference, H5LinkAccess linkAccess)
@@ -144,18 +108,6 @@ public class NativeGroup : NativeAttributableObject, IH5Group
             .Dereference();
     }
 
-    /// <summary>
-    /// Gets the object that is at the given <paramref name="reference"/>.
-    /// </summary>
-    /// <param name="reference">The reference of the object.</param>
-    /// <param name="linkAccess">The link access properties.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>The requested object.</returns>
-    public Task<IH5Object> GetAsync(NativeObjectReference1 reference, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(Get(reference, linkAccess));
-    }
-
     /// <inheritdoc />
     public IEnumerable<IH5Object> Children()
     {
@@ -165,7 +117,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     /// <inheritdoc />
     public Task<IEnumerable<IH5Object>> ChildrenAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(Children());
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <summary>
@@ -177,17 +129,6 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     {
         return EnumerateReferences(linkAccess)
             .Select(reference => reference.Dereference());
-    }
-
-    /// <summary>
-    /// Gets an enumerable of the available children using the optionally specified <paramref name="linkAccess"/>.
-    /// </summary>
-    /// <param name="linkAccess">The link access properties.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>An enumerable of the available children.</returns>
-    public Task<IEnumerable<IH5Object>> ChildrenAsync(H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(Children(linkAccess));
     }
 
     private bool InternalLinkExists(string path, H5LinkAccess linkAccess)
@@ -591,13 +532,13 @@ public class NativeGroup : NativeAttributableObject, IH5Group
         {
             HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, Context.File),
             SoftLinkInfo soft => new SymbolicLink(linkMessage, this, Context.File)
-                .GetTarget(linkAccess, useAsync: default),
+                .GetTarget(linkAccess),
 #if NET6_0_OR_GREATER
             ExternalLinkInfo external => new SymbolicLink(linkMessage, this, Context.File)
-                .GetTarget(linkAccess, useAsync: Context.Driver is H5FileHandleDriver driver && driver.IsAsync),
+                .GetTarget(linkAccess),
 #else
             ExternalLinkInfo external => new SymbolicLink(linkMessage, this, Context.File)
-                .GetTarget(linkAccess, useAsync: default),
+                .GetTarget(linkAccess),
 #endif
 
             _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
@@ -622,7 +563,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
                 name, 
                 heap.GetObjectName(linkScratch.LinkValueOffset), 
                 this, 
-                Context.File).GetTarget(linkAccess, useAsync: default),
+                Context.File).GetTarget(linkAccess),
 
             _ when !Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
 

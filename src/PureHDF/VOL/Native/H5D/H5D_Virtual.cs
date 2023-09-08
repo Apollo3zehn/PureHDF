@@ -59,7 +59,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
         return Dataset.Space.Dimensions;
     }
 
-    public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
     {
         IH5ReadStream stream = new VirtualDatasetStream<TResult>(
             ReadContext.File,
@@ -70,7 +70,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
             _readVirtualDelegate
         );
 
-        return Task.FromResult(stream);
+        return stream;
     }
 
     public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)

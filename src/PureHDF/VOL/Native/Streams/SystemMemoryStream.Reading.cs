@@ -24,8 +24,6 @@ internal partial class SystemMemoryStream : IH5ReadStream
 
         Seek(length, SeekOrigin.Current);
     }
-
-    public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
     
     public void Seek(long offset, SeekOrigin origin)
     {

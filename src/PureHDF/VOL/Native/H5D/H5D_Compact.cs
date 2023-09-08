@@ -23,7 +23,7 @@ internal class H5D_Compact : H5D_Base
         return Dataset.Space.GetDims();
     }
 
-    public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
     {
         byte[] buffer;
 
@@ -46,7 +46,7 @@ internal class H5D_Compact : H5D_Base
 
         IH5ReadStream stream = new SystemMemoryStream(buffer);
 
-        return Task.FromResult(stream);
+        return stream;
     }
 
     public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)

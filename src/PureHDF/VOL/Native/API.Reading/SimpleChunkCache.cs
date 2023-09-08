@@ -56,7 +56,7 @@ public partial class SimpleChunkCache : IReadingChunkCache
     public ulong ConsumedBytes { get; private set; }
 
     /// <inheritdoc />
-    public async Task<Memory<byte>> GetChunkAsync(ulong[] indices, Func<Task<Memory<byte>>> chunkReader)
+    public Memory<byte> GetChunk(ulong[] indices, Func<Memory<byte>> chunkReader)
     {
         if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
         {
@@ -65,7 +65,7 @@ public partial class SimpleChunkCache : IReadingChunkCache
 
         else
         {
-            var buffer = await chunkReader().ConfigureAwait(false);
+            var buffer = chunkReader();
             chunkInfo = new ChunkInfo(buffer) { LastAccess = DateTime.Now };
             var chunk = chunkInfo.Chunk;
 

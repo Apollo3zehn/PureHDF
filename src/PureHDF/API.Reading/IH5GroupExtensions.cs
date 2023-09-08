@@ -1,7 +1,5 @@
 namespace PureHDF;
 
-// TODO: properly implement async
-
 /// <summary>
 /// Defines extensions methods for the <see cref="IH5Group" /> type.
 /// </summary>

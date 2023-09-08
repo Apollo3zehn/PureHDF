@@ -576,10 +576,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            void action() => SelectionHelper
-                .DecodeAsync(default(SyncReader), sourceRank: 2, targetRank: 2, decodeInfo)
-                .GetAwaiter()
-                .GetResult();
+            void action() => SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert
             Assert.Throws<ArgumentException>(action);
@@ -588,7 +585,7 @@ namespace PureHDF.Tests.Selections
         [Theory]
         [InlineData(new ulong[] { 0, 2 }, new ulong[] { 3, 2 })]
         [InlineData(new ulong[] { 2, 2 }, new ulong[] { 0, 2 })]
-        public async Task CanCopySmall2D_Count0_Or_Block0(ulong[] counts, ulong[] blocks)
+        public void CanCopySmall2D_Count0_Or_Block0(ulong[] counts, ulong[] blocks)
         {
             // Arrange
             var datasetDims = new ulong[] { 10, 10 };
@@ -625,7 +622,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            await SelectionHelper.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
+            SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert
         }
@@ -633,7 +630,7 @@ namespace PureHDF.Tests.Selections
         [Theory]
         [InlineData(new ulong[] { 10, 0 }, new ulong[] { 10, 10 })]
         [InlineData(new ulong[] { 10, 10 }, new ulong[] { 10, 0 })]
-        public async Task CanCopySmall2D_Dims0(ulong[] datasetDims, ulong[] memoryDims)
+        public void CanCopySmall2D_Dims0(ulong[] datasetDims, ulong[] memoryDims)
         {
             // Arrange
             var chunkDims = new ulong[] { 6, 6 };
@@ -668,7 +665,7 @@ namespace PureHDF.Tests.Selections
             );
 
             // Act
-            await SelectionHelper.DecodeAsync(default(AsyncReader), sourceRank: 2, targetRank: 2, decodeInfo);
+            SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert        
         }
@@ -774,17 +771,14 @@ namespace PureHDF.Tests.Selections
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult((IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)])),
+                indices => (IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
                 indices => actual,
                 (source, target) => source.ReadDataset(target.Cast<int, byte>()),
                 SourceTypeSize: 4
             );
 
             // Act
-            SelectionHelper
-                .DecodeAsync(default(SyncReader), sourceRank: 2, targetRank: 2, decodeInfo)
-                .GetAwaiter()
-                .GetResult();
+            SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -886,7 +880,7 @@ namespace PureHDF.Tests.Selections
             var actual = new int[5 * 6 * 11];
             var scaledDatasetDims = datasetDims.Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i])).ToArray();
 
-            IH5ReadStream getSourceStreamAsync(ulong[] indices) 
+            IH5ReadStream getSourceStream(ulong[] indices) 
                 => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
             var decodeInfo = new DecodeInfo<int>(
@@ -896,17 +890,14 @@ namespace PureHDF.Tests.Selections
                 memoryDims,
                 sourceSelection,
                 targetSelection,
-                indices => Task.FromResult(getSourceStreamAsync(indices)),
+                getSourceStream,
                 indices => actual,
                 (source, target) => source.ReadDataset(target.Cast<int, byte>()),
                 SourceTypeSize: 4
             );
 
             // Act
-            SelectionHelper
-                .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfo)
-                .GetAwaiter()
-                .GetResult();
+            SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -1020,7 +1011,7 @@ namespace PureHDF.Tests.Selections
 
             var actual = new int[11 * 11 * 12];
 
-            IH5ReadStream getSourceStreamAsync(ulong[] indices) 
+            IH5ReadStream getSourceStream(ulong[] indices) 
                 => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
             var decodeInfo = new DecodeInfo<int>(
@@ -1030,17 +1021,14 @@ namespace PureHDF.Tests.Selections
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                indices => Task.FromResult(getSourceStreamAsync(indices)),
+                getSourceStream,
                 indices => actual,
                 (source, target) => source.ReadDataset(target.Cast<int, byte>()),
                 SourceTypeSize: 4
             );
 
             // Act
-            SelectionHelper
-                .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfo)
-                .GetAwaiter()
-                .GetResult();
+            SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfo);
 
             // Assert
             Assert.True(actual.SequenceEqual(expected));
@@ -1133,16 +1121,13 @@ namespace PureHDF.Tests.Selections
                     datasetDims,
                     datasetSelection,
                     datasetSelection,
-                    indices => h5dIntermediate.GetReadStreamAsync(default(SyncReader), indices),
+                    indices => h5dIntermediate.GetReadStream(indices),
                     indices => intermediate,
                     (source, target) => source.ReadDataset(target.Cast<int, byte>()),
                     SourceTypeSize: 4
                 );
 
-                SelectionHelper
-                    .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 3, decodeInfoInterMediate)
-                    .GetAwaiter()
-                    .GetResult();
+                SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfoInterMediate);
 
                 /* get actual data */
                 var actual = new int[memoryDims[0] * memoryDims[1]];
@@ -1157,17 +1142,14 @@ namespace PureHDF.Tests.Selections
                     memoryDims,
                     datasetSelection,
                     memorySelection,
-                    indices => h5d.GetReadStreamAsync(default(SyncReader), indices),
+                    indices => h5d.GetReadStream(indices),
                     indices => actual,
                     Decoder: default!,
                     SourceTypeSize: 4
                 );
 
                 // Act
-                SelectionHelper
-                    .DecodeAsync(default(SyncReader), sourceRank: 3, targetRank: 2, decodeInfo)
-                    .GetAwaiter()
-                    .GetResult();
+                SelectionHelper.Decode(sourceRank: 3, targetRank: 2, decodeInfo);
 
                 //var intermediateForMatlab = string.Join(',', intermediate.ToArray().Select(value => value.ToString()));
                 //var actualForMatlab = string.Join(',', actual.ToArray().Select(value => value.ToString()));

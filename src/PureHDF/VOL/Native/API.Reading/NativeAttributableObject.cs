@@ -33,7 +33,7 @@ public abstract class NativeAttributableObject : NativeObject, IH5AttributableOb
     /// <inheritdoc />
     public Task<IEnumerable<IH5Attribute>> AttributesAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(EnumerateAttributes());
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <inheritdoc />
@@ -48,7 +48,7 @@ public abstract class NativeAttributableObject : NativeObject, IH5AttributableOb
     /// <inheritdoc />
     public Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(Attribute(name));
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <inheritdoc />
@@ -60,7 +60,7 @@ public abstract class NativeAttributableObject : NativeObject, IH5AttributableOb
     /// <inheritdoc />
     public Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult(AttributeExists(name));
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     private bool TryGetAttributeMessage(string name, [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)

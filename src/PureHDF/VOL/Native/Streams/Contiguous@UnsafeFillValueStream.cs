@@ -41,17 +41,6 @@ internal class UnsafeFillValueStream : IH5ReadStream
         }
     }
 
-    public ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-    {
-        ReadDataset(buffer);
-
-#if NET5_0_OR_GREATER
-        return ValueTask.CompletedTask;
-#else
-        return new ValueTask();
-#endif
-    }
-
     public void Seek(long offset, SeekOrigin origin)
     {
         _position += origin switch

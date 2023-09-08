@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Reflection;
+using Xunit;
 
 namespace PureHDF.Tests.Reading;
 
@@ -41,7 +42,7 @@ public partial class DatasetTests
             void action() => dataset.Read<double[]>();
 
             // Assert
-            Assert.Throws<Exception>(action);
+            Assert.Throws<TargetInvocationException>(action);
         });
     }   
 }

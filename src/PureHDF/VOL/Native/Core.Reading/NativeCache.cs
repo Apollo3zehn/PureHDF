@@ -76,7 +76,7 @@ internal static class NativeCache
 
     private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<string, NativeFile>> _fileMap;
 
-    public static NativeFile GetNativeFile(H5DriverBase driver, string absoluteFilePath, bool useAsync)
+    public static NativeFile GetNativeFile(H5DriverBase driver, string absoluteFilePath)
     {
         if (!Uri.TryCreate(absoluteFilePath, UriKind.Absolute, out var uri))
             throw new Exception("The provided path is not absolute.");
@@ -93,7 +93,7 @@ internal static class NativeCache
         if (!pathToNativeFileMap.TryGetValue(uri.AbsoluteUri, out var nativeFile))
         {
             // TODO: This does not correspond to https://support.hdfgroup.org/HDF5/doc/RM/H5L/H5Lcreate_external.htm
-            nativeFile = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read, useAsync: useAsync);
+            nativeFile = H5File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
             pathToNativeFileMap[uri.AbsoluteUri] = nativeFile;
         }
 

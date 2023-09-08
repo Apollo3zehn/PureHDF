@@ -54,7 +54,6 @@ public class NativeFile : NativeGroup, IDisposable
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
-            useAsync: false,
             deleteOnClose: deleteOnClose,
             options: options);
     }
@@ -64,7 +63,6 @@ public class NativeFile : NativeGroup, IDisposable
         FileMode fileMode,
         FileAccess fileAccess,
         FileShare fileShare,
-        bool useAsync = false,
         bool deleteOnClose = false,
         H5ReadOptions? options = default)
     {
@@ -75,8 +73,7 @@ public class NativeFile : NativeGroup, IDisposable
             fileMode,
             fileAccess,
             fileShare,
-            4096,
-            useAsync);
+            4096);
 
 #if NET6_0_OR_GREATER
         var driver = new H5FileHandleDriver(stream, leaveOpen: false);

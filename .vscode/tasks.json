@@ -16,14 +16,14 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "build-async-benchmark",
+            "label": "build-concurrency-benchmark",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
                 "-c",
                 "Release",
-                "${workspaceFolder}/benchmarks/PureHDF.AsyncBenchmark/PureHDF.AsyncBenchmark.csproj",
+                "${workspaceFolder}/benchmarks/PureHDF.ConcurrencyBenchmark/PureHDF.ConcurrencyBenchmark.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
