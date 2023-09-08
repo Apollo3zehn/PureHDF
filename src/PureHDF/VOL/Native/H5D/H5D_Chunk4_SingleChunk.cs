@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.VOL.Native;
 
 internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
 {

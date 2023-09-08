@@ -49,11 +49,11 @@
             "console": "internalConsole"
         },
         {
-            "name": "Benchmark: Async",
+            "name": "Benchmark: Concurrency",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build-async-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/PureHDF.AsyncBenchmark/Release/net7.0/PureHDF.AsyncBenchmark.dll",
+            "preLaunchTask": "build-concurrency-benchmark",
+            "program": "${workspaceFolder}/artifacts/bin/PureHDF.ConcurrencyBenchmark/Release/net7.0/PureHDF.ConcurrencyBenchmark.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

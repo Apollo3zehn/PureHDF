@@ -91,26 +91,6 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     /// <inheritdoc />
-#if NETSTANDARD2_0
-    public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-#else
-    public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        return ReadCachedAsync(buffer, useAsync: true, cancellationToken);
-    }
-#endif
-
-    /// <inheritdoc />
-    public async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        await ReadUncachedAsync(buffer, useAsync: true, cancellationToken);
-        return;
-    }
-
-    /// <inheritdoc />
     public override long Seek(long offset, SeekOrigin origin)
     {
         switch (origin)

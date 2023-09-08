@@ -1,22 +1,18 @@
-using System.Reflection;
-using System.Text.Json;
 using Hsds.Api;
-using PureHDF.Selections;
+using System.Text.Json;
 
 namespace PureHDF.VOL.Hsds;
 
 internal class HsdsAttribute : IH5Attribute
 {
     private readonly AttributeType _attribute;
-    private readonly HsdsClient _client;
     private IH5Dataspace? _space;
     private IH5DataType? _type;
 
-    public HsdsAttribute(AttributeType attribute, HsdsClient client)
+    public HsdsAttribute(AttributeType attribute)
     {
         _attribute = attribute;
         Name = attribute.Name;
-        _client = client;
     }
 
     public string Name { get; }
@@ -39,7 +35,7 @@ internal class HsdsAttribute : IH5Attribute
         }
     }
 
-    public T[] Read<T>() where T : unmanaged
+    public T Read<T>(ulong[]? memoryDims = null)
     {
         if (!_attribute.Value.HasValue)
             throw new Exception("The attribute contains no data.");
@@ -49,32 +45,14 @@ internal class HsdsAttribute : IH5Attribute
         if (value.ValueKind != JsonValueKind.Array)
             throw new Exception($"Invalid value kind {value.ValueKind}.");
 
-        var data = JsonSerializer.Deserialize<T[]>(value) 
+        var data = JsonSerializer.Deserialize<T>(value)
             ?? throw new Exception($"Unable to deserialize data.");
-            
+
         return data;
     }
 
-    public T[] ReadCompound<T>(Func<FieldInfo, string?>? getName = null) where T : struct
+    public void Read<T>(T buffer, ulong[]? memoryDims = null)
     {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public Dictionary<string, object?>[] ReadCompound()
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public string[] ReadString()
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
-    }
-
-    public T[]?[] ReadVariableLength<T>(
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null) where T : struct
-    {
-        throw new NotImplementedException("This method is not (yet) implemented in the HSDS VOL connector.");
+        throw new NotImplementedException("This methods is not yet implemented on the HSDS attribute.");
     }
 }

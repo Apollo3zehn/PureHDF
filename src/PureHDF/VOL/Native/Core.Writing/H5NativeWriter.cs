@@ -428,7 +428,7 @@ partial class H5NativeWriter
         }
 
         /* dataset dims */
-        var datasetDims = datasetInfo.GetDatasetDims();
+        var datasetDims = datasetInfo.Space.GetDims();
 
         /* dataset chunk dims */
         var datasetChunkDims = h5d.GetChunkDims();
@@ -458,12 +458,11 @@ partial class H5NativeWriter
             GetSourceBuffer: indiced => memoryData,
             GetTargetStream: getTargetStream,
             Encoder: encode,
-            TargetTypeSize: (int)datatype.Size,
-            SourceTypeFactor: 1
+            TargetTypeSize: (int)datatype.Size
         );
 
         /* encode data */
-        SelectionUtils.Encode(
+        SelectionHelper.Encode(
             memoryDims.Length,
             datasetChunkDims.Length,
             encodeInfo);

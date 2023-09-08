@@ -6,15 +6,8 @@ namespace PureHDF;
 
 internal static class DataUtils
 {
-    static DataUtils()
-    {
-        MethodInfoCastToArray = typeof(DataUtils)
-            .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-            .Where(methodInfo => methodInfo.IsGenericMethod && methodInfo.Name == nameof(CastToArray))
-            .Single();
-    }
-
-    public static MethodInfo MethodInfoCastToArray { get; }
+    public static MethodInfo MethodInfoIsReferenceOrContainsReferences { get; } = typeof(RuntimeHelpers)
+        .GetMethod(nameof(IsReferenceOrContainsReferences), BindingFlags.Public | BindingFlags.Static)!;
 
     public static bool IsReferenceOrContainsReferences(Type type)
     {
@@ -22,13 +15,25 @@ internal static class DataUtils
         var isSimpleValueType = type.IsPrimitive || type.IsEnum;
         return !isSimpleValueType;
 #else
-        var name = nameof(RuntimeHelpers.IsReferenceOrContainsReferences);
-        var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.Instance;
-        var method = typeof(RuntimeHelpers).GetMethod(name, flags)!;
-        var generic = method.MakeGenericMethod(type);
+        // TODO cache
+        var generic = MethodInfoIsReferenceOrContainsReferences.MakeGenericMethod(type);
 
         return (bool)generic.Invoke(null, null)!;
 #endif
+    }
+
+    public static void CheckEndianness(ByteOrder byteOrder)
+    {
+        if (byteOrder == ByteOrder.VaxEndian)
+            throw new Exception("VAX-endian byte order is not supported.");
+
+        var isLittleEndian = BitConverter.IsLittleEndian;
+
+        if ((isLittleEndian && byteOrder != ByteOrder.LittleEndian) ||
+           (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
+        {
+            throw new Exception("Byte order conversion is not (yet) support by PureHDF.");
+        }
     }
 
     public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)
@@ -45,11 +50,27 @@ internal static class DataUtils
         }
     }
 
-    // Warning: do not change the signature without also adapting the _methodInfo variable above
-    private static T[] CastToArray<T>(byte[] data) where T : unmanaged
+    public static bool IsMemory(Type type)
     {
-        return MemoryMarshal
-            .Cast<byte, T>(data)
-            .ToArray();
+        return 
+            type.IsGenericType && 
+            typeof(Memory<>).Equals(type.GetGenericTypeDefinition());
+    }
+
+    public static bool IsArray(Type type)
+    {
+        return
+            type.IsArray &&
+            type.GetElementType() is not null;
+    }
+
+    public static int UnmanagedSizeOf(Type type)
+    {
+        return type switch
+        {
+            _ when type.IsEnum => Marshal.SizeOf(Enum.GetUnderlyingType(type)),
+            _ when type == typeof(bool) => 1,
+            _ => Marshal.SizeOf(type)
+        };
     }
 }

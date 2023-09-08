@@ -1,7 +1,4 @@
-﻿using PureHDF.Selections;
-using System.Reflection;
-
-namespace PureHDF;
+﻿namespace PureHDF;
 
 /// <summary>
 /// An HDF5 attribute.
@@ -24,38 +21,18 @@ public interface IH5Attribute
     IH5DataType Type { get; }
 
     /// <summary>
-    /// Reads the data. The type parameter <typeparamref name="T"/> must match the <see langword="unmanaged" /> constraint.
+    /// Reads the data.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
-    /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
-    T[] Read<T>() where T : unmanaged;
+    /// <param name="memoryDims">The dimensions of the resulting buffer.</param>
+    /// <returns>The read data of type <typeparamref name="T"/>.</returns>
+    T Read<T>(ulong[]? memoryDims = null);
 
     /// <summary>
-    /// Reads the compound data. The type parameter <typeparamref name="T"/> must match the <see langword="struct" /> constraint. Nested fields with nullable references are not supported.
+    /// Reads the data into the provided buffer.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
-    /// <param name="getName">An optional function to map the field names of <typeparamref name="T"/> to the member names of the HDF5 compound type.</param>
-    /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
-    T[] ReadCompound<T>(Func<FieldInfo, string?>? getName = null) where T : struct;
-
-    /// <summary>
-    /// Reads the compound data. This is the slowest but most flexible option to read compound data as no prior type knowledge is required.
-    /// </summary>
-    /// <returns>The read data as array of a dictionary with the keys corresponding to the compound member names and the values being the member data.</returns>
-    Dictionary<string, object?>[] ReadCompound();
-
-    /// <summary>
-    /// Reads the string data.
-    /// </summary>
-    /// <returns>The read data as array of <see cref="string"/>.</returns>
-    string[] ReadString();
-
-    /// <summary>
-    /// Reads the variable-length sequence data.
-    /// </summary>
-    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
-    /// <param name="memorySelection">The selection within the destination memory.</param>
-    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
-    /// <returns>The read data as jagged array of <typeparamref name="T"/>.</returns>
-    T[]?[] ReadVariableLength<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : struct;
+    /// <param name="buffer">The buffer to read the data into.</param>
+    /// <param name="memoryDims">The dimensions of the resulting buffer.</param>
+    void Read<T>(T buffer, ulong[]? memoryDims = null);
 }

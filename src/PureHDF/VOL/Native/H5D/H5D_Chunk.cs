@@ -1,6 +1,6 @@
 ﻿using System.Buffers;
 
-namespace PureHDF;
+namespace PureHDF.VOL.Native;
 
 internal abstract class H5D_Chunk : H5D_Base
 {
@@ -35,12 +35,12 @@ internal abstract class H5D_Chunk : H5D_Base
 
         if (readContext is null)
         {
-            _writingChunkCache = datasetCreation.ChunkCache ?? (writeContext.WriteOptions.ChunkCacheFactory ?? H5WriteOptions.DefaultChunkCacheFactory)();
+            _writingChunkCache = datasetCreation.ChunkCache ?? ChunkCache.DefaultWritingChunkCacheFactory();
         }
 
         else
         {
-            _readingChunkCache = datasetAccess.ChunkCache ?? readContext.File.ChunkCacheFactory();
+            _readingChunkCache = datasetAccess.ChunkCache ?? ChunkCache.DefaultReadingChunkCacheFactory();
 
             var address = Dataset.Layout switch
             {
@@ -135,7 +135,7 @@ internal abstract class H5D_Chunk : H5D_Base
         RawChunkDims = GetRawChunkDims();
         ChunkDims = RawChunkDims[..^1].ToArray();
         ChunkRank = (byte)ChunkDims.Length;
-        ChunkByteSize = MathUtils.CalculateSize(ChunkDims) * Dataset.Type.Size;
+        ChunkByteSize = ChunkDims.Aggregate(1UL, (product, dim) => product * dim) * Dataset.Type.Size;
         ChunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
         Dims = Dataset.Space.Dimensions;
         MaxDims = Dataset.Space.MaxDimensions;
@@ -174,15 +174,12 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override async Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
     {
-        var buffer = await _readingChunkCache
-
-            .GetChunkAsync(
+        var buffer = _readingChunkCache
+            .GetChunk(
                 chunkIndices, 
-                chunkReader: () => ReadChunkAsync(reader, chunkIndices))
-                
-            .ConfigureAwait(false);
+                chunkReader: () => ReadChunk(chunkIndices));
 
         var stream = new SystemMemoryStream(buffer);
 
@@ -221,10 +218,8 @@ internal abstract class H5D_Chunk : H5D_Base
         FlushChunkCache();
     }
 
-    private async Task<Memory<byte>> ReadChunkAsync<TReader>(
-        TReader reader, 
-        ulong[] chunkIndices) 
-        where TReader : IReader
+    private Memory<byte> ReadChunk(
+        ulong[] chunkIndices)
     {
         Memory<byte> chunk;
 
@@ -255,9 +250,8 @@ internal abstract class H5D_Chunk : H5D_Base
                 {
                     chunk = new byte[ChunkByteSize];
 
-                    await reader
-                        .ReadDatasetAsync(ReadContext.Driver, chunk, (long)chunkInfo.Address)
-                        .ConfigureAwait(false);
+                    ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadContext.Driver.ReadDataset(chunk);
                 }
                 
                 else
@@ -266,9 +260,8 @@ internal abstract class H5D_Chunk : H5D_Base
                     using var filterBufferOwner = MemoryPool<byte>.Shared.Rent(rawChunkSize);
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
-                    await reader
-                        .ReadDatasetAsync(ReadContext.Driver, buffer, (long)chunkInfo.Address)
-                        .ConfigureAwait(false);
+                    ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadContext.Driver.ReadDataset(buffer);
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,

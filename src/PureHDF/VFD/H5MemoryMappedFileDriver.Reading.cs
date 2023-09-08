@@ -42,11 +42,6 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         ReadCore(buffer);
     }
 
-    public override ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        throw new Exception("Memory-mapped files cannot be accessed asynchronously.");
-    }
-
     public override void Read(Span<byte> buffer)
     {
         throw new NotImplementedException();

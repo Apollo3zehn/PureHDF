@@ -21,7 +21,7 @@ namespace Benchmark
         [Benchmark(Baseline = true)]
         public int Execute()
         {
-            var steps = SelectionUtils
+            var steps = SelectionHelper
                 .Walk(rank: 3, Dims, ChunkDims, Selection)
                 .ToArray();
 

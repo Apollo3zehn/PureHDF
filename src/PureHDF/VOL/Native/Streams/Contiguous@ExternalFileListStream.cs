@@ -69,39 +69,6 @@ internal class ExternalFileListStream : IH5ReadStream
                 _loadSlot = true;
         }
     }
-
-#if NET6_0_OR_GREATER
-    public async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        var offset = 0;
-        var remaining = buffer.Length;
-
-        while (remaining > 0)
-        {
-            if (_slotStream is null || _loadSlot)
-            {
-                _slotStream = _slotStreams.Last(stream => stream.Offset <= _position);
-                _slotStream.Seek(_position - _slotStream.Offset, SeekOrigin.Begin);
-                _loadSlot = false;
-            }
-
-            var streamRemaining = _slotStream.Length - _slotStream.Position;
-            var length = (int)Math.Min(remaining, streamRemaining);
-
-            await _slotStream
-                .ReadDatasetAsync(buffer.Slice(offset, length), cancellationToken)
-                .ConfigureAwait(false);
-
-            _position += length;
-            offset += length;
-            remaining -= length;
-
-            if (length == streamRemaining)
-                _loadSlot = true;
-        }
-    }
-#endif
-
     public void Seek(long offset, SeekOrigin origin)
     {
         switch (origin)

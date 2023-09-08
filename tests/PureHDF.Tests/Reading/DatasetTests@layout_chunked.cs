@@ -1,216 +1,215 @@
 ﻿using HDF.PInvoke;
 using Xunit;
 
-namespace PureHDF.Tests.Reading
+namespace PureHDF.Tests.Reading;
+
+public partial class DatasetTests
 {
-    public partial class DatasetTests
+    [Fact]
+    public void CanRead_Chunked_Legacy()
     {
-        [Fact]
-        public void CanReadDataset_Chunked_Legacy()
+        var versions = new H5F.libver_t[]
         {
-            var versions = new H5F.libver_t[]
-            {
-                H5F.libver_t.EARLIEST,
-                H5F.libver_t.V18
-            };
+            H5F.libver_t.EARLIEST,
+            H5F.libver_t.V18
+        };
 
-            TestUtils.RunForVersions(versions, version =>
-            {
-                foreach (var withShuffle in new bool[] { false, true })
-                {
-                    // Arrange
-                    var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Legacy(fileId, withShuffle));
-
-                    // Act
-                    using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                    var parent = root.Group("chunked");
-                    var dataset = parent.Dataset("chunked");
-                    var actual = dataset.Read<int>();
-
-                    // Assert
-                    Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-                }
-            });
-        }
-
-        [Fact]
-        public void CanReadDataset_ChunkedSingleChunk()
+        TestUtils.RunForVersions(versions, version =>
         {
             foreach (var withShuffle in new bool[] { false, true })
             {
                 // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Single_Chunk(fileId, withShuffle));
+                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Legacy(fileId, withShuffle));
 
                 // Act
                 using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
                 var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_single_chunk");
-                var actual = dataset.Read<int>();
+                var dataset = parent.Dataset("chunked");
+                var actual = dataset.Read<int[]>();
 
                 // Assert
                 Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
             }
-        }
+        });
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedImplicit()
+    [Fact]
+    public void CanRead_ChunkedSingleChunk()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
             // Arrange
             var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Implicit);
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Single_Chunk(fileId, withShuffle));
 
             // Act
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var parent = root.Group("chunked");
-            var dataset = parent.Dataset("chunked_implicit");
-            var actual = dataset.Read<int>();
+            var dataset = parent.Dataset("chunked_single_chunk");
+            var actual = dataset.Read<int[]>();
 
             // Assert
             Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedFixedArray()
+    [Fact]
+    public void CanRead_ChunkedImplicit()
+    {
+        // Arrange
+        var version = H5F.libver_t.LATEST;
+        var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Implicit);
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var parent = root.Group("chunked");
+        var dataset = parent.Dataset("chunked_implicit");
+        var actual = dataset.Read<int[]>();
+
+        // Assert
+        Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
+    }
+
+    [Fact]
+    public void CanRead_ChunkedFixedArray()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
-            foreach (var withShuffle in new bool[] { false, true })
-            {
-                // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId, withShuffle));
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId, withShuffle));
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_fixed_array");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_fixed_array");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedFixedArrayPaged()
+    [Fact]
+    public void CanRead_ChunkedFixedArrayPaged()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
-            foreach (var withShuffle in new bool[] { false, true })
-            {
-                // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId, withShuffle));
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId, withShuffle));
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_fixed_array_paged");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_fixed_array_paged");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedExtensibleArrayElements()
+    [Fact]
+    public void CanRead_ChunkedExtensibleArrayElements()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
-            foreach (var withShuffle in new bool[] { false, true })
-            {
-                // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId, withShuffle));
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId, withShuffle));
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_extensible_array_elements");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_extensible_array_elements");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedExtensibleArrayDataBlocks()
+    [Fact]
+    public void CanRead_ChunkedExtensibleArrayDataBlocks()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
-            foreach (var withShuffle in new bool[] { false, true })
-            {
-                // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId, withShuffle));
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId, withShuffle));
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_extensible_array_data_blocks");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_extensible_array_data_blocks");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedExtensibleArraySecondaryBlocks()
+    [Fact]
+    public void CanRead_ChunkedExtensibleArraySecondaryBlocks()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
-            foreach (var withShuffle in new bool[] { false, true })
-            {
-                // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId, withShuffle));
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId, withShuffle));
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_extensible_array_secondary_blocks");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_extensible_array_secondary_blocks");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_ChunkedBTree2()
+    [Fact]
+    public void CanRead_ChunkedBTree2()
+    {
+        foreach (var withShuffle in new bool[] { false, true })
         {
-            foreach (var withShuffle in new bool[] { false, true })
-            {
-                // Arrange
-                var version = H5F.libver_t.LATEST;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_BTree2(fileId, withShuffle));
+            // Arrange
+            var version = H5F.libver_t.LATEST;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDataset_BTree2(fileId, withShuffle));
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var parent = root.Group("chunked");
-                var dataset = parent.Dataset("chunked_btree2");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var parent = root.Group("chunked");
+            var dataset = parent.Dataset("chunked_btree2");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
-            }
+            // Assert
+            Assert.True(actual.SequenceEqual(SharedTestData.MediumData));
         }
+    }
 
-        [Fact]
-        public void CanReadDataset_Chunked_With_FillValue_And_AllocationLate()
+    [Fact]
+    public void CanRead_Chunked_With_FillValue_And_AllocationLate()
+    {
+        TestUtils.RunForAllVersions(version =>
         {
-            TestUtils.RunForAllVersions(version =>
-            {
-                // Arrange
-                var fillValue = 99;
-                var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetWithFillValueAndAllocationLate(fileId, fillValue));
-                var expected = Enumerable.Range(0, SharedTestData.MediumData.Length)
-                    .Select(value => fillValue)
-                    .ToArray();
+            // Arrange
+            var fillValue = 99;
+            var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetWithFillValueAndAllocationLate(fileId, fillValue));
+            var expected = Enumerable.Range(0, SharedTestData.MediumData.Length)
+                .Select(value => fillValue)
+                .ToArray();
 
-                // Act
-                using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
-                var group = root.Group("fillvalue");
-                var dataset = group.Dataset($"{LayoutClass.Chunked}");
-                var actual = dataset.Read<int>();
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var group = root.Group("fillvalue");
+            var dataset = group.Dataset($"{LayoutClass.Chunked}");
+            var actual = dataset.Read<int[]>();
 
-                // Assert
-                Assert.Equal(expected, actual);
-            });
-        }
+            // Assert
+            Assert.Equal(expected, actual);
+        });
     }
 }

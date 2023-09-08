@@ -385,7 +385,8 @@ namespace PureHDF.Tests
                 var vlenData = new H5T.hvl_t[] 
                 {
                     new H5T.hvl_t() { len = (nint)data1.Length, p = (nint)data1Ptr },
-                    new H5T.hvl_t() { len = (nint)data2.Length, p = (nint)data2Ptr }
+                    new H5T.hvl_t() { len = (nint)data2.Length, p = (nint)data2Ptr },
+                    default
                 };
 
                 fixed (void* vlenDataPtr = vlenData)

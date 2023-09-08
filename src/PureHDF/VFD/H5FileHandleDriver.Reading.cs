@@ -17,13 +17,8 @@ internal partial class H5FileHandleDriver : H5DriverBase
     {
         _stream = stream;
         _handle = _stream.SafeFileHandle;
-
-        IsAsync = _handle.IsAsync;
-
         _leaveOpen = leaveOpen;
     }
-
-    public bool IsAsync { get; }
 
     public override long Position { get => _position.Value; }
 
@@ -47,16 +42,6 @@ internal partial class H5FileHandleDriver : H5DriverBase
     public override void ReadDataset(Memory<byte> buffer)
     {
         ReadCore(buffer);
-    }
-
-    public override async ValueTask ReadDatasetAsync(Memory<byte> buffer, CancellationToken cancellationToken)
-    {
-        var count = await RandomAccess.ReadAsync(_handle, buffer, Position, cancellationToken);
-
-        if (count != buffer.Length)
-            throw new Exception("The file is too small");
-
-        _position.Value += count;
     }
 
     public override void Read(Span<byte> buffer)

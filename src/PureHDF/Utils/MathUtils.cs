@@ -65,6 +65,17 @@ internal static partial class MathUtils
         return coordinates;
     }
 
+    public static void ToCoordinates(this int linearIndex, Span<int> dimensions, Span<int> coordinates)
+    {
+        var rank = dimensions.Length;
+
+        for (int i = rank - 1; i >= 0; i--)
+        {
+            linearIndex = Math.DivRem(linearIndex, dimensions[i], out var coordinate);
+            coordinates[i] = coordinate;
+        }
+    }
+
     public static void ToCoordinates(this ulong linearIndex, Span<ulong> dimensions, Span<ulong> coordinates)
     {
         var rank = dimensions.Length;
@@ -165,34 +176,5 @@ internal static partial class MathUtils
             result += 1;
 
         return result;
-    }
-
-    public static ulong CalculateSize(IEnumerable<uint> dimensionSizes, DataspaceType type = DataspaceType.Simple)
-    {
-        return CalculateSize(dimensionSizes.Select(value => (ulong)value), type);
-    }
-
-    public static ulong CalculateSize(IEnumerable<ulong> dimensionSizes, DataspaceType type = DataspaceType.Simple)
-    {
-        switch (type)
-        {
-            case DataspaceType.Scalar:
-                return 1;
-
-            case DataspaceType.Simple:
-
-                var totalSize = 0UL;
-
-                if (dimensionSizes.Any())
-                    totalSize = dimensionSizes.Aggregate((x, y) => x * y);
-
-                return totalSize;
-
-            case DataspaceType.Null:
-                return 0;
-
-            default:
-                throw new Exception($"The dataspace type '{type}' is not supported.");
-        }
     }
 }

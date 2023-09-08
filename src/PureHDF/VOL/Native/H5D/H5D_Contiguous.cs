@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+﻿namespace PureHDF.VOL.Native;
 
 internal class H5D_Contiguous : H5D_Base
 {
@@ -23,10 +23,10 @@ internal class H5D_Contiguous : H5D_Base
 
     public override ulong[] GetChunkDims()
     {
-        return Dataset.GetDatasetDims();
+        return Dataset.Space.GetDims();
     }
 
-    public override Task<IH5ReadStream> GetReadStreamAsync<TReader>(TReader reader, ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
     {
         if (_readStream is null)
         {
@@ -49,7 +49,7 @@ internal class H5D_Contiguous : H5D_Base
             }
         }
 
-        return Task.FromResult(_readStream);
+        return _readStream;
     }
 
     public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)

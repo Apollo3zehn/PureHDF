@@ -18,7 +18,7 @@ public class SourceGeneratorTests
         var bindings = new MyGeneratedH5Bindings(nativeFile);
         var group = bindings.group1.Get();
         var dataset = bindings.group1.sub_group1.sub_sub_dataset1;
-        var actual = dataset.Read<long>();
+        var actual = dataset.Read<long[]>();
 
         var expected = Enumerable
             .Range(0, 10)

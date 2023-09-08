@@ -41,8 +41,8 @@
       },
       {
         "files": [
-          "articles/**.md",
-          "articles/**/toc.yml",
+          "reading/**.md",
+          "reading/**/toc.yml",
           "toc.yml",
           "*.md"
         ]
