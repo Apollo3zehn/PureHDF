@@ -2,11 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Interface IDatasetStream
- | PureHDF </title>
+      <title>External Files | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Interface IDatasetStream
- | PureHDF ">
+      <meta name="title" content="External Files | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -17,7 +15,7 @@
       
       
       
-      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/external_files.md/#L1">
   </head>
 
   <script type="module">
@@ -32,7 +30,7 @@
   </script>
 
 
-  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
@@ -73,83 +71,81 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.IDatasetStream">
+        <article data-uid="">
+<h1 id="external-files">External Files</h1>
 
+<p>There are multiple mechanisms in HDF5 that allow one file to reference another file. The external file resolution algorithm is specific to each of these mechanisms:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Documentation</th>
+<th>Algorithm</th>
+<th>Environment variable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>External Link</td>
+<td><a href="https://docs.hdfgroup.org/hdf5/v1_10/group___h5_l.html#title5">Link</a></td>
+<td><a href="https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Lpublic.h#L1503-L1566">Link</a></td>
+<td><code>HDF5_EXT_PREFIX</code></td>
+</tr>
+<tr>
+<td>External Dataset Storage</td>
+<td><a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title11">Link</a></td>
+<td><a href="https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L7084-L7116">Link</a></td>
+<td><code>HDF5_EXTFILE_PREFIX</code></td>
+</tr>
+<tr>
+<td>Virtual Datasets</td>
+<td><a href="https://docs.hdfgroup.org/hdf5/v1_10/group___d_a_p_l.html#title12">Link</a></td>
+<td><a href="https://github.com/HDFGroup/hdf5/blob/hdf5_1_10_9/src/H5Ppublic.h#L6607-L6670">Link</a></td>
+<td><code>HDF5_VDS_PREFIX</code></td>
+</tr>
+</tbody>
+</table>
+<p>Usage:</p>
+<p><strong>External Link</strong></p>
+<pre><code class="lang-cs">using PureHDF.VOL.Native;
 
+var group = (NativeGroup)root.Group(...);
 
-  <h1 id="PureHDF_IDatasetStream" data-uid="PureHDF.IDatasetStream" class="text-break">
-    Interface IDatasetStream
-  
-  </h1>
+var linkAccess = new H5LinkAccess(
+    ExternalLinkPrefix: prefix 
+);
 
-  <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
-  </div>
+var dataset = group.Dataset(path, linkAccess);
+</code></pre>
+<p><strong>External Dataset Storage</strong></p>
+<pre><code class="lang-cs">using PureHDF.VOL.Native;
 
-  <div class="markdown summary"><p>Contains a collection of optional methods to improve performance.</p>
-</div>
-  <div class="markdown conceptual"></div>
+var dataset = (NativeDataset)root.Dataset(...);
 
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IDatasetStream</code></pre>
-  </div>
+var datasetAccess = new H5DatasetAccess(
+    ExternalFilePrefix: prefix 
+);
 
+var data = dataset.Read&lt;float[]&gt;(..., datasetAccess: datasetAccess);
+</code></pre>
+<p><strong>Virtual Datasets</strong></p>
+<pre><code class="lang-cs">using PureHDF.VOL.Native;
 
+var dataset = (NativeDataset)root.Dataset(...);
 
+var datasetAccess = new H5DatasetAccess(
+    VirtualPrefix: prefix 
+);
 
-
-
-
-
-
-
-
-
-
-  <h2 class="section" id="methods">Methods
-</h2>
-
-
-  <a id="PureHDF_IDatasetStream_ReadDataset_" data-uid="PureHDF.IDatasetStream.ReadDataset*"></a>
-
-  <h3 id="PureHDF_IDatasetStream_ReadDataset_System_Memory_System_Byte__" data-uid="PureHDF.IDatasetStream.ReadDataset(System.Memory{System.Byte})">
-  ReadDataset(Memory&lt;byte&gt;)
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>This method is called to indicate that actual data is being read (e.g. to determine if the request should be cached).</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">void ReadDataset(Memory&lt;byte&gt; buffer)</code></pre>
-  </div>
-
-  <h4 class="section">Parameters</h4>
-  <dl class="parameters">
-    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
-    <dd><p>The buffer to write the data into.</p>
-</dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
+var data = dataset.Read&lt;float[]&gt;(..., datasetAccess: datasetAccess);
+</code></pre>
 </article>
 
         <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/external_files.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
         
       </div>
 

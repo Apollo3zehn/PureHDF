@@ -6,21 +6,21 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Filters | PureHDF ">
       
-      <link rel="icon" href="../images/icon.svg">
-      <link rel="stylesheet" href="../public/docfx.min.css">
-      <link rel="stylesheet" href="../public/main.css">
-      <meta name="docfx:navrel" content="../toc.html">
+      <link rel="icon" href="images/icon.svg">
+      <link rel="stylesheet" href="public/docfx.min.css">
+      <link rel="stylesheet" href="public/main.css">
+      <meta name="docfx:navrel" content="toc.html">
       <meta name="docfx:tocrel" content="toc.html">
       
       
       
       
-      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/articles/filters.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/filters.md/#L1">
   </head>
 
   <script type="module">
-    import options from './../public/main.js'
-    import { init } from './../public/docfx.min.js'
+    import options from './public/main.js'
+    import { init } from './public/docfx.min.js'
     init(options)
   </script>
 
@@ -34,8 +34,8 @@
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
-          <a class="navbar-brand" href="../index.html">
-            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+          <a class="navbar-brand" href="index.html">
+            <img id="logo" class="svg" src="images/icon.svg" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -104,12 +104,14 @@ H5Filter.Register(new Blosc2Filter());
     }
 }
 </code></pre>
-<blockquote>
-<p>Note: For <code>reading</code>, the filter will be selected automatically by the library as long as it is registered with the correct ID.</p>
-</blockquote>
-<blockquote>
-<p>Note: For <code>writing</code>, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the <code>H5WriteOptions.Filters</code> list). See <a href="writing.html">writing</a> for more details.</p>
-</blockquote>
+<div class="NOTE">
+<h5>Note</h5>
+<p>For <code>reading</code>, the filter will be selected automatically by the library as long as it is registered with the correct ID.</p>
+</div>
+<div class="NOTE">
+<h5>Note</h5>
+<p>For <code>writing</code>, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the <code>H5WriteOptions.Filters</code> list). See <a href="writing.html">writing</a> for more details.</p>
+</div>
 <h2 id="supported-filters-overview">Supported Filters Overview</h2>
 <p>based on <a href="https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0">ZLibStream</a></p>
 <table>
@@ -239,7 +241,7 @@ H5Filter.Register(new LzfFilter());
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/articles/filters.md/#L1" class="edit-link">Edit this page</a>
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/filters.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
         <div class="next-article d-print-none border-top" id="nextArticle"></div>

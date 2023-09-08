@@ -2,11 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Interface IDatasetStream
- | PureHDF </title>
+      <title>Highly Scalable Data Service (HSDS) | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Interface IDatasetStream
- | PureHDF ">
+      <meta name="title" content="Highly Scalable Data Service (HSDS) | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -17,7 +15,7 @@
       
       
       
-      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/hsds.md/#L1">
   </head>
 
   <script type="module">
@@ -32,7 +30,7 @@
   </script>
 
 
-  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
@@ -73,83 +71,60 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.IDatasetStream">
+        <article data-uid="">
+<h1 id="highly-scalable-data-service-hsds">Highly Scalable Data Service (HSDS)</h1>
 
+<table>
+<thead>
+<tr>
+<th>Requires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.NET 6+</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <code>HsdsConnector</code> shown below uses the <code>HsdsClient</code> from the <a href="https://github.com/Apollo3zehn/hsds-api">hsds-api</a> project. Please follow that link for information about authentication.</p>
+<pre><code class="lang-cs">var domainName = &quot;/shared/tall.h5&quot;;
+var client = new HsdsClient(new Uri(&quot;http://hsdshdflab.hdfgroup.org&quot;));
+var root = HsdsConnector.Create(domainName, client);
+var group = root.Group(&quot;/my-group&quot;);
 
-
-  <h1 id="PureHDF_IDatasetStream" data-uid="PureHDF.IDatasetStream" class="text-break">
-    Interface IDatasetStream
-  
-  </h1>
-
-  <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
-  </div>
-
-  <div class="markdown summary"><p>Contains a collection of optional methods to improve performance.</p>
-</div>
-  <div class="markdown conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IDatasetStream</code></pre>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <h2 class="section" id="methods">Methods
-</h2>
-
-
-  <a id="PureHDF_IDatasetStream_ReadDataset_" data-uid="PureHDF.IDatasetStream.ReadDataset*"></a>
-
-  <h3 id="PureHDF_IDatasetStream_ReadDataset_System_Memory_System_Byte__" data-uid="PureHDF.IDatasetStream.ReadDataset(System.Memory{System.Byte})">
-  ReadDataset(Memory&lt;byte&gt;)
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>This method is called to indicate that actual data is being read (e.g. to determine if the request should be cached).</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">void ReadDataset(Memory&lt;byte&gt; buffer)</code></pre>
-  </div>
-
-  <h4 class="section">Parameters</h4>
-  <dl class="parameters">
-    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
-    <dd><p>The buffer to write the data into.</p>
-</dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
+...
+</code></pre>
+<p>The following features are not (yet) implemented:</p>
+<ul>
+<li><code>IH5Attribute</code>
+<ul>
+<li>Read compounds</li>
+<li>Read strings and other variable-length data types</li>
+</ul>
+</li>
+<li><code>IH5Dataset</code>:
+<ul>
+<li>Read compounds</li>
+<li>Read strings and other variable-length data types</li>
+<li>Memory selections</li>
+</ul>
+</li>
+<li><code>IH5DataType</code>:
+<ul>
+<li><code>Size</code> property (the HSDS REST API does not seem to provide that information)</li>
+<li>data type properties other than <code>integer</code>, <code>float</code> and <code>compound</code></li>
+</ul>
+</li>
+<li><code>IH5FillValue</code></li>
+</ul>
+<p><strong>Please file a new issue if you encounter any problems.</strong></p>
 </article>
 
         <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/hsds.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
         
       </div>
 

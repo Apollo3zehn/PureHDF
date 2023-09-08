@@ -7,87 +7,6 @@ references:
   commentId: N:PureHDF
   fullName: PureHDF
   nameWithType: PureHDF
-- uid: PureHDF.ArrayExtensions
-  name: ArrayExtensions
-  href: api/PureHDF.ArrayExtensions.html
-  commentId: T:PureHDF.ArrayExtensions
-  fullName: PureHDF.ArrayExtensions
-  nameWithType: ArrayExtensions
-- uid: PureHDF.ArrayExtensions.ToArray2D*
-  name: ToArray2D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray2D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray2D
-  fullName: PureHDF.ArrayExtensions.ToArray2D
-  nameWithType: ArrayExtensions.ToArray2D
-- uid: PureHDF.ArrayExtensions.ToArray2D``1(``0[],System.Int64,System.Int64)
-  name: ToArray2D<T>(T[], long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray2D__1___0___System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray2D``1(``0[],System.Int64,System.Int64)
-  name.vb: ToArray2D(Of T)(T(), Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray2D<T>(T[], long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray2D(Of T)(T(), Long, Long)
-  nameWithType: ArrayExtensions.ToArray2D<T>(T[], long, long)
-  nameWithType.vb: ArrayExtensions.ToArray2D(Of T)(T(), Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray3D*
-  name: ToArray3D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray3D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray3D
-  fullName: PureHDF.ArrayExtensions.ToArray3D
-  nameWithType: ArrayExtensions.ToArray3D
-- uid: PureHDF.ArrayExtensions.ToArray3D``1(``0[],System.Int64,System.Int64,System.Int64)
-  name: ToArray3D<T>(T[], long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray3D__1___0___System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray3D``1(``0[],System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray3D(Of T)(T(), Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray3D<T>(T[], long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray3D(Of T)(T(), Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray3D<T>(T[], long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray3D(Of T)(T(), Long, Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray4D*
-  name: ToArray4D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray4D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray4D
-  fullName: PureHDF.ArrayExtensions.ToArray4D
-  nameWithType: ArrayExtensions.ToArray4D
-- uid: PureHDF.ArrayExtensions.ToArray4D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64)
-  name: ToArray4D<T>(T[], long, long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray4D__1___0___System_Int64_System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray4D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray4D(Of T)(T(), Long, Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray4D<T>(T[], long, long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray4D(Of T)(T(), Long, Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray4D<T>(T[], long, long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray4D(Of T)(T(), Long, Long, Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray5D*
-  name: ToArray5D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray5D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray5D
-  fullName: PureHDF.ArrayExtensions.ToArray5D
-  nameWithType: ArrayExtensions.ToArray5D
-- uid: PureHDF.ArrayExtensions.ToArray5D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name: ToArray5D<T>(T[], long, long, long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray5D__1___0___System_Int64_System_Int64_System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray5D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray5D(Of T)(T(), Long, Long, Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray5D<T>(T[], long, long, long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray5D(Of T)(T(), Long, Long, Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray5D<T>(T[], long, long, long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray5D(Of T)(T(), Long, Long, Long, Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray6D*
-  name: ToArray6D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray6D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray6D
-  fullName: PureHDF.ArrayExtensions.ToArray6D
-  nameWithType: ArrayExtensions.ToArray6D
-- uid: PureHDF.ArrayExtensions.ToArray6D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name: ToArray6D<T>(T[], long, long, long, long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray6D__1___0___System_Int64_System_Int64_System_Int64_System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray6D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray6D(Of T)(T(), Long, Long, Long, Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray6D<T>(T[], long, long, long, long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray6D(Of T)(T(), Long, Long, Long, Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray6D<T>(T[], long, long, long, long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray6D(Of T)(T(), Long, Long, Long, Long, Long, Long)
 - uid: PureHDF.CompoundMember
   name: CompoundMember
   href: api/PureHDF.CompoundMember.html
@@ -2009,45 +1928,48 @@ references:
   commentId: Overload:PureHDF.H5File.BeginWrite
   fullName: PureHDF.H5File.BeginWrite
   nameWithType: H5File.BeginWrite
-- uid: PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor)
-  name: Open(MemoryMappedViewAccessor)
-  href: api/PureHDF.H5File.html#PureHDF_H5File_Open_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_
-  commentId: M:PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor)
-  fullName: PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor)
-  nameWithType: H5File.Open(MemoryMappedViewAccessor)
-- uid: PureHDF.H5File.Open(System.IO.Stream,System.Boolean)
-  name: Open(Stream, bool)
-  href: api/PureHDF.H5File.html#PureHDF_H5File_Open_System_IO_Stream_System_Boolean_
-  commentId: M:PureHDF.H5File.Open(System.IO.Stream,System.Boolean)
-  name.vb: Open(Stream, Boolean)
-  fullName: PureHDF.H5File.Open(System.IO.Stream, bool)
-  fullName.vb: PureHDF.H5File.Open(System.IO.Stream, Boolean)
-  nameWithType: H5File.Open(Stream, bool)
-  nameWithType.vb: H5File.Open(Stream, Boolean)
-- uid: PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,System.Boolean)
-  name: Open(string, FileMode, FileAccess, FileShare, bool)
-  href: api/PureHDF.H5File.html#PureHDF_H5File_Open_System_String_System_IO_FileMode_System_IO_FileAccess_System_IO_FileShare_System_Boolean_
-  commentId: M:PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,System.Boolean)
-  name.vb: Open(String, FileMode, FileAccess, FileShare, Boolean)
-  fullName: PureHDF.H5File.Open(string, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, bool)
-  fullName.vb: PureHDF.H5File.Open(String, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, Boolean)
-  nameWithType: H5File.Open(string, FileMode, FileAccess, FileShare, bool)
-  nameWithType.vb: H5File.Open(String, FileMode, FileAccess, FileShare, Boolean)
+- uid: PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor,PureHDF.H5ReadOptions)
+  name: Open(MemoryMappedViewAccessor, H5ReadOptions?)
+  href: api/PureHDF.H5File.html#PureHDF_H5File_Open_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor,PureHDF.H5ReadOptions)
+  name.vb: Open(MemoryMappedViewAccessor, H5ReadOptions)
+  fullName: PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor, PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor, PureHDF.H5ReadOptions)
+  nameWithType: H5File.Open(MemoryMappedViewAccessor, H5ReadOptions?)
+  nameWithType.vb: H5File.Open(MemoryMappedViewAccessor, H5ReadOptions)
+- uid: PureHDF.H5File.Open(System.IO.Stream,System.Boolean,PureHDF.H5ReadOptions)
+  name: Open(Stream, bool, H5ReadOptions?)
+  href: api/PureHDF.H5File.html#PureHDF_H5File_Open_System_IO_Stream_System_Boolean_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5File.Open(System.IO.Stream,System.Boolean,PureHDF.H5ReadOptions)
+  name.vb: Open(Stream, Boolean, H5ReadOptions)
+  fullName: PureHDF.H5File.Open(System.IO.Stream, bool, PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5File.Open(System.IO.Stream, Boolean, PureHDF.H5ReadOptions)
+  nameWithType: H5File.Open(Stream, bool, H5ReadOptions?)
+  nameWithType.vb: H5File.Open(Stream, Boolean, H5ReadOptions)
+- uid: PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,PureHDF.H5ReadOptions)
+  name: Open(string, FileMode, FileAccess, FileShare, H5ReadOptions?)
+  href: api/PureHDF.H5File.html#PureHDF_H5File_Open_System_String_System_IO_FileMode_System_IO_FileAccess_System_IO_FileShare_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,PureHDF.H5ReadOptions)
+  name.vb: Open(String, FileMode, FileAccess, FileShare, H5ReadOptions)
+  fullName: PureHDF.H5File.Open(string, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5File.Open(String, System.IO.FileMode, System.IO.FileAccess, System.IO.FileShare, PureHDF.H5ReadOptions)
+  nameWithType: H5File.Open(string, FileMode, FileAccess, FileShare, H5ReadOptions?)
+  nameWithType.vb: H5File.Open(String, FileMode, FileAccess, FileShare, H5ReadOptions)
 - uid: PureHDF.H5File.Open*
   name: Open
   href: api/PureHDF.H5File.html#PureHDF_H5File_Open_
   commentId: Overload:PureHDF.H5File.Open
   fullName: PureHDF.H5File.Open
   nameWithType: H5File.Open
-- uid: PureHDF.H5File.OpenRead(System.String)
-  name: OpenRead(string)
-  href: api/PureHDF.H5File.html#PureHDF_H5File_OpenRead_System_String_
-  commentId: M:PureHDF.H5File.OpenRead(System.String)
-  name.vb: OpenRead(String)
-  fullName: PureHDF.H5File.OpenRead(string)
-  fullName.vb: PureHDF.H5File.OpenRead(String)
-  nameWithType: H5File.OpenRead(string)
-  nameWithType.vb: H5File.OpenRead(String)
+- uid: PureHDF.H5File.OpenRead(System.String,PureHDF.H5ReadOptions)
+  name: OpenRead(string, H5ReadOptions?)
+  href: api/PureHDF.H5File.html#PureHDF_H5File_OpenRead_System_String_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5File.OpenRead(System.String,PureHDF.H5ReadOptions)
+  name.vb: OpenRead(String, H5ReadOptions)
+  fullName: PureHDF.H5File.OpenRead(string, PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5File.OpenRead(String, PureHDF.H5ReadOptions)
+  nameWithType: H5File.OpenRead(string, H5ReadOptions?)
+  nameWithType.vb: H5File.OpenRead(String, H5ReadOptions)
 - uid: PureHDF.H5File.OpenRead*
   name: OpenRead
   href: api/PureHDF.H5File.html#PureHDF_H5File_OpenRead_
@@ -2429,6 +2351,246 @@ references:
   fullName.vb: PureHDF.H5Object.New
   nameWithType: H5Object.H5Object
   nameWithType.vb: H5Object.New
+- uid: PureHDF.H5ReadOptions
+  name: H5ReadOptions
+  href: api/PureHDF.H5ReadOptions.html
+  commentId: T:PureHDF.H5ReadOptions
+  fullName: PureHDF.H5ReadOptions
+  nameWithType: H5ReadOptions
+- uid: PureHDF.H5ReadOptions.#ctor(PureHDF.H5ReadOptions)
+  name: H5ReadOptions(H5ReadOptions)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions__ctor_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5ReadOptions.#ctor(PureHDF.H5ReadOptions)
+  name.vb: New(H5ReadOptions)
+  fullName: PureHDF.H5ReadOptions.H5ReadOptions(PureHDF.H5ReadOptions)
+  fullName.vb: PureHDF.H5ReadOptions.New(PureHDF.H5ReadOptions)
+  nameWithType: H5ReadOptions.H5ReadOptions(H5ReadOptions)
+  nameWithType.vb: H5ReadOptions.New(H5ReadOptions)
+- uid: PureHDF.H5ReadOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.String})
+  name: H5ReadOptions(bool, bool, bool, bool, Func<FieldInfo, string?>?, Func<PropertyInfo, string?>?)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions__ctor_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Func_System_Reflection_FieldInfo_System_String__System_Func_System_Reflection_PropertyInfo_System_String__
+  commentId: M:PureHDF.H5ReadOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.String})
+  name.vb: New(Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of PropertyInfo, String))
+  fullName: PureHDF.H5ReadOptions.H5ReadOptions(bool, bool, bool, bool, System.Func<System.Reflection.FieldInfo, string?>?, System.Func<System.Reflection.PropertyInfo, string?>?)
+  fullName.vb: PureHDF.H5ReadOptions.New(Boolean, Boolean, Boolean, Boolean, System.Func(Of System.Reflection.FieldInfo, String), System.Func(Of System.Reflection.PropertyInfo, String))
+  nameWithType: H5ReadOptions.H5ReadOptions(bool, bool, bool, bool, Func<FieldInfo, string?>?, Func<PropertyInfo, string?>?)
+  nameWithType.vb: H5ReadOptions.New(Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of PropertyInfo, String))
+- uid: PureHDF.H5ReadOptions.#ctor*
+  name: H5ReadOptions
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions__ctor_
+  commentId: Overload:PureHDF.H5ReadOptions.#ctor
+  name.vb: New
+  fullName: PureHDF.H5ReadOptions.H5ReadOptions
+  fullName.vb: PureHDF.H5ReadOptions.New
+  nameWithType: H5ReadOptions.H5ReadOptions
+  nameWithType.vb: H5ReadOptions.New
+- uid: PureHDF.H5ReadOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.String}@)
+  name: Deconstruct(out bool, out bool, out bool, out bool, out Func<FieldInfo, string?>?, out Func<PropertyInfo, string?>?)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_Deconstruct_System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Func_System_Reflection_FieldInfo_System_String___System_Func_System_Reflection_PropertyInfo_System_String___
+  commentId: M:PureHDF.H5ReadOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.String}@)
+  name.vb: Deconstruct(Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of PropertyInfo, String))
+  fullName: PureHDF.H5ReadOptions.Deconstruct(out bool, out bool, out bool, out bool, out System.Func<System.Reflection.FieldInfo, string?>?, out System.Func<System.Reflection.PropertyInfo, string?>?)
+  fullName.vb: PureHDF.H5ReadOptions.Deconstruct(Boolean, Boolean, Boolean, Boolean, System.Func(Of System.Reflection.FieldInfo, String), System.Func(Of System.Reflection.PropertyInfo, String))
+  nameWithType: H5ReadOptions.Deconstruct(out bool, out bool, out bool, out bool, out Func<FieldInfo, string?>?, out Func<PropertyInfo, string?>?)
+  nameWithType.vb: H5ReadOptions.Deconstruct(Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of PropertyInfo, String))
+- uid: PureHDF.H5ReadOptions.Deconstruct*
+  name: Deconstruct
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_Deconstruct_
+  commentId: Overload:PureHDF.H5ReadOptions.Deconstruct
+  fullName: PureHDF.H5ReadOptions.Deconstruct
+  nameWithType: H5ReadOptions.Deconstruct
+- uid: PureHDF.H5ReadOptions.EqualityContract
+  name: EqualityContract
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_EqualityContract
+  commentId: P:PureHDF.H5ReadOptions.EqualityContract
+  fullName: PureHDF.H5ReadOptions.EqualityContract
+  nameWithType: H5ReadOptions.EqualityContract
+- uid: PureHDF.H5ReadOptions.EqualityContract*
+  name: EqualityContract
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_EqualityContract_
+  commentId: Overload:PureHDF.H5ReadOptions.EqualityContract
+  fullName: PureHDF.H5ReadOptions.EqualityContract
+  nameWithType: H5ReadOptions.EqualityContract
+- uid: PureHDF.H5ReadOptions.Equals(PureHDF.H5ReadOptions)
+  name: Equals(H5ReadOptions?)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_Equals_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5ReadOptions.Equals(PureHDF.H5ReadOptions)
+  name.vb: Equals(H5ReadOptions)
+  fullName: PureHDF.H5ReadOptions.Equals(PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5ReadOptions.Equals(PureHDF.H5ReadOptions)
+  nameWithType: H5ReadOptions.Equals(H5ReadOptions?)
+  nameWithType.vb: H5ReadOptions.Equals(H5ReadOptions)
+- uid: PureHDF.H5ReadOptions.Equals(System.Object)
+  name: Equals(object?)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_Equals_System_Object_
+  commentId: M:PureHDF.H5ReadOptions.Equals(System.Object)
+  name.vb: Equals(Object)
+  fullName: PureHDF.H5ReadOptions.Equals(object?)
+  fullName.vb: PureHDF.H5ReadOptions.Equals(Object)
+  nameWithType: H5ReadOptions.Equals(object?)
+  nameWithType.vb: H5ReadOptions.Equals(Object)
+- uid: PureHDF.H5ReadOptions.Equals*
+  name: Equals
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_Equals_
+  commentId: Overload:PureHDF.H5ReadOptions.Equals
+  fullName: PureHDF.H5ReadOptions.Equals
+  nameWithType: H5ReadOptions.Equals
+- uid: PureHDF.H5ReadOptions.FieldNameMapper
+  name: FieldNameMapper
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_FieldNameMapper
+  commentId: P:PureHDF.H5ReadOptions.FieldNameMapper
+  fullName: PureHDF.H5ReadOptions.FieldNameMapper
+  nameWithType: H5ReadOptions.FieldNameMapper
+- uid: PureHDF.H5ReadOptions.FieldNameMapper*
+  name: FieldNameMapper
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_FieldNameMapper_
+  commentId: Overload:PureHDF.H5ReadOptions.FieldNameMapper
+  fullName: PureHDF.H5ReadOptions.FieldNameMapper
+  nameWithType: H5ReadOptions.FieldNameMapper
+- uid: PureHDF.H5ReadOptions.GetHashCode
+  name: GetHashCode()
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_GetHashCode
+  commentId: M:PureHDF.H5ReadOptions.GetHashCode
+  fullName: PureHDF.H5ReadOptions.GetHashCode()
+  nameWithType: H5ReadOptions.GetHashCode()
+- uid: PureHDF.H5ReadOptions.GetHashCode*
+  name: GetHashCode
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_GetHashCode_
+  commentId: Overload:PureHDF.H5ReadOptions.GetHashCode
+  fullName: PureHDF.H5ReadOptions.GetHashCode
+  nameWithType: H5ReadOptions.GetHashCode
+- uid: PureHDF.H5ReadOptions.IncludeClassFields
+  name: IncludeClassFields
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeClassFields
+  commentId: P:PureHDF.H5ReadOptions.IncludeClassFields
+  fullName: PureHDF.H5ReadOptions.IncludeClassFields
+  nameWithType: H5ReadOptions.IncludeClassFields
+- uid: PureHDF.H5ReadOptions.IncludeClassFields*
+  name: IncludeClassFields
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeClassFields_
+  commentId: Overload:PureHDF.H5ReadOptions.IncludeClassFields
+  fullName: PureHDF.H5ReadOptions.IncludeClassFields
+  nameWithType: H5ReadOptions.IncludeClassFields
+- uid: PureHDF.H5ReadOptions.IncludeClassProperties
+  name: IncludeClassProperties
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeClassProperties
+  commentId: P:PureHDF.H5ReadOptions.IncludeClassProperties
+  fullName: PureHDF.H5ReadOptions.IncludeClassProperties
+  nameWithType: H5ReadOptions.IncludeClassProperties
+- uid: PureHDF.H5ReadOptions.IncludeClassProperties*
+  name: IncludeClassProperties
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeClassProperties_
+  commentId: Overload:PureHDF.H5ReadOptions.IncludeClassProperties
+  fullName: PureHDF.H5ReadOptions.IncludeClassProperties
+  nameWithType: H5ReadOptions.IncludeClassProperties
+- uid: PureHDF.H5ReadOptions.IncludeStructFields
+  name: IncludeStructFields
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeStructFields
+  commentId: P:PureHDF.H5ReadOptions.IncludeStructFields
+  fullName: PureHDF.H5ReadOptions.IncludeStructFields
+  nameWithType: H5ReadOptions.IncludeStructFields
+- uid: PureHDF.H5ReadOptions.IncludeStructFields*
+  name: IncludeStructFields
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeStructFields_
+  commentId: Overload:PureHDF.H5ReadOptions.IncludeStructFields
+  fullName: PureHDF.H5ReadOptions.IncludeStructFields
+  nameWithType: H5ReadOptions.IncludeStructFields
+- uid: PureHDF.H5ReadOptions.IncludeStructProperties
+  name: IncludeStructProperties
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeStructProperties
+  commentId: P:PureHDF.H5ReadOptions.IncludeStructProperties
+  fullName: PureHDF.H5ReadOptions.IncludeStructProperties
+  nameWithType: H5ReadOptions.IncludeStructProperties
+- uid: PureHDF.H5ReadOptions.IncludeStructProperties*
+  name: IncludeStructProperties
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_IncludeStructProperties_
+  commentId: Overload:PureHDF.H5ReadOptions.IncludeStructProperties
+  fullName: PureHDF.H5ReadOptions.IncludeStructProperties
+  nameWithType: H5ReadOptions.IncludeStructProperties
+- uid: PureHDF.H5ReadOptions.PrintMembers(System.Text.StringBuilder)
+  name: PrintMembers(StringBuilder)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_PrintMembers_System_Text_StringBuilder_
+  commentId: M:PureHDF.H5ReadOptions.PrintMembers(System.Text.StringBuilder)
+  fullName: PureHDF.H5ReadOptions.PrintMembers(System.Text.StringBuilder)
+  nameWithType: H5ReadOptions.PrintMembers(StringBuilder)
+- uid: PureHDF.H5ReadOptions.PrintMembers*
+  name: PrintMembers
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_PrintMembers_
+  commentId: Overload:PureHDF.H5ReadOptions.PrintMembers
+  fullName: PureHDF.H5ReadOptions.PrintMembers
+  nameWithType: H5ReadOptions.PrintMembers
+- uid: PureHDF.H5ReadOptions.PropertyNameMapper
+  name: PropertyNameMapper
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_PropertyNameMapper
+  commentId: P:PureHDF.H5ReadOptions.PropertyNameMapper
+  fullName: PureHDF.H5ReadOptions.PropertyNameMapper
+  nameWithType: H5ReadOptions.PropertyNameMapper
+- uid: PureHDF.H5ReadOptions.PropertyNameMapper*
+  name: PropertyNameMapper
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_PropertyNameMapper_
+  commentId: Overload:PureHDF.H5ReadOptions.PropertyNameMapper
+  fullName: PureHDF.H5ReadOptions.PropertyNameMapper
+  nameWithType: H5ReadOptions.PropertyNameMapper
+- uid: PureHDF.H5ReadOptions.ToString
+  name: ToString()
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_ToString
+  commentId: M:PureHDF.H5ReadOptions.ToString
+  fullName: PureHDF.H5ReadOptions.ToString()
+  nameWithType: H5ReadOptions.ToString()
+- uid: PureHDF.H5ReadOptions.ToString*
+  name: ToString
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_ToString_
+  commentId: Overload:PureHDF.H5ReadOptions.ToString
+  fullName: PureHDF.H5ReadOptions.ToString
+  nameWithType: H5ReadOptions.ToString
+- uid: PureHDF.H5ReadOptions.op_Equality(PureHDF.H5ReadOptions,PureHDF.H5ReadOptions)
+  name: operator ==(H5ReadOptions?, H5ReadOptions?)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_op_Equality_PureHDF_H5ReadOptions_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5ReadOptions.op_Equality(PureHDF.H5ReadOptions,PureHDF.H5ReadOptions)
+  name.vb: =(H5ReadOptions, H5ReadOptions)
+  fullName: PureHDF.H5ReadOptions.operator ==(PureHDF.H5ReadOptions?, PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5ReadOptions.=(PureHDF.H5ReadOptions, PureHDF.H5ReadOptions)
+  nameWithType: H5ReadOptions.operator ==(H5ReadOptions?, H5ReadOptions?)
+  nameWithType.vb: H5ReadOptions.=(H5ReadOptions, H5ReadOptions)
+- uid: PureHDF.H5ReadOptions.op_Equality*
+  name: operator ==
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_op_Equality_
+  commentId: Overload:PureHDF.H5ReadOptions.op_Equality
+  name.vb: =
+  fullName: PureHDF.H5ReadOptions.operator ==
+  fullName.vb: PureHDF.H5ReadOptions.=
+  nameWithType: H5ReadOptions.operator ==
+  nameWithType.vb: H5ReadOptions.=
+- uid: PureHDF.H5ReadOptions.op_Inequality(PureHDF.H5ReadOptions,PureHDF.H5ReadOptions)
+  name: operator !=(H5ReadOptions?, H5ReadOptions?)
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_op_Inequality_PureHDF_H5ReadOptions_PureHDF_H5ReadOptions_
+  commentId: M:PureHDF.H5ReadOptions.op_Inequality(PureHDF.H5ReadOptions,PureHDF.H5ReadOptions)
+  name.vb: <>(H5ReadOptions, H5ReadOptions)
+  fullName: PureHDF.H5ReadOptions.operator !=(PureHDF.H5ReadOptions?, PureHDF.H5ReadOptions?)
+  fullName.vb: PureHDF.H5ReadOptions.<>(PureHDF.H5ReadOptions, PureHDF.H5ReadOptions)
+  nameWithType: H5ReadOptions.operator !=(H5ReadOptions?, H5ReadOptions?)
+  nameWithType.vb: H5ReadOptions.<>(H5ReadOptions, H5ReadOptions)
+- uid: PureHDF.H5ReadOptions.op_Inequality*
+  name: operator !=
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions_op_Inequality_
+  commentId: Overload:PureHDF.H5ReadOptions.op_Inequality
+  name.vb: <>
+  fullName: PureHDF.H5ReadOptions.operator !=
+  fullName.vb: PureHDF.H5ReadOptions.<>
+  nameWithType: H5ReadOptions.operator !=
+  nameWithType.vb: H5ReadOptions.<>
+- uid: PureHDF.H5ReadOptions.{Clone}$
+  name: <Clone>$()
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions__Clone__
+  commentId: M:PureHDF.H5ReadOptions.{Clone}$
+  fullName: PureHDF.H5ReadOptions.<Clone>$()
+  nameWithType: H5ReadOptions.<Clone>$()
+- uid: PureHDF.H5ReadOptions.{Clone}$*
+  name: <Clone>$
+  href: api/PureHDF.H5ReadOptions.html#PureHDF_H5ReadOptions__Clone___
+  commentId: Overload:PureHDF.H5ReadOptions.{Clone}$
+  fullName: PureHDF.H5ReadOptions.<Clone>$
+  nameWithType: H5ReadOptions.<Clone>$
 - uid: PureHDF.H5SourceGeneratorAttribute
   name: H5SourceGeneratorAttribute
   href: api/PureHDF.H5SourceGeneratorAttribute.html
@@ -2504,15 +2666,15 @@ references:
   fullName.vb: PureHDF.H5WriteOptions.New(PureHDF.H5WriteOptions)
   nameWithType: H5WriteOptions.H5WriteOptions(H5WriteOptions)
   nameWithType.vb: H5WriteOptions.New(H5WriteOptions)
-- uid: PureHDF.H5WriteOptions.#ctor(System.Int32,System.Int32,System.Int64,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}},System.Func{System.Reflection.PropertyInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}},System.Func{PureHDF.VOL.Native.IWritingChunkCache},System.Collections.Generic.List{PureHDF.Filters.H5Filter})
-  name: H5WriteOptions(int, int, long, bool, bool, bool, bool, bool, Func<FieldInfo, string?>?, Func<FieldInfo, int?>?, Func<PropertyInfo, string?>?, Func<PropertyInfo, int?>?, Func<IWritingChunkCache>?, List<H5Filter>?)
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions__ctor_System_Int32_System_Int32_System_Int64_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Func_System_Reflection_FieldInfo_System_String__System_Func_System_Reflection_FieldInfo_System_Nullable_System_Int32___System_Func_System_Reflection_PropertyInfo_System_String__System_Func_System_Reflection_PropertyInfo_System_Nullable_System_Int32___System_Func_PureHDF_VOL_Native_IWritingChunkCache__System_Collections_Generic_List_PureHDF_Filters_H5Filter__
-  commentId: M:PureHDF.H5WriteOptions.#ctor(System.Int32,System.Int32,System.Int64,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}},System.Func{System.Reflection.PropertyInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}},System.Func{PureHDF.VOL.Native.IWritingChunkCache},System.Collections.Generic.List{PureHDF.Filters.H5Filter})
-  name.vb: New(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), Func(Of IWritingChunkCache), List(Of H5Filter))
-  fullName: PureHDF.H5WriteOptions.H5WriteOptions(int, int, long, bool, bool, bool, bool, bool, System.Func<System.Reflection.FieldInfo, string?>?, System.Func<System.Reflection.FieldInfo, int?>?, System.Func<System.Reflection.PropertyInfo, string?>?, System.Func<System.Reflection.PropertyInfo, int?>?, System.Func<PureHDF.VOL.Native.IWritingChunkCache>?, System.Collections.Generic.List<PureHDF.Filters.H5Filter>?)
-  fullName.vb: PureHDF.H5WriteOptions.New(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, System.Func(Of System.Reflection.FieldInfo, String), System.Func(Of System.Reflection.FieldInfo, Integer?), System.Func(Of System.Reflection.PropertyInfo, String), System.Func(Of System.Reflection.PropertyInfo, Integer?), System.Func(Of PureHDF.VOL.Native.IWritingChunkCache), System.Collections.Generic.List(Of PureHDF.Filters.H5Filter))
-  nameWithType: H5WriteOptions.H5WriteOptions(int, int, long, bool, bool, bool, bool, bool, Func<FieldInfo, string?>?, Func<FieldInfo, int?>?, Func<PropertyInfo, string?>?, Func<PropertyInfo, int?>?, Func<IWritingChunkCache>?, List<H5Filter>?)
-  nameWithType.vb: H5WriteOptions.New(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), Func(Of IWritingChunkCache), List(Of H5Filter))
+- uid: PureHDF.H5WriteOptions.#ctor(System.Int32,System.Int32,System.Int64,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}},System.Func{System.Reflection.PropertyInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}},System.Collections.Generic.List{PureHDF.Filters.H5Filter})
+  name: H5WriteOptions(int, int, long, bool, bool, bool, bool, bool, Func<FieldInfo, string?>?, Func<FieldInfo, int?>?, Func<PropertyInfo, string?>?, Func<PropertyInfo, int?>?, List<H5Filter>?)
+  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions__ctor_System_Int32_System_Int32_System_Int64_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Func_System_Reflection_FieldInfo_System_String__System_Func_System_Reflection_FieldInfo_System_Nullable_System_Int32___System_Func_System_Reflection_PropertyInfo_System_String__System_Func_System_Reflection_PropertyInfo_System_Nullable_System_Int32___System_Collections_Generic_List_PureHDF_Filters_H5Filter__
+  commentId: M:PureHDF.H5WriteOptions.#ctor(System.Int32,System.Int32,System.Int64,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}},System.Func{System.Reflection.PropertyInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}},System.Collections.Generic.List{PureHDF.Filters.H5Filter})
+  name.vb: New(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), List(Of H5Filter))
+  fullName: PureHDF.H5WriteOptions.H5WriteOptions(int, int, long, bool, bool, bool, bool, bool, System.Func<System.Reflection.FieldInfo, string?>?, System.Func<System.Reflection.FieldInfo, int?>?, System.Func<System.Reflection.PropertyInfo, string?>?, System.Func<System.Reflection.PropertyInfo, int?>?, System.Collections.Generic.List<PureHDF.Filters.H5Filter>?)
+  fullName.vb: PureHDF.H5WriteOptions.New(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, System.Func(Of System.Reflection.FieldInfo, String), System.Func(Of System.Reflection.FieldInfo, Integer?), System.Func(Of System.Reflection.PropertyInfo, String), System.Func(Of System.Reflection.PropertyInfo, Integer?), System.Collections.Generic.List(Of PureHDF.Filters.H5Filter))
+  nameWithType: H5WriteOptions.H5WriteOptions(int, int, long, bool, bool, bool, bool, bool, Func<FieldInfo, string?>?, Func<FieldInfo, int?>?, Func<PropertyInfo, string?>?, Func<PropertyInfo, int?>?, List<H5Filter>?)
+  nameWithType.vb: H5WriteOptions.New(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), List(Of H5Filter))
 - uid: PureHDF.H5WriteOptions.#ctor*
   name: H5WriteOptions
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions__ctor_
@@ -2522,45 +2684,21 @@ references:
   fullName.vb: PureHDF.H5WriteOptions.New
   nameWithType: H5WriteOptions.H5WriteOptions
   nameWithType.vb: H5WriteOptions.New
-- uid: PureHDF.H5WriteOptions.ChunkCacheFactory
-  name: ChunkCacheFactory
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_ChunkCacheFactory
-  commentId: P:PureHDF.H5WriteOptions.ChunkCacheFactory
-  fullName: PureHDF.H5WriteOptions.ChunkCacheFactory
-  nameWithType: H5WriteOptions.ChunkCacheFactory
-- uid: PureHDF.H5WriteOptions.ChunkCacheFactory*
-  name: ChunkCacheFactory
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_ChunkCacheFactory_
-  commentId: Overload:PureHDF.H5WriteOptions.ChunkCacheFactory
-  fullName: PureHDF.H5WriteOptions.ChunkCacheFactory
-  nameWithType: H5WriteOptions.ChunkCacheFactory
-- uid: PureHDF.H5WriteOptions.Deconstruct(System.Int32@,System.Int32@,System.Int64@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}}@,System.Func{System.Reflection.PropertyInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}}@,System.Func{PureHDF.VOL.Native.IWritingChunkCache}@,System.Collections.Generic.List{PureHDF.Filters.H5Filter}@)
-  name: Deconstruct(out int, out int, out long, out bool, out bool, out bool, out bool, out bool, out Func<FieldInfo, string?>?, out Func<FieldInfo, int?>?, out Func<PropertyInfo, string?>?, out Func<PropertyInfo, int?>?, out Func<IWritingChunkCache>?, out List<H5Filter>?)
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_Deconstruct_System_Int32__System_Int32__System_Int64__System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Func_System_Reflection_FieldInfo_System_String___System_Func_System_Reflection_FieldInfo_System_Nullable_System_Int32____System_Func_System_Reflection_PropertyInfo_System_String___System_Func_System_Reflection_PropertyInfo_System_Nullable_System_Int32____System_Func_PureHDF_VOL_Native_IWritingChunkCache___System_Collections_Generic_List_PureHDF_Filters_H5Filter___
-  commentId: M:PureHDF.H5WriteOptions.Deconstruct(System.Int32@,System.Int32@,System.Int64@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}}@,System.Func{System.Reflection.PropertyInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}}@,System.Func{PureHDF.VOL.Native.IWritingChunkCache}@,System.Collections.Generic.List{PureHDF.Filters.H5Filter}@)
-  name.vb: Deconstruct(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), Func(Of IWritingChunkCache), List(Of H5Filter))
-  fullName: PureHDF.H5WriteOptions.Deconstruct(out int, out int, out long, out bool, out bool, out bool, out bool, out bool, out System.Func<System.Reflection.FieldInfo, string?>?, out System.Func<System.Reflection.FieldInfo, int?>?, out System.Func<System.Reflection.PropertyInfo, string?>?, out System.Func<System.Reflection.PropertyInfo, int?>?, out System.Func<PureHDF.VOL.Native.IWritingChunkCache>?, out System.Collections.Generic.List<PureHDF.Filters.H5Filter>?)
-  fullName.vb: PureHDF.H5WriteOptions.Deconstruct(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, System.Func(Of System.Reflection.FieldInfo, String), System.Func(Of System.Reflection.FieldInfo, Integer?), System.Func(Of System.Reflection.PropertyInfo, String), System.Func(Of System.Reflection.PropertyInfo, Integer?), System.Func(Of PureHDF.VOL.Native.IWritingChunkCache), System.Collections.Generic.List(Of PureHDF.Filters.H5Filter))
-  nameWithType: H5WriteOptions.Deconstruct(out int, out int, out long, out bool, out bool, out bool, out bool, out bool, out Func<FieldInfo, string?>?, out Func<FieldInfo, int?>?, out Func<PropertyInfo, string?>?, out Func<PropertyInfo, int?>?, out Func<IWritingChunkCache>?, out List<H5Filter>?)
-  nameWithType.vb: H5WriteOptions.Deconstruct(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), Func(Of IWritingChunkCache), List(Of H5Filter))
+- uid: PureHDF.H5WriteOptions.Deconstruct(System.Int32@,System.Int32@,System.Int64@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}}@,System.Func{System.Reflection.PropertyInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}}@,System.Collections.Generic.List{PureHDF.Filters.H5Filter}@)
+  name: Deconstruct(out int, out int, out long, out bool, out bool, out bool, out bool, out bool, out Func<FieldInfo, string?>?, out Func<FieldInfo, int?>?, out Func<PropertyInfo, string?>?, out Func<PropertyInfo, int?>?, out List<H5Filter>?)
+  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_Deconstruct_System_Int32__System_Int32__System_Int64__System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Func_System_Reflection_FieldInfo_System_String___System_Func_System_Reflection_FieldInfo_System_Nullable_System_Int32____System_Func_System_Reflection_PropertyInfo_System_String___System_Func_System_Reflection_PropertyInfo_System_Nullable_System_Int32____System_Collections_Generic_List_PureHDF_Filters_H5Filter___
+  commentId: M:PureHDF.H5WriteOptions.Deconstruct(System.Int32@,System.Int32@,System.Int64@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.FieldInfo,System.Nullable{System.Int32}}@,System.Func{System.Reflection.PropertyInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.Nullable{System.Int32}}@,System.Collections.Generic.List{PureHDF.Filters.H5Filter}@)
+  name.vb: Deconstruct(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), List(Of H5Filter))
+  fullName: PureHDF.H5WriteOptions.Deconstruct(out int, out int, out long, out bool, out bool, out bool, out bool, out bool, out System.Func<System.Reflection.FieldInfo, string?>?, out System.Func<System.Reflection.FieldInfo, int?>?, out System.Func<System.Reflection.PropertyInfo, string?>?, out System.Func<System.Reflection.PropertyInfo, int?>?, out System.Collections.Generic.List<PureHDF.Filters.H5Filter>?)
+  fullName.vb: PureHDF.H5WriteOptions.Deconstruct(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, System.Func(Of System.Reflection.FieldInfo, String), System.Func(Of System.Reflection.FieldInfo, Integer?), System.Func(Of System.Reflection.PropertyInfo, String), System.Func(Of System.Reflection.PropertyInfo, Integer?), System.Collections.Generic.List(Of PureHDF.Filters.H5Filter))
+  nameWithType: H5WriteOptions.Deconstruct(out int, out int, out long, out bool, out bool, out bool, out bool, out bool, out Func<FieldInfo, string?>?, out Func<FieldInfo, int?>?, out Func<PropertyInfo, string?>?, out Func<PropertyInfo, int?>?, out List<H5Filter>?)
+  nameWithType.vb: H5WriteOptions.Deconstruct(Integer, Integer, Long, Boolean, Boolean, Boolean, Boolean, Boolean, Func(Of FieldInfo, String), Func(Of FieldInfo, Integer?), Func(Of PropertyInfo, String), Func(Of PropertyInfo, Integer?), List(Of H5Filter))
 - uid: PureHDF.H5WriteOptions.Deconstruct*
   name: Deconstruct
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_Deconstruct_
   commentId: Overload:PureHDF.H5WriteOptions.Deconstruct
   fullName: PureHDF.H5WriteOptions.Deconstruct
   nameWithType: H5WriteOptions.Deconstruct
-- uid: PureHDF.H5WriteOptions.DefaultChunkCacheFactory
-  name: DefaultChunkCacheFactory
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_DefaultChunkCacheFactory
-  commentId: P:PureHDF.H5WriteOptions.DefaultChunkCacheFactory
-  fullName: PureHDF.H5WriteOptions.DefaultChunkCacheFactory
-  nameWithType: H5WriteOptions.DefaultChunkCacheFactory
-- uid: PureHDF.H5WriteOptions.DefaultChunkCacheFactory*
-  name: DefaultChunkCacheFactory
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_DefaultChunkCacheFactory_
-  commentId: Overload:PureHDF.H5WriteOptions.DefaultChunkCacheFactory
-  fullName: PureHDF.H5WriteOptions.DefaultChunkCacheFactory
-  nameWithType: H5WriteOptions.DefaultChunkCacheFactory
 - uid: PureHDF.H5WriteOptions.DefaultStringLength
   name: DefaultStringLength
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_DefaultStringLength
@@ -2900,21 +3038,6 @@ references:
   commentId: Overload:PureHDF.IDatasetStream.ReadDataset
   fullName: PureHDF.IDatasetStream.ReadDataset
   nameWithType: IDatasetStream.ReadDataset
-- uid: PureHDF.IDatasetStream.ReadDatasetAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
-  name: ReadDatasetAsync(Memory<byte>, CancellationToken)
-  href: api/PureHDF.IDatasetStream.html#PureHDF_IDatasetStream_ReadDatasetAsync_System_Memory_System_Byte__System_Threading_CancellationToken_
-  commentId: M:PureHDF.IDatasetStream.ReadDatasetAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
-  name.vb: ReadDatasetAsync(Memory(Of Byte), CancellationToken)
-  fullName: PureHDF.IDatasetStream.ReadDatasetAsync(System.Memory<byte>, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IDatasetStream.ReadDatasetAsync(System.Memory(Of Byte), System.Threading.CancellationToken)
-  nameWithType: IDatasetStream.ReadDatasetAsync(Memory<byte>, CancellationToken)
-  nameWithType.vb: IDatasetStream.ReadDatasetAsync(Memory(Of Byte), CancellationToken)
-- uid: PureHDF.IDatasetStream.ReadDatasetAsync*
-  name: ReadDatasetAsync
-  href: api/PureHDF.IDatasetStream.html#PureHDF_IDatasetStream_ReadDatasetAsync_
-  commentId: Overload:PureHDF.IDatasetStream.ReadDatasetAsync
-  fullName: PureHDF.IDatasetStream.ReadDatasetAsync
-  nameWithType: IDatasetStream.ReadDatasetAsync
 - uid: PureHDF.IEnumerationType
   name: IEnumerationType
   href: api/PureHDF.IEnumerationType.html
@@ -3059,63 +3182,24 @@ references:
   commentId: Overload:PureHDF.IH5Attribute.Read
   fullName: PureHDF.IH5Attribute.Read
   nameWithType: IH5Attribute.Read
-- uid: PureHDF.IH5Attribute.ReadCompound
-  name: ReadCompound()
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadCompound
-  commentId: M:PureHDF.IH5Attribute.ReadCompound
-  fullName: PureHDF.IH5Attribute.ReadCompound()
-  nameWithType: IH5Attribute.ReadCompound()
-- uid: PureHDF.IH5Attribute.ReadCompound*
-  name: ReadCompound
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadCompound_
-  commentId: Overload:PureHDF.IH5Attribute.ReadCompound
-  fullName: PureHDF.IH5Attribute.ReadCompound
-  nameWithType: IH5Attribute.ReadCompound
-- uid: PureHDF.IH5Attribute.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String})
-  name: ReadCompound<T>(Func<FieldInfo, string?>?)
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadCompound__1_System_Func_System_Reflection_FieldInfo_System_String__
-  commentId: M:PureHDF.IH5Attribute.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String})
-  name.vb: ReadCompound(Of T)(Func(Of FieldInfo, String))
-  fullName: PureHDF.IH5Attribute.ReadCompound<T>(System.Func<System.Reflection.FieldInfo, string?>?)
-  fullName.vb: PureHDF.IH5Attribute.ReadCompound(Of T)(System.Func(Of System.Reflection.FieldInfo, String))
-  nameWithType: IH5Attribute.ReadCompound<T>(Func<FieldInfo, string?>?)
-  nameWithType.vb: IH5Attribute.ReadCompound(Of T)(Func(Of FieldInfo, String))
-- uid: PureHDF.IH5Attribute.ReadString
-  name: ReadString()
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadString
-  commentId: M:PureHDF.IH5Attribute.ReadString
-  fullName: PureHDF.IH5Attribute.ReadString()
-  nameWithType: IH5Attribute.ReadString()
-- uid: PureHDF.IH5Attribute.ReadString*
-  name: ReadString
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadString_
-  commentId: Overload:PureHDF.IH5Attribute.ReadString
-  fullName: PureHDF.IH5Attribute.ReadString
-  nameWithType: IH5Attribute.ReadString
-- uid: PureHDF.IH5Attribute.ReadVariableLength*
-  name: ReadVariableLength
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadVariableLength_
-  commentId: Overload:PureHDF.IH5Attribute.ReadVariableLength
-  fullName: PureHDF.IH5Attribute.ReadVariableLength
-  nameWithType: IH5Attribute.ReadVariableLength
-- uid: PureHDF.IH5Attribute.ReadVariableLength``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadVariableLength<T>(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_ReadVariableLength__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Attribute.ReadVariableLength``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadVariableLength(Of T)(Selection, Selection, ULong())
-  fullName: PureHDF.IH5Attribute.ReadVariableLength<T>(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Attribute.ReadVariableLength(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Attribute.ReadVariableLength<T>(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Attribute.ReadVariableLength(Of T)(Selection, Selection, ULong())
-- uid: PureHDF.IH5Attribute.Read``1
-  name: Read<T>()
-  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_Read__1
-  commentId: M:PureHDF.IH5Attribute.Read``1
-  name.vb: Read(Of T)()
-  fullName: PureHDF.IH5Attribute.Read<T>()
-  fullName.vb: PureHDF.IH5Attribute.Read(Of T)()
-  nameWithType: IH5Attribute.Read<T>()
-  nameWithType.vb: IH5Attribute.Read(Of T)()
+- uid: PureHDF.IH5Attribute.Read``1(System.UInt64[])
+  name: Read<T>(ulong[]?)
+  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_Read__1_System_UInt64___
+  commentId: M:PureHDF.IH5Attribute.Read``1(System.UInt64[])
+  name.vb: Read(Of T)(ULong())
+  fullName: PureHDF.IH5Attribute.Read<T>(ulong[]?)
+  fullName.vb: PureHDF.IH5Attribute.Read(Of T)(ULong())
+  nameWithType: IH5Attribute.Read<T>(ulong[]?)
+  nameWithType.vb: IH5Attribute.Read(Of T)(ULong())
+- uid: PureHDF.IH5Attribute.Read``1(``0,System.UInt64[])
+  name: Read<T>(T, ulong[]?)
+  href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_Read__1___0_System_UInt64___
+  commentId: M:PureHDF.IH5Attribute.Read``1(``0,System.UInt64[])
+  name.vb: Read(Of T)(T, ULong())
+  fullName: PureHDF.IH5Attribute.Read<T>(T, ulong[]?)
+  fullName.vb: PureHDF.IH5Attribute.Read(Of T)(T, ULong())
+  nameWithType: IH5Attribute.Read<T>(T, ulong[]?)
+  nameWithType.vb: IH5Attribute.Read(Of T)(T, ULong())
 - uid: PureHDF.IH5Attribute.Space
   name: Space
   href: api/PureHDF.IH5Attribute.html#PureHDF_IH5Attribute_Space
@@ -3356,30 +3440,12 @@ references:
   commentId: Overload:PureHDF.IH5Dataset.Layout
   fullName: PureHDF.IH5Dataset.Layout
   nameWithType: IH5Dataset.Layout
-- uid: PureHDF.IH5Dataset.Read(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_Read_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Dataset.Read(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(Selection, Selection, ULong())
-  fullName: PureHDF.IH5Dataset.Read(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Dataset.Read(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Dataset.Read(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Dataset.Read(Selection, Selection, ULong())
 - uid: PureHDF.IH5Dataset.Read*
   name: Read
   href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_Read_
   commentId: Overload:PureHDF.IH5Dataset.Read
   fullName: PureHDF.IH5Dataset.Read
   nameWithType: IH5Dataset.Read
-- uid: PureHDF.IH5Dataset.ReadAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadAsync_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5Dataset.ReadAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.IH5Dataset.ReadAsync(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5Dataset.ReadAsync(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: IH5Dataset.ReadAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: IH5Dataset.ReadAsync(Selection, Selection, ULong(), CancellationToken)
 - uid: PureHDF.IH5Dataset.ReadAsync*
   name: ReadAsync
   href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadAsync_
@@ -3395,123 +3461,15 @@ references:
   fullName.vb: PureHDF.IH5Dataset.ReadAsync(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
   nameWithType: IH5Dataset.ReadAsync<T>(Selection?, Selection?, ulong[]?, CancellationToken)
   nameWithType.vb: IH5Dataset.ReadAsync(Of T)(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.IH5Dataset.ReadAsync``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync<T>(Memory<T>, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadAsync__1_System_Memory___0__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5Dataset.ReadAsync``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(Of T)(Memory(Of T), Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.IH5Dataset.ReadAsync<T>(System.Memory<T>, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5Dataset.ReadAsync(Of T)(System.Memory(Of T), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: IH5Dataset.ReadAsync<T>(Memory<T>, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: IH5Dataset.ReadAsync(Of T)(Memory(Of T), Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.IH5Dataset.ReadCompound(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadCompound(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadCompound_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Dataset.ReadCompound(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadCompound(Selection, Selection, ULong())
-  fullName: PureHDF.IH5Dataset.ReadCompound(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Dataset.ReadCompound(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Dataset.ReadCompound(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Dataset.ReadCompound(Selection, Selection, ULong())
-- uid: PureHDF.IH5Dataset.ReadCompound*
-  name: ReadCompound
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadCompound_
-  commentId: Overload:PureHDF.IH5Dataset.ReadCompound
-  fullName: PureHDF.IH5Dataset.ReadCompound
-  nameWithType: IH5Dataset.ReadCompound
-- uid: PureHDF.IH5Dataset.ReadCompoundAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadCompoundAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadCompoundAsync_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5Dataset.ReadCompoundAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadCompoundAsync(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.IH5Dataset.ReadCompoundAsync(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5Dataset.ReadCompoundAsync(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: IH5Dataset.ReadCompoundAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: IH5Dataset.ReadCompoundAsync(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.IH5Dataset.ReadCompoundAsync*
-  name: ReadCompoundAsync
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadCompoundAsync_
-  commentId: Overload:PureHDF.IH5Dataset.ReadCompoundAsync
-  fullName: PureHDF.IH5Dataset.ReadCompoundAsync
-  nameWithType: IH5Dataset.ReadCompoundAsync
-- uid: PureHDF.IH5Dataset.ReadCompoundAsync``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadCompoundAsync<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadCompoundAsync__1_System_Func_System_Reflection_FieldInfo_System_String__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5Dataset.ReadCompoundAsync``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadCompoundAsync(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.IH5Dataset.ReadCompoundAsync<T>(System.Func<System.Reflection.FieldInfo, string?>?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5Dataset.ReadCompoundAsync(Of T)(System.Func(Of System.Reflection.FieldInfo, String), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: IH5Dataset.ReadCompoundAsync<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: IH5Dataset.ReadCompoundAsync(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.IH5Dataset.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadCompound<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadCompound__1_System_Func_System_Reflection_FieldInfo_System_String__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Dataset.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadCompound(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong())
-  fullName: PureHDF.IH5Dataset.ReadCompound<T>(System.Func<System.Reflection.FieldInfo, string?>?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Dataset.ReadCompound(Of T)(System.Func(Of System.Reflection.FieldInfo, String), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Dataset.ReadCompound<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Dataset.ReadCompound(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong())
-- uid: PureHDF.IH5Dataset.ReadString(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadString(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadString_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Dataset.ReadString(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadString(Selection, Selection, ULong())
-  fullName: PureHDF.IH5Dataset.ReadString(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Dataset.ReadString(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Dataset.ReadString(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Dataset.ReadString(Selection, Selection, ULong())
-- uid: PureHDF.IH5Dataset.ReadString*
-  name: ReadString
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadString_
-  commentId: Overload:PureHDF.IH5Dataset.ReadString
-  fullName: PureHDF.IH5Dataset.ReadString
-  nameWithType: IH5Dataset.ReadString
-- uid: PureHDF.IH5Dataset.ReadStringAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadStringAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadStringAsync_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5Dataset.ReadStringAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadStringAsync(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.IH5Dataset.ReadStringAsync(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5Dataset.ReadStringAsync(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: IH5Dataset.ReadStringAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: IH5Dataset.ReadStringAsync(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.IH5Dataset.ReadStringAsync*
-  name: ReadStringAsync
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadStringAsync_
-  commentId: Overload:PureHDF.IH5Dataset.ReadStringAsync
-  fullName: PureHDF.IH5Dataset.ReadStringAsync
-  nameWithType: IH5Dataset.ReadStringAsync
-- uid: PureHDF.IH5Dataset.ReadVariableLength*
-  name: ReadVariableLength
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadVariableLength_
-  commentId: Overload:PureHDF.IH5Dataset.ReadVariableLength
-  fullName: PureHDF.IH5Dataset.ReadVariableLength
-  nameWithType: IH5Dataset.ReadVariableLength
-- uid: PureHDF.IH5Dataset.ReadVariableLengthAsync*
-  name: ReadVariableLengthAsync
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadVariableLengthAsync_
-  commentId: Overload:PureHDF.IH5Dataset.ReadVariableLengthAsync
-  fullName: PureHDF.IH5Dataset.ReadVariableLengthAsync
-  nameWithType: IH5Dataset.ReadVariableLengthAsync
-- uid: PureHDF.IH5Dataset.ReadVariableLengthAsync``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadVariableLengthAsync<T>(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadVariableLengthAsync__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5Dataset.ReadVariableLengthAsync``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadVariableLengthAsync(Of T)(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.IH5Dataset.ReadVariableLengthAsync<T>(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5Dataset.ReadVariableLengthAsync(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: IH5Dataset.ReadVariableLengthAsync<T>(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: IH5Dataset.ReadVariableLengthAsync(Of T)(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.IH5Dataset.ReadVariableLength``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadVariableLength<T>(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadVariableLength__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Dataset.ReadVariableLength``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadVariableLength(Of T)(Selection, Selection, ULong())
-  fullName: PureHDF.IH5Dataset.ReadVariableLength<T>(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Dataset.ReadVariableLength(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Dataset.ReadVariableLength<T>(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Dataset.ReadVariableLength(Of T)(Selection, Selection, ULong())
+- uid: PureHDF.IH5Dataset.ReadAsync``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
+  name: ReadAsync<T>(T, Selection?, Selection?, ulong[]?, CancellationToken)
+  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_ReadAsync__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
+  commentId: M:PureHDF.IH5Dataset.ReadAsync``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
+  name.vb: ReadAsync(Of T)(T, Selection, Selection, ULong(), CancellationToken)
+  fullName: PureHDF.IH5Dataset.ReadAsync<T>(T, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
+  fullName.vb: PureHDF.IH5Dataset.ReadAsync(Of T)(T, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
+  nameWithType: IH5Dataset.ReadAsync<T>(T, Selection?, Selection?, ulong[]?, CancellationToken)
+  nameWithType.vb: IH5Dataset.ReadAsync(Of T)(T, Selection, Selection, ULong(), CancellationToken)
 - uid: PureHDF.IH5Dataset.Read``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
   name: Read<T>(Selection?, Selection?, ulong[]?)
   href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_Read__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
@@ -3521,15 +3479,15 @@ references:
   fullName.vb: PureHDF.IH5Dataset.Read(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
   nameWithType: IH5Dataset.Read<T>(Selection?, Selection?, ulong[]?)
   nameWithType.vb: IH5Dataset.Read(Of T)(Selection, Selection, ULong())
-- uid: PureHDF.IH5Dataset.Read``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read<T>(Memory<T>, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_Read__1_System_Memory___0__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5Dataset.Read``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(Of T)(Memory(Of T), Selection, Selection, ULong())
-  fullName: PureHDF.IH5Dataset.Read<T>(System.Memory<T>, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5Dataset.Read(Of T)(System.Memory(Of T), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5Dataset.Read<T>(Memory<T>, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: IH5Dataset.Read(Of T)(Memory(Of T), Selection, Selection, ULong())
+- uid: PureHDF.IH5Dataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
+  name: Read<T>(T, Selection?, Selection?, ulong[]?)
+  href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_Read__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
+  commentId: M:PureHDF.IH5Dataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
+  name.vb: Read(Of T)(T, Selection, Selection, ULong())
+  fullName: PureHDF.IH5Dataset.Read<T>(T, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
+  fullName.vb: PureHDF.IH5Dataset.Read(Of T)(T, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
+  nameWithType: IH5Dataset.Read<T>(T, Selection?, Selection?, ulong[]?)
+  nameWithType.vb: IH5Dataset.Read(Of T)(T, Selection, Selection, ULong())
 - uid: PureHDF.IH5Dataset.Space
   name: Space
   href: api/PureHDF.IH5Dataset.html#PureHDF_IH5Dataset_Space
@@ -3554,27 +3512,6 @@ references:
   commentId: Overload:PureHDF.IH5Dataset.Type
   fullName: PureHDF.IH5Dataset.Type
   nameWithType: IH5Dataset.Type
-- uid: PureHDF.IH5DatasetExtensions
-  name: IH5DatasetExtensions
-  href: api/PureHDF.IH5DatasetExtensions.html
-  commentId: T:PureHDF.IH5DatasetExtensions
-  fullName: PureHDF.IH5DatasetExtensions
-  nameWithType: IH5DatasetExtensions
-- uid: PureHDF.IH5DatasetExtensions.AsQueryable*
-  name: AsQueryable
-  href: api/PureHDF.IH5DatasetExtensions.html#PureHDF_IH5DatasetExtensions_AsQueryable_
-  commentId: Overload:PureHDF.IH5DatasetExtensions.AsQueryable
-  fullName: PureHDF.IH5DatasetExtensions.AsQueryable
-  nameWithType: IH5DatasetExtensions.AsQueryable
-- uid: PureHDF.IH5DatasetExtensions.AsQueryable``1(PureHDF.IH5Dataset,PureHDF.Selections.Selection,System.UInt64[])
-  name: AsQueryable<T>(IH5Dataset, Selection?, ulong[]?)
-  href: api/PureHDF.IH5DatasetExtensions.html#PureHDF_IH5DatasetExtensions_AsQueryable__1_PureHDF_IH5Dataset_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5DatasetExtensions.AsQueryable``1(PureHDF.IH5Dataset,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: AsQueryable(Of T)(IH5Dataset, Selection, ULong())
-  fullName: PureHDF.IH5DatasetExtensions.AsQueryable<T>(PureHDF.IH5Dataset, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5DatasetExtensions.AsQueryable(Of T)(PureHDF.IH5Dataset, PureHDF.Selections.Selection, ULong())
-  nameWithType: IH5DatasetExtensions.AsQueryable<T>(IH5Dataset, Selection?, ulong[]?)
-  nameWithType.vb: IH5DatasetExtensions.AsQueryable(Of T)(IH5Dataset, Selection, ULong())
 - uid: PureHDF.IH5Dataspace
   name: IH5Dataspace
   href: api/PureHDF.IH5Dataspace.html
@@ -4508,21 +4445,6 @@ references:
   commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Read
   fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Read
   nameWithType: AmazonS3Stream.Read
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
-  name: ReadAsync(Memory<byte>, CancellationToken)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadAsync_System_Memory_System_Byte__System_Threading_CancellationToken_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
-  name.vb: ReadAsync(Memory(Of Byte), CancellationToken)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync(System.Memory<byte>, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync(System.Memory(Of Byte), System.Threading.CancellationToken)
-  nameWithType: AmazonS3Stream.ReadAsync(Memory<byte>, CancellationToken)
-  nameWithType.vb: AmazonS3Stream.ReadAsync(Memory(Of Byte), CancellationToken)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync*
-  name: ReadAsync
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadAsync_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync
-  nameWithType: AmazonS3Stream.ReadAsync
 - uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset(System.Memory{System.Byte})
   name: ReadDataset(Memory<byte>)
   href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDataset_System_Memory_System_Byte__
@@ -4538,21 +4460,6 @@ references:
   commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset
   fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset
   nameWithType: AmazonS3Stream.ReadDataset
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
-  name: ReadDatasetAsync(Memory<byte>, CancellationToken)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDatasetAsync_System_Memory_System_Byte__System_Threading_CancellationToken_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync(System.Memory{System.Byte},System.Threading.CancellationToken)
-  name.vb: ReadDatasetAsync(Memory(Of Byte), CancellationToken)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync(System.Memory<byte>, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync(System.Memory(Of Byte), System.Threading.CancellationToken)
-  nameWithType: AmazonS3Stream.ReadDatasetAsync(Memory<byte>, CancellationToken)
-  nameWithType.vb: AmazonS3Stream.ReadDatasetAsync(Memory(Of Byte), CancellationToken)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync*
-  name: ReadDatasetAsync
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDatasetAsync_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync
-  nameWithType: AmazonS3Stream.ReadDatasetAsync
 - uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek(System.Int64,System.IO.SeekOrigin)
   name: Seek(long, SeekOrigin)
   href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Seek_System_Int64_System_IO_SeekOrigin_
@@ -4637,6 +4544,36 @@ references:
   commentId: N:PureHDF.VOL.Native
   fullName: PureHDF.VOL.Native
   nameWithType: PureHDF.VOL.Native
+- uid: PureHDF.VOL.Native.ChunkCache
+  name: ChunkCache
+  href: api/PureHDF.VOL.Native.ChunkCache.html
+  commentId: T:PureHDF.VOL.Native.ChunkCache
+  fullName: PureHDF.VOL.Native.ChunkCache
+  nameWithType: ChunkCache
+- uid: PureHDF.VOL.Native.ChunkCache.DefaultReadingChunkCacheFactory
+  name: DefaultReadingChunkCacheFactory
+  href: api/PureHDF.VOL.Native.ChunkCache.html#PureHDF_VOL_Native_ChunkCache_DefaultReadingChunkCacheFactory
+  commentId: P:PureHDF.VOL.Native.ChunkCache.DefaultReadingChunkCacheFactory
+  fullName: PureHDF.VOL.Native.ChunkCache.DefaultReadingChunkCacheFactory
+  nameWithType: ChunkCache.DefaultReadingChunkCacheFactory
+- uid: PureHDF.VOL.Native.ChunkCache.DefaultReadingChunkCacheFactory*
+  name: DefaultReadingChunkCacheFactory
+  href: api/PureHDF.VOL.Native.ChunkCache.html#PureHDF_VOL_Native_ChunkCache_DefaultReadingChunkCacheFactory_
+  commentId: Overload:PureHDF.VOL.Native.ChunkCache.DefaultReadingChunkCacheFactory
+  fullName: PureHDF.VOL.Native.ChunkCache.DefaultReadingChunkCacheFactory
+  nameWithType: ChunkCache.DefaultReadingChunkCacheFactory
+- uid: PureHDF.VOL.Native.ChunkCache.DefaultWritingChunkCacheFactory
+  name: DefaultWritingChunkCacheFactory
+  href: api/PureHDF.VOL.Native.ChunkCache.html#PureHDF_VOL_Native_ChunkCache_DefaultWritingChunkCacheFactory
+  commentId: P:PureHDF.VOL.Native.ChunkCache.DefaultWritingChunkCacheFactory
+  fullName: PureHDF.VOL.Native.ChunkCache.DefaultWritingChunkCacheFactory
+  nameWithType: ChunkCache.DefaultWritingChunkCacheFactory
+- uid: PureHDF.VOL.Native.ChunkCache.DefaultWritingChunkCacheFactory*
+  name: DefaultWritingChunkCacheFactory
+  href: api/PureHDF.VOL.Native.ChunkCache.html#PureHDF_VOL_Native_ChunkCache_DefaultWritingChunkCacheFactory_
+  commentId: Overload:PureHDF.VOL.Native.ChunkCache.DefaultWritingChunkCacheFactory
+  fullName: PureHDF.VOL.Native.ChunkCache.DefaultWritingChunkCacheFactory
+  nameWithType: ChunkCache.DefaultWritingChunkCacheFactory
 - uid: PureHDF.VOL.Native.H5DatasetAccess
   name: H5DatasetAccess
   href: api/PureHDF.VOL.Native.H5DatasetAccess.html
@@ -5075,21 +5012,21 @@ references:
   commentId: T:PureHDF.VOL.Native.IReadingChunkCache
   fullName: PureHDF.VOL.Native.IReadingChunkCache
   nameWithType: IReadingChunkCache
-- uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync(System.UInt64[],System.Func{System.Threading.Tasks.Task{System.Memory{System.Byte}}})
-  name: GetChunkAsync(ulong[], Func<Task<Memory<byte>>>)
-  href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunkAsync_System_UInt64___System_Func_System_Threading_Tasks_Task_System_Memory_System_Byte____
-  commentId: M:PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync(System.UInt64[],System.Func{System.Threading.Tasks.Task{System.Memory{System.Byte}}})
-  name.vb: GetChunkAsync(ULong(), Func(Of Task(Of Memory(Of Byte))))
-  fullName: PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync(ulong[], System.Func<System.Threading.Tasks.Task<System.Memory<byte>>>)
-  fullName.vb: PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync(ULong(), System.Func(Of System.Threading.Tasks.Task(Of System.Memory(Of Byte))))
-  nameWithType: IReadingChunkCache.GetChunkAsync(ulong[], Func<Task<Memory<byte>>>)
-  nameWithType.vb: IReadingChunkCache.GetChunkAsync(ULong(), Func(Of Task(Of Memory(Of Byte))))
-- uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync*
-  name: GetChunkAsync
-  href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunkAsync_
-  commentId: Overload:PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync
-  fullName: PureHDF.VOL.Native.IReadingChunkCache.GetChunkAsync
-  nameWithType: IReadingChunkCache.GetChunkAsync
+- uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
+  name: GetChunk(ulong[], Func<Memory<byte>>)
+  href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.IReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)))
+  nameWithType: IReadingChunkCache.GetChunk(ulong[], Func<Memory<byte>>)
+  nameWithType.vb: IReadingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunk*
+  name: GetChunk
+  href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunk_
+  commentId: Overload:PureHDF.VOL.Native.IReadingChunkCache.GetChunk
+  fullName: PureHDF.VOL.Native.IReadingChunkCache.GetChunk
+  nameWithType: IReadingChunkCache.GetChunk
 - uid: PureHDF.VOL.Native.IWritingChunkCache
   name: IWritingChunkCache
   href: api/PureHDF.VOL.Native.IWritingChunkCache.html
@@ -5222,21 +5159,6 @@ references:
   commentId: T:PureHDF.VOL.Native.NativeDataset
   fullName: PureHDF.VOL.Native.NativeDataset
   nameWithType: NativeDataset
-- uid: PureHDF.VOL.Native.NativeDataset.AsQueryable*
-  name: AsQueryable
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_AsQueryable_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.AsQueryable
-  fullName: PureHDF.VOL.Native.NativeDataset.AsQueryable
-  nameWithType: NativeDataset.AsQueryable
-- uid: PureHDF.VOL.Native.NativeDataset.AsQueryable``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,System.UInt64[])
-  name: AsQueryable<T>(H5DatasetAccess, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_AsQueryable__1_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.AsQueryable``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: AsQueryable(Of T)(H5DatasetAccess, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.AsQueryable<T>(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.AsQueryable(Of T)(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.AsQueryable<T>(H5DatasetAccess, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.AsQueryable(Of T)(H5DatasetAccess, Selection, ULong())
 - uid: PureHDF.VOL.Native.NativeDataset.FillValue
   name: FillValue
   href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_FillValue
@@ -5261,48 +5183,12 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeDataset.Layout
   fullName: PureHDF.VOL.Native.NativeDataset.Layout
   nameWithType: NativeDataset.Layout
-- uid: PureHDF.VOL.Native.NativeDataset.Read(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.Read(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.Read(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.Read(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.Read(Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.Read(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.Read(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(H5DatasetAccess, Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.Read(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.Read(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.Read(H5DatasetAccess, Selection, Selection, ULong())
 - uid: PureHDF.VOL.Native.NativeDataset.Read*
   name: Read
   href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read_
   commentId: Overload:PureHDF.VOL.Native.NativeDataset.Read
   fullName: PureHDF.VOL.Native.NativeDataset.Read
   nameWithType: NativeDataset.Read
-- uid: PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadAsync(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadAsync(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadAsync(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
 - uid: PureHDF.VOL.Native.NativeDataset.ReadAsync*
   name: ReadAsync
   href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync_
@@ -5318,213 +5204,15 @@ references:
   fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
   nameWithType: NativeDataset.ReadAsync<T>(Selection?, Selection?, ulong[]?, CancellationToken)
   nameWithType.vb: NativeDataset.ReadAsync(Of T)(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadAsync``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync__1_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadAsync``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(Of T)(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadAsync<T>(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(Of T)(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadAsync<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadAsync(Of T)(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadAsync``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync<T>(Memory<T>, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync__1_System_Memory___0__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadAsync``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(Of T)(Memory(Of T), Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadAsync<T>(System.Memory<T>, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(Of T)(System.Memory(Of T), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadAsync<T>(Memory<T>, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadAsync(Of T)(Memory(Of T), Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadAsync``1(System.Memory{``0},PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadAsync<T>(Memory<T>, H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync__1_System_Memory___0__PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadAsync``1(System.Memory{``0},PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadAsync(Of T)(Memory(Of T), H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadAsync<T>(System.Memory<T>, PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(Of T)(System.Memory(Of T), PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadAsync<T>(Memory<T>, H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadAsync(Of T)(Memory(Of T), H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadCompound(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompound_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadCompound(Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadCompound(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadCompound(Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadCompound(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompound_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadCompound(H5DatasetAccess, Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompound(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadCompound(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadCompound(H5DatasetAccess, Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompound*
-  name: ReadCompound
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompound_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.ReadCompound
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompound
-  nameWithType: NativeDataset.ReadCompound
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadCompoundAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompoundAsync_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadCompoundAsync(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadCompoundAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadCompoundAsync(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadCompoundAsync(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompoundAsync_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadCompoundAsync(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadCompoundAsync(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadCompoundAsync(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync*
-  name: ReadCompoundAsync
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompoundAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync
-  nameWithType: NativeDataset.ReadCompoundAsync
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync``1(PureHDF.VOL.Native.H5DatasetAccess,System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadCompoundAsync<T>(H5DatasetAccess, Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompoundAsync__1_PureHDF_VOL_Native_H5DatasetAccess_System_Func_System_Reflection_FieldInfo_System_String__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync``1(PureHDF.VOL.Native.H5DatasetAccess,System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadCompoundAsync(Of T)(H5DatasetAccess, Func(Of FieldInfo, String), Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync<T>(PureHDF.VOL.Native.H5DatasetAccess, System.Func<System.Reflection.FieldInfo, string?>?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(Of T)(PureHDF.VOL.Native.H5DatasetAccess, System.Func(Of System.Reflection.FieldInfo, String), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadCompoundAsync<T>(H5DatasetAccess, Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadCompoundAsync(Of T)(H5DatasetAccess, Func(Of FieldInfo, String), Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadCompoundAsync<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompoundAsync__1_System_Func_System_Reflection_FieldInfo_System_String__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadCompoundAsync(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync<T>(System.Func<System.Reflection.FieldInfo, string?>?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompoundAsync(Of T)(System.Func(Of System.Reflection.FieldInfo, String), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadCompoundAsync<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadCompoundAsync(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompound``1(PureHDF.VOL.Native.H5DatasetAccess,System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadCompound<T>(H5DatasetAccess, Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompound__1_PureHDF_VOL_Native_H5DatasetAccess_System_Func_System_Reflection_FieldInfo_System_String__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompound``1(PureHDF.VOL.Native.H5DatasetAccess,System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadCompound(Of T)(H5DatasetAccess, Func(Of FieldInfo, String), Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompound<T>(PureHDF.VOL.Native.H5DatasetAccess, System.Func<System.Reflection.FieldInfo, string?>?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompound(Of T)(PureHDF.VOL.Native.H5DatasetAccess, System.Func(Of System.Reflection.FieldInfo, String), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadCompound<T>(H5DatasetAccess, Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadCompound(Of T)(H5DatasetAccess, Func(Of FieldInfo, String), Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadCompound<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadCompound__1_System_Func_System_Reflection_FieldInfo_System_String__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadCompound``1(System.Func{System.Reflection.FieldInfo,System.String},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadCompound(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadCompound<T>(System.Func<System.Reflection.FieldInfo, string?>?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadCompound(Of T)(System.Func(Of System.Reflection.FieldInfo, String), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadCompound<T>(Func<FieldInfo, string?>?, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadCompound(Of T)(Func(Of FieldInfo, String), Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadString(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadString_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadString(Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadString(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadString(Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadString(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadString_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadString(H5DatasetAccess, Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadString(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadString(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadString(H5DatasetAccess, Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadString*
-  name: ReadString
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadString_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.ReadString
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadString
-  nameWithType: NativeDataset.ReadString
-- uid: PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadStringAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadStringAsync_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadStringAsync(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadStringAsync(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadStringAsync(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadStringAsync(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadStringAsync_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadStringAsync(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadStringAsync(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadStringAsync(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadStringAsync(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadStringAsync*
-  name: ReadStringAsync
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadStringAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.ReadStringAsync
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadStringAsync
-  nameWithType: NativeDataset.ReadStringAsync
-- uid: PureHDF.VOL.Native.NativeDataset.ReadVariableLength*
-  name: ReadVariableLength
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadVariableLength_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.ReadVariableLength
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadVariableLength
-  nameWithType: NativeDataset.ReadVariableLength
-- uid: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync*
-  name: ReadVariableLengthAsync
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadVariableLengthAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync
-  nameWithType: NativeDataset.ReadVariableLengthAsync
-- uid: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadVariableLengthAsync<T>(Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadVariableLengthAsync__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadVariableLengthAsync(Of T)(Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync<T>(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadVariableLengthAsync<T>(Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadVariableLengthAsync(Of T)(Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name: ReadVariableLengthAsync<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadVariableLengthAsync__1_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
-  name.vb: ReadVariableLengthAsync(Of T)(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync<T>(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadVariableLengthAsync(Of T)(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
-  nameWithType: NativeDataset.ReadVariableLengthAsync<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)
-  nameWithType.vb: NativeDataset.ReadVariableLengthAsync(Of T)(H5DatasetAccess, Selection, Selection, ULong(), CancellationToken)
-- uid: PureHDF.VOL.Native.NativeDataset.ReadVariableLength``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadVariableLength<T>(Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadVariableLength__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadVariableLength``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadVariableLength(Of T)(Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadVariableLength<T>(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadVariableLength(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadVariableLength<T>(Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadVariableLength(Of T)(Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.ReadVariableLength``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: ReadVariableLength<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadVariableLength__1_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadVariableLength``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: ReadVariableLength(Of T)(H5DatasetAccess, Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.ReadVariableLength<T>(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadVariableLength(Of T)(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.ReadVariableLength<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.ReadVariableLength(Of T)(H5DatasetAccess, Selection, Selection, ULong())
+- uid: PureHDF.VOL.Native.NativeDataset.ReadAsync``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
+  name: ReadAsync<T>(T, Selection?, Selection?, ulong[]?, CancellationToken)
+  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_ReadAsync__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_
+  commentId: M:PureHDF.VOL.Native.NativeDataset.ReadAsync``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)
+  name.vb: ReadAsync(Of T)(T, Selection, Selection, ULong(), CancellationToken)
+  fullName: PureHDF.VOL.Native.NativeDataset.ReadAsync<T>(T, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, System.Threading.CancellationToken)
+  fullName.vb: PureHDF.VOL.Native.NativeDataset.ReadAsync(Of T)(T, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), System.Threading.CancellationToken)
+  nameWithType: NativeDataset.ReadAsync<T>(T, Selection?, Selection?, ulong[]?, CancellationToken)
+  nameWithType.vb: NativeDataset.ReadAsync(Of T)(T, Selection, Selection, ULong(), CancellationToken)
 - uid: PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
   name: Read<T>(Selection?, Selection?, ulong[]?)
   href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
@@ -5534,33 +5222,33 @@ references:
   fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
   nameWithType: NativeDataset.Read<T>(Selection?, Selection?, ulong[]?)
   nameWithType.vb: NativeDataset.Read(Of T)(Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1_PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(Of T)(H5DatasetAccess, Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.Read<T>(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.Read<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.Read(Of T)(H5DatasetAccess, Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.Read``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read<T>(Memory<T>, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1_System_Memory___0__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.Read``1(System.Memory{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(Of T)(Memory(Of T), Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.Read<T>(System.Memory<T>, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(System.Memory(Of T), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.Read<T>(Memory<T>, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.Read(Of T)(Memory(Of T), Selection, Selection, ULong())
-- uid: PureHDF.VOL.Native.NativeDataset.Read``1(System.Memory{``0},PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name: Read<T>(Memory<T>, H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1_System_Memory___0__PureHDF_VOL_Native_H5DatasetAccess_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
-  commentId: M:PureHDF.VOL.Native.NativeDataset.Read``1(System.Memory{``0},PureHDF.VOL.Native.H5DatasetAccess,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
-  name.vb: Read(Of T)(Memory(Of T), H5DatasetAccess, Selection, Selection, ULong())
-  fullName: PureHDF.VOL.Native.NativeDataset.Read<T>(System.Memory<T>, PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
-  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(System.Memory(Of T), PureHDF.VOL.Native.H5DatasetAccess, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
-  nameWithType: NativeDataset.Read<T>(Memory<T>, H5DatasetAccess, Selection?, Selection?, ulong[]?)
-  nameWithType.vb: NativeDataset.Read(Of T)(Memory(Of T), H5DatasetAccess, Selection, Selection, ULong())
+- uid: PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)
+  name: Read<T>(Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetAccess_
+  commentId: M:PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)
+  name.vb: Read(Of T)(Selection, Selection, ULong(), H5DatasetAccess)
+  fullName: PureHDF.VOL.Native.NativeDataset.Read<T>(PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, PureHDF.VOL.Native.H5DatasetAccess)
+  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), PureHDF.VOL.Native.H5DatasetAccess)
+  nameWithType: NativeDataset.Read<T>(Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  nameWithType.vb: NativeDataset.Read(Of T)(Selection, Selection, ULong(), H5DatasetAccess)
+- uid: PureHDF.VOL.Native.NativeDataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
+  name: Read<T>(T, Selection?, Selection?, ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeDataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])
+  name.vb: Read(Of T)(T, Selection, Selection, ULong())
+  fullName: PureHDF.VOL.Native.NativeDataset.Read<T>(T, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(T, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong())
+  nameWithType: NativeDataset.Read<T>(T, Selection?, Selection?, ulong[]?)
+  nameWithType.vb: NativeDataset.Read(Of T)(T, Selection, Selection, ULong())
+- uid: PureHDF.VOL.Native.NativeDataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)
+  name: Read<T>(T, Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Read__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetAccess_
+  commentId: M:PureHDF.VOL.Native.NativeDataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)
+  name.vb: Read(Of T)(T, Selection, Selection, ULong(), H5DatasetAccess)
+  fullName: PureHDF.VOL.Native.NativeDataset.Read<T>(T, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, PureHDF.VOL.Native.H5DatasetAccess)
+  fullName.vb: PureHDF.VOL.Native.NativeDataset.Read(Of T)(T, PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), PureHDF.VOL.Native.H5DatasetAccess)
+  nameWithType: NativeDataset.Read<T>(T, Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  nameWithType.vb: NativeDataset.Read(Of T)(T, Selection, Selection, ULong(), H5DatasetAccess)
 - uid: PureHDF.VOL.Native.NativeDataset.Space
   name: Space
   href: api/PureHDF.VOL.Native.NativeDataset.html#PureHDF_VOL_Native_NativeDataset_Space
@@ -5591,30 +5279,6 @@ references:
   commentId: T:PureHDF.VOL.Native.NativeFile
   fullName: PureHDF.VOL.Native.NativeFile
   nameWithType: NativeFile
-- uid: PureHDF.VOL.Native.NativeFile.ChunkCacheFactory
-  name: ChunkCacheFactory
-  href: api/PureHDF.VOL.Native.NativeFile.html#PureHDF_VOL_Native_NativeFile_ChunkCacheFactory
-  commentId: P:PureHDF.VOL.Native.NativeFile.ChunkCacheFactory
-  fullName: PureHDF.VOL.Native.NativeFile.ChunkCacheFactory
-  nameWithType: NativeFile.ChunkCacheFactory
-- uid: PureHDF.VOL.Native.NativeFile.ChunkCacheFactory*
-  name: ChunkCacheFactory
-  href: api/PureHDF.VOL.Native.NativeFile.html#PureHDF_VOL_Native_NativeFile_ChunkCacheFactory_
-  commentId: Overload:PureHDF.VOL.Native.NativeFile.ChunkCacheFactory
-  fullName: PureHDF.VOL.Native.NativeFile.ChunkCacheFactory
-  nameWithType: NativeFile.ChunkCacheFactory
-- uid: PureHDF.VOL.Native.NativeFile.DefaultChunkCacheFactory
-  name: DefaultChunkCacheFactory
-  href: api/PureHDF.VOL.Native.NativeFile.html#PureHDF_VOL_Native_NativeFile_DefaultChunkCacheFactory
-  commentId: P:PureHDF.VOL.Native.NativeFile.DefaultChunkCacheFactory
-  fullName: PureHDF.VOL.Native.NativeFile.DefaultChunkCacheFactory
-  nameWithType: NativeFile.DefaultChunkCacheFactory
-- uid: PureHDF.VOL.Native.NativeFile.DefaultChunkCacheFactory*
-  name: DefaultChunkCacheFactory
-  href: api/PureHDF.VOL.Native.NativeFile.html#PureHDF_VOL_Native_NativeFile_DefaultChunkCacheFactory_
-  commentId: Overload:PureHDF.VOL.Native.NativeFile.DefaultChunkCacheFactory
-  fullName: PureHDF.VOL.Native.NativeFile.DefaultChunkCacheFactory
-  nameWithType: NativeFile.DefaultChunkCacheFactory
 - uid: PureHDF.VOL.Native.NativeFile.Dispose
   name: Dispose()
   href: api/PureHDF.VOL.Native.NativeFile.html#PureHDF_VOL_Native_NativeFile_Dispose
@@ -5684,12 +5348,6 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeGroup.Children
   fullName: PureHDF.VOL.Native.NativeGroup.Children
   nameWithType: NativeGroup.Children
-- uid: PureHDF.VOL.Native.NativeGroup.ChildrenAsync(PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: ChildrenAsync(H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_ChildrenAsync_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroup.ChildrenAsync(PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroup.ChildrenAsync(PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroup.ChildrenAsync(H5LinkAccess, CancellationToken)
 - uid: PureHDF.VOL.Native.NativeGroup.ChildrenAsync(System.Threading.CancellationToken)
   name: ChildrenAsync(CancellationToken)
   href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_ChildrenAsync_System_Threading_CancellationToken_
@@ -5738,27 +5396,6 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeGroup.Get
   fullName: PureHDF.VOL.Native.NativeGroup.Get
   nameWithType: NativeGroup.Get
-- uid: PureHDF.VOL.Native.NativeGroup.GetAsync(PureHDF.VOL.Native.NativeObjectReference1,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: GetAsync(NativeObjectReference1, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_GetAsync_PureHDF_VOL_Native_NativeObjectReference1_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroup.GetAsync(PureHDF.VOL.Native.NativeObjectReference1,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroup.GetAsync(PureHDF.VOL.Native.NativeObjectReference1, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroup.GetAsync(NativeObjectReference1, H5LinkAccess, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroup.GetAsync(PureHDF.VOL.Native.NativeObjectReference1,System.Threading.CancellationToken)
-  name: GetAsync(NativeObjectReference1, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_GetAsync_PureHDF_VOL_Native_NativeObjectReference1_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroup.GetAsync(PureHDF.VOL.Native.NativeObjectReference1,System.Threading.CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroup.GetAsync(PureHDF.VOL.Native.NativeObjectReference1, System.Threading.CancellationToken)
-  nameWithType: NativeGroup.GetAsync(NativeObjectReference1, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroup.GetAsync(System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: GetAsync(string, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_GetAsync_System_String_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroup.GetAsync(System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: GetAsync(String, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroup.GetAsync(string, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroup.GetAsync(String, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroup.GetAsync(string, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroup.GetAsync(String, H5LinkAccess, CancellationToken)
 - uid: PureHDF.VOL.Native.NativeGroup.GetAsync(System.String,System.Threading.CancellationToken)
   name: GetAsync(string, CancellationToken)
   href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_GetAsync_System_String_System_Threading_CancellationToken_
@@ -5798,15 +5435,6 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeGroup.LinkExists
   fullName: PureHDF.VOL.Native.NativeGroup.LinkExists
   nameWithType: NativeGroup.LinkExists
-- uid: PureHDF.VOL.Native.NativeGroup.LinkExistsAsync(System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: LinkExistsAsync(string, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_LinkExistsAsync_System_String_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroup.LinkExistsAsync(System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: LinkExistsAsync(String, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroup.LinkExistsAsync(string, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroup.LinkExistsAsync(String, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroup.LinkExistsAsync(string, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroup.LinkExistsAsync(String, H5LinkAccess, CancellationToken)
 - uid: PureHDF.VOL.Native.NativeGroup.LinkExistsAsync(System.String,System.Threading.CancellationToken)
   name: LinkExistsAsync(string, CancellationToken)
   href: api/PureHDF.VOL.Native.NativeGroup.html#PureHDF_VOL_Native_NativeGroup_LinkExistsAsync_System_String_System_Threading_CancellationToken_
@@ -5843,21 +5471,6 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatype
   fullName: PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatype
   nameWithType: NativeGroupExtensions.CommitedDatatype
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: CommitedDatatypeAsync(NativeGroup, string, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_CommitedDatatypeAsync_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: CommitedDatatypeAsync(NativeGroup, String, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync(PureHDF.VOL.Native.NativeGroup, string, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync(PureHDF.VOL.Native.NativeGroup, String, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroupExtensions.CommitedDatatypeAsync(NativeGroup, string, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroupExtensions.CommitedDatatypeAsync(NativeGroup, String, H5LinkAccess, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync*
-  name: CommitedDatatypeAsync
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_CommitedDatatypeAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.CommitedDatatypeAsync
-  nameWithType: NativeGroupExtensions.CommitedDatatypeAsync
 - uid: PureHDF.VOL.Native.NativeGroupExtensions.Dataset(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess)
   name: Dataset(NativeGroup, string, H5LinkAccess)
   href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Dataset_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_
@@ -5873,60 +5486,12 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.Dataset
   fullName: PureHDF.VOL.Native.NativeGroupExtensions.Dataset
   nameWithType: NativeGroupExtensions.Dataset
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: DatasetAsync(NativeGroup, string, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_DatasetAsync_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: DatasetAsync(NativeGroup, String, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync(PureHDF.VOL.Native.NativeGroup, string, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync(PureHDF.VOL.Native.NativeGroup, String, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroupExtensions.DatasetAsync(NativeGroup, string, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroupExtensions.DatasetAsync(NativeGroup, String, H5LinkAccess, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync*
-  name: DatasetAsync
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_DatasetAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.DatasetAsync
-  nameWithType: NativeGroupExtensions.DatasetAsync
 - uid: PureHDF.VOL.Native.NativeGroupExtensions.Get*
   name: Get
   href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Get_
   commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.Get
   fullName: PureHDF.VOL.Native.NativeGroupExtensions.Get
   nameWithType: NativeGroupExtensions.Get
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync*
-  name: GetAsync
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_GetAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.GetAsync
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync
-  nameWithType: NativeGroupExtensions.GetAsync
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync``1(PureHDF.VOL.Native.NativeGroup,PureHDF.VOL.Native.NativeObjectReference1,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: GetAsync<T>(NativeGroup, NativeObjectReference1, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_GetAsync__1_PureHDF_VOL_Native_NativeGroup_PureHDF_VOL_Native_NativeObjectReference1_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroupExtensions.GetAsync``1(PureHDF.VOL.Native.NativeGroup,PureHDF.VOL.Native.NativeObjectReference1,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: GetAsync(Of T)(NativeGroup, NativeObjectReference1, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync<T>(PureHDF.VOL.Native.NativeGroup, PureHDF.VOL.Native.NativeObjectReference1, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync(Of T)(PureHDF.VOL.Native.NativeGroup, PureHDF.VOL.Native.NativeObjectReference1, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroupExtensions.GetAsync<T>(NativeGroup, NativeObjectReference1, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroupExtensions.GetAsync(Of T)(NativeGroup, NativeObjectReference1, H5LinkAccess, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync``1(PureHDF.VOL.Native.NativeGroup,PureHDF.VOL.Native.NativeObjectReference1,System.Threading.CancellationToken)
-  name: GetAsync<T>(NativeGroup, NativeObjectReference1, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_GetAsync__1_PureHDF_VOL_Native_NativeGroup_PureHDF_VOL_Native_NativeObjectReference1_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroupExtensions.GetAsync``1(PureHDF.VOL.Native.NativeGroup,PureHDF.VOL.Native.NativeObjectReference1,System.Threading.CancellationToken)
-  name.vb: GetAsync(Of T)(NativeGroup, NativeObjectReference1, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync<T>(PureHDF.VOL.Native.NativeGroup, PureHDF.VOL.Native.NativeObjectReference1, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync(Of T)(PureHDF.VOL.Native.NativeGroup, PureHDF.VOL.Native.NativeObjectReference1, System.Threading.CancellationToken)
-  nameWithType: NativeGroupExtensions.GetAsync<T>(NativeGroup, NativeObjectReference1, CancellationToken)
-  nameWithType.vb: NativeGroupExtensions.GetAsync(Of T)(NativeGroup, NativeObjectReference1, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync``1(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: GetAsync<T>(NativeGroup, string, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_GetAsync__1_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroupExtensions.GetAsync``1(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: GetAsync(Of T)(NativeGroup, String, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync<T>(PureHDF.VOL.Native.NativeGroup, string, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroupExtensions.GetAsync(Of T)(PureHDF.VOL.Native.NativeGroup, String, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroupExtensions.GetAsync<T>(NativeGroup, string, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroupExtensions.GetAsync(Of T)(NativeGroup, String, H5LinkAccess, CancellationToken)
 - uid: PureHDF.VOL.Native.NativeGroupExtensions.Get``1(PureHDF.VOL.Native.NativeGroup,PureHDF.VOL.Native.NativeObjectReference1)
   name: Get<T>(NativeGroup, NativeObjectReference1)
   href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Get__1_PureHDF_VOL_Native_NativeGroup_PureHDF_VOL_Native_NativeObjectReference1_
@@ -5969,21 +5534,6 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.Group
   fullName: PureHDF.VOL.Native.NativeGroupExtensions.Group
   nameWithType: NativeGroupExtensions.Group
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name: GroupAsync(NativeGroup, string, H5LinkAccess, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_GroupAsync_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync(PureHDF.VOL.Native.NativeGroup,System.String,PureHDF.VOL.Native.H5LinkAccess,System.Threading.CancellationToken)
-  name.vb: GroupAsync(NativeGroup, String, H5LinkAccess, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync(PureHDF.VOL.Native.NativeGroup, string, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync(PureHDF.VOL.Native.NativeGroup, String, PureHDF.VOL.Native.H5LinkAccess, System.Threading.CancellationToken)
-  nameWithType: NativeGroupExtensions.GroupAsync(NativeGroup, string, H5LinkAccess, CancellationToken)
-  nameWithType.vb: NativeGroupExtensions.GroupAsync(NativeGroup, String, H5LinkAccess, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync*
-  name: GroupAsync
-  href: api/PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_GroupAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync
-  fullName: PureHDF.VOL.Native.NativeGroupExtensions.GroupAsync
-  nameWithType: NativeGroupExtensions.GroupAsync
 - uid: PureHDF.VOL.Native.NativeObject
   name: NativeObject
   href: api/PureHDF.VOL.Native.NativeObject.html
@@ -6101,6 +5651,15 @@ references:
   commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.Flush
   fullName: PureHDF.VOL.Native.SimpleChunkCache.Flush
   nameWithType: SimpleChunkCache.Flush
+- uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
+  name: GetChunk(ulong[], Func<Memory<byte>>)
+  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)))
+  nameWithType: SimpleChunkCache.GetChunk(ulong[], Func<Memory<byte>>)
+  nameWithType.vb: SimpleChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
   name: GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
   href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___System_Action_System_UInt64___System_Memory_System_Byte___
@@ -6116,18 +5675,3 @@ references:
   commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.GetChunk
   fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunk
   nameWithType: SimpleChunkCache.GetChunk
-- uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync(System.UInt64[],System.Func{System.Threading.Tasks.Task{System.Memory{System.Byte}}})
-  name: GetChunkAsync(ulong[], Func<Task<Memory<byte>>>)
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunkAsync_System_UInt64___System_Func_System_Threading_Tasks_Task_System_Memory_System_Byte____
-  commentId: M:PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync(System.UInt64[],System.Func{System.Threading.Tasks.Task{System.Memory{System.Byte}}})
-  name.vb: GetChunkAsync(ULong(), Func(Of Task(Of Memory(Of Byte))))
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync(ulong[], System.Func<System.Threading.Tasks.Task<System.Memory<byte>>>)
-  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync(ULong(), System.Func(Of System.Threading.Tasks.Task(Of System.Memory(Of Byte))))
-  nameWithType: SimpleChunkCache.GetChunkAsync(ulong[], Func<Task<Memory<byte>>>)
-  nameWithType.vb: SimpleChunkCache.GetChunkAsync(ULong(), Func(Of Task(Of Memory(Of Byte))))
-- uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync*
-  name: GetChunkAsync
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunkAsync_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunkAsync
-  nameWithType: SimpleChunkCache.GetChunkAsync

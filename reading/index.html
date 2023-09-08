@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Reading | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Reading | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/index.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="reading">Reading</h1>
+
+<p>The following code snippets show how to work the reading API. The first step is to open the file to read from:</p>
+<pre><code class="lang-cs">var file = H5File.OpenRead(&quot;path/to/file.h5&quot;);
+</code></pre>
+<p>The method <code>H5File.OpenRead</code> returns an instance of type <code>NativeFile</code> which represents the root group <code>/</code>. From there you can access any object within the file as shown below:</p>
+<pre><code class="lang-cs">var group = file.Group(&quot;/path/to/my/group&quot;);
+var dataset = file.Dataset(&quot;/path/to/my/dataset&quot;);
+var commitedDataType = file.Group(&quot;/path/to/my/datatype&quot;);
+var unknownObject = file.Get(&quot;/path/to/my/unknown/object&quot;);
+</code></pre>
+<p>The following example shows you how to iterate over the objects within an HDF5 group:</p>
+<pre><code class="lang-cs">foreach (var link in group.Children())
+{
+    var message = link switch
+    {
+        IH5Group group               =&gt; $&quot;I am a group and my name is '{group.Name}'.&quot;,
+        IH5Dataset dataset           =&gt; $&quot;I am a dataset, call me '{dataset.Name}'.&quot;,
+        IH5CommitedDatatype datatype =&gt; $&quot;I am the data type '{datatype.Name}'.&quot;,
+        IH5UnresolvedLink lostLink   =&gt; $&quot;I cannot find my link target =( shame on '{lostLink.Name}'.&quot;
+        _                            =&gt; throw new Exception(&quot;Unknown link type&quot;)
+    };
+
+    Console.WriteLine(message);
+}
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>An <code>IH5UnresolvedLink</code> becomes part of the <code>Children</code> collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.</p>
+</div>
+<p>HDF5 objects can have zero or more attributes attached which can either be accessed by enumerating all attributes (<code>myObject.Attributes()</code>) or by direct access (<code>myObject.Attribute(&quot;attribute-name&quot;)</code>);</p>
+<p>When you have a dataset or attribute available, you can read it's data by providing a compatible return type as shown below.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>An overview over compatible return types can be found here in the <a href="simple.html">Simple Data</a> or the <a href="complex.html">Complex Data</a> sections.</p>
+</div>
+<pre><code class="lang-cs">var intScalar = dataset.Read&lt;int&gt;();
+var doubleArray = dataset.Read&lt;double[]&gt;();
+var double2DArray = dataset.Read&lt;double[,]&gt;();
+var double3DArray = dataset.Read&lt;double[,,]&gt;();
+var floatJaggedArray = dataset.Read&lt;float[][]&gt;(); /* This works only for variable length sequences */
+</code></pre>
+<h1 id="unsupported-features">Unsupported Features</h1>
+<p>The following features are <strong>not</strong> (yet) supported:</p>
+<ul>
+<li>Filters
+<ul>
+<li><code>N-bit</code></li>
+<li><code>SZIP</code></li>
+</ul>
+</li>
+<li>Virtual datasets
+<ul>
+<li>with <strong>unlimited dimensions</strong></li>
+</ul>
+</li>
+<li>Data Types
+<ul>
+<li>Reference: <code>Attribute reference</code>, <code>object reference 2</code>, <code>dataset region reference 2</code> (I was unable to produce sample files using <code>h5py</code> or <code>HDF.PInvoke1.10</code> - the feature seems to be too new)</li>
+</ul>
+</li>
+</ul>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/index.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

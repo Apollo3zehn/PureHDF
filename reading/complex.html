@@ -1,0 +1,311 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Complex Data | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Complex Data | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/complex.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="complex-data">Complex Data</h1>
+
+<p>There are three ways to read compound data which are explained in the following sections. Here is an overview:</p>
+<table>
+<thead>
+<tr>
+<th>method</th>
+<th>constraint</th>
+<th>speed</th>
+<th>requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Read&lt;T&gt;()</code></td>
+<td>unmanaged</td>
+<td>fast</td>
+<td>predefined type required with correct field offsets</td>
+</tr>
+<tr>
+<td><code>Read&lt;T&gt;()</code></td>
+<td>-</td>
+<td>medium</td>
+<td>predefined type required, support for variable-length data</td>
+</tr>
+<tr>
+<td><code>ReadCompound&lt;Dictionary&lt;string, object&gt;()</code></td>
+<td>-</td>
+<td>slow</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h2 id="compounds-without-reference-type-data">Compounds without reference type data</h2>
+<p>Compound data without string-like or array-like members can be read like any other dataset using a high performance copy operation. To do so, define a .NET struct and specify the field offsets using the <code>StructLayout</code> and <code>FieldOffset</code> attributes:</p>
+<pre><code class="lang-cs">[StructLayout(LayoutKind.Explicit, Size = 5)]
+struct SimpleStruct
+{
+    [FieldOffset(0)]
+    public byte ByteValue;
+
+    [FieldOffset(1)]
+    public ushort UShortValue;
+
+    [FieldOffset(3)]
+    public TestEnum EnumValue;
+}
+
+var compoundData = dataset.Read&lt;SimpleStruct&gt;();
+</code></pre>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Make sure the field offset attributes match the field offsets defined in the HDF5 file when the dataset was created.</p>
+</div>
+<div class="NOTE">
+<h5>Note</h5>
+<p>This method does not require that the structs field names match since they are simply mapped by their offset.</p>
+</div>
+<p>If the compound contains fixed size array data (here: <code>3</code>), you would need to add the <code>unsafe</code> modifier to the struct definition and define the corresponding struct field as follows:</p>
+<pre><code class="lang-cs">[StructLayout(LayoutKind.Explicit, Size = 8)]
+unsafe struct SimpleStructWithArray
+{
+    // ... all the fields from the struct above, plus:
+
+    [FieldOffset(5)]
+    public fixed float FloatArray[3];
+}
+
+var compoundData = dataset.Read&lt;SimpleStruct&gt;();
+</code></pre>
+<h2 id="compounds-with-reference-types-strings-arrays">Compounds with reference types (strings, arrays)</h2>
+<p>If compound has members of string-like or array-like type, the read operation will still work but a slower code path will be invoked to properly decode the variable-length data.</p>
+<pre><code class="lang-cs">struct NullableStruct
+{
+    public float FloatValue;
+    public string StringValue1;
+    public string StringValue2;
+    public byte ByteValue;
+    public short ShortValue;
+    public float[] FloatArray;
+}
+
+var compoundData = dataset.ReadCompound&lt;NullableStruct&gt;();
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>For compounds with reference type data, it is mandatory that the field names match exactly those in the HDF5 file. If you would like to use custom field names, consider the approach shown below.</p>
+</div>
+<pre><code class="lang-cs">
+// Apply the H5NameAttribute to the field with custom name.
+struct NullableStructWithCustomFieldName
+{
+    [H5Name(&quot;FloatValue&quot;)]
+    public float FloatValueWithCustomName;
+
+    // ... more fields
+}
+
+// Create a name translator.
+Func&lt;FieldInfo, string?&gt; converter = fieldInfo =&gt;
+{
+    var attribute = fieldInfo.GetCustomAttribute&lt;H5NameAttribute&gt;(true);
+    return attribute is not null ? attribute.Name : null;
+};
+
+// Use that name translator.
+var options = new H5ReadOptions() { FieldNameMapper = converter };
+var h5file = H5File.OpenRead(..., options);
+var dataset = h5file.Dataset(...);
+var compoundData = dataset.Read&lt;NullableStructWithCustomFieldName&gt;(converter);
+</code></pre>
+<h2 id="class-vs-struct">Class vs. struct</h2>
+<p>You may want to use a class with a specific set of properties and use that as return type for complex data. For classes properties instead of fields will be considered by default - and your need to make sure that your class has a parameterless constructor. Additionally, for classes, the field names must always match (or use a property name mapper as shown above for fields).</p>
+<p>You can use the <code>H5ReadOptions</code> to change the default behavior for structs and classes. These options can be passed to the <code>H5File.OpenRead(...)</code> method.</p>
+<h2 id="unknown-compounds">Unknown compounds</h2>
+<p>You have no idea how the compound in the HDF5 file looks like? Or it is so large that it is no fun to predefine a struct or class for it? In that case, you can simply call <code>dataset.Read&lt;Dictionary&lt;string, object&gt;&gt;()</code> where the values of the returned dictionary can be anything from simple value types to arrays or nested dictionaries (or even <code>NativeObjectReference1</code>), depending on the kind of data in the file. Use the standard .NET dictionary methods to work with these kind of data.</p>
+<p>The type mapping is as follows:</p>
+<table>
+<thead>
+<tr>
+<th>H5 type</th>
+<th>.NET type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fixed point, 1 byte,  unsigned</td>
+<td><code>byte</code></td>
+</tr>
+<tr>
+<td>fixed point, 1 byte,    signed</td>
+<td><code>sbyte</code></td>
+</tr>
+<tr>
+<td>fixed point, 2 bytes, unsigned</td>
+<td><code>ushort</code></td>
+</tr>
+<tr>
+<td>fixed point, 2 bytes,   signed</td>
+<td><code>short</code></td>
+</tr>
+<tr>
+<td>fixed point, 4 bytes, unsigned</td>
+<td><code>uint</code></td>
+</tr>
+<tr>
+<td>fixed point, 4 bytes,   signed</td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td>fixed point, 8 bytes, unsigned</td>
+<td><code>ulong</code></td>
+</tr>
+<tr>
+<td>fixed point, 8 bytes,   signed</td>
+<td><code>long</code></td>
+</tr>
+<tr>
+<td>floating point, 4 bytes</td>
+<td><code>float </code></td>
+</tr>
+<tr>
+<td>floating point, 8 bytes,</td>
+<td><code>double</code></td>
+</tr>
+<tr>
+<td>string</td>
+<td><code>string</code></td>
+</tr>
+<tr>
+<td>bitfield</td>
+<td><code>byte[]</code></td>
+</tr>
+<tr>
+<td>opaque</td>
+<td><code>byte[]</code></td>
+</tr>
+<tr>
+<td>compound</td>
+<td><code>Dictionary&lt;string, object&gt;</code></td>
+</tr>
+<tr>
+<td>reference</td>
+<td><code>NativeObjectReference1</code></td>
+</tr>
+<tr>
+<td>enumerated</td>
+<td><code>&lt;base type&gt;</code></td>
+</tr>
+<tr>
+<td>variable length string</td>
+<td><code>string</code></td>
+</tr>
+<tr>
+<td>variable length sequence</td>
+<td><code>&lt;base type&gt;[]</code></td>
+</tr>
+<tr>
+<td>1D array</td>
+<td><code>&lt;base type&gt;[]</code></td>
+</tr>
+<tr>
+<td>2D array</td>
+<td><code>&lt;base type&gt;[,]</code></td>
+</tr>
+<tr>
+<td>ND array</td>
+<td><code>&lt;base type&gt;[...]</code></td>
+</tr>
+</tbody>
+</table>
+<p>Not supported data types like <code>time</code> will be represented as <code>null</code>.</p>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/complex.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

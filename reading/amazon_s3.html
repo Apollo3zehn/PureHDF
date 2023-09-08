@@ -2,11 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Interface IDatasetStream
- | PureHDF </title>
+      <title>Amazon S3 | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Interface IDatasetStream
- | PureHDF ">
+      <meta name="title" content="Amazon S3 | PureHDF ">
       
       <link rel="icon" href="../images/icon.svg">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -17,7 +15,7 @@
       
       
       
-      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/amazon_s3.md/#L1">
   </head>
 
   <script type="module">
@@ -32,7 +30,7 @@
   </script>
 
 
-  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
@@ -73,83 +71,45 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.IDatasetStream">
+        <article data-uid="">
+<h1 id="amazon-s3">Amazon S3</h1>
 
+<table>
+<thead>
+<tr>
+<th>Requires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.NET Standard 2.1+</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>dotnet add package PureHdf.VFD.AmazonS3</code></p>
+<pre><code class="lang-cs">using PureHDF.VFD.AmazonS3
 
+// adapt to your needs
+var credentials = new AnonymousAWSCredentials();
+var region = RegionEndpoint.EUWest1;
+var client = new AmazonS3Client(credentials, region);
+var s3Stream = new AmazonS3Stream(client, bucketName: &quot;xxx&quot;, key: &quot;yyy&quot;);
 
-  <h1 id="PureHDF_IDatasetStream" data-uid="PureHDF.IDatasetStream" class="text-break">
-    Interface IDatasetStream
-  
-  </h1>
+using var file = H5File.Open(s3Stream);
 
-  <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
-  </div>
-
-  <div class="markdown summary"><p>Contains a collection of optional methods to improve performance.</p>
+...
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The <code>AmazonS3Stream</code> caches S3 responses in cache slots of 1 MB by default (use the constructor overload to customize this). Data read from datasets is not being cached to keep the cache small but still useful.</p>
 </div>
-  <div class="markdown conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IDatasetStream</code></pre>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <h2 class="section" id="methods">Methods
-</h2>
-
-
-  <a id="PureHDF_IDatasetStream_ReadDataset_" data-uid="PureHDF.IDatasetStream.ReadDataset*"></a>
-
-  <h3 id="PureHDF_IDatasetStream_ReadDataset_System_Memory_System_Byte__" data-uid="PureHDF.IDatasetStream.ReadDataset(System.Memory{System.Byte})">
-  ReadDataset(Memory&lt;byte&gt;)
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>This method is called to indicate that actual data is being read (e.g. to determine if the request should be cached).</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">void ReadDataset(Memory&lt;byte&gt; buffer)</code></pre>
-  </div>
-
-  <h4 class="section">Parameters</h4>
-  <dl class="parameters">
-    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
-    <dd><p>The buffer to write the data into.</p>
-</dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
 </article>
 
         <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/amazon_s3.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
         
       </div>
 

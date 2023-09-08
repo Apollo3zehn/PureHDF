@@ -1,0 +1,782 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class H5ReadOptions
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class H5ReadOptions
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.H5ReadOptions">
+
+
+
+  <h1 id="PureHDF_H5ReadOptions" data-uid="PureHDF.H5ReadOptions" class="text-break">
+    Class H5ReadOptions
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Provides options to be used with <a class="xref" href="PureHDF.H5File.html">H5File</a>.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public record H5ReadOptions : IEquatable&lt;H5ReadOptions&gt;</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">H5ReadOptions</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a>&gt;</div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="PureHDF_H5ReadOptions__ctor_" data-uid="PureHDF.H5ReadOptions.#ctor*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions__ctor_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5ReadOptions.#ctor(PureHDF.H5ReadOptions)">
+  H5ReadOptions(H5ReadOptions)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected H5ReadOptions(H5ReadOptions original)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>original</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions__ctor_" data-uid="PureHDF.H5ReadOptions.#ctor*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions__ctor_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Func_System_Reflection_FieldInfo_System_String__System_Func_System_Reflection_PropertyInfo_System_String__" data-uid="PureHDF.H5ReadOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.String})">
+  H5ReadOptions(bool, bool, bool, bool, Func&lt;FieldInfo, string?&gt;?, Func&lt;PropertyInfo, string?&gt;?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Provides options to be used with <a class="xref" href="PureHDF.H5File.html">H5File</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public H5ReadOptions(bool IncludeStructFields = true, bool IncludeStructProperties = false, bool IncludeClassFields = false, bool IncludeClassProperties = true, Func&lt;FieldInfo, string?&gt;? FieldNameMapper = null, Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>IncludeStructFields</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A value that indicates whether struct fields are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>.</p>
+</dd>
+    <dt><code>IncludeStructProperties</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A value that indicates whether struct properties are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</dd>
+    <dt><code>IncludeClassFields</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A value that indicates whether class fields are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</dd>
+    <dt><code>IncludeClassProperties</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A value that indicates whether class properties are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>.</p>
+</dd>
+    <dt><code>FieldNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>Maps a <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a> to the name of the HDF5 member.</p>
+</dd>
+    <dt><code>PropertyNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>Maps a <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a> to the name of the HDF5 member.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_H5ReadOptions_EqualityContract_" data-uid="PureHDF.H5ReadOptions.EqualityContract*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_EqualityContract" data-uid="PureHDF.H5ReadOptions.EqualityContract">
+  EqualityContract
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual Type EqualityContract { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_FieldNameMapper_" data-uid="PureHDF.H5ReadOptions.FieldNameMapper*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_FieldNameMapper" data-uid="PureHDF.H5ReadOptions.FieldNameMapper">
+  FieldNameMapper
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Maps a <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a> to the name of the HDF5 member.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Func&lt;FieldInfo, string?&gt;? FieldNameMapper { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_IncludeClassFields_" data-uid="PureHDF.H5ReadOptions.IncludeClassFields*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_IncludeClassFields" data-uid="PureHDF.H5ReadOptions.IncludeClassFields">
+  IncludeClassFields
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A value that indicates whether class fields are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IncludeClassFields { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_IncludeClassProperties_" data-uid="PureHDF.H5ReadOptions.IncludeClassProperties*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_IncludeClassProperties" data-uid="PureHDF.H5ReadOptions.IncludeClassProperties">
+  IncludeClassProperties
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A value that indicates whether class properties are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IncludeClassProperties { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_IncludeStructFields_" data-uid="PureHDF.H5ReadOptions.IncludeStructFields*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_IncludeStructFields" data-uid="PureHDF.H5ReadOptions.IncludeStructFields">
+  IncludeStructFields
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A value that indicates whether struct fields are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">true</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IncludeStructFields { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_IncludeStructProperties_" data-uid="PureHDF.H5ReadOptions.IncludeStructProperties*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_IncludeStructProperties" data-uid="PureHDF.H5ReadOptions.IncludeStructProperties">
+  IncludeStructProperties
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A value that indicates whether struct properties are handled during serialization. The default value is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool IncludeStructProperties { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_PropertyNameMapper_" data-uid="PureHDF.H5ReadOptions.PropertyNameMapper*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_PropertyNameMapper" data-uid="PureHDF.H5ReadOptions.PropertyNameMapper">
+  PropertyNameMapper
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Maps a <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a> to the name of the HDF5 member.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_H5ReadOptions_Deconstruct_" data-uid="PureHDF.H5ReadOptions.Deconstruct*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_Deconstruct_System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Func_System_Reflection_FieldInfo_System_String___System_Func_System_Reflection_PropertyInfo_System_String___" data-uid="PureHDF.H5ReadOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.String}@)">
+  Deconstruct(out bool, out bool, out bool, out bool, out Func&lt;FieldInfo, string?&gt;?, out Func&lt;PropertyInfo, string?&gt;?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out bool IncludeStructFields, out bool IncludeStructProperties, out bool IncludeClassFields, out bool IncludeClassProperties, out Func&lt;FieldInfo, string?&gt;? FieldNameMapper, out Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>IncludeStructFields</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+    <dt><code>IncludeStructProperties</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+    <dt><code>IncludeClassFields</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+    <dt><code>IncludeClassProperties</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+    <dt><code>FieldNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+    <dt><code>PropertyNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_Equals_" data-uid="PureHDF.H5ReadOptions.Equals*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_Equals_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5ReadOptions.Equals(PureHDF.H5ReadOptions)">
+  Equals(H5ReadOptions?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual bool Equals(H5ReadOptions? other)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>other</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_Equals_" data-uid="PureHDF.H5ReadOptions.Equals*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_Equals_System_Object_" data-uid="PureHDF.H5ReadOptions.Equals(System.Object)">
+  Equals(object?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_GetHashCode_" data-uid="PureHDF.H5ReadOptions.GetHashCode*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_GetHashCode" data-uid="PureHDF.H5ReadOptions.GetHashCode">
+  GetHashCode()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_PrintMembers_" data-uid="PureHDF.H5ReadOptions.PrintMembers*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_PrintMembers_System_Text_StringBuilder_" data-uid="PureHDF.H5ReadOptions.PrintMembers(System.Text.StringBuilder)">
+  PrintMembers(StringBuilder)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual bool PrintMembers(StringBuilder builder)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>builder</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.stringbuilder">StringBuilder</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_ToString_" data-uid="PureHDF.H5ReadOptions.ToString*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_ToString" data-uid="PureHDF.H5ReadOptions.ToString">
+  ToString()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions__Clone___" data-uid="PureHDF.H5ReadOptions.{Clone}$*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions__Clone__" data-uid="PureHDF.H5ReadOptions.{Clone}$">
+  &lt;Clone&gt;$()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual H5ReadOptions &lt;Clone&gt;$()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="operators">Operators
+</h2>
+
+
+  <a id="PureHDF_H5ReadOptions_op_Equality_" data-uid="PureHDF.H5ReadOptions.op_Equality*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_op_Equality_PureHDF_H5ReadOptions_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5ReadOptions.op_Equality(PureHDF.H5ReadOptions,PureHDF.H5ReadOptions)">
+  operator ==(H5ReadOptions?, H5ReadOptions?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(H5ReadOptions? left, H5ReadOptions? right)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>left</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+    <dt><code>right</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_op_Inequality_" data-uid="PureHDF.H5ReadOptions.op_Inequality*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_op_Inequality_PureHDF_H5ReadOptions_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5ReadOptions.op_Inequality(PureHDF.H5ReadOptions,PureHDF.H5ReadOptions)">
+  operator !=(H5ReadOptions?, H5ReadOptions?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(H5ReadOptions? left, H5ReadOptions? right)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>left</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+    <dt><code>right</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

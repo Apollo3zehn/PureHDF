@@ -233,7 +233,7 @@
     <dd><p>The stream to write the contents into. It must be readable, writeable and seekable.</p>
 </dd>
     <dt><code>options</code> <a class="xref" href="PureHDF.H5WriteOptions.html">H5WriteOptions</a></dt>
-    <dd><p>Options to control serialization behavior.</p>
+    <dd><p>Options to control encoding behavior.</p>
 </dd>
   </dl>
 
@@ -274,7 +274,7 @@
     <dd><p>The path of the file to write the contents into.</p>
 </dd>
     <dt><code>options</code> <a class="xref" href="PureHDF.H5WriteOptions.html">H5WriteOptions</a></dt>
-    <dd><p>Options to control serialization behavior.</p>
+    <dd><p>Options to control encoding behavior.</p>
 </dd>
   </dl>
 
@@ -296,8 +296,8 @@
 
   <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
 
-  <h3 id="PureHDF_H5File_Open_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_" data-uid="PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor)">
-  Open(MemoryMappedViewAccessor)
+  <h3 id="PureHDF_H5File_Open_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor,PureHDF.H5ReadOptions)">
+  Open(MemoryMappedViewAccessor, H5ReadOptions?)
   
   </h3>
 
@@ -306,13 +306,16 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static NativeFile Open(MemoryMappedViewAccessor accessor)</code></pre>
+    <pre><code class="lang-csharp hljs">public static NativeFile Open(MemoryMappedViewAccessor accessor, H5ReadOptions? options = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
     <dt><code>accessor</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.memorymappedfiles.memorymappedviewaccessor">MemoryMappedViewAccessor</a></dt>
     <dd><p>The memory-mapped accessor to use.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
 </dd>
   </dl>
 
@@ -334,8 +337,8 @@
 
   <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
 
-  <h3 id="PureHDF_H5File_Open_System_IO_Stream_System_Boolean_" data-uid="PureHDF.H5File.Open(System.IO.Stream,System.Boolean)">
-  Open(Stream, bool)
+  <h3 id="PureHDF_H5File_Open_System_IO_Stream_System_Boolean_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(System.IO.Stream,System.Boolean,PureHDF.H5ReadOptions)">
+  Open(Stream, bool, H5ReadOptions?)
   
   </h3>
 
@@ -344,7 +347,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static NativeFile Open(Stream stream, bool leaveOpen = false)</code></pre>
+    <pre><code class="lang-csharp hljs">public static NativeFile Open(Stream stream, bool leaveOpen = false, H5ReadOptions? options = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -355,6 +358,9 @@
     <dt><code>leaveOpen</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
     <dd><p>A boolean which indicates if the stream should be kept open when this class is disposed. The default is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
 </dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
   </dl>
 
   <h4 class="section">Returns</h4>
@@ -375,8 +381,8 @@
 
   <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
 
-  <h3 id="PureHDF_H5File_Open_System_String_System_IO_FileMode_System_IO_FileAccess_System_IO_FileShare_System_Boolean_" data-uid="PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,System.Boolean)">
-  Open(string, FileMode, FileAccess, FileShare, bool)
+  <h3 id="PureHDF_H5File_Open_System_String_System_IO_FileMode_System_IO_FileAccess_System_IO_FileShare_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,PureHDF.H5ReadOptions)">
+  Open(string, FileMode, FileAccess, FileShare, H5ReadOptions?)
   
   </h3>
 
@@ -385,7 +391,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static NativeFile Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, bool useAsync = false)</code></pre>
+    <pre><code class="lang-csharp hljs">public static NativeFile Open(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, H5ReadOptions? options = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -402,8 +408,8 @@
     <dt><code>fileShare</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileshare">FileShare</a></dt>
     <dd><p>A <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileshare">FileShare</a> value specifying the type of access other threads have to the file.</p>
 </dd>
-    <dt><code>useAsync</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
-    <dd><p>A boolean which indicates if the file be opened with the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileoptions#system-io-fileoptions-asynchronous">Asynchronous</a> flag.</p>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
 </dd>
   </dl>
 
@@ -425,8 +431,8 @@
 
   <a id="PureHDF_H5File_OpenRead_" data-uid="PureHDF.H5File.OpenRead*"></a>
 
-  <h3 id="PureHDF_H5File_OpenRead_System_String_" data-uid="PureHDF.H5File.OpenRead(System.String)">
-  OpenRead(string)
+  <h3 id="PureHDF_H5File_OpenRead_System_String_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.OpenRead(System.String,PureHDF.H5ReadOptions)">
+  OpenRead(string, H5ReadOptions?)
   
   </h3>
 
@@ -435,13 +441,16 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static NativeFile OpenRead(string filePath)</code></pre>
+    <pre><code class="lang-csharp hljs">public static NativeFile OpenRead(string filePath, H5ReadOptions? options = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
     <dt><code>filePath</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
     <dd><p>The path of the file to open.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
 </dd>
   </dl>
 
@@ -482,7 +491,7 @@
     <dd><p>The stream to write the contents into. It must be readable, writeable and seekable.</p>
 </dd>
     <dt><code>options</code> <a class="xref" href="PureHDF.H5WriteOptions.html">H5WriteOptions</a></dt>
-    <dd><p>Options to control serialization behavior.</p>
+    <dd><p>Options to control encoding behavior.</p>
 </dd>
   </dl>
 
@@ -518,7 +527,7 @@
     <dd><p>The path of the file to write the contents into.</p>
 </dd>
     <dt><code>options</code> <a class="xref" href="PureHDF.H5WriteOptions.html">H5WriteOptions</a></dt>
-    <dd><p>Options to control serialization behavior.</p>
+    <dd><p>Options to control encoding behavior.</p>
 </dd>
   </dl>
 

@@ -1,2 +1,2 @@
 
-{"items":[{"name":"Introduction","href":"articles/reading.html","tocHref":"articles/toc.html","topicHref":"articles/reading.html"},{"name":"PureHDF API","href":"api/PureHDF.html","tocHref":"api/toc.html","topicHref":"api/PureHDF.html","topicUid":"PureHDF"}]}
+{"items":[{"name":"Welcome","href":"index.html","topicHref":"index.html"},{"name":"Reading","href":"reading/index.html","tocHref":"reading/toc.html","topicHref":"reading/index.html"},{"name":"Writing","href":"writing.html","topicHref":"writing.html"},{"name":"Filters","href":"filters.html","topicHref":"filters.html"},{"name":"PureHDF API","href":"api/PureHDF.html","tocHref":"api/toc.html","topicHref":"api/PureHDF.html","topicUid":"PureHDF"}]}

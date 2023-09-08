@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Slicing | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Slicing | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/slicing.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="slicing">Slicing</h1>
+
+<h2 id="overview">Overview</h2>
+<p>Data selection is one of the strengths of HDF5 and is applicable to all dataset types (contiguous, compact and chunked). With PureHDF, the full dataset can be read with a simple call to <code>dataset.Read&lt;T&gt;()</code>. However, if you want to read only parts of the dataset, <a href="https://support.hdfgroup.org/HDF5/Tutor/selectsimple.html">selections</a> are your friend.</p>
+<p>PureHDF supports three types of selections. These are:</p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HyperslabSelection</code></td>
+<td>A hyperslab is a selection of elements from a hyper rectangle.<br><a href="https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides">HDF5 User's Guide</a> &gt; 7.4.1.1 Hyperslab Selection</td>
+</tr>
+<tr>
+<td><code>PointSelection</code></td>
+<td>Selects a collection of points.<br><a href="https://portal.hdfgroup.org/display/HDF5/HDF5+User+Guides">HDF5 User's Guide</a> &gt; 7.4.1.2 Select Points</td>
+</tr>
+<tr>
+<td><code>DelegateSelection</code></td>
+<td>This selection accepts a custom walker which selects the user defined points or blocks.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="examples">Examples</h2>
+<p>Selections can be passed to the read method to avoid reading the full dataset like this:</p>
+<pre><code class="lang-cs">var fileSelection = ...;
+var data = dataset.Read&lt;int&gt;(fileSelection: fileSelection);
+</code></pre>
+<p>Alternatively, if the selection should not be applied to the file but to the memory buffer, use the <code>memorySelection</code> parameter:</p>
+<pre><code class="lang-cs">var memorySelection = ...;
+var data = dataset.Read&lt;int&gt;(memorySelection: memorySelection);
+</code></pre>
+<p>All parameters are optional. For example, when the <code>fileSelection</code> parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>There are overload methods that allow you to provide your own buffer.</p>
+</div>
+<p><strong>Point selection</strong></p>
+<p>Point selections require a two-dimensional <code>n</code> x <code>m</code> array where <code>n</code> is the number of points and <code>m</code> the rank of the dataset. Here is an example with four points to select data from a dataset of rank = <code>3</code>.</p>
+<pre><code class="lang-cs">var selection = new PointSelection(new ulong[,] {
+    { 00, 00, 00 },
+    { 00, 05, 10 },
+    { 12, 01, 10 },
+    { 05, 07, 09 }
+});
+</code></pre>
+<p><strong>Hyperslab selection</strong></p>
+<p>A hyperslab selection can be used to select a contiguous block of elements or to select multiple blocks.</p>
+<p>The simplest example is a selection for a 1-dimensional dataset at a certain offset (<code>start: 10</code>) and a certain length (<code>block: 50</code>):</p>
+<pre><code class="lang-cs">var fileSelection = new HyperslabSelection(start: 10, block: 50);
+</code></pre>
+<p>The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):</p>
+<pre><code class="lang-cs">var dataset = root.Dataset(&quot;myDataset&quot;);
+var memoryDims = new ulong[] { 75, 25 };
+
+var datasetSelection = new HyperslabSelection(
+    rank: 3,
+    starts: new ulong[] { 2, 2, 0 },
+    strides: new ulong[] { 5, 8, 2 },
+    counts: new ulong[] { 5, 3, 2 },
+    blocks: new ulong[] { 3, 5, 2 }
+);
+
+var memorySelection = new HyperslabSelection(
+    rank: 2,
+    starts: new ulong[] { 2, 1 },
+    strides: new ulong[] { 35, 17 },
+    counts: new ulong[] { 2, 1 },
+    blocks: new ulong[] { 30, 15 }
+);
+
+var result = dataset
+    .Read&lt;int&gt;(
+        fileSelection: datasetSelection,
+        memorySelection: memorySelection,
+        memoryDims: memoryDims
+    )
+    .ToArray2D(75, 25);
+</code></pre>
+<p><strong>Delegate selection</strong></p>
+<p>A delegate accepts a custom walker function which select blocks of data at certain coordinates. Here is an example which selects a total number of 11 elements from a 3-dimensional dataset:</p>
+<pre><code class="lang-cs">static IEnumerable&lt;Step&gt; Walker(ulong[] datasetDimensions)
+{
+    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
+    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
+    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
+    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+};
+
+var selection = new DelegateSelection(totalElementCount: 11, Walker);
+</code></pre>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/slicing.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

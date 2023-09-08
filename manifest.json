@@ -5,16 +5,6 @@
   "files": [
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.ArrayExtensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.ArrayExtensions.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.CompoundMember.yml",
       "output": {
         ".html": {
@@ -325,6 +315,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.H5ReadOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.H5ReadOptions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.H5SourceGeneratorAttribute.yml",
       "output": {
         ".html": {
@@ -479,16 +479,6 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.IH5Dataset.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.IH5DatasetExtensions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.IH5DatasetExtensions.html"
         }
       },
       "version": ""
@@ -735,6 +725,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Native.ChunkCache.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Native.ChunkCache.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.VOL.Native.H5DatasetAccess.yml",
       "output": {
         ".html": {
@@ -908,43 +908,10 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "articles/filters.md",
+      "source_relative_path": "filters.md",
       "output": {
         ".html": {
-          "relative_path": "articles/filters.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
-      "source_relative_path": "articles/reading.md",
-      "output": {
-        ".html": {
-          "relative_path": "articles/reading.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Toc",
-      "source_relative_path": "articles/toc.yml",
-      "output": {
-        ".html": {
-          "relative_path": "articles/toc.html"
-        },
-        ".json": {
-          "relative_path": "articles/toc.json"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Conceptual",
-      "source_relative_path": "articles/writing.md",
-      "output": {
-        ".html": {
-          "relative_path": "articles/writing.html"
+          "relative_path": "filters.html"
         }
       },
       "version": ""
@@ -1000,6 +967,109 @@
       "version": ""
     },
     {
+      "type": "Conceptual",
+      "source_relative_path": "reading/amazon_s3.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/amazon_s3.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/complex.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/complex.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/concurrency.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/concurrency.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/external_files.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/external_files.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/hsds.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/hsds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/intellisense.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/intellisense.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/simple.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/simple.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "reading/slicing.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/slicing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "reading/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "reading/toc.html"
+        },
+        ".json": {
+          "relative_path": "reading/toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
       "type": "Toc",
       "source_relative_path": "toc.yml",
       "output": {
@@ -1008,6 +1078,16 @@
         },
         ".json": {
           "relative_path": "toc.json"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "writing.md",
+      "output": {
+        ".html": {
+          "relative_path": "writing.html"
         }
       },
       "version": ""

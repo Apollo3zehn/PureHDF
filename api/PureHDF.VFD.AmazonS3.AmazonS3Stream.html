@@ -173,6 +173,9 @@
       <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream.readasync#system-io-stream-readasync(system-byte()-system-int32-system-int32-system-threading-cancellationtoken)">Stream.ReadAsync(byte[], int, int, CancellationToken)</a>
     </div>
     <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream.readasync#system-io-stream-readasync(system-memory((system-byte))-system-threading-cancellationtoken)">Stream.ReadAsync(Memory&lt;byte&gt;, CancellationToken)</a>
+    </div>
+    <div>
       <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream.beginwrite">Stream.BeginWrite(byte[], int, int, AsyncCallback, object)</a>
     </div>
     <div>
@@ -542,44 +545,6 @@
 
 
 
-  <a id="PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadAsync_" data-uid="PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync*"></a>
-
-  <h3 id="PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadAsync_System_Memory_System_Byte__System_Threading_CancellationToken_" data-uid="PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadAsync(System.Memory{System.Byte},System.Threading.CancellationToken)">
-  ReadAsync(Memory&lt;byte&gt;, CancellationToken)
-  
-  </h3>
-
-  <div class="markdown level1 summary"></div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public override ValueTask&lt;int&gt; ReadAsync(Memory&lt;byte&gt; buffer, CancellationToken cancellationToken)</code></pre>
-  </div>
-
-  <h4 class="section">Parameters</h4>
-  <dl class="parameters">
-    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
-    <dd></dd>
-    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
-    <dd></dd>
-  </dl>
-
-  <h4 class="section">Returns</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask-1">ValueTask</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a>&gt;</dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
-
   <a id="PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDataset_" data-uid="PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset*"></a>
 
   <h3 id="PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDataset_System_Memory_System_Byte__" data-uid="PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset(System.Memory{System.Byte})">
@@ -602,47 +567,6 @@
 </dd>
   </dl>
 
-
-
-
-
-
-
-
-
-
-
-
-  <a id="PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDatasetAsync_" data-uid="PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync*"></a>
-
-  <h3 id="PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDatasetAsync_System_Memory_System_Byte__System_Threading_CancellationToken_" data-uid="PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDatasetAsync(System.Memory{System.Byte},System.Threading.CancellationToken)">
-  ReadDatasetAsync(Memory&lt;byte&gt;, CancellationToken)
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>This method is called to indicate that actual data is being read (e.g. to determine if the request should be cached).</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public ValueTask ReadDatasetAsync(Memory&lt;byte&gt; buffer, CancellationToken cancellationToken)</code></pre>
-  </div>
-
-  <h4 class="section">Parameters</h4>
-  <dl class="parameters">
-    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
-    <dd><p>The buffer to write the data into.</p>
-</dd>
-    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
-    <dd><p>A token to cancel the current operation.</p>
-</dd>
-  </dl>
-
-  <h4 class="section">Returns</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.valuetask">ValueTask</a></dt>
-    <dd></dd>
-  </dl>
 
 
 

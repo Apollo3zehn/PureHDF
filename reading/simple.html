@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Simple Data | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Simple Data | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.svg">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/simple.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="simple-data">Simple Data</h1>
+
+<p>Each HDF5 attribute or dataset has an associated dataspace which is either of type <code>null</code>, <code>scalar</code> or <code>simple</code>. The following overview shows you how to handle these different dataspace types:</p>
+<ul>
+<li><code>null</code>: You cannot read <code>null</code> dataspaces as they contain no data.</li>
+<li><code>scalar</code>: Provide a compatible scalar return type. To read the value of a scalar dataset of type <code>int</code> call <code>dataset.Read&lt;int&gt;()</code>.</li>
+<li><code>simple</code>: Provide a compatible array return type. To read the value of a 2D dataset of type <code>int</code> call <code>dataset.Read&lt;int[,]&gt;()</code></li>
+</ul>
+<p>The following section shows you how to read 1D datasets of any datatype. All samples shown work for datasets as well as attributes.</p>
+<pre><code class="lang-cs">// class: fixed-point
+
+    var data = dataset.Read&lt;int[]&gt;();
+
+// class: floating-point
+
+    var data = dataset.Read&lt;double[]&gt;();
+
+// class: string
+
+    var data = dataset.Read&lt;string[]&gt;();
+
+// class: bitfield
+
+    [Flags]
+    enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
+    {
+        MainValve_Open          = 0x0001
+        AuxValve_1_Open         = 0x0002
+        AuxValve_2_Open         = 0x0004
+        MainEngine_Ready        = 0x0008
+        FallbackEngine_Ready    = 0x0010
+        // ...
+    }
+
+    var data = dataset.Read&lt;SystemStatus[]&gt;();
+    var readyToLaunch = data[0].HasFlag(SystemStatus.MainValve_Open | SystemStatus.MainEngine_Ready);
+
+// class: opaque
+
+    var data = dataset.Read&lt;MyOpaqueStruct[]&gt;();
+
+// class: compound
+
+    /* option 1: faster (if no reference types are contained) */
+    var data = dataset.Read&lt;MyNonNullableStruct[]&gt;();
+
+    /* option 2: slower (useful to read unknown structs) */
+    var data = dataset.Read&lt;Dictionary&lt;string, object&gt;&gt;();
+
+// class: reference @ object reference
+
+    var references = dataset.Read&lt;NativeObjectReference1[]&gt;();
+    var firstRef = references.First();
+
+    /* NOTE: Dereferencing would be quite fast if the object's name
+     * was known. Instead, the library searches recursively for the  
+     * object. Do not dereference using a parent (group) that contains
+     * any circular soft links. Hard links are no problem.
+     */
+
+    /* option 1 (faster) */
+    var firstObject = directParent.Get(firstRef);
+
+    /* option 1 (slower, use if you don't know the objects parent) */
+    var firstObject = root.Get(firstRef);
+
+// class: reference @ region reference
+
+    var references = dataset.Read&lt;NativeRegionReference1[]&gt;();
+    var firstRef = references.First();
+    var selection = root.Get(firstRef);
+    var data = referencedDataset.Read&lt;T&gt;(fileSelection: selection);
+
+// class: enumerated
+
+    enum MyEnum : short /* make sure the enum in HDF file is based on the same type */
+    {
+        MyValue1 = 1,
+        MyValue2 = 2,
+        // ...
+    }
+
+    var data = dataset.Read&lt;MyEnum[]&gt;();
+
+// class: variable length strings
+
+    var data = dataset.Read&lt;string[]&gt;();
+
+// class: variable length sequences
+
+    var data = dataset.Read&lt;T[][]&gt;();
+
+// class: array
+
+    var data = dataset.Read&lt;T[][]&gt;;
+
+// class: time
+// -&gt; not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>For more information about complex data (compounds), see section <a href="complex.html">Complex Data</a>.</p>
+</div>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/simple.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2023 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
