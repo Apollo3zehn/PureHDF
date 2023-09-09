@@ -14,6 +14,8 @@ There are three ways to read compound data which are explained in the following 
 Compound data without string-like or array-like members can be read like any other dataset using a high performance copy operation. To do so, define a .NET struct and specify the field offsets using the `StructLayout` and `FieldOffset` attributes:
 
 ```cs
+using System.Runtime.InteropServices;
+
 [StructLayout(LayoutKind.Explicit, Size = 5)]
 struct SimpleStruct
 {
@@ -85,6 +87,8 @@ struct NullableStructWithCustomFieldName
 }
 
 // Create a name translator.
+using System.Reflection;
+
 Func<FieldInfo, string?> converter = fieldInfo =>
 {
     var attribute = fieldInfo.GetCustomAttribute<H5NameAttribute>(true);
@@ -95,7 +99,7 @@ Func<FieldInfo, string?> converter = fieldInfo =>
 var options = new H5ReadOptions() { FieldNameMapper = converter };
 var h5file = H5File.OpenRead(..., options);
 var dataset = h5file.Dataset(...);
-var compoundData = dataset.Read<NullableStructWithCustomFieldName>(converter);
+var compoundData = dataset.Read<NullableStructWithCustomFieldName>();
 ```
 
 ## Class vs. struct

@@ -2,7 +2,7 @@
 
 [![GitHub Actions](https://github.com/Apollo3zehn/PureHDF/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/Apollo3zehn/PureHDF/actions) [![NuGet](https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget)](https://www.nuget.org/packages/PureHDF)
 
-A pure C# library without native dependencies that makes reading and writing of HDF5 files (groups, datasets, attributes, links, ...) very easy.
+A pure C# library without native dependencies that makes reading and writing of HDF5 files (groups, datasets, attributes, ...) very easy.
 
 The minimum supported target framework is .NET Standard 2.0 which includes
 - .NET Framework 4.6.1+ 
@@ -14,6 +14,12 @@ This library runs on all platforms (ARM, x86, x64) and operating systems (Linux,
 The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html).
 
 > Please read the [docs](https://apollo3zehn.github.io/PureHDF/) for samples and API documentation.
+
+# Installation
+
+```bash
+dotnet add package PureHDF --prerelease
+```
 
 # Quick Start
 
@@ -35,7 +41,7 @@ var dataset = group.Dataset("my-dataset");
 var datasetData = dataset.Read<double>();
 ```
 
-See the [docs](https://apollo3zehn.github.io/PureHDF/reading.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
+See the [docs](https://apollo3zehn.github.io/PureHDF/reading/index.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
 
 ## Writing
 
@@ -102,7 +108,7 @@ The last step is to write the defined file to the drive:
 file.Write("path/to/file.h5");
 ```
 
-See the [docs](https://apollo3zehn.github.io/PureHDF/writing.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
+See the [docs](https://apollo3zehn.github.io/PureHDF/writing/index.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
 
 # Development
 

@@ -17,6 +17,8 @@ Reading data from a dataset is thread-safe in the following cases, depending on 
 If you have opened a file as memory-mapped file, you may read the data in parallel like this:
 
 ```cs
+using System.IO.MemoryMappedFiles;
+
 const ulong TOTAL_ELEMENT_COUNT = xxx;
 const ulong SEGMENT_COUNT = xxx;
 const ulong SEGMENT_SIZE = TOTAL_ELEMENT_COUNT / SEGMENT_COUNT;

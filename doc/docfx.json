@@ -43,6 +43,8 @@
         "files": [
           "reading/**.md",
           "reading/**/toc.yml",
+          "writing/**.md",
+          "writing/**/toc.yml",
           "toc.yml",
           "*.md"
         ]

@@ -19,8 +19,11 @@
 - name: Intellisense
   href: intellisense.md
 
-- name: Amazon S3
-  href: amazon_s3.md
+- name: VFD - Amazon S3
+  href: amazon-s3.md
 
-- name: HSDS
+- name: VOL - HSDS
   href: hsds.md
+
+- name: Unsupported features
+  href: unsupported-features.md
