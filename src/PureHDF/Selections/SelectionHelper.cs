@@ -26,14 +26,11 @@ internal record EncodeInfo<T>(
     int TargetTypeSize
 );
 
-internal readonly struct RelativeStep
-{
-    public ulong[] Chunk { get; init; }
-
-    public ulong Offset { get; init; }
-
-    public ulong Length { get; init; }
-}
+internal readonly record struct RelativeStep(
+    ulong[] Chunk,
+    ulong Offset,
+    ulong Length
+);
 
 internal static class SelectionHelper
 {

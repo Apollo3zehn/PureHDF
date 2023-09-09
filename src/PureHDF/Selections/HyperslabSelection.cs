@@ -145,7 +145,7 @@ public class HyperslabSelection : Selection
         var supportsBulkCopy = lastDimGap == 0;
 
         /* prepare the step */
-        var step = new Step() { Coordinates = new ulong[Rank] };
+        var step = new Step(Coordinates: new ulong[Rank], ElementCount: default);
 
         /* loop until all data have been processed */
         while (true)
@@ -164,7 +164,7 @@ public class HyperslabSelection : Selection
                 .AsSpan()
                 .CopyTo(step.Coordinates);
                 
-            step.ElementCount = totalLength;
+            step = step with { ElementCount = totalLength };
 
             yield return step;
 

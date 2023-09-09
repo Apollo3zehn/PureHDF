@@ -94,10 +94,10 @@ A delegate accepts a custom walker function which select blocks of data at certa
 ```cs
 static IEnumerable<Step> Walker(ulong[] datasetDimensions)
 {
-    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
-    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
-    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
-    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+    yield return new Step(Coordinates: new ulong[] { 00, 00, 00 }, ElementCount: 1);
+    yield return new Step(Coordinates: new ulong[] { 00, 05, 10 }, ElementCount: 5);
+    yield return new Step(Coordinates: new ulong[] { 12, 01, 10 }, ElementCount: 2);
+    yield return new Step(Coordinates: new ulong[] { 05, 07, 09 }, ElementCount: 3);
 };
 
 var selection = new DelegateSelection(totalElementCount: 11, Walker);
