@@ -2,13 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Struct Step
- | PureHDF </title>
+      <title>Chunks | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Struct Step
- | PureHDF ">
+      <meta name="title" content="Chunks | PureHDF ">
       
-      <link rel="icon" href="../images/icon.svg">
+      <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
       <meta name="docfx:navrel" content="../toc.html">
@@ -17,7 +15,7 @@
       
       
       
-      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/chunks.md/#L1">
   </head>
 
   <script type="module">
@@ -32,12 +30,12 @@
   </script>
 
 
-  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
           <a class="navbar-brand" href="../index.html">
-            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,127 +71,36 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.Step">
+        <article data-uid="">
+<h1 id="chunks">Chunks</h1>
 
-
-
-  <h1 id="PureHDF_Step" data-uid="PureHDF.Step" class="text-break">
-    Struct Step
-  
-  </h1>
-
-  <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
-  </div>
-
-  <div class="markdown summary"><p>Represents a single unit of data to be selected.</p>
+<p>To chunk data, give the <code>H5Dataset</code> some chunk dimensions:</p>
+<pre><code class="lang-cs">var dataset = new H5Dataset(
+    data, 
+    chunks: new uint[] { 10, 10 });
+</code></pre>
+<p>When no chunks and no filters are specified, the data will be written as compact or contiguous datasets, depending on the total size.</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Chunks can only be written to file once! Depending on your dataset and chunk dimensions, chunks are being accessed more than once during a write operation (only relevant for multidimensional arrays). To avoid an exception, make sure the chunk cache is large enough so that chunks are not being flushed from the cache to disk too early. You can adjust the chunk cache parameters by passing <code>H5DatasetAccess</code> properties to the dataset's constructor as shown below.</p>
 </div>
-  <div class="markdown conceptual"></div>
+<pre><code class="lang-cs">using PureHDF.VOL.Native;
 
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public struct Step</code></pre>
-  </div>
+var datasetCreation = new H5DatasetCreation(ChunkCache: new SimpleChunkCache(...));
 
-
-
-
-
-
-
-  <dl class="typelist derived">
-    <dt>Inherited Members</dt>
-    <dd>
-    <div>
-      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.valuetype.equals">ValueType.Equals(object)</a>
-    </div>
-    <div>
-      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.valuetype.gethashcode">ValueType.GetHashCode()</a>
-    </div>
-    <div>
-      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.valuetype.tostring">ValueType.ToString()</a>
-    </div>
-  </dd></dl>
-
-
-
-
-
-
-  <h2 class="section" id="properties">Properties
-</h2>
-
-
-  <a id="PureHDF_Step_Coordinates_" data-uid="PureHDF.Step.Coordinates*"></a>
-
-  <h3 id="PureHDF_Step_Coordinates" data-uid="PureHDF.Step.Coordinates">
-  Coordinates
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>Gets or sets the data coordinates.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public ulong[] Coordinates { readonly get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-  <a id="PureHDF_Step_ElementCount_" data-uid="PureHDF.Step.ElementCount*"></a>
-
-  <h3 id="PureHDF_Step_ElementCount" data-uid="PureHDF.Step.ElementCount">
-  ElementCount
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>Gets or sets the number of elements to select along the fastest changing dimension.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public ulong ElementCount { readonly get; set; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-
+var dataset = new H5Dataset(
+    data, 
+    chunks: new uint[] { 10, 10 },
+    datasetCreation: datasetCreation
+);
+</code></pre>
 </article>
 
         <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/chunks.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
         
       </div>
 

@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Slicing | PureHDF ">
       
-      <link rel="icon" href="../images/icon.svg">
+      <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
       <meta name="docfx:navrel" content="../toc.html">
@@ -35,7 +35,7 @@
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
           <a class="navbar-brand" href="../index.html">
-            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,11 +102,11 @@
 <h2 id="examples">Examples</h2>
 <p>Selections can be passed to the read method to avoid reading the full dataset like this:</p>
 <pre><code class="lang-cs">var fileSelection = ...;
-var data = dataset.Read&lt;int&gt;(fileSelection: fileSelection);
+var data = dataset.Read&lt;int[]&gt;(fileSelection: fileSelection);
 </code></pre>
 <p>Alternatively, if the selection should not be applied to the file but to the memory buffer, use the <code>memorySelection</code> parameter:</p>
 <pre><code class="lang-cs">var memorySelection = ...;
-var data = dataset.Read&lt;int&gt;(memorySelection: memorySelection);
+var data = dataset.Read&lt;int[]&gt;(memorySelection: memorySelection);
 </code></pre>
 <p>All parameters are optional. For example, when the <code>fileSelection</code> parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.</p>
 <div class="NOTE">
@@ -115,7 +115,9 @@ var data = dataset.Read&lt;int&gt;(memorySelection: memorySelection);
 </div>
 <p><strong>Point selection</strong></p>
 <p>Point selections require a two-dimensional <code>n</code> x <code>m</code> array where <code>n</code> is the number of points and <code>m</code> the rank of the dataset. Here is an example with four points to select data from a dataset of rank = <code>3</code>.</p>
-<pre><code class="lang-cs">var selection = new PointSelection(new ulong[,] {
+<pre><code class="lang-cs">using PureHDF.Selections;
+
+var selection = new PointSelection(new ulong[,] {
     { 00, 00, 00 },
     { 00, 05, 10 },
     { 12, 01, 10 },
@@ -127,7 +129,7 @@ var data = dataset.Read&lt;int&gt;(memorySelection: memorySelection);
 <p>The simplest example is a selection for a 1-dimensional dataset at a certain offset (<code>start: 10</code>) and a certain length (<code>block: 50</code>):</p>
 <pre><code class="lang-cs">var fileSelection = new HyperslabSelection(start: 10, block: 50);
 </code></pre>
-<p>The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):</p>
+<p>The following - more advanced - example shows selections for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):</p>
 <pre><code class="lang-cs">var dataset = root.Dataset(&quot;myDataset&quot;);
 var memoryDims = new ulong[] { 75, 25 };
 
@@ -148,21 +150,20 @@ var memorySelection = new HyperslabSelection(
 );
 
 var result = dataset
-    .Read&lt;int&gt;(
+    .Read&lt;int[,]&gt;(
         fileSelection: datasetSelection,
         memorySelection: memorySelection,
         memoryDims: memoryDims
-    )
-    .ToArray2D(75, 25);
+    );
 </code></pre>
 <p><strong>Delegate selection</strong></p>
 <p>A delegate accepts a custom walker function which select blocks of data at certain coordinates. Here is an example which selects a total number of 11 elements from a 3-dimensional dataset:</p>
 <pre><code class="lang-cs">static IEnumerable&lt;Step&gt; Walker(ulong[] datasetDimensions)
 {
-    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
-    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
-    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
-    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+    yield return new Step(Coordinates: new ulong[] { 00, 00, 00 }, ElementCount: 1);
+    yield return new Step(Coordinates: new ulong[] { 00, 05, 10 }, ElementCount: 5);
+    yield return new Step(Coordinates: new ulong[] { 12, 01, 10 }, ElementCount: 2);
+    yield return new Step(Coordinates: new ulong[] { 05, 07, 09 }, ElementCount: 3);
 };
 
 var selection = new DelegateSelection(totalElementCount: 11, Walker);

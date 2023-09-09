@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Struct H5LinkAccess
+      <title>Struct Step
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Struct H5LinkAccess
+      <meta name="title" content="Struct Step
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
@@ -73,27 +73,26 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.VOL.Native.H5LinkAccess">
+        <article data-uid="PureHDF.Selections.Step">
 
 
 
-  <h1 id="PureHDF_VOL_Native_H5LinkAccess" data-uid="PureHDF.VOL.Native.H5LinkAccess" class="text-break">
-    Struct H5LinkAccess
+  <h1 id="PureHDF_Selections_Step" data-uid="PureHDF.Selections.Step" class="text-break">
+    Struct Step
   
   </h1>
 
   <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.VOL.html">VOL</a>.<a class="xref" href="PureHDF.VOL.Native.html">Native</a></dd></dl>
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.Selections.html">Selections</a></dd></dl>
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>A structure which controls how the link is accessed. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___l_a_p_l.html">hdfgroup.org</a>.</p>
-<param name="ExternalLinkPrefix">The prefix to be applied to external link paths. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___l_a_p_l.html#gafa5eced13ba3a00cdd65669626dc7294">hdfgroup.org</a>.
+  <div class="markdown summary"><p>Represents a single unit of data to be selected.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public readonly struct H5LinkAccess : IEquatable&lt;H5LinkAccess&gt;</code></pre>
+    <pre><code class="lang-csharp hljs">public readonly struct Step : IEquatable&lt;Step&gt;</code></pre>
   </div>
 
 
@@ -103,7 +102,7 @@
   <dl class="typelist implements">
     <dt>Implements</dt>
     <dd>
-      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a>&gt;</div>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="PureHDF.Selections.Step.html">Step</a>&gt;</div>
     </dd>
   </dl>
 
@@ -118,26 +117,29 @@
 </h2>
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess__ctor_" data-uid="PureHDF.VOL.Native.H5LinkAccess.#ctor*"></a>
+  <a id="PureHDF_Selections_Step__ctor_" data-uid="PureHDF.Selections.Step.#ctor*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess__ctor_System_String_" data-uid="PureHDF.VOL.Native.H5LinkAccess.#ctor(System.String)">
-  H5LinkAccess(string?)
+  <h3 id="PureHDF_Selections_Step__ctor_System_UInt64___System_UInt64_" data-uid="PureHDF.Selections.Step.#ctor(System.UInt64[],System.UInt64)">
+  Step(ulong[], ulong)
   
   </h3>
 
-  <div class="markdown level1 summary"><p>A structure which controls how the link is accessed. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___l_a_p_l.html">hdfgroup.org</a>.</p>
-<param name="ExternalLinkPrefix">The prefix to be applied to external link paths. Reference: <a href="https://docs.hdfgroup.org/hdf5/v1_10/group___l_a_p_l.html#gafa5eced13ba3a00cdd65669626dc7294">hdfgroup.org</a>.
+  <div class="markdown level1 summary"><p>Represents a single unit of data to be selected.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5LinkAccess(string? ExternalLinkPrefix = null)</code></pre>
+    <pre><code class="lang-csharp hljs">public Step(ulong[] Coordinates, ulong ElementCount)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>ExternalLinkPrefix</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
-    <dd></dd>
+    <dt><code>Coordinates</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The data coordinates.</p>
+</dd>
+    <dt><code>ElementCount</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>The number of elements to select along the fastest changing dimension.</p>
+</dd>
   </dl>
 
 
@@ -155,18 +157,19 @@
 </h2>
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_ExternalLinkPrefix_" data-uid="PureHDF.VOL.Native.H5LinkAccess.ExternalLinkPrefix*"></a>
+  <a id="PureHDF_Selections_Step_Coordinates_" data-uid="PureHDF.Selections.Step.Coordinates*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_ExternalLinkPrefix" data-uid="PureHDF.VOL.Native.H5LinkAccess.ExternalLinkPrefix">
-  ExternalLinkPrefix
+  <h3 id="PureHDF_Selections_Step_Coordinates" data-uid="PureHDF.Selections.Step.Coordinates">
+  Coordinates
   
   </h3>
 
-  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 summary"><p>The data coordinates.</p>
+</div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public string? ExternalLinkPrefix { get; init; }</code></pre>
+    <pre><code class="lang-csharp hljs">public ulong[] Coordinates { get; init; }</code></pre>
   </div>
 
 
@@ -175,7 +178,39 @@
 
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Selections_Step_ElementCount_" data-uid="PureHDF.Selections.Step.ElementCount*"></a>
+
+  <h3 id="PureHDF_Selections_Step_ElementCount" data-uid="PureHDF.Selections.Step.ElementCount">
+  ElementCount
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The number of elements to select along the fastest changing dimension.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ulong ElementCount { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
     <dd></dd>
   </dl>
 
@@ -190,10 +225,10 @@
 </h2>
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_Deconstruct_" data-uid="PureHDF.VOL.Native.H5LinkAccess.Deconstruct*"></a>
+  <a id="PureHDF_Selections_Step_Deconstruct_" data-uid="PureHDF.Selections.Step.Deconstruct*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_Deconstruct_System_String__" data-uid="PureHDF.VOL.Native.H5LinkAccess.Deconstruct(System.String@)">
-  Deconstruct(out string?)
+  <h3 id="PureHDF_Selections_Step_Deconstruct_System_UInt64____System_UInt64__" data-uid="PureHDF.Selections.Step.Deconstruct(System.UInt64[]@,System.UInt64@)">
+  Deconstruct(out ulong[], out ulong)
   
   </h3>
 
@@ -201,12 +236,14 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public void Deconstruct(out string? ExternalLinkPrefix)</code></pre>
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out ulong[] Coordinates, out ulong ElementCount)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>ExternalLinkPrefix</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dt><code>Coordinates</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd></dd>
+    <dt><code>ElementCount</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
     <dd></dd>
   </dl>
 
@@ -221,10 +258,10 @@
 
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_Equals_" data-uid="PureHDF.VOL.Native.H5LinkAccess.Equals*"></a>
+  <a id="PureHDF_Selections_Step_Equals_" data-uid="PureHDF.Selections.Step.Equals*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_Equals_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.H5LinkAccess.Equals(PureHDF.VOL.Native.H5LinkAccess)">
-  Equals(H5LinkAccess)
+  <h3 id="PureHDF_Selections_Step_Equals_PureHDF_Selections_Step_" data-uid="PureHDF.Selections.Step.Equals(PureHDF.Selections.Step)">
+  Equals(Step)
   
   </h3>
 
@@ -232,12 +269,12 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public bool Equals(H5LinkAccess other)</code></pre>
+    <pre><code class="lang-csharp hljs">public bool Equals(Step other)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>other</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dt><code>other</code> <a class="xref" href="PureHDF.Selections.Step.html">Step</a></dt>
     <dd></dd>
   </dl>
 
@@ -257,9 +294,9 @@
 
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_Equals_" data-uid="PureHDF.VOL.Native.H5LinkAccess.Equals*"></a>
+  <a id="PureHDF_Selections_Step_Equals_" data-uid="PureHDF.Selections.Step.Equals*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_Equals_System_Object_" data-uid="PureHDF.VOL.Native.H5LinkAccess.Equals(System.Object)">
+  <h3 id="PureHDF_Selections_Step_Equals_System_Object_" data-uid="PureHDF.Selections.Step.Equals(System.Object)">
   Equals(object)
   
   </h3>
@@ -293,9 +330,9 @@
 
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_GetHashCode_" data-uid="PureHDF.VOL.Native.H5LinkAccess.GetHashCode*"></a>
+  <a id="PureHDF_Selections_Step_GetHashCode_" data-uid="PureHDF.Selections.Step.GetHashCode*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_GetHashCode" data-uid="PureHDF.VOL.Native.H5LinkAccess.GetHashCode">
+  <h3 id="PureHDF_Selections_Step_GetHashCode" data-uid="PureHDF.Selections.Step.GetHashCode">
   GetHashCode()
   
   </h3>
@@ -324,9 +361,9 @@
 
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_ToString_" data-uid="PureHDF.VOL.Native.H5LinkAccess.ToString*"></a>
+  <a id="PureHDF_Selections_Step_ToString_" data-uid="PureHDF.Selections.Step.ToString*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_ToString" data-uid="PureHDF.VOL.Native.H5LinkAccess.ToString">
+  <h3 id="PureHDF_Selections_Step_ToString" data-uid="PureHDF.Selections.Step.ToString">
   ToString()
   
   </h3>
@@ -359,10 +396,10 @@
 </h2>
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_op_Equality_" data-uid="PureHDF.VOL.Native.H5LinkAccess.op_Equality*"></a>
+  <a id="PureHDF_Selections_Step_op_Equality_" data-uid="PureHDF.Selections.Step.op_Equality*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_op_Equality_PureHDF_VOL_Native_H5LinkAccess_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.H5LinkAccess.op_Equality(PureHDF.VOL.Native.H5LinkAccess,PureHDF.VOL.Native.H5LinkAccess)">
-  operator ==(H5LinkAccess, H5LinkAccess)
+  <h3 id="PureHDF_Selections_Step_op_Equality_PureHDF_Selections_Step_PureHDF_Selections_Step_" data-uid="PureHDF.Selections.Step.op_Equality(PureHDF.Selections.Step,PureHDF.Selections.Step)">
+  operator ==(Step, Step)
   
   </h3>
 
@@ -370,14 +407,14 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static bool operator ==(H5LinkAccess left, H5LinkAccess right)</code></pre>
+    <pre><code class="lang-csharp hljs">public static bool operator ==(Step left, Step right)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>left</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dt><code>left</code> <a class="xref" href="PureHDF.Selections.Step.html">Step</a></dt>
     <dd></dd>
-    <dt><code>right</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dt><code>right</code> <a class="xref" href="PureHDF.Selections.Step.html">Step</a></dt>
     <dd></dd>
   </dl>
 
@@ -397,10 +434,10 @@
 
 
 
-  <a id="PureHDF_VOL_Native_H5LinkAccess_op_Inequality_" data-uid="PureHDF.VOL.Native.H5LinkAccess.op_Inequality*"></a>
+  <a id="PureHDF_Selections_Step_op_Inequality_" data-uid="PureHDF.Selections.Step.op_Inequality*"></a>
 
-  <h3 id="PureHDF_VOL_Native_H5LinkAccess_op_Inequality_PureHDF_VOL_Native_H5LinkAccess_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.H5LinkAccess.op_Inequality(PureHDF.VOL.Native.H5LinkAccess,PureHDF.VOL.Native.H5LinkAccess)">
-  operator !=(H5LinkAccess, H5LinkAccess)
+  <h3 id="PureHDF_Selections_Step_op_Inequality_PureHDF_Selections_Step_PureHDF_Selections_Step_" data-uid="PureHDF.Selections.Step.op_Inequality(PureHDF.Selections.Step,PureHDF.Selections.Step)">
+  operator !=(Step, Step)
   
   </h3>
 
@@ -408,14 +445,14 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static bool operator !=(H5LinkAccess left, H5LinkAccess right)</code></pre>
+    <pre><code class="lang-csharp hljs">public static bool operator !=(Step left, Step right)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>left</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dt><code>left</code> <a class="xref" href="PureHDF.Selections.Step.html">Step</a></dt>
     <dd></dd>
-    <dt><code>right</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dt><code>right</code> <a class="xref" href="PureHDF.Selections.Step.html">Step</a></dt>
     <dd></dd>
   </dl>
 

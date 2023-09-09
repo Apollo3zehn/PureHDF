@@ -3839,6 +3839,18 @@ references:
   commentId: T:PureHDF.IH5UnresolvedLink
   fullName: PureHDF.IH5UnresolvedLink
   nameWithType: IH5UnresolvedLink
+- uid: PureHDF.IH5UnresolvedLink.Name
+  name: Name
+  href: api/PureHDF.IH5UnresolvedLink.html#PureHDF_IH5UnresolvedLink_Name
+  commentId: P:PureHDF.IH5UnresolvedLink.Name
+  fullName: PureHDF.IH5UnresolvedLink.Name
+  nameWithType: IH5UnresolvedLink.Name
+- uid: PureHDF.IH5UnresolvedLink.Name*
+  name: Name
+  href: api/PureHDF.IH5UnresolvedLink.html#PureHDF_IH5UnresolvedLink_Name_
+  commentId: Overload:PureHDF.IH5UnresolvedLink.Name
+  fullName: PureHDF.IH5UnresolvedLink.Name
+  nameWithType: IH5UnresolvedLink.Name
 - uid: PureHDF.IH5UnresolvedLink.Reason
   name: Reason
   href: api/PureHDF.IH5UnresolvedLink.html#PureHDF_IH5UnresolvedLink_Reason
@@ -3950,13 +3962,13 @@ references:
   commentId: T:PureHDF.Selections.DelegateSelection
   fullName: PureHDF.Selections.DelegateSelection
   nameWithType: DelegateSelection
-- uid: PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Step}})
+- uid: PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Selections.Step}})
   name: DelegateSelection(ulong, Func<ulong[], IEnumerable<Step>>)
-  href: api/PureHDF.Selections.DelegateSelection.html#PureHDF_Selections_DelegateSelection__ctor_System_UInt64_System_Func_System_UInt64___System_Collections_Generic_IEnumerable_PureHDF_Step___
-  commentId: M:PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Step}})
+  href: api/PureHDF.Selections.DelegateSelection.html#PureHDF_Selections_DelegateSelection__ctor_System_UInt64_System_Func_System_UInt64___System_Collections_Generic_IEnumerable_PureHDF_Selections_Step___
+  commentId: M:PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Selections.Step}})
   name.vb: New(ULong, Func(Of ULong(), IEnumerable(Of Step)))
-  fullName: PureHDF.Selections.DelegateSelection.DelegateSelection(ulong, System.Func<ulong[], System.Collections.Generic.IEnumerable<PureHDF.Step>>)
-  fullName.vb: PureHDF.Selections.DelegateSelection.New(ULong, System.Func(Of ULong(), System.Collections.Generic.IEnumerable(Of PureHDF.Step)))
+  fullName: PureHDF.Selections.DelegateSelection.DelegateSelection(ulong, System.Func<ulong[], System.Collections.Generic.IEnumerable<PureHDF.Selections.Step>>)
+  fullName.vb: PureHDF.Selections.DelegateSelection.New(ULong, System.Func(Of ULong(), System.Collections.Generic.IEnumerable(Of PureHDF.Selections.Step)))
   nameWithType: DelegateSelection.DelegateSelection(ulong, Func<ulong[], IEnumerable<Step>>)
   nameWithType.vb: DelegateSelection.New(ULong, Func(Of ULong(), IEnumerable(Of Step)))
 - uid: PureHDF.Selections.DelegateSelection.#ctor*
@@ -4283,36 +4295,150 @@ references:
   commentId: Overload:PureHDF.Selections.Selection.Walk
   fullName: PureHDF.Selections.Selection.Walk
   nameWithType: Selection.Walk
-- uid: PureHDF.Step
+- uid: PureHDF.Selections.Step
   name: Step
-  href: api/PureHDF.Step.html
-  commentId: T:PureHDF.Step
-  fullName: PureHDF.Step
+  href: api/PureHDF.Selections.Step.html
+  commentId: T:PureHDF.Selections.Step
+  fullName: PureHDF.Selections.Step
   nameWithType: Step
-- uid: PureHDF.Step.Coordinates
+- uid: PureHDF.Selections.Step.#ctor(System.UInt64[],System.UInt64)
+  name: Step(ulong[], ulong)
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step__ctor_System_UInt64___System_UInt64_
+  commentId: M:PureHDF.Selections.Step.#ctor(System.UInt64[],System.UInt64)
+  name.vb: New(ULong(), ULong)
+  fullName: PureHDF.Selections.Step.Step(ulong[], ulong)
+  fullName.vb: PureHDF.Selections.Step.New(ULong(), ULong)
+  nameWithType: Step.Step(ulong[], ulong)
+  nameWithType.vb: Step.New(ULong(), ULong)
+- uid: PureHDF.Selections.Step.#ctor*
+  name: Step
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step__ctor_
+  commentId: Overload:PureHDF.Selections.Step.#ctor
+  name.vb: New
+  fullName: PureHDF.Selections.Step.Step
+  fullName.vb: PureHDF.Selections.Step.New
+  nameWithType: Step.Step
+  nameWithType.vb: Step.New
+- uid: PureHDF.Selections.Step.Coordinates
   name: Coordinates
-  href: api/PureHDF.Step.html#PureHDF_Step_Coordinates
-  commentId: P:PureHDF.Step.Coordinates
-  fullName: PureHDF.Step.Coordinates
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Coordinates
+  commentId: P:PureHDF.Selections.Step.Coordinates
+  fullName: PureHDF.Selections.Step.Coordinates
   nameWithType: Step.Coordinates
-- uid: PureHDF.Step.Coordinates*
+- uid: PureHDF.Selections.Step.Coordinates*
   name: Coordinates
-  href: api/PureHDF.Step.html#PureHDF_Step_Coordinates_
-  commentId: Overload:PureHDF.Step.Coordinates
-  fullName: PureHDF.Step.Coordinates
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Coordinates_
+  commentId: Overload:PureHDF.Selections.Step.Coordinates
+  fullName: PureHDF.Selections.Step.Coordinates
   nameWithType: Step.Coordinates
-- uid: PureHDF.Step.ElementCount
+- uid: PureHDF.Selections.Step.Deconstruct(System.UInt64[]@,System.UInt64@)
+  name: Deconstruct(out ulong[], out ulong)
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Deconstruct_System_UInt64____System_UInt64__
+  commentId: M:PureHDF.Selections.Step.Deconstruct(System.UInt64[]@,System.UInt64@)
+  name.vb: Deconstruct(ULong(), ULong)
+  fullName: PureHDF.Selections.Step.Deconstruct(out ulong[], out ulong)
+  fullName.vb: PureHDF.Selections.Step.Deconstruct(ULong(), ULong)
+  nameWithType: Step.Deconstruct(out ulong[], out ulong)
+  nameWithType.vb: Step.Deconstruct(ULong(), ULong)
+- uid: PureHDF.Selections.Step.Deconstruct*
+  name: Deconstruct
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Deconstruct_
+  commentId: Overload:PureHDF.Selections.Step.Deconstruct
+  fullName: PureHDF.Selections.Step.Deconstruct
+  nameWithType: Step.Deconstruct
+- uid: PureHDF.Selections.Step.ElementCount
   name: ElementCount
-  href: api/PureHDF.Step.html#PureHDF_Step_ElementCount
-  commentId: P:PureHDF.Step.ElementCount
-  fullName: PureHDF.Step.ElementCount
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_ElementCount
+  commentId: P:PureHDF.Selections.Step.ElementCount
+  fullName: PureHDF.Selections.Step.ElementCount
   nameWithType: Step.ElementCount
-- uid: PureHDF.Step.ElementCount*
+- uid: PureHDF.Selections.Step.ElementCount*
   name: ElementCount
-  href: api/PureHDF.Step.html#PureHDF_Step_ElementCount_
-  commentId: Overload:PureHDF.Step.ElementCount
-  fullName: PureHDF.Step.ElementCount
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_ElementCount_
+  commentId: Overload:PureHDF.Selections.Step.ElementCount
+  fullName: PureHDF.Selections.Step.ElementCount
   nameWithType: Step.ElementCount
+- uid: PureHDF.Selections.Step.Equals(PureHDF.Selections.Step)
+  name: Equals(Step)
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Equals_PureHDF_Selections_Step_
+  commentId: M:PureHDF.Selections.Step.Equals(PureHDF.Selections.Step)
+  fullName: PureHDF.Selections.Step.Equals(PureHDF.Selections.Step)
+  nameWithType: Step.Equals(Step)
+- uid: PureHDF.Selections.Step.Equals(System.Object)
+  name: Equals(object)
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Equals_System_Object_
+  commentId: M:PureHDF.Selections.Step.Equals(System.Object)
+  name.vb: Equals(Object)
+  fullName: PureHDF.Selections.Step.Equals(object)
+  fullName.vb: PureHDF.Selections.Step.Equals(Object)
+  nameWithType: Step.Equals(object)
+  nameWithType.vb: Step.Equals(Object)
+- uid: PureHDF.Selections.Step.Equals*
+  name: Equals
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_Equals_
+  commentId: Overload:PureHDF.Selections.Step.Equals
+  fullName: PureHDF.Selections.Step.Equals
+  nameWithType: Step.Equals
+- uid: PureHDF.Selections.Step.GetHashCode
+  name: GetHashCode()
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_GetHashCode
+  commentId: M:PureHDF.Selections.Step.GetHashCode
+  fullName: PureHDF.Selections.Step.GetHashCode()
+  nameWithType: Step.GetHashCode()
+- uid: PureHDF.Selections.Step.GetHashCode*
+  name: GetHashCode
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_GetHashCode_
+  commentId: Overload:PureHDF.Selections.Step.GetHashCode
+  fullName: PureHDF.Selections.Step.GetHashCode
+  nameWithType: Step.GetHashCode
+- uid: PureHDF.Selections.Step.ToString
+  name: ToString()
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_ToString
+  commentId: M:PureHDF.Selections.Step.ToString
+  fullName: PureHDF.Selections.Step.ToString()
+  nameWithType: Step.ToString()
+- uid: PureHDF.Selections.Step.ToString*
+  name: ToString
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_ToString_
+  commentId: Overload:PureHDF.Selections.Step.ToString
+  fullName: PureHDF.Selections.Step.ToString
+  nameWithType: Step.ToString
+- uid: PureHDF.Selections.Step.op_Equality(PureHDF.Selections.Step,PureHDF.Selections.Step)
+  name: operator ==(Step, Step)
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_op_Equality_PureHDF_Selections_Step_PureHDF_Selections_Step_
+  commentId: M:PureHDF.Selections.Step.op_Equality(PureHDF.Selections.Step,PureHDF.Selections.Step)
+  name.vb: =(Step, Step)
+  fullName: PureHDF.Selections.Step.operator ==(PureHDF.Selections.Step, PureHDF.Selections.Step)
+  fullName.vb: PureHDF.Selections.Step.=(PureHDF.Selections.Step, PureHDF.Selections.Step)
+  nameWithType: Step.operator ==(Step, Step)
+  nameWithType.vb: Step.=(Step, Step)
+- uid: PureHDF.Selections.Step.op_Equality*
+  name: operator ==
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_op_Equality_
+  commentId: Overload:PureHDF.Selections.Step.op_Equality
+  name.vb: =
+  fullName: PureHDF.Selections.Step.operator ==
+  fullName.vb: PureHDF.Selections.Step.=
+  nameWithType: Step.operator ==
+  nameWithType.vb: Step.=
+- uid: PureHDF.Selections.Step.op_Inequality(PureHDF.Selections.Step,PureHDF.Selections.Step)
+  name: operator !=(Step, Step)
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_op_Inequality_PureHDF_Selections_Step_PureHDF_Selections_Step_
+  commentId: M:PureHDF.Selections.Step.op_Inequality(PureHDF.Selections.Step,PureHDF.Selections.Step)
+  name.vb: <>(Step, Step)
+  fullName: PureHDF.Selections.Step.operator !=(PureHDF.Selections.Step, PureHDF.Selections.Step)
+  fullName.vb: PureHDF.Selections.Step.<>(PureHDF.Selections.Step, PureHDF.Selections.Step)
+  nameWithType: Step.operator !=(Step, Step)
+  nameWithType.vb: Step.<>(Step, Step)
+- uid: PureHDF.Selections.Step.op_Inequality*
+  name: operator !=
+  href: api/PureHDF.Selections.Step.html#PureHDF_Selections_Step_op_Inequality_
+  commentId: Overload:PureHDF.Selections.Step.op_Inequality
+  name.vb: <>
+  fullName: PureHDF.Selections.Step.operator !=
+  fullName.vb: PureHDF.Selections.Step.<>
+  nameWithType: Step.operator !=
+  nameWithType.vb: Step.<>
 - uid: PureHDF.VFD.AmazonS3
   name: PureHDF.VFD.AmazonS3
   href: api/PureHDF.VFD.AmazonS3.html

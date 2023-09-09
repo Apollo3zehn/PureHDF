@@ -8,7 +8,7 @@
       <meta name="title" content="Class DelegateSelection
  | PureHDF ">
       
-      <link rel="icon" href="../images/icon.svg">
+      <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
       <meta name="docfx:navrel" content="../toc.html">
@@ -37,7 +37,7 @@
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
           <a class="navbar-brand" href="../index.html">
-            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,7 +121,7 @@
 
   <a id="PureHDF_Selections_DelegateSelection__ctor_" data-uid="PureHDF.Selections.DelegateSelection.#ctor*"></a>
 
-  <h3 id="PureHDF_Selections_DelegateSelection__ctor_System_UInt64_System_Func_System_UInt64___System_Collections_Generic_IEnumerable_PureHDF_Step___" data-uid="PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Step}})">
+  <h3 id="PureHDF_Selections_DelegateSelection__ctor_System_UInt64_System_Func_System_UInt64___System_Collections_Generic_IEnumerable_PureHDF_Selections_Step___" data-uid="PureHDF.Selections.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Selections.Step}})">
   DelegateSelection(ulong, Func&lt;ulong[], IEnumerable&lt;Step&gt;&gt;)
   
   </h3>
@@ -139,7 +139,7 @@
     <dt><code>totalElementCount</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
     <dd><p>The total number of elements which is used to preallocate the returned buffer.</p>
 </dd>
-    <dt><code>walker</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[], <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.Step.html">Step</a>&gt;&gt;</dt>
+    <dt><code>walker</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[], <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.Selections.Step.html">Step</a>&gt;&gt;</dt>
     <dd><p>The user-defined walker delegate.</p>
 </dd>
   </dl>
@@ -219,7 +219,7 @@
 
   <h4 class="section">Returns</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.Step.html">Step</a>&gt;</dt>
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.Selections.Step.html">Step</a>&gt;</dt>
     <dd><p>An enumerable which provides a sequence of steps to select the requested data.</p>
 </dd>
   </dl>

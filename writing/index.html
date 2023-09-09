@@ -6,21 +6,21 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Writing | PureHDF ">
       
-      <link rel="icon" href="images/icon.svg">
-      <link rel="stylesheet" href="public/docfx.min.css">
-      <link rel="stylesheet" href="public/main.css">
-      <meta name="docfx:navrel" content="toc.html">
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
       <meta name="docfx:tocrel" content="toc.html">
       
       
       
       
-      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/index.md/#L1">
   </head>
 
   <script type="module">
-    import options from './public/main.js'
-    import { init } from './public/docfx.min.js'
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
     init(options)
   </script>
 
@@ -34,8 +34,8 @@
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
-          <a class="navbar-brand" href="index.html">
-            <img id="logo" class="svg" src="images/icon.svg" alt="">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,8 @@
         <article data-uid="">
 <h1 id="writing">Writing</h1>
 
-<p>The first step is to create a new <code>H5File</code> instance:</p>
+<p>PureHDF can easily create new files, as described in more detail below. However, <strong>editing existing</strong> files is outside the scope of PureHDF.</p>
+<p>To get started, first create a new <code>H5File</code> instance:</p>
 <pre><code class="lang-cs">var file = new H5File();
 </code></pre>
 <p>A <code>H5File</code> derives from the <code>H5Group</code> type because it represents the root group. <code>H5Group</code> implements the <code>IDictionary</code> interface, where the keys represent the links in an HDF5 file and the value determines the type of the link: either it is another <code>H5Group</code> or a <code>H5Dataset</code>.</p>
@@ -86,7 +87,7 @@
 {
     [&quot;numerical-dataset&quot;] = new double[] { 2.0, 3.1, 4.2 },
     [&quot;string-dataset&quot;] = new string[] { &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot; }
-}
+};
 </code></pre>
 <p>Datasets and attributes can both be created either by instantiating their specific class (<code>H5Dataset</code>, <code>H5Attribute</code>) or by just providing some kind of data. This data can be nearly anything: arrays, scalars, numerical values, strings, anonymous types, enums, complex objects, structs, bool values, etc. However, whenever you want to provide more details like the dimensionality of the attribute or dataset, the chunk layout or the filters to be applied to a dataset, you need to instantiate the appropriate class.</p>
 <p>But first, let's see how to add attributes. Attributes cannot be added directly using the dictionary collection initializer because that is only for datasets. However, every <code>H5Group</code> has an <code>Attribute</code> property which accepts our attributes:</p>
@@ -97,10 +98,12 @@
         [&quot;numerical-attribute&quot;] = new double[] { 2.0, 3.1, 4.2 },
         [&quot;string-attribute&quot;] = new string[] { &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot; }
     }
-}
+};
 </code></pre>
 <p>The full example with the root group, a subgroup, two datasets and two attributes looks like this:</p>
-<pre><code class="lang-cs">var file = new H5File()
+<pre><code class="lang-cs">using PureHDF;
+
+var file = new H5File()
 {
     [&quot;my-group&quot;] = new H5Group()
     {
@@ -117,59 +120,33 @@
 <p>The last step is to write the defined file to the drive:</p>
 <pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;);
 </code></pre>
-<h2 id="dimensions">Dimensions</h2>
-<p>If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. <code>int[,]</code>), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality (or <code>reshape</code>) like this:</p>
-<pre><code class="lang-cs">// Create a 100x100 dataset - the data itself must be an
-// array-like type with a total of 100x100 = 10.000 elements. */
-var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
-</code></pre>
-<p>Here is a quick example how to use a multidimensional array to determine the shape of the dataset:</p>
-<pre><code class="lang-cs">// Create a 3x3 dataset - no `fileDims` parameter required
-var data = new int[,] 
+<h2 id="deferred-writing">Deferred writing</h2>
+<p>You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the <code>H5File.BeginWrite(...)</code> method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being diposed.</p>
+<pre><code class="lang-cs">var data = Enumerable.Range(0, 100).ToArray();
+var dataset = new H5Dataset&lt;int[]&gt;(fileDims: new ulong[] { (ulong)data.Length });
+
+var file = new H5File
 {
-    { 0, 1, 2 },
-    { 3, 4, 5 },
-    { 6, 7, 8 }
+    [&quot;my-dataset&quot;] = dataset
 };
 
-var dataset = new H5Dataset(data);
+using var writer = file.BeginWrite(&quot;path/to/file.h5&quot;);
+writer.Write(dataset, data);
 </code></pre>
-<h2 id="chunks">Chunks</h2>
-<p>To chunk data, give the <code>H5Dataset</code> some chunk dimensions:</p>
-<pre><code class="lang-cs">var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
-</code></pre>
-<p>When no chunks and no filters are specified, the data will be written as compact or contiguous datasets, depending on the total size.</p>
-<h2 id="filters">Filters</h2>
-<p>Many of the standard HDF5 filters are supported. Please see the <a href="filters.html">Filters</a> section for more details about the available filters.</p>
-<p>Filters can be configured either for all datasets or for a specific dataset.</p>
-<p>If you like to configure them for all datasets, create an instance of the <code>H5WriteOptions</code> class and add some filters to the pipeline:</p>
-<pre><code class="lang-cs">var options = new H5WriteOptions(
-    Filters: new() {
-        ShuffleFilter.Id,
-        DeflateFilter.Id
-    }
-);
-</code></pre>
-<p>Then pass the options to the <code>H5File.Write</code> method:</p>
-<pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;, options);
-</code></pre>
-<p>Use the filters parameter to configure the filter pipeline for a single dataset:</p>
-<pre><code class="lang-cs">var datasetCreation = new H5DatasetCreation(Filters: new() {
-    ShuffleFilter.Id,
-    DeflateFilter.Id
-})
+<p>You probably do not want to write all data at once but in chunks. To do so, make use of selections to select the proper slice of the dataset to write to. Create a selection and then pass it to the write method (the element count of the selection must match the element count of the data):</p>
+<pre><code class="lang-cs">using PureHDF.Selections;
 
-var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
+var fileSelection = new HyperslabSelection(start: 2, block: 5);
+writer.Write(dataset, data, fileSelection: fileSelection);
 </code></pre>
-<h2 id="todo">TODO</h2>
-<ul>
-<li>deferred writing</li>
-<li>slicing</li>
-</ul>
+<div class="NOTE">
+<h5>Note</h5>
+<p>See <a href="../reading/slicing.html">slicing</a> for information about available selections.</p>
+</div>
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing.md/#L1" class="edit-link">Edit this page</a>
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/index.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
         <div class="next-article d-print-none border-top" id="nextArticle"></div>

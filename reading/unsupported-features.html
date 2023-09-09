@@ -2,11 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class H5Constants
- | PureHDF </title>
+      <title>Unsupported Features | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class H5Constants
- | PureHDF ">
+      <meta name="title" content="Unsupported Features | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -17,7 +15,7 @@
       
       
       
-      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/unsupported-features.md/#L1">
   </head>
 
   <script type="module">
@@ -32,7 +30,7 @@
   </script>
 
 
-  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
@@ -73,88 +71,35 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.H5Constants">
+        <article data-uid="">
+<h1 id="unsupported-features">Unsupported Features</h1>
 
-
-
-  <h1 id="PureHDF_H5Constants" data-uid="PureHDF.H5Constants" class="text-break">
-    Class H5Constants
-  
-  </h1>
-
-  <div class="facts text-secondary">
-    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
-  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
-  </div>
-
-  <div class="markdown summary"><p>A class to group constants.</p>
-</div>
-  <div class="markdown conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public static class H5Constants</code></pre>
-  </div>
-
-
-
-
-  <dl class="typelist inheritance">
-    <dt>Inheritance</dt>
-    <dd>
-      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-      <div><span class="xref">H5Constants</span></div>
-    </dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-  <h2 class="section" id="fields">Fields
-</h2>
-
-
-
-  <h3 id="PureHDF_H5Constants_Unlimited" data-uid="PureHDF.H5Constants.Unlimited">
-  Unlimited
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>This constant is used to specify an unlimited dimension.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public const ulong Unlimited = 18446744073709551615</code></pre>
-  </div>
-
-
-
-
-  <h4 class="section">Field Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
-
-
+<p>The following features are <strong>not</strong> (yet) supported:</p>
+<ul>
+<li>Filters
+<ul>
+<li><code>N-bit</code></li>
+<li><code>SZIP</code></li>
+</ul>
+</li>
+<li>Virtual datasets
+<ul>
+<li>with <strong>unlimited dimensions</strong></li>
+</ul>
+</li>
+<li>Data Types
+<ul>
+<li>Reference: <code>Attribute reference</code>, <code>object reference 2</code>, <code>dataset region reference 2</code> (I was unable to produce sample files using <code>h5py</code> or <code>HDF.PInvoke1.10</code> - the feature seems to be too new)</li>
+</ul>
+</li>
+</ul>
 </article>
 
         <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/unsupported-features.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
         
       </div>
 

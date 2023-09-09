@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Complex Data | PureHDF ">
       
-      <link rel="icon" href="../images/icon.svg">
+      <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
       <meta name="docfx:navrel" content="../toc.html">
@@ -35,7 +35,7 @@
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
           <a class="navbar-brand" href="../index.html">
-            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -107,7 +107,9 @@
 </table>
 <h2 id="compounds-without-reference-type-data">Compounds without reference type data</h2>
 <p>Compound data without string-like or array-like members can be read like any other dataset using a high performance copy operation. To do so, define a .NET struct and specify the field offsets using the <code>StructLayout</code> and <code>FieldOffset</code> attributes:</p>
-<pre><code class="lang-cs">[StructLayout(LayoutKind.Explicit, Size = 5)]
+<pre><code class="lang-cs">using System.Runtime.InteropServices;
+
+[StructLayout(LayoutKind.Explicit, Size = 5)]
 struct SimpleStruct
 {
     [FieldOffset(0)]
@@ -171,6 +173,8 @@ struct NullableStructWithCustomFieldName
 }
 
 // Create a name translator.
+using System.Reflection;
+
 Func&lt;FieldInfo, string?&gt; converter = fieldInfo =&gt;
 {
     var attribute = fieldInfo.GetCustomAttribute&lt;H5NameAttribute&gt;(true);
@@ -181,7 +185,7 @@ Func&lt;FieldInfo, string?&gt; converter = fieldInfo =&gt;
 var options = new H5ReadOptions() { FieldNameMapper = converter };
 var h5file = H5File.OpenRead(..., options);
 var dataset = h5file.Dataset(...);
-var compoundData = dataset.Read&lt;NullableStructWithCustomFieldName&gt;(converter);
+var compoundData = dataset.Read&lt;NullableStructWithCustomFieldName&gt;();
 </code></pre>
 <h2 id="class-vs-struct">Class vs. struct</h2>
 <p>You may want to use a class with a specific set of properties and use that as return type for complex data. For classes properties instead of fields will be considered by default - and your need to make sure that your class has a parameterless constructor. Additionally, for classes, the field names must always match (or use a property name mapper as shown above for fields).</p>

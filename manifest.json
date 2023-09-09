@@ -655,20 +655,20 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.Selections.yml",
+      "source_relative_path": "api/PureHDF.Selections.Step.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.Selections.html"
+          "relative_path": "api/PureHDF.Selections.Step.html"
         }
       },
       "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.Step.yml",
+      "source_relative_path": "api/PureHDF.Selections.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.Step.html"
+          "relative_path": "api/PureHDF.Selections.html"
         }
       },
       "version": ""
@@ -918,6 +918,16 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/automatic1111.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/automatic1111.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/hdfview.png",
       "output": {
         "resource": {
@@ -928,10 +938,10 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/icon.svg",
+      "source_relative_path": "images/icon.png",
       "output": {
         "resource": {
-          "relative_path": "images/icon.svg"
+          "relative_path": "images/icon.png"
         }
       },
       "version": ""
@@ -942,16 +952,6 @@
       "output": {
         "resource": {
           "relative_path": "images/intellisense.png"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/nuget.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/nuget.png"
         }
       },
       "version": ""
@@ -968,10 +968,10 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "reading/amazon_s3.md",
+      "source_relative_path": "reading/amazon-s3.md",
       "output": {
         ".html": {
-          "relative_path": "reading/amazon_s3.html"
+          "relative_path": "reading/amazon-s3.html"
         }
       },
       "version": ""
@@ -1070,6 +1070,16 @@
       "version": ""
     },
     {
+      "type": "Conceptual",
+      "source_relative_path": "reading/unsupported-features.md",
+      "output": {
+        ".html": {
+          "relative_path": "reading/unsupported-features.html"
+        }
+      },
+      "version": ""
+    },
+    {
       "type": "Toc",
       "source_relative_path": "toc.yml",
       "output": {
@@ -1084,10 +1094,53 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "writing.md",
+      "source_relative_path": "writing/chunks.md",
       "output": {
         ".html": {
-          "relative_path": "writing.html"
+          "relative_path": "writing/chunks.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "writing/dimensions.md",
+      "output": {
+        ".html": {
+          "relative_path": "writing/dimensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "writing/filters.md",
+      "output": {
+        ".html": {
+          "relative_path": "writing/filters.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "writing/index.md",
+      "output": {
+        ".html": {
+          "relative_path": "writing/index.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "writing/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "writing/toc.html"
+        },
+        ".json": {
+          "relative_path": "writing/toc.json"
         }
       },
       "version": ""

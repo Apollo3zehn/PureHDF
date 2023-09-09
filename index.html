@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Welcome to PureHDF | PureHDF </title>
+      <title>PureHDF | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Welcome to PureHDF | PureHDF ">
+      <meta name="title" content="PureHDF | PureHDF ">
       
-      <link rel="icon" href="images/icon.svg">
+      <link rel="icon" href="images/icon.png">
       <link rel="stylesheet" href="public/docfx.min.css">
       <link rel="stylesheet" href="public/main.css">
       <meta name="docfx:navrel" content="toc.html">
@@ -35,7 +35,7 @@
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
           <a class="navbar-brand" href="index.html">
-            <img id="logo" class="svg" src="images/icon.svg" alt="">
+            <img id="logo" class="svg" src="images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,9 +72,276 @@
         </div>
 
         <article data-uid="">
-<h1 id="welcome-to-purehdf">Welcome to PureHDF</h1>
+<h1 id="purehdf">PureHDF</h1>
 
-<p>Please navigate to the introduction to get started with the PureHDF reading API or writing API.</p>
+<p><a href="https://www.nuget.org/packages/PureHDF"><img src="https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget" alt="NuGet"></a></p>
+<p>A pure C# library without native dependencies that makes reading and writing of HDF5 files (groups, datasets, attributes, ...) very easy.</p>
+<p>The minimum supported target framework is .NET Standard 2.0 which includes</p>
+<ul>
+<li>.NET Framework 4.6.1+</li>
+<li>.NET Core (all versions)</li>
+<li>.NET 5+</li>
+</ul>
+<p>This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.</p>
+<p>The implemention follows the <a href="https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html">HDF5 File Format Specification (HDF5 1.10)</a>.</p>
+<blockquote>
+<p>Please read the <a href="reading/index.html">reading</a> or <a href="writing/index.html">writing</a> docs to get started with PureHDF.</p>
+</blockquote>
+<h1 id="installation">Installation</h1>
+<pre><code class="lang-bash">dotnet add package PureHDF --prerelease
+</code></pre>
+<h1 id="comparison-table">Comparison Table</h1>
+<p>Overwhelmed by the number of different HDF 5 libraries? Here is a comparison table:</p>
+<blockquote>
+<p>Note: The following table considers only projects listed on Nuget.org</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Arch</th>
+<th>Platform</th>
+<th>Kind</th>
+<th>Mode</th>
+<th>Version</th>
+<th>License</th>
+<th>Maintainer</th>
+<th>Comment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>v1.10</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/PureHDF">PureHDF</a></td>
+<td>all</td>
+<td>all</td>
+<td>managed</td>
+<td>rw</td>
+<td>1.10.*</td>
+<td>MIT</td>
+<td>Apollo3zehn</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF5-CSharp">HDF5-CSharp</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.10.6</td>
+<td>MIT</td>
+<td>LiorBanai</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/SciSharp.Keras.HDF5">SciSharp.Keras.HDF5</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.10.5</td>
+<td>MIT</td>
+<td>SciSharp</td>
+<td>fork of HDF-CSharp</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/ILNumerics.IO.HDF5">ILNumerics.IO.HDF5</a></td>
+<td>x64</td>
+<td>Win,Lin</td>
+<td>HL</td>
+<td>rw</td>
+<td>?</td>
+<td>proprietary</td>
+<td>IL_Numerics_GmbH</td>
+<td>probably 1.10</td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/LiteHDF">LiteHDF</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>ro</td>
+<td>1.10.5</td>
+<td>MIT</td>
+<td>silkfire</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/hdflib">hdflib</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>HL</td>
+<td>wo</td>
+<td>1.10.6</td>
+<td>MIT</td>
+<td>bdebree</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/Mbc.Hdf5Utils">Mbc.Hdf5Utils</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.10.6</td>
+<td>Apache-2.0</td>
+<td>bqstony</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke">HDF.PInvoke</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.8,1.10.6</td>
+<td>HDF5</td>
+<td>hdf,gheber</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke.1.10">HDF.PInvoke.1.10</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.10.6</td>
+<td>HDF5</td>
+<td>hdf,Apollo3zehn</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke.NETStandard">HDF.PInvoke.NETStandard</a></td>
+<td>x86,x64</td>
+<td>Win,Lin,Mac</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.10.5</td>
+<td>HDF5</td>
+<td>surban</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>v1.8</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF5DotNet.x64">HDF5DotNet.x64</a></td>
+<td>x64</td>
+<td>Windows</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>thieum</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF5DotNet.x86">HDF5DotNet.x86</a></td>
+<td>x86</td>
+<td>Windows</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>thieum</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/sharpHDF">sharpHDF</a></td>
+<td>x64</td>
+<td>Windows</td>
+<td>HL</td>
+<td>rw</td>
+<td>1.8</td>
+<td>MIT</td>
+<td>bengecko</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/HDF.PInvoke">HDF.PInvoke</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>bindings</td>
+<td>rw</td>
+<td>1.8,1.10.6</td>
+<td>HDF5</td>
+<td>hdf,gheber</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/hdf5-v120-complete">hdf5-v120-complete</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>native</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>daniel.gracia</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://www.nuget.org/packages/hdf5-v120">hdf5-v120</a></td>
+<td>x86,x64</td>
+<td>Windows</td>
+<td>native</td>
+<td>rw</td>
+<td>1.8</td>
+<td>HDF5</td>
+<td>keen</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Abbreviations:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>.NET API</th>
+<th>Native dependencies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>managed</code></td>
+<td>high-level</td>
+<td>none</td>
+</tr>
+<tr>
+<td><code>HL</code></td>
+<td>high-level</td>
+<td>C-library</td>
+</tr>
+<tr>
+<td><code>bindings</code></td>
+<td>low-level</td>
+<td>C-library</td>
+</tr>
+<tr>
+<td><code>native</code></td>
+<td>none</td>
+<td>C-library</td>
+</tr>
+</tbody>
+</table>
 </article>
 
         <div class="contribution d-print-none">

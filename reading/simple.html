@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Simple Data | PureHDF ">
       
-      <link rel="icon" href="../images/icon.svg">
+      <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
       <link rel="stylesheet" href="../public/main.css">
       <meta name="docfx:navrel" content="../toc.html">
@@ -35,7 +35,7 @@
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
           <a class="navbar-brand" href="../index.html">
-            <img id="logo" class="svg" src="../images/icon.svg" alt="">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
             
           </a>
           <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,10 +98,10 @@
     [Flags]
     enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
     {
-        MainValve_Open          = 0x0001
-        AuxValve_1_Open         = 0x0002
-        AuxValve_2_Open         = 0x0004
-        MainEngine_Ready        = 0x0008
+        MainValve_Open          = 0x0001,
+        AuxValve_1_Open         = 0x0002,
+        AuxValve_2_Open         = 0x0004,
+        MainEngine_Ready        = 0x0008,
         FallbackEngine_Ready    = 0x0010
         // ...
     }
