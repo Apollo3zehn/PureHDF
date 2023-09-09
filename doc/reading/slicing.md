@@ -18,14 +18,14 @@ Selections can be passed to the read method to avoid reading the full dataset li
 
 ```cs
 var fileSelection = ...;
-var data = dataset.Read<int>(fileSelection: fileSelection);
+var data = dataset.Read<int[]>(fileSelection: fileSelection);
 ```
 
 Alternatively, if the selection should not be applied to the file but to the memory buffer, use the `memorySelection` parameter:
 
 ```cs
 var memorySelection = ...;
-var data = dataset.Read<int>(memorySelection: memorySelection);
+var data = dataset.Read<int[]>(memorySelection: memorySelection);
 ```
 
 All parameters are optional. For example, when the `fileSelection` parameter is ommited, the whole dataset will be read. Note that the number of data points in the file selection must always match that of the memory selection.
@@ -38,6 +38,8 @@ All parameters are optional. For example, when the `fileSelection` parameter is 
 Point selections require a two-dimensional `n` x `m` array where `n` is the number of points and `m` the rank of the dataset. Here is an example with four points to select data from a dataset of rank = `3`.
 
 ```cs
+using PureHDF.Selections;
+
 var selection = new PointSelection(new ulong[,] {
     { 00, 00, 00 },
     { 00, 05, 10 },
@@ -56,7 +58,7 @@ The simplest example is a selection for a 1-dimensional dataset at a certain off
 var fileSelection = new HyperslabSelection(start: 10, block: 50);
 ```
 
-The following - more advanced - example shows selecions for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
+The following - more advanced - example shows selections for a three-dimensional dataset (source) and a two-dimensional memory buffer (target):
 
 ```cs
 var dataset = root.Dataset("myDataset");
@@ -79,12 +81,11 @@ var memorySelection = new HyperslabSelection(
 );
 
 var result = dataset
-    .Read<int>(
+    .Read<int[,]>(
         fileSelection: datasetSelection,
         memorySelection: memorySelection,
         memoryDims: memoryDims
-    )
-    .ToArray2D(75, 25);
+    );
 ``` 
 
 **Delegate selection**
@@ -94,10 +95,10 @@ A delegate accepts a custom walker function which select blocks of data at certa
 ```cs
 static IEnumerable<Step> Walker(ulong[] datasetDimensions)
 {
-    yield return new Step() { Coordinates = new ulong[] { 00, 00, 00 }, ElementCount = 1 };
-    yield return new Step() { Coordinates = new ulong[] { 00, 05, 10 }, ElementCount = 5 };
-    yield return new Step() { Coordinates = new ulong[] { 12, 01, 10 }, ElementCount = 2 };
-    yield return new Step() { Coordinates = new ulong[] { 05, 07, 09 }, ElementCount = 3 };
+    yield return new Step(Coordinates: new ulong[] { 00, 00, 00 }, ElementCount: 1);
+    yield return new Step(Coordinates: new ulong[] { 00, 05, 10 }, ElementCount: 5);
+    yield return new Step(Coordinates: new ulong[] { 12, 01, 10 }, ElementCount: 2);
+    yield return new Step(Coordinates: new ulong[] { 05, 07, 09 }, ElementCount: 3);
 };
 
 var selection = new DelegateSelection(totalElementCount: 11, Walker);

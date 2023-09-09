@@ -26,10 +26,10 @@ The following section shows you how to read 1D datasets of any datatype. All sam
     [Flags]
     enum SystemStatus : ushort /* make sure the enum in HDF file is based on the same type */
     {
-        MainValve_Open          = 0x0001
-        AuxValve_1_Open         = 0x0002
-        AuxValve_2_Open         = 0x0004
-        MainEngine_Ready        = 0x0008
+        MainValve_Open          = 0x0001,
+        AuxValve_1_Open         = 0x0002,
+        AuxValve_2_Open         = 0x0004,
+        MainEngine_Ready        = 0x0008,
         FallbackEngine_Ready    = 0x0010
         // ...
     }

@@ -1,6 +1,8 @@
 # Writing
 
-The first step is to create a new `H5File` instance:
+PureHDF can easily create new files, as described in more detail below. However, **editing existing** files is outside the scope of PureHDF.
+
+To get started, first create a new `H5File` instance:
 
 ```cs
 var file = new H5File();
@@ -21,7 +23,7 @@ var group = new H5Group()
 {
     ["numerical-dataset"] = new double[] { 2.0, 3.1, 4.2 },
     ["string-dataset"] = new string[] { "One", "Two", "Three" }
-}
+};
 ```
 
 Datasets and attributes can both be created either by instantiating their specific class (`H5Dataset`, `H5Attribute`) or by just providing some kind of data. This data can be nearly anything: arrays, scalars, numerical values, strings, anonymous types, enums, complex objects, structs, bool values, etc. However, whenever you want to provide more details like the dimensionality of the attribute or dataset, the chunk layout or the filters to be applied to a dataset, you need to instantiate the appropriate class.
@@ -36,12 +38,14 @@ var group = new H5Group()
         ["numerical-attribute"] = new double[] { 2.0, 3.1, 4.2 },
         ["string-attribute"] = new string[] { "One", "Two", "Three" }
     }
-}
+};
 ```
 
 The full example with the root group, a subgroup, two datasets and two attributes looks like this:
 
 ```cs
+using PureHDF;
+
 var file = new H5File()
 {
     ["my-group"] = new H5Group()
@@ -63,74 +67,31 @@ The last step is to write the defined file to the drive:
 file.Write("path/to/file.h5");
 ```
 
-## Dimensions
+## Deferred writing
 
-If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. `int[,]`), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality (or `reshape`) like this:
-
-```cs
-// Create a 100x100 dataset - the data itself must be an
-// array-like type with a total of 100x100 = 10.000 elements. */
-var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
-```
-
-Here is a quick example how to use a multidimensional array to determine the shape of the dataset:
+You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the `H5File.BeginWrite(...)` method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being diposed.
 
 ```cs
-// Create a 3x3 dataset - no `fileDims` parameter required
-var data = new int[,] 
+var data = Enumerable.Range(0, 100).ToArray();
+var dataset = new H5Dataset<int[]>(fileDims: new ulong[] { (ulong)data.Length });
+
+var file = new H5File
 {
-    { 0, 1, 2 },
-    { 3, 4, 5 },
-    { 6, 7, 8 }
+    ["my-dataset"] = dataset
 };
 
-var dataset = new H5Dataset(data);
+using var writer = file.BeginWrite("path/to/file.h5");
+writer.Write(dataset, data);
 ```
 
-## Chunks
-
-To chunk data, give the `H5Dataset` some chunk dimensions:
+You probably do not want to write all data at once but in chunks. To do so, make use of selections to select the proper slice of the dataset to write to. Create a selection and then pass it to the write method (the element count of the selection must match the element count of the data):
 
 ```cs
-var dataset = new H5Dataset(data, chunks: new ulong[] { 10, 10 });
+using PureHDF.Selections;
+
+var fileSelection = new HyperslabSelection(start: 2, block: 5);
+writer.Write(dataset, data, fileSelection: fileSelection);
 ```
 
-When no chunks and no filters are specified, the data will be written as compact or contiguous datasets, depending on the total size.
-
-## Filters
-
-Many of the standard HDF5 filters are supported. Please see the [Filters](filters.md) section for more details about the available filters.
-
-Filters can be configured either for all datasets or for a specific dataset.
-
-If you like to configure them for all datasets, create an instance of the `H5WriteOptions` class and add some filters to the pipeline:
-
-```cs
-var options = new H5WriteOptions(
-    Filters: new() {
-        ShuffleFilter.Id,
-        DeflateFilter.Id
-    }
-);
-```
-
-Then pass the options to the `H5File.Write` method:
-
-```cs
-file.Write("path/to/file.h5", options);
-```
-
-Use the filters parameter to configure the filter pipeline for a single dataset:
-
-```cs
-var datasetCreation = new H5DatasetCreation(Filters: new() {
-    ShuffleFilter.Id,
-    DeflateFilter.Id
-})
-
-var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
-```
-
-## TODO
-- deferred writing
-- slicing
+> [!NOTE]
+> See [slicing](../reading/slicing.md) for information about available selections.

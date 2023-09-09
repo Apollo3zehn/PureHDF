@@ -70,7 +70,7 @@ public class IrregularHyperslabSelection : Selection
             }
 
             /* prepare the step */
-            var step = new Step() { Coordinates = coordinates };  
+            var step = new Step(Coordinates: coordinates, ElementCount: default);
 
             /* loop until all data have been processed */
             while (true)
@@ -85,7 +85,7 @@ public class IrregularHyperslabSelection : Selection
                     .AsSpan()
                     .CopyTo(step.Coordinates);
 
-                step.ElementCount = totalLength;
+                step = step with { ElementCount = totalLength };
 
                 yield return step;
 
