@@ -61,8 +61,8 @@
     "globalMetadata": {
       "_appTitle": "PureHDF",
       "_appFooter": "Copyright © 2023 Vincent Wilms",
-      "_appFaviconPath": "images/icon.svg",
-      "_appLogoPath": "images/icon.svg"
+      "_appFaviconPath": "images/icon.png",
+      "_appLogoPath": "images/icon.png"
     },
     "fileMetadataFiles": [],
     "template": [

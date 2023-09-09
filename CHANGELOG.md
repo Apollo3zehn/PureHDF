@@ -1,3 +1,14 @@
+## v1.0.0-beta.1 - 2023-09-09
+
+### Breaking Changes
+- The reading API has been simplified to `T dataset.Read<T>(...)` and `T attribute.Read<T>(...)`. This means that method calls like `dataset.Read<T>` should be changed to `dataset.Read<T[]>`, otherwise you will get back a scalar value.
+- The async implementation for the native VOL connector has been dropped and using it results in an exception. For the HSDS VOL connector, both APIs, sync and async, still work. The reason is that to avoid massive code duplication, we need to combine async and sync methods into a single asynchronous code path that can complete synchronous or asynchronous. This makes the code more general (good) but less optimized (bad), and much more complex because a lot of methods have to carry around the boolean parameter that decides whether the call is synchronous or asynchronous. Another reason for removing asynchronous support is that I don't see many use cases. Benchmarks have shown that multithreading is much more efficient on an M.2 SSD, and in my experience asynchronous code is most often useful for web servers to avoid creating many threads. Originally, async support was implemented to support running PureHDF in the browser as a web assembly module, since only async calls to a file stream are allowed in that environment. Hopefully this can be worked around by using web workers or other browser features.
+
+### Features
+- Write support to create new HDF5 files (no editing of existing files) has been added.
+
+See https://apollo3zehn.github.io/PureHDF for more information about PureHDF features.
+
 ## v1.0.0-alpha.25 - 2023-03-23
 
 ### Breaking Changes
