@@ -5,7 +5,7 @@
     <PackageTags>HDF HDF5 hierarchical data file H5 HSDS</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>net6.0</TargetFramework>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
