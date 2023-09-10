@@ -957,6 +957,16 @@
       "version": ""
     },
     {
+      "type": "Resource",
+      "source_relative_path": "images/nuget.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/nuget.png"
+        }
+      },
+      "version": ""
+    },
+    {
       "type": "Conceptual",
       "source_relative_path": "index.md",
       "output": {
