@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <PackageIcon>icon.png</PackageIcon>
+    <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <SuppressWarnings>NU5128</SuppressWarnings>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
