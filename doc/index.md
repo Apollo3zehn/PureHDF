@@ -21,7 +21,22 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 dotnet add package PureHDF --prerelease
 ```
 
-# Comparison Table
+# Feature overview
+
+| Reading | Writing | Feature                      |
+| ------- | ------- | ---------------------------- |
+| &check; | &check; | generic API                  |
+| &check; | &check; | easy filter access           |
+| &check; | &check; | hardware-accelerated filters |
+| &check; | &check; | data slicing                 |
+| &check; | &check; | multidimensional arrays      |
+| &check; | &check; | compound data                |
+| &check; | &check; | variable-length data         |
+| &check; | -       | multithreading (^1)          |
+| &check; | -       | Amazon S3 access             |
+| &check; | -       | HSDS (^2) access             |
+
+# Comparison table
 Overwhelmed by the number of different HDF 5 libraries? Here is a comparison table:
 
 > Note: The following table considers only projects listed on Nuget.org

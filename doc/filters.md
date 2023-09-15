@@ -43,23 +43,23 @@ public class MyFilter : IH5Filter
 > [!NOTE]
 > For `writing`, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the `H5WriteOptions.Filters` list). See [writing](writing/filters.md) for more details.
 
-## Supported Filters Overview
+## Supported filters overview
 
-based on [ZLibStream](https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0)
+The first group of filters is built into PureHDF.
 
-| Filter                                                                                      | Compress | Decompress | Notes                        |
-| ------------------------------------------------------------------------------------------- | -------- | ---------- | ---------------------------- |
-| Shuffle                                                                                     | &check;  | &check;    | hardware-accelerated         |
-| Fletcher-32                                                                                 | &check;  | &check;    |                              |
-| N-Bit                                                                                       | -        | -          |                              |
-| Scale-Offset                                                                                | -        | &check;    |                              |
-| Deflate                                                                                     | &check;  | &check;    |                              |
-|                                                                                             |          |            |                              |
-| [C-Blosc2](https://www.nuget.org/packages/PureHDF.Filters.Blosc2)                           | &check;  | &check;    | native, hardware-accelerated |
-| [BZip2 (SharpZipLib)](https://www.nuget.org/packages/PureHDF.Filters.BZip2.SharpZipLib)     | &check;  | &check;    |                              |
-| [Deflate (ISA-L)](https://www.nuget.org/packages/PureHDF.Filters.Deflate.ISA-L)             | &check;  | &check;    | native, hardware-accelerated |
-| [Deflate (SharpZipLib)](https://www.nuget.org/packages/PureHDF.Filters.Deflate.SharpZipLib) | &check;  | &check;    |                              |
-| [LZF](https://www.nuget.org/packages/PureHDF.Filters.LZF)                                   | &check;  | &check;    |                              |
+| Filter                                                                                      | Compress | Decompress | Notes                                                                                                             |
+| ------------------------------------------------------------------------------------------- | -------- | ---------- | ----------------------------------------------------------------------------------------------------------------- |
+| Shuffle                                                                                     | &check;  | &check;    | hardware-accelerated                                                                                              |
+| Fletcher-32                                                                                 | &check;  | &check;    |                                                                                                                   |
+| N-Bit                                                                                       | -        | -          |                                                                                                                   |
+| Scale-Offset                                                                                | -        | &check;    |                                                                                                                   |
+| Deflate                                                                                     | &check;  | &check;    | based on [ZLibStream](https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0) |
+|                                                                                             |          |            |                                                                                                                   |
+| [C-Blosc2](https://www.nuget.org/packages/PureHDF.Filters.Blosc2)                           | &check;  | &check;    | native, hardware-accelerated                                                                                      |
+| [BZip2 (SharpZipLib)](https://www.nuget.org/packages/PureHDF.Filters.BZip2.SharpZipLib)     | &check;  | &check;    |                                                                                                                   |
+| [Deflate (ISA-L)](https://www.nuget.org/packages/PureHDF.Filters.Deflate.ISA-L)             | &check;  | &check;    | native, hardware-accelerated                                                                                      |
+| [Deflate (SharpZipLib)](https://www.nuget.org/packages/PureHDF.Filters.Deflate.SharpZipLib) | &check;  | &check;    |                                                                                                                   |
+| [LZF](https://www.nuget.org/packages/PureHDF.Filters.LZF)                                   | &check;  | &check;    |                                                                                                                   |
 
 ## External Filter Details
 

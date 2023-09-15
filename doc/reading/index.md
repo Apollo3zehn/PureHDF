@@ -1,6 +1,6 @@
 # Reading
 
-The following code snippets show how to work the reading API. The first step is to open the file to read from:
+The following code snippets show how to work with the reading API. The first step is to open the file to read from:
 
 ```cs
 using PureHDF;
@@ -40,7 +40,7 @@ foreach (var link in group.Children())
 
 HDF5 objects can have zero or more attributes attached which can either be accessed by enumerating all attributes (`myObject.Attributes()`) or by direct access (`myObject.Attribute("attribute-name")`);
 
-When you have a dataset or attribute available, you can read it's data by providing a compatible return type as shown below.
+When you have a dataset or attribute available, you can read it's data by providing a compatible generic type as shown below.
 
 ```cs
 var intScalar = dataset.Read<int>();
@@ -51,4 +51,4 @@ var floatJaggedArray = dataset.Read<float[][]>(); /* This works only for variabl
 ```
 
 > [!NOTE]
-> An overview over compatible return types can be found here in the [Simple Data](simple.md) or the [Complex Data](complex.md) sections.
+> An overview over compatible generic types can be found here in the [Simple Data](simple.md) or the [Complex Data](complex.md) sections.

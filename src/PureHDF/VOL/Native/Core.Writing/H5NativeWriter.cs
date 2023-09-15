@@ -40,13 +40,8 @@ partial class H5NativeWriter
         );
 
         File = file;
-        Stream = stream;
         Context = writeContext;
     }
-
-    internal H5File File { get; }
-
-    internal Stream Stream { get; }
 
     internal NativeWriteContext Context { get; }
 

@@ -1,3 +1,8 @@
+## v1.0.0-beta.2 - 2023-09-15
+
+### Features
+- The `H5NativeWriter` now also exposes the associated `H5File` as property.
+
 ## v1.0.0-beta.1 - 2023-09-09
 
 ### Breaking Changes
