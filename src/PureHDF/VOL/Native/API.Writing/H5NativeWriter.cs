@@ -39,6 +39,11 @@ public partial class H5NativeWriter : IDisposable
         });
     }
 
+    /// <summary>
+    /// The associated <see cref="H5File"/> instance.
+    /// </summary>
+    public H5File File { get; }
+
     #region IDisposable
 
     private bool _disposedValue;
