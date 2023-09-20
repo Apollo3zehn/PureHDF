@@ -7,7 +7,7 @@ There are three ways to read compound data which are explained in the following 
 | ------------------------------------------- | ---------- | ------ | ---------------------------------------------------------- |
 | `Read<T>()`                                 | unmanaged  | fast   | predefined type required with correct field offsets        |
 | `Read<T>()`                                 | -          | medium | predefined type required, support for variable-length data |
-| `ReadCompound<Dictionary<string, object>()` | -          | slow   | -                                                          |
+| `Read<Dictionary<string, object>()` | -          | slow   | -                                                          |
 
 ## Compounds without reference type data
 
@@ -69,7 +69,7 @@ struct NullableStruct
     public float[] FloatArray;
 }
 
-var compoundData = dataset.ReadCompound<NullableStruct>();
+var compoundData = dataset.Read<NullableStruct>();
 ```
 
 > [!NOTE]
