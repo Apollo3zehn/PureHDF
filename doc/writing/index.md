@@ -69,7 +69,7 @@ file.Write("path/to/file.h5");
 
 ## Deferred writing
 
-You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the `H5File.BeginWrite(...)` method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being diposed.
+You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the `H5File.BeginWrite(...)` method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being disposed.
 
 ```cs
 var data = Enumerable.Range(0, 100).ToArray();

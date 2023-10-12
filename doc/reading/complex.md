@@ -3,10 +3,10 @@
 
 There are three ways to read compound data which are explained in the following sections. Here is an overview:
 
-| method                                      | constraint | speed  | requirements                                               |
-| ------------------------------------------- | ---------- | ------ | ---------------------------------------------------------- |
-| `Read<T>()`                                 | unmanaged  | fast   | predefined type required with correct field offsets        |
-| `Read<T>()`                                 | -          | medium | predefined type required, support for variable-length data |
+| method                              | constraint | speed  | requirements                                               |
+| ----------------------------------- | ---------- | ------ | ---------------------------------------------------------- |
+| `Read<T>()`                         | unmanaged  | fast   | predefined type required with correct field offsets        |
+| `Read<T>()`                         | -          | medium | predefined type required, support for variable-length data |
 | `Read<Dictionary<string, object>()` | -          | slow   | -                                                          |
 
 ## Compounds without reference type data
