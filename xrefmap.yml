@@ -2285,6 +2285,18 @@ references:
   commentId: Overload:PureHDF.H5NativeWriter.Dispose
   fullName: PureHDF.H5NativeWriter.Dispose
   nameWithType: H5NativeWriter.Dispose
+- uid: PureHDF.H5NativeWriter.File
+  name: File
+  href: api/PureHDF.H5NativeWriter.html#PureHDF_H5NativeWriter_File
+  commentId: P:PureHDF.H5NativeWriter.File
+  fullName: PureHDF.H5NativeWriter.File
+  nameWithType: H5NativeWriter.File
+- uid: PureHDF.H5NativeWriter.File*
+  name: File
+  href: api/PureHDF.H5NativeWriter.html#PureHDF_H5NativeWriter_File_
+  commentId: Overload:PureHDF.H5NativeWriter.File
+  fullName: PureHDF.H5NativeWriter.File
+  nameWithType: H5NativeWriter.File
 - uid: PureHDF.H5NativeWriter.Write*
   name: Write
   href: api/PureHDF.H5NativeWriter.html#PureHDF_H5NativeWriter_Write_

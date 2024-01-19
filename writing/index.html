@@ -121,7 +121,7 @@ var file = new H5File()
 <pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;);
 </code></pre>
 <h2 id="deferred-writing">Deferred writing</h2>
-<p>You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the <code>H5File.BeginWrite(...)</code> method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being diposed.</p>
+<p>You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the <code>H5File.BeginWrite(...)</code> method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being disposed.</p>
 <pre><code class="lang-cs">var data = Enumerable.Range(0, 100).ToArray();
 var dataset = new H5Dataset&lt;int[]&gt;(fileDims: new ulong[] { (ulong)data.Length });
 

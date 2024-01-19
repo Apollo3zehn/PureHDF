@@ -98,7 +98,7 @@
 <td>predefined type required, support for variable-length data</td>
 </tr>
 <tr>
-<td><code>ReadCompound&lt;Dictionary&lt;string, object&gt;()</code></td>
+<td><code>Read&lt;Dictionary&lt;string, object&gt;()</code></td>
 <td>-</td>
 <td>slow</td>
 <td>-</td>
@@ -156,7 +156,7 @@ var compoundData = dataset.Read&lt;SimpleStruct&gt;();
     public float[] FloatArray;
 }
 
-var compoundData = dataset.ReadCompound&lt;NullableStruct&gt;();
+var compoundData = dataset.Read&lt;NullableStruct&gt;();
 </code></pre>
 <div class="NOTE">
 <h5>Note</h5>

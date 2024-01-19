@@ -74,7 +74,7 @@
         <article data-uid="">
 <h1 id="reading">Reading</h1>
 
-<p>The following code snippets show how to work the reading API. The first step is to open the file to read from:</p>
+<p>The following code snippets show how to work with the reading API. The first step is to open the file to read from:</p>
 <pre><code class="lang-cs">using PureHDF;
 
 var file = H5File.OpenRead(&quot;path/to/file.h5&quot;);
@@ -105,7 +105,7 @@ var unknownObject = file.Get(&quot;/path/to/my/unknown/object&quot;);
 <p>An <code>IH5UnresolvedLink</code> becomes part of the <code>Children</code> collection when a symbolic link is dangling, i.e. the link target does not exist or cannot be accessed.</p>
 </div>
 <p>HDF5 objects can have zero or more attributes attached which can either be accessed by enumerating all attributes (<code>myObject.Attributes()</code>) or by direct access (<code>myObject.Attribute(&quot;attribute-name&quot;)</code>);</p>
-<p>When you have a dataset or attribute available, you can read it's data by providing a compatible return type as shown below.</p>
+<p>When you have a dataset or attribute available, you can read it's data by providing a compatible generic type as shown below.</p>
 <pre><code class="lang-cs">var intScalar = dataset.Read&lt;int&gt;();
 var doubleArray = dataset.Read&lt;double[]&gt;();
 var double2DArray = dataset.Read&lt;double[,]&gt;();
@@ -114,7 +114,7 @@ var floatJaggedArray = dataset.Read&lt;float[][]&gt;(); /* This works only for v
 </code></pre>
 <div class="NOTE">
 <h5>Note</h5>
-<p>An overview over compatible return types can be found here in the <a href="simple.html">Simple Data</a> or the <a href="complex.html">Complex Data</a> sections.</p>
+<p>An overview over compatible generic types can be found here in the <a href="simple.html">Simple Data</a> or the <a href="complex.html">Complex Data</a> sections.</p>
 </div>
 </article>
 

@@ -112,8 +112,8 @@ H5Filter.Register(new Blosc2Filter());
 <h5>Note</h5>
 <p>For <code>writing</code>, the filter will be selected only if registered properly and then explicitly specified for the dataset to write (or you add it to the <code>H5WriteOptions.Filters</code> list). See <a href="writing/filters.html">writing</a> for more details.</p>
 </div>
-<h2 id="supported-filters-overview">Supported Filters Overview</h2>
-<p>based on <a href="https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0">ZLibStream</a></p>
+<h2 id="supported-filters-overview">Supported filters overview</h2>
+<p>The first group of filters is built into PureHDF.</p>
 <table>
 <thead>
 <tr>
@@ -152,7 +152,7 @@ H5Filter.Register(new Blosc2Filter());
 <td>Deflate</td>
 <td>✓</td>
 <td>✓</td>
-<td></td>
+<td>based on <a href="https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0">ZLibStream</a></td>
 </tr>
 <tr>
 <td></td>
