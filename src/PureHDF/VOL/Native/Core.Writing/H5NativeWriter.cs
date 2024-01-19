@@ -75,32 +75,7 @@ partial class H5NativeWriter
 
         headerMessages.Add(ToHeaderMessage(linkInfoMessage));
 
-        // TODO https://forum.hdfgroup.org/t/hdf5-file-format-is-attribute-info-message-required/11277
-        // attribute info message
-        if (group.Attributes.Any())
-        {
-            var attributeInfoMessage = new AttributeInfoMessage(
-                default!,
-                Flags: CreationOrderFlags.None,
-                MaximumCreationIndex: default,
-                FractalHeapAddress: Superblock.UndefinedAddress,
-                BTree2NameIndexAddress: Superblock.UndefinedAddress,
-                BTree2CreationOrderIndexAddress: Superblock.UndefinedAddress
-            )
-            {
-                Version = 0
-            };
-
-            headerMessages.Add(ToHeaderMessage(attributeInfoMessage));
-        }
-
-        // attribute messages
-        foreach (var entry in group.Attributes)
-        {
-            var attributeMessage = AttributeMessage.Create(Context, entry.Key, entry.Value);
-
-            headerMessages.Add(ToHeaderMessage(attributeMessage));
-        }
+        AppendAttributesToHeaderMessages(group.Attributes, headerMessages, Context);
 
         foreach (var entry in group)
         {
@@ -295,6 +270,8 @@ partial class H5NativeWriter
         if (filterPipeline is not null)
             headerMessages.Add(ToHeaderMessage(filterPipeline));
 
+        AppendAttributesToHeaderMessages(dataset.Attributes, headerMessages, Context);
+
         // object header
         var objectHeader = new ObjectHeader2(
             Address: default,
@@ -461,6 +438,39 @@ partial class H5NativeWriter
             memoryDims.Length,
             datasetChunkDims.Length,
             encodeInfo);
+    }
+
+    private static void AppendAttributesToHeaderMessages(
+        Dictionary<string, object> attributes,
+        List<HeaderMessage> headerMessages,
+        NativeWriteContext context)
+    {
+        // TODO https://forum.hdfgroup.org/t/hdf5-file-format-is-attribute-info-message-required/11277
+        // attribute info message
+        if (attributes.Any())
+        {
+            var attributeInfoMessage = new AttributeInfoMessage(
+                default!,
+                Flags: CreationOrderFlags.None,
+                MaximumCreationIndex: default,
+                FractalHeapAddress: Superblock.UndefinedAddress,
+                BTree2NameIndexAddress: Superblock.UndefinedAddress,
+                BTree2CreationOrderIndexAddress: Superblock.UndefinedAddress
+            )
+            {
+                Version = 0
+            };
+
+            headerMessages.Add(ToHeaderMessage(attributeInfoMessage));
+        }
+
+        // attribute messages
+        foreach (var entry in attributes)
+        {
+            var attributeMessage = AttributeMessage.Create(context, entry.Key, entry.Value);
+
+            headerMessages.Add(ToHeaderMessage(attributeMessage));
+        }
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)

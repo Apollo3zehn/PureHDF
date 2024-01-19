@@ -1,0 +1,20 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   GROUP "group" {
+      ATTRIBUTE "attribute 1" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SCALAR
+         DATA {
+         (0): 99.2
+         }
+      }
+      ATTRIBUTE "attribute 2" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SCALAR
+         DATA {
+         (0): 99.3
+         }
+      }
+   }
+}
+}

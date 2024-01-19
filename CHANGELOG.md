@@ -1,3 +1,8 @@
+## v1.0.0-beta.3 - 2024-01-19
+
+### Bugs fixed
+- Attributes on a dataset are now also properly written to file.
+
 ## v1.0.0-beta.2 - 2023-09-15
 
 ### Features
