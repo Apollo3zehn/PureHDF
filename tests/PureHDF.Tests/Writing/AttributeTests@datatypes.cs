@@ -120,7 +120,7 @@ public partial class AttributeTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 

@@ -1,3 +1,8 @@
+## v1.0.0-beta.4 - 2024-01-26
+
+### Bugs fixed
+- Files with many strings could not be written due to the new global heap collections no being created properly.
+
 ## v1.0.0-beta.3 - 2024-01-19
 
 ### Bugs fixed
