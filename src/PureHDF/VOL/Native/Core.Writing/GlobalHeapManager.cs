@@ -34,18 +34,18 @@ internal class GlobalHeapManager
     public (WritingGlobalHeapId, Memory<byte>) AddObject(int size)
     {
         // validation
-        if (_collectionState is null)
-            AddNewCollection();
+        var collectionState = _collectionState;
 
-        var collectionState = _collectionState!;
+        if (collectionState is null)
+            collectionState = AddNewCollection();
 
-        if (collectionState.Consumed + size > collectionState.Memory.Length)
+        if (collectionState.Consumed + OBJECT_HEADER_SIZE + size > collectionState.Memory.Length)
         {
             if (size > collectionState.Memory.Length)
                 throw new Exception("The object is too large for the global object heap.");
 
             else
-                AddNewCollection();
+                collectionState = AddNewCollection();
         }
 
         // encode object header
@@ -88,7 +88,7 @@ internal class GlobalHeapManager
         );
     }
 
-    private void AddNewCollection()
+    private GlobalHeapCollectionState AddNewCollection()
     {
         // flush before we are able to continue
         if (_collectionMap.Count * _collectionSize >= _flushThreshold)
@@ -117,6 +117,8 @@ internal class GlobalHeapManager
 
         _collectionState = collectionState;
         _collectionMap[_baseAddress] = collectionState;
+
+        return collectionState;
     }
 
     public void Encode()
