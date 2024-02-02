@@ -307,9 +307,23 @@ internal partial record class DatatypeMessage(
         /* read unknown compound */
         if (memoryType is null || memoryType == typeof(Dictionary<string, object?>))
         {
+            /*
+             * Compound members are not necessarily ordered by their offsets. We can do one of the following to handle this:
+             * - 1. sort them when the type message is being decoded
+             * - 2. seek to correct offset for each individual member and seek to basePosition + Size in the end
+             * - 3. sort them when defining the decode steps variable
+             *
+             * - Option 1 is not being choosed to keep the type definition untouched.
+             * - Option 2 is also not being used because in .NET versions < .NET 6 seeking was a costly operation as there
+             *     was a system call involved (https://devblogs.microsoft.com/dotnet/file-io-improvements-in-dotnet-6/#summary)
+             *     and we would like to avoid having specialized code for < .NET 6.
+             * - Option 3 seems to be a good compromise.
+             */
+
             var decodeSteps = Properties
                 .Cast<CompoundPropertyDescription>()
                 .Select(property => (property, property.MemberTypeMessage.GetDecodeInfoForScalar(context, memoryType: default).Decode))
+                .OrderBy(tuple => tuple.Item1.MemberByteOffset)
                 .ToArray();
 
             object? decode(IH5ReadStream source)
@@ -386,7 +400,23 @@ internal partial record class DatatypeMessage(
         if (!isValueType && type.GetConstructor(Type.EmptyTypes) is null)
             throw new Exception("Only types with parameterless constructors are supported to decode compound data.");
 
-        var compoundProperties = Properties.Cast<CompoundPropertyDescription>().ToArray();
+        /*
+         * Compound members are not necessarily ordered by their offsets. We can do one of the following to handle this:
+         * - 1. sort them when the type message is being decoded
+         * - 2. seek to correct offset for each individual member and seek to basePosition + Size in the end
+         * - 3. sort them when defining the decode steps variable
+         *
+         * - Option 1 is not being choosed to keep the type definition untouched.
+         * - Option 2 is also not being used because in .NET versions < .NET 6 seeking was a costly operation as there
+         *      was a system call involved (https://devblogs.microsoft.com/dotnet/file-io-improvements-in-dotnet-6/#summary)
+         *     and we would like to avoid having specialized code for < .NET 6.
+         * - Option 3 seems to be a good compromise.
+         */
+        var compoundProperties = Properties
+            .Cast<CompoundPropertyDescription>()
+            .OrderBy(propertyDescription => propertyDescription.MemberByteOffset)
+            .ToArray();
+
         var decodeSteps = new DecodeStep[compoundProperties.Length];
 
         // fields
@@ -780,7 +810,7 @@ internal partial record class DatatypeMessage(
             {
                 // It would be more correct to just throw an exception 
                 // when the object index is not found in the collection,
-                // but that would make the tests following test fail
+                // but that would make the following test fail
                 // - CanRead_Array_nullable_struct.
                 // 
                 // And it would make the user's life a bit more complicated
