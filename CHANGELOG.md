@@ -1,3 +1,8 @@
+## v1.0.0-beta.5 - 2024-02-02
+
+### Bugs fixed
+- Compounds with members not sorted by their offset can now be decoded correctly.
+
 ## v1.0.0-beta.4 - 2024-01-26
 
 ### Bugs fixed

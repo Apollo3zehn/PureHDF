@@ -8,7 +8,7 @@ namespace PureHDF.Tests.Reading;
 public partial class DatasetTests
 {
     [Fact]
-    public void CanRead_Virtual_sync()
+    public void CanRead_Virtual()
     {
         // Arrange
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
