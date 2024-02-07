@@ -83,6 +83,6 @@ internal record struct LocalHeap(
         var end = Array.IndexOf(Data, (byte)0, (int)offset);
         var bytes = Data[(int)offset..end];
 
-        return Encoding.ASCII.GetString(bytes);
+        return Encoding.UTF8.GetString(bytes);
     }
 }
