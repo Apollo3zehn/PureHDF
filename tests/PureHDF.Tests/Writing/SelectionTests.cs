@@ -54,7 +54,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -105,7 +105,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -160,7 +160,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -210,7 +210,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         using (var writer = file.BeginWrite(filePath))
         {
@@ -287,7 +287,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -327,7 +327,7 @@ public class SelectionTests
             data: data,
 
             memorySelection: new HyperslabSelection(
-                start: 0, 
+                start: 0,
                 block: 36),
 
             fileSelection: new HyperslabSelection(rank: 2,
@@ -346,7 +346,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -391,7 +391,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         using (var writer = file.BeginWrite(filePath))
         {

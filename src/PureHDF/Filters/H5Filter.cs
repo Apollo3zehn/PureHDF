@@ -265,7 +265,7 @@ public class Fletcher32Filter : IH5Filter
 
             /* Copy checksum */
             Span<uint> fletcherBuffer = stackalloc uint[] { fletcher };
-            
+
             MemoryMarshal.AsBytes(fletcherBuffer)
                 .CopyTo(resultBuffer.Span[^4..]);
 
@@ -423,7 +423,7 @@ public class DeflateFilter : IH5Filter
             var compressionLevel = GetCompressionLevel(unchecked(compressionLevelValue));
 
             using (var compressionStream = new ZLibStream(
-                compressedStream, 
+                compressedStream,
                 compressionLevel,
                 leaveOpen: true))
             {
@@ -462,7 +462,7 @@ public class DeflateFilter : IH5Filter
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
         {
             if (objectValue is int value)

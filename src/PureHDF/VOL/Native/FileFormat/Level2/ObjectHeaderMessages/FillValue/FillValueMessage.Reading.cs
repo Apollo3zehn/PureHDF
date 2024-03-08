@@ -8,7 +8,7 @@ internal partial record class FillValueMessage(
 ) : Message
 {
     private byte _version;
-    
+
     public required byte Version
     {
         get
@@ -36,7 +36,7 @@ internal partial record class FillValueMessage(
         uint size;
         SpaceAllocationTime allocationTime;
         FillValueWriteTime fillTime;
-        
+
         var value = default(byte[]);
 
         switch (version)
@@ -100,8 +100,8 @@ internal partial record class FillValueMessage(
         return new FillValueMessage(
             AllocationTime: allocationTime,
             FillTime: fillTime,
-            Value: value?.Length > 0 
-                ? value 
+            Value: value?.Length > 0
+                ? value
                 : default
         )
         {

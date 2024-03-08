@@ -7,7 +7,7 @@ internal record class TinyObjectsFractalHeapIdSubType1(
 ) : FractalHeapId
 {
     public static TinyObjectsFractalHeapIdSubType1 Decode(
-        H5DriverBase localDriver, 
+        H5DriverBase localDriver,
         byte firstByte)
     {
         var length = (byte)(((firstByte & 0x0F) >> 0) + 1);
@@ -18,7 +18,7 @@ internal record class TinyObjectsFractalHeapIdSubType1(
     }
 
     public override T Read<T>(
-        Func<H5DriverBase, T> func, 
+        Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache)
     {
         using var driver = new H5StreamDriver(new MemoryStream(Data), leaveOpen: false);

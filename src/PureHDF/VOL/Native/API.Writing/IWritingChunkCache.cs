@@ -12,7 +12,7 @@ public interface IWritingChunkCache
     /// <param name="chunkAllocator">The chunk allocator is used whenever the chunk is not already cached.</param>
     /// <param name="chunkWriter">The chunk writer is used whenever the chunk is flushed from the cache.</param>
     public Memory<byte> GetChunk(
-        ulong[] indices, 
+        ulong[] indices,
         Func<Memory<byte>> chunkAllocator,
         Action<ulong[], Memory<byte>> chunkWriter);
 

@@ -3,7 +3,7 @@
 namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2(
-    ulong Address, 
+    ulong Address,
     ObjectHeaderFlags Flags,
     uint AccessTime,
     uint ModificationTime,
@@ -79,10 +79,10 @@ internal partial record class ObjectHeader2(
 
         // header messages
         var headerMessages = ReadHeaderMessages(
-            context, 
+            context,
             address,
             sizeOfChunk0,
-            version: 2, 
+            version: 2,
             withCreationOrder);
 
         var objectHeader = new ObjectHeader2(

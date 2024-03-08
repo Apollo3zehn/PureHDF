@@ -11,8 +11,8 @@ public static class WritingTestData
             ["A"] = 1, ["B"] = -2, ["C"] = 3
         }},
 
-        new object[] { new Dictionary<string, int[,]> { 
-            ["A"] = new int[,] 
+        new object[] { new Dictionary<string, int[,]> {
+            ["A"] = new int[,]
             {
                 { 0, 1, 2 },
                 { 3, 4, 5 },
@@ -27,7 +27,7 @@ public static class WritingTestData
 
         new object[] { new string?[] { "A", "ßAB", null, "C BA" } },
 
-        new object[] { 
+        new object[] {
             new int[]?[]
             {
                 new int[] { 1, -2, 3 },
@@ -37,10 +37,10 @@ public static class WritingTestData
         },
 
         new object[] { new Dictionary<string, int>[] {
-            new Dictionary<string, int> { 
-                ["A"] = 1, ["B"] = -2, ["C"] = 3 
+            new Dictionary<string, int> {
+                ["A"] = 1, ["B"] = -2, ["C"] = 3
             },
-            new Dictionary<string, int> { 
+            new Dictionary<string, int> {
                 ["D"] = 4, ["E"] = -5
             }
         }},
@@ -63,7 +63,7 @@ public static class WritingTestData
         new object[] { Tuple.Create(1, -2L, 3.3) },
 
         /* reference type */
-        new object[] { 
+        new object[] {
             new DataspaceMessage(
                 Rank: 1,
                 Flags: DataspaceMessageFlags.DimensionMaxSizes | DataspaceMessageFlags.PermuationIndices,

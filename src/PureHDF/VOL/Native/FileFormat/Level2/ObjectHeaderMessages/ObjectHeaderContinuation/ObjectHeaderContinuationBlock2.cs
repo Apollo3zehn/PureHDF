@@ -8,12 +8,12 @@ internal record class ObjectHeaderContinuationBlock2(
 ) : ObjectHeader(Address, HeaderMessages)
 {
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("OCHK");
-    
+
     internal static ObjectHeaderContinuationBlock2 Decode(
-        NativeReadContext context, 
+        NativeReadContext context,
         ulong objectHeaderAddress,
         ulong objectHeaderSize,
-        byte version, 
+        byte version,
         bool withCreationOrder)
     {
         // address
@@ -31,7 +31,7 @@ internal record class ObjectHeaderContinuationBlock2(
             context,
             objectHeaderAddress,
             objectHeaderSize - 8,
-            version, 
+            version,
             withCreationOrder);
 
         var objectHeader = new ObjectHeaderContinuationBlock2(

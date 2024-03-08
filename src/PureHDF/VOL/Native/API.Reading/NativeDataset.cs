@@ -154,13 +154,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     /// <inheritdoc />
     public T Read<T>(
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
         return Read<T>(
-            fileSelection, 
-            memorySelection, 
+            fileSelection,
+            memorySelection,
             memoryDims,
             datasetAccess: default);
     }
@@ -168,14 +168,14 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// <inheritdoc />
     public void Read<T>(
         T buffer,
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
         Read(
             buffer,
-            fileSelection, 
-            memorySelection, 
+            fileSelection,
+            memorySelection,
             memoryDims,
             datasetAccess: default);
     }
@@ -200,7 +200,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCorePre.MakeGenericMethod(typeof(T), elementType);
 
-        var result = (T)method.Invoke(this, new object?[] 
+        var result = (T)method.Invoke(this, new object?[]
         {
             default /* buffer */,
             fileSelection,
@@ -234,7 +234,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCorePre.MakeGenericMethod(typeof(T), elementType);
 
-        method.Invoke(this, new object?[] 
+        method.Invoke(this, new object?[]
         {
             buffer,
             fileSelection,
@@ -247,8 +247,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     /// <inheritdoc />
     public Task<T> ReadAsync<T>(
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
@@ -258,8 +258,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// <inheritdoc />
     public Task ReadAsync<T>(
         T buffer,
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
@@ -496,8 +496,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
         SelectionHelper
             .Decode(
-                sourceRank: fileDims.Length, 
-                targetRank: memoryDims.Length, 
+                sourceRank: fileDims.Length,
+                targetRank: memoryDims.Length,
                 decodeInfo);
     }
 

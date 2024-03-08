@@ -9,7 +9,7 @@ internal readonly partial record struct HeaderMessage
 
         var dataEncodeSize = Data.GetEncodeSize();
 
-        return 
+        return
             sizeof(byte) +
             sizeof(ushort) +
             sizeof(byte) +

@@ -20,10 +20,10 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
     #region Constructors
 
     public H5D_Chunk4_ExtensibleArray(
-        NativeReadContext readContext, 
+        NativeReadContext readContext,
         NativeWriteContext writeContext,
-        DatasetInfo dataset, 
-        DataLayoutMessage4 layout, 
+        DatasetInfo dataset,
+        DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation) :
         base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)

@@ -74,7 +74,7 @@ public abstract class NativeAttributableObject : NativeObject, IH5AttributableOb
         {
             return true;
         }
-        
+
         // get attribute from attribute info
         else
         {

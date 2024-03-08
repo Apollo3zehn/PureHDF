@@ -6,7 +6,7 @@ internal abstract record class DatatypeBitFieldDescription
 };
 
 internal record class ArrayBitFieldDescription(
-    //
+//
 ) : DatatypeBitFieldDescription
 {
     public static ArrayBitFieldDescription Decode(H5DriverBase driver)
@@ -14,7 +14,7 @@ internal record class ArrayBitFieldDescription(
         _ = driver.ReadBytes(3);
 
         return new ArrayBitFieldDescription(
-            //
+        //
         );
     }
 
@@ -131,8 +131,8 @@ internal record class FixedPointBitFieldDescription(
 #endif
 
         data[0] = (byte)(
-            (byte)ByteOrder & 0x01 | 
-            (PaddingTypeLow ? 1 : 0) << 1 | 
+            (byte)ByteOrder & 0x01 |
+            (PaddingTypeLow ? 1 : 0) << 1 |
             (PaddingTypeHigh ? 1 : 0) << 2 |
             (IsSigned ? 1 : 0) << 3
         );
@@ -169,7 +169,7 @@ internal record class FloatingPointBitFieldDescription(
 
         else
         {
-            byteOrder = bit0 
+            byteOrder = bit0
                 ? ByteOrder.VaxEndian
                 : throw new NotSupportedException("In a floating-point bit field description bit 0 of the class bit field must be set when bit 6 is also set.");
         }
@@ -202,8 +202,8 @@ internal record class FloatingPointBitFieldDescription(
             data[0] = (1 << 0) | (1 << 6);
 
         data[0] = (byte)(
-            data[0] | 
-            (PaddingTypeLow ? 1 : 0) << 1 | 
+            data[0] |
+            (PaddingTypeLow ? 1 : 0) << 1 |
             (PaddingTypeHigh ? 1 : 0) << 2 |
             (PaddingTypeInternal ? 1 : 0) << 3 |
             ((byte)MantissaNormalization & 0x03) << 4

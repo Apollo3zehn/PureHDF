@@ -33,7 +33,7 @@ public partial class PointSelection : Selection
                 coordinates[j] = PointsField[i, j];
             }
 
-            var step = new Step (
+            var step = new Step(
                 Coordinates: coordinates,
                 ElementCount: 1
             );

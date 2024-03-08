@@ -7,17 +7,17 @@ internal record class BTree2LeafNode<T>(
 ) : BTree2Node<T>(Records) where T : struct, IBTree2Record
 {
     public static BTree2LeafNode<T> Decode(
-        H5DriverBase driver, 
-        BTree2Header<T> header, 
-        ulong recordCount, 
+        H5DriverBase driver,
+        BTree2Header<T> header,
+        ulong recordCount,
         Func<T> decodeKey)
     {
         Decode(
-            driver, 
-            header, 
-            recordCount, 
-            Signature, 
-            decodeKey, 
+            driver,
+            header,
+            recordCount,
+            Signature,
+            decodeKey,
             out var version,
             out var records
         );

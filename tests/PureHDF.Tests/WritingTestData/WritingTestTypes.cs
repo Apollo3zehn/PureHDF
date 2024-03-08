@@ -5,21 +5,21 @@ internal struct WritingTestStruct
 {
     public int x;
 
-    [field: H5Name("y2")] 
+    [field: H5Name("y2")]
     public double y;
 }
 
 internal readonly record struct WritingTestRecordStruct(
     int X,
 
-    [property: H5Name("Y2")] 
+    [property: H5Name("Y2")]
     double Y
 );
 
 internal record class WritingTestRecordClass(
     int X,
 
-    [property: H5Name("Y2")] 
+    [property: H5Name("Y2")]
     double Y
 );
 

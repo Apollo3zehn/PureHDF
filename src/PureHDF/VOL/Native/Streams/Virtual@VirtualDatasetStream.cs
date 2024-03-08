@@ -19,8 +19,8 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     public VirtualDatasetStream(
         NativeFile file,
-        VdsDatasetEntry[] entries, 
-        ulong[] dimensions, 
+        VdsDatasetEntry[] entries,
+        ulong[] dimensions,
         TResult? fillValue,
         H5DatasetAccess datasetAccess,
         ReadVirtualDelegate<TResult> readVirtual)
@@ -74,7 +74,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                     minimumMaxCount = virtualResult.MaxCount;
                     break;
                 }
-                
+
                 // continue searching for the minimum distance to the next selection
                 else if (virtualResult.MaxCount != 0)
                 {
@@ -104,17 +104,17 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
             if (sourceDatasetInfo is not null && !foundEntry.Equals(default))
             {
                 var selection = new DelegateSelection(
-                    virtualCount, 
+                    virtualCount,
                     sourceDimensions => Walker(
-                        virtualCount, 
-                        virtualResult.LinearIndex, 
-                        sourceDimensions, 
+                        virtualCount,
+                        virtualResult.LinearIndex,
+                        sourceDimensions,
                         foundEntry.SourceSelection));
 
                 _readVirtual(
-                    dataset: sourceDatasetInfo.Dataset, 
-                    destination: slicedBuffer, 
-                    fileSelection: selection, 
+                    dataset: sourceDatasetInfo.Dataset,
+                    destination: slicedBuffer,
+                    fileSelection: selection,
                     datasetAccess: sourceDatasetInfo.DatasetAccess);
             }
 
@@ -135,8 +135,8 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
     }
 
     private static IEnumerable<Step> Walker(
-        ulong totalElementCount, 
-        ulong linearIndex, 
+        ulong totalElementCount,
+        ulong linearIndex,
         ulong[] sourceDimensions,
         DataspaceSelection sourceSelection)
     {
@@ -153,10 +153,10 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
             remaining -= sourceCount;
             linearIndex += sourceCount;
 
-            yield return new Step() 
-            { 
-                Coordinates = coordinates, 
-                ElementCount = sourceCount 
+            yield return new Step()
+            {
+                Coordinates = coordinates,
+                ElementCount = sourceCount
             };
         }
     }

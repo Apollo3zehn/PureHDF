@@ -163,7 +163,7 @@ public class HyperslabSelection : Selection
             offsets
                 .AsSpan()
                 .CopyTo(step.Coordinates);
-                
+
             step = step with { ElementCount = totalLength };
 
             yield return step;

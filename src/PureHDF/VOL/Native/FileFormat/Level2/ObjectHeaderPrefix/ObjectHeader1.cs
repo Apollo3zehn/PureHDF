@@ -1,9 +1,9 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal record ObjectHeader1(
-    ulong Address, 
+    ulong Address,
     ushort HeaderMessagesCount,
-    uint ObjectReferenceCount, 
+    uint ObjectReferenceCount,
     uint ObjectHeaderSize,
     List<HeaderMessage> HeaderMessages)
     : ObjectHeader(Address, HeaderMessages)
@@ -51,7 +51,7 @@ internal record ObjectHeader1(
             driver.ReadBytes(4);
 
         var headerMessages = ReadHeaderMessages(
-            context, 
+            context,
             address,
             objectHeaderSize,
             version: 1,

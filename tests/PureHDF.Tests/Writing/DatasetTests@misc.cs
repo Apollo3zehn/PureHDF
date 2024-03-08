@@ -35,7 +35,7 @@ public partial class DatasetTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal abstract record class H5S_SEL(
-    //
+//
 )
 {
     public abstract LinearIndexResult ToLinearIndex(ulong[] sourceDimensions, ulong[] coordinates);

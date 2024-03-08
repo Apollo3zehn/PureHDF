@@ -82,14 +82,14 @@ public class NativeFile : NativeGroup, IDisposable
 #endif
 
         return InternalOpen(
-            driver, 
-            absoluteFilePath, 
+            driver,
+            absoluteFilePath,
             deleteOnClose,
             options);
     }
 
     internal static NativeFile InternalOpen(
-        H5DriverBase driver, 
+        H5DriverBase driver,
         string absoluteFilePath,
         bool deleteOnClose = false,
         H5ReadOptions? options = default)
@@ -130,7 +130,7 @@ public class NativeFile : NativeGroup, IDisposable
         {
             address = superblock01.RootGroupSymbolTableEntry.HeaderAddress;
         }
-        
+
         else
         {
             var superblock23 = superblock as Superblock23;
@@ -145,10 +145,10 @@ public class NativeFile : NativeGroup, IDisposable
         driver.Seek((long)address, SeekOrigin.Begin);
 
         var context = new NativeReadContext(
-            driver, 
-            superblock) 
-        { 
-            ReadOptions = options ?? new() 
+            driver,
+            superblock)
+        {
+            ReadOptions = options ?? new()
         };
 
         var header = ObjectHeader.Construct(context);
@@ -208,9 +208,9 @@ public class NativeFile : NativeGroup, IDisposable
         return selection;
     }
 
-#endregion
+    #endregion
 
-#region IDisposable
+    #region IDisposable
 
     private bool _disposedValue;
 

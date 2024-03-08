@@ -26,7 +26,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddNumerical(fileId, ContainerType.Attribute));
 
             // Act
@@ -45,7 +45,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
             // Act
@@ -64,7 +64,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
             // Act
@@ -78,17 +78,17 @@ public partial class AttributeTests
             };
 
             using var root = NativeFile.InternalOpenRead(
-                filePath, 
-                deleteOnClose: true, 
+                filePath,
+                deleteOnClose: true,
                 options);
-                
+
             var attribute = root.Group("struct").Attribute("nullable");
 
             var actual = attribute.Read<TestStructStringAndArray[]>();
 
             // Assert
             Assert.Equal(
-                JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), 
+                JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
                 JsonSerializer.Serialize(actual, _options));
         });
     }
@@ -99,7 +99,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Attribute));
 
             // Act
@@ -120,7 +120,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Attribute, includeH5NameAttribute: true));
 
             // Act
@@ -135,10 +135,10 @@ public partial class AttributeTests
             };
 
             using var root = NativeFile.InternalOpenRead(
-                filePath, 
-                deleteOnClose: true, 
+                filePath,
+                deleteOnClose: true,
                 options);
-                
+
             var attribute = root.Group("struct").Attribute("nullable");
 
             var actual = attribute.Read<TestObjectStringAndArray[]>();
@@ -164,7 +164,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddString(fileId, ContainerType.Attribute));
 
             // Act
@@ -183,7 +183,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddBitField(fileId, ContainerType.Attribute));
 
             // Act
@@ -202,7 +202,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddOpaque(fileId, ContainerType.Attribute));
 
             var expected = MemoryMarshal.Cast<int, ushort>(SharedTestData.SmallData).ToArray();
@@ -224,7 +224,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddArray_value(fileId, ContainerType.Attribute));
 
             // Act
@@ -254,7 +254,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Attribute));
 
             // Act
@@ -284,7 +284,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Attribute));
 
             // Act
@@ -306,7 +306,7 @@ public partial class AttributeTests
             var expected = ReadingTestData.NullableStructData
                 .ToArray();
 
-// HACK: Probably a bug in C-lib
+            // HACK: Probably a bug in C-lib
             expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
             expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
             expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
@@ -322,7 +322,7 @@ public partial class AttributeTests
                 JsonSerializer.Serialize(actual_1, _options));
 
             Assert.Equal(
-                expectedJsonString, 
+                expectedJsonString,
                 JsonSerializer.Serialize(actual_2, _options));
         });
     }
@@ -333,7 +333,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddObjectReference(fileId, ContainerType.Attribute));
 
             // Act
@@ -369,7 +369,7 @@ public partial class AttributeTests
             /* it seems to be impossible to create a regular hyperslab but it should work even without this test */
 
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddRegionReference(fileId, ContainerType.Attribute));
 
             // Act
@@ -414,7 +414,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Attribute));
 
             // Act
@@ -439,7 +439,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId   
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Attribute));
 
             // Act
@@ -462,7 +462,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddDataWithSharedDataType(fileId, ContainerType.Attribute));
 
             var expected = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };

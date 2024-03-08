@@ -72,7 +72,7 @@ internal partial record class DataspaceMessage(
                 dimensionMaxSizes[i] = superblock.ReadLength(driver);
             }
         }
-        
+
         else
         {
             dimensionMaxSizes = dimensionSizes.ToArray();

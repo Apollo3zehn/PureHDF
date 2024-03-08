@@ -271,7 +271,7 @@ internal static class SelectionHelper
                 var length = Math.Min(currentLength, currentTarget.Length);
                 var targetLength = length;
 
-                if (virtualDatasetStream is null) 
+                if (virtualDatasetStream is null)
                 {
                     sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
@@ -283,7 +283,7 @@ internal static class SelectionHelper
                 else
                 {
                     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
-                    
+
                     virtualDatasetStream.ReadVirtual(
                         currentTarget[..targetLength]);
                 }

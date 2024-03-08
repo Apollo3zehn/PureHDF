@@ -30,9 +30,9 @@ internal partial record class DatatypeMessage : Message
         bool isScalar
     )
     {
-        var isScalarDictionary = isScalar && 
+        var isScalarDictionary = isScalar &&
             !topLevelData.Equals(default) &&
-            typeof(IDictionary).IsAssignableFrom(typeof(T)) && 
+            typeof(IDictionary).IsAssignableFrom(typeof(T)) &&
             typeof(T).GenericTypeArguments[0] == typeof(string);
 
         if (isScalar)
@@ -107,7 +107,7 @@ internal partial record class DatatypeMessage : Message
             ? ByteOrder.LittleEndian
             : ByteOrder.BigEndian;
 
-        (DatatypeMessage newMessage, ElementEncodeDelegate encode) = type switch
+        (var newMessage, var encode) = type switch
         {
             /* string */
             Type when type == typeof(string)

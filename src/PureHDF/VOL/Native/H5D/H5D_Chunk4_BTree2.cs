@@ -14,9 +14,9 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
     #region Constructors
     public H5D_Chunk4_BTree2(
         NativeReadContext readContext,
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage4 layout, 
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation)
         : base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)

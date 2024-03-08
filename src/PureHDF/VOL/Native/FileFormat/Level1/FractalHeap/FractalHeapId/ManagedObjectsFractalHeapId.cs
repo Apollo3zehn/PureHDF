@@ -10,10 +10,10 @@ internal record class ManagedObjectsFractalHeapId(
 ) : FractalHeapId
 {
     public static ManagedObjectsFractalHeapId Decode(
-        H5DriverBase driver, 
-        H5DriverBase localDriver, 
-        FractalHeapHeader header, 
-        ulong offsetByteCount, 
+        H5DriverBase driver,
+        H5DriverBase localDriver,
+        FractalHeapHeader header,
+        ulong offsetByteCount,
         ulong lengthByteCount)
     {
         return new ManagedObjectsFractalHeapId(
@@ -25,7 +25,7 @@ internal record class ManagedObjectsFractalHeapId(
     }
 
     public override T Read<T>(
-        Func<H5DriverBase, T> func, 
+        Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache)
     {
         var address = Header.GetAddress(this);

@@ -26,8 +26,8 @@ public static class IH5GroupExtensions
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested object.</returns>
     public static async Task<T> GetAsync<T>(
-        this IH5Group group, 
-        string path, 
+        this IH5Group group,
+        string path,
         CancellationToken cancellationToken = default) where T : IH5Object
     {
         return (T)await group

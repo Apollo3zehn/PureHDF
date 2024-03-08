@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal record class H5S_SEL_NONE(
-    //
+//
 ) : H5S_SEL
 {
     private uint _version;
@@ -30,7 +30,7 @@ internal record class H5S_SEL_NONE(
         driver.ReadBytes(8);
 
         return new H5S_SEL_NONE(
-            //
+        //
         )
         {
             Version = version

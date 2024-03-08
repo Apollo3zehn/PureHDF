@@ -91,7 +91,7 @@ public class DeflateSharpZipLibFilter : IH5Filter
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
         {
             if (objectValue is int value)

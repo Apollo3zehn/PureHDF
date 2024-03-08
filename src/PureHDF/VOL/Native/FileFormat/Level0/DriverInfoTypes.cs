@@ -38,9 +38,9 @@ internal record class MultiDriverInfo() : DriverInfo
         driver.ReadBytes(3);
 
         // member count
-        var memberCount = new MemberMapping[] { 
+        var memberCount = new MemberMapping[] {
             memberMapping1, memberMapping2, memberMapping3,
-            memberMapping4, memberMapping5, memberMapping6 
+            memberMapping4, memberMapping5, memberMapping6
         }.Distinct().Count();
 
         // member start and end addresses

@@ -390,8 +390,8 @@ public class FilePathUtilsTests
         var envPrefix = $"{FilePathUtils.ORIGIN_TOKEN}/env/variable";
 
         var expected = Path.Combine(
-            THIS_FOLDER_PATH, 
-            envPrefix.Replace(FilePathUtils.ORIGIN_TOKEN, ""), 
+            THIS_FOLDER_PATH,
+            envPrefix.Replace(FilePathUtils.ORIGIN_TOKEN, ""),
             relativePath);
 
         bool fileExists(string filePath) => filePath == expected;
@@ -443,8 +443,8 @@ public class FilePathUtilsTests
         var datasetAccessPrefix = $"{FilePathUtils.ORIGIN_TOKEN}/dataset/access";
 
         var expected = Path.Combine(
-            THIS_FOLDER_PATH, 
-            datasetAccessPrefix.Replace(FilePathUtils.ORIGIN_TOKEN, ""), 
+            THIS_FOLDER_PATH,
+            datasetAccessPrefix.Replace(FilePathUtils.ORIGIN_TOKEN, ""),
             relativePath);
 
         var datasetAccess = new H5DatasetAccess(ExternalFilePrefix: datasetAccessPrefix);

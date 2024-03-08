@@ -16,7 +16,7 @@ internal partial record class FillValueMessage
                     ? 0
                     : sizeof(uint) + Value.Length
             );
-            
+
         return (ushort)size;
     }
 

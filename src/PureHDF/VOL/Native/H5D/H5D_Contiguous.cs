@@ -26,7 +26,7 @@ internal class H5D_Contiguous : H5D_Base
         return Dataset.Space.GetDims();
     }
 
-    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices)
     {
         if (_readStream is null)
         {

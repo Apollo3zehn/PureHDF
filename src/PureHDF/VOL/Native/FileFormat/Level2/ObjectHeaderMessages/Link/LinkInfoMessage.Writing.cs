@@ -19,7 +19,7 @@ internal partial record class LinkInfoMessage
                     ? sizeof(ulong)
                     : 0
             );
-            
+
         return (ushort)size;
     }
 

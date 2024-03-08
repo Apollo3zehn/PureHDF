@@ -82,7 +82,7 @@ public class BZip2SharpZipLibFilter : IH5Filter
     private static int GetBlockSizeValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(BLOCK_SIZE, out var objectValue))
         {
             if (objectValue is int value)

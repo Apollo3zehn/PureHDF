@@ -84,7 +84,7 @@ internal record class BTree2Header<T>(
                 var pointerSize = (uint)(superblock.OffsetsSize + maxRecordCountSize + nodeInfos[i - 1].CumulatedTotalRecordCountSize);
                 var maxInternalRecordCount = (nodeSize - (fixedSizeOverhead + pointerSize)) / recordSize + pointerSize;
 
-                var cumulatedTotalRecordCount = 
+                var cumulatedTotalRecordCount =
                     (maxInternalRecordCount + 1) *
                     nodeInfos[i - 1].MaxRecordCount + maxInternalRecordCount;
 
@@ -144,16 +144,16 @@ internal record class BTree2Header<T>(
                 return Depth != 0
 
                     ? BTree2InternalNode<T>.Decode(
-                        Context, 
+                        Context,
                         this,
-                        RootNodePointer.RecordCount, 
-                        Depth, 
+                        RootNodePointer.RecordCount,
+                        Depth,
                         DecodeKey)
 
                     : BTree2LeafNode<T>.Decode(
-                        Context.Driver, 
-                        this, 
-                        RootNodePointer.RecordCount, 
+                        Context.Driver,
+                        this,
+                        RootNodePointer.RecordCount,
                         DecodeKey);
             }
         }
@@ -186,13 +186,13 @@ internal record class BTree2Header<T>(
         while (depth > 0)
         {
             Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
-            
+
             var internalNode = BTree2InternalNode<T>.Decode(
-                Context, 
-                this, 
-                currentNodePointer.RecordCount, 
-                depth, 
-                DecodeKey) 
+                Context,
+                this,
+                currentNodePointer.RecordCount,
+                depth,
+                DecodeKey)
                 ?? throw new Exception("Unable to load B-tree internal node.");
 
             /* Locate node pointer for child */
@@ -273,7 +273,7 @@ internal record class BTree2Header<T>(
 
         if (rootNode is not null)
             return EnumerateRecords(rootNode, Depth);
-            
+
         else
             return new List<T>();
     }
@@ -309,10 +309,10 @@ internal record class BTree2Header<T>(
                 if (childNodeLevel > 0)
                 {
                     var childNode = BTree2InternalNode<T>.Decode(
-                        Context, 
-                        this, 
-                        nodePointer.RecordCount, 
-                        childNodeLevel, 
+                        Context,
+                        this,
+                        nodePointer.RecordCount,
+                        childNodeLevel,
                         DecodeKey);
 
                     childRecords = EnumerateRecords(childNode, childNodeLevel);
@@ -321,8 +321,8 @@ internal record class BTree2Header<T>(
                 else
                 {
                     var childNode = BTree2LeafNode<T>.Decode(
-                        Context.Driver, 
-                        this, 
+                        Context.Driver,
+                        this,
                         nodePointer.RecordCount,
                         DecodeKey);
 

@@ -8,10 +8,10 @@ internal partial record class Superblock23(
     ulong ExtensionAddress,
     ulong EndOfFileAddress,
     ulong RootGroupObjectHeaderAddress
-): Superblock(
-    Version, 
-    FileConsistencyFlags, 
-    BaseAddress, 
+) : Superblock(
+    Version,
+    FileConsistencyFlags,
+    BaseAddress,
     EndOfFileAddress
 )
 {
@@ -52,7 +52,7 @@ internal partial record class Superblock23(
     //             Driver.Seek((long)ExtensionAddress, SeekOrigin.Begin);
     //             _extension = ObjectHeader.Construct(new NativeReadContext(Driver, this));
     //         }
-            
+
     //         return _extension;
     //     }
     // }

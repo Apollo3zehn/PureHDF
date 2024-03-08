@@ -60,7 +60,7 @@
     "output": "_site",
     "globalMetadata": {
       "_appTitle": "PureHDF",
-      "_appFooter": "Copyright © 2023 Vincent Wilms",
+      "_appFooter": "Copyright © 2024 Vincent Wilms",
       "_appFaviconPath": "images/icon.png",
       "_appLogoPath": "images/icon.png"
     },

@@ -33,8 +33,8 @@ internal partial record class FixedArrayDataBlock<T>(
 
     public static FixedArrayDataBlock<T> Decode(
         NativeReadContext context,
-        ulong elementsPerPage, 
-        ulong pageCount, 
+        ulong elementsPerPage,
+        ulong pageCount,
         ulong pageBitmapSize,
         ulong entriesCount,
         Func<H5DriverBase, T> decode)

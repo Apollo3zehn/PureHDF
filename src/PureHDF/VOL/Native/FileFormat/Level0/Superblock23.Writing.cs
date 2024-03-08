@@ -2,8 +2,8 @@
 
 internal partial record class Superblock23
 {
-    public const int ENCODE_SIZE = 
-        8 + 
+    public const int ENCODE_SIZE =
+        8 +
         sizeof(byte) +
         sizeof(byte) +
         sizeof(byte) +

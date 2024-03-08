@@ -16,7 +16,7 @@ public partial class H5NativeWriter : IDisposable
     /// <param name="memorySelection">The memory selection.</param>
     /// <param name="fileSelection">The file selection.</param>
     public void Write<T>(
-        H5Dataset<T> dataset, 
+        H5Dataset<T> dataset,
         T data,
         Selection? memorySelection = default,
         Selection? fileSelection = default)
@@ -29,10 +29,10 @@ public partial class H5NativeWriter : IDisposable
         // TODO cache this
         var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        method.Invoke(this, new object?[] 
-        { 
-            info.H5D, 
-            info.Encode, 
+        method.Invoke(this, new object?[]
+        {
+            info.H5D,
+            info.Encode,
             data,
             memorySelection,
             fileSelection

@@ -13,7 +13,7 @@ public partial class DatasetTests
 
         if (filtered)
             Assert.NotNull(nativeDataset.InternalFilterPipeline);
-        
+
         else
             Assert.Null(nativeDataset.InternalFilterPipeline);
 
@@ -38,7 +38,7 @@ public partial class DatasetTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         var options = new H5WriteOptions(
             Filters: new() {
                 DeflateFilter.Id
@@ -84,7 +84,7 @@ public partial class DatasetTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         var options = new H5WriteOptions(
             Filters: new() {
                 DeflateFilter.Id
@@ -158,7 +158,7 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            fileDims: new ulong[] { (ulong)data.Length }, 
+            fileDims: new ulong[] { (ulong)data.Length },
             chunks: new[] { 10U }
         );
 
@@ -247,7 +247,7 @@ public partial class DatasetTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         var options = new H5WriteOptions(
             Filters: new() {
                 ShuffleFilter.Id,
@@ -294,7 +294,7 @@ public partial class DatasetTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         var options = new H5WriteOptions(
             Filters: new() {
                 ShuffleFilter.Id,

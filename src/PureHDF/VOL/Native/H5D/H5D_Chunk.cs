@@ -24,9 +24,9 @@ internal abstract class H5D_Chunk : H5D_Base
     #region Constructors
 
     public H5D_Chunk(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation)
         : base(readContext, writeContext, dataset, datasetAccess)
@@ -91,9 +91,9 @@ internal abstract class H5D_Chunk : H5D_Base
     #region Methods
 
     public static H5D_Chunk Create(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation)
     {
@@ -174,11 +174,11 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices)
     {
         var buffer = _readingChunkCache
             .GetChunk(
-                chunkIndices, 
+                chunkIndices,
                 chunkReader: () => ReadChunk(chunkIndices));
 
         var stream = new SystemMemoryStream(buffer);
@@ -253,7 +253,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
                     ReadContext.Driver.ReadDataset(chunk);
                 }
-                
+
                 else
                 {
                     var rawChunkSize = (int)chunkInfo.Size;
@@ -265,7 +265,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,
-                        chunkInfo.FilterMask, 
+                        chunkInfo.FilterMask,
                         H5FilterFlags.Decompress,
                         (int)ChunkByteSize,
                         buffer);
@@ -277,7 +277,7 @@ internal abstract class H5D_Chunk : H5D_Base
     }
 
     private void WriteChunk(
-        ulong[] chunkIndices, 
+        ulong[] chunkIndices,
         Memory<byte> chunk)
     {
         if (Dataset.FilterPipeline is null)
@@ -287,14 +287,14 @@ internal abstract class H5D_Chunk : H5D_Base
             WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
             WriteContext.Driver.Write(chunk.Span);
         }
-        
+
         else
         {
             var filterMask = 0U;
 
             var buffer = H5Filter.ExecutePipeline(
-                Dataset.FilterPipeline.FilterDescriptions, 
-                filterMask, 
+                Dataset.FilterPipeline.FilterDescriptions,
+                filterMask,
                 H5FilterFlags.None,
                 (int)ChunkByteSize,
                 chunk);

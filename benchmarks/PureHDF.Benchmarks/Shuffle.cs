@@ -4,83 +4,82 @@ using BenchmarkDotNet.Attributes;
 using PureHDF;
 using PureHDF.Filters;
 
-namespace Benchmark
+namespace Benchmark;
+
+[MemoryDiagnoser]
+public class Shuffle
 {
-    [MemoryDiagnoser]
-    public class Shuffle
+    private readonly int _bytesOfType = sizeof(long);
+    private long[] _shuffledData = default!;
+    private long[] _unshuffledData = default!;
+
+    [GlobalSetup]
+    public unsafe void GlobalSetup()
     {
-        private readonly int _bytesOfType = sizeof(long);
-        private long[] _shuffledData = default!;
-        private long[] _unshuffledData = default!;
+        if (!Sse2.IsSupported)
+            throw new Exception("SSE2 is not supported on this platform.");
 
-        [GlobalSetup]
-        public unsafe void GlobalSetup()
-        {
-            if (!Sse2.IsSupported)
-                throw new Exception("SSE2 is not supported on this platform.");
+        if (!Avx2.IsSupported)
+            throw new Exception("AVX2 is not supported on this platform.");
 
-            if (!Avx2.IsSupported)
-                throw new Exception("AVX2 is not supported on this platform.");
+        var random = new Random();
 
-            var random = new Random();
+        var source = Enumerable
+            .Range(0, N)
+            .Select(i => random.NextInt64())
+            .ToArray();
 
-            var source = Enumerable
-                .Range(0, N)
-                .Select(i => random.NextInt64())
-                .ToArray();
+        var destination = Enumerable
+            .Range(0, N)
+            .Select(i => 0L)
+            .ToArray();
 
-            var destination = Enumerable
-                .Range(0, N)
-                .Select(i => 0L)
-                .ToArray();
+        ShuffleAvx2.DoShuffle(
+            _bytesOfType,
+            MemoryMarshal.AsBytes<long>(source),
+            MemoryMarshal.AsBytes<long>(destination));
 
-            ShuffleAvx2.DoShuffle(
-                _bytesOfType, 
-                MemoryMarshal.AsBytes<long>(source),
-                MemoryMarshal.AsBytes<long>(destination));
+        _shuffledData = destination;
 
-            _shuffledData = destination;
+        _unshuffledData = Enumerable
+            .Range(0, N)
+            .Select(i => 0L)
+            .ToArray();
+    }
 
-            _unshuffledData = Enumerable
-                .Range(0, N)
-                .Select(i => 0L)
-                .ToArray();
-        }
+    [Params(1, 100, 10_000, 1_000_000, 10_000_000)]
+    public int N;
 
-        [Params(1, 100, 10_000, 1_000_000, 10_000_000)]
-        public int N;
+    [Benchmark(Baseline = true)]
+    public Memory<long> Generic()
+    {
+        ShuffleGeneric.DoUnshuffle(
+            _bytesOfType,
+            MemoryMarshal.AsBytes<long>(_shuffledData),
+            MemoryMarshal.AsBytes<long>(_unshuffledData));
 
-        [Benchmark(Baseline = true)]
-        public Memory<long> Generic()
-        {
-            ShuffleGeneric.DoUnshuffle(
-                _bytesOfType,
-                MemoryMarshal.AsBytes<long>(_shuffledData), 
-                MemoryMarshal.AsBytes<long>(_unshuffledData));
+        return _unshuffledData;
+    }
 
-            return _unshuffledData;
-        }
+    [Benchmark]
+    public Memory<long> SSE2()
+    {
+        ShuffleSse2.DoUnshuffle(
+            _bytesOfType,
+            MemoryMarshal.AsBytes<long>(_shuffledData),
+            MemoryMarshal.AsBytes<long>(_unshuffledData));
 
-        [Benchmark]
-        public Memory<long> SSE2()
-        {
-            ShuffleSse2.DoUnshuffle(
-                _bytesOfType,
-                MemoryMarshal.AsBytes<long>(_shuffledData), 
-                MemoryMarshal.AsBytes<long>(_unshuffledData));
+        return _unshuffledData;
+    }
 
-            return _unshuffledData;
-        }
+    [Benchmark]
+    public Memory<long> AVX2()
+    {
+        ShuffleAvx2.DoUnshuffle(
+            _bytesOfType,
+            MemoryMarshal.AsBytes<long>(_shuffledData),
+            MemoryMarshal.AsBytes<long>(_unshuffledData));
 
-        [Benchmark]
-        public Memory<long> AVX2()
-        {
-            ShuffleAvx2.DoUnshuffle(
-                _bytesOfType,
-                MemoryMarshal.AsBytes<long>(_shuffledData), 
-                MemoryMarshal.AsBytes<long>(_unshuffledData));
-
-            return _unshuffledData;
-        }
+        return _unshuffledData;
     }
 }

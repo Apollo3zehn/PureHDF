@@ -1,10 +1,10 @@
 internal readonly record struct LinearIndexResult(
-    bool Success, 
-    ulong LinearIndex, 
+    bool Success,
+    ulong LinearIndex,
     ulong MaxCount);
 
 internal readonly record struct CoordinatesResult(
-    ulong[] Coordinates, 
+    ulong[] Coordinates,
     ulong MaxCount);
 
 internal enum SelectionType : uint

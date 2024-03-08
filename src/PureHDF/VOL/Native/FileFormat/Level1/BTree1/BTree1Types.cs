@@ -32,8 +32,8 @@ internal readonly record struct BTree1RawDataChunksKey(
 ) : IBTree1Key
 {
     public static BTree1RawDataChunksKey Decode(
-        H5DriverBase driver, 
-        byte rank, 
+        H5DriverBase driver,
+        byte rank,
         ulong[] rawChunkDims)
     {
         // H5Dbtree.c (H5D__btree_decode_key)

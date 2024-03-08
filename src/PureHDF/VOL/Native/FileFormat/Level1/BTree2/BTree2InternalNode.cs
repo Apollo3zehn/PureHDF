@@ -8,20 +8,20 @@ internal record class BTree2InternalNode<T>(
 ) : BTree2Node<T>(Records) where T : struct, IBTree2Record
 {
     public static BTree2InternalNode<T> Decode(
-        NativeReadContext context, 
-        BTree2Header<T> header, 
-        ulong recordCount, 
-        int nodeLevel, 
+        NativeReadContext context,
+        BTree2Header<T> header,
+        ulong recordCount,
+        int nodeLevel,
         Func<T> decodeKey)
     {
         var (driver, superblock) = context;
 
         Decode(
-            driver, 
-            header, 
-            recordCount, 
-            Signature, 
-            decodeKey, 
+            driver,
+            header,
+            recordCount,
+            Signature,
+            decodeKey,
             out var version,
             out var records
         );
@@ -52,8 +52,8 @@ internal record class BTree2InternalNode<T>(
             }
 
             nodePointers[i] = new BTree2NodePointer(
-                address, 
-                childRecordCount, 
+                address,
+                childRecordCount,
                 totalRecordCount);
         }
 

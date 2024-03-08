@@ -11,7 +11,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddDataspaceScalar(fileId, ContainerType.Dataset));
 
             var expected = -1.2234234e-3;
@@ -32,7 +32,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddDataspaceNull(fileId, ContainerType.Dataset));
 
             // Act
@@ -44,5 +44,5 @@ public partial class DatasetTests
             // Assert
             Assert.Throws<TargetInvocationException>(action);
         });
-    }   
+    }
 }

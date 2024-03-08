@@ -11,7 +11,7 @@ internal partial record class AttributeMessage
 
     public static AttributeMessage Create(
         NativeWriteContext context,
-        string name, 
+        string name,
         object attribute)
     {
         var data = attribute is H5Attribute h5Attribute
@@ -28,25 +28,25 @@ internal partial record class AttributeMessage
 
     private static AttributeMessage InternalCreate<T, TElement>(
         NativeWriteContext context,
-        string name, 
+        string name,
         object attribute,
         object data,
         bool isScalar)
     {
-        var (memoryData, memoryDims) 
+        var (memoryData, memoryDims)
             = WriteUtils.ToMemory<T, TElement>(data ?? throw new Exception("This should never happen."));
 
         var type = memoryData.GetType();
 
         /* datatype */
-        var (datatype, encode) = 
+        var (datatype, encode) =
             DatatypeMessage.Create(context, memoryData, isScalar);
 
         /* dataspace */
         var dataspace = attribute is H5Attribute h5Attribute
 
             ? DataspaceMessage.Create(
-                fileDims: h5Attribute.Dimensions ?? memoryDims 
+                fileDims: h5Attribute.Dimensions ?? memoryDims
                     ?? throw new Exception("This should never happen."))
 
             : DataspaceMessage.Create(
@@ -77,7 +77,7 @@ internal partial record class AttributeMessage
             Datatype: datatype,
             Dataspace: dataspace,
             InputData: default,
-            EncodeData: driver => 
+            EncodeData: driver =>
             {
                 encode(memoryData, localWriter);
                 driver.Write(buffer);
@@ -89,7 +89,7 @@ internal partial record class AttributeMessage
 
         return attributeMessage;
     }
-    
+
     public override ushort GetEncodeSize()
     {
         if (Version != 3)

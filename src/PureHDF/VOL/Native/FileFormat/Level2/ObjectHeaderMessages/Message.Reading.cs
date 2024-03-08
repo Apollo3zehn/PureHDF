@@ -5,7 +5,7 @@ internal abstract partial record class Message
     public static T Decode<T>(
         NativeReadContext context,
         ulong address,
-        MessageFlags messageFlags, 
+        MessageFlags messageFlags,
         Func<T> decode) where T : Message
     {
         // H5OShared.h (H5O_SHARED_DECODE)

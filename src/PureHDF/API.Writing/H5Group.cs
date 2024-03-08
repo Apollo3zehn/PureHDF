@@ -11,8 +11,8 @@ public class H5Group : H5AttributableObject, IDictionary<string, object>
     private readonly IDictionary<string, object> _objects = new Dictionary<string, object>();
 
     /// <inheritdoc />
-    public object this[string key] 
-    { 
+    public object this[string key]
+    {
         get => _objects[key];
         set => _objects[key] = value;
     }

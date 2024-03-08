@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal record class BogusMessage(
-    //
+//
 ) : Message
 {
     private uint _bogusValue;

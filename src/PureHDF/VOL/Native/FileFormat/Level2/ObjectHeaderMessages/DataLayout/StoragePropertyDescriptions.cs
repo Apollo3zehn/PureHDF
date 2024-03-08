@@ -1,7 +1,7 @@
 ﻿namespace PureHDF.VOL.Native;
 
 internal abstract record class StoragePropertyDescription(
-    //
+//
 )
 {
     public required ulong Address { get; set; }

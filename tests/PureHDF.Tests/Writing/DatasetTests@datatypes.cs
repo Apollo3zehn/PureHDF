@@ -53,15 +53,15 @@ public partial class DatasetTests
 
             var suffix = type switch
             {
-                Type when 
+                Type when
                     type == typeof(bool)
                     => $"_{data}",
 
-                Type when 
-                    typeof(IDictionary).IsAssignableFrom(type) 
+                Type when
+                    typeof(IDictionary).IsAssignableFrom(type)
                     => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
 
-                Type when type != 
+                Type when type !=
                     typeof(string) &&
                     typeof(IEnumerable).IsAssignableFrom(type) &&
                     !type.IsArray
@@ -85,7 +85,7 @@ public partial class DatasetTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -126,7 +126,7 @@ public partial class DatasetTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -181,7 +181,7 @@ public partial class DatasetTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -196,7 +196,8 @@ public partial class DatasetTests
             Numerical = 1,
             Boolean = true,
             Enum = FileAccess.Read,
-            Anonymous = new {
+            Anonymous = new
+            {
                 A = 1,
                 B = 9.81
             }
@@ -422,7 +423,7 @@ public partial class DatasetTests
         }};
 
         var type = data.GetType();
-        
+
         var file = new H5File
         {
             [type.Name] = data
@@ -441,7 +442,7 @@ public partial class DatasetTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 }

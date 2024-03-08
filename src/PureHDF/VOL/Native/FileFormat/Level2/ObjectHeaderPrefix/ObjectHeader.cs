@@ -9,7 +9,8 @@ internal abstract record class ObjectHeader(
 
     public ObjectType ObjectType
     {
-        get {
+        get
+        {
             if (_objectType == ObjectType.Undefined)
                 _objectType = DetermineObjectType(HeaderMessages);
 
@@ -107,8 +108,8 @@ internal abstract record class ObjectHeader(
                 var moreHeaderMessages = ReadHeaderMessages(
                     context,
                     objectHeaderAddress,
-                    continuationMessage.Length, 
-                    version, 
+                    continuationMessage.Length,
+                    version,
                     withCreationOrder: false);
 
                 headerMessages.AddRange(moreHeaderMessages);
@@ -116,10 +117,10 @@ internal abstract record class ObjectHeader(
             else if (version == 2)
             {
                 var continuationBlock = ObjectHeaderContinuationBlock2.Decode(
-                    context, 
+                    context,
                     objectHeaderAddress,
-                    continuationMessage.Length, 
-                    version, 
+                    continuationMessage.Length,
+                    version,
                     withCreationOrder);
 
                 headerMessages.AddRange(continuationBlock.HeaderMessages);

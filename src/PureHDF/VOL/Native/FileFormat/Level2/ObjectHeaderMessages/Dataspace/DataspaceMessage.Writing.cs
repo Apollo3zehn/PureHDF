@@ -52,7 +52,7 @@ internal partial record class DataspaceMessage
                     ? sizeof(ulong) * Rank
                     : 0
             );
-            
+
         return (ushort)size;
     }
 

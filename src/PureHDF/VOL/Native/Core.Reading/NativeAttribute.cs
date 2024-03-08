@@ -68,7 +68,7 @@ internal class NativeAttribute : IH5Attribute
         var method = _methodInfoReadCore.MakeGenericMethod(typeof(T), elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        var result = (T)method.Invoke(this, new object?[] 
+        var result = (T)method.Invoke(this, new object?[]
         {
             default /* buffer */,
             source,
@@ -88,7 +88,7 @@ internal class NativeAttribute : IH5Attribute
         var method = _methodInfoReadCore.MakeGenericMethod(typeof(T), elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        method.Invoke(this, new object?[] 
+        method.Invoke(this, new object?[]
         {
             buffer,
             source,

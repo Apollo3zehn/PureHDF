@@ -79,7 +79,7 @@ internal class SlotStream : IH5ReadStream
         return _stream;
     }
 
-#region IDisposable
+    #region IDisposable
 
     private bool _disposedValue;
 
@@ -98,7 +98,7 @@ internal class SlotStream : IH5ReadStream
         GC.SuppressFinalize(this);
     }
 
-#endregion
+    #endregion
 
 }
 

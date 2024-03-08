@@ -52,8 +52,8 @@ internal static class DataUtils
 
     public static bool IsMemory(Type type)
     {
-        return 
-            type.IsGenericType && 
+        return
+            type.IsGenericType &&
             typeof(Memory<>).Equals(type.GetGenericTypeDefinition());
     }
 

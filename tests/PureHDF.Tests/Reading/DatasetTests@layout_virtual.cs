@@ -11,7 +11,7 @@ public partial class DatasetTests
     public void CanRead_Virtual()
     {
         // Arrange
-        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddVirtualDataset(fileId, "virtual"));
 
         var expected = new int[] { 2, 3, 17, 8, 21, 25, -1, -1 };
@@ -73,8 +73,8 @@ public partial class DatasetTests
         }
         /* end fix */
 
-        var expected = new int[] 
-        { 
+        var expected = new int[]
+        {
             13, 24, 35, 119, 94, 80, 54, 53, 59, 91
         };
 
@@ -91,11 +91,11 @@ public partial class DatasetTests
     public void CanRead_Virtual_source_irregular()
     {
         // Arrange
-        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddVirtualDataset_source_irregular(fileId, "virtual"));
 
-        var expected = new int[] 
-        { 
+        var expected = new int[]
+        {
             13, 14, 15,
             23, 24, 25,
             33, 34, 35,
@@ -104,7 +104,7 @@ public partial class DatasetTests
             61, 62, 63, 64, 65, 66, 67,
             71, 72, 73, 74, 75, 76, 77,
             81, 82, 83, 85, 86, 87,
-            
+
             93, 94, 95,
             103, 104, 105,
             113, 114, 115,
@@ -123,7 +123,7 @@ public partial class DatasetTests
     public void CanRead_Virtual_source_regular()
     {
         // Arrange
-        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId 
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddVirtualDataset_source_regular(fileId, "virtual"));
 
         var expected = new int[90];
@@ -199,8 +199,8 @@ public partial class DatasetTests
 
         var expected = new int[130];
 
-        var hasValue = new int[] 
-        { 
+        var hasValue = new int[]
+        {
             13, 24, 35, 119, 94, 80, 54, 53, 59, 91
         };
 
@@ -227,8 +227,8 @@ public partial class DatasetTests
 
         var expected = new int[130];
 
-        var hasValue = new int[] 
-        { 
+        var hasValue = new int[]
+        {
             13, 14, 15,
             23, 24, 25,
             33, 34, 35,
@@ -237,7 +237,7 @@ public partial class DatasetTests
             61, 62, 63, 64, 65, 66, 67,
             71, 72, 73, 74, 75, 76, 77,
             81, 82, 83, 85, 86, 87,
-            
+
             93, 94, 95,
             103, 104, 105,
             113, 114, 115,

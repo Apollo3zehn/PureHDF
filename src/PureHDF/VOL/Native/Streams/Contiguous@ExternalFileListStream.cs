@@ -102,7 +102,7 @@ internal class ExternalFileListStream : IH5ReadStream
         }
     }
 
-#region IDisposable
+    #region IDisposable
 
     private bool _disposedValue;
 
@@ -125,5 +125,5 @@ internal class ExternalFileListStream : IH5ReadStream
         GC.SuppressFinalize(this);
     }
 
-#endregion
+    #endregion
 }

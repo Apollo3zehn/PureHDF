@@ -61,7 +61,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddTiny(fileId, ContainerType.Attribute));
 
             // Act
@@ -81,7 +81,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddHuge(fileId, ContainerType.Attribute, version));
 
             // Act
@@ -101,7 +101,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddMass(fileId, ContainerType.Attribute));
             var expectedCount = 1000;
 
