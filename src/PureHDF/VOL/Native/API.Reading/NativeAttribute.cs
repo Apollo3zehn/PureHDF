@@ -5,7 +5,7 @@ namespace PureHDF.VOL.Native;
 /// <summary>
 /// A native HDF5 attribute.
 /// </summary>
-internal class NativeAttribute : IH5Attribute
+public class NativeAttribute : IH5Attribute
 {
     #region Fields
 
@@ -36,8 +36,10 @@ internal class NativeAttribute : IH5Attribute
 
     #region Properties
 
+    /// <inheritdoc />
     public string Name => Message.Name;
 
+    /// <inheritdoc />
     public IH5Dataspace Space
     {
         get
@@ -48,6 +50,7 @@ internal class NativeAttribute : IH5Attribute
         }
     }
 
+    /// <inheritdoc />
     public IH5DataType Type
     {
         get
@@ -66,6 +69,7 @@ internal class NativeAttribute : IH5Attribute
 
     #region Methods
 
+    /// <inheritdoc />
     public T Read<T>(
         ulong[]? memoryDims = null)
     {
@@ -85,6 +89,7 @@ internal class NativeAttribute : IH5Attribute
         return result;
     }
 
+    /// <inheritdoc />
     public void Read<T>(
         T buffer,
         ulong[]? memoryDims = null)
@@ -109,6 +114,12 @@ internal class NativeAttribute : IH5Attribute
      * argument issue.
      */
 
+    /// <summary>
+    /// Reads the data into the provided buffer.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="buffer">The buffer to read the data into.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     public void Read<T>(
         Span<T> buffer,
         ulong[]? memoryDims = null)
