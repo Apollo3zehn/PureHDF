@@ -7,10 +7,10 @@ internal abstract record class BTree2Node<T>(
     private byte _version;
 
     public static void Decode(
-        H5DriverBase driver, 
-        BTree2Header<T> header, 
-        ulong recordCount, 
-        byte[] signature, 
+        H5DriverBase driver,
+        BTree2Header<T> header,
+        ulong recordCount,
+        byte[] signature,
         Func<T> decodeKey,
         out byte version,
         out T[] records)

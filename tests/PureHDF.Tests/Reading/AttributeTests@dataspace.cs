@@ -11,7 +11,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddDataspaceScalar(fileId, ContainerType.Attribute));
 
             var expected = -1.2234234e-3;
@@ -32,7 +32,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddDataspaceNull(fileId, ContainerType.Attribute));
 
             // Act

@@ -13,12 +13,12 @@ internal class H5D_Virtual<TResult> : H5D_Base
     #region Constructors
 
     public H5D_Virtual(
-        NativeReadContext readContext, 
+        NativeReadContext readContext,
         NativeWriteContext writeContext,
-        DatasetInfo dataset, 
+        DatasetInfo dataset,
         H5DatasetAccess datasetAccess,
         TResult? fillValue,
-        ReadVirtualDelegate<TResult> readVirtualDelegate) 
+        ReadVirtualDelegate<TResult> readVirtualDelegate)
         : base(readContext, writeContext, dataset, datasetAccess)
     {
         _fillValue = fillValue;
@@ -59,11 +59,11 @@ internal class H5D_Virtual<TResult> : H5D_Base
         return Dataset.Space.Dimensions;
     }
 
-    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices)
     {
         IH5ReadStream stream = new VirtualDatasetStream<TResult>(
             ReadContext.File,
-            _block.VdsDatasetEntries, 
+            _block.VdsDatasetEntries,
             dimensions: Dataset.Space.Dimensions,
             fillValue: _fillValue,
             DatasetAccess,

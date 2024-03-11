@@ -18,7 +18,7 @@ internal static class WriteUtils
 
         Span<ulong> valueArray = stackalloc ulong[] { value };
         var valueBytes = MemoryMarshal.AsBytes(valueArray);
-        
+
         driver.Write(valueBytes[0..(int)size]);
     }
 
@@ -92,7 +92,7 @@ internal static class WriteUtils
     private static (Memory<T>, ulong[]) ElementToMemory<T>(T data)
     {
         var memory = new T[] { data }.AsMemory();
-        
+
         return (
             memory,
             Array.Empty<ulong>()
@@ -103,7 +103,7 @@ internal static class WriteUtils
     private static (Memory<T>, ulong[]) EnumerableToMemory<T>(IEnumerable<T> data)
     {
         var memory = data.ToArray().AsMemory();
-        
+
         return (
             memory,
             new ulong[] { (ulong)memory.Length }

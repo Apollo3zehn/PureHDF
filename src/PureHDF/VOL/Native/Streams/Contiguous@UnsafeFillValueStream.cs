@@ -17,18 +17,18 @@ internal class UnsafeFillValueStream : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public unsafe void ReadDataset(Memory<byte> buffer)
+    public unsafe void ReadDataset(Span<byte> buffer)
     {
         if (_fillValue is null)
         {
-            buffer.Span.Clear();
+            buffer.Clear();
         }
 
         else
         {
             unsafe
             {
-                fixed (byte* ptrSrc = _fillValue, ptrDst = buffer.Span)
+                fixed (byte* ptrSrc = _fillValue, ptrDst = buffer)
                 {
                     for (int i = 0; i < buffer.Length; i++)
                     {

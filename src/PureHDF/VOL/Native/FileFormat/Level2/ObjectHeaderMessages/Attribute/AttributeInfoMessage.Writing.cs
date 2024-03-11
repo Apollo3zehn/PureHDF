@@ -4,7 +4,7 @@ internal partial record class AttributeInfoMessage
 {
     public override ushort GetEncodeSize()
     {
-        var size = 
+        var size =
             sizeof(byte) +
             sizeof(byte) +
             (

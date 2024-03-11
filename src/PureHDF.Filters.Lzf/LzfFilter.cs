@@ -45,7 +45,7 @@ public class LzfFilter : IH5Filter
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
 
-            if ((info.Parameters.Length >= 3) && (info.Parameters[2] !=0 ))
+            if ((info.Parameters.Length >= 3) && (info.Parameters[2] != 0))
                 targetSize = info.Parameters[2];   /* Precomputed buffer guess */
 
             else
@@ -63,7 +63,7 @@ public class LzfFilter : IH5Filter
                 else
                     return buffer.Slice(0, (int)status);
             }
-            
+
             throw new Exception("This should never happen.");
         }
 
@@ -95,7 +95,7 @@ public class LzfFilter : IH5Filter
 
         var chunkSize = typeSize * chunkDimensions
             .Aggregate(1U, (product, dimension) => product * dimension);
-        
+
         parameters[2] = chunkSize;
 
         return parameters;
@@ -117,16 +117,16 @@ public class LzfFilter : IH5Filter
 
         try
         {
-            fixed (byte* 
+            fixed (byte*
                 _ip = input,
                 _op = output)
             {
-                byte **hslot;
+                byte** hslot;
                 byte* ip = _ip;
                 byte* op = _op;
-                byte* in_end  = ip + input.Length;
+                byte* in_end = ip + input.Length;
                 byte* out_end = op + output.Length;
-                byte *@ref;
+                byte* @ref;
 
                 ulong off;
                 uint hval;
@@ -137,7 +137,7 @@ public class LzfFilter : IH5Filter
 
                 lit = 0; op++;
 
-                hval = FRST (ip);
+                hval = FRST(ip);
                 while (ip < in_end - 2)
                 {
                     hval = NEXT(hval, ip);
@@ -158,7 +158,7 @@ public class LzfFilter : IH5Filter
                         // #else
                         && *(ushort*)@ref == *(ushort*)ip
                         && @ref[2] == ip[2]
-                        // #endif
+                    // #endif
                     )
                     {
                         /* match found at *@ref++ */
@@ -302,7 +302,7 @@ public class LzfFilter : IH5Filter
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe uint IDX(uint h)
     {
-        return (((h ^ (h << 5)) >> (3*8 - HLOG)) - h*5) & (HSIZE - 1);
+        return (((h ^ (h << 5)) >> (3 * 8 - HLOG)) - h * 5) & (HSIZE - 1);
     }
 
     // https://github.com/h5py/h5py/blob/3.9.0/lzf/lzf/lzf_d.c
@@ -314,7 +314,7 @@ public class LzfFilter : IH5Filter
         {
             byte* ip = _ip;
             byte* op = _op;
-            byte* in_end  = ip + input.Length;
+            byte* in_end = ip + input.Length;
             byte* out_end = op + output.Length;
 
             do

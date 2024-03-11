@@ -3,13 +3,13 @@ namespace PureHDF.VOL.Hsds;
 internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
 {
     // this constructor is only for the derived InternalHsdsConnector class
-    public HsdsAttributableObject(HsdsNamedReference reference) 
+    public HsdsAttributableObject(HsdsNamedReference reference)
         : base(reference)
     {
         Connector = (InternalHsdsConnector)this;
     }
 
-    public HsdsAttributableObject(InternalHsdsConnector connector, HsdsNamedReference reference) 
+    public HsdsAttributableObject(InternalHsdsConnector connector, HsdsNamedReference reference)
         : base(reference)
     {
         Connector = connector;
@@ -74,7 +74,7 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
             ? await Connector.Client.Attribute
                 .GetAttributeAsync(Connector.DomainName, collection, Id, name, cancellationToken: cancellationToken)
                 .ConfigureAwait(false)
-                
+
             : Connector.Client.Attribute
                 .GetAttribute(Connector.DomainName, collection, Id, name);
 
@@ -96,7 +96,7 @@ internal class HsdsAttributableObject : HsdsObject, IH5AttributableObject
             ? await Connector.Client.Attribute
                 .GetAttributesAsync(collection, Id, Connector.DomainName, cancellationToken: cancellationToken)
                 .ConfigureAwait(false)
-                
+
             : Connector.Client.Attribute
                 .GetAttributes(collection, Id, Connector.DomainName);
 

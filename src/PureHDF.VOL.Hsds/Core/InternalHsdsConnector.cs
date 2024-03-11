@@ -3,7 +3,7 @@ using Hsds.Api;
 namespace PureHDF.VOL.Hsds;
 
 internal class InternalHsdsConnector : HsdsGroup, IHsdsConnector
-{   
+{
     public InternalHsdsConnector(HsdsClient client, HsdsNamedReference reference, string domainName) : base(reference)
     {
         Client = client;

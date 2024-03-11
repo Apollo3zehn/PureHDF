@@ -3,8 +3,8 @@
 internal record class SharedMessage(
     SharedMessageLocation Type,
     ulong Address
-    // TODO: implement this
-    // FractalHeapId FractalHeapId
+// TODO: implement this
+// FractalHeapId FractalHeapId
 )
 {
     private byte _version;

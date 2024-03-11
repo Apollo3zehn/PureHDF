@@ -11,7 +11,7 @@ internal static class ScaleOffsetGeneric
     #region Decompression
 
     public static Memory<byte> Decompress(
-        Memory<byte> data, 
+        Memory<byte> data,
         uint[] parametersBuffer)
     {
         // H5Zscaleoffset.c (H5Z__filter_scaleoffset)
@@ -129,8 +129,8 @@ internal static class ScaleOffsetGeneric
 
     private static void DecompressAll(
         Span<byte> output,
-        Span<byte> input, 
-        Parameters parameters, 
+        Span<byte> input,
+        Parameters parameters,
         uint minbits)
     {
         /* j: index of buffer,
@@ -238,9 +238,9 @@ internal static class ScaleOffsetGeneric
     #region Postdecompression
 
     private static unsafe void PostdecompressByte(
-        Span<byte> output, 
-        Parameters parameters, 
-        uint minbits, 
+        Span<byte> output,
+        Parameters parameters,
+        uint minbits,
         byte[] minvalRaw)
     {
         byte minval = minvalRaw[0];
@@ -268,8 +268,8 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressSByte(
-        Span<sbyte> output, 
-        Parameters parameters, 
+        Span<sbyte> output,
+        Parameters parameters,
         uint minbits,
         byte[] minvalRaw)
     {
@@ -298,18 +298,18 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressInteger<T>(
-        Span<T> output, 
-        Parameters parameters, 
-        uint minbits, 
+        Span<T> output,
+        Parameters parameters,
+        uint minbits,
         byte[] minvalRaw)
         where T : struct
     {
-        T minval = MemoryMarshal.Cast<byte, T>(minvalRaw)[0];
-        T maxval = MemoryMarshal.Cast<byte, T>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
+        var minval = MemoryMarshal.Cast<byte, T>(minvalRaw)[0];
+        var maxval = MemoryMarshal.Cast<byte, T>(BitConverter.GetBytes((1UL << (int)minbits) - 1UL))[0];
 
         if (parameters.FillValueDefined == FillValueDefined.Defined)
         {
-            T filval = GetFillValue<T>(new Span<uint>(parameters.FillValue, 12));
+            var filval = GetFillValue<T>(new Span<uint>(parameters.FillValue, 12));
 
             for (int i = 0; i < output.Length; i++)
             {
@@ -329,9 +329,9 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressFloat32(
-        Span<float> output, 
-        Parameters parameters, 
-        uint minbits, 
+        Span<float> output,
+        Parameters parameters,
+        uint minbits,
         byte[] minvalRaw)
     {
         var minval = MemoryMarshal.Cast<byte, float>(minvalRaw)[0];
@@ -365,9 +365,9 @@ internal static class ScaleOffsetGeneric
     }
 
     private static unsafe void PostdecompressFloat64(
-        Span<double> output, 
-        Parameters parameters, 
-        uint minbits, 
+        Span<double> output,
+        Parameters parameters,
+        uint minbits,
         byte[] minvalRaw)
     {
         var minval = MemoryMarshal.Cast<byte, double>(minvalRaw)[0];

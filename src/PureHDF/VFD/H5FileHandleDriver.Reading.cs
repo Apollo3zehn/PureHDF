@@ -39,7 +39,7 @@ internal partial class H5FileHandleDriver : H5DriverBase
         }
     }
 
-    public override void ReadDataset(Memory<byte> buffer)
+    public override void ReadDataset(Span<byte> buffer)
     {
         ReadCore(buffer);
     }
@@ -83,9 +83,9 @@ internal partial class H5FileHandleDriver : H5DriverBase
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReadCore(Memory<byte> buffer)
+    private void ReadCore(Span<byte> buffer)
     {
-        var count = RandomAccess.Read(_handle, buffer.Span, Position);
+        var count = RandomAccess.Read(_handle, buffer, Position);
 
         if (count != buffer.Length)
             throw new Exception("The file is too small");

@@ -38,7 +38,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
     {
         return LinkExists(path, default);
     }
-    
+
     /// <inheritdoc />
     public Task<bool> LinkExistsAsync(string path, CancellationToken cancellationToken = default)
     {
@@ -499,7 +499,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
             {
                 return 1;
             }
-            
+
             else
             {
                 // TODO: duplicate3_of_3
@@ -560,9 +560,9 @@ public class NativeGroup : NativeAttributableObject, IH5Group
             ObjectHeaderScratchPad objectScratch => AddScratchPad(reference, objectScratch),
 
             SymbolicLinkScratchPad linkScratch => new SymbolicLink(
-                name, 
-                heap.GetObjectName(linkScratch.LinkValueOffset), 
-                this, 
+                name,
+                heap.GetObjectName(linkScratch.LinkValueOffset),
+                this,
                 Context.File).GetTarget(linkAccess),
 
             _ when !Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
@@ -660,7 +660,7 @@ public class NativeGroup : NativeAttributableObject, IH5Group
         userData = new BTree1SymbolTableUserData(
             SymbolTableEntry: symbolTableNode.GroupEntries[(int)index]
         );
-        
+
         return true;
     }
 

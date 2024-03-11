@@ -15,7 +15,7 @@ internal record class H5S_SEL_ALL(
         driver.ReadBytes(8);
 
         return new H5S_SEL_ALL(
-            //
+        //
         )
         {
             Version = version

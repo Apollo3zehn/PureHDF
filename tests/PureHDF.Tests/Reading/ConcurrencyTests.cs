@@ -5,76 +5,75 @@ using HDF.PInvoke;
 using PureHDF.Selections;
 using Xunit;
 
-namespace PureHDF.Tests.Reading
+namespace PureHDF.Tests.Reading;
+
+public class ConcurrencyTests
 {
-    public class ConcurrencyTests
+    [Fact]
+    public void CanReadDatasetParallel_File_Threads()
     {
-        [Fact]
-        public void CanReadDatasetParallel_File_Threads()
+        // Arrange
+        var version = H5F.libver_t.LATEST;
+        var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Huge);
+
+        // Act
+        using var root = NativeFile.InternalOpen(
+            filePath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            deleteOnClose: true);
+
+        var parent = root.Group("chunked");
+        var dataset = parent.Dataset("chunked_huge");
+
+        const int CHUNK_SIZE = 1_000_000;
+
+        Parallel.For(0, 10, i =>
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Huge);
+            var fileSelection = new HyperslabSelection(
+                start: (uint)i * CHUNK_SIZE,
+                block: CHUNK_SIZE
+            );
 
-            // Act
-            using var root = NativeFile.InternalOpen(
-                filePath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                deleteOnClose: true);
+            var actual = dataset.Read<int[]>(fileSelection);
 
-            var parent = root.Group("chunked");
-            var dataset = parent.Dataset("chunked_huge");
+            // Assert
+            var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
+            Assert.True(actual.SequenceEqual(slicedData));
+        });
+    }
 
-            const int CHUNK_SIZE = 1_000_000;
+    [Fact]
+    public void CanReadDatasetParallel_MMF_Threads()
+    {
+        // Arrange
+        var version = H5F.libver_t.LATEST;
+        var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Huge);
 
-            Parallel.For(0, 10, i =>
-            {
-                var fileSelection = new HyperslabSelection(
-                    start: (uint)i * CHUNK_SIZE,
-                    block: CHUNK_SIZE
-                );
+        // Act
+        using var mmf = MemoryMappedFile.CreateFromFile(filePath);
+        using var accessor = mmf.CreateViewAccessor();
+        using var root = H5File.Open(accessor);
 
-                var actual = dataset.Read<int[]>(fileSelection);
+        var parent = root.Group("chunked");
+        var dataset = parent.Dataset("chunked_huge");
 
-                // Assert
-                var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
-                Assert.True(actual.SequenceEqual(slicedData));
-            });
-        }
+        const int CHUNK_SIZE = 1_000_000;
 
-        [Fact]
-        public void CanReadDatasetParallel_MMF_Threads()
+        Parallel.For(0, 10, i =>
         {
-            // Arrange
-            var version = H5F.libver_t.LATEST;
-            var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Huge);
+            var fileSelection = new HyperslabSelection(
+                start: (uint)i * CHUNK_SIZE,
+                block: CHUNK_SIZE
+            );
 
-            // Act
-            using var mmf = MemoryMappedFile.CreateFromFile(filePath);
-            using var accessor = mmf.CreateViewAccessor();
-            using var root = H5File.Open(accessor);
+            var actual = dataset.Read<int[]>(fileSelection);
 
-            var parent = root.Group("chunked");
-            var dataset = parent.Dataset("chunked_huge");
-
-            const int CHUNK_SIZE = 1_000_000;
-
-            Parallel.For(0, 10, i =>
-            {
-                var fileSelection = new HyperslabSelection(
-                    start: (uint)i * CHUNK_SIZE,
-                    block: CHUNK_SIZE
-                );
-
-                var actual = dataset.Read<int[]>(fileSelection);
-
-                // Assert
-                var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
-                Assert.True(actual.SequenceEqual(slicedData));
-            });
-        }
+            // Assert
+            var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
+            Assert.True(actual.SequenceEqual(slicedData));
+        });
     }
 }
 

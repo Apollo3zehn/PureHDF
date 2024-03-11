@@ -10,8 +10,8 @@ internal record class HugeObjectsFractalHeapIdSubType1(
 ) : FractalHeapId
 {
     internal static HugeObjectsFractalHeapIdSubType1 Decode(
-        NativeReadContext context, 
-        H5DriverBase localDriver, 
+        NativeReadContext context,
+        H5DriverBase localDriver,
         FractalHeapHeader header)
     {
         return new HugeObjectsFractalHeapIdSubType1(
@@ -22,7 +22,7 @@ internal record class HugeObjectsFractalHeapIdSubType1(
     }
 
     public override T Read<T>(
-        Func<H5DriverBase, T> func, 
+        Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache)
     {
         var driver = Context.Driver;

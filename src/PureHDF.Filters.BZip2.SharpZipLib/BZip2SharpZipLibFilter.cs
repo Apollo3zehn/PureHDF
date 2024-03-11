@@ -76,13 +76,13 @@ public class BZip2SharpZipLibFilter : IH5Filter
         if (blockSize < 1 || blockSize > 9)
             throw new Exception("The block size must be in the range of 1..9.");
 
-        return new uint[] { (uint)blockSize };
+        return [(uint)blockSize];
     }
 
     private static int GetBlockSizeValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(BLOCK_SIZE, out var objectValue))
         {
             if (objectValue is int value)

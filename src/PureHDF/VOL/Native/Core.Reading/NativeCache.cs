@@ -24,7 +24,7 @@ internal static class NativeCache
 
 
         // file map
-        if (_fileMap.TryGetValue(driver, out Dictionary<string, NativeFile>? value))
+        if (_fileMap.TryGetValue(driver, out var value))
         {
             var pathToNativeFileMap = value;
 
@@ -44,7 +44,7 @@ internal static class NativeCache
     private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
     public static GlobalHeapCollection GetGlobalHeapObject(
-        NativeReadContext context, 
+        NativeReadContext context,
         ulong address,
         bool restoreAddress = false)
     {

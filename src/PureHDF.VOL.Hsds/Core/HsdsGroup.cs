@@ -5,7 +5,7 @@ namespace PureHDF.VOL.Hsds;
 internal class HsdsGroup : HsdsAttributableObject, IH5Group
 {
     // this constructor is only for the derived InternalHsdsConnector class
-    public HsdsGroup(HsdsNamedReference reference) 
+    public HsdsGroup(HsdsNamedReference reference)
         : base(reference)
     {
         //

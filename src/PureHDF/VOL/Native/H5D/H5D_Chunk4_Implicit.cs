@@ -4,9 +4,9 @@ internal class H5D_Chunk4_Implicit : H5D_Chunk4
 {
     public H5D_Chunk4_Implicit(
         NativeReadContext readContext,
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage4 layout, 
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation) :
         base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)

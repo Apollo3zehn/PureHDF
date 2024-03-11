@@ -117,9 +117,9 @@ public class Blosc2Filter : IH5Filter
                 fixed (byte* destPtr = buffer.Span)
                 {
                     var status = Blosc.blosc2_decompress(
-                        src: new IntPtr(srcPtr), 
-                        srcsize: info.Buffer.Length, 
-                        dest: new IntPtr(destPtr), 
+                        src: new IntPtr(srcPtr),
+                        srcsize: info.Buffer.Length,
+                        dest: new IntPtr(destPtr),
                         destsize: buffer.Length);
 
                     /* decompression failed */
@@ -139,8 +139,8 @@ public class Blosc2Filter : IH5Filter
                 fixed (byte* destPtr = buffer.Span)
                 {
                     var status = Blosc.blosc2_compress(
-                        clevel, doshuffle, typesize, 
-                        new IntPtr(srcPtr), info.Buffer.Length, 
+                        clevel, doshuffle, typesize,
+                        new IntPtr(srcPtr), info.Buffer.Length,
                         new IntPtr(destPtr), buffer.Length);
 
                     if (status < 0)
@@ -166,7 +166,7 @@ public class Blosc2Filter : IH5Filter
         /* Limit large typesizes (they are pretty expensive to shuffle
         and, in addition, Blosc does not handle typesizes larger than
         256 bytes). */
-        if (typeSize > 256) 
+        if (typeSize > 256)
             typeSize = 1;
 
         parameters[2] = typeSize;
@@ -203,7 +203,7 @@ public class Blosc2Filter : IH5Filter
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
         {
             if (objectValue is int value)
@@ -222,7 +222,7 @@ public class Blosc2Filter : IH5Filter
     private static Blosc2ShuffleMode GetShuffleValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(SHUFFLE, out var objectValue))
         {
             if (objectValue is Blosc2ShuffleMode value)
@@ -241,13 +241,13 @@ public class Blosc2Filter : IH5Filter
     private static int GetCompressorCode(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(SHUFFLE, out var objectValue))
         {
             if (objectValue is string value)
             {
                 var code = Blosc.blosc2_compname_to_compcode(value);
-                
+
                 if (code == 1)
                 {
                     var compressorsPtr = Blosc.blosc2_list_compressors();

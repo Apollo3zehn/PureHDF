@@ -6,9 +6,9 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
     public H5D_Chunk4_FixedArray(
         NativeReadContext readContext,
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage4 layout, 
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation) :
         base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)
@@ -109,7 +109,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
                 var dataBlock = new FixedArrayDataBlock<FilteredDataBlockElement>(
                     ClientID: ClientID.FilteredDatasetChunks,
-                    HeaderAddress: Chunked4.Address, 
+                    HeaderAddress: Chunked4.Address,
                     PageBitmap: Array.Empty<byte>(),
                     Elements: elements,
                     ElementsPerPage: default,
@@ -142,7 +142,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 WriteContext.Driver.Seek(dataBlockAddress, SeekOrigin.Begin);
 
                 dataBlock.Encode(
-                    driver: WriteContext.Driver, 
+                    driver: WriteContext.Driver,
                     encode: (driver, element) =>
                 {
                     // Address

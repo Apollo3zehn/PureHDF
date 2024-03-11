@@ -16,7 +16,7 @@ public class HyperslabSelection : Selection
     /// <param name="start">The start coordinate of the block.</param>
     /// <param name="block">The block size.</param>
     public HyperslabSelection(ulong start, ulong block)
-        : this(rank: 1, new ulong[] { start }, new ulong[] { block })
+        : this(rank: 1, [start], [block])
     {
         //
     }
@@ -29,7 +29,7 @@ public class HyperslabSelection : Selection
     /// <param name="count">The number of blocks to select.</param>
     /// <param name="block">The block size.</param>
     public HyperslabSelection(ulong start, ulong stride, ulong count, ulong block)
-        : this(rank: 1, new ulong[] { start }, new ulong[] { stride }, new ulong[] { count }, new ulong[] { block })
+        : this(rank: 1, [start], [stride], [count], [block])
     {
         //
     }
@@ -163,7 +163,7 @@ public class HyperslabSelection : Selection
             offsets
                 .AsSpan()
                 .CopyTo(step.Coordinates);
-                
+
             step = step with { ElementCount = totalLength };
 
             yield return step;

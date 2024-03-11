@@ -67,27 +67,13 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     /// <inheritdoc />
     public override int Read(byte[] buffer, int offset, int count)
     {
-        var valueTask = ReadCachedAsync(buffer.AsMemory(offset, count), useAsync: false);
-
-        if (!valueTask.IsCompleted)
-            throw new Exception("This should never happen.");
-
-        return valueTask
-            .GetAwaiter()
-            .GetResult();
+        return ReadCached(buffer.AsSpan(offset, count));
     }
 
     /// <inheritdoc />
-    public void ReadDataset(Memory<byte> buffer)
+    public void ReadDataset(Span<byte> buffer)
     {
-        var valueTask = ReadUncachedAsync(buffer, useAsync: false);
-
-        if (!valueTask.IsCompleted)
-            throw new Exception("This should never happen.");
-
-        _ = valueTask
-            .GetAwaiter()
-            .GetResult();
+        ReadUncached(buffer);
     }
 
     /// <inheritdoc />
@@ -139,22 +125,19 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<int> ReadUncachedAsync(Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken = default)
+    private int ReadUncached(Span<byte> buffer)
     {
-        var stream = await ReadDataFromS3Async(
+        var stream = ReadDataFromS3(
             start: Position,
-            end: Position + buffer.Length,
-            useAsync,
-            cancellationToken)
-            .ConfigureAwait(false);
+            end: Position + buffer.Length);
 
-        await ReadExactlyAsync(stream, buffer, useAsync, cancellationToken);
+        ReadExactly(stream, buffer);
 
         return buffer.Length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<int> ReadCachedAsync(Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken = default)
+    private int ReadCached(Span<byte> buffer)
     {
         // TODO issue parallel requests
         var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
@@ -191,7 +174,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
                 if (s3StartIndex != -1)
                 {
                     var s3EndIndex = currentIndex + 1;
-                    remainingBuffer = await LoadFromS3ToCacheAndBufferAsync(s3StartIndex, s3EndIndex, remainingBuffer, useAsync: useAsync, cancellationToken);
+                    remainingBuffer = LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex, remainingBuffer);
                     s3StartIndex = -1;
                 }
 
@@ -207,30 +190,25 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         if (s3StartIndex != -1)
         {
             var s3EndIndex = s3StartIndex + s3ActualLength / _cacheSlotSize;
-            remainingBuffer = await LoadFromS3ToCacheAndBufferAsync(s3StartIndex, s3EndIndex, remainingBuffer, useAsync: useAsync, cancellationToken);
+            remainingBuffer = LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex, remainingBuffer);
             s3StartIndex = -1;
         }
 
         return buffer.Length;
     }
 
-    private async Task<Memory<byte>> LoadFromS3ToCacheAndBufferAsync(
+    private Span<byte> LoadFromS3ToCacheAndBuffer(
         long s3StartIndex,
         long s3EndIndex,
-        Memory<byte> remainingBuffer,
-        bool useAsync,
-        CancellationToken cancellationToken)
+        Span<byte> remainingBuffer)
     {
         // get S3 stream
         var s3Start = s3StartIndex * _cacheSlotSize;
         var s3End = Math.Min(s3EndIndex * _cacheSlotSize, Length);
 
-        var stream = await ReadDataFromS3Async(
+        var stream = ReadDataFromS3(
             start: s3Start,
-            end: s3End,
-            useAsync,
-            cancellationToken)
-            .ConfigureAwait(false);
+            end: s3End);
 
         // copy
         for (long currentIndex = s3StartIndex; currentIndex < s3EndIndex; currentIndex++)
@@ -239,7 +217,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
 
             // copy to cache
             var buffer = owner.Memory[..(int)Math.Min(_cacheSlotSize, Length - Position)];
-            await ReadExactlyAsync(stream, buffer, useAsync, cancellationToken);
+            ReadExactly(stream, buffer.Span);
 
             // copy to request buffer
             remainingBuffer = CopyFromCacheToBuffer(currentIndex, owner, remainingBuffer);
@@ -248,7 +226,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         return remainingBuffer;
     }
 
-    private Memory<byte> CopyFromCacheToBuffer(long currentIndex, IMemoryOwner<byte> owner, Memory<byte> remainingBuffer)
+    private Span<byte> CopyFromCacheToBuffer(long currentIndex, IMemoryOwner<byte> owner, Span<byte> remainingBuffer)
     {
         var s3Position = currentIndex * _cacheSlotSize;
 
@@ -261,7 +239,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         var slicedMemory = owner.Memory
             .Slice(cacheSlotOffset, Math.Min(remainingCacheSlotSize, remainingBuffer.Length));
 
-        slicedMemory.Span.CopyTo(remainingBuffer.Span);
+        slicedMemory.Span.CopyTo(remainingBuffer);
 
         remainingBuffer = remainingBuffer[slicedMemory.Length..];
         _position.Value += slicedMemory.Length;
@@ -270,7 +248,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<Stream> ReadDataFromS3Async(long start, long end, bool useAsync, CancellationToken cancellationToken)
+    private Stream ReadDataFromS3(long start, long end)
     {
         var request = new GetObjectRequest()
         {
@@ -279,30 +257,20 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
             ByteRange = new ByteRange(start, end)
         };
 
-        var task = _client.GetObjectAsync(request, cancellationToken);
-
-        var response = useAsync
-            ? await task.ConfigureAwait(false)
-            : task.GetAwaiter().GetResult();
+        var task = _client.GetObjectAsync(request);
+        var response = task.GetAwaiter().GetResult();
 
         return response.ResponseStream;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static async Task ReadExactlyAsync(Stream stream, Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken)
+    private static void ReadExactly(Stream stream, Span<byte> buffer)
     {
         var slicedBuffer = buffer;
 
         while (slicedBuffer.Length > 0)
         {
-            var readBytes = useAsync
-
-                ? await stream
-                    .ReadAsync(slicedBuffer, cancellationToken)
-                    .ConfigureAwait(false)
-
-                : stream.Read(slicedBuffer.Span);
-
+            var readBytes = stream.Read(slicedBuffer);
             slicedBuffer = slicedBuffer[readBytes..];
         };
     }

@@ -101,7 +101,7 @@ internal static partial class ReadUtils
         if (DataUtils.IsMemory(type))
         {
             var memory = (Memory<TElement>)(object)buffer!;
-            return (memory, new ulong[] { (ulong)memory.Length });
+            return (memory, [(ulong)memory.Length]);
         }
 
         else if (DataUtils.IsArray(type))
@@ -120,7 +120,7 @@ internal static partial class ReadUtils
         else
         {
             var memory = new TElement[] { (TElement)(object)buffer! };
-            return (memory, new ulong[] { 1 });
+            return (memory, [1]);
         }
     }
 
@@ -141,7 +141,7 @@ internal static partial class ReadUtils
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(bytesOfType);
         var buffer = memoryOwner.Memory[..bytesOfType];
 
-        source.ReadDataset(buffer);
+        source.ReadDataset(buffer.Span);
 
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
@@ -165,7 +165,7 @@ internal static partial class ReadUtils
         var array = Array.CreateInstance(typeof(TElement), dims);
         var memory = new ArrayMemoryManager<TElement>(array).Memory;
 
-        source.ReadDataset(memory.Cast<TElement, byte>());
+        source.ReadDataset(MemoryMarshal.AsBytes(memory.Span));
 
         return array;
     }

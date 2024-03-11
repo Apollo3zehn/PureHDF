@@ -45,11 +45,11 @@ internal readonly record struct BTree1Node<T>(
         keys[entriesUsed] = decodeKey();
 
         return new BTree1Node<T>(
-            context, 
+            context,
             decodeKey,
             nodeLevel,
             entriesUsed,
-            leftSiblingAddress, 
+            leftSiblingAddress,
             rightSiblingAddress,
             keys,
             childAddresses

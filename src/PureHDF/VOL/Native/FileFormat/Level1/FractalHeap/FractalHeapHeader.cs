@@ -5,7 +5,7 @@ namespace PureHDF.VOL.Native;
 // this should be a class because it has so many fields
 internal record class FractalHeapHeader(
     NativeReadContext Context,
-    
+
     ushort HeapIdLength,
     ushort IOFilterEncodedLength,
     FractalHeapHeaderFlags Flags,

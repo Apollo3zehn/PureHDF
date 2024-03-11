@@ -205,7 +205,7 @@ public class ShuffleFilter : IH5Filter
         if (typeSize == 0)
             throw new Exception("The type size must be > 0.");
 
-        return new uint[] { typeSize };
+        return [typeSize];
     }
 }
 
@@ -265,7 +265,7 @@ public class Fletcher32Filter : IH5Filter
 
             /* Copy checksum */
             Span<uint> fletcherBuffer = stackalloc uint[] { fletcher };
-            
+
             MemoryMarshal.AsBytes(fletcherBuffer)
                 .CopyTo(resultBuffer.Span[^4..]);
 
@@ -423,7 +423,7 @@ public class DeflateFilter : IH5Filter
             var compressionLevel = GetCompressionLevel(unchecked(compressionLevelValue));
 
             using (var compressionStream = new ZLibStream(
-                compressedStream, 
+                compressedStream,
                 compressionLevel,
                 leaveOpen: true))
             {
@@ -452,7 +452,7 @@ public class DeflateFilter : IH5Filter
         if (value < -1 || value > 9)
             throw new Exception("The compression level must be one of [-1, 0, 1, 9].");
 
-        return new uint[] { unchecked((uint)value) };
+        return [unchecked((uint)value)];
 #else
         throw new Exception(".NET 6+ is required for zlib compression support.");
 #endif
@@ -462,7 +462,7 @@ public class DeflateFilter : IH5Filter
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
         {
             if (objectValue is int value)

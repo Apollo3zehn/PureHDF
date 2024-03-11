@@ -6,6 +6,31 @@ namespace PureHDF.Tests.Reading;
 public partial class AttributeTests
 {
     [Fact]
+    public void CanRead_external_buffer_span()
+    {
+        TestUtils.RunForAllVersions(version =>
+        {
+            // Arrange
+            var expected = SharedTestData.SmallData;
+
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
+                => TestUtils.Add(
+                    ContainerType.Attribute, fileId, "buffer", "memory",
+                    H5T.NATIVE_INT32, expected.AsSpan()));
+
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var attribute = (NativeAttribute)root.Group("buffer").Attribute("memory");
+
+            var actual = new int[expected.Length];
+            attribute.Read(actual.AsSpan());
+
+            // Assert
+            Assert.True(actual.SequenceEqual(expected));
+        });
+    }
+
+    [Fact]
     public void CanRead_external_buffer_memory()
     {
         TestUtils.RunForAllVersions(version =>
@@ -61,7 +86,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddTiny(fileId, ContainerType.Attribute));
 
             // Act
@@ -81,7 +106,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddHuge(fileId, ContainerType.Attribute, version));
 
             // Act
@@ -101,7 +126,7 @@ public partial class AttributeTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddMass(fileId, ContainerType.Attribute));
             var expectedCount = 1000;
 

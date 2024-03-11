@@ -30,7 +30,7 @@ internal record class ExtensibleArrayDataBlock<T>(
     }
 
     public static ExtensibleArrayDataBlock<T> Decode(
-        NativeReadContext context, 
+        NativeReadContext context,
         ExtensibleArrayHeader header,
         ulong elementCount, Func<H5DriverBase, T> decode)
     {

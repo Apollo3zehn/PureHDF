@@ -5,7 +5,7 @@ namespace PureHDF.VOL.Native;
 internal partial record class ObjectHeader2
 {
     public ulong Encode(NativeWriteContext context)
-    {   
+    {
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
 
@@ -84,7 +84,7 @@ internal partial record class ObjectHeader2
 
     private ulong GetEncodeSize(ulong headerMessagesEncodeSize)
     {
-        return 
+        return
             (uint)Signature.Length +
             sizeof(byte) +
             sizeof(byte) +

@@ -8,7 +8,6 @@ internal record DecodeInfo<T>(
     Selection SourceSelection,
     Selection TargetSelection,
     Func<ulong[], IH5ReadStream> GetSourceStream,
-    Func<ulong[], Memory<T>> GetTargetBuffer,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize
 );
@@ -188,7 +187,8 @@ internal static class SelectionHelper
     public static void Decode<TResult>(
         int sourceRank,
         int targetRank,
-        DecodeInfo<TResult> decodeInfo)
+        DecodeInfo<TResult> decodeInfo,
+        Span<TResult> targetBuffer)
     {
         /* validate selections */
         if (decodeInfo.SourceSelection.TotalElementCount != decodeInfo.TargetSelection.TotalElementCount)
@@ -209,22 +209,21 @@ internal static class SelectionHelper
             .GetEnumerator();
 
         /* select method */
-        DecodeStream(sourceWalker, targetWalker, decodeInfo);
+        DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer);
     }
 
     private static void DecodeStream<TResult>(
         IEnumerator<RelativeStep> sourceWalker,
         IEnumerator<RelativeStep> targetWalker,
-        DecodeInfo<TResult> decodeInfo)
+        DecodeInfo<TResult> decodeInfo,
+        Span<TResult> targetBuffer)
     {
         /* initialize source walker */
         var sourceStream = default(IH5ReadStream);
         var lastSourceChunk = default(ulong[]);
 
         /* initialize target walker */
-        var targetBuffer = default(Memory<TResult>);
-        var lastTargetChunk = default(ulong[]);
-        var currentTarget = default(Memory<TResult>);
+        var currentTarget = default(Span<TResult>);
 
         /* walk until end */
         while (sourceWalker.MoveNext())
@@ -254,13 +253,6 @@ internal static class SelectionHelper
                     if (!success || targetStep.Length == 0)
                         throw new FormatException("The target walker stopped early.");
 
-                    if (targetBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                        !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
-                    {
-                        targetBuffer = decodeInfo.GetTargetBuffer(targetStep.Chunk);
-                        lastTargetChunk = targetStep.Chunk;
-                    }
-
                     currentTarget = targetBuffer.Slice(
                         (int)targetStep.Offset,
                         (int)targetStep.Length);
@@ -271,7 +263,7 @@ internal static class SelectionHelper
                 var length = Math.Min(currentLength, currentTarget.Length);
                 var targetLength = length;
 
-                if (virtualDatasetStream is null) 
+                if (virtualDatasetStream is null)
                 {
                     sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
@@ -283,7 +275,7 @@ internal static class SelectionHelper
                 else
                 {
                     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
-                    
+
                     virtualDatasetStream.ReadVirtual(
                         currentTarget[..targetLength]);
                 }

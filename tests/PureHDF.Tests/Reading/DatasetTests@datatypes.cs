@@ -26,7 +26,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddNumerical(fileId, ContainerType.Dataset));
 
             // Act
@@ -45,7 +45,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
             // Act
@@ -64,7 +64,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
 
             // Act
@@ -78,17 +78,17 @@ public partial class DatasetTests
             };
 
             using var root = NativeFile.InternalOpenRead(
-                filePath, 
-                deleteOnClose: true, 
+                filePath,
+                deleteOnClose: true,
                 options);
-                
+
             var dataset = root.Group("struct").Dataset("nullable");
 
             var actual = dataset.Read<TestStructStringAndArray[]>();
 
             // Assert
             Assert.Equal(
-                JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options), 
+                JsonSerializer.Serialize(ReadingTestData.NullableStructData, _options),
                 JsonSerializer.Serialize(actual, _options));
         });
     }
@@ -99,7 +99,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Dataset));
 
             // Act
@@ -120,7 +120,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddStruct(fileId, ContainerType.Dataset, includeH5NameAttribute: true));
 
             // Act
@@ -135,10 +135,10 @@ public partial class DatasetTests
             };
 
             using var root = NativeFile.InternalOpenRead(
-                filePath, 
-                deleteOnClose: true, 
+                filePath,
+                deleteOnClose: true,
                 options);
-                
+
             var dataset = root.Group("struct").Dataset("nullable");
 
             var actual = dataset.Read<TestObjectStringAndArray[]>();
@@ -164,7 +164,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddString(fileId, ContainerType.Dataset));
 
             // Act
@@ -183,7 +183,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddBitField(fileId, ContainerType.Dataset));
 
             // Act
@@ -202,7 +202,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddOpaque(fileId, ContainerType.Dataset));
 
             var expected = MemoryMarshal.Cast<int, ushort>(SharedTestData.SmallData).ToArray();
@@ -224,7 +224,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddArray_value(fileId, ContainerType.Dataset));
 
             // Act
@@ -254,7 +254,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddArray_variable_length_string(fileId, ContainerType.Dataset));
 
             // Act
@@ -284,7 +284,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddArray_nullable_struct(fileId, ContainerType.Dataset));
 
             // Act
@@ -306,7 +306,7 @@ public partial class DatasetTests
             var expected = ReadingTestData.NullableStructData
                 .ToArray();
 
-// HACK: Probably a bug in C-lib
+            // HACK: Probably a bug in C-lib
             expected[6].StringValue1 = default!; expected[6].StringValue2 = default!;
             expected[7].StringValue1 = default!; expected[7].StringValue2 = default!;
             expected[8].StringValue1 = default!; expected[8].StringValue2 = default!;
@@ -322,7 +322,7 @@ public partial class DatasetTests
                 JsonSerializer.Serialize(actual_1, _options));
 
             Assert.Equal(
-                expectedJsonString, 
+                expectedJsonString,
                 JsonSerializer.Serialize(actual_2, _options));
         });
     }
@@ -333,7 +333,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddObjectReference(fileId, ContainerType.Dataset));
 
             // Act
@@ -369,7 +369,7 @@ public partial class DatasetTests
             /* it seems to be impossible to create a regular hyperslab but it should work even without this test */
 
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
 
             // Act
@@ -414,7 +414,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddVariableLengthSequence_Simple(fileId, ContainerType.Dataset));
 
             // Act
@@ -439,7 +439,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId   
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddVariableLengthSequence_NullableStruct(fileId, ContainerType.Dataset));
 
             // Act
@@ -462,7 +462,7 @@ public partial class DatasetTests
         TestUtils.RunForAllVersions(version =>
         {
             // Arrange
-            var filePath = TestUtils.PrepareTestFile(version, fileId 
+            var filePath = TestUtils.PrepareTestFile(version, fileId
                 => TestUtils.AddDataWithSharedDataType(fileId, ContainerType.Dataset));
 
             var expected = new string[] { "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!" };

@@ -129,10 +129,10 @@ public class HsdsTests(HsdsTestsFixture fixture) : IClassFixture<HsdsTestsFixtur
 
         var fileSelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 2, 3 },
-            strides: new ulong[] { 3, 2 },
-            counts: new ulong[] { 2, 3 },
-            blocks: new ulong[] { 1, 1 }
+            starts: [2, 3],
+            strides: [3, 2],
+            counts: [2, 3],
+            blocks: [1, 1]
         );
 
         // Act

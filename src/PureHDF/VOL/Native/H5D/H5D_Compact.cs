@@ -23,7 +23,7 @@ internal class H5D_Compact : H5D_Base
         return Dataset.Space.GetDims();
     }
 
-    public override IH5ReadStream GetReadStream(ulong[] chunkIndices) 
+    public override IH5ReadStream GetReadStream(ulong[] chunkIndices)
     {
         byte[] buffer;
 
@@ -38,7 +38,7 @@ internal class H5D_Compact : H5D_Base
             var compact = (CompactStoragePropertyDescription)layout34.Properties;
             buffer = compact.Data;
         }
-        
+
         else
         {
             throw new Exception($"Data layout message type '{Dataset.Layout.GetType().Name}' is not supported.");
@@ -64,7 +64,7 @@ internal class H5D_Compact : H5D_Base
             var compact = (CompactStoragePropertyDescription)layout34.Properties;
             buffer = compact.Data;
         }
-        
+
         else
         {
             throw new Exception($"Data layout message type '{Dataset.Layout.GetType().Name}' is not supported.");

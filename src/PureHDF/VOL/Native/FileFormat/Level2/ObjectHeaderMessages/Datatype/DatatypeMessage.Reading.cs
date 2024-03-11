@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -135,7 +136,7 @@ internal partial record class DatatypeMessage(
     }
 
     public DecodeDelegate<TElement> GetDecodeInfo<TElement>(
-        NativeReadContext context) 
+        NativeReadContext context)
     {
         var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(typeof(TElement));
         var fileIsRef = IsReferenceOrContainsReferences();
@@ -160,14 +161,14 @@ internal partial record class DatatypeMessage(
     }
 
     private (Type Type, ElementDecodeDelegate Decode) GetDecodeInfoForScalar(
-        NativeReadContext context, 
+        NativeReadContext context,
         Type? memoryType)
     {
         return Class switch
         {
             /* string / variable-length string */
-            DatatypeMessageClass.String => 
-                memoryType is null || memoryType == typeof(string) 
+            DatatypeMessageClass.String =>
+                memoryType is null || memoryType == typeof(string)
                     ? (typeof(string), GetDecodeInfoForFixedLengthString())
                     : throw new Exception($"Fixed-length string data can only be decoded as string (incompatible type: {memoryType})."),
 
@@ -177,7 +178,7 @@ internal partial record class DatatypeMessage(
                     : throw new Exception($"Variable-length string data can only be decoded as string (incompatible type: {memoryType})."),
 
             /* array / variable-length sequence */
-            DatatypeMessageClass.Array => 
+            DatatypeMessageClass.Array =>
                 memoryType is null || DataUtils.IsArray(memoryType)
                     ? GetDecodeInfoForArray(context, memoryType)
                     : throw new Exception($"Array data can only be decoded as array (incompatible type: {memoryType})."),
@@ -186,9 +187,9 @@ internal partial record class DatatypeMessage(
                 memoryType is null || DataUtils.IsArray(memoryType)
                     ? GetDecodeInfoForVariableLengthSequence(context, memoryType)
                     : throw new Exception($"Variable-length sequence data can only be decoded as array (incompatible type: {memoryType})."),
-            
+
             /* compound */
-            DatatypeMessageClass.Compound => 
+            DatatypeMessageClass.Compound =>
                 memoryType is null || ReadUtils.CanDecodeFromCompound(memoryType)
                     ? GetDecodeInfoForCompound(context, memoryType /* isObject = true is OK here */)
                     : throw new Exception($"Compound data can only be decoded as non-primitive struct or reference type (incompatible type: {memoryType})."),
@@ -206,21 +207,21 @@ internal partial record class DatatypeMessage(
                 memoryType is null || ReadUtils.CanDecodeToUnmanaged(memoryType, (int)Size)
                     ? memoryType is null
                         ? (Size, ((FixedPointBitFieldDescription)BitField).IsSigned) switch
-                            {
-                                (1, false) => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>()),
-                                (1, true) => (typeof(sbyte), GetDecodeInfoForUnmanagedElement<sbyte>()),
-                                (2, false) => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
-                                (2, true) => (typeof(short), GetDecodeInfoForUnmanagedElement<short>()),
-                                (4, false) => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
-                                (4, true) => (typeof(int), GetDecodeInfoForUnmanagedElement<int>()),
-                                (8, false) => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
-                                (8, true) => (typeof(long), GetDecodeInfoForUnmanagedElement<long>()),
-    #if NET7_0_OR_GREATER
-                                (16, false) => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
-                                (16, true) => (typeof(Int128), GetDecodeInfoForUnmanagedElement<Int128>()),
-    #endif
-                                _ => throw new Exception("Unable to decode fixed-point data without additional runtime type information.")
-                            }
+                        {
+                            (1, false) => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>()),
+                            (1, true) => (typeof(sbyte), GetDecodeInfoForUnmanagedElement<sbyte>()),
+                            (2, false) => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
+                            (2, true) => (typeof(short), GetDecodeInfoForUnmanagedElement<short>()),
+                            (4, false) => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
+                            (4, true) => (typeof(int), GetDecodeInfoForUnmanagedElement<int>()),
+                            (8, false) => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
+                            (8, true) => (typeof(long), GetDecodeInfoForUnmanagedElement<long>()),
+#if NET7_0_OR_GREATER
+                            (16, false) => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
+                            (16, true) => (typeof(Int128), GetDecodeInfoForUnmanagedElement<Int128>()),
+#endif
+                            _ => throw new Exception("Unable to decode fixed-point data without additional runtime type information.")
+                        }
                         : (memoryType, GetDecodeInfoForUnmanagedElement(memoryType))
                     : throw new Exception($"Fixed-point data can only be decoded into types that match the struct constraint of the same size (incompatible type: {memoryType})."),
 
@@ -228,15 +229,15 @@ internal partial record class DatatypeMessage(
             DatatypeMessageClass.FloatingPoint =>
                 memoryType is null || ReadUtils.CanDecodeToUnmanaged(memoryType, (int)Size)
                     ? memoryType is null
-                        ? Size switch 
-                            {
+                        ? Size switch
+                        {
 #if NET5_0_OR_GREATER
-                                2 => (typeof(Half), GetDecodeInfoForUnmanagedElement<Half>()),
+                            2 => (typeof(Half), GetDecodeInfoForUnmanagedElement<Half>()),
 #endif
-                                4 => (typeof(float), GetDecodeInfoForUnmanagedElement<float>()),
-                                8 => (typeof(double), GetDecodeInfoForUnmanagedElement<double>()),
-                                _ => throw new Exception("Unable to decode floating-point data without additional runtime type information.")
-                            }
+                            4 => (typeof(float), GetDecodeInfoForUnmanagedElement<float>()),
+                            8 => (typeof(double), GetDecodeInfoForUnmanagedElement<double>()),
+                            _ => throw new Exception("Unable to decode floating-point data without additional runtime type information.")
+                        }
                         : (memoryType, GetDecodeInfoForUnmanagedElement(memoryType))
                     : throw new Exception($"Floating-point data can only be decoded into types that match the struct constraint of the same size (incompatible type: {memoryType})."),
 
@@ -245,16 +246,16 @@ internal partial record class DatatypeMessage(
                 memoryType is null || ReadUtils.CanDecodeToUnmanaged(memoryType, (int)Size)
                     ? memoryType is null
                         ? Size switch
-                            {
-                                1 => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>()),
-                                2 => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
-                                4 => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
-                                8 => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
+                        {
+                            1 => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>()),
+                            2 => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
+                            4 => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
+                            8 => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
 #if NET7_0_OR_GREATER
-                                16 => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
+                            16 => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
 #endif
-                                _ => throw new Exception("Unable to decode bitfield data without additional runtime type information.")
-                            }
+                            _ => throw new Exception("Unable to decode bitfield data without additional runtime type information.")
+                        }
                         : (memoryType, GetDecodeInfoForUnmanagedElement(memoryType))
                     : throw new Exception($"Bitfield data can only be decoded into types that match the struct constraint of the same size (incompatible type: {memoryType})."),
 
@@ -279,7 +280,7 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>() where T : struct
     {
-        object? decode(IH5ReadStream source) 
+        object? decode(IH5ReadStream source)
             => ReadUtils.DecodeUnmanagedElement<T>(source);
 
         return decode;
@@ -509,7 +510,7 @@ internal partial record class DatatypeMessage(
 
             ElementDecodeDelegate elementDecode;
 
-            elementDecode = (IH5ReadStream source) => 
+            elementDecode = (IH5ReadStream source) =>
             {
                 var nextOffset = i == compoundProperties.Length - 1
                     ? Size
@@ -599,7 +600,7 @@ internal partial record class DatatypeMessage(
             _ => throw new Exception("Unable to decode values types of different type size.")
         };
 
-        memoryType ??= Type.GetType($"{elementType}[{new string(',', property.Rank)}]") 
+        memoryType ??= Type.GetType($"{elementType}[{new string(',', property.Rank)}]")
             ?? throw new Exception($"Unable to find array type for element type {elementType}.");
 
         return (memoryType, decode);
@@ -655,7 +656,7 @@ internal partial record class DatatypeMessage(
 
         return decode;
     }
-    
+
     private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
     {
         var dims = new int[] { (int)Size };
@@ -695,11 +696,11 @@ internal partial record class DatatypeMessage(
             var lengthSize = sizeof(uint);
             var globalHeapIdSize = context.Superblock.OffsetsSize + sizeof(uint);
             var totalSize = lengthSize + globalHeapIdSize;
-            
+
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            source.ReadDataset(buffer);
+            source.ReadDataset(buffer.Span);
 
             /* decode sequence length */
             var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
@@ -715,7 +716,7 @@ internal partial record class DatatypeMessage(
             buffer = buffer.Slice(globalHeapIdSize);
 
             var globalHeapCollection = NativeCache.GetGlobalHeapObject(
-                context, 
+                context,
                 globalHeapId.CollectionAddress,
                 restoreAddress: true);
 
@@ -731,7 +732,7 @@ internal partial record class DatatypeMessage(
 
                 return array;
             }
-            
+
             else
             {
                 // It would be more correct to just throw an exception 
@@ -745,7 +746,7 @@ internal partial record class DatatypeMessage(
             }
         }
 
-        memoryType ??= Type.GetType($"{elementType}[]") 
+        memoryType ??= Type.GetType($"{elementType}[]")
             ?? throw new Exception($"Unable to find array type for element type {elementType}.");
 
         return (memoryType, decode);
@@ -783,7 +784,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            source.ReadDataset(buffer);
+            source.ReadDataset(buffer.Span);
 
             /* skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
             buffer = buffer.Slice(sizeof(uint));
@@ -795,7 +796,7 @@ internal partial record class DatatypeMessage(
                 return default;
 
             var globalHeapCollection = NativeCache.GetGlobalHeapObject(
-                context, 
+                context,
                 globalHeapId.CollectionAddress,
                 restoreAddress: true);
 
@@ -838,7 +839,7 @@ internal partial record class DatatypeMessage(
             Func<string, string> trim = bitField.PaddingType switch
             {
 #if NETSTANDARD2_0
-                PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
+                PaddingType.NullTerminate => value => value.Split(['\0'], 2)[0],
 #else
                 PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
 #endif
@@ -850,7 +851,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
-            source.ReadDataset(memory);
+            source.ReadDataset(memory.Span);
 
             var value = ReadUtils.ReadFixedLengthString(memory.Span);
             value = trim(value);
@@ -867,9 +868,9 @@ internal partial record class DatatypeMessage(
     {
         var elementDecode = GetDecodeInfoForScalar(context, typeof(T)).Decode;
 
-        void decode(IH5ReadStream source, Memory<T> target)
+        void decode(IH5ReadStream source, Span<T> target)
         {
-            var targetSpan = target.Span;
+            var targetSpan = target;
 
             for (int i = 0; i < target.Length; i++)
             {
@@ -880,11 +881,11 @@ internal partial record class DatatypeMessage(
         return decode;
     }
 
-    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>() 
+    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
         where T : struct
     {
-        static void decode(IH5ReadStream source, Memory<T> target)
-            => source.ReadDataset(target.Cast<T, byte>());
+        static void decode(IH5ReadStream source, Span<T> target)
+            => source.ReadDataset(MemoryMarshal.AsBytes(target));
 
         return decode;
     }

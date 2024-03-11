@@ -10,7 +10,7 @@ internal record class HugeObjectsFractalHeapIdSubType4(
 ) : FractalHeapId
 {
     public static HugeObjectsFractalHeapIdSubType4 Decode(
-        Superblock superblock, 
+        Superblock superblock,
         H5DriverBase localDriver)
     {
         return new HugeObjectsFractalHeapIdSubType4(
@@ -22,7 +22,7 @@ internal record class HugeObjectsFractalHeapIdSubType4(
     }
 
     public override T Read<T>(
-        Func<H5DriverBase, T> func, 
+        Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache)
     {
         throw new Exception("Filtered data is not yet supported.");

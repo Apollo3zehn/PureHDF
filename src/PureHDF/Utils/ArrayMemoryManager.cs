@@ -17,7 +17,7 @@ internal class ArrayMemoryManager<T> : MemoryManager<T>
     {
 #if NET6_0_OR_GREATER
         var span = MemoryMarshal.CreateSpan(
-            reference: ref Unsafe.As<byte, T>(ref MemoryMarshal.GetArrayDataReference(_array)), 
+            reference: ref Unsafe.As<byte, T>(ref MemoryMarshal.GetArrayDataReference(_array)),
             length: _array.Length);
 
         return span;

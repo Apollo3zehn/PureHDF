@@ -9,8 +9,8 @@ internal record class HugeObjectsFractalHeapIdSubType2(
 ) : HugeObjectsFractalHeapIdSubType1(Context, HeapHeader, BTree2Key)
 {
     public static new HugeObjectsFractalHeapIdSubType2 Decode(
-        NativeReadContext context, 
-        H5DriverBase localDriver, 
+        NativeReadContext context,
+        H5DriverBase localDriver,
         FractalHeapHeader header)
     {
         return new HugeObjectsFractalHeapIdSubType2(
@@ -21,7 +21,7 @@ internal record class HugeObjectsFractalHeapIdSubType2(
     }
 
     public override T Read<T>(
-        Func<H5DriverBase, T> func, 
+        Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache)
     {
         throw new Exception("Filtered data is not yet supported.");

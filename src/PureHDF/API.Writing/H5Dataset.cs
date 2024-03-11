@@ -22,14 +22,14 @@ public class H5Dataset : H5AttributableObject
         Selection? memorySelection = default,
         Selection? fileSelection = default,
         ulong[]? fileDims = default,
-        H5DatasetCreation datasetCreation = default) 
+        H5DatasetCreation datasetCreation = default)
         : this(
-            data.GetType(), 
-            data, 
+            data.GetType(),
+            data,
             chunks,
             memorySelection,
             fileSelection,
-            fileDims, 
+            fileDims,
             datasetCreation)
     {
         //
@@ -60,7 +60,7 @@ public class H5Dataset : H5AttributableObject
     internal uint[]? Chunks { get; }
 
     internal Selection? MemorySelection { get; }
-    
+
     internal Selection? FileSelection { get; }
 
     internal ulong[]? FileDims { get; }
@@ -85,12 +85,12 @@ public class H5Dataset<T> : H5Dataset
         uint[]? chunks = default,
         H5DatasetCreation datasetCreation = default)
         : base(
-            typeof(T), 
-            default, 
-            chunks, 
+            typeof(T),
+            default,
+            chunks,
             default,
             default,
-            fileDims, 
+            fileDims,
             datasetCreation)
     {
         //
@@ -108,12 +108,12 @@ public class H5NullDataset<T> : H5Dataset
     /// </summary>
     public H5NullDataset()
         : base(
-            typeof(T), 
+            typeof(T),
             data: null,
             default,
             default,
             default,
-            fileDims: null, 
+            fileDims: null,
             default)
     {
         //

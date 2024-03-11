@@ -32,8 +32,8 @@ internal record struct DataBlockPage<T>(
 )
 {
     public static DataBlockPage<T> Decode(
-        H5DriverBase driver, 
-        ulong elementCount, 
+        H5DriverBase driver,
+        ulong elementCount,
         Func<H5DriverBase, T> decode)
     {
         // elements

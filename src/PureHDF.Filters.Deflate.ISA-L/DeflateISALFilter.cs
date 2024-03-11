@@ -26,7 +26,7 @@ public class DeflateISALFilter : IH5Filter
     private static readonly ThreadLocal<IntPtr> _state_ptr = new(
         valueFactory: CreateState,
         trackAllValues: false);
-        
+
     private static readonly ThreadLocal<IntPtr> _stream_ptr = new(
         valueFactory: CreateStream,
         trackAllValues: false);
@@ -46,7 +46,7 @@ public class DeflateISALFilter : IH5Filter
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
             var stateSpan = new Span<inflate_state>(_state_ptr.Value.ToPointer(), _state_length);
-            ref inflate_state state = ref stateSpan[0];
+            ref var state = ref stateSpan[0];
 
             ISAL.isal_inflate_init(_state_ptr.Value);
 
@@ -86,7 +86,7 @@ public class DeflateISALFilter : IH5Filter
                             tmp.CopyTo(inflated);
                             targetBuffer = inflated.Span.Slice(tmp.Length);
                         }
-                        
+
                         else
                         {
                             break;
@@ -102,7 +102,7 @@ public class DeflateISALFilter : IH5Filter
         else
         {
             var streamSpan = new Span<isal_zstream>(_stream_ptr.Value.ToPointer(), _stream_length);
-            ref isal_zstream stream = ref streamSpan[0];
+            ref var stream = ref streamSpan[0];
 
             ISAL.isal_deflate_init(_stream_ptr.Value);
 
@@ -160,7 +160,7 @@ public class DeflateISALFilter : IH5Filter
                             tmp.CopyTo(deflated);
                             targetBuffer = deflated.Span.Slice(tmp.Length);
                         }
-                        
+
                         else
                         {
                             break;
@@ -181,7 +181,7 @@ public class DeflateISALFilter : IH5Filter
         if (value < 0 || value > 3)
             throw new Exception("The compression level must be in the range of 0..3.");
 
-        return new uint[] { unchecked((uint)value) };
+        return [unchecked((uint)value)];
     }
 
     private static unsafe IntPtr CreateState()
@@ -203,7 +203,7 @@ public class DeflateISALFilter : IH5Filter
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
-            options is not null && 
+            options is not null &&
             options.TryGetValue(COMPRESSION_LEVEL, out var objectValue))
         {
             if (objectValue is int value)

@@ -36,7 +36,7 @@ internal partial record class DataLayoutMessage4
                     : ChunkedStoragePropertyFlags.None;
 
                 indexInfo = (
-                    indexingInformation, 
+                    indexingInformation,
                     0,
                     flags);
             }
@@ -44,7 +44,7 @@ internal partial record class DataLayoutMessage4
             else
             {
                 indexInfo = isFiltered
-                    ? 
+                    ?
                         (
                             new FixedArrayIndexingInformation(
                                 /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
@@ -53,13 +53,13 @@ internal partial record class DataLayoutMessage4
 #else
                                 PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
 #endif
-                            ), 
+                            ),
                             FixedArrayHeader.ENCODE_SIZE,
                             ChunkedStoragePropertyFlags.None
                         )
-                    : 
+                    :
                         (
-                            new ImplicitIndexingInformation(), 
+                            new ImplicitIndexingInformation(),
                             (long)(chunkCount * dataBlockSize * typeSize),
                             ChunkedStoragePropertyFlags.None
                         );

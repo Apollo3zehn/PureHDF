@@ -10,8 +10,8 @@ public partial class SimpleChunkCache : IWritingChunkCache
 {
     /// <inheritdoc />
     public Memory<byte> GetChunk(
-        ulong[] indices, 
-        Func<Memory<byte>> chunkAllocator, 
+        ulong[] indices,
+        Func<Memory<byte>> chunkAllocator,
         Action<ulong[], Memory<byte>> chunkWriter)
     {
         if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))

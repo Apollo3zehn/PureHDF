@@ -15,9 +15,9 @@ internal record class Superblock01(
     ulong EndOfFileAddress,
     ulong DriverInfoBlockAddress
 ) : Superblock(
-    SuperBlockVersion, 
-    FileConsistencyFlags, 
-    BaseAddress, 
+    SuperBlockVersion,
+    FileConsistencyFlags,
+    BaseAddress,
     EndOfFileAddress
 )
 {

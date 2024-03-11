@@ -7,10 +7,10 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
     #region Constructors
 
     public H5D_Chunk4(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage4 layout, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation)
         : base(readContext, writeContext, dataset, datasetAccess, datasetCreation)
@@ -85,7 +85,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             WriteChunkInfos[chunkIndex] = chunkInfo;
 
             return chunkInfo;
-        }        
+        }
 
         else
         {

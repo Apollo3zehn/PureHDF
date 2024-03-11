@@ -187,7 +187,7 @@ internal record class CompoundPropertyDescription(
         return new CompoundPropertyDescription(
             Name: name,
             MemberByteOffset: memberByteOffset,
-            MemberTypeMessage: memberTypeMessage 
+            MemberTypeMessage: memberTypeMessage
         );
     }
 
@@ -227,7 +227,7 @@ internal record class CompoundPropertyDescription(
 #else
         driver.Write(slicedMemberByteOffsetBytes.ToArray());
 #endif
-    
+
         // member type message
         MemberTypeMessage.Encode(driver);
     }
@@ -239,9 +239,9 @@ internal record class EnumerationPropertyDescription(
     : DatatypePropertyDescription
 {
     public static EnumerationPropertyDescription Decode(
-        H5DriverBase driver, 
-        byte version, 
-        uint valueSize, 
+        H5DriverBase driver,
+        byte version,
+        uint valueSize,
         ushort memberCount)
     {
         // base type
@@ -347,7 +347,7 @@ internal record class FloatingPointPropertyDescription(
             BitPrecision: driver.ReadUInt16(),
             ExponentLocation: driver.ReadByte(),
             ExponentSize: driver.ReadByte(),
-            MantissaLocation: driver.ReadByte(), 
+            MantissaLocation: driver.ReadByte(),
             MantissaSize: driver.ReadByte(),
             ExponentBias: driver.ReadUInt32()
         );
@@ -358,10 +358,10 @@ internal record class FloatingPointPropertyDescription(
         return
             sizeof(ushort) +
             sizeof(ushort) +
-            sizeof(byte) + 
-            sizeof(byte) + 
-            sizeof(byte) + 
-            sizeof(byte) + 
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
+            sizeof(byte) +
             sizeof(uint);
     }
 
@@ -382,7 +382,7 @@ internal record class OpaquePropertyDescription(
     : DatatypePropertyDescription
 {
     public static OpaquePropertyDescription Decode(
-        H5DriverBase driver, 
+        H5DriverBase driver,
         byte tagByteLength)
     {
         return new OpaquePropertyDescription(

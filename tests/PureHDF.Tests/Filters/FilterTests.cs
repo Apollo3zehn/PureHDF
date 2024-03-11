@@ -168,7 +168,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -213,7 +213,7 @@ public class FilterTests
             // Assert
             Assert.True(expected.SequenceEqual(actual));
         }
-        
+
         else
         {
             var exception = Assert.Throws<Exception>(() => dataset.Read<int>());
@@ -264,7 +264,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -330,7 +330,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -404,7 +404,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -483,7 +483,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -564,7 +564,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -617,7 +617,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -659,7 +659,7 @@ public class FilterTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -684,7 +684,7 @@ public class FilterTests
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var parent = root.Group("filtered");
         var dataset = parent.Dataset($"shuffle_{bytesOfType}");
-        
+
         var actual = dataset.Read<int[]>();
 
         // Assert
@@ -728,8 +728,8 @@ public class FilterTests
         var actual = new T[length];
 
         ShuffleGeneric.DoShuffle(
-            bytesOfType, 
-            source: actual_unshuffled, 
+            bytesOfType,
+            source: actual_unshuffled,
             destination: MemoryMarshal.AsBytes<T>(actual));
 
         // Assert
@@ -771,8 +771,8 @@ public class FilterTests
         var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
 
         ShuffleGeneric.DoUnshuffle(
-            bytesOfType, 
-            source: MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), 
+            bytesOfType,
+            source: MemoryMarshal.AsBytes(actual_shuffled.AsSpan()),
             destination: actual);
 
         // Assert
@@ -815,8 +815,8 @@ public class FilterTests
         var actual = new T[length];
 
         ShuffleAvx2.DoShuffle(
-            bytesOfType, 
-            source: actual_unshuffled, 
+            bytesOfType,
+            source: actual_unshuffled,
             destination: MemoryMarshal.AsBytes<T>(actual));
 
         // Assert
@@ -858,8 +858,8 @@ public class FilterTests
         var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
 
         ShuffleAvx2.DoUnshuffle(
-            bytesOfType, 
-            source: MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), 
+            bytesOfType,
+            source: MemoryMarshal.AsBytes(actual_shuffled.AsSpan()),
             destination: actual);
 
         // Assert
@@ -902,8 +902,8 @@ public class FilterTests
         var actual = new T[length];
 
         ShuffleSse2.DoShuffle(
-            bytesOfType, 
-            source: actual_unshuffled, 
+            bytesOfType,
+            source: actual_unshuffled,
             destination: MemoryMarshal.AsBytes<T>(actual));
 
         // Assert
@@ -945,8 +945,8 @@ public class FilterTests
         var actual = new byte[actual_shuffled!.Length * Unsafe.SizeOf<T>()];
 
         ShuffleAvx2.DoUnshuffle(
-            bytesOfType, 
-            source: MemoryMarshal.AsBytes(actual_shuffled.AsSpan()), 
+            bytesOfType,
+            source: MemoryMarshal.AsBytes(actual_shuffled.AsSpan()),
             destination: actual);
 
         // Assert
@@ -1016,7 +1016,7 @@ public class FilterTests
     }
 #endif
 
-// TODO: move to benchmark
+    // TODO: move to benchmark
 
     [Fact]
     public void ConvertEndiannessPerformanceTest()
@@ -1148,7 +1148,7 @@ public class FilterTests
     // }
 
     public static T[] GetShuffledData<T>(
-        int length, 
+        int length,
         Memory<byte> data) where T : unmanaged
     {
         var bytesOfType = Unsafe.SizeOf<T>();
@@ -1162,7 +1162,7 @@ public class FilterTests
         var dataset = (NativeDataset)parent.Dataset($"shuffle_{bytesOfType}");
 
         var shuffled = dataset
-            .ReadCorePre<T[], T>(
+            .ReadCoreLevel1_Generic<T[], T>(
                 buffer: default,
                 skipShuffle: true)!;
 

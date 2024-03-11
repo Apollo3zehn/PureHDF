@@ -26,17 +26,16 @@ internal class SlotStream : IH5ReadStream
 
     public long Length { get; }
 
-    public void ReadDataset(Memory<byte> buffer)
+    public void ReadDataset(Span<byte> buffer)
     {
         var length = (int)Math.Min(Length - Position, buffer.Length);
 
         _stream = EnsureStream();
 
-        var actualLength = _stream.Read(buffer.Span[..length]);
+        var actualLength = _stream.Read(buffer[..length]);
 
         // If file is shorter than slot: fill remaining buffer with zeros.
         buffer[actualLength..length]
-            .Span
             .Clear();
 
         _position += length;
@@ -79,7 +78,7 @@ internal class SlotStream : IH5ReadStream
         return _stream;
     }
 
-#region IDisposable
+    #region IDisposable
 
     private bool _disposedValue;
 
@@ -98,7 +97,7 @@ internal class SlotStream : IH5ReadStream
         GC.SuppressFinalize(this);
     }
 
-#endregion
+    #endregion
 
 }
 

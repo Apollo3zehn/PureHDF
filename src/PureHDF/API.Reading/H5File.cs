@@ -13,7 +13,7 @@ public partial class H5File
     /// <param name="filePath">The path of the file to open.</param>
     /// <param name="options">Options to control decoding behavior.</param>
     public static NativeFile OpenRead(
-        string filePath, 
+        string filePath,
         H5ReadOptions? options = default)
     {
         return NativeFile.InternalOpenRead(
@@ -30,17 +30,17 @@ public partial class H5File
     /// <param name="fileShare">A <see cref="FileShare"/> value specifying the type of access other threads have to the file.</param>
     /// <param name="options">Options to control decoding behavior.</param>
     public static NativeFile Open(
-        string filePath, 
-        FileMode mode, 
-        FileAccess fileAccess, 
-        FileShare fileShare, 
+        string filePath,
+        FileMode mode,
+        FileAccess fileAccess,
+        FileShare fileShare,
         H5ReadOptions? options = default)
     {
         return NativeFile.InternalOpen(
-            filePath, 
-            mode, 
-            fileAccess, 
-            fileShare, 
+            filePath,
+            mode,
+            fileAccess,
+            fileShare,
             options: options);
     }
 
@@ -51,7 +51,7 @@ public partial class H5File
     /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
     /// <param name="options">Options to control decoding behavior.</param>
     public static NativeFile Open(
-        Stream stream, 
+        Stream stream,
         bool leaveOpen = false,
         H5ReadOptions? options = default)
     {
@@ -69,8 +69,8 @@ public partial class H5File
             driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
         return NativeFile.InternalOpen(
-            driver, 
-            absoluteFilePath: string.Empty, 
+            driver,
+            absoluteFilePath: string.Empty,
             options: options);
     }
 
@@ -84,10 +84,10 @@ public partial class H5File
         H5ReadOptions? options = default)
     {
         var driver = new H5MemoryMappedFileDriver(accessor);
-        
+
         return NativeFile.InternalOpen(
-            driver, 
-            absoluteFilePath: string.Empty, 
+            driver,
+            absoluteFilePath: string.Empty,
             options: options);
     }
 }

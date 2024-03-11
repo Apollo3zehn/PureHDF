@@ -1,5 +1,6 @@
 .vs/
 .venv/
+
 artifacts/
 BenchmarkDotNet.Artifacts
 

@@ -11,8 +11,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 {
     #region Fields
 
-    private static readonly MethodInfo _methodInfoReadCorePre = typeof(NativeDataset)
-        .GetMethod(nameof(ReadCorePre), BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private static readonly MethodInfo _methodInfoReadCoreLevel1 = typeof(NativeDataset)
+        .GetMethod(nameof(ReadCoreLevel1_Generic), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
@@ -154,13 +154,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
     /// <inheritdoc />
     public T Read<T>(
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
         return Read<T>(
-            fileSelection, 
-            memorySelection, 
+            fileSelection,
+            memorySelection,
             memoryDims,
             datasetAccess: default);
     }
@@ -168,14 +168,14 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// <inheritdoc />
     public void Read<T>(
         T buffer,
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
         Read(
             buffer,
-            fileSelection, 
-            memorySelection, 
+            fileSelection,
+            memorySelection,
             memoryDims,
             datasetAccess: default);
     }
@@ -198,17 +198,17 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCorePre.MakeGenericMethod(typeof(T), elementType);
+        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
 
-        var result = (T)method.Invoke(this, new object?[] 
-        {
+        var result = (T)method.Invoke(this,
+        [
             default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
             datasetAccess,
             false /* skip shuffle */
-        })!;
+        ])!;
 
         return result;
     }
@@ -232,23 +232,55 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCorePre.MakeGenericMethod(typeof(T), elementType);
+        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
 
-        method.Invoke(this, new object?[] 
-        {
+        method.Invoke(this,
+        [
             buffer,
             fileSelection,
             memorySelection,
             memoryDims,
             datasetAccess,
             false /* skip shuffle */
-        });
+        ]);
+    }
+
+    /* This overload is required because Span<T> is not allowed as generic argument and
+     * ReadUtils.ToMemory(...) would have trouble to cast generic type to Span<T>.
+     * https://github.com/dotnet/csharplang/issues/7608 tracks support for the generic
+     * argument issue.
+     */
+
+    /// <summary>
+    /// Reads the data into the provided buffer.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="buffer">The buffer to read the data into.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    public void Read<T>(
+        Span<T> buffer,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default,
+        H5DatasetAccess datasetAccess = default)
+    {
+        ReadCoreLevel1(
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess,
+            false /* skip shuffle */
+        );
     }
 
     /// <inheritdoc />
     public Task<T> ReadAsync<T>(
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
@@ -258,15 +290,15 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// <inheritdoc />
     public Task ReadAsync<T>(
         T buffer,
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
-    internal TResult? ReadCorePre<TResult, TElement>(
+    internal TResult? ReadCoreLevel1_Generic<TResult, TElement>(
         TResult? buffer,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
@@ -274,50 +306,10 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         H5DatasetAccess datasetAccess = default,
         bool skipShuffle = false)
     {
-        /* for testing only */
-        if (skipShuffle && InternalFilterPipeline is not null)
-        {
-            InternalFilterPipeline = InternalFilterPipeline with
-            {
-                FilterDescriptions = InternalFilterPipeline.FilterDescriptions
-                    .Where(description => description.Identifier != ShuffleFilter.Id)
-                    .ToArray()
-            };
-        }
-
-        /* check endianness */
-        var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
-
-        if (byteOrderAware is not null)
-            DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
-
-        /* fast path for null dataspace */
-        if (InternalDataspace.Type == DataspaceType.Null)
-            throw new Exception("Datasets with null dataspace cannot be read.");
-
-        /* memory selection + dims validation */
-        if (memorySelection is not null && memoryDims is null)
-            throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
-
-        /* file dimensions */
-        var fileDims = InternalDataspace.GetDims();
-
-        /* file selection */
-        if (fileSelection is null || fileSelection is AllSelection)
-        {
-            fileSelection = InternalDataspace.Type switch
-            {
-                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
-                    rank: fileDims.Length,
-                    starts: new ulong[fileDims.Length],
-                    blocks: fileDims),
-
-                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
-            };
-        }
+        (var fileDims, fileSelection) = GetFileDimsAndSelection(fileSelection, memorySelection, memoryDims, skipShuffle);
 
         /* result buffer / result array */
-        Memory<TElement> resultBuffer;
+        Span<TElement> resultBuffer;
         var resultArray = default(Array);
 
         if (buffer is null || buffer.Equals(default(TResult)))
@@ -330,7 +322,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 var rank = resultType.GetArrayRank();
 
                 if (rank == 1)
-                    memoryDims ??= new ulong[] { fileSelection.TotalElementCount };
+                    memoryDims ??= [fileSelection.TotalElementCount];
 
                 else if (rank == fileDims.Length)
                     memoryDims ??= fileDims;
@@ -341,7 +333,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 
             else
             {
-                memoryDims ??= new ulong[] { 1 };
+                memoryDims ??= [1];
             }
 
             /* result buffer */
@@ -349,15 +341,63 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
                 : new TResult[1];
 
-            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory.Span;
         }
 
         else
         {
             /* result buffer */
-            (resultBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
+            (var resultMemoryBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
+            resultBuffer = resultMemoryBuffer.Span;
         }
 
+        ReadCoreLevel2(
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            fileDims,
+            resultBuffer,
+            datasetAccess);
+
+        /* return */
+        return resultArray is null
+            ? default
+            : ReadUtils.FromArray<TResult, TElement>(resultArray);
+    }
+
+    private void ReadCoreLevel1<TElement>(
+        Span<TElement> buffer,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default,
+        H5DatasetAccess datasetAccess = default,
+        bool skipShuffle = false)
+    {
+        (var fileDims, fileSelection) = GetFileDimsAndSelection(fileSelection, memorySelection, memoryDims, skipShuffle);
+
+        /* result buffer */
+        if (memoryDims is null)
+            memoryDims = [(ulong)buffer.Length];
+
+        var resultBuffer = buffer;
+
+        ReadCoreLevel2(
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            fileDims,
+            resultBuffer,
+            datasetAccess);
+    }
+
+    private void ReadCoreLevel2<TElement>(
+        Selection fileSelection,
+        Selection? memorySelection,
+        ulong[] memoryDims,
+        ulong[] fileDims,
+        Span<TElement> resultBuffer,
+        H5DatasetAccess datasetAccess)
+    {
         /* memory selection */
         if (memorySelection is null || memorySelection is AllSelection)
         {
@@ -372,7 +412,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             throw new Exception("The total file selection element count does not match the total memory selection element count.");
 
         /* decode */
-        ReadCore(
+        ReadCoreLevel3(
             resultBuffer,
             fileSelection,
             memorySelection,
@@ -380,15 +420,10 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memoryDims,
             datasetAccess
         );
-
-        /* return */
-        return resultArray is null
-            ? default
-            : ReadUtils.FromArray<TResult, TElement>(resultArray);
     }
 
-    internal void ReadCore<TElement>(
-        Memory<TElement> resultBuffer,
+    private void ReadCoreLevel3<TElement>(
+        Span<TElement> resultBuffer,
         Selection fileSelection,
         Selection memorySelection,
         ulong[] fileDims,
@@ -416,13 +451,13 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         }
 
         /* read virtual delegate */
-        void readVirtualDelegate(NativeDataset dataset, Memory<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
-            => dataset.ReadCore(
+        void readVirtualDelegate(NativeDataset dataset, Span<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+            => dataset.ReadCoreLevel3(
                 resultBuffer: destination,
                 fileSelection: fileSelection,
                 memorySelection: new HyperslabSelection(0, (ulong)destination.Length),
                 fileDims: dataset.InternalDataspace.GetDims(),
-                memoryDims: new ulong[] { (ulong)destination.Length },
+                memoryDims: [(ulong)destination.Length],
                 datasetAccess: datasetAccess);
 
         /* dataset info */
@@ -489,16 +524,63 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             fileSelection,
             memorySelection,
             GetSourceStream: h5d.GetReadStream,
-            GetTargetBuffer: _ => resultBuffer,
             Decoder: decoder,
             SourceTypeSize: (int)InternalDataType.Size
         );
 
         SelectionHelper
             .Decode(
-                sourceRank: fileDims.Length, 
-                targetRank: memoryDims.Length, 
-                decodeInfo);
+                sourceRank: fileDims.Length,
+                targetRank: memoryDims.Length,
+                decodeInfo,
+                resultBuffer);
+    }
+
+    private (ulong[], Selection) GetFileDimsAndSelection(Selection? fileSelection, Selection? memorySelection, ulong[]? memoryDims, bool skipShuffle)
+    {
+        /* for testing only */
+        if (skipShuffle && InternalFilterPipeline is not null)
+        {
+            InternalFilterPipeline = InternalFilterPipeline with
+            {
+                FilterDescriptions = InternalFilterPipeline.FilterDescriptions
+                    .Where(description => description.Identifier != ShuffleFilter.Id)
+                    .ToArray()
+            };
+        }
+
+        /* check endianness */
+        var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
+
+        if (byteOrderAware is not null)
+            DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
+
+        /* fast path for null dataspace */
+        if (InternalDataspace.Type == DataspaceType.Null)
+            throw new Exception("Datasets with null dataspace cannot be read.");
+
+        /* memory selection + dims validation */
+        if (memorySelection is not null && memoryDims is null)
+            throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
+
+        /* file dimensions */
+        var fileDims = InternalDataspace.GetDims();
+
+        /* file selection */
+        if (fileSelection is null || fileSelection is AllSelection)
+        {
+            fileSelection = InternalDataspace.Type switch
+            {
+                DataspaceType.Scalar or DataspaceType.Simple => new HyperslabSelection(
+                    rank: fileDims.Length,
+                    starts: new ulong[fileDims.Length],
+                    blocks: fileDims),
+
+                _ => throw new Exception($"Unsupported data space type '{InternalDataspace.Type}'.")
+            };
+        }
+
+        return (fileDims, fileSelection);
     }
 
     #endregion

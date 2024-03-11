@@ -3,11 +3,11 @@
 namespace PureHDF.VOL.Native;
 
 internal abstract record class FractalHeapId(
-    //
+//
 )
 {
     internal static FractalHeapId Construct(
-        NativeReadContext context, 
+        NativeReadContext context,
         H5DriverBase localDriver,
         in FractalHeapHeader header)
     {
@@ -55,6 +55,6 @@ internal abstract record class FractalHeapId(
     }
 
     public abstract T Read<T>(
-        Func<H5DriverBase, T> func, 
+        Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache);
 }

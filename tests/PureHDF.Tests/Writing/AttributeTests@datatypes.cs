@@ -50,15 +50,15 @@ public partial class AttributeTests
 
             var suffix = type switch
             {
-                Type when 
+                Type when
                     type == typeof(bool)
                     => $"_{data}",
 
-                Type when 
-                    typeof(IDictionary).IsAssignableFrom(type) 
+                Type when
+                    typeof(IDictionary).IsAssignableFrom(type)
                     => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
 
-                Type when type != 
+                Type when type !=
                     typeof(string) &&
                     typeof(IEnumerable).IsAssignableFrom(type) &&
                     !type.IsArray
@@ -82,7 +82,7 @@ public partial class AttributeTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -172,7 +172,7 @@ public partial class AttributeTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 
@@ -187,7 +187,8 @@ public partial class AttributeTests
             Numerical = 1,
             Boolean = true,
             Enum = FileAccess.Read,
-            Anonymous = new {
+            Anonymous = new
+            {
                 A = 1,
                 B = 9.81
             }
@@ -217,7 +218,7 @@ public partial class AttributeTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);  
+                File.Delete(filePath);
         }
     }
 
@@ -271,7 +272,7 @@ public partial class AttributeTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);  
+                File.Delete(filePath);
         }
     }
 
@@ -463,7 +464,7 @@ public partial class AttributeTests
         finally
         {
             if (File.Exists(filePath))
-                File.Delete(filePath);   
+                File.Delete(filePath);
         }
     }
 }

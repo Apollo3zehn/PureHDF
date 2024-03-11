@@ -3,10 +3,10 @@
 internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
 {
     public H5Dataset_Chunk_Single_Chunk4(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage4 layout, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation) :
         base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)
@@ -29,7 +29,7 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
     {
         /* see also H5D__single_idx_insert (H5DSingle.c) */
         Chunked4.Address = (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize);
-        
+
         var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
         single.FilteredChunkSize = chunkSize;
 

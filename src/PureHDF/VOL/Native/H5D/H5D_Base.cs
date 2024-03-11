@@ -3,8 +3,8 @@ namespace PureHDF.VOL.Native;
 internal abstract class H5D_Base : IDisposable
 {
     public H5D_Base(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
         DatasetInfo dataset,
         H5DatasetAccess datasetAccess)
     {

@@ -11,6 +11,6 @@ public interface IReadingChunkCache
     /// <param name="indices">The chunk position.</param>
     /// <param name="chunkReader">The chunk reader is used whenever the chunk is not already cached.</param>
     public Memory<byte> GetChunk(
-        ulong[] indices, 
+        ulong[] indices,
         Func<Memory<byte>> chunkReader);
 }

@@ -39,7 +39,7 @@ internal class ExternalFileListStream : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public void ReadDataset(Memory<byte> buffer)
+    public void ReadDataset(Span<byte> buffer)
     {
         var offset = 0;
         var remaining = buffer.Length;
@@ -102,7 +102,7 @@ internal class ExternalFileListStream : IH5ReadStream
         }
     }
 
-#region IDisposable
+    #region IDisposable
 
     private bool _disposedValue;
 
@@ -125,5 +125,5 @@ internal class ExternalFileListStream : IH5ReadStream
         GC.SuppressFinalize(this);
     }
 
-#endregion
+    #endregion
 }

@@ -1,8 +1,7 @@
-﻿namespace PureHDF.Tests
+﻿namespace PureHDF.Tests;
+
+public enum ContainerType
 {
-    public enum ContainerType
-    {
-        Dataset,
-        Attribute
-    }
+    Dataset,
+    Attribute
 }

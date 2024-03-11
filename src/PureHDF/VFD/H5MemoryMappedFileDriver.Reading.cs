@@ -37,7 +37,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         }
     }
 
-    public override void ReadDataset(Memory<byte> buffer)
+    public override void ReadDataset(Span<byte> buffer)
     {
         ReadCore(buffer);
     }
@@ -95,7 +95,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         return value;
     }
 
-    private void ReadCore(Memory<byte> buffer)
+    private void ReadCore(Span<byte> buffer)
     {
         unsafe
         {
@@ -106,7 +106,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
                 _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
                 var ptrSrc = _accessor.PointerOffset + ptr + _position.Value;
 
-                fixed (byte* ptrDst = buffer.Span)
+                fixed (byte* ptrDst = buffer)
                 {
                     Buffer.MemoryCopy(ptrSrc, ptrDst, buffer.Length, buffer.Length);
                 }

@@ -43,7 +43,7 @@ internal partial record class FilterPipelineMessage
             sizeof(byte) +
             sizeof(byte) +
             FilterDescriptions.Aggregate(0, (sum, description) => sum + description.GetEncodeSize());
-            
+
         return (ushort)size;
     }
 
@@ -57,7 +57,7 @@ internal partial record class FilterPipelineMessage
 
         // number of filters
         driver.Write((byte)FilterDescriptions.Length);
-        
+
         // filter descriptions
         foreach (var description in FilterDescriptions)
         {

@@ -54,7 +54,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -105,7 +105,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -148,10 +148,10 @@ public class SelectionTests
         var dataset = new H5Dataset(
             data: data2D,
             memorySelection: new HyperslabSelection(rank: 2,
-                starts: new ulong[] { 1, 2 },
-                strides: new ulong[] { 4, 4 },
-                counts: new ulong[] { 2, 2 },
-                blocks: new ulong[] { 3, 3 })
+                starts: [1, 2],
+                strides: [4, 4],
+                counts: [2, 2],
+                blocks: [3, 3])
         );
 
         var file = new H5File
@@ -160,7 +160,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -201,7 +201,7 @@ public class SelectionTests
         }
 
         var dataset = new H5Dataset<int[,]>(
-            fileDims: new ulong[] { 36 }
+            fileDims: [36]
         );
 
         var file = new H5File
@@ -210,7 +210,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         using (var writer = file.BeginWrite(filePath))
         {
@@ -218,10 +218,10 @@ public class SelectionTests
                 dataset,
                 data: data2D,
                 memorySelection: new HyperslabSelection(rank: 2,
-                    starts: new ulong[] { 1, 2 },
-                    strides: new ulong[] { 4, 4 },
-                    counts: new ulong[] { 2, 2 },
-                    blocks: new ulong[] { 3, 3 })
+                    starts: [1, 2],
+                    strides: [4, 4],
+                    counts: [2, 2],
+                    blocks: [3, 3])
             );
         };
 
@@ -287,7 +287,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -327,16 +327,16 @@ public class SelectionTests
             data: data,
 
             memorySelection: new HyperslabSelection(
-                start: 0, 
+                start: 0,
                 block: 36),
 
             fileSelection: new HyperslabSelection(rank: 2,
-                starts: new ulong[] { 1, 2 },
-                strides: new ulong[] { 4, 4 },
-                counts: new ulong[] { 2, 2 },
-                blocks: new ulong[] { 3, 3 }),
+                starts: [1, 2],
+                strides: [4, 4],
+                counts: [2, 2],
+                blocks: [3, 3]),
 
-            fileDims: new ulong[] { 10, 10 }
+            fileDims: [10, 10]
 
         );
 
@@ -346,7 +346,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         file.Write(filePath);
 
@@ -382,7 +382,7 @@ public class SelectionTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            fileDims: new ulong[] { 10, 10 }
+            fileDims: [10, 10]
         );
 
         var file = new H5File
@@ -391,7 +391,7 @@ public class SelectionTests
         };
 
         var filePath = Path.GetTempFileName();
-       
+
         // Act
         using (var writer = file.BeginWrite(filePath))
         {
@@ -406,10 +406,10 @@ public class SelectionTests
                     block: 36),
 
                 fileSelection: new HyperslabSelection(rank: 2,
-                    starts: new ulong[] { 1, 2 },
-                    strides: new ulong[] { 4, 4 },
-                    counts: new ulong[] { 2, 2 },
-                    blocks: new ulong[] { 3, 3 })
+                    starts: [1, 2],
+                    strides: [4, 4],
+                    counts: [2, 2],
+                    blocks: [3, 3])
             );
         };
 

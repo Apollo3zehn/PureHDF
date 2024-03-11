@@ -13,7 +13,7 @@ namespace PureHDF.VOL.Native;
 // public List<ulong> FractalHeapAddress { get; set; }
 
 internal readonly record struct SharedObjectHeaderMessageTable(
-    //
+//
 )
 {
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("SMTB");
@@ -31,7 +31,7 @@ internal readonly record struct SharedObjectHeaderMessageTable(
         var _ = driver.ReadUInt32();
 
         return new SharedObjectHeaderMessageTable(
-            //
+        //
         );
     }
 }

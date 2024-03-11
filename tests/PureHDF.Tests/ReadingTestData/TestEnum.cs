@@ -1,9 +1,8 @@
-﻿namespace PureHDF.Tests
+﻿namespace PureHDF.Tests;
+
+public enum TestEnum : short
 {
-    public enum TestEnum : short
-    {
-        a = 0,
-        b = -1,
-        c = 2
-    }
+    a = 0,
+    b = -1,
+    c = 2
 }

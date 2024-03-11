@@ -12,19 +12,19 @@ internal partial class SystemMemoryStream : IH5ReadStream
     public long Position { get => _position; }
 
     public Memory<byte> OriginalMemory { get; private set; }
-    
+
     public Memory<byte> SlicedMemory { get; private set; }
 
-    public void ReadDataset(Memory<byte> buffer)
+    public void ReadDataset(Span<byte> buffer)
     {
         var length = Math.Min(SlicedMemory.Length, buffer.Length);
 
-        SlicedMemory[..length]
+        SlicedMemory.Span[..length]
             .CopyTo(buffer);
 
         Seek(length, SeekOrigin.Current);
     }
-    
+
     public void Seek(long offset, SeekOrigin origin)
     {
         switch (origin)

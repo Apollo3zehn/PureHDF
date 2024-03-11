@@ -2,8 +2,8 @@
 
 internal partial record class FixedArrayHeader
 {
-    public const int ENCODE_SIZE = 
-        4 + 
+    public const int ENCODE_SIZE =
+        4 +
         sizeof(byte) +
         sizeof(byte) +
         sizeof(byte) +

@@ -46,10 +46,10 @@ internal record class FractalHeapIndirectBlock(
         }
     }
 
-        public static FractalHeapIndirectBlock Decode(
-        NativeReadContext context, 
-        FractalHeapHeader header, 
-        uint rowCount)
+    public static FractalHeapIndirectBlock Decode(
+    NativeReadContext context,
+    FractalHeapHeader header,
+    uint rowCount)
     {
         var (driver, superblock) = context;
 

@@ -28,7 +28,7 @@ public abstract class NativeObject : IH5Object
     #endregion
 
     #region Properties
-    
+
     /// <inheritdoc />
     public string Name => Reference.Name;
 

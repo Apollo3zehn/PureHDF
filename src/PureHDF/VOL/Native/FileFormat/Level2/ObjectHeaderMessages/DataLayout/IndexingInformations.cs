@@ -3,7 +3,7 @@
 internal abstract record class IndexingInformation()
 {
     public abstract ushort GetEncodeSize(ChunkedStoragePropertyFlags flags);
-    
+
     public abstract void Encode(H5DriverBase driver, ChunkedStoragePropertyFlags flags);
 };
 
@@ -46,7 +46,7 @@ internal record class SingleChunkIndexingInformation(
                 sizeof(ulong) +
                 sizeof(uint);
         }
-    
+
         else
         {
             return 0;
@@ -155,7 +155,7 @@ internal record class ExtensibleArrayIndexingInformation(
             PageBitCount: pageBitCount
         );
     }
-    
+
     public override ushort GetEncodeSize(ChunkedStoragePropertyFlags flags)
     {
         throw new NotImplementedException();

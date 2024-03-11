@@ -16,7 +16,7 @@ internal readonly partial record struct FilterDescription
             sizeof(ushort) +
             (isUnknown ? Name.Length : 0) +
             sizeof(uint) * ClientData.Length;
-            
+
         return (ushort)size;
     }
 

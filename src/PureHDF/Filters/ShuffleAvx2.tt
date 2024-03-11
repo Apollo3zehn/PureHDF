@@ -102,33 +102,32 @@ This is automatically translated code from https://github.com/Blosc/c-blosc2
 
 #if NET5_0_OR_GREATER
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
-namespace PureHDF.Filters
+namespace PureHDF.Filters;
+
+internal static class ShuffleAvx2
 {
-    internal static class ShuffleAvx2
+    public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
     {
-        public static unsafe void Shuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+        fixed (byte* src = source, dest = destination)
         {
-            fixed (byte* src = source, dest = destination)
-            {
-                shuffle_avx2(bytesOfType, source.Length, src, dest);
-            }
+            shuffle_avx2(bytesOfType, source.Length, src, dest);
         }
-
-        public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
-        {
-            fixed (byte* src = source, dest = destination)
-            {
-                unshuffle_avx2(bytesOfType, source.Length, src, dest);
-            }
-        }
-
-        <# Write(csstring); #>
     }
+
+    public static unsafe void Unshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
+    {
+        fixed (byte* src = source, dest = destination)
+        {
+            unshuffle_avx2(bytesOfType, source.Length, src, dest);
+        }
+    }
+
+    <# Write(csstring); #>
 }
+
 
 #endif

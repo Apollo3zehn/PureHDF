@@ -66,7 +66,7 @@ internal class SymbolicLink
         {
             try
             {
-                var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(_file.FolderPath, _value, linkAccess) 
+                var absoluteFilePath = FilePathUtils.FindExternalFileForLinkAccess(_file.FolderPath, _value, linkAccess)
                     ?? throw new Exception($"Could not find file {_value}.");
 
                 var externalFile = NativeCache

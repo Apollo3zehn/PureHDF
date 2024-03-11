@@ -44,7 +44,7 @@ internal record struct FreeSpaceSectionList(
                 Context.Driver.Seek((long)FreeSpaceManagerHeaderAddress, SeekOrigin.Begin);
                 _freeSpaceManagerHeader = FreeSpaceManagerHeader.Decode(Context);
             };
-            
+
             return _freeSpaceManagerHeader;
         }
     }

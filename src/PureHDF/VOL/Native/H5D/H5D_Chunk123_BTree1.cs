@@ -17,10 +17,10 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
     #region Constructors
 
     public H5D_Chunk123_BTree1(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage12 layout, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage12 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation) :
         base(readContext, writeContext, dataset, datasetAccess, datasetCreation)
@@ -29,10 +29,10 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
     }
 
     public H5D_Chunk123_BTree1(
-        NativeReadContext readContext, 
-        NativeWriteContext writeContext, 
-        DatasetInfo dataset, 
-        DataLayoutMessage3 layout, 
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        DataLayoutMessage3 layout,
         H5DatasetAccess datasetAccess,
         H5DatasetCreation datasetCreation) :
         base(readContext, writeContext, dataset, datasetAccess, datasetCreation)
@@ -86,7 +86,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
 
         var success = _btree1.Value.TryFindUserData(
             out var userData,
-            (leftKey, rightKey) 
+            (leftKey, rightKey)
                 => NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey),
             (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
                 => NodeFound(ChunkRank, chunkIndices, address, leftKey, out userData));

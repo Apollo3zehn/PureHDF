@@ -66,22 +66,22 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        var result = ((Task<T>)method.Invoke(this, new object?[] 
-        {
+        var result = ((Task<T>)method.Invoke(this,
+        [
             false /* useAsync */,
             default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
             default(CancellationToken)
-        })!).GetAwaiter().GetResult();
+        ])!).GetAwaiter().GetResult();
 
         return result;
     }
 
     public void Read<T>(
-        T buffer, 
-        Selection? fileSelection = null, 
+        T buffer,
+        Selection? fileSelection = null,
         Selection? memorySelection = null,
         ulong[]? memoryDims = null)
     {
@@ -93,17 +93,17 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        method.Invoke(this, new object?[] 
-        {
+        method.Invoke(this,
+        [
             false /* useAsync */,
             buffer,
             fileSelection,
             memorySelection,
             memoryDims,
             default(CancellationToken)
-        });
+        ]);
     }
-    
+
     public async Task<T> ReadAsync<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
@@ -118,24 +118,24 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        var result = await (Task<T>)method.Invoke(this, new object?[] 
-        {
+        var result = await (Task<T>)method.Invoke(this,
+        [
             true /* useAsync */,
             default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
             cancellationToken
-        })!;
+        ])!;
 
         return result;
     }
 
     public Task ReadAsync<T>(
-        T buffer, 
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null, 
+        T buffer,
+        Selection? fileSelection = null,
+        Selection? memorySelection = null,
+        ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
@@ -146,15 +146,15 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        return (Task)method.Invoke(this, new object?[] 
-        {
+        return (Task)method.Invoke(this,
+        [
             true /* useAsync */,
             buffer,
             fileSelection,
             memorySelection,
             memoryDims,
             cancellationToken
-        })!;
+        ])!;
     }
 
     private async Task<TResult?> ReadCoreAsync<TResult, TElement>(
@@ -163,16 +163,16 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         Selection? fileSelection = null,
         Selection? memorySelection = null,
         ulong[]? memoryDims = null,
-        CancellationToken cancellationToken = default) 
+        CancellationToken cancellationToken = default)
             where TElement : struct
     {
         var resultType = typeof(TResult);
-        
+
         /* fast path for null dataspace */
         if (Space.Type == H5DataspaceType.Null)
             throw new Exception("Datasets with null dataspace cannot be read.");
 
-        /* memory selection + dims validation */ 
+        /* memory selection + dims validation */
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
 
@@ -271,7 +271,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
                 var rank = resultType.GetArrayRank();
 
                 if (rank == 1)
-                    memoryDims ??= new ulong[] { fileSelection.TotalElementCount };
+                    memoryDims ??= [fileSelection.TotalElementCount];
 
                 else if (rank == fileDims.Length)
                     memoryDims ??= fileDims;
@@ -282,7 +282,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 
             else
             {
-                memoryDims ??= new ulong[] { 1 };
+                memoryDims ??= [1];
             }
 
             /* result buffer */
@@ -333,8 +333,8 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         var byteMemory = resultBuffer.Cast<TElement, byte>();
 
         await ReadExactlyAsync(
-            stream, 
-            buffer: byteMemory, 
+            stream,
+            buffer: byteMemory,
             useAsync: useAsync,
             cancellationToken);
 

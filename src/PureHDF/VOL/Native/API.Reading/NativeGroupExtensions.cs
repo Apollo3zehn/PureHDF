@@ -14,8 +14,8 @@ public static class NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
     public static T Get<T>(
-        this NativeGroup group, 
-        string path, 
+        this NativeGroup group,
+        string path,
         H5LinkAccess linkAccess) where T : IH5Object
     {
         return (T)group.Get(path, linkAccess);
@@ -30,8 +30,8 @@ public static class NativeGroupExtensions
     /// <param name="linkAccess">The link access properties.</param>
     /// <returns>The requested object.</returns>
     public static T Get<T>(
-        this NativeGroup group, 
-        NativeObjectReference1 reference, 
+        this NativeGroup group,
+        NativeObjectReference1 reference,
         H5LinkAccess linkAccess)
         where T : IH5Object
     {
@@ -46,7 +46,7 @@ public static class NativeGroupExtensions
     /// <param name="reference">The reference of the object.</param>
     /// <returns>The requested object.</returns>
     public static T Get<T>(
-        this NativeGroup group, 
+        this NativeGroup group,
         NativeObjectReference1 reference)
         where T : IH5Object
     {
