@@ -5,7 +5,7 @@
         {
           "src": "../",
           "files": [
-            "artifacts/bin/PureHDF/Release/net7.0/PureHDF.dll",
+            "artifacts/bin/PureHDF/release_net8.0/PureHDF.dll",
             "artifacts/bin/PureHDF.Filters.Blosc2/Release/netstandard2.0/PureHDF.Filters.Blosc2.dll",
             "artifacts/bin/PureHDF.Filters.BZip2.SharpZipLib/Release/netstandard2.0/PureHDF.Filters.BZip2.SharpZipLib.dll",
             "artifacts/bin/PureHDF.Filters.Deflate.ISA-L/Release/netstandard2.0/PureHDF.Filters.Deflate.ISA-L.dll",
@@ -19,7 +19,7 @@
       "dest": "api",
       "filter": "filterConfig.yml",
       "properties": {
-        "TargetFramework": "net70"
+        "TargetFramework": "net80"
       },
       "includePrivateMembers": false,
       "disableGitFeatures": false,
