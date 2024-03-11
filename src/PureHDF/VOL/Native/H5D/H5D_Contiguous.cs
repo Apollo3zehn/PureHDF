@@ -38,7 +38,7 @@ internal class H5D_Contiguous : H5D_Base
                     _readStream = new ExternalFileListStream(ReadContext.File, Dataset.ExternalFileList, DatasetAccess);
 
                 else
-                    _readStream = new UnsafeFillValueStream(Dataset.FillValue.Value ?? new byte[] { 0 });
+                    _readStream = new UnsafeFillValueStream(Dataset.FillValue.Value ?? [0]);
             }
 
             else

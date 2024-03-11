@@ -29,14 +29,14 @@ public partial class H5NativeWriter : IDisposable
         // TODO cache this
         var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        method.Invoke(this, new object?[]
-        {
+        method.Invoke(this,
+        [
             info.H5D,
             info.Encode,
             data,
             memorySelection,
             fileSelection
-        });
+        ]);
     }
 
     /// <summary>

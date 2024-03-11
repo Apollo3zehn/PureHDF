@@ -14,7 +14,7 @@ public class UtilsTests
 
         // Act
         var actual = MathUtils.ToLinearIndex(coordinates, dimensions);
-        
+
         // Assert
         Assert.Equal(expected, actual);
     }
@@ -29,7 +29,7 @@ public class UtilsTests
 
         // Act
         var actual = MathUtils.ToCoordinates(linearIndex, dimensions);
-        
+
         // Assert
         Assert.True(expected.SequenceEqual(actual));
     }

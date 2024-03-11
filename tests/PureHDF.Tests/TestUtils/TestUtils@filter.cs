@@ -8,7 +8,7 @@ public partial class TestUtils
     {
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { (ulong)length });
+        _ = H5P.set_chunk(dcpl_id, 1, [(ulong)length]);
         _ = H5P.set_shuffle(dcpl_id);
 
         var typeId = bytesOfType switch
@@ -30,8 +30,8 @@ public partial class TestUtils
         var dims = new ulong[] { length, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
-        _ = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), new uint[] { 5 } /* compression level */);
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 4]);
+        _ = H5P.set_filter(dcpl_id, H5Z.filter_t.DEFLATE, 0, new IntPtr(1), [5] /* compression level */);
 
         Add(ContainerType.Dataset, fileId, "filtered", $"deflate", H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
         _ = H5P.close(dcpl_id);
@@ -43,7 +43,7 @@ public partial class TestUtils
         var dims = new ulong[] { length, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 4]);
         _ = H5P.set_fletcher32(dcpl_id);
 
         Add(ContainerType.Dataset, fileId, "filtered", $"fletcher", H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
@@ -56,7 +56,7 @@ public partial class TestUtils
         var dims = new ulong[] { length, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 4 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 4]);
         _ = H5P.set_fletcher32(dcpl_id);
         _ = H5P.set_shuffle(dcpl_id);
         _ = H5P.set_deflate(dcpl_id, level: 5);

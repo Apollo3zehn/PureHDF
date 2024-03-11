@@ -13,7 +13,7 @@ public partial class TestUtils
     {
         var dump = default(string);
 
-        var h5dumpProcess = new Process 
+        var h5dumpProcess = new Process
         {
             StartInfo = new ProcessStartInfo
             {
@@ -235,7 +235,7 @@ public partial class TestUtils
             var typeId = H5T.copy(H5T.NATIVE_INT64);
             _ = H5T.set_size(typeId, 16);
             _ = H5T.set_precision(typeId, 128);
-            
+
             return typeId;
         }
 #endif
@@ -254,7 +254,7 @@ public partial class TestUtils
 
             _ = H5T.set_ebias(typeId, (nint)15);
             _ = H5T.set_precision(typeId, (nint)16);
-            _ = H5T.set_size(typeId, (nint)2);                
+            _ = H5T.set_size(typeId, (nint)2);
 
             return typeId;
         }

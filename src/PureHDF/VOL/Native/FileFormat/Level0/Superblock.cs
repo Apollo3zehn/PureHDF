@@ -7,7 +7,7 @@ internal abstract partial record class Superblock(
     ulong EndOfFileAddress
 )
 {
-    public static byte[] Signature { get; } = new byte[] { 0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a };
+    public static byte[] Signature { get; } = [0x89, 0x48, 0x44, 0x46, 0x0d, 0x0a, 0x1a, 0x0a];
 
     public static ulong UndefinedAddress { get; } = 0xFFFFFFFFFFFFFFFF;
 

@@ -66,15 +66,15 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        var result = ((Task<T>)method.Invoke(this, new object?[]
-        {
+        var result = ((Task<T>)method.Invoke(this,
+        [
             false /* useAsync */,
             default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
             default(CancellationToken)
-        })!).GetAwaiter().GetResult();
+        ])!).GetAwaiter().GetResult();
 
         return result;
     }
@@ -93,15 +93,15 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        method.Invoke(this, new object?[]
-        {
+        method.Invoke(this,
+        [
             false /* useAsync */,
             buffer,
             fileSelection,
             memorySelection,
             memoryDims,
             default(CancellationToken)
-        });
+        ]);
     }
 
     public async Task<T> ReadAsync<T>(
@@ -118,15 +118,15 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        var result = await (Task<T>)method.Invoke(this, new object?[]
-        {
+        var result = await (Task<T>)method.Invoke(this,
+        [
             true /* useAsync */,
             default /* buffer */,
             fileSelection,
             memorySelection,
             memoryDims,
             cancellationToken
-        })!;
+        ])!;
 
         return result;
     }
@@ -146,15 +146,15 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
         // TODO cache this
         var method = _methodInfoReadCoreAsync.MakeGenericMethod(typeof(T), elementType);
 
-        return (Task)method.Invoke(this, new object?[]
-        {
+        return (Task)method.Invoke(this,
+        [
             true /* useAsync */,
             buffer,
             fileSelection,
             memorySelection,
             memoryDims,
             cancellationToken
-        })!;
+        ])!;
     }
 
     private async Task<TResult?> ReadCoreAsync<TResult, TElement>(

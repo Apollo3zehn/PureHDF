@@ -102,7 +102,7 @@ internal static partial class MathUtils
     }
 
     // H5VMprivate.h (H5VM_bit_get)
-    public static byte[] SequentialBitMask { get; } = new byte[] { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+    public static byte[] SequentialBitMask { get; } = [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int VectorCompare(byte rank, ulong[] v1, ulong[] v2)

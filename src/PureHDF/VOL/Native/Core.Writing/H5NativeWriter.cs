@@ -159,7 +159,7 @@ partial class H5NativeWriter
         // TODO cache this
         var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Type, elementType);
 
-        return (ulong)method.Invoke(this, new object?[] { h5Dataset, h5Dataset.Data, isScalar })!;
+        return (ulong)method.Invoke(this, [h5Dataset, h5Dataset.Data, isScalar])!;
     }
 
     private ulong InternalEncodeDataset<T, TElement>(
@@ -182,7 +182,7 @@ partial class H5NativeWriter
             {
                 fileDims = dataset.MemorySelection is null || dataset.MemorySelection is AllSelection
                     ? memoryDims
-                    : new ulong[] { dataset.MemorySelection.TotalElementCount };
+                    : [dataset.MemorySelection.TotalElementCount];
             }
         }
 
@@ -380,7 +380,7 @@ partial class H5NativeWriter
         /* memory dims */
         memoryDims = h5d.Dataset.Space.Type switch
         {
-            DataspaceType.Scalar => new ulong[] { 1 },
+            DataspaceType.Scalar => [1],
             DataspaceType.Simple => memoryDims,
             _ => throw new Exception($"Unsupported data space type '{h5d.Dataset.Space.Type}'.")
         };

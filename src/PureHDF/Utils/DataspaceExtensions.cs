@@ -6,7 +6,7 @@ internal static class DataspaceExtensions
     {
         return dataspace.Type switch
         {
-            DataspaceType.Scalar => new ulong[] { 1 },
+            DataspaceType.Scalar => [1],
             DataspaceType.Simple => dataspace.Dimensions,
             _ => throw new Exception($"The dataspace type '{dataspace.Type}' is not supported.")
         };
@@ -28,7 +28,7 @@ internal static class DataspaceExtensions
     {
         return dataspace.Type switch
         {
-            H5DataspaceType.Scalar => new ulong[] { 1 },
+            H5DataspaceType.Scalar => [1],
             H5DataspaceType.Simple => dataspace.Dimensions,
             _ => throw new Exception($"The dataspace type '{dataspace.Type}' is not supported.")
         };

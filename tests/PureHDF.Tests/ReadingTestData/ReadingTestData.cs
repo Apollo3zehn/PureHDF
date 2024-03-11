@@ -56,7 +56,7 @@ public class ReadingTestData
         StringValue2 = "World",
         ByteValue = 123,
         ShortValueWithCustomName = -15521,
-        FloatArray = new float[] { 1.1f, 2.2f, 3.3f },
+        FloatArray = [1.1f, 2.2f, 3.3f],
         L2Struct = new TestStructL2()
         {
             ByteValue = 15,
@@ -72,7 +72,7 @@ public class ReadingTestData
         StringValue2 = "World!",
         ByteValue = 0,
         ShortValueWithCustomName = 15521,
-        FloatArray = new float[] { 2.2f, 3.3f, 4.4f },
+        FloatArray = [2.2f, 3.3f, 4.4f],
         L2Struct = new TestStructL2()
         {
             ByteValue = 18,
@@ -83,15 +83,67 @@ public class ReadingTestData
 
     static ReadingTestData()
     {
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
         EnumData = new TestEnum[] { 
             TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
             TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
         };
+Nach:
+        EnumData = [ 
+            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
+            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
+        ];
+*/
 
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+        EnumData = new TestEnum[] { 
+            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
+            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
+        };
+Nach:
+        EnumData = [ 
+            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
+            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
+        ];
+*/
+        EnumData = [
+            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
+            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99
+        ];
+
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
         BitfieldData = new TestBitfield[] { 
             TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
             TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
         };
+Nach:
+        BitfieldData = [ 
+            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
+        ];
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+        BitfieldData = new TestBitfield[] { 
+            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
+        };
+Nach:
+        BitfieldData = [ 
+            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
+        ];
+*/
+        BitfieldData = [
+            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
+            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99
+        ];
 
         ArrayDataValue = new int[2, 3, 4, 5];
 
@@ -153,8 +205,8 @@ public class ReadingTestData
 #endif
         };
 
-        NonNullableStructData = new TestStructL1[] { _nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a };
-        NullableStructData = new TestStructStringAndArray[] { _string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a };
+        NonNullableStructData = [_nn_a, _nn_b, _nn_a, _nn_a, _nn_b, _nn_b, _nn_b, _nn_b, _nn_a, _nn_a, _nn_b, _nn_a];
+        NullableStructData = [_string_a, _string_b, _string_a, _string_a, _string_b, _string_b, _string_b, _string_b, _string_a, _string_a, _string_b, _string_a];
         HyperslabData = Enumerable.Range(0, 2 * 3 * 6).ToArray();
     }
 

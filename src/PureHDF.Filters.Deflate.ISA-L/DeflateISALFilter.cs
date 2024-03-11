@@ -181,7 +181,7 @@ public class DeflateISALFilter : IH5Filter
         if (value < 0 || value > 3)
             throw new Exception("The compression level must be in the range of 0..3.");
 
-        return new uint[] { unchecked((uint)value) };
+        return [unchecked((uint)value)];
     }
 
     private static unsafe IntPtr CreateState()

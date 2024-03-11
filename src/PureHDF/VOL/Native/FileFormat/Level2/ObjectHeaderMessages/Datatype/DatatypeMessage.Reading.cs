@@ -839,7 +839,7 @@ internal partial record class DatatypeMessage(
             Func<string, string> trim = bitField.PaddingType switch
             {
 #if NETSTANDARD2_0
-                PaddingType.NullTerminate => value => value.Split(new char[] { '\0' }, 2)[0],
+                PaddingType.NullTerminate => value => value.Split(['\0'], 2)[0],
 #else
                 PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
 #endif

@@ -19,7 +19,7 @@ public class HsdsTestsFixture
             BaseAddress = new Uri("http://localhost:5101")
         };
 
-        httpClient.DefaultRequestHeaders.Authorization 
+        httpClient.DefaultRequestHeaders.Authorization
             = new AuthenticationHeaderValue("Basic", base64String);
 
         var client = new HsdsClient(httpClient);

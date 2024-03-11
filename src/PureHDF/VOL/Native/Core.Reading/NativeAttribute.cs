@@ -75,12 +75,12 @@ internal class NativeAttribute : IH5Attribute
         var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        var result = (T)method.Invoke(this, new object?[]
-        {
+        var result = (T)method.Invoke(this,
+        [
             default /* buffer */,
             source,
             memoryDims
-        })!;
+        ])!;
 
         return result;
     }
@@ -197,10 +197,10 @@ internal class NativeAttribute : IH5Attribute
     }
 
     private static void ReadCoreLevel2<TElement>(
-        IH5ReadStream source, 
-        ulong[] memoryDims, 
-        ulong fileElementCount, 
-        DecodeDelegate<TElement> decoder, 
+        IH5ReadStream source,
+        ulong[] memoryDims,
+        ulong fileElementCount,
+        DecodeDelegate<TElement> decoder,
         Span<TElement> resultBuffer)
     {
         /* memory element count */

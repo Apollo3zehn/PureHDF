@@ -23,7 +23,7 @@ internal partial record class AttributeMessage
         // TODO cache this
         var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(data.GetType(), elementType);
 
-        return (AttributeMessage)method.Invoke(default, new object?[] { context, name, attribute, data, isScalar })!;
+        return (AttributeMessage)method.Invoke(default, [context, name, attribute, data, isScalar])!;
     }
 
     private static AttributeMessage InternalCreate<T, TElement>(

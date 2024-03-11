@@ -23,7 +23,7 @@ public partial class TestUtils
         var length = (ulong)SharedTestData.MediumData.Length / 4;
         var dims = new ulong[] { length, 4 };
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -38,7 +38,7 @@ public partial class TestUtils
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
         _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.LATE);
-        _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1000 });
+        _ = H5P.set_chunk(dcpl_id, 1, [1000]);
 
         var handle = GCHandle.Alloc(BitConverter.GetBytes(fillValue), GCHandleType.Pinned);
         _ = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT, handle.AddrOfPinnedObject());
@@ -54,7 +54,7 @@ public partial class TestUtils
         var length = (ulong)SharedTestData.MediumData.Length / 4;
         var dims = new ulong[] { length, 4 };
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { length, 4 });
+        _ = H5P.set_chunk(dcpl_id, 2, [length, 4]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -69,7 +69,7 @@ public partial class TestUtils
         var dims = new ulong[] { length, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 3]);
         _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
         Add(ContainerType.Dataset, fileId, "chunked", "chunked_implicit", H5T.NATIVE_INT32, SharedTestData.MediumData.AsSpan(), dims, cpl: dcpl_id);
@@ -82,7 +82,7 @@ public partial class TestUtils
         var dims = new ulong[] { length, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -97,7 +97,7 @@ public partial class TestUtils
         var dims = new ulong[] { length, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -113,7 +113,7 @@ public partial class TestUtils
         var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -129,7 +129,7 @@ public partial class TestUtils
         var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 100, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [100, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -145,7 +145,7 @@ public partial class TestUtils
         var dims1 = new ulong[] { H5S.UNLIMITED, 4 };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 3, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [3, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -161,7 +161,7 @@ public partial class TestUtils
         var dims1 = new ulong[] { H5S.UNLIMITED, H5S.UNLIMITED };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 2, new ulong[] { 1000, 3 });
+        _ = H5P.set_chunk(dcpl_id, 2, [1000, 3]);
 
         if (withShuffle)
             _ = H5P.set_shuffle(dcpl_id);
@@ -177,7 +177,7 @@ public partial class TestUtils
         var dims = new ulong[] { length };
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
-        _ = H5P.set_chunk(dcpl_id, 1, new ulong[] { 1_000_000 });
+        _ = H5P.set_chunk(dcpl_id, 1, [1_000_000]);
         _ = H5P.set_alloc_time(dcpl_id, H5D.alloc_time_t.EARLY);
 
         Add(ContainerType.Dataset, fileId, "chunked", "chunked_huge", H5T.NATIVE_INT32, SharedTestData.HugeData.AsSpan(), dims, cpl: dcpl_id);

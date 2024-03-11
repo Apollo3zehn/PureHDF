@@ -64,20 +64,20 @@ public class SelectionTests
 
         static IEnumerable<Step> Walker(ulong[] datasetDimensions)
         {
-            yield return new Step(Coordinates: new ulong[] { 00, 00, 00 }, ElementCount: 1);
-            yield return new Step(Coordinates: new ulong[] { 00, 05, 10 }, ElementCount: 1);
-            yield return new Step(Coordinates: new ulong[] { 12, 01, 10 }, ElementCount: 1);
-            yield return new Step(Coordinates: new ulong[] { 05, 07, 09 }, ElementCount: 1);
+            yield return new Step(Coordinates: [00, 00, 00], ElementCount: 1);
+            yield return new Step(Coordinates: [00, 05, 10], ElementCount: 1);
+            yield return new Step(Coordinates: [12, 01, 10], ElementCount: 1);
+            yield return new Step(Coordinates: [05, 07, 09], ElementCount: 1);
         };
 
         var selection = new DelegateSelection(totalElementCount: 5, Walker);
 
         var expected = new RelativeStep[]
         {
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 3}, Offset: 7, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {4, 0, 3}, Offset: 4, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 3}, Offset: 21, Length: 1),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 3], Offset: 7, Length: 1),
+            new RelativeStep(Chunk: [4, 0, 3], Offset: 4, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 3], Offset: 21, Length: 1),
         };
 
         // Act
@@ -135,10 +135,10 @@ public class SelectionTests
 
         var expected = new RelativeStep[]
         {
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 3}, Offset: 7, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {4, 0, 3}, Offset: 4, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 3}, Offset: 21, Length: 1),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 3], Offset: 7, Length: 1),
+            new RelativeStep(Chunk: [4, 0, 3], Offset: 4, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 3], Offset: 21, Length: 1),
         };
 
         // Act
@@ -189,187 +189,187 @@ public class SelectionTests
 
         var selection = new HyperslabSelection(
             rank: 3,
-            starts: new ulong[] { 2, 3, 2 },
-            strides: new ulong[] { 6, 5, 6 },
-            counts: new ulong[] { 2, 2, 2 },
-            blocks: new ulong[] { 3, 2, 5 }
+            starts: [2, 3, 2],
+            strides: [6, 5, 6],
+            counts: [2, 2, 2],
+            blocks: [3, 2, 5]
         );
 
         var expected = new RelativeStep[]
         {
             // row 0
-            new RelativeStep(Chunk: new ulong[] {0, 1, 0}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 1}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 2}, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 2}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 3}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 4}, Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 0], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 1], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [0, 1, 2], Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 2], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 3], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [0, 1, 4], Offset: 18, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {0, 1, 0}, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 1}, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 2}, Offset: 21, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 2}, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 3}, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 4}, Offset: 21, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 0], Offset: 23, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 1], Offset: 21, Length: 3),
+            new RelativeStep(Chunk: [0, 1, 2], Offset: 21, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 2], Offset: 23, Length: 1),
+            new RelativeStep(Chunk: [0, 1, 3], Offset: 21, Length: 3),
+            new RelativeStep(Chunk: [0, 1, 4], Offset: 21, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {0, 2, 0}, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 2, 1}, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 2, 2}, Offset: 24, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 2, 2}, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 2, 3}, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 2, 4}, Offset: 24, Length: 1),
+            new RelativeStep(Chunk: [0, 2, 0], Offset: 26, Length: 1),
+            new RelativeStep(Chunk: [0, 2, 1], Offset: 24, Length: 3),
+            new RelativeStep(Chunk: [0, 2, 2], Offset: 24, Length: 1),
+            new RelativeStep(Chunk: [0, 2, 2], Offset: 26, Length: 1),
+            new RelativeStep(Chunk: [0, 2, 3], Offset: 24, Length: 3),
+            new RelativeStep(Chunk: [0, 2, 4], Offset: 24, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {0, 3, 0}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 3, 1}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 3, 2}, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 3, 2}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {0, 3, 3}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 3, 4}, Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [0, 3, 0], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [0, 3, 1], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [0, 3, 2], Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [0, 3, 2], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [0, 3, 3], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [0, 3, 4], Offset: 18, Length: 1),
 
             // row 1
-            new RelativeStep(Chunk: new ulong[] {1, 1, 0}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 1}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 3}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 4}, Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 0], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 1], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 3], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 4], Offset: 0, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {1, 1, 0}, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 1}, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 3, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 3}, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 4}, Offset: 3, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 0], Offset: 5, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 1], Offset: 3, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 3, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 5, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 3], Offset: 3, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 4], Offset: 3, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {1, 2, 0}, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 1}, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 2}, Offset: 6, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 2}, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 3}, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 4}, Offset: 6, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 0], Offset: 8, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 1], Offset: 6, Length: 3),
+            new RelativeStep(Chunk: [1, 2, 2], Offset: 6, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 2], Offset: 8, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 3], Offset: 6, Length: 3),
+            new RelativeStep(Chunk: [1, 2, 4], Offset: 6, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {1, 3, 0}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 1}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 2}, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 2}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 3}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 4}, Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 0], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 1], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [1, 3, 2], Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 2], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 3], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [1, 3, 4], Offset: 0, Length: 1),
 
             // row 2
-            new RelativeStep(Chunk: new ulong[] {1, 1, 0}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 1}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 3}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 4}, Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 0], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 1], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 3], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 4], Offset: 9, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {1, 1, 0}, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 1}, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 12, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 2}, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 3}, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 1, 4}, Offset: 12, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 0], Offset: 14, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 1], Offset: 12, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 12, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 2], Offset: 14, Length: 1),
+            new RelativeStep(Chunk: [1, 1, 3], Offset: 12, Length: 3),
+            new RelativeStep(Chunk: [1, 1, 4], Offset: 12, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {1, 2, 0}, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 1}, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 2}, Offset: 15, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 2}, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 3}, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 2, 4}, Offset: 15, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 0], Offset: 17, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 1], Offset: 15, Length: 3),
+            new RelativeStep(Chunk: [1, 2, 2], Offset: 15, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 2], Offset: 17, Length: 1),
+            new RelativeStep(Chunk: [1, 2, 3], Offset: 15, Length: 3),
+            new RelativeStep(Chunk: [1, 2, 4], Offset: 15, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {1, 3, 0}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 1}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 2}, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 2}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 3}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {1, 3, 4}, Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 0], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 1], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [1, 3, 2], Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 2], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [1, 3, 3], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [1, 3, 4], Offset: 9, Length: 1),
 
             // row 3
-            new RelativeStep(Chunk: new ulong[] {2, 1, 0}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 1}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 2}, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 2}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 3}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 4}, Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 0], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 1], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [2, 1, 2], Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 2], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 3], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [2, 1, 4], Offset: 18, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {2, 1, 0}, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 1}, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 2}, Offset: 21, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 2}, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 3}, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 1, 4}, Offset: 21, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 0], Offset: 23, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 1], Offset: 21, Length: 3),
+            new RelativeStep(Chunk: [2, 1, 2], Offset: 21, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 2], Offset: 23, Length: 1),
+            new RelativeStep(Chunk: [2, 1, 3], Offset: 21, Length: 3),
+            new RelativeStep(Chunk: [2, 1, 4], Offset: 21, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {2, 2, 0}, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 2, 1}, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 2, 2}, Offset: 24, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 2, 2}, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 2, 3}, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 2, 4}, Offset: 24, Length: 1),
+            new RelativeStep(Chunk: [2, 2, 0], Offset: 26, Length: 1),
+            new RelativeStep(Chunk: [2, 2, 1], Offset: 24, Length: 3),
+            new RelativeStep(Chunk: [2, 2, 2], Offset: 24, Length: 1),
+            new RelativeStep(Chunk: [2, 2, 2], Offset: 26, Length: 1),
+            new RelativeStep(Chunk: [2, 2, 3], Offset: 24, Length: 3),
+            new RelativeStep(Chunk: [2, 2, 4], Offset: 24, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {2, 3, 0}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 3, 1}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 3, 2}, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 3, 2}, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {2, 3, 3}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {2, 3, 4}, Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [2, 3, 0], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [2, 3, 1], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [2, 3, 2], Offset: 18, Length: 1),
+            new RelativeStep(Chunk: [2, 3, 2], Offset: 20, Length: 1),
+            new RelativeStep(Chunk: [2, 3, 3], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [2, 3, 4], Offset: 18, Length: 1),
 
             // row 4
-            new RelativeStep(Chunk: new ulong[] {3, 1, 0}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 1}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 3}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 4}, Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 0], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 1], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 3], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 4], Offset: 0, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {3, 1, 0}, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 1}, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 3, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 3}, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 4}, Offset: 3, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 0], Offset: 5, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 1], Offset: 3, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 3, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 5, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 3], Offset: 3, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 4], Offset: 3, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {3, 2, 0}, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 1}, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 2}, Offset: 6, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 2}, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 3}, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 4}, Offset: 6, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 0], Offset: 8, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 1], Offset: 6, Length: 3),
+            new RelativeStep(Chunk: [3, 2, 2], Offset: 6, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 2], Offset: 8, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 3], Offset: 6, Length: 3),
+            new RelativeStep(Chunk: [3, 2, 4], Offset: 6, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {3, 3, 0}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 1}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 2}, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 2}, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 3}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 4}, Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 0], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 1], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [3, 3, 2], Offset: 0, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 2], Offset: 2, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 3], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [3, 3, 4], Offset: 0, Length: 1),
 
             // row 5
-            new RelativeStep(Chunk: new ulong[] {3, 1, 0}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 1}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 3}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 4}, Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 0], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 1], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 3], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 4], Offset: 9, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {3, 1, 0}, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 1}, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 12, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 2}, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 3}, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 1, 4}, Offset: 12, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 0], Offset: 14, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 1], Offset: 12, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 12, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 2], Offset: 14, Length: 1),
+            new RelativeStep(Chunk: [3, 1, 3], Offset: 12, Length: 3),
+            new RelativeStep(Chunk: [3, 1, 4], Offset: 12, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {3, 2, 0}, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 1}, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 2}, Offset: 15, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 2}, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 3}, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 2, 4}, Offset: 15, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 0], Offset: 17, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 1], Offset: 15, Length: 3),
+            new RelativeStep(Chunk: [3, 2, 2], Offset: 15, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 2], Offset: 17, Length: 1),
+            new RelativeStep(Chunk: [3, 2, 3], Offset: 15, Length: 3),
+            new RelativeStep(Chunk: [3, 2, 4], Offset: 15, Length: 1),
 
-            new RelativeStep(Chunk: new ulong[] {3, 3, 0}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 1}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 2}, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 2}, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 3}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {3, 3, 4}, Offset: 9, Length: 1)
+            new RelativeStep(Chunk: [3, 3, 0], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 1], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [3, 3, 2], Offset: 9, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 2], Offset: 11, Length: 1),
+            new RelativeStep(Chunk: [3, 3, 3], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [3, 3, 4], Offset: 9, Length: 1)
         };
 
         // Act
@@ -427,13 +427,13 @@ public class SelectionTests
         // Arrange
         var selection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 1, 25 },
-            strides: new ulong[] { 4, 4 },
-            counts: new ulong[] { 4, 4 },
-            blocks: new ulong[] { 2, 3 });
+            starts: [1, 25],
+            strides: [4, 4],
+            counts: [4, 4],
+            blocks: [2, 3]);
 
         // Act
-        void action() => _ = selection.Walk(limits: new[] { 100UL, 100UL, 100UL }).ToList();
+        void action() => _ = selection.Walk(limits: [100UL, 100UL, 100UL]).ToList();
 
         // Assert
         Assert.Throws<RankException>(action);
@@ -447,10 +447,10 @@ public class SelectionTests
         // Arrange
         var selection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 1, 25 },
-            strides: new ulong[] { 4, 4 },
-            counts: new ulong[] { 4, 4 },
-            blocks: new ulong[] { 2, 3 });
+            starts: [1, 25],
+            strides: [4, 4],
+            counts: [4, 4],
+            blocks: [2, 3]);
 
         // Act
         void action() => _ = selection.Walk(limits: limits).ToList();
@@ -488,29 +488,29 @@ public class SelectionTests
 
         var selection = new IrregularHyperslabSelection(
             rank: 3,
-            blockOffsets: new ulong[]
-            {
+            blockOffsets:
+            [
                 /* starts..|...ends */
                 0, 0, 0, 0, 0, 2, // block 1
                 0, 1, 0, 0, 1, 4, // block 2
                 0, 2, 1, 0, 3, 4, // block 3
                 1, 0, 0, 2, 1, 2  // block 4
-            }
+            ]
         );
 
         var expected = new RelativeStep[]
         {
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 1}, Offset: 3, Length: 2),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 7, Length: 2),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 1}, Offset: 6, Length: 2),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 0}, Offset: 1, Length: 2),
-            new RelativeStep(Chunk: new ulong[] {0, 1, 1}, Offset: 0, Length: 2),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: new ulong[] {0, 0, 0}, Offset: 21, Length: 3)
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 0, Length: 3),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 3, Length: 3),
+            new RelativeStep(Chunk: [0, 0, 1], Offset: 3, Length: 2),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 7, Length: 2),
+            new RelativeStep(Chunk: [0, 0, 1], Offset: 6, Length: 2),
+            new RelativeStep(Chunk: [0, 1, 0], Offset: 1, Length: 2),
+            new RelativeStep(Chunk: [0, 1, 1], Offset: 0, Length: 2),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 9, Length: 3),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 12, Length: 3),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 18, Length: 3),
+            new RelativeStep(Chunk: [0, 0, 0], Offset: 21, Length: 3)
         };
 
         // Act
@@ -593,16 +593,16 @@ public class SelectionTests
 
         var datasetSelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 0, 1 },
-            strides: new ulong[] { 5, 5 },
+            starts: [0, 1],
+            strides: [5, 5],
             counts: counts,
             blocks: blocks
         );
 
         var memorySelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 1, 1 },
-            strides: new ulong[] { 5, 5 },
+            starts: [1, 1],
+            strides: [5, 5],
             counts: counts,
             blocks: blocks
         );
@@ -635,18 +635,18 @@ public class SelectionTests
 
         var datasetSelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 0, 1 },
-            strides: new ulong[] { 5, 5 },
-            counts: new ulong[] { 2, 0 },
-            blocks: new ulong[] { 3, 2 }
+            starts: [0, 1],
+            strides: [5, 5],
+            counts: [2, 0],
+            blocks: [3, 2]
         );
 
         var memorySelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 1, 1 },
-            strides: new ulong[] { 5, 5 },
-            counts: new ulong[] { 2, 0 },
-            blocks: new ulong[] { 3, 2 }
+            starts: [1, 1],
+            strides: [5, 5],
+            counts: [2, 0],
+            blocks: [3, 2]
         );
 
         var decodeInfo = new DecodeInfo<int>(
@@ -808,16 +808,16 @@ public class SelectionTests
         var memoryDims = new ulong[] { 5, 6, 11 };
 
         var sourceSelection = new HyperslabSelection(rank: 3,
-            starts: new ulong[] { 0, 1, 1 },
-            strides: new ulong[] { 1, 1, 1 },
-            counts: new ulong[] { 1, 2, 3 },
-            blocks: new ulong[] { 1, 1, 1 });
+            starts: [0, 1, 1],
+            strides: [1, 1, 1],
+            counts: [1, 2, 3],
+            blocks: [1, 1, 1]);
 
         var targetSelection = new HyperslabSelection(rank: 3,
-            starts: new ulong[] { 1, 1, 1 },
-            strides: new ulong[] { 1, 1, 1 },
-            counts: new ulong[] { 3, 1, 2 },
-            blocks: new ulong[] { 1, 1, 1 });
+            starts: [1, 1, 1],
+            strides: [1, 1, 1],
+            counts: [3, 1, 2],
+            blocks: [1, 1, 1]);
 
         // source
         var sourceBuffer1 = new byte[1 * 2 * 3 * sizeof(int)];
@@ -876,7 +876,7 @@ public class SelectionTests
         var actual = new int[5 * 6 * 11];
         var scaledDatasetDims = datasetDims.Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i])).ToArray();
 
-        IH5ReadStream getSourceStream(ulong[] indices) 
+        IH5ReadStream getSourceStream(ulong[] indices)
             => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
         var decodeInfo = new DecodeInfo<int>(
@@ -924,18 +924,18 @@ public class SelectionTests
 
         var datasetSelection = new HyperslabSelection(
             rank: 3,
-            starts: new ulong[] { 4, 4, 2 },
-            strides: new ulong[] { 2, 2, 4 },
-            counts: new ulong[] { 2, 3, 2 },
-            blocks: new ulong[] { 1, 1, 1 }
+            starts: [4, 4, 2],
+            strides: [2, 2, 4],
+            counts: [2, 3, 2],
+            blocks: [1, 1, 1]
         );
 
         var memorySelection = new HyperslabSelection(
             rank: 3,
-            starts: new ulong[] { 2, 1, 1 },
-            strides: new ulong[] { 3, 3, 3 },
-            counts: new ulong[] { 2, 2, 3 },
-            blocks: new ulong[] { 1, 1, 1 }
+            starts: [2, 1, 1],
+            strides: [3, 3, 3],
+            counts: [2, 2, 3],
+            blocks: [1, 1, 1]
         );
 
         // s0
@@ -1006,7 +1006,7 @@ public class SelectionTests
 
         var actual = new int[11 * 11 * 12];
 
-        IH5ReadStream getSourceStream(ulong[] indices) 
+        IH5ReadStream getSourceStream(ulong[] indices)
             => new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]);
 
         var decodeInfo = new DecodeInfo<int>(
@@ -1040,18 +1040,18 @@ public class SelectionTests
 
             var datasetSelection = new HyperslabSelection(
                 rank: 3,
-                starts: new ulong[] { 2, 2, 0 },
-                strides: new ulong[] { 5, 8, 2 },
-                counts: new ulong[] { 5, 3, 2 },
-                blocks: new ulong[] { 3, 5, 2 }
+                starts: [2, 2, 0],
+                strides: [5, 8, 2],
+                counts: [5, 3, 2],
+                blocks: [3, 5, 2]
             );
 
             var memorySelection = new HyperslabSelection(
                 rank: 2,
-                starts: new ulong[] { 2, 1 },
-                strides: new ulong[] { 35, 17 },
-                counts: new ulong[] { 2, 1 },
-                blocks: new ulong[] { 30, 15 }
+                starts: [2, 1],
+                strides: [35, 17],
+                counts: [2, 1],
+                blocks: [30, 15]
             );
 
             var filePath = TestUtils.PrepareTestFile(version, fileId => TestUtils.AddChunkedDatasetForHyperslab(fileId));

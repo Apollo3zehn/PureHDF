@@ -57,7 +57,7 @@ public partial class TestUtils
     {
         long res;
 
-        var typeId = H5T.array_create(H5T.NATIVE_INT32, 2, new ulong[] { 4, 5 });
+        var typeId = H5T.array_create(H5T.NATIVE_INT32, 2, [4, 5]);
         var dims = new ulong[] { 2, 3 };
 
         fixed (void* dataPtr = ReadingTestData.ArrayDataValue)
@@ -75,7 +75,7 @@ public partial class TestUtils
         var typeIdVar = H5T.copy(H5T.C_S1);
         res = H5T.set_size(typeIdVar, H5T.VARIABLE);
 
-        var typeId = H5T.array_create(typeIdVar, 2, new ulong[] { 4, 5 });
+        var typeId = H5T.array_create(typeIdVar, 2, [4, 5]);
         var dims = new ulong[] { 2, 3 };
 
         var offset = 0;
@@ -83,7 +83,7 @@ public partial class TestUtils
 
         var dataVarChar = ReadingTestData.ArrayDataVariableLengthString
             .Cast<string>()
-            .SelectMany(value => 
+            .SelectMany(value =>
             {
                 var bytes = Encoding.ASCII.GetBytes(value + '\0');
                 offsets.Add(offset);
@@ -116,7 +116,7 @@ public partial class TestUtils
 
         using var nullableStruct = Prepare_nullable_struct();
 
-        var typeIdArray = H5T.array_create(nullableStruct.TypeId, 2, new ulong[] { 2, 3 });
+        var typeIdArray = H5T.array_create(nullableStruct.TypeId, 2, [2, 3]);
         Add(container, fileId, "array", "nullable_struct", typeIdArray, nullableStruct.Ptr.ToPointer(), dims);
         _ = H5T.close(typeIdArray);
     }
@@ -178,11 +178,11 @@ public partial class TestUtils
             res = H5R.create(new IntPtr(ptr + 1), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
 
             // regular hyperslab selection (this does not really work - an irregular hyperslab is being created)
-            res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: new ulong[] { 0, 0, 0 }, stride: new ulong[] { 1, 1, 3 }, count: new ulong[] { 1, 1, 2 }, block: new ulong[] { 1, 1, 2 }); // 0, 1, 3, 4
+            res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: [0, 0, 0], stride: [1, 1, 3], count: [1, 1, 2], block: [1, 1, 2]); // 0, 1, 3, 4
             res = H5R.create(new IntPtr(ptr + 2), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
 
             // irregular hyperslab selection
-            res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: new ulong[] { 0, 0, 0 }, stride: new ulong[] { 1, 1, 3 }, count: new ulong[] { 1, 1, 2 }, block: new ulong[] { 1, 1, 2 }); // 0, 1, 3, 4
+            res = H5S.select_hyperslab(referencedSpaceId, H5S.seloper_t.SET, start: [0, 0, 0], stride: [1, 1, 3], count: [1, 1, 2], block: [1, 1, 2]); // 0, 1, 3, 4
             res = H5R.create(new IntPtr(ptr + 3), referenceGroupId, "referenced", H5R.type_t.DATASET_REGION, referencedSpaceId);
 
             // all selection
@@ -382,7 +382,7 @@ public partial class TestUtils
         fixed (int* data1Ptr = data1, data2Ptr = data2)
         {
             // vlen data
-            var vlenData = new H5T.hvl_t[] 
+            var vlenData = new H5T.hvl_t[]
             {
                 new H5T.hvl_t() { len = (nint)data1.Length, p = (nint)data1Ptr },
                 new H5T.hvl_t() { len = (nint)data2.Length, p = (nint)data2Ptr },
@@ -406,7 +406,7 @@ public partial class TestUtils
         var typeId = H5T.vlen_create(data.TypeId);
 
         // vlen data
-        var vlenData = new H5T.hvl_t[] 
+        var vlenData = new H5T.hvl_t[]
         {
             // struct data
             new H5T.hvl_t() { len = (nint)data.Ptrs.Count, p = (nint)data.Ptr },

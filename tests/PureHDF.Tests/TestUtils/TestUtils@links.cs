@@ -12,7 +12,7 @@ public partial class TestUtils
         var groupId_sub = H5G.create(groupId, "sub");
 
         // datasets
-        var dataspaceId1 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+        var dataspaceId1 = H5S.create_simple(1, [1], [1]);
         var datasetId1 = H5D.create(fileId, "D", H5T.NATIVE_INT8, dataspaceId1);
         var data1 = new byte[] { 1 };
 
@@ -24,13 +24,13 @@ public partial class TestUtils
         res = H5D.close(datasetId1);
         res = H5S.close(dataspaceId1);
 
-        var dataspaceId2 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+        var dataspaceId2 = H5S.create_simple(1, [1], [1]);
         var datasetId2 = H5D.create(groupId, "D1", H5T.NATIVE_INT8, dataspaceId2);
 
         res = H5D.close(datasetId2);
         res = H5S.close(dataspaceId2);
 
-        var dataspaceId3 = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+        var dataspaceId3 = H5S.create_simple(1, [1], [1]);
         var datasetId3 = H5D.create(groupId_sub, "D1.1", H5T.NATIVE_INT8, dataspaceId3);
 
         res = H5D.close(datasetId3);
@@ -62,7 +62,7 @@ public partial class TestUtils
         _ = H5L.create_soft("hard_link_2", groupId, "soft_link_1");
         _ = H5L.create_soft("/links/soft_link_1", groupId, "soft_link_2");
 
-        var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+        var spaceId = H5S.create_simple(1, [1], [1]);
         var datasetId = H5D.create(hardLinkId1, "dataset", H5T.NATIVE_INT, spaceId);
 
         _ = H5L.create_soft("/links/soft_link_2/dataset", groupId, "dataset");

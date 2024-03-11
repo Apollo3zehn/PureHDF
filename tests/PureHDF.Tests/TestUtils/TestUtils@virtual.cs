@@ -8,7 +8,7 @@ public partial class TestUtils
     {
         // see VirtualMapping.ods for a visualization
 
-        var vspaceId = H5S.create_simple(1, new ulong[] { 20 }, new ulong[] { 20 });
+        var vspaceId = H5S.create_simple(1, [20], [20]);
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
 
         unsafe
@@ -27,10 +27,10 @@ public partial class TestUtils
         var dataA = SharedTestData.SmallData.Skip(0).Take(16).ToArray();
         Add(ContainerType.Dataset, fileId1, "vds", "source_a", H5T.NATIVE_INT32, dataA.AsSpan());
 
-        var sourceSpaceId1 = H5S.create_simple(1, new ulong[] { (ulong)dataA.Length }, new ulong[] { (ulong)dataA.Length });
+        var sourceSpaceId1 = H5S.create_simple(1, [(ulong)dataA.Length], [(ulong)dataA.Length]);
 
-        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 3 });
-        _ = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, new ulong[] { 2 }, new ulong[] { 5 }, new ulong[] { 3 }, new ulong[] { 2 });
+        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, [3], [5], [2], [3]);
+        _ = H5S.select_hyperslab(sourceSpaceId1, H5S.seloper_t.SET, [2], [5], [3], [2]);
         _ = H5P.set_virtual(dcpl_id, vspaceId, fileName1, "/vds/source_a", sourceSpaceId1);
 
         // file 2
@@ -43,18 +43,18 @@ public partial class TestUtils
         var dataB = SharedTestData.SmallData.Skip(10).Take(16).ToArray();
         Add(ContainerType.Dataset, fileId2, "vds", "source_b", H5T.NATIVE_INT32, dataB.AsSpan());
 
-        var sourceSpaceId2 = H5S.create_simple(1, new ulong[] { (ulong)dataB.Length }, new ulong[] { (ulong)dataB.Length });
+        var sourceSpaceId2 = H5S.create_simple(1, [(ulong)dataB.Length], [(ulong)dataB.Length]);
 
-        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 6 }, new ulong[] { 5 }, new ulong[] { 2 }, new ulong[] { 2 });
-        _ = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, new ulong[] { 3 }, new ulong[] { 4 }, new ulong[] { 4 }, new ulong[] { 1 });
+        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, [6], [5], [2], [2]);
+        _ = H5S.select_hyperslab(sourceSpaceId2, H5S.seloper_t.SET, [3], [4], [4], [1]);
         _ = H5P.set_virtual(dcpl_id, vspaceId, fileName2, "/vds/source_b", sourceSpaceId2);
 
         // file 3 (non-existent)
         var fileName3 = $"{datasetName}_c.h5";
-        var sourceSpaceId3 = H5S.create_simple(1, new ulong[] { 10UL }, new ulong[] { 10UL });
+        var sourceSpaceId3 = H5S.create_simple(1, [10UL], [10UL]);
 
-        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, new ulong[] { 15 }, new ulong[] { 1 }, new ulong[] { 1 }, new ulong[] { 1 });
-        _ = H5S.select_hyperslab(sourceSpaceId3, H5S.seloper_t.SET, new ulong[] { 0 }, new ulong[] { 1 }, new ulong[] { 1 }, new ulong[] { 1 });
+        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, [15], [1], [1], [1]);
+        _ = H5S.select_hyperslab(sourceSpaceId3, H5S.seloper_t.SET, [0], [1], [1], [1]);
         _ = H5P.set_virtual(dcpl_id, vspaceId, fileName3, "/vds/source_c", sourceSpaceId3);
 
         // create virtual dataset
@@ -104,9 +104,9 @@ public partial class TestUtils
         var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
 
         // source dataset
-        var sourceSpaceId = H5S.create_simple(2, new ulong[] { 13, 10 }, new ulong[] { 13, 10 });
+        var sourceSpaceId = H5S.create_simple(2, [13, 10], [13, 10]);
         var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
-        var memorySpaceId = H5S.create_simple(1, new ulong[] { 130 }, new ulong[] { 130 });
+        var memorySpaceId = H5S.create_simple(1, [130], [130]);
         var data = SharedTestData.MediumData.Skip(0).Take(130).ToArray();
 
         unsafe
@@ -144,19 +144,19 @@ public partial class TestUtils
         var count = new ulong[] { 1, 1 };
         var block = new ulong[] { 1, 1 };
 
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET, start: new ulong[] { 01, 03 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 02, 04 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 03, 05 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 11, 09 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 09, 04 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 08, 00 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 05, 04 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 05, 03 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 05, 09 }, stride, count, block);
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: new ulong[] { 09, 01 }, stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET, start: [01, 03], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [02, 04], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [03, 05], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [11, 09], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [09, 04], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [08, 00], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [05, 04], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [05, 03], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [05, 09], stride, count, block);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, start: [09, 01], stride, count, block);
 
         // virtual dataset
-        var virtualSpaceId = H5S.create_simple(1, new ulong[] { 10 }, new ulong[] { 10 });
+        var virtualSpaceId = H5S.create_simple(1, [10], [10]);
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -207,9 +207,9 @@ public partial class TestUtils
         var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
 
         // source dataset
-        var sourceSpaceId = H5S.create_simple(2, new ulong[] { 13, 10 }, new ulong[] { 13, 10 });
+        var sourceSpaceId = H5S.create_simple(2, [13, 10], [13, 10]);
         var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
-        var memorySpaceId = H5S.create_simple(1, new ulong[] { 130 }, new ulong[] { 130 });
+        var memorySpaceId = H5S.create_simple(1, [130], [130]);
         var data = SharedTestData.MediumData.Skip(0).Take(130).ToArray();
 
         unsafe
@@ -221,21 +221,65 @@ public partial class TestUtils
         }
 
         // source selection A
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET, 
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET,
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
             start: new ulong[] { 6, 1 }, 
             stride: new ulong[] { 3, 4 }, 
             count: new ulong[] { 1, 2 }, 
-            block: new ulong[] { 3, 3 });
+Nach:
+            start: [6, 1], 
+            stride: [3, 4], 
+            count: [1, 2], 
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+            start: new ulong[] { 6, 1 }, 
+            stride: new ulong[] { 3, 4 }, 
+            count: new ulong[] { 1, 2 }, 
+Nach:
+            start: [6, 1], 
+            stride: [3, 4], 
+            count: [1, 2], 
+*/
+            start: [6, 1],
+            stride: [3, 4],
+            count: [1, 2],
+            block: [3, 3]);
 
         // source selection B
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR, 
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR,
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
             start: new ulong[] { 1, 3 }, 
             stride:new ulong[] { 4, 3 }, 
             count: new ulong[] { 3, 1 }, 
-            block: new ulong[] { 3, 3 });
+Nach:
+            start: [1, 3], 
+            stride:[4, 3], 
+            count: [3, 1], 
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+            start: new ulong[] { 1, 3 }, 
+            stride:new ulong[] { 4, 3 }, 
+            count: new ulong[] { 3, 1 }, 
+Nach:
+            start: [1, 3], 
+            stride:[4, 3], 
+            count: [3, 1], 
+*/
+            start: [1, 3],
+            stride: [4, 3],
+            count: [3, 1],
+            block: [3, 3]);
 
         // virtual dataset
-        var virtualSpaceId = H5S.create_simple(1, new ulong[] { 41 }, new ulong[] { 41 });
+        var virtualSpaceId = H5S.create_simple(1, [41], [41]);
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -283,9 +327,9 @@ public partial class TestUtils
         var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
 
         // source dataset
-        var sourceSpaceId = H5S.create_simple(2, new ulong[] { 40, 10 }, new ulong[] { 40, 10 });
+        var sourceSpaceId = H5S.create_simple(2, [40, 10], [40, 10]);
         var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
-        var memorySpaceId = H5S.create_simple(1, new ulong[] { 400 }, new ulong[] { 400 });
+        var memorySpaceId = H5S.create_simple(1, [400], [400]);
         var data = SharedTestData.MediumData.Skip(0).Take(400).ToArray();
 
         unsafe
@@ -297,14 +341,36 @@ public partial class TestUtils
         }
 
         // source selection A
-        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET, 
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET,
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
             start: new ulong[] { 1, 3 }, 
             stride: new ulong[] { 4, 3 }, 
             count: new ulong[] { 10, 1 }, 
-            block: new ulong[] { 3, 3 });
+Nach:
+            start: [1, 3], 
+            stride: [4, 3], 
+            count: [10, 1], 
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+            start: new ulong[] { 1, 3 }, 
+            stride: new ulong[] { 4, 3 }, 
+            count: new ulong[] { 10, 1 }, 
+Nach:
+            start: [1, 3], 
+            stride: [4, 3], 
+            count: [10, 1], 
+*/
+            start: [1, 3],
+            stride: [4, 3],
+            count: [10, 1],
+            block: [3, 3]);
 
         // virtual dataset
-        var virtualSpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
+        var virtualSpaceId = H5S.create_simple(1, [90], [90]);
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -354,9 +420,9 @@ public partial class TestUtils
         var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
 
         // source dataset
-        var sourceSpaceId = H5S.create_simple(1, new ulong[] { 10 }, new ulong[] { 10 });
+        var sourceSpaceId = H5S.create_simple(1, [10], [10]);
         var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
-        var memorySpaceId = H5S.create_simple(1, new ulong[] { 10 }, new ulong[] { 10 });
+        var memorySpaceId = H5S.create_simple(1, [10], [10]);
         var data = SharedTestData.MediumData.Skip(0).Take(10).ToArray();
 
         unsafe
@@ -368,7 +434,7 @@ public partial class TestUtils
         }
 
         // virtual dataset
-        var virtualSpaceId = H5S.create_simple(2, new ulong[] { 13, 10 }, new ulong[] { 13, 10 });
+        var virtualSpaceId = H5S.create_simple(2, [13, 10], [13, 10]);
 
         // virtual selection A
         // _ = H5S.select_elements(virtualSpaceId, H5S.seloper_t.SET, num_elements: 10,
@@ -397,16 +463,16 @@ public partial class TestUtils
         var count = new ulong[] { 1, 1 };
         var block = new ulong[] { 1, 1 };
 
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET, start: new ulong[] { 01, 03 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 02, 04 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 03, 05 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 11, 09 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 09, 04 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 08, 00 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 05, 04 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 05, 03 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 05, 09 }, stride, count, block);
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: new ulong[] { 09, 01 }, stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET, start: [01, 03], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [02, 04], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [03, 05], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [11, 09], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [09, 04], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [08, 00], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [05, 04], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [05, 03], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [05, 09], stride, count, block);
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, start: [09, 01], stride, count, block);
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -457,9 +523,9 @@ public partial class TestUtils
         var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
 
         // source dataset
-        var sourceSpaceId = H5S.create_simple(1, new ulong[] { 41 }, new ulong[] { 41 });
+        var sourceSpaceId = H5S.create_simple(1, [41], [41]);
         var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
-        var memorySpaceId = H5S.create_simple(1, new ulong[] { 41 }, new ulong[] { 41 });
+        var memorySpaceId = H5S.create_simple(1, [41], [41]);
         var data = SharedTestData.MediumData.Skip(0).Take(41).ToArray();
 
         unsafe
@@ -471,21 +537,65 @@ public partial class TestUtils
         }
 
         // virtual dataset
-        var virtualSpaceId = H5S.create_simple(2, new ulong[] { 13, 10 }, new ulong[] { 13, 10 });
+        var virtualSpaceId = H5S.create_simple(2, [13, 10], [13, 10]);
 
         // virtual selection A
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET, 
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET,
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
             start: new ulong[] { 6, 1 }, 
             stride: new ulong[] { 3, 4 }, 
             count: new ulong[] { 1, 2 }, 
-            block: new ulong[] { 3, 3 });
+Nach:
+            start: [6, 1], 
+            stride: [3, 4], 
+            count: [1, 2], 
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+            start: new ulong[] { 6, 1 }, 
+            stride: new ulong[] { 3, 4 }, 
+            count: new ulong[] { 1, 2 }, 
+Nach:
+            start: [6, 1], 
+            stride: [3, 4], 
+            count: [1, 2], 
+*/
+            start: [6, 1],
+            stride: [3, 4],
+            count: [1, 2],
+            block: [3, 3]);
 
         // virtual selection B
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR, 
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR,
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
             start: new ulong[] { 1, 3 }, 
             stride:new ulong[] { 4, 3 }, 
             count: new ulong[] { 3, 1 }, 
-            block: new ulong[] { 3, 3 });
+Nach:
+            start: [1, 3], 
+            stride:[4, 3], 
+            count: [3, 1], 
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+            start: new ulong[] { 1, 3 }, 
+            stride:new ulong[] { 4, 3 }, 
+            count: new ulong[] { 3, 1 }, 
+Nach:
+            start: [1, 3], 
+            stride:[4, 3], 
+            count: [3, 1], 
+*/
+            start: [1, 3],
+            stride: [4, 3],
+            count: [3, 1],
+            block: [3, 3]);
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -533,9 +643,9 @@ public partial class TestUtils
         var sourceFileId = H5F.create(sourceFileName, H5F.ACC_TRUNC);
 
         // source dataset
-        var sourceSpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
+        var sourceSpaceId = H5S.create_simple(1, [90], [90]);
         var sourceDatasetId = H5D.create(sourceFileId, "source", H5T.NATIVE_INT32, sourceSpaceId);
-        var memorySpaceId = H5S.create_simple(1, new ulong[] { 90 }, new ulong[] { 90 });
+        var memorySpaceId = H5S.create_simple(1, [90], [90]);
         var data = SharedTestData.MediumData.Skip(0).Take(90).ToArray();
 
         unsafe
@@ -547,14 +657,32 @@ public partial class TestUtils
         }
 
         // virtual dataset
-        var virtualSpaceId = H5S.create_simple(2, new ulong[] { 40, 10 }, new ulong[] { 40, 10 });
+        var virtualSpaceId = H5S.create_simple(2, [40, 10], [40, 10]);
 
         // virtual selection A
-        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET, 
+        _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET,
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
+Vor:
             start: new ulong[] { 1, 3 }, 
             stride: new ulong[] { 4, 3 }, 
-            count: new ulong[] { 10, 1 },
-            block: new ulong[] { 3, 3 });
+Nach:
+            start: [1, 3], 
+            stride: [4, 3], 
+*/
+
+/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
+Vor:
+            start: new ulong[] { 1, 3 }, 
+            stride: new ulong[] { 4, 3 }, 
+Nach:
+            start: [1, 3], 
+            stride: [4, 3], 
+*/
+            start: [1, 3],
+            stride: [4, 3],
+            count: [10, 1],
+            block: [3, 3]);
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);

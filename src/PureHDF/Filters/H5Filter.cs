@@ -205,7 +205,7 @@ public class ShuffleFilter : IH5Filter
         if (typeSize == 0)
             throw new Exception("The type size must be > 0.");
 
-        return new uint[] { typeSize };
+        return [typeSize];
     }
 }
 
@@ -452,7 +452,7 @@ public class DeflateFilter : IH5Filter
         if (value < -1 || value > 9)
             throw new Exception("The compression level must be one of [-1, 0, 1, 9].");
 
-        return new uint[] { unchecked((uint)value) };
+        return [unchecked((uint)value)];
 #else
         throw new Exception(".NET 6+ is required for zlib compression support.");
 #endif

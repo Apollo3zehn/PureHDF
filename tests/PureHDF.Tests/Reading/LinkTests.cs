@@ -114,11 +114,11 @@ public class LinkTests
         using var driver = new H5StreamDriver(fileStream, leaveOpen: false);
 
         var superblock = new Superblock01(
-            default!, default, default, default, default, default, default, 
+            default!, default, default, default, default, default, default,
             default, default, default, default, default, default)
         {
             OffsetsSize = 8,
-            LengthsSize  = 8
+            LengthsSize = 8
         };
 
         var context = new NativeReadContext(driver, superblock) { ReadOptions = default! };
@@ -223,7 +223,7 @@ public class LinkTests
         var externalGroupId1 = H5G.create(externalFileId, "external");
         var externalGroupId2 = H5G.create(externalGroupId1, "group");
 
-        var spaceId = H5S.create_simple(1, new ulong[] { 1 }, new ulong[] { 1 });
+        var spaceId = H5S.create_simple(1, [1], [1]);
         var datasetId = H5D.create(externalGroupId2, "Hello from external file =)", H5T.NATIVE_UINT, spaceId);
 
         long res;

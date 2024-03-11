@@ -352,11 +352,11 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         }
 
         ReadCoreLevel2(
-            fileSelection, 
-            memorySelection, 
-            memoryDims, 
-            fileDims, 
-            resultBuffer, 
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            fileDims,
+            resultBuffer,
             datasetAccess);
 
         /* return */
@@ -382,19 +382,19 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var resultBuffer = buffer;
 
         ReadCoreLevel2(
-            fileSelection, 
-            memorySelection, 
-            memoryDims, 
-            fileDims, 
-            resultBuffer, 
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            fileDims,
+            resultBuffer,
             datasetAccess);
     }
 
     private void ReadCoreLevel2<TElement>(
-        Selection fileSelection, 
-        Selection? memorySelection, 
-        ulong[] memoryDims, 
-        ulong[] fileDims, 
+        Selection fileSelection,
+        Selection? memorySelection,
+        ulong[] memoryDims,
+        ulong[] fileDims,
         Span<TElement> resultBuffer,
         H5DatasetAccess datasetAccess)
     {
@@ -536,7 +536,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 resultBuffer);
     }
 
-    private (ulong[], Selection)  GetFileDimsAndSelection(Selection? fileSelection, Selection? memorySelection, ulong[]? memoryDims, bool skipShuffle)
+    private (ulong[], Selection) GetFileDimsAndSelection(Selection? fileSelection, Selection? memorySelection, ulong[]? memoryDims, bool skipShuffle)
     {
         /* for testing only */
         if (skipShuffle && InternalFilterPipeline is not null)

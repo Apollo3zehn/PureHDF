@@ -30,9 +30,9 @@ public static class WritingTestData
         new object[] {
             new int[]?[]
             {
-                new int[] { 1, -2, 3 },
+                [1, -2, 3],
                 null,
-                new int[] { 2, -4, 6 },
+                [2, -4, 6],
             }
         },
 
@@ -68,8 +68,8 @@ public static class WritingTestData
                 Rank: 1,
                 Flags: DataspaceMessageFlags.DimensionMaxSizes | DataspaceMessageFlags.PermuationIndices,
                 Type: DataspaceType.Simple,
-                Dimensions: new ulong[] { 10, 20, 30 },
-                MaxDimensions: new ulong[] { 20, 40, 60 },
+                Dimensions: [10, 20, 30],
+                MaxDimensions: [20, 40, 60],
                 PermutationIndices: null)
             {
                 Version = 1

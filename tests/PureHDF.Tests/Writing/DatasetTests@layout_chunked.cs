@@ -34,7 +34,7 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                chunks: new[] { (uint)data.Length })
+                chunks: [(uint)data.Length])
         };
 
         var filePath = Path.GetTempFileName();
@@ -74,8 +74,8 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            fileDims: new ulong[] { (ulong)data.Length },
-            chunks: new[] { (uint)data.Length }
+            fileDims: [(ulong)data.Length],
+            chunks: [(uint)data.Length]
         );
 
         var file = new H5File
@@ -124,7 +124,7 @@ public partial class DatasetTests
 
         var file = new H5File
         {
-            ["chunked"] = new H5Dataset(data, chunks: new[] { 10U })
+            ["chunked"] = new H5Dataset(data, chunks: [10U])
         };
 
         var filePath = Path.GetTempFileName();
@@ -158,8 +158,8 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            fileDims: new ulong[] { (ulong)data.Length },
-            chunks: new[] { 10U }
+            fileDims: [(ulong)data.Length],
+            chunks: [10U]
         );
 
         var file = new H5File
@@ -204,8 +204,8 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                fileDims: new[] { 10UL, 10UL },
-                chunks: new[] { 3U, 4U })
+                fileDims: [10UL, 10UL],
+                chunks: [3U, 4U])
         };
 
         var filePath = Path.GetTempFileName();
@@ -242,8 +242,8 @@ public partial class DatasetTests
         {
             ["chunked"] = new H5Dataset(
                 data,
-                fileDims: new[] { 10UL, 10UL },
-                chunks: new[] { 3U, 4U })
+                fileDims: [10UL, 10UL],
+                chunks: [3U, 4U])
         };
 
         var filePath = Path.GetTempFileName();
@@ -284,8 +284,8 @@ public partial class DatasetTests
         var data = SharedTestData.SmallData;
 
         var dataset = new H5Dataset<int[]>(
-            fileDims: new[] { 10UL, 10UL },
-            chunks: new[] { 3U, 4U }
+            fileDims: [10UL, 10UL],
+            chunks: [3U, 4U]
         );
 
         var file = new H5File
@@ -335,7 +335,7 @@ public partial class DatasetTests
 
         var file = new H5File
         {
-            ["chunked"] = new H5Dataset(data, chunks: new[] { 10U, 10U })
+            ["chunked"] = new H5Dataset(data, chunks: [10U, 10U])
         };
 
         var filePath = Path.GetTempFileName();
@@ -363,7 +363,7 @@ public partial class DatasetTests
 
         var file = new H5File
         {
-            ["chunked"] = new H5Dataset(data, chunks: new[] { 101U })
+            ["chunked"] = new H5Dataset(data, chunks: [101U])
         };
 
         var filePath = Path.GetTempFileName();

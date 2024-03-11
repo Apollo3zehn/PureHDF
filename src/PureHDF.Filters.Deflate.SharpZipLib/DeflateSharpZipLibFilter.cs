@@ -85,7 +85,7 @@ public class DeflateSharpZipLibFilter : IH5Filter
         if (value < -1 || value > 9)
             throw new Exception("The compression level must be in the range of -1..9.");
 
-        return new uint[] { unchecked((uint)value) };
+        return [unchecked((uint)value)];
     }
 
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)

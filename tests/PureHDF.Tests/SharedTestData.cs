@@ -4,7 +4,7 @@ public class SharedTestData
 {
     static SharedTestData()
     {
-        TinyData = new byte[] { 99 };
+        TinyData = [99];
         SmallData = Enumerable.Range(0, 100).ToArray();
         MediumData = Enumerable.Range(0, 10_000).ToArray();
         HugeData = Enumerable.Range(0, 10_000_000).ToArray();
