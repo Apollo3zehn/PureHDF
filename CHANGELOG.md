@@ -1,3 +1,9 @@
+## v1.0.0-beta.6 - 2024-03-11
+
+### Features
+- `NativeDataset` got an overload to pass `Span<T>` as buffer.
+- `NativeAttribute` got an overload to pass `Span<T>` as buffer. `NativeAttribute` was also made public.
+
 ## v1.0.0-beta.5 - 2024-02-02
 
 ### Bugs fixed
