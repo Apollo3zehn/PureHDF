@@ -1,3 +1,8 @@
+## v1.0.0-beta.7 - 2024-03-11
+
+### Bugs fixed
+- `NativeAttribute` is now really made public.
+
 ## v1.0.0-beta.6 - 2024-03-11
 
 ### Features
