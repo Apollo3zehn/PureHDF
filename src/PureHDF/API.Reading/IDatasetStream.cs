@@ -9,5 +9,5 @@ public interface IDatasetStream
     /// This method is called to indicate that actual data is being read (e.g. to determine if the request should be cached).
     /// </summary>
     /// <param name="buffer">The buffer to write the data into.</param>
-    public void ReadDataset(Memory<byte> buffer);
+    public void ReadDataset(Span<byte> buffer);
 }

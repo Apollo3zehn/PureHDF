@@ -251,7 +251,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     chunk = new byte[ChunkByteSize];
 
                     ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                    ReadContext.Driver.ReadDataset(chunk);
+                    ReadContext.Driver.ReadDataset(chunk.Span);
                 }
 
                 else
@@ -261,7 +261,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
                     ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
-                    ReadContext.Driver.ReadDataset(buffer);
+                    ReadContext.Driver.ReadDataset(buffer.Span);
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,

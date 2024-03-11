@@ -15,11 +15,11 @@ internal partial class SystemMemoryStream : IH5ReadStream
 
     public Memory<byte> SlicedMemory { get; private set; }
 
-    public void ReadDataset(Memory<byte> buffer)
+    public void ReadDataset(Span<byte> buffer)
     {
         var length = Math.Min(SlicedMemory.Length, buffer.Length);
 
-        SlicedMemory[..length]
+        SlicedMemory.Span[..length]
             .CopyTo(buffer);
 
         Seek(length, SeekOrigin.Current);

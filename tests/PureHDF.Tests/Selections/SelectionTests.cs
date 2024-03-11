@@ -571,12 +571,11 @@ public class SelectionTests
             targetSelection,
             default!,
             default!,
-            default!,
             0
         );
 
         // Act
-        void action() => SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
+        void action() => SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo, default);
 
         // Assert
         Assert.Throws<ArgumentException>(action);
@@ -616,13 +615,12 @@ public class SelectionTests
             datasetSelection,
             memorySelection,
             indices => default!,
-            indices => default,
             Decoder: default!,
             SourceTypeSize: 4
         );
 
         // Act
-        SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
+        SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo, default);
 
         // Assert
     }
@@ -659,13 +657,12 @@ public class SelectionTests
             datasetSelection,
             memorySelection,
             indices => default!,
-            indices => default,
             Decoder: default!,
             SourceTypeSize: 4
         );
 
         // Act
-        SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
+        SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo, default);
 
         // Assert        
     }
@@ -715,18 +712,18 @@ public class SelectionTests
 
         var datasetSelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 0, 1 },
-            strides: new ulong[] { 5, 5 },
-            counts: new ulong[] { 2, 2 },
-            blocks: new ulong[] { 3, 2 }
+            starts: [0, 1],
+            strides: [5, 5],
+            counts: [2, 2],
+            blocks: [3, 2]
         );
 
         var memorySelection = new HyperslabSelection(
             rank: 2,
-            starts: new ulong[] { 1, 1 },
-            strides: new ulong[] { 4, 25 /* should work */ },
-            counts: new ulong[] { 2, 1 },
-            blocks: new ulong[] { 2, 6 }
+            starts: [1, 1],
+            strides: [4, 25 /* should work */],
+            counts: [2, 1],
+            blocks: [2, 6]
         );
 
         // s0
@@ -772,13 +769,12 @@ public class SelectionTests
             datasetSelection,
             memorySelection,
             indices => (IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
-            indices => actual,
-            (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+            (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4
         );
 
         // Act
-        SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo);
+        SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo, actual);
 
         // Assert
         Assert.True(actual.SequenceEqual(expected));
@@ -891,13 +887,12 @@ public class SelectionTests
             sourceSelection,
             targetSelection,
             getSourceStream,
-            indices => actual,
-            (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+            (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4
         );
 
         // Act
-        SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfo);
+        SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfo, actual);
 
         // Assert
         Assert.True(actual.SequenceEqual(expected));
@@ -1022,13 +1017,12 @@ public class SelectionTests
             datasetSelection,
             memorySelection,
             getSourceStream,
-            indices => actual,
-            (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+            (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4
         );
 
         // Act
-        SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfo);
+        SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfo, actual);
 
         // Assert
         Assert.True(actual.SequenceEqual(expected));
@@ -1122,12 +1116,11 @@ public class SelectionTests
                 datasetSelection,
                 datasetSelection,
                 indices => h5dIntermediate.GetReadStream(indices),
-                indices => intermediate,
-                (source, target) => source.ReadDataset(target.Cast<int, byte>()),
+                (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
                 SourceTypeSize: 4
             );
 
-            SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfoInterMediate);
+            SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfoInterMediate, intermediate);
 
             /* get actual data */
             var actual = new int[memoryDims[0] * memoryDims[1]];
@@ -1143,13 +1136,12 @@ public class SelectionTests
                 datasetSelection,
                 memorySelection,
                 indices => h5d.GetReadStream(indices),
-                indices => actual,
                 Decoder: default!,
                 SourceTypeSize: 4
             );
 
             // Act
-            SelectionHelper.Decode(sourceRank: 3, targetRank: 2, decodeInfo);
+            SelectionHelper.Decode(sourceRank: 3, targetRank: 2, decodeInfo, actual);
 
             //var intermediateForMatlab = string.Join(',', intermediate.ToArray().Select(value => value.ToString()));
             //var actualForMatlab = string.Join(',', actual.ToArray().Select(value => value.ToString()));

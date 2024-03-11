@@ -6,5 +6,5 @@ internal interface IH5ReadStream : IDisposable
 
     void Seek(long offset, SeekOrigin origin);
 
-    void ReadDataset(Memory<byte> buffer);
+    void ReadDataset(Span<byte> buffer);
 }

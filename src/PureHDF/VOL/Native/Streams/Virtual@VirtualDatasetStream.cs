@@ -2,7 +2,7 @@
 
 namespace PureHDF;
 
-internal delegate void ReadVirtualDelegate<TResult>(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
+internal delegate void ReadVirtualDelegate<TResult>(NativeDataset dataset, Span<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
 
 internal class VirtualDatasetStream<TResult> : IH5ReadStream
 {
@@ -35,9 +35,9 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public void ReadDataset(Memory<byte> buffer) => throw new NotImplementedException();
+    public void ReadDataset(Span<byte> buffer) => throw new NotImplementedException();
 
-    public void ReadVirtual(Memory<TResult> buffer)
+    public void ReadVirtual(Span<TResult> buffer)
     {
         // Overall algorithm:
         // - We get a linear index.
@@ -122,10 +122,10 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
             else
             {
                 if (_fillValue is not null)
-                    slicedBuffer.Span.Fill(_fillValue);
+                    slicedBuffer.Fill(_fillValue);
 
                 else
-                    slicedBuffer.Span.Clear();
+                    slicedBuffer.Clear();
             }
 
             // Update state

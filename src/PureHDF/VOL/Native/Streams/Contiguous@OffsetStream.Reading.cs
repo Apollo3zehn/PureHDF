@@ -14,7 +14,7 @@ internal partial class OffsetStream : IH5ReadStream
 
     public long Position { get => _driver.Position - _baseAddress; }
 
-    public void ReadDataset(Memory<byte> buffer)
+    public void ReadDataset(Span<byte> buffer)
     {
         _driver.ReadDataset(buffer);
     }

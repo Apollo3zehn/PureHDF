@@ -9,7 +9,7 @@ internal abstract partial class H5DriverBase : IH5ReadStream
     public abstract long Position { get; }
     public abstract long Length { get; }
 
-    public abstract void ReadDataset(Memory<byte> buffer);
+    public abstract void ReadDataset(Span<byte> buffer);
     public abstract void Seek(long offset, SeekOrigin origin);
 
     public abstract void Read(Span<byte> buffer);

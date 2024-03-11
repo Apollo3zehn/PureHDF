@@ -41,7 +41,7 @@ internal partial class H5StreamDriver : H5DriverBase
         };
     }
 
-    public override void ReadDataset(Memory<byte> buffer)
+    public override void ReadDataset(Span<byte> buffer)
     {
         if (_stream is IDatasetStream datasetStream)
         {
@@ -54,7 +54,7 @@ internal partial class H5StreamDriver : H5DriverBase
 
             while (remainingBuffer.Length > 0)
             {
-                var count = _stream.Read(buffer.Span);
+                var count = _stream.Read(buffer);
                 remainingBuffer = remainingBuffer[count..];
             }
         }

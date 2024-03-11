@@ -271,7 +271,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
                 var rank = resultType.GetArrayRank();
 
                 if (rank == 1)
-                    memoryDims ??= new ulong[] { fileSelection.TotalElementCount };
+                    memoryDims ??= [fileSelection.TotalElementCount];
 
                 else if (rank == fileDims.Length)
                     memoryDims ??= fileDims;
@@ -282,7 +282,7 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 
             else
             {
-                memoryDims ??= new ulong[] { 1 };
+                memoryDims ??= [1];
             }
 
             /* result buffer */

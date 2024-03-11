@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -699,7 +700,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            source.ReadDataset(buffer);
+            source.ReadDataset(buffer.Span);
 
             /* decode sequence length */
             var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
@@ -783,7 +784,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            source.ReadDataset(buffer);
+            source.ReadDataset(buffer.Span);
 
             /* skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
             buffer = buffer.Slice(sizeof(uint));
@@ -850,7 +851,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
-            source.ReadDataset(memory);
+            source.ReadDataset(memory.Span);
 
             var value = ReadUtils.ReadFixedLengthString(memory.Span);
             value = trim(value);
@@ -867,9 +868,9 @@ internal partial record class DatatypeMessage(
     {
         var elementDecode = GetDecodeInfoForScalar(context, typeof(T)).Decode;
 
-        void decode(IH5ReadStream source, Memory<T> target)
+        void decode(IH5ReadStream source, Span<T> target)
         {
-            var targetSpan = target.Span;
+            var targetSpan = target;
 
             for (int i = 0; i < target.Length; i++)
             {
@@ -883,8 +884,8 @@ internal partial record class DatatypeMessage(
     private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
         where T : struct
     {
-        static void decode(IH5ReadStream source, Memory<T> target)
-            => source.ReadDataset(target.Cast<T, byte>());
+        static void decode(IH5ReadStream source, Span<T> target)
+            => source.ReadDataset(MemoryMarshal.AsBytes(target));
 
         return decode;
     }
