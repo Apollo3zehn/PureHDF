@@ -1,0 +1,676 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class NativeDataset
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class NativeDataset
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.VOL.Native.NativeDataset">
+
+
+
+  <h1 id="PureHDF_VOL_Native_NativeDataset" data-uid="PureHDF.VOL.Native.NativeDataset" class="text-break">
+    Class NativeDataset
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.VOL.html">VOL</a>.<a class="xref" href="PureHDF.VOL.Native.html">Native</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>A native HDF5 dataset.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class NativeDataset : NativeAttributableObject, IH5Dataset, IH5AttributableObject, IH5Object</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><a class="xref" href="PureHDF.VOL.Native.NativeObject.html">NativeObject</a></div>
+      <div><a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html">NativeAttributableObject</a></div>
+      <div><span class="xref">NativeDataset</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="PureHDF.IH5Dataset.html">IH5Dataset</a></div>
+      <div><a class="xref" href="PureHDF.IH5AttributableObject.html">IH5AttributableObject</a></div>
+      <div><a class="xref" href="PureHDF.IH5Object.html">IH5Object</a></div>
+    </dd>
+  </dl>
+
+
+  <dl class="typelist derived">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attributes">NativeAttributableObject.Attributes()</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributesAsync_System_Threading_CancellationToken_">NativeAttributableObject.AttributesAsync(CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attribute_System_String_">NativeAttributableObject.Attribute(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeAsync_System_String_System_Threading_CancellationToken_">NativeAttributableObject.AttributeAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExists_System_String_">NativeAttributableObject.AttributeExists(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExistsAsync_System_String_System_Threading_CancellationToken_">NativeAttributableObject.AttributeExistsAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Name">NativeObject.Name</a>
+    </div>
+  </dd></dl>
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_FillValue_" data-uid="PureHDF.VOL.Native.NativeDataset.FillValue*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_FillValue" data-uid="PureHDF.VOL.Native.NativeDataset.FillValue">
+  FillValue
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the fill value.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5FillValue FillValue { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5FillValue.html">IH5FillValue</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Layout_" data-uid="PureHDF.VOL.Native.NativeDataset.Layout*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Layout" data-uid="PureHDF.VOL.Native.NativeDataset.Layout">
+  Layout
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the data layout.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5DataLayout Layout { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5DataLayout.html">IH5DataLayout</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Space_" data-uid="PureHDF.VOL.Native.NativeDataset.Space*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Space" data-uid="PureHDF.VOL.Native.NativeDataset.Space">
+  Space
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the data space.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5Dataspace Space { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5Dataspace.html">IH5Dataspace</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Type_" data-uid="PureHDF.VOL.Native.NativeDataset.Type*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Type" data-uid="PureHDF.VOL.Native.NativeDataset.Type">
+  Type
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5DataType Type { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5DataType.html">IH5DataType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_ReadAsync_" data-uid="PureHDF.VOL.Native.NativeDataset.ReadAsync*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_ReadAsync__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_" data-uid="PureHDF.VOL.Native.NativeDataset.ReadAsync``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)">
+  ReadAsync&lt;T&gt;(Selection?, Selection?, ulong[]?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data asynchronously. More information: <a href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;T&gt; ReadAsync&lt;T&gt;(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the target memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the target memory buffer.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;T&gt;</dt>
+    <dd><p>A task which returns the read data as array of T.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_ReadAsync_" data-uid="PureHDF.VOL.Native.NativeDataset.ReadAsync*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_ReadAsync__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___System_Threading_CancellationToken_" data-uid="PureHDF.VOL.Native.NativeDataset.ReadAsync``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],System.Threading.CancellationToken)">
+  ReadAsync&lt;T&gt;(T, Selection?, Selection?, ulong[]?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data asynchronously into the provided buffer. More information: <a href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task ReadAsync&lt;T&gt;(T buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>buffer</code> <span class="xref">T</span></dt>
+    <dd><p>The buffer to read the data into.</p>
+</dd>
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the target memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the target memory buffer.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Read_" data-uid="PureHDF.VOL.Native.NativeDataset.Read*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Read__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___" data-uid="PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])">
+  Read&lt;T&gt;(Selection?, Selection?, ulong[]?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public T Read&lt;T&gt;(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><span class="xref">T</span></dt>
+    <dd><p>The read data as array of T.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Read_" data-uid="PureHDF.VOL.Native.NativeDataset.Read*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Read__1_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetAccess_" data-uid="PureHDF.VOL.Native.NativeDataset.Read``1(PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)">
+  Read&lt;T&gt;(Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public T Read&lt;T&gt;(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, H5DatasetAccess datasetAccess = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+    <dt><code>datasetAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5DatasetAccess.html">H5DatasetAccess</a></dt>
+    <dd><p>The dataset access properties.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><span class="xref">T</span></dt>
+    <dd><p>The read data as array of <code class="typeparamref">T</code>.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Read_" data-uid="PureHDF.VOL.Native.NativeDataset.Read*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Read__1_System_Span___0__PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetAccess_" data-uid="PureHDF.VOL.Native.NativeDataset.Read``1(System.Span{``0},PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)">
+  Read&lt;T&gt;(Span&lt;T&gt;, Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data into the provided buffer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Read&lt;T&gt;(Span&lt;T&gt; buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, H5DatasetAccess datasetAccess = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>buffer</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.span-1">Span</a>&lt;T&gt;</dt>
+    <dd><p>The buffer to read the data into.</p>
+</dd>
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+    <dt><code>datasetAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5DatasetAccess.html">H5DatasetAccess</a></dt>
+    <dd><p>The dataset access properties.</p>
+</dd>
+  </dl>
+
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Read_" data-uid="PureHDF.VOL.Native.NativeDataset.Read*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Read__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___" data-uid="PureHDF.VOL.Native.NativeDataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[])">
+  Read&lt;T&gt;(T, Selection?, Selection?, ulong[]?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data into the provided buffer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Read&lt;T&gt;(T buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>buffer</code> <span class="xref">T</span></dt>
+    <dd><p>The buffer to read the data into.</p>
+</dd>
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+  </dl>
+
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeDataset_Read_" data-uid="PureHDF.VOL.Native.NativeDataset.Read*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeDataset_Read__1___0_PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetAccess_" data-uid="PureHDF.VOL.Native.NativeDataset.Read``1(``0,PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetAccess)">
+  Read&lt;T&gt;(T, Selection?, Selection?, ulong[]?, H5DatasetAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Reads the data into the provided buffer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Read&lt;T&gt;(T buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, H5DatasetAccess datasetAccess = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>buffer</code> <span class="xref">T</span></dt>
+    <dd><p>The buffer to read the data into.</p>
+</dd>
+    <dt><code>fileSelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the source HDF5 dataset.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selections.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+    <dt><code>datasetAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5DatasetAccess.html">H5DatasetAccess</a></dt>
+    <dd><p>The dataset access properties.</p>
+</dd>
+  </dl>
+
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2024 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,731 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class H5Filter
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class H5Filter
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.Filters.H5Filter">
+
+
+
+  <h1 id="PureHDF_Filters_H5Filter" data-uid="PureHDF.Filters.H5Filter" class="text-break">
+    Class H5Filter
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.Filters.html">Filters</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>A filter with associated options.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public record H5Filter : IEquatable&lt;H5Filter&gt;</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">H5Filter</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a>&gt;</div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="PureHDF_Filters_H5Filter__ctor_" data-uid="PureHDF.Filters.H5Filter.#ctor*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter__ctor_PureHDF_Filters_H5Filter_" data-uid="PureHDF.Filters.H5Filter.#ctor(PureHDF.Filters.H5Filter)">
+  H5Filter(H5Filter)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected H5Filter(H5Filter original)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>original</code> <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter__ctor_" data-uid="PureHDF.Filters.H5Filter.#ctor*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter__ctor_System_UInt16_System_Collections_Generic_Dictionary_System_String_System_Object__" data-uid="PureHDF.Filters.H5Filter.#ctor(System.UInt16,System.Collections.Generic.Dictionary{System.String,System.Object})">
+  H5Filter(ushort, Dictionary&lt;string, object&gt;?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A filter with associated options.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public H5Filter(ushort Id, Dictionary&lt;string, object&gt;? Options = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>Id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
+    <dd><p>The filter identifier.</p>
+</dd>
+    <dt><code>Options</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd><p>Optional filter options.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_Filters_H5Filter_EqualityContract_" data-uid="PureHDF.Filters.H5Filter.EqualityContract*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_EqualityContract" data-uid="PureHDF.Filters.H5Filter.EqualityContract">
+  EqualityContract
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual Type EqualityContract { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_Id_" data-uid="PureHDF.Filters.H5Filter.Id*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_Id" data-uid="PureHDF.Filters.H5Filter.Id">
+  Id
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The filter identifier.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ushort Id { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_Options_" data-uid="PureHDF.Filters.H5Filter.Options*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_Options" data-uid="PureHDF.Filters.H5Filter.Options">
+  Options
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Optional filter options.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Dictionary&lt;string, object&gt;? Options { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_Filters_H5Filter_Deconstruct_" data-uid="PureHDF.Filters.H5Filter.Deconstruct*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_Deconstruct_System_UInt16__System_Collections_Generic_Dictionary_System_String_System_Object___" data-uid="PureHDF.Filters.H5Filter.Deconstruct(System.UInt16@,System.Collections.Generic.Dictionary{System.String,System.Object}@)">
+  Deconstruct(out ushort, out Dictionary&lt;string, object&gt;?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out ushort Id, out Dictionary&lt;string, object&gt;? Options)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>Id</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
+    <dd></dd>
+    <dt><code>Options</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_Equals_" data-uid="PureHDF.Filters.H5Filter.Equals*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_Equals_PureHDF_Filters_H5Filter_" data-uid="PureHDF.Filters.H5Filter.Equals(PureHDF.Filters.H5Filter)">
+  Equals(H5Filter?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual bool Equals(H5Filter? other)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>other</code> <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_Equals_" data-uid="PureHDF.Filters.H5Filter.Equals*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_Equals_System_Object_" data-uid="PureHDF.Filters.H5Filter.Equals(System.Object)">
+  Equals(object?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_GetHashCode_" data-uid="PureHDF.Filters.H5Filter.GetHashCode*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_GetHashCode" data-uid="PureHDF.Filters.H5Filter.GetHashCode">
+  GetHashCode()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_PrintMembers_" data-uid="PureHDF.Filters.H5Filter.PrintMembers*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_PrintMembers_System_Text_StringBuilder_" data-uid="PureHDF.Filters.H5Filter.PrintMembers(System.Text.StringBuilder)">
+  PrintMembers(StringBuilder)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual bool PrintMembers(StringBuilder builder)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>builder</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.stringbuilder">StringBuilder</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_Register_" data-uid="PureHDF.Filters.H5Filter.Register*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_Register_PureHDF_Filters_IH5Filter_" data-uid="PureHDF.Filters.H5Filter.Register(PureHDF.Filters.IH5Filter)">
+  Register(IH5Filter)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Registers a new filter.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void Register(IH5Filter filter)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>filter</code> <a class="xref" href="PureHDF.Filters.IH5Filter.html">IH5Filter</a></dt>
+    <dd><p>The filter.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_ResetRegistrations_" data-uid="PureHDF.Filters.H5Filter.ResetRegistrations*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_ResetRegistrations" data-uid="PureHDF.Filters.H5Filter.ResetRegistrations">
+  ResetRegistrations()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Restores the default list of filter registrations.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static void ResetRegistrations()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_ToString_" data-uid="PureHDF.Filters.H5Filter.ToString*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_ToString" data-uid="PureHDF.Filters.H5Filter.ToString">
+  ToString()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter__Clone___" data-uid="PureHDF.Filters.H5Filter.{Clone}$*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter__Clone__" data-uid="PureHDF.Filters.H5Filter.{Clone}$">
+  &lt;Clone&gt;$()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual H5Filter &lt;Clone&gt;$()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="operators">Operators
+</h2>
+
+
+  <a id="PureHDF_Filters_H5Filter_op_Equality_" data-uid="PureHDF.Filters.H5Filter.op_Equality*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_op_Equality_PureHDF_Filters_H5Filter_PureHDF_Filters_H5Filter_" data-uid="PureHDF.Filters.H5Filter.op_Equality(PureHDF.Filters.H5Filter,PureHDF.Filters.H5Filter)">
+  operator ==(H5Filter?, H5Filter?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(H5Filter? left, H5Filter? right)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>left</code> <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+    <dt><code>right</code> <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_op_Implicit_" data-uid="PureHDF.Filters.H5Filter.op_Implicit*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_op_Implicit_System_UInt16__PureHDF_Filters_H5Filter" data-uid="PureHDF.Filters.H5Filter.op_Implicit(System.UInt16)~PureHDF.Filters.H5Filter">
+  implicit operator H5Filter(ushort)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Converts a filter identifier into a <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a> instance with default filter options.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static implicit operator H5Filter(ushort filterId)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>filterId</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_H5Filter_op_Inequality_" data-uid="PureHDF.Filters.H5Filter.op_Inequality*"></a>
+
+  <h3 id="PureHDF_Filters_H5Filter_op_Inequality_PureHDF_Filters_H5Filter_PureHDF_Filters_H5Filter_" data-uid="PureHDF.Filters.H5Filter.op_Inequality(PureHDF.Filters.H5Filter,PureHDF.Filters.H5Filter)">
+  operator !=(H5Filter?, H5Filter?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(H5Filter? left, H5Filter? right)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>left</code> <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+    <dt><code>right</code> <a class="xref" href="PureHDF.Filters.H5Filter.html">H5Filter</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2024 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

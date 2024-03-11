@@ -1,0 +1,671 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class CompoundMember
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class CompoundMember
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.CompoundMember">
+
+
+
+  <h1 id="PureHDF_CompoundMember" data-uid="PureHDF.CompoundMember" class="text-break">
+    Class CompoundMember
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>A compound member.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public record CompoundMember : IEquatable&lt;CompoundMember&gt;</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">CompoundMember</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.iequatable-1">IEquatable</a>&lt;<a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a>&gt;</div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="PureHDF_CompoundMember__ctor_" data-uid="PureHDF.CompoundMember.#ctor*"></a>
+
+  <h3 id="PureHDF_CompoundMember__ctor_PureHDF_CompoundMember_" data-uid="PureHDF.CompoundMember.#ctor(PureHDF.CompoundMember)">
+  CompoundMember(CompoundMember)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected CompoundMember(CompoundMember original)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>original</code> <a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember__ctor_" data-uid="PureHDF.CompoundMember.#ctor*"></a>
+
+  <h3 id="PureHDF_CompoundMember__ctor_System_String_System_Int32_PureHDF_IH5DataType_" data-uid="PureHDF.CompoundMember.#ctor(System.String,System.Int32,PureHDF.IH5DataType)">
+  CompoundMember(string, int, IH5DataType)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A compound member.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public CompoundMember(string Name, int Offset, IH5DataType Type)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>Name</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The member name.</p>
+</dd>
+    <dt><code>Offset</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>The offset of the member in the parent compound data type.</p>
+</dd>
+    <dt><code>Type</code> <a class="xref" href="PureHDF.IH5DataType.html">IH5DataType</a></dt>
+    <dd><p>The member data type.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_CompoundMember_EqualityContract_" data-uid="PureHDF.CompoundMember.EqualityContract*"></a>
+
+  <h3 id="PureHDF_CompoundMember_EqualityContract" data-uid="PureHDF.CompoundMember.EqualityContract">
+  EqualityContract
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual Type EqualityContract { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.type">Type</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_Name_" data-uid="PureHDF.CompoundMember.Name*"></a>
+
+  <h3 id="PureHDF_CompoundMember_Name" data-uid="PureHDF.CompoundMember.Name">
+  Name
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The member name.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Name { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_Offset_" data-uid="PureHDF.CompoundMember.Offset*"></a>
+
+  <h3 id="PureHDF_CompoundMember_Offset" data-uid="PureHDF.CompoundMember.Offset">
+  Offset
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The offset of the member in the parent compound data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int Offset { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_Type_" data-uid="PureHDF.CompoundMember.Type*"></a>
+
+  <h3 id="PureHDF_CompoundMember_Type" data-uid="PureHDF.CompoundMember.Type">
+  Type
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The member data type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5DataType Type { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5DataType.html">IH5DataType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_CompoundMember_Deconstruct_" data-uid="PureHDF.CompoundMember.Deconstruct*"></a>
+
+  <h3 id="PureHDF_CompoundMember_Deconstruct_System_String__System_Int32__PureHDF_IH5DataType__" data-uid="PureHDF.CompoundMember.Deconstruct(System.String@,System.Int32@,PureHDF.IH5DataType@)">
+  Deconstruct(out string, out int, out IH5DataType)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out string Name, out int Offset, out IH5DataType Type)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>Name</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+    <dt><code>Offset</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+    <dt><code>Type</code> <a class="xref" href="PureHDF.IH5DataType.html">IH5DataType</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_Equals_" data-uid="PureHDF.CompoundMember.Equals*"></a>
+
+  <h3 id="PureHDF_CompoundMember_Equals_PureHDF_CompoundMember_" data-uid="PureHDF.CompoundMember.Equals(PureHDF.CompoundMember)">
+  Equals(CompoundMember?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual bool Equals(CompoundMember? other)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>other</code> <a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_Equals_" data-uid="PureHDF.CompoundMember.Equals*"></a>
+
+  <h3 id="PureHDF_CompoundMember_Equals_System_Object_" data-uid="PureHDF.CompoundMember.Equals(System.Object)">
+  Equals(object?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override bool Equals(object? obj)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>obj</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_GetHashCode_" data-uid="PureHDF.CompoundMember.GetHashCode*"></a>
+
+  <h3 id="PureHDF_CompoundMember_GetHashCode" data-uid="PureHDF.CompoundMember.GetHashCode">
+  GetHashCode()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override int GetHashCode()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_PrintMembers_" data-uid="PureHDF.CompoundMember.PrintMembers*"></a>
+
+  <h3 id="PureHDF_CompoundMember_PrintMembers_System_Text_StringBuilder_" data-uid="PureHDF.CompoundMember.PrintMembers(System.Text.StringBuilder)">
+  PrintMembers(StringBuilder)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">protected virtual bool PrintMembers(StringBuilder builder)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>builder</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.text.stringbuilder">StringBuilder</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_ToString_" data-uid="PureHDF.CompoundMember.ToString*"></a>
+
+  <h3 id="PureHDF_CompoundMember_ToString" data-uid="PureHDF.CompoundMember.ToString">
+  ToString()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override string ToString()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember__Clone___" data-uid="PureHDF.CompoundMember.{Clone}$*"></a>
+
+  <h3 id="PureHDF_CompoundMember__Clone__" data-uid="PureHDF.CompoundMember.{Clone}$">
+  &lt;Clone&gt;$()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public virtual CompoundMember &lt;Clone&gt;$()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="operators">Operators
+</h2>
+
+
+  <a id="PureHDF_CompoundMember_op_Equality_" data-uid="PureHDF.CompoundMember.op_Equality*"></a>
+
+  <h3 id="PureHDF_CompoundMember_op_Equality_PureHDF_CompoundMember_PureHDF_CompoundMember_" data-uid="PureHDF.CompoundMember.op_Equality(PureHDF.CompoundMember,PureHDF.CompoundMember)">
+  operator ==(CompoundMember?, CompoundMember?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator ==(CompoundMember? left, CompoundMember? right)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>left</code> <a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+    <dt><code>right</code> <a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_CompoundMember_op_Inequality_" data-uid="PureHDF.CompoundMember.op_Inequality*"></a>
+
+  <h3 id="PureHDF_CompoundMember_op_Inequality_PureHDF_CompoundMember_PureHDF_CompoundMember_" data-uid="PureHDF.CompoundMember.op_Inequality(PureHDF.CompoundMember,PureHDF.CompoundMember)">
+  operator !=(CompoundMember?, CompoundMember?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static bool operator !=(CompoundMember? left, CompoundMember? right)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>left</code> <a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+    <dt><code>right</code> <a class="xref" href="PureHDF.CompoundMember.html">CompoundMember</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2024 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

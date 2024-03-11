@@ -1,0 +1,669 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class NativeGroup
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class NativeGroup
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.VOL.Native.NativeGroup">
+
+
+
+  <h1 id="PureHDF_VOL_Native_NativeGroup" data-uid="PureHDF.VOL.Native.NativeGroup" class="text-break">
+    Class NativeGroup
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.VOL.html">VOL</a>.<a class="xref" href="PureHDF.VOL.Native.html">Native</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>An HDF5 group.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class NativeGroup : NativeAttributableObject, IH5Group, IH5AttributableObject, IH5Object</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><a class="xref" href="PureHDF.VOL.Native.NativeObject.html">NativeObject</a></div>
+      <div><a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html">NativeAttributableObject</a></div>
+      <div><span class="xref">NativeGroup</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="PureHDF.IH5Group.html">IH5Group</a></div>
+      <div><a class="xref" href="PureHDF.IH5AttributableObject.html">IH5AttributableObject</a></div>
+      <div><a class="xref" href="PureHDF.IH5Object.html">IH5Object</a></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist derived">
+    <dt>Derived</dt>
+    <dd>
+      <div><a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist derived">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attributes">NativeAttributableObject.Attributes()</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributesAsync_System_Threading_CancellationToken_">NativeAttributableObject.AttributesAsync(CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attribute_System_String_">NativeAttributableObject.Attribute(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeAsync_System_String_System_Threading_CancellationToken_">NativeAttributableObject.AttributeAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExists_System_String_">NativeAttributableObject.AttributeExists(string)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExistsAsync_System_String_System_Threading_CancellationToken_">NativeAttributableObject.AttributeExistsAsync(string, CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Name">NativeObject.Name</a>
+    </div>
+  </dd></dl>
+
+  <dl class="typelist extensionMethods">
+    <dt>Extension Methods</dt>
+    <dd>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_CommitedDatatype_PureHDF_IH5Group_System_String_">IH5GroupExtensions.CommitedDatatype(IH5Group, string)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_CommitedDatatypeAsync_PureHDF_IH5Group_System_String_System_Threading_CancellationToken_">IH5GroupExtensions.CommitedDatatypeAsync(IH5Group, string, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_Dataset_PureHDF_IH5Group_System_String_">IH5GroupExtensions.Dataset(IH5Group, string)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_DatasetAsync_PureHDF_IH5Group_System_String_System_Threading_CancellationToken_">IH5GroupExtensions.DatasetAsync(IH5Group, string, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_GetAsync__1_PureHDF_IH5Group_System_String_System_Threading_CancellationToken_">IH5GroupExtensions.GetAsync&lt;T&gt;(IH5Group, string, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_Get__1_PureHDF_IH5Group_System_String_">IH5GroupExtensions.Get&lt;T&gt;(IH5Group, string)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_Group_PureHDF_IH5Group_System_String_">IH5GroupExtensions.Group(IH5Group, string)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.IH5GroupExtensions.html#PureHDF_IH5GroupExtensions_GroupAsync_PureHDF_IH5Group_System_String_System_Threading_CancellationToken_">IH5GroupExtensions.GroupAsync(IH5Group, string, CancellationToken)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_CommitedDatatype_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_">NativeGroupExtensions.CommitedDatatype(NativeGroup, string, H5LinkAccess)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Dataset_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_">NativeGroupExtensions.Dataset(NativeGroup, string, H5LinkAccess)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Get__1_PureHDF_VOL_Native_NativeGroup_PureHDF_VOL_Native_NativeObjectReference1_">NativeGroupExtensions.Get&lt;T&gt;(NativeGroup, NativeObjectReference1)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Get__1_PureHDF_VOL_Native_NativeGroup_PureHDF_VOL_Native_NativeObjectReference1_PureHDF_VOL_Native_H5LinkAccess_">NativeGroupExtensions.Get&lt;T&gt;(NativeGroup, NativeObjectReference1, H5LinkAccess)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Get__1_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_">NativeGroupExtensions.Get&lt;T&gt;(NativeGroup, string, H5LinkAccess)</a>
+  </div>
+  <div>
+      <a class="xref" href="PureHDF.VOL.Native.NativeGroupExtensions.html#PureHDF_VOL_Native_NativeGroupExtensions_Group_PureHDF_VOL_Native_NativeGroup_System_String_PureHDF_VOL_Native_H5LinkAccess_">NativeGroupExtensions.Group(NativeGroup, string, H5LinkAccess)</a>
+  </div>
+  </dd></dl>
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_Children_" data-uid="PureHDF.VOL.Native.NativeGroup.Children*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_Children" data-uid="PureHDF.VOL.Native.NativeGroup.Children">
+  Children()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets an enumerable of the available children.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;IH5Object&gt; Children()</code></pre>
+  </div>
+
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.IH5Object.html">IH5Object</a>&gt;</dt>
+    <dd><p>An enumerable of the available children.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_Children_" data-uid="PureHDF.VOL.Native.NativeGroup.Children*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_Children_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.NativeGroup.Children(PureHDF.VOL.Native.H5LinkAccess)">
+  Children(H5LinkAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets an enumerable of the available children using the optionally specified <code class="paramref">linkAccess</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IEnumerable&lt;IH5Object&gt; Children(H5LinkAccess linkAccess = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>linkAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dd><p>The link access properties.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.IH5Object.html">IH5Object</a>&gt;</dt>
+    <dd><p>An enumerable of the available children.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_ChildrenAsync_" data-uid="PureHDF.VOL.Native.NativeGroup.ChildrenAsync*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_ChildrenAsync_System_Threading_CancellationToken_" data-uid="PureHDF.VOL.Native.NativeGroup.ChildrenAsync(System.Threading.CancellationToken)">
+  ChildrenAsync(CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets an enumerable of the available children.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;IEnumerable&lt;IH5Object&gt;&gt; ChildrenAsync(CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.IH5Object.html">IH5Object</a>&gt;&gt;</dt>
+    <dd><p>An enumerable of the available children.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_Get_" data-uid="PureHDF.VOL.Native.NativeGroup.Get*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_Get_PureHDF_VOL_Native_NativeObjectReference1_" data-uid="PureHDF.VOL.Native.NativeGroup.Get(PureHDF.VOL.Native.NativeObjectReference1)">
+  Get(NativeObjectReference1)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the object that is at the given <code class="paramref">reference</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5Object Get(NativeObjectReference1 reference)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>reference</code> <a class="xref" href="PureHDF.VOL.Native.NativeObjectReference1.html">NativeObjectReference1</a></dt>
+    <dd><p>The reference of the object.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5Object.html">IH5Object</a></dt>
+    <dd><p>The requested object.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_Get_" data-uid="PureHDF.VOL.Native.NativeGroup.Get*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_Get_PureHDF_VOL_Native_NativeObjectReference1_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.NativeGroup.Get(PureHDF.VOL.Native.NativeObjectReference1,PureHDF.VOL.Native.H5LinkAccess)">
+  Get(NativeObjectReference1, H5LinkAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the object that is at the given <code class="paramref">reference</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5Object Get(NativeObjectReference1 reference, H5LinkAccess linkAccess)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>reference</code> <a class="xref" href="PureHDF.VOL.Native.NativeObjectReference1.html">NativeObjectReference1</a></dt>
+    <dd><p>The reference of the object.</p>
+</dd>
+    <dt><code>linkAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dd><p>The link access properties.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5Object.html">IH5Object</a></dt>
+    <dd><p>The requested object.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_Get_" data-uid="PureHDF.VOL.Native.NativeGroup.Get*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_Get_System_String_" data-uid="PureHDF.VOL.Native.NativeGroup.Get(System.String)">
+  Get(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the object that is at the given <code class="paramref">path</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5Object Get(string path)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the object.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5Object.html">IH5Object</a></dt>
+    <dd><p>The requested object.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_Get_" data-uid="PureHDF.VOL.Native.NativeGroup.Get*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_Get_System_String_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.NativeGroup.Get(System.String,PureHDF.VOL.Native.H5LinkAccess)">
+  Get(string, H5LinkAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the object that is at the given <code class="paramref">path</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public IH5Object Get(string path, H5LinkAccess linkAccess)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the object.</p>
+</dd>
+    <dt><code>linkAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dd><p>The link access properties.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.IH5Object.html">IH5Object</a></dt>
+    <dd><p>The requested object.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_GetAsync_" data-uid="PureHDF.VOL.Native.NativeGroup.GetAsync*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_GetAsync_System_String_System_Threading_CancellationToken_" data-uid="PureHDF.VOL.Native.NativeGroup.GetAsync(System.String,System.Threading.CancellationToken)">
+  GetAsync(string, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the object that is at the given <code class="paramref">path</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;IH5Object&gt; GetAsync(string path, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the object.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.IH5Object.html">IH5Object</a>&gt;</dt>
+    <dd><p>The requested object.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_LinkExists_" data-uid="PureHDF.VOL.Native.NativeGroup.LinkExists*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_LinkExists_System_String_" data-uid="PureHDF.VOL.Native.NativeGroup.LinkExists(System.String)">
+  LinkExists(string)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Checks if the link with the specified <code class="paramref">path</code> exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool LinkExists(string path)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the link.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean which indicates if the link exists.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_LinkExists_" data-uid="PureHDF.VOL.Native.NativeGroup.LinkExists*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_LinkExists_System_String_PureHDF_VOL_Native_H5LinkAccess_" data-uid="PureHDF.VOL.Native.NativeGroup.LinkExists(System.String,PureHDF.VOL.Native.H5LinkAccess)">
+  LinkExists(string, H5LinkAccess)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Checks if the link with the specified <code class="paramref">path</code> exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public bool LinkExists(string path, H5LinkAccess linkAccess)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the link.</p>
+</dd>
+    <dt><code>linkAccess</code> <a class="xref" href="PureHDF.VOL.Native.H5LinkAccess.html">H5LinkAccess</a></dt>
+    <dd><p>The link access properties.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean which indicates if the link exists.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_VOL_Native_NativeGroup_LinkExistsAsync_" data-uid="PureHDF.VOL.Native.NativeGroup.LinkExistsAsync*"></a>
+
+  <h3 id="PureHDF_VOL_Native_NativeGroup_LinkExistsAsync_System_String_System_Threading_CancellationToken_" data-uid="PureHDF.VOL.Native.NativeGroup.LinkExistsAsync(System.String,System.Threading.CancellationToken)">
+  LinkExistsAsync(string, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Checks if the link with the specified <code class="paramref">path</code> exist.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;bool&gt; LinkExistsAsync(string path, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>path</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the link.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a>&gt;</dt>
+    <dd><p>A boolean which indicates if the link exists.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2024 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
