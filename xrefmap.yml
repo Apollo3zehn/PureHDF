@@ -4595,6 +4595,81 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync
   fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync
   nameWithType: NativeAttributableObject.AttributesAsync
+- uid: PureHDF.VOL.Native.NativeAttribute
+  name: NativeAttribute
+  href: api/PureHDF.VOL.Native.NativeAttribute.html
+  commentId: T:PureHDF.VOL.Native.NativeAttribute
+  fullName: PureHDF.VOL.Native.NativeAttribute
+  nameWithType: NativeAttribute
+- uid: PureHDF.VOL.Native.NativeAttribute.Name
+  name: Name
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Name
+  commentId: P:PureHDF.VOL.Native.NativeAttribute.Name
+  fullName: PureHDF.VOL.Native.NativeAttribute.Name
+  nameWithType: NativeAttribute.Name
+- uid: PureHDF.VOL.Native.NativeAttribute.Name*
+  name: Name
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Name_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Name
+  fullName: PureHDF.VOL.Native.NativeAttribute.Name
+  nameWithType: NativeAttribute.Name
+- uid: PureHDF.VOL.Native.NativeAttribute.Read*
+  name: Read
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Read
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read
+  nameWithType: NativeAttribute.Read
+- uid: PureHDF.VOL.Native.NativeAttribute.Read``1(System.Span{``0},System.UInt64[])
+  name: Read<T>(Span<T>, ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read__1_System_Span___0__System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeAttribute.Read``1(System.Span{``0},System.UInt64[])
+  name.vb: Read(Of T)(Span(Of T), ULong())
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read<T>(System.Span<T>, ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeAttribute.Read(Of T)(System.Span(Of T), ULong())
+  nameWithType: NativeAttribute.Read<T>(Span<T>, ulong[]?)
+  nameWithType.vb: NativeAttribute.Read(Of T)(Span(Of T), ULong())
+- uid: PureHDF.VOL.Native.NativeAttribute.Read``1(System.UInt64[])
+  name: Read<T>(ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read__1_System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeAttribute.Read``1(System.UInt64[])
+  name.vb: Read(Of T)(ULong())
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read<T>(ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeAttribute.Read(Of T)(ULong())
+  nameWithType: NativeAttribute.Read<T>(ulong[]?)
+  nameWithType.vb: NativeAttribute.Read(Of T)(ULong())
+- uid: PureHDF.VOL.Native.NativeAttribute.Read``1(``0,System.UInt64[])
+  name: Read<T>(T, ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read__1___0_System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeAttribute.Read``1(``0,System.UInt64[])
+  name.vb: Read(Of T)(T, ULong())
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read<T>(T, ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeAttribute.Read(Of T)(T, ULong())
+  nameWithType: NativeAttribute.Read<T>(T, ulong[]?)
+  nameWithType.vb: NativeAttribute.Read(Of T)(T, ULong())
+- uid: PureHDF.VOL.Native.NativeAttribute.Space
+  name: Space
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Space
+  commentId: P:PureHDF.VOL.Native.NativeAttribute.Space
+  fullName: PureHDF.VOL.Native.NativeAttribute.Space
+  nameWithType: NativeAttribute.Space
+- uid: PureHDF.VOL.Native.NativeAttribute.Space*
+  name: Space
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Space_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Space
+  fullName: PureHDF.VOL.Native.NativeAttribute.Space
+  nameWithType: NativeAttribute.Space
+- uid: PureHDF.VOL.Native.NativeAttribute.Type
+  name: Type
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Type
+  commentId: P:PureHDF.VOL.Native.NativeAttribute.Type
+  fullName: PureHDF.VOL.Native.NativeAttribute.Type
+  nameWithType: NativeAttribute.Type
+- uid: PureHDF.VOL.Native.NativeAttribute.Type*
+  name: Type
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Type_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Type
+  fullName: PureHDF.VOL.Native.NativeAttribute.Type
+  nameWithType: NativeAttribute.Type
 - uid: PureHDF.VOL.Native.NativeDataset
   name: NativeDataset
   href: api/PureHDF.VOL.Native.NativeDataset.html
