@@ -186,6 +186,51 @@ public partial class DatasetTests
     }
 
     [Fact]
+    /* this test ensures that the global heap collection is also written to disk in deferred mode */
+    public void CanWrite_VariableLength_Deferred()
+    {
+        // Arrange
+        var file = new H5File();
+
+        int[][] data =
+        [
+            [1, 2, 3], 
+            [1, 2]
+        ];
+
+        var type = data.GetType();
+        var dataset = new H5Dataset<int[][]>([(ulong)data.Length]);
+
+        file[type.Name] = dataset;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        using (var writer = file.BeginWrite(filePath))
+        {
+            writer.Write(dataset, data);
+        }
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_Int32[][]_deferred.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
     public void CanWrite_Anonymous()
     {
         // Arrange

@@ -47,12 +47,9 @@ partial class H5NativeWriter
 
     internal void Write()
     {
-        // root group       
+        // root group
         Context.Driver.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
         _rootGroupAddress = EncodeGroup(File);
-
-        // global heap collections
-        Context.GlobalHeapManager.Encode();
     }
 
     private ulong EncodeGroup(

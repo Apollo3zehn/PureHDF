@@ -90,7 +90,10 @@ public interface IEnumerationType
 /// </summary>
 public interface IVariableLengthType
 {
-    //
+    /// <summary>
+    /// Gets the base data type.
+    /// </summary>
+    IH5DataType BaseType { get; }
 }
 
 /// <summary>

@@ -61,7 +61,7 @@ internal class HsdsEnumerationType : IEnumerationType
 
 internal class HsdsVariableLengthType : IVariableLengthType
 {
-    //
+    public IH5DataType BaseType => throw new NotImplementedException();
 }
 
 internal class HsdsArrayType : IArrayType
