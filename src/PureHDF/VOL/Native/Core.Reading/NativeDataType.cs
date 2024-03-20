@@ -73,7 +73,17 @@ internal class NativeEnumerationType : IEnumerationType
 
 internal class NativeVariableLengthType : IVariableLengthType
 {
-    //
+    private readonly VariableLengthPropertyDescription _property;
+
+    internal NativeVariableLengthType(
+        VariableLengthPropertyDescription property)
+    {
+        _property = property;
+
+        BaseType = new NativeDataType(_property.BaseType);
+    }
+
+    public IH5DataType BaseType { get; }
 }
 
 internal class NativeArrayType : IArrayType
@@ -270,10 +280,11 @@ internal class NativeDataType : IH5DataType
             if (_variableLength is null)
             {
                 if (Class == H5DataTypeClass.VariableLength)
-                    _variableLength = new NativeVariableLengthType();
+                    _variableLength = new NativeVariableLengthType(
+                        (VariableLengthPropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
+                    throw new InvalidOperationException($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
             }
 
             return _variableLength;
@@ -291,7 +302,7 @@ internal class NativeDataType : IH5DataType
                         (ArrayPropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Array}.");
+                    throw new InvalidOperationException($"This property can only be called for data of class {H5DataTypeClass.Array}.");
             }
 
             return _array;

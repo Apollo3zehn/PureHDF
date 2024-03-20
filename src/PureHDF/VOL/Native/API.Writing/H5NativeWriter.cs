@@ -61,6 +61,9 @@ public partial class H5NativeWriter : IDisposable
                     entry.Value.H5D.Dispose();
                 }
 
+                // global heap collections
+                Context.GlobalHeapManager.Encode();
+
                 // superblock
                 var endOfFileAddress = (ulong)Context.Driver.Length;
 

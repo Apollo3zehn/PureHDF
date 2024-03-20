@@ -1,3 +1,9 @@
+## v1.0.0-beta.8 - 2024-03-20
+
+### Bugs fixed
+- #66
+- `IVariableLengthType` now exposes the `BaseType`. 
+
 ## v1.0.0-beta.7 - 2024-03-11
 
 ### Bugs fixed
