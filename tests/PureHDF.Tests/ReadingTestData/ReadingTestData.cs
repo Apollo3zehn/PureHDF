@@ -83,66 +83,34 @@ public class ReadingTestData
 
     static ReadingTestData()
     {
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-        EnumData = new TestEnum[] { 
-            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
-            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
-        };
-Nach:
-        EnumData = [ 
-            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
-            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
-        ];
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-        EnumData = new TestEnum[] { 
-            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
-            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
-        };
-Nach:
-        EnumData = [ 
-            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
-            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99 
-        ];
-*/
         EnumData = [
-            TestEnum.a, TestEnum.b, TestEnum.c, TestEnum.c, TestEnum.c, TestEnum.a,
-            TestEnum.b, TestEnum.b, TestEnum.b, TestEnum.c, TestEnum.c, (TestEnum)99
+            TestEnum.a,
+            TestEnum.b,
+            TestEnum.c,
+            TestEnum.c,
+            TestEnum.c,
+            TestEnum.a,
+            TestEnum.b,
+            TestEnum.b,
+            TestEnum.b,
+            TestEnum.c,
+            TestEnum.c,
+            (TestEnum)99
         ];
 
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-        BitfieldData = new TestBitfield[] { 
-            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
-            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
-        };
-Nach:
-        BitfieldData = [ 
-            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
-            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
-        ];
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-        BitfieldData = new TestBitfield[] { 
-            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
-            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
-        };
-Nach:
-        BitfieldData = [ 
-            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
-            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99 
-        ];
-*/
         BitfieldData = [
-            TestBitfield.a | TestBitfield.b, TestBitfield.b, TestBitfield.c, TestBitfield.c, TestBitfield.c, TestBitfield.a,
-            TestBitfield.b, TestBitfield.b, TestBitfield.b, TestBitfield.e | TestBitfield.f | TestBitfield.d, TestBitfield.c, (TestBitfield)99
+            TestBitfield.a | TestBitfield.b,
+            TestBitfield.b,
+            TestBitfield.c,
+            TestBitfield.c,
+            TestBitfield.c,
+            TestBitfield.a,
+            TestBitfield.b,
+            TestBitfield.b,
+            TestBitfield.b,
+            TestBitfield.e | TestBitfield.f | TestBitfield.d,
+            TestBitfield.c,
+            (TestBitfield)99
         ];
 
         ArrayDataValue = new int[2, 3, 4, 5];

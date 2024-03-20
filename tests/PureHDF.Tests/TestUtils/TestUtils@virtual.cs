@@ -222,61 +222,19 @@ public partial class TestUtils
 
         // source selection A
         _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET,
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-            start: new ulong[] { 6, 1 }, 
-            stride: new ulong[] { 3, 4 }, 
-            count: new ulong[] { 1, 2 }, 
-Nach:
-            start: [6, 1], 
-            stride: [3, 4], 
-            count: [1, 2], 
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-            start: new ulong[] { 6, 1 }, 
-            stride: new ulong[] { 3, 4 }, 
-            count: new ulong[] { 1, 2 }, 
-Nach:
-            start: [6, 1], 
-            stride: [3, 4], 
-            count: [1, 2], 
-*/
             start: [6, 1],
             stride: [3, 4],
             count: [1, 2],
-            block: [3, 3]);
+            block: [3, 3]
+        );
 
         // source selection B
         _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.OR,
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride:new ulong[] { 4, 3 }, 
-            count: new ulong[] { 3, 1 }, 
-Nach:
-            start: [1, 3], 
-            stride:[4, 3], 
-            count: [3, 1], 
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride:new ulong[] { 4, 3 }, 
-            count: new ulong[] { 3, 1 }, 
-Nach:
-            start: [1, 3], 
-            stride:[4, 3], 
-            count: [3, 1], 
-*/
             start: [1, 3],
             stride: [4, 3],
             count: [3, 1],
-            block: [3, 3]);
+            block: [3, 3]
+        );
 
         // virtual dataset
         var virtualSpaceId = H5S.create_simple(1, [41], [41]);
@@ -342,32 +300,11 @@ Nach:
 
         // source selection A
         _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET,
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride: new ulong[] { 4, 3 }, 
-            count: new ulong[] { 10, 1 }, 
-Nach:
-            start: [1, 3], 
-            stride: [4, 3], 
-            count: [10, 1], 
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride: new ulong[] { 4, 3 }, 
-            count: new ulong[] { 10, 1 }, 
-Nach:
-            start: [1, 3], 
-            stride: [4, 3], 
-            count: [10, 1], 
-*/
             start: [1, 3],
             stride: [4, 3],
             count: [10, 1],
-            block: [3, 3]);
+            block: [3, 3]
+        );
 
         // virtual dataset
         var virtualSpaceId = H5S.create_simple(1, [90], [90]);
@@ -541,61 +478,19 @@ Nach:
 
         // virtual selection A
         _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET,
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-            start: new ulong[] { 6, 1 }, 
-            stride: new ulong[] { 3, 4 }, 
-            count: new ulong[] { 1, 2 }, 
-Nach:
-            start: [6, 1], 
-            stride: [3, 4], 
-            count: [1, 2], 
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-            start: new ulong[] { 6, 1 }, 
-            stride: new ulong[] { 3, 4 }, 
-            count: new ulong[] { 1, 2 }, 
-Nach:
-            start: [6, 1], 
-            stride: [3, 4], 
-            count: [1, 2], 
-*/
             start: [6, 1],
             stride: [3, 4],
             count: [1, 2],
-            block: [3, 3]);
+            block: [3, 3]
+        );
 
         // virtual selection B
         _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.OR,
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride:new ulong[] { 4, 3 }, 
-            count: new ulong[] { 3, 1 }, 
-Nach:
-            start: [1, 3], 
-            stride:[4, 3], 
-            count: [3, 1], 
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride:new ulong[] { 4, 3 }, 
-            count: new ulong[] { 3, 1 }, 
-Nach:
-            start: [1, 3], 
-            stride:[4, 3], 
-            count: [3, 1], 
-*/
             start: [1, 3],
             stride: [4, 3],
             count: [3, 1],
-            block: [3, 3]);
+            block: [3, 3]
+        );
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);
@@ -661,28 +556,11 @@ Nach:
 
         // virtual selection A
         _ = H5S.select_hyperslab(virtualSpaceId, H5S.seloper_t.SET,
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net7.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride: new ulong[] { 4, 3 }, 
-Nach:
-            start: [1, 3], 
-            stride: [4, 3], 
-*/
-
-/* Nicht gemergte Änderung aus Projekt "PureHDF.Tests(net6.0)"
-Vor:
-            start: new ulong[] { 1, 3 }, 
-            stride: new ulong[] { 4, 3 }, 
-Nach:
-            start: [1, 3], 
-            stride: [4, 3], 
-*/
             start: [1, 3],
             stride: [4, 3],
             count: [10, 1],
-            block: [3, 3]);
+            block: [3, 3]
+        );
 
         // create virtual dataset
         var dcpl_id = H5P.create(H5P.DATASET_CREATE);

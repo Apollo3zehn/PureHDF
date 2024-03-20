@@ -194,7 +194,7 @@ public partial class DatasetTests
 
         int[][] data =
         [
-            [1, 2, 3], 
+            [1, 2, 3],
             [1, 2]
         ];
 
