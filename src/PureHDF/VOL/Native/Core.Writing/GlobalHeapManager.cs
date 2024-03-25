@@ -1,18 +1,18 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Runtime.CompilerServices;
+
+namespace PureHDF.VOL.Native;
 
 internal class GlobalHeapManager
 {
     private const int ALIGNMENT = 8;
-    private const int MINIMUM_COLLECTION_SIZE = 4096; /* according to spec, includes collection header */
+    private const int ABSOLUTE_MINIMUM_COLLECTION_SIZE = 4096; /* according to spec, includes collection header */
     private const int COLLECTION_HEADER_SIZE = 16;
     private const int OBJECT_HEADER_SIZE = 16;
 
-    private readonly int _totalCollectionSize;
-    private readonly int _collectionSize;
-    private readonly long _flushThreshold;
     private readonly FreeSpaceManager _freeSpaceManager;
     private readonly Dictionary<long, GlobalHeapCollectionState> _collectionMap = new();
     private readonly H5DriverBase _driver;
+    private readonly H5WriteOptions _options;
 
     private GlobalHeapCollectionState? _collectionState;
     private long _baseAddress;
@@ -21,31 +21,26 @@ internal class GlobalHeapManager
 
     public GlobalHeapManager(H5WriteOptions options, FreeSpaceManager freeSpaceManager, H5DriverBase driver)
     {
-        if (options.GlobalHeapCollectionSize < MINIMUM_COLLECTION_SIZE)
-            throw new Exception($"The minimum global heap collection size is {MINIMUM_COLLECTION_SIZE} bytes");
+        if (options.MinimumGlobalHeapCollectionSize < ABSOLUTE_MINIMUM_COLLECTION_SIZE)
+            throw new Exception($"The absolute minimum global heap collection size is {ABSOLUTE_MINIMUM_COLLECTION_SIZE} bytes");
 
-        _totalCollectionSize = options.GlobalHeapCollectionSize;
-        _collectionSize = _totalCollectionSize - COLLECTION_HEADER_SIZE;
-        _flushThreshold = options.GlobalHeapFlushThreshold;
+        _options = options;
         _freeSpaceManager = freeSpaceManager;
         _driver = driver;
     }
 
-    public (WritingGlobalHeapId, Memory<byte>) AddObject(int size)
+    public (WritingGlobalHeapId, Memory<byte>) AddObject(int objectSize)
     {
         // validation
         var collectionState = _collectionState;
 
-        if (collectionState is null)
-            collectionState = AddNewCollection();
-
-        if (collectionState.Consumed + OBJECT_HEADER_SIZE + size > collectionState.Memory.Length)
+        if (collectionState is null ||
+            collectionState.Consumed + OBJECT_HEADER_SIZE + AlignSize(objectSize) > collectionState.Memory.Length)
         {
-            if (size > collectionState.Memory.Length)
-                throw new Exception("The object is too large for the global object heap.");
-
-            else
-                collectionState = AddNewCollection();
+            collectionState = AddNewCollection(
+                collectionSize: Math.Max(
+                    _options.MinimumGlobalHeapCollectionSize, 
+                    AlignSize(objectSize) + OBJECT_HEADER_SIZE + COLLECTION_HEADER_SIZE));
         }
 
         // encode object header
@@ -65,7 +60,7 @@ internal class GlobalHeapManager
         collectionState.Consumed += 4;
 
         BitConverter
-            .GetBytes((ulong)size)
+            .GetBytes((ulong)objectSize)
             .CopyTo(_memory.Span.Slice(collectionState.Consumed, sizeof(ulong)));
 
         collectionState.Consumed += sizeof(ulong);
@@ -76,10 +71,9 @@ internal class GlobalHeapManager
         );
 
         // object data
-        var data = _memory.Slice(collectionState.Consumed, size);
+        var data = _memory.Slice(collectionState.Consumed, objectSize);
 
-        /* H5HGpkg.h #define H5HG_ALIGN(X) */
-        var alignedSize = ALIGNMENT * ((size + ALIGNMENT - 1) / ALIGNMENT);
+        var alignedSize = AlignSize(objectSize);
         collectionState.Consumed += alignedSize;
 
         return (
@@ -88,10 +82,20 @@ internal class GlobalHeapManager
         );
     }
 
-    private GlobalHeapCollectionState AddNewCollection()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int AlignSize(int objectSize)
+    {
+        /* H5HGpkg.h #define H5HG_ALIGN(X) */
+        return ALIGNMENT * ((objectSize + ALIGNMENT - 1) / ALIGNMENT);
+    }
+
+    private GlobalHeapCollectionState AddNewCollection(int collectionSize)
     {
         // flush before we are able to continue
-        if (_collectionMap.Count * _collectionSize >= _flushThreshold)
+        if (
+            _collectionMap.Sum(entry => (long)entry.Value.Collection.CollectionSize) >= 
+            _options.GlobalHeapFlushThreshold
+        )
         {
             Encode();
             _collectionMap.Clear();
@@ -102,11 +106,11 @@ internal class GlobalHeapManager
         var collection = new GlobalHeapCollection(default!)
         {
             Version = 1,
-            CollectionSize = (ulong)_totalCollectionSize
+            CollectionSize = (ulong)collectionSize
         };
 
-        _baseAddress = _freeSpaceManager.Allocate(_totalCollectionSize);
-        _memory = new byte[_collectionSize];
+        _baseAddress = _freeSpaceManager.Allocate(collectionSize);
+        _memory = new byte[collectionSize - COLLECTION_HEADER_SIZE];
 
         //
         _index = 0;

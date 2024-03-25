@@ -284,7 +284,7 @@ internal class NativeDataType : IH5DataType
                         (VariableLengthPropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new InvalidOperationException($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
+                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
             }
 
             return _variableLength;
@@ -302,7 +302,7 @@ internal class NativeDataType : IH5DataType
                         (ArrayPropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new InvalidOperationException($"This property can only be called for data of class {H5DataTypeClass.Array}.");
+                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Array}.");
             }
 
             return _array;

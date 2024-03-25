@@ -1,3 +1,8 @@
+## v1.0.0-beta.9 - 2024-03-25
+
+### Bugs fixed
+- #67 - Exception with variable-length-list element over a certain size
+
 ## v1.0.0-beta.8 - 2024-03-20
 
 ### Bugs fixed
