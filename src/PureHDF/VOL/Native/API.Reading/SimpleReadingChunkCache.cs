@@ -5,23 +5,23 @@
 
 
 /// <summary>
-/// A simple chunk cache.
+/// A simple reading chunk cache following the cache design principles of the HDF5 C-library.
 /// </summary>
-public partial class SimpleChunkCache : IReadingChunkCache
+public class SimpleReadingChunkCache : IReadingChunkCache
 {
-    private record ChunkInfo(Memory<byte> Chunk)
+    private record ReadingChunkInfo(Memory<byte> Chunk)
     {
         public DateTime LastAccess { get; set; }
     }
 
-    private readonly Dictionary<ulong[], ChunkInfo> _chunkInfoMap;
+    private readonly Dictionary<ulong[], ReadingChunkInfo> _chunkInfoMap;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SimpleChunkCache"/> class.
+    /// Initializes a new instance of the <see cref="SimpleReadingChunkCache"/> class.
     /// </summary>
     /// <param name="chunkSlotCount">The number of chunks that can be hold in the cache at the same time.</param>
     /// <param name="byteCount">The maximum size of the chunk cache in bytes.</param>
-    public SimpleChunkCache(int chunkSlotCount = 521, ulong byteCount = 1 * 1024 * 1024/*, double w0 = 0.75*/)
+    public SimpleReadingChunkCache(int chunkSlotCount = 521, ulong byteCount = 1 * 1024 * 1024/*, double w0 = 0.75*/)
     {
         if (chunkSlotCount < 0)
             throw new Exception("The chunk slot count parameter must be >= 0.");
@@ -32,7 +32,7 @@ public partial class SimpleChunkCache : IReadingChunkCache
         ChunkSlotCount = chunkSlotCount;
         ByteCount = byteCount;
 
-        _chunkInfoMap = new Dictionary<ulong[], ChunkInfo>(new ArrayEqualityComparer());
+        _chunkInfoMap = new Dictionary<ulong[], ReadingChunkInfo>(new ArrayEqualityComparer());
     }
 
     /// <summary>
@@ -66,14 +66,14 @@ public partial class SimpleChunkCache : IReadingChunkCache
         else
         {
             var buffer = chunkReader();
-            chunkInfo = new ChunkInfo(buffer) { LastAccess = DateTime.Now };
+            chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = DateTime.Now };
             var chunk = chunkInfo.Chunk;
 
             if ((ulong)chunk.Length <= ByteCount)
             {
                 while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
                 {
-                    Preempt(chunkWriter: default);
+                    Preempt();
                 }
 
                 ConsumedBytes += (ulong)chunk.Length;
@@ -84,14 +84,11 @@ public partial class SimpleChunkCache : IReadingChunkCache
         return chunkInfo.Chunk;
     }
 
-    private void Preempt(Action<ulong[], Memory<byte>>? chunkWriter)
+    private void Preempt()
     {
         var entry = _chunkInfoMap
             .OrderBy(current => current.Value.LastAccess)
             .FirstOrDefault();
-
-        if (chunkWriter is not null)
-            chunkWriter(entry.Key, entry.Value.Chunk);
 
         ConsumedBytes -= (ulong)entry.Value.Chunk.Length;
         _chunkInfoMap.Remove(entry.Key);

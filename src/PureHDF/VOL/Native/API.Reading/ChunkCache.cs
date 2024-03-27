@@ -6,7 +6,8 @@ namespace PureHDF.VOL.Native;
 public static partial class ChunkCache
 {
     /// <summary>
-    /// The default chunk cache factory for reading.
+    /// Gets or sets the default chunk cache factory for reading.
     /// </summary>
-    public static Func<IReadingChunkCache> DefaultReadingChunkCacheFactory { get; } = () => new SimpleChunkCache();
+    public static Func<IReadingChunkCache> DefaultReadingChunkCacheFactory { get; set; } 
+        = () => new SimpleReadingChunkCache();
 }
