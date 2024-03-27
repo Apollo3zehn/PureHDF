@@ -2336,18 +2336,6 @@ references:
   commentId: Overload:PureHDF.H5WriteOptions.GetHashCode
   fullName: PureHDF.H5WriteOptions.GetHashCode
   nameWithType: H5WriteOptions.GetHashCode
-- uid: PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  name: GlobalHeapCollectionSize
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_GlobalHeapCollectionSize
-  commentId: P:PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  fullName: PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  nameWithType: H5WriteOptions.GlobalHeapCollectionSize
-- uid: PureHDF.H5WriteOptions.GlobalHeapCollectionSize*
-  name: GlobalHeapCollectionSize
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_GlobalHeapCollectionSize_
-  commentId: Overload:PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  fullName: PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  nameWithType: H5WriteOptions.GlobalHeapCollectionSize
 - uid: PureHDF.H5WriteOptions.GlobalHeapFlushThreshold
   name: GlobalHeapFlushThreshold
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_GlobalHeapFlushThreshold
@@ -2408,6 +2396,18 @@ references:
   commentId: Overload:PureHDF.H5WriteOptions.IncludeStructProperties
   fullName: PureHDF.H5WriteOptions.IncludeStructProperties
   nameWithType: H5WriteOptions.IncludeStructProperties
+- uid: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  name: MinimumGlobalHeapCollectionSize
+  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_MinimumGlobalHeapCollectionSize
+  commentId: P:PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  fullName: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  nameWithType: H5WriteOptions.MinimumGlobalHeapCollectionSize
+- uid: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize*
+  name: MinimumGlobalHeapCollectionSize
+  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_MinimumGlobalHeapCollectionSize_
+  commentId: Overload:PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  fullName: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  nameWithType: H5WriteOptions.MinimumGlobalHeapCollectionSize
 - uid: PureHDF.H5WriteOptions.PreferCompactDatasetLayout
   name: PreferCompactDatasetLayout
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_PreferCompactDatasetLayout
@@ -3440,6 +3440,18 @@ references:
   commentId: T:PureHDF.IVariableLengthType
   fullName: PureHDF.IVariableLengthType
   nameWithType: IVariableLengthType
+- uid: PureHDF.IVariableLengthType.BaseType
+  name: BaseType
+  href: api/PureHDF.IVariableLengthType.html#PureHDF_IVariableLengthType_BaseType
+  commentId: P:PureHDF.IVariableLengthType.BaseType
+  fullName: PureHDF.IVariableLengthType.BaseType
+  nameWithType: IVariableLengthType.BaseType
+- uid: PureHDF.IVariableLengthType.BaseType*
+  name: BaseType
+  href: api/PureHDF.IVariableLengthType.html#PureHDF_IVariableLengthType_BaseType_
+  commentId: Overload:PureHDF.IVariableLengthType.BaseType
+  fullName: PureHDF.IVariableLengthType.BaseType
+  nameWithType: IVariableLengthType.BaseType
 - uid: PureHDF.Selections
   name: PureHDF.Selections
   href: api/PureHDF.Selections.html
