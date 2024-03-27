@@ -1,3 +1,9 @@
+## v1.0.0-beta.10 - 2024-03-27
+
+### Bugs fixed
+- #52 - Chunk cache problem
+- #70, #71 - Setting the SHUFFLE parameter on the Blosc filter causes an error, thanks @marklam
+
 ## v1.0.0-beta.9 - 2024-03-25
 
 ### Bugs fixed
