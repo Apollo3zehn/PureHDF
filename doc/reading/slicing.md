@@ -66,18 +66,18 @@ var memoryDims = new ulong[] { 75, 25 };
 
 var datasetSelection = new HyperslabSelection(
     rank: 3,
-    starts: new ulong[] { 2, 2, 0 },
-    strides: new ulong[] { 5, 8, 2 },
-    counts: new ulong[] { 5, 3, 2 },
-    blocks: new ulong[] { 3, 5, 2 }
+    starts: [2, 2, 0],
+    strides: [5, 8, 2],
+    counts: [5, 3, 2],
+    blocks: [3, 5, 2]
 );
 
 var memorySelection = new HyperslabSelection(
     rank: 2,
-    starts: new ulong[] { 2, 1 },
-    strides: new ulong[] { 35, 17 },
-    counts: new ulong[] { 2, 1 },
-    blocks: new ulong[] { 30, 15 }
+    starts: [2, 1],
+    strides: [35, 17],
+    counts: [2, 1],
+    blocks: [30, 15]
 );
 
 var result = dataset
@@ -95,10 +95,10 @@ A delegate accepts a custom walker function which select blocks of data at certa
 ```cs
 static IEnumerable<Step> Walker(ulong[] datasetDimensions)
 {
-    yield return new Step(Coordinates: new ulong[] { 00, 00, 00 }, ElementCount: 1);
-    yield return new Step(Coordinates: new ulong[] { 00, 05, 10 }, ElementCount: 5);
-    yield return new Step(Coordinates: new ulong[] { 12, 01, 10 }, ElementCount: 2);
-    yield return new Step(Coordinates: new ulong[] { 05, 07, 09 }, ElementCount: 3);
+    yield return new Step(Coordinates: [00, 00, 00], ElementCount: 1);
+    yield return new Step(Coordinates: [00, 05, 10], ElementCount: 5);
+    yield return new Step(Coordinates: [12, 01, 10], ElementCount: 2);
+    yield return new Step(Coordinates: [05, 07, 09], ElementCount: 3);
 };
 
 var selection = new DelegateSelection(totalElementCount: 11, Walker);

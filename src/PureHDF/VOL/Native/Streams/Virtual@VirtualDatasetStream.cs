@@ -180,7 +180,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                     var datasetAccess = _datasetAccess;
 
                     if (_datasetAccess.ChunkCache is null)
-                        datasetAccess = _datasetAccess with { ChunkCache = new SimpleChunkCache() };
+                        datasetAccess = _datasetAccess with { ChunkCache = new SimpleReadingChunkCache() };
 
                     var dataset = (NativeDataset)file.Dataset(entry.SourceDataset);
 

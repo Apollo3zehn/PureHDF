@@ -73,7 +73,7 @@ You may want to write data at a later point in time (for instance if the data is
 
 ```cs
 var data = Enumerable.Range(0, 100).ToArray();
-var dataset = new H5Dataset<int[]>(fileDims: new ulong[] { (ulong)data.Length });
+var dataset = new H5Dataset<int[]>(fileDims: [(ulong)data.Length]);
 
 var file = new H5File
 {

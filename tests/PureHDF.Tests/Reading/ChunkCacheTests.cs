@@ -8,7 +8,7 @@ public class ChunkCacheTests
     public void CanCacheChunk()
     {
         // Arrange
-        var cache = new SimpleChunkCache();
+        var cache = new SimpleReadingChunkCache();
 
         for (int index = 0; index < cache.ChunkSlotCount; index++)
         {
@@ -31,7 +31,7 @@ public class ChunkCacheTests
     public void CanPreemptChunk_Slots()
     {
         // Arrange
-        var cache = new SimpleChunkCache();
+        var cache = new SimpleReadingChunkCache();
 
         for (int index = 0; index < cache.ChunkSlotCount; index++)
         {
@@ -52,7 +52,7 @@ public class ChunkCacheTests
     public void CanPreemptChunk_Size()
     {
         // Arrange
-        var cache = new SimpleChunkCache();
+        var cache = new SimpleReadingChunkCache();
         cache.GetChunk([0], () => new byte[1024 * 1024].AsMemory());
 
         // Act
@@ -73,7 +73,7 @@ public class ChunkCacheTests
     public void CanPreemptCorrectChunk()
     {
         // Arrange
-        var cache = new SimpleChunkCache();
+        var cache = new SimpleReadingChunkCache();
 
         for (int index = 0; index < cache.ChunkSlotCount; index++)
         {

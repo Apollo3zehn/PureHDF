@@ -28,7 +28,7 @@ foreach (var link in group.Children())
         IH5Dataset childDataset             => $"I am a dataset, call me '{childDataset.Name}'.",
         IH5CommitedDatatype childDatatype   => $"I am the data type '{childDatatype.Name}'.",
         IH5UnresolvedLink lostLink          => $"I cannot find my link target =( shame on '{lostLink.Name}'.",
-        _                            => throw new Exception("Unknown link type")
+        _                                   => throw new Exception("Unknown link type")
     };
 
     Console.WriteLine(message);
