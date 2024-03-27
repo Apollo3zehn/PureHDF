@@ -94,7 +94,7 @@ var unknownObject = file.Get(&quot;/path/to/my/unknown/object&quot;);
         IH5Dataset childDataset             =&gt; $&quot;I am a dataset, call me '{childDataset.Name}'.&quot;,
         IH5CommitedDatatype childDatatype   =&gt; $&quot;I am the data type '{childDatatype.Name}'.&quot;,
         IH5UnresolvedLink lostLink          =&gt; $&quot;I cannot find my link target =( shame on '{lostLink.Name}'.&quot;,
-        _                            =&gt; throw new Exception(&quot;Unknown link type&quot;)
+        _                                   =&gt; throw new Exception(&quot;Unknown link type&quot;)
     };
 
     Console.WriteLine(message);

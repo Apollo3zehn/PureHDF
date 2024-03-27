@@ -1,8 +1,28 @@
 {
   "homepages": [],
-  "source_base_path": "/home/runner/work/PureHDF/PureHDF/doc",
+  "source_base_path": "/home/vincent/Dokumente/Git/GitHub/PureHDF/doc",
   "xrefmap": "xrefmap.yml",
   "files": [
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.AllSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.AllSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.ArrayExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.ArrayExtensions.html"
+        }
+      },
+      "version": ""
+    },
     {
       "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.CompoundMember.yml",
@@ -15,10 +35,70 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.DelegateSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.DelegateSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Filters.BZip2SharpZipLibFilter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Filters.BZip2SharpZipLibFilter.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Filters.Blosc2Filter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Filters.Blosc2Filter.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Filters.Blosc2ShuffleMode.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Filters.Blosc2ShuffleMode.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.Filters.DeflateFilter.yml",
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.Filters.DeflateFilter.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Filters.DeflateISALFilter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Filters.DeflateISALFilter.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Filters.DeflateSharpZipLibFilter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Filters.DeflateSharpZipLibFilter.html"
         }
       },
       "version": ""
@@ -69,6 +149,16 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.Filters.IH5Filter.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Filters.LzfFilter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Filters.LzfFilter.html"
         }
       },
       "version": ""
@@ -295,6 +385,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.HyperslabSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.HyperslabSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.IArrayType.yml",
       "output": {
         ".html": {
@@ -425,6 +525,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IH5DatasetExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IH5DatasetExtensions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.IH5Dataspace.yml",
       "output": {
         ".html": {
@@ -525,6 +635,46 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.IrregularHyperslabSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.IrregularHyperslabSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.NoneSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.NoneSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.PointSelection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.PointSelection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Selection.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Selection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.Selections.AllSelection.yml",
       "output": {
         ".html": {
@@ -615,6 +765,66 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.Step.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.Step.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VFD.AmazonS3.AmazonS3Stream.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VFD.AmazonS3.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VFD.AmazonS3.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Hsds.HsdsConnector.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Hsds.HsdsConnector.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Hsds.IHsdsConnector.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Hsds.IHsdsConnector.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.VOL.Hsds.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.VOL.Hsds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.VOL.Native.ChunkCache.yml",
       "output": {
         ".html": {
@@ -679,16 +889,6 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.VOL.Native.NativeAttributableObject.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.VOL.Native.NativeAttribute.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.VOL.Native.NativeAttribute.html"
         }
       },
       "version": ""

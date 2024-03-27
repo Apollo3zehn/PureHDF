@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Interface IVariableLengthType
+      <title>Class AllSelection
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Interface IVariableLengthType
+      <meta name="title" content="Class AllSelection
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
@@ -73,12 +73,12 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.IVariableLengthType">
+        <article data-uid="PureHDF.AllSelection">
 
 
 
-  <h1 id="PureHDF_IVariableLengthType" data-uid="PureHDF.IVariableLengthType" class="text-break">
-    Interface IVariableLengthType
+  <h1 id="PureHDF_AllSelection" data-uid="PureHDF.AllSelection" class="text-break">
+    Class AllSelection
   
   </h1>
 
@@ -87,15 +87,133 @@
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>The variable-length data type.</p>
+  <div class="markdown summary"><p>This selection selects all elements in the dataset.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IVariableLengthType</code></pre>
+    <pre><code class="lang-csharp hljs">public class AllSelection : Selection</code></pre>
   </div>
 
 
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><a class="xref" href="PureHDF.Selection.html">Selection</a></div>
+      <div><span class="xref">AllSelection</span></div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="PureHDF_AllSelection__ctor_" data-uid="PureHDF.AllSelection.#ctor*"></a>
+
+  <h3 id="PureHDF_AllSelection__ctor" data-uid="PureHDF.AllSelection.#ctor">
+  AllSelection()
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.AllSelection.html">AllSelection</a> instance.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public AllSelection()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_AllSelection_TotalElementCount_" data-uid="PureHDF.AllSelection.TotalElementCount*"></a>
+
+  <h3 id="PureHDF_AllSelection_TotalElementCount" data-uid="PureHDF.AllSelection.TotalElementCount">
+  TotalElementCount
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Gets the total number of elements which is used to preallocate the returned buffer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override ulong TotalElementCount { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_AllSelection_Walk_" data-uid="PureHDF.AllSelection.Walk*"></a>
+
+  <h3 id="PureHDF_AllSelection_Walk_System_UInt64___" data-uid="PureHDF.AllSelection.Walk(System.UInt64[])">
+  Walk(ulong[])
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The walk function is used to walk through the dataset and select the requested data.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public override IEnumerable&lt;Step&gt; Walk(ulong[] limits)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>limits</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dataset dimensions.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;<a class="xref" href="PureHDF.Step.html">Step</a>&gt;</dt>
+    <dd><p>An enumerable which provides a sequence of steps to select the requested data.</p>
+</dd>
+  </dl>
 
 
 

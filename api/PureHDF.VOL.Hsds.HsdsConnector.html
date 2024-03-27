@@ -2,9 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Dimensions | PureHDF </title>
+      <title>Class HsdsConnector
+ | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Dimensions | PureHDF ">
+      <meta name="title" content="Class HsdsConnector
+ | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -15,7 +17,7 @@
       
       
       
-      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/dimensions.md/#L1">
+      
   </head>
 
   <script type="module">
@@ -30,7 +32,7 @@
   </script>
 
 
-  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
     <header class="bg-body border-bottom">
       <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
         <div class="container-xxl flex-nowrap">
@@ -71,32 +73,97 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="">
-<h1 id="dimensions">Dimensions</h1>
+        <article data-uid="PureHDF.VOL.Hsds.HsdsConnector">
 
-<p>If you do not specify the dimensions, they will be derived from the data being provided. It the data is scalar, it will also be a scalar in the HDF5 file. If the data is array-like (e.g. <code>int[,]</code>), the dimensionality of that array is determined and will be used for the dimensionality of the dataset in the file. You can explicitly specify the dimensionality (or <code>reshape</code>) like this:</p>
-<pre><code class="lang-cs">// Create a 100x100 dataset - the data itself must be an
-// array-like type with a total of 100x100 = 10.000 elements. */
-var dataset = new H5Dataset(data, fileDims: [100, 100]);
-</code></pre>
-<p>Here is a quick example how to use a multidimensional array to determine the shape of the dataset:</p>
-<pre><code class="lang-cs">// Create a 3x3 dataset - no `fileDims` parameter required
-var data = new int[,] 
-{
-    { 0, 1, 2 },
-    { 3, 4, 5 },
-    { 6, 7, 8 }
-};
 
-var dataset = new H5Dataset(data);
-</code></pre>
+
+  <h1 id="PureHDF_VOL_Hsds_HsdsConnector" data-uid="PureHDF.VOL.Hsds.HsdsConnector" class="text-break">
+    Class HsdsConnector
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.VOL.html">VOL</a>.<a class="xref" href="PureHDF.VOL.Hsds.html">Hsds</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.VOL.Hsds.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"></div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static class HsdsConnector</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">HsdsConnector</span></div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_VOL_Hsds_HsdsConnector_Create_" data-uid="PureHDF.VOL.Hsds.HsdsConnector.Create*"></a>
+
+  <h3 id="PureHDF_VOL_Hsds_HsdsConnector_Create_System_String_Hsds_Api_HsdsClient_" data-uid="PureHDF.VOL.Hsds.HsdsConnector.Create(System.String,Hsds.Api.HsdsClient)">
+  Create(string, HsdsClient)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Initializes a new instances of the <a class="xref" href="PureHDF.VOL.Hsds.IHsdsConnector.html">IHsdsConnector</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IHsdsConnector Create(string domainName, HsdsClient client)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>domainName</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The domain name.</p>
+</dd>
+    <dt><code>client</code> <span class="xref">HsdsClient</span></dt>
+    <dd><p>The HsdsClient used to communicate with HSDS.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.VOL.Hsds.IHsdsConnector.html">IHsdsConnector</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/dimensions.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
-        <div class="next-article d-print-none border-top" id="nextArticle"></div>
         
       </div>
 

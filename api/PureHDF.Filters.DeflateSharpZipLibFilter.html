@@ -1,0 +1,398 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class DeflateSharpZipLibFilter
+ | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class DeflateSharpZipLibFilter
+ | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="PureHDF.Filters.DeflateSharpZipLibFilter">
+
+
+
+  <h1 id="PureHDF_Filters_DeflateSharpZipLibFilter" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter" class="text-break">
+    Class DeflateSharpZipLibFilter
+  
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="PureHDF.html">PureHDF</a>.<a class="xref" href="PureHDF.Filters.html">Filters</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>PureHDF.Filters.Deflate.SharpZipLib.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Deflate filter based on SharpZipLib.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class DeflateSharpZipLibFilter : IH5Filter</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">DeflateSharpZipLibFilter</span></div>
+    </dd>
+  </dl>
+
+  <dl class="typelist implements">
+    <dt>Implements</dt>
+    <dd>
+      <div><a class="xref" href="PureHDF.Filters.IH5Filter.html">IH5Filter</a></div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="PureHDF_Filters_DeflateSharpZipLibFilter__ctor_" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.#ctor*"></a>
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter__ctor" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.#ctor">
+  DeflateSharpZipLibFilter()
+  
+  </h3>
+
+  <div class="markdown level1 summary"></div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public DeflateSharpZipLibFilter()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="fields">Fields
+</h2>
+
+
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter_COMPRESSION_LEVEL" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.COMPRESSION_LEVEL">
+  COMPRESSION_LEVEL
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The compression level options key. The compression level must be in the range of -1..9 and the default is -1.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const string COMPRESSION_LEVEL = &quot;compression-level&quot;</code></pre>
+  </div>
+
+
+
+
+  <h4 class="section">Field Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter_Id" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.Id">
+  Id
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The deflate filter identifier.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public const ushort Id = 1</code></pre>
+  </div>
+
+
+
+
+  <h4 class="section">Field Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="PureHDF_Filters_DeflateSharpZipLibFilter_FilterId_" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.FilterId*"></a>
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter_FilterId" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.FilterId">
+  FilterId
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The filter identifier.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ushort FilterId { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint16">ushort</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_DeflateSharpZipLibFilter_Name_" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.Name*"></a>
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter_Name" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.Name">
+  Name
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The filter name.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string Name { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_Filters_DeflateSharpZipLibFilter_Filter_" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.Filter*"></a>
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter_Filter_PureHDF_Filters_FilterInfo_" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)">
+  Filter(FilterInfo)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>The filter function.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Memory&lt;byte&gt; Filter(FilterInfo info)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>info</code> <a class="xref" href="PureHDF.Filters.FilterInfo.html">FilterInfo</a></dt>
+    <dd><p>Additional information for the filter process.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
+    <dd><p>The filtered data.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_Filters_DeflateSharpZipLibFilter_GetParameters_" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters*"></a>
+
+  <h3 id="PureHDF_Filters_DeflateSharpZipLibFilter_GetParameters_System_UInt32___System_UInt32_System_Collections_Generic_Dictionary_System_String_System_Object__" data-uid="PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})">
+  GetParameters(uint[], uint, Dictionary&lt;string, object&gt;?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Returns the filter parameters being stored in the HDF5 file and which will be provided to the filter function. This method is only required for the PureHDF write API.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary&lt;string, object&gt;? options)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>chunkDimensions</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a>[]</dt>
+    <dd><p>The chunk dimensions.</p>
+</dd>
+    <dt><code>typeSize</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a></dt>
+    <dd><p>The size of the data type.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dd><p>The user defined map of filter options.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint32">uint</a>[]</dt>
+    <dd><p>The filter parameters.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2024 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

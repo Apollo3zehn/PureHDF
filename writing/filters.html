@@ -74,25 +74,29 @@
         <article data-uid="">
 <h1 id="filters">Filters</h1>
 
-<p>Many of the standard HDF5 filters are supported. Please see the <a href="filters.html">Filters</a> section for more details about the available filters.</p>
+<p>Many of the standard HDF5 filters are supported. Please see the <a href="../filters.html">Filters</a> section for more details about the available filters.</p>
 <p>Filters can be configured either for all datasets or for a specific dataset. If you like to configure them for all datasets, create an instance of the <code>H5WriteOptions</code> and add some filters to the pipeline:</p>
 <pre><code class="lang-cs">using PureHDF.Filters;
 
 var options = new H5WriteOptions(
-    Filters: new() {
+    Filters:
+    [
         ShuffleFilter.Id,
         DeflateFilter.Id
-    }
+    ]
 );
 </code></pre>
 <p>Then pass the options to the <code>H5File.Write</code> method:</p>
 <pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;, options);
 </code></pre>
 <p>An alternative is to configure the filter pipeline for a single dataset:</p>
-<pre><code class="lang-cs">var datasetCreation = new H5DatasetCreation(Filters: new() {
-    ShuffleFilter.Id,
-    DeflateFilter.Id
-})
+<pre><code class="lang-cs">var datasetCreation = new H5DatasetCreation(
+    Filters:
+    [
+        ShuffleFilter.Id,
+        DeflateFilter.Id
+    ]
+)
 
 var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
 </code></pre>

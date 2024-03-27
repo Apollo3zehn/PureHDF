@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Interface IVariableLengthType
+      <title>Class IH5DatasetExtensions
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Interface IVariableLengthType
+      <meta name="title" content="Class IH5DatasetExtensions
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
@@ -73,12 +73,12 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.IVariableLengthType">
+        <article data-uid="PureHDF.IH5DatasetExtensions">
 
 
 
-  <h1 id="PureHDF_IVariableLengthType" data-uid="PureHDF.IVariableLengthType" class="text-break">
-    Interface IVariableLengthType
+  <h1 id="PureHDF_IH5DatasetExtensions" data-uid="PureHDF.IH5DatasetExtensions" class="text-break">
+    Class IH5DatasetExtensions
   
   </h1>
 
@@ -87,16 +87,78 @@
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>The variable-length data type.</p>
+  <div class="markdown summary"><p>Defines extensions methods for the <a class="xref" href="PureHDF.IH5Dataset.html">IH5Dataset</a> type.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public interface IVariableLengthType</code></pre>
+    <pre><code class="lang-csharp hljs">public static class IH5DatasetExtensions</code></pre>
   </div>
 
 
 
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">IH5DatasetExtensions</span></div>
+    </dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="PureHDF_IH5DatasetExtensions_AsQueryable_" data-uid="PureHDF.IH5DatasetExtensions.AsQueryable*"></a>
+
+  <h3 id="PureHDF_IH5DatasetExtensions_AsQueryable__1_PureHDF_IH5Dataset_PureHDF_Selection_System_UInt64___" data-uid="PureHDF.IH5DatasetExtensions.AsQueryable``1(PureHDF.IH5Dataset,PureHDF.Selection,System.UInt64[])">
+  AsQueryable&lt;T&gt;(IH5Dataset, Selection?, ulong[]?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Queries the data. More information: <a href="https://github.com/Apollo3zehn/PureHDF#43-experimental-iqueryable-1-dimensional-data-only">PureHDF</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static IQueryable&lt;T&gt; AsQueryable&lt;T&gt;(this IH5Dataset dataset, Selection? memorySelection = null, ulong[]? memoryDims = null) where T : unmanaged</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>dataset</code> <a class="xref" href="PureHDF.IH5Dataset.html">IH5Dataset</a></dt>
+    <dd><p>The dataset to operate on.</p>
+</dd>
+    <dt><code>memorySelection</code> <a class="xref" href="PureHDF.Selection.html">Selection</a></dt>
+    <dd><p>The selection within the destination memory.</p>
+</dd>
+    <dt><code>memoryDims</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The dimensions of the destination memory buffer.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.linq.iqueryable-1">IQueryable</a>&lt;T&gt;</dt>
+    <dd><p>A queryable of type <code class="typeparamref">T</code>.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Type Parameters</h4>
+  <dl class="parameters">
+    <dt><code>T</code></dt>
+    <dd><p>The type of the data to read.</p>
+</dd>
+  </dl>
 
 
 

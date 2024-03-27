@@ -77,23 +77,9 @@
 <p>To chunk data, give the <code>H5Dataset</code> some chunk dimensions:</p>
 <pre><code class="lang-cs">var dataset = new H5Dataset(
     data, 
-    chunks: new uint[] { 10, 10 });
+    chunks: [10, 10]);
 </code></pre>
 <p>When no chunks and no filters are specified, the data will be written as compact or contiguous datasets, depending on the total size.</p>
-<div class="WARNING">
-<h5>Warning</h5>
-<p>Chunks can only be written to file once! Depending on your dataset and chunk dimensions, chunks are being accessed more than once during a write operation (only relevant for multidimensional arrays). To avoid an exception, make sure the chunk cache is large enough so that chunks are not being flushed from the cache to disk too early. You can adjust the chunk cache parameters by passing <code>H5DatasetAccess</code> properties to the dataset's constructor as shown below.</p>
-</div>
-<pre><code class="lang-cs">using PureHDF.VOL.Native;
-
-var datasetCreation = new H5DatasetCreation(ChunkCache: new SimpleChunkCache(...));
-
-var dataset = new H5Dataset(
-    data, 
-    chunks: new uint[] { 10, 10 },
-    datasetCreation: datasetCreation
-);
-</code></pre>
 </article>
 
         <div class="contribution d-print-none">
