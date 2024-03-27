@@ -40,9 +40,10 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 DeflateFilter.Id
-            }
+            ]
         );
 
         // Act
@@ -86,9 +87,10 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 DeflateFilter.Id
-            }
+            ]
         );
 
         // Act
@@ -249,10 +251,11 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 ShuffleFilter.Id,
                 DeflateFilter.Id
-            }
+            ]
         );
 
         // Act
@@ -296,10 +299,11 @@ public partial class DatasetTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters: 
+            [
                 ShuffleFilter.Id,
                 DeflateFilter.Id
-            }
+            ]
         );
 
         // Act

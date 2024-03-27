@@ -145,9 +145,10 @@ public class FilterTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 Blosc2Filter.Id
-            }
+            ]
         );
 
         H5Filter.ResetRegistrations();
@@ -241,9 +242,10 @@ public class FilterTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 LzfFilter.Id
-            }
+            ]
         );
 
         H5Filter.ResetRegistrations();
@@ -307,9 +309,10 @@ public class FilterTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 BZip2SharpZipLibFilter.Id
-            }
+            ]
         );
 
         H5Filter.ResetRegistrations();
@@ -380,9 +383,10 @@ public class FilterTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 Fletcher32Filter.Id
-            }
+            ]
         );
 
         H5Filter.ResetRegistrations();
@@ -448,9 +452,10 @@ public class FilterTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 DeflateFilter.Id
-            }
+            ]
         );
 
         IH5Filter? filter = implementation switch
@@ -536,11 +541,12 @@ public class FilterTests
         };
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 Fletcher32Filter.Id,
                 ShuffleFilter.Id,
                 DeflateFilter.Id
-            }
+            ]
         );
 
         var filePath = Path.GetTempFileName();
@@ -597,9 +603,10 @@ public class FilterTests
         };
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 99
-            }
+            ]
         );
 
         var filePath = Path.GetTempFileName();
@@ -635,9 +642,10 @@ public class FilterTests
         var filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            Filters: new() {
+            Filters:
+            [
                 ShuffleFilter.Id
-            }
+            ]
         );
 
         H5Filter.ResetRegistrations();

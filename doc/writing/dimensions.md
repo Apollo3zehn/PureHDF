@@ -5,7 +5,7 @@ If you do not specify the dimensions, they will be derived from the data being p
 ```cs
 // Create a 100x100 dataset - the data itself must be an
 // array-like type with a total of 100x100 = 10.000 elements. */
-var dataset = new H5Dataset(data, fileDims: new ulong[] { 100, 100 });
+var dataset = new H5Dataset(data, fileDims: [100, 100]);
 ```
 
 Here is a quick example how to use a multidimensional array to determine the shape of the dataset:
