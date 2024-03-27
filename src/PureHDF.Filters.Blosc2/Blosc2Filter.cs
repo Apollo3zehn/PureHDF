@@ -242,7 +242,7 @@ public class Blosc2Filter : IH5Filter
     {
         if (
             options is not null &&
-            options.TryGetValue(SHUFFLE, out var objectValue))
+            options.TryGetValue(COMPRESSOR_CODE, out var objectValue))
         {
             if (objectValue is string value)
             {
@@ -259,7 +259,7 @@ public class Blosc2Filter : IH5Filter
 
             else
             {
-                throw new Exception($"The value of the filter parameter '{SHUFFLE}' must be of type {nameof(String)}.");
+                throw new Exception($"The value of the filter parameter '{COMPRESSOR_CODE}' must be of type {nameof(String)}.");
             }
         }
 
