@@ -167,7 +167,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5WriteOptions(int DefaultStringLength = 0, int GlobalHeapCollectionSize = 4096, long GlobalHeapFlushThreshold = 4194304, bool PreferCompactDatasetLayout = true, bool IncludeStructFields = true, bool IncludeStructProperties = false, bool IncludeClassFields = false, bool IncludeClassProperties = true, Func&lt;FieldInfo, string?&gt;? FieldNameMapper = null, Func&lt;FieldInfo, int?&gt;? FieldStringLengthMapper = null, Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper = null, Func&lt;PropertyInfo, int?&gt;? PropertyStringLengthMapper = null, List&lt;H5Filter&gt;? Filters = null)</code></pre>
+    <pre><code class="lang-csharp hljs">public H5WriteOptions(int DefaultStringLength = 0, int MinimumGlobalHeapCollectionSize = 4096, long GlobalHeapFlushThreshold = 4194304, bool PreferCompactDatasetLayout = true, bool IncludeStructFields = true, bool IncludeStructProperties = false, bool IncludeClassFields = false, bool IncludeClassProperties = true, Func&lt;FieldInfo, string?&gt;? FieldNameMapper = null, Func&lt;FieldInfo, int?&gt;? FieldStringLengthMapper = null, Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper = null, Func&lt;PropertyInfo, int?&gt;? PropertyStringLengthMapper = null, List&lt;H5Filter&gt;? Filters = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -175,8 +175,8 @@
     <dt><code>DefaultStringLength</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
     <dd><p>A value that indicates how strings are handled during serialization. A nonzero positve value means that strings are treated as fixed-length strings, otherwise they are variable-length strings. The default value is 0.</p>
 </dd>
-    <dt><code>GlobalHeapCollectionSize</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
-    <dd><p>A value that indicates the size of a global heap collection in bytes. The default value is 4096 bytes which is the minimum allowed size.</p>
+    <dt><code>MinimumGlobalHeapCollectionSize</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd><p>A value that indicates the minimum size of a global heap collection in bytes. The default value is 4096 bytes which is the absolute minimum allowed size.</p>
 </dd>
     <dt><code>GlobalHeapFlushThreshold</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
     <dd><p>A value that indicates the threshold after which global heap collections will be flushed. The default value is 4096 * 1024 = 4 MB.</p>
@@ -387,38 +387,6 @@
 
 
 
-  <a id="PureHDF_H5WriteOptions_GlobalHeapCollectionSize_" data-uid="PureHDF.H5WriteOptions.GlobalHeapCollectionSize*"></a>
-
-  <h3 id="PureHDF_H5WriteOptions_GlobalHeapCollectionSize" data-uid="PureHDF.H5WriteOptions.GlobalHeapCollectionSize">
-  GlobalHeapCollectionSize
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>A value that indicates the size of a global heap collection in bytes. The default value is 4096 bytes which is the minimum allowed size.</p>
-</div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public int GlobalHeapCollectionSize { get; init; }</code></pre>
-  </div>
-
-
-
-
-
-  <h4 class="section">Property Value</h4>
-  <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
-    <dd></dd>
-  </dl>
-
-
-
-
-
-
-
-
   <a id="PureHDF_H5WriteOptions_GlobalHeapFlushThreshold_" data-uid="PureHDF.H5WriteOptions.GlobalHeapFlushThreshold*"></a>
 
   <h3 id="PureHDF_H5WriteOptions_GlobalHeapFlushThreshold" data-uid="PureHDF.H5WriteOptions.GlobalHeapFlushThreshold">
@@ -579,6 +547,38 @@
 
 
 
+  <a id="PureHDF_H5WriteOptions_MinimumGlobalHeapCollectionSize_" data-uid="PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize*"></a>
+
+  <h3 id="PureHDF_H5WriteOptions_MinimumGlobalHeapCollectionSize" data-uid="PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize">
+  MinimumGlobalHeapCollectionSize
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A value that indicates the minimum size of a global heap collection in bytes. The default value is 4096 bytes which is the absolute minimum allowed size.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public int MinimumGlobalHeapCollectionSize { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
   <a id="PureHDF_H5WriteOptions_PreferCompactDatasetLayout_" data-uid="PureHDF.H5WriteOptions.PreferCompactDatasetLayout*"></a>
 
   <h3 id="PureHDF_H5WriteOptions_PreferCompactDatasetLayout" data-uid="PureHDF.H5WriteOptions.PreferCompactDatasetLayout">
@@ -690,14 +690,14 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public void Deconstruct(out int DefaultStringLength, out int GlobalHeapCollectionSize, out long GlobalHeapFlushThreshold, out bool PreferCompactDatasetLayout, out bool IncludeStructFields, out bool IncludeStructProperties, out bool IncludeClassFields, out bool IncludeClassProperties, out Func&lt;FieldInfo, string?&gt;? FieldNameMapper, out Func&lt;FieldInfo, int?&gt;? FieldStringLengthMapper, out Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper, out Func&lt;PropertyInfo, int?&gt;? PropertyStringLengthMapper, out List&lt;H5Filter&gt;? Filters)</code></pre>
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out int DefaultStringLength, out int MinimumGlobalHeapCollectionSize, out long GlobalHeapFlushThreshold, out bool PreferCompactDatasetLayout, out bool IncludeStructFields, out bool IncludeStructProperties, out bool IncludeClassFields, out bool IncludeClassProperties, out Func&lt;FieldInfo, string?&gt;? FieldNameMapper, out Func&lt;FieldInfo, int?&gt;? FieldStringLengthMapper, out Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper, out Func&lt;PropertyInfo, int?&gt;? PropertyStringLengthMapper, out List&lt;H5Filter&gt;? Filters)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
     <dt><code>DefaultStringLength</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
     <dd></dd>
-    <dt><code>GlobalHeapCollectionSize</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
+    <dt><code>MinimumGlobalHeapCollectionSize</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int32">int</a></dt>
     <dd></dd>
     <dt><code>GlobalHeapFlushThreshold</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
     <dd></dd>

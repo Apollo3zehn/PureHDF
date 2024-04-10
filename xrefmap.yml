@@ -7,138 +7,6 @@ references:
   commentId: N:PureHDF
   fullName: PureHDF
   nameWithType: PureHDF
-- uid: PureHDF.AllSelection
-  name: AllSelection
-  href: api/PureHDF.AllSelection.html
-  commentId: T:PureHDF.AllSelection
-  fullName: PureHDF.AllSelection
-  nameWithType: AllSelection
-- uid: PureHDF.AllSelection.#ctor
-  name: AllSelection()
-  href: api/PureHDF.AllSelection.html#PureHDF_AllSelection__ctor
-  commentId: M:PureHDF.AllSelection.#ctor
-  name.vb: New()
-  fullName: PureHDF.AllSelection.AllSelection()
-  fullName.vb: PureHDF.AllSelection.New()
-  nameWithType: AllSelection.AllSelection()
-  nameWithType.vb: AllSelection.New()
-- uid: PureHDF.AllSelection.#ctor*
-  name: AllSelection
-  href: api/PureHDF.AllSelection.html#PureHDF_AllSelection__ctor_
-  commentId: Overload:PureHDF.AllSelection.#ctor
-  name.vb: New
-  fullName: PureHDF.AllSelection.AllSelection
-  fullName.vb: PureHDF.AllSelection.New
-  nameWithType: AllSelection.AllSelection
-  nameWithType.vb: AllSelection.New
-- uid: PureHDF.AllSelection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.AllSelection.html#PureHDF_AllSelection_TotalElementCount
-  commentId: P:PureHDF.AllSelection.TotalElementCount
-  fullName: PureHDF.AllSelection.TotalElementCount
-  nameWithType: AllSelection.TotalElementCount
-- uid: PureHDF.AllSelection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.AllSelection.html#PureHDF_AllSelection_TotalElementCount_
-  commentId: Overload:PureHDF.AllSelection.TotalElementCount
-  fullName: PureHDF.AllSelection.TotalElementCount
-  nameWithType: AllSelection.TotalElementCount
-- uid: PureHDF.AllSelection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.AllSelection.html#PureHDF_AllSelection_Walk_System_UInt64___
-  commentId: M:PureHDF.AllSelection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.AllSelection.Walk(ulong[])
-  fullName.vb: PureHDF.AllSelection.Walk(ULong())
-  nameWithType: AllSelection.Walk(ulong[])
-  nameWithType.vb: AllSelection.Walk(ULong())
-- uid: PureHDF.AllSelection.Walk*
-  name: Walk
-  href: api/PureHDF.AllSelection.html#PureHDF_AllSelection_Walk_
-  commentId: Overload:PureHDF.AllSelection.Walk
-  fullName: PureHDF.AllSelection.Walk
-  nameWithType: AllSelection.Walk
-- uid: PureHDF.ArrayExtensions
-  name: ArrayExtensions
-  href: api/PureHDF.ArrayExtensions.html
-  commentId: T:PureHDF.ArrayExtensions
-  fullName: PureHDF.ArrayExtensions
-  nameWithType: ArrayExtensions
-- uid: PureHDF.ArrayExtensions.ToArray2D*
-  name: ToArray2D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray2D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray2D
-  fullName: PureHDF.ArrayExtensions.ToArray2D
-  nameWithType: ArrayExtensions.ToArray2D
-- uid: PureHDF.ArrayExtensions.ToArray2D``1(``0[],System.Int64,System.Int64)
-  name: ToArray2D<T>(T[], long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray2D__1___0___System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray2D``1(``0[],System.Int64,System.Int64)
-  name.vb: ToArray2D(Of T)(T(), Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray2D<T>(T[], long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray2D(Of T)(T(), Long, Long)
-  nameWithType: ArrayExtensions.ToArray2D<T>(T[], long, long)
-  nameWithType.vb: ArrayExtensions.ToArray2D(Of T)(T(), Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray3D*
-  name: ToArray3D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray3D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray3D
-  fullName: PureHDF.ArrayExtensions.ToArray3D
-  nameWithType: ArrayExtensions.ToArray3D
-- uid: PureHDF.ArrayExtensions.ToArray3D``1(``0[],System.Int64,System.Int64,System.Int64)
-  name: ToArray3D<T>(T[], long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray3D__1___0___System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray3D``1(``0[],System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray3D(Of T)(T(), Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray3D<T>(T[], long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray3D(Of T)(T(), Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray3D<T>(T[], long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray3D(Of T)(T(), Long, Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray4D*
-  name: ToArray4D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray4D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray4D
-  fullName: PureHDF.ArrayExtensions.ToArray4D
-  nameWithType: ArrayExtensions.ToArray4D
-- uid: PureHDF.ArrayExtensions.ToArray4D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64)
-  name: ToArray4D<T>(T[], long, long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray4D__1___0___System_Int64_System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray4D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray4D(Of T)(T(), Long, Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray4D<T>(T[], long, long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray4D(Of T)(T(), Long, Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray4D<T>(T[], long, long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray4D(Of T)(T(), Long, Long, Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray5D*
-  name: ToArray5D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray5D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray5D
-  fullName: PureHDF.ArrayExtensions.ToArray5D
-  nameWithType: ArrayExtensions.ToArray5D
-- uid: PureHDF.ArrayExtensions.ToArray5D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name: ToArray5D<T>(T[], long, long, long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray5D__1___0___System_Int64_System_Int64_System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray5D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray5D(Of T)(T(), Long, Long, Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray5D<T>(T[], long, long, long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray5D(Of T)(T(), Long, Long, Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray5D<T>(T[], long, long, long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray5D(Of T)(T(), Long, Long, Long, Long, Long)
-- uid: PureHDF.ArrayExtensions.ToArray6D*
-  name: ToArray6D
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray6D_
-  commentId: Overload:PureHDF.ArrayExtensions.ToArray6D
-  fullName: PureHDF.ArrayExtensions.ToArray6D
-  nameWithType: ArrayExtensions.ToArray6D
-- uid: PureHDF.ArrayExtensions.ToArray6D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name: ToArray6D<T>(T[], long, long, long, long, long, long)
-  href: api/PureHDF.ArrayExtensions.html#PureHDF_ArrayExtensions_ToArray6D__1___0___System_Int64_System_Int64_System_Int64_System_Int64_System_Int64_System_Int64_
-  commentId: M:PureHDF.ArrayExtensions.ToArray6D``1(``0[],System.Int64,System.Int64,System.Int64,System.Int64,System.Int64,System.Int64)
-  name.vb: ToArray6D(Of T)(T(), Long, Long, Long, Long, Long, Long)
-  fullName: PureHDF.ArrayExtensions.ToArray6D<T>(T[], long, long, long, long, long, long)
-  fullName.vb: PureHDF.ArrayExtensions.ToArray6D(Of T)(T(), Long, Long, Long, Long, Long, Long)
-  nameWithType: ArrayExtensions.ToArray6D<T>(T[], long, long, long, long, long, long)
-  nameWithType.vb: ArrayExtensions.ToArray6D(Of T)(T(), Long, Long, Long, Long, Long, Long)
 - uid: PureHDF.CompoundMember
   name: CompoundMember
   href: api/PureHDF.CompoundMember.html
@@ -343,279 +211,12 @@ references:
   commentId: Overload:PureHDF.CompoundMember.{Clone}$
   fullName: PureHDF.CompoundMember.<Clone>$
   nameWithType: CompoundMember.<Clone>$
-- uid: PureHDF.DelegateSelection
-  name: DelegateSelection
-  href: api/PureHDF.DelegateSelection.html
-  commentId: T:PureHDF.DelegateSelection
-  fullName: PureHDF.DelegateSelection
-  nameWithType: DelegateSelection
-- uid: PureHDF.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Step}})
-  name: DelegateSelection(ulong, Func<ulong[], IEnumerable<Step>>)
-  href: api/PureHDF.DelegateSelection.html#PureHDF_DelegateSelection__ctor_System_UInt64_System_Func_System_UInt64___System_Collections_Generic_IEnumerable_PureHDF_Step___
-  commentId: M:PureHDF.DelegateSelection.#ctor(System.UInt64,System.Func{System.UInt64[],System.Collections.Generic.IEnumerable{PureHDF.Step}})
-  name.vb: New(ULong, Func(Of ULong(), IEnumerable(Of Step)))
-  fullName: PureHDF.DelegateSelection.DelegateSelection(ulong, System.Func<ulong[], System.Collections.Generic.IEnumerable<PureHDF.Step>>)
-  fullName.vb: PureHDF.DelegateSelection.New(ULong, System.Func(Of ULong(), System.Collections.Generic.IEnumerable(Of PureHDF.Step)))
-  nameWithType: DelegateSelection.DelegateSelection(ulong, Func<ulong[], IEnumerable<Step>>)
-  nameWithType.vb: DelegateSelection.New(ULong, Func(Of ULong(), IEnumerable(Of Step)))
-- uid: PureHDF.DelegateSelection.#ctor*
-  name: DelegateSelection
-  href: api/PureHDF.DelegateSelection.html#PureHDF_DelegateSelection__ctor_
-  commentId: Overload:PureHDF.DelegateSelection.#ctor
-  name.vb: New
-  fullName: PureHDF.DelegateSelection.DelegateSelection
-  fullName.vb: PureHDF.DelegateSelection.New
-  nameWithType: DelegateSelection.DelegateSelection
-  nameWithType.vb: DelegateSelection.New
-- uid: PureHDF.DelegateSelection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.DelegateSelection.html#PureHDF_DelegateSelection_TotalElementCount
-  commentId: P:PureHDF.DelegateSelection.TotalElementCount
-  fullName: PureHDF.DelegateSelection.TotalElementCount
-  nameWithType: DelegateSelection.TotalElementCount
-- uid: PureHDF.DelegateSelection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.DelegateSelection.html#PureHDF_DelegateSelection_TotalElementCount_
-  commentId: Overload:PureHDF.DelegateSelection.TotalElementCount
-  fullName: PureHDF.DelegateSelection.TotalElementCount
-  nameWithType: DelegateSelection.TotalElementCount
-- uid: PureHDF.DelegateSelection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.DelegateSelection.html#PureHDF_DelegateSelection_Walk_System_UInt64___
-  commentId: M:PureHDF.DelegateSelection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.DelegateSelection.Walk(ulong[])
-  fullName.vb: PureHDF.DelegateSelection.Walk(ULong())
-  nameWithType: DelegateSelection.Walk(ulong[])
-  nameWithType.vb: DelegateSelection.Walk(ULong())
-- uid: PureHDF.DelegateSelection.Walk*
-  name: Walk
-  href: api/PureHDF.DelegateSelection.html#PureHDF_DelegateSelection_Walk_
-  commentId: Overload:PureHDF.DelegateSelection.Walk
-  fullName: PureHDF.DelegateSelection.Walk
-  nameWithType: DelegateSelection.Walk
 - uid: PureHDF.Filters
   name: PureHDF.Filters
   href: api/PureHDF.Filters.html
   commentId: N:PureHDF.Filters
   fullName: PureHDF.Filters
   nameWithType: PureHDF.Filters
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter
-  name: BZip2SharpZipLibFilter
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html
-  commentId: T:PureHDF.Filters.BZip2SharpZipLibFilter
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter
-  nameWithType: BZip2SharpZipLibFilter
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.#ctor
-  name: BZip2SharpZipLibFilter()
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter__ctor
-  commentId: M:PureHDF.Filters.BZip2SharpZipLibFilter.#ctor
-  name.vb: New()
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.BZip2SharpZipLibFilter()
-  fullName.vb: PureHDF.Filters.BZip2SharpZipLibFilter.New()
-  nameWithType: BZip2SharpZipLibFilter.BZip2SharpZipLibFilter()
-  nameWithType.vb: BZip2SharpZipLibFilter.New()
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.#ctor*
-  name: BZip2SharpZipLibFilter
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter__ctor_
-  commentId: Overload:PureHDF.Filters.BZip2SharpZipLibFilter.#ctor
-  name.vb: New
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.BZip2SharpZipLibFilter
-  fullName.vb: PureHDF.Filters.BZip2SharpZipLibFilter.New
-  nameWithType: BZip2SharpZipLibFilter.BZip2SharpZipLibFilter
-  nameWithType.vb: BZip2SharpZipLibFilter.New
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.BLOCK_SIZE
-  name: BLOCK_SIZE
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_BLOCK_SIZE
-  commentId: F:PureHDF.Filters.BZip2SharpZipLibFilter.BLOCK_SIZE
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.BLOCK_SIZE
-  nameWithType: BZip2SharpZipLibFilter.BLOCK_SIZE
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)
-  name: Filter(FilterInfo)
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_Filter_PureHDF_Filters_FilterInfo_
-  commentId: M:PureHDF.Filters.BZip2SharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)
-  nameWithType: BZip2SharpZipLibFilter.Filter(FilterInfo)
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.Filter*
-  name: Filter
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_Filter_
-  commentId: Overload:PureHDF.Filters.BZip2SharpZipLibFilter.Filter
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.Filter
-  nameWithType: BZip2SharpZipLibFilter.Filter
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.FilterId
-  name: FilterId
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_FilterId
-  commentId: P:PureHDF.Filters.BZip2SharpZipLibFilter.FilterId
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.FilterId
-  nameWithType: BZip2SharpZipLibFilter.FilterId
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.FilterId*
-  name: FilterId
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_FilterId_
-  commentId: Overload:PureHDF.Filters.BZip2SharpZipLibFilter.FilterId
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.FilterId
-  nameWithType: BZip2SharpZipLibFilter.FilterId
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name: GetParameters(uint[], uint, Dictionary<string, object>?)
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_GetParameters_System_UInt32___System_UInt32_System_Collections_Generic_Dictionary_System_String_System_Object__
-  commentId: M:PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name.vb: GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters(uint[], uint, System.Collections.Generic.Dictionary<string, object>?)
-  fullName.vb: PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters(UInteger(), UInteger, System.Collections.Generic.Dictionary(Of String, Object))
-  nameWithType: BZip2SharpZipLibFilter.GetParameters(uint[], uint, Dictionary<string, object>?)
-  nameWithType.vb: BZip2SharpZipLibFilter.GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters*
-  name: GetParameters
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_GetParameters_
-  commentId: Overload:PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.GetParameters
-  nameWithType: BZip2SharpZipLibFilter.GetParameters
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.Id
-  name: Id
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_Id
-  commentId: F:PureHDF.Filters.BZip2SharpZipLibFilter.Id
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.Id
-  nameWithType: BZip2SharpZipLibFilter.Id
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.Name
-  name: Name
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_Name
-  commentId: P:PureHDF.Filters.BZip2SharpZipLibFilter.Name
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.Name
-  nameWithType: BZip2SharpZipLibFilter.Name
-- uid: PureHDF.Filters.BZip2SharpZipLibFilter.Name*
-  name: Name
-  href: api/PureHDF.Filters.BZip2SharpZipLibFilter.html#PureHDF_Filters_BZip2SharpZipLibFilter_Name_
-  commentId: Overload:PureHDF.Filters.BZip2SharpZipLibFilter.Name
-  fullName: PureHDF.Filters.BZip2SharpZipLibFilter.Name
-  nameWithType: BZip2SharpZipLibFilter.Name
-- uid: PureHDF.Filters.Blosc2Filter
-  name: Blosc2Filter
-  href: api/PureHDF.Filters.Blosc2Filter.html
-  commentId: T:PureHDF.Filters.Blosc2Filter
-  fullName: PureHDF.Filters.Blosc2Filter
-  nameWithType: Blosc2Filter
-- uid: PureHDF.Filters.Blosc2Filter.#ctor
-  name: Blosc2Filter()
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter__ctor
-  commentId: M:PureHDF.Filters.Blosc2Filter.#ctor
-  name.vb: New()
-  fullName: PureHDF.Filters.Blosc2Filter.Blosc2Filter()
-  fullName.vb: PureHDF.Filters.Blosc2Filter.New()
-  nameWithType: Blosc2Filter.Blosc2Filter()
-  nameWithType.vb: Blosc2Filter.New()
-- uid: PureHDF.Filters.Blosc2Filter.#ctor*
-  name: Blosc2Filter
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter__ctor_
-  commentId: Overload:PureHDF.Filters.Blosc2Filter.#ctor
-  name.vb: New
-  fullName: PureHDF.Filters.Blosc2Filter.Blosc2Filter
-  fullName.vb: PureHDF.Filters.Blosc2Filter.New
-  nameWithType: Blosc2Filter.Blosc2Filter
-  nameWithType.vb: Blosc2Filter.New
-- uid: PureHDF.Filters.Blosc2Filter.COMPRESSION_LEVEL
-  name: COMPRESSION_LEVEL
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_COMPRESSION_LEVEL
-  commentId: F:PureHDF.Filters.Blosc2Filter.COMPRESSION_LEVEL
-  fullName: PureHDF.Filters.Blosc2Filter.COMPRESSION_LEVEL
-  nameWithType: Blosc2Filter.COMPRESSION_LEVEL
-- uid: PureHDF.Filters.Blosc2Filter.COMPRESSOR_CODE
-  name: COMPRESSOR_CODE
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_COMPRESSOR_CODE
-  commentId: F:PureHDF.Filters.Blosc2Filter.COMPRESSOR_CODE
-  fullName: PureHDF.Filters.Blosc2Filter.COMPRESSOR_CODE
-  nameWithType: Blosc2Filter.COMPRESSOR_CODE
-- uid: PureHDF.Filters.Blosc2Filter.Filter(PureHDF.Filters.FilterInfo)
-  name: Filter(FilterInfo)
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_Filter_PureHDF_Filters_FilterInfo_
-  commentId: M:PureHDF.Filters.Blosc2Filter.Filter(PureHDF.Filters.FilterInfo)
-  fullName: PureHDF.Filters.Blosc2Filter.Filter(PureHDF.Filters.FilterInfo)
-  nameWithType: Blosc2Filter.Filter(FilterInfo)
-- uid: PureHDF.Filters.Blosc2Filter.Filter*
-  name: Filter
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_Filter_
-  commentId: Overload:PureHDF.Filters.Blosc2Filter.Filter
-  fullName: PureHDF.Filters.Blosc2Filter.Filter
-  nameWithType: Blosc2Filter.Filter
-- uid: PureHDF.Filters.Blosc2Filter.FilterId
-  name: FilterId
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_FilterId
-  commentId: P:PureHDF.Filters.Blosc2Filter.FilterId
-  fullName: PureHDF.Filters.Blosc2Filter.FilterId
-  nameWithType: Blosc2Filter.FilterId
-- uid: PureHDF.Filters.Blosc2Filter.FilterId*
-  name: FilterId
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_FilterId_
-  commentId: Overload:PureHDF.Filters.Blosc2Filter.FilterId
-  fullName: PureHDF.Filters.Blosc2Filter.FilterId
-  nameWithType: Blosc2Filter.FilterId
-- uid: PureHDF.Filters.Blosc2Filter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name: GetParameters(uint[], uint, Dictionary<string, object>?)
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_GetParameters_System_UInt32___System_UInt32_System_Collections_Generic_Dictionary_System_String_System_Object__
-  commentId: M:PureHDF.Filters.Blosc2Filter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name.vb: GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-  fullName: PureHDF.Filters.Blosc2Filter.GetParameters(uint[], uint, System.Collections.Generic.Dictionary<string, object>?)
-  fullName.vb: PureHDF.Filters.Blosc2Filter.GetParameters(UInteger(), UInteger, System.Collections.Generic.Dictionary(Of String, Object))
-  nameWithType: Blosc2Filter.GetParameters(uint[], uint, Dictionary<string, object>?)
-  nameWithType.vb: Blosc2Filter.GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-- uid: PureHDF.Filters.Blosc2Filter.GetParameters*
-  name: GetParameters
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_GetParameters_
-  commentId: Overload:PureHDF.Filters.Blosc2Filter.GetParameters
-  fullName: PureHDF.Filters.Blosc2Filter.GetParameters
-  nameWithType: Blosc2Filter.GetParameters
-- uid: PureHDF.Filters.Blosc2Filter.Id
-  name: Id
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_Id
-  commentId: F:PureHDF.Filters.Blosc2Filter.Id
-  fullName: PureHDF.Filters.Blosc2Filter.Id
-  nameWithType: Blosc2Filter.Id
-- uid: PureHDF.Filters.Blosc2Filter.Name
-  name: Name
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_Name
-  commentId: P:PureHDF.Filters.Blosc2Filter.Name
-  fullName: PureHDF.Filters.Blosc2Filter.Name
-  nameWithType: Blosc2Filter.Name
-- uid: PureHDF.Filters.Blosc2Filter.Name*
-  name: Name
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_Name_
-  commentId: Overload:PureHDF.Filters.Blosc2Filter.Name
-  fullName: PureHDF.Filters.Blosc2Filter.Name
-  nameWithType: Blosc2Filter.Name
-- uid: PureHDF.Filters.Blosc2Filter.SHUFFLE
-  name: SHUFFLE
-  href: api/PureHDF.Filters.Blosc2Filter.html#PureHDF_Filters_Blosc2Filter_SHUFFLE
-  commentId: F:PureHDF.Filters.Blosc2Filter.SHUFFLE
-  fullName: PureHDF.Filters.Blosc2Filter.SHUFFLE
-  nameWithType: Blosc2Filter.SHUFFLE
-- uid: PureHDF.Filters.Blosc2ShuffleMode
-  name: Blosc2ShuffleMode
-  href: api/PureHDF.Filters.Blosc2ShuffleMode.html
-  commentId: T:PureHDF.Filters.Blosc2ShuffleMode
-  fullName: PureHDF.Filters.Blosc2ShuffleMode
-  nameWithType: Blosc2ShuffleMode
-- uid: PureHDF.Filters.Blosc2ShuffleMode.AutoShuffle
-  name: AutoShuffle
-  href: api/PureHDF.Filters.Blosc2ShuffleMode.html#PureHDF_Filters_Blosc2ShuffleMode_AutoShuffle
-  commentId: F:PureHDF.Filters.Blosc2ShuffleMode.AutoShuffle
-  fullName: PureHDF.Filters.Blosc2ShuffleMode.AutoShuffle
-  nameWithType: Blosc2ShuffleMode.AutoShuffle
-- uid: PureHDF.Filters.Blosc2ShuffleMode.BitShuffle
-  name: BitShuffle
-  href: api/PureHDF.Filters.Blosc2ShuffleMode.html#PureHDF_Filters_Blosc2ShuffleMode_BitShuffle
-  commentId: F:PureHDF.Filters.Blosc2ShuffleMode.BitShuffle
-  fullName: PureHDF.Filters.Blosc2ShuffleMode.BitShuffle
-  nameWithType: Blosc2ShuffleMode.BitShuffle
-- uid: PureHDF.Filters.Blosc2ShuffleMode.NoShuffle
-  name: NoShuffle
-  href: api/PureHDF.Filters.Blosc2ShuffleMode.html#PureHDF_Filters_Blosc2ShuffleMode_NoShuffle
-  commentId: F:PureHDF.Filters.Blosc2ShuffleMode.NoShuffle
-  fullName: PureHDF.Filters.Blosc2ShuffleMode.NoShuffle
-  nameWithType: Blosc2ShuffleMode.NoShuffle
-- uid: PureHDF.Filters.Blosc2ShuffleMode.Shuffle
-  name: Shuffle
-  href: api/PureHDF.Filters.Blosc2ShuffleMode.html#PureHDF_Filters_Blosc2ShuffleMode_Shuffle
-  commentId: F:PureHDF.Filters.Blosc2ShuffleMode.Shuffle
-  fullName: PureHDF.Filters.Blosc2ShuffleMode.Shuffle
-  nameWithType: Blosc2ShuffleMode.Shuffle
 - uid: PureHDF.Filters.DeflateFilter
   name: DeflateFilter
   href: api/PureHDF.Filters.DeflateFilter.html
@@ -703,180 +304,6 @@ references:
   commentId: Overload:PureHDF.Filters.DeflateFilter.Name
   fullName: PureHDF.Filters.DeflateFilter.Name
   nameWithType: DeflateFilter.Name
-- uid: PureHDF.Filters.DeflateISALFilter
-  name: DeflateISALFilter
-  href: api/PureHDF.Filters.DeflateISALFilter.html
-  commentId: T:PureHDF.Filters.DeflateISALFilter
-  fullName: PureHDF.Filters.DeflateISALFilter
-  nameWithType: DeflateISALFilter
-- uid: PureHDF.Filters.DeflateISALFilter.#ctor
-  name: DeflateISALFilter()
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter__ctor
-  commentId: M:PureHDF.Filters.DeflateISALFilter.#ctor
-  name.vb: New()
-  fullName: PureHDF.Filters.DeflateISALFilter.DeflateISALFilter()
-  fullName.vb: PureHDF.Filters.DeflateISALFilter.New()
-  nameWithType: DeflateISALFilter.DeflateISALFilter()
-  nameWithType.vb: DeflateISALFilter.New()
-- uid: PureHDF.Filters.DeflateISALFilter.#ctor*
-  name: DeflateISALFilter
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter__ctor_
-  commentId: Overload:PureHDF.Filters.DeflateISALFilter.#ctor
-  name.vb: New
-  fullName: PureHDF.Filters.DeflateISALFilter.DeflateISALFilter
-  fullName.vb: PureHDF.Filters.DeflateISALFilter.New
-  nameWithType: DeflateISALFilter.DeflateISALFilter
-  nameWithType.vb: DeflateISALFilter.New
-- uid: PureHDF.Filters.DeflateISALFilter.COMPRESSION_LEVEL
-  name: COMPRESSION_LEVEL
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_COMPRESSION_LEVEL
-  commentId: F:PureHDF.Filters.DeflateISALFilter.COMPRESSION_LEVEL
-  fullName: PureHDF.Filters.DeflateISALFilter.COMPRESSION_LEVEL
-  nameWithType: DeflateISALFilter.COMPRESSION_LEVEL
-- uid: PureHDF.Filters.DeflateISALFilter.Filter(PureHDF.Filters.FilterInfo)
-  name: Filter(FilterInfo)
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_Filter_PureHDF_Filters_FilterInfo_
-  commentId: M:PureHDF.Filters.DeflateISALFilter.Filter(PureHDF.Filters.FilterInfo)
-  fullName: PureHDF.Filters.DeflateISALFilter.Filter(PureHDF.Filters.FilterInfo)
-  nameWithType: DeflateISALFilter.Filter(FilterInfo)
-- uid: PureHDF.Filters.DeflateISALFilter.Filter*
-  name: Filter
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_Filter_
-  commentId: Overload:PureHDF.Filters.DeflateISALFilter.Filter
-  fullName: PureHDF.Filters.DeflateISALFilter.Filter
-  nameWithType: DeflateISALFilter.Filter
-- uid: PureHDF.Filters.DeflateISALFilter.FilterId
-  name: FilterId
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_FilterId
-  commentId: P:PureHDF.Filters.DeflateISALFilter.FilterId
-  fullName: PureHDF.Filters.DeflateISALFilter.FilterId
-  nameWithType: DeflateISALFilter.FilterId
-- uid: PureHDF.Filters.DeflateISALFilter.FilterId*
-  name: FilterId
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_FilterId_
-  commentId: Overload:PureHDF.Filters.DeflateISALFilter.FilterId
-  fullName: PureHDF.Filters.DeflateISALFilter.FilterId
-  nameWithType: DeflateISALFilter.FilterId
-- uid: PureHDF.Filters.DeflateISALFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name: GetParameters(uint[], uint, Dictionary<string, object>?)
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_GetParameters_System_UInt32___System_UInt32_System_Collections_Generic_Dictionary_System_String_System_Object__
-  commentId: M:PureHDF.Filters.DeflateISALFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name.vb: GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-  fullName: PureHDF.Filters.DeflateISALFilter.GetParameters(uint[], uint, System.Collections.Generic.Dictionary<string, object>?)
-  fullName.vb: PureHDF.Filters.DeflateISALFilter.GetParameters(UInteger(), UInteger, System.Collections.Generic.Dictionary(Of String, Object))
-  nameWithType: DeflateISALFilter.GetParameters(uint[], uint, Dictionary<string, object>?)
-  nameWithType.vb: DeflateISALFilter.GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-- uid: PureHDF.Filters.DeflateISALFilter.GetParameters*
-  name: GetParameters
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_GetParameters_
-  commentId: Overload:PureHDF.Filters.DeflateISALFilter.GetParameters
-  fullName: PureHDF.Filters.DeflateISALFilter.GetParameters
-  nameWithType: DeflateISALFilter.GetParameters
-- uid: PureHDF.Filters.DeflateISALFilter.Id
-  name: Id
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_Id
-  commentId: F:PureHDF.Filters.DeflateISALFilter.Id
-  fullName: PureHDF.Filters.DeflateISALFilter.Id
-  nameWithType: DeflateISALFilter.Id
-- uid: PureHDF.Filters.DeflateISALFilter.Name
-  name: Name
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_Name
-  commentId: P:PureHDF.Filters.DeflateISALFilter.Name
-  fullName: PureHDF.Filters.DeflateISALFilter.Name
-  nameWithType: DeflateISALFilter.Name
-- uid: PureHDF.Filters.DeflateISALFilter.Name*
-  name: Name
-  href: api/PureHDF.Filters.DeflateISALFilter.html#PureHDF_Filters_DeflateISALFilter_Name_
-  commentId: Overload:PureHDF.Filters.DeflateISALFilter.Name
-  fullName: PureHDF.Filters.DeflateISALFilter.Name
-  nameWithType: DeflateISALFilter.Name
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter
-  name: DeflateSharpZipLibFilter
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html
-  commentId: T:PureHDF.Filters.DeflateSharpZipLibFilter
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter
-  nameWithType: DeflateSharpZipLibFilter
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.#ctor
-  name: DeflateSharpZipLibFilter()
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter__ctor
-  commentId: M:PureHDF.Filters.DeflateSharpZipLibFilter.#ctor
-  name.vb: New()
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.DeflateSharpZipLibFilter()
-  fullName.vb: PureHDF.Filters.DeflateSharpZipLibFilter.New()
-  nameWithType: DeflateSharpZipLibFilter.DeflateSharpZipLibFilter()
-  nameWithType.vb: DeflateSharpZipLibFilter.New()
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.#ctor*
-  name: DeflateSharpZipLibFilter
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter__ctor_
-  commentId: Overload:PureHDF.Filters.DeflateSharpZipLibFilter.#ctor
-  name.vb: New
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.DeflateSharpZipLibFilter
-  fullName.vb: PureHDF.Filters.DeflateSharpZipLibFilter.New
-  nameWithType: DeflateSharpZipLibFilter.DeflateSharpZipLibFilter
-  nameWithType.vb: DeflateSharpZipLibFilter.New
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.COMPRESSION_LEVEL
-  name: COMPRESSION_LEVEL
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_COMPRESSION_LEVEL
-  commentId: F:PureHDF.Filters.DeflateSharpZipLibFilter.COMPRESSION_LEVEL
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.COMPRESSION_LEVEL
-  nameWithType: DeflateSharpZipLibFilter.COMPRESSION_LEVEL
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)
-  name: Filter(FilterInfo)
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_Filter_PureHDF_Filters_FilterInfo_
-  commentId: M:PureHDF.Filters.DeflateSharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.Filter(PureHDF.Filters.FilterInfo)
-  nameWithType: DeflateSharpZipLibFilter.Filter(FilterInfo)
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.Filter*
-  name: Filter
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_Filter_
-  commentId: Overload:PureHDF.Filters.DeflateSharpZipLibFilter.Filter
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.Filter
-  nameWithType: DeflateSharpZipLibFilter.Filter
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.FilterId
-  name: FilterId
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_FilterId
-  commentId: P:PureHDF.Filters.DeflateSharpZipLibFilter.FilterId
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.FilterId
-  nameWithType: DeflateSharpZipLibFilter.FilterId
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.FilterId*
-  name: FilterId
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_FilterId_
-  commentId: Overload:PureHDF.Filters.DeflateSharpZipLibFilter.FilterId
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.FilterId
-  nameWithType: DeflateSharpZipLibFilter.FilterId
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name: GetParameters(uint[], uint, Dictionary<string, object>?)
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_GetParameters_System_UInt32___System_UInt32_System_Collections_Generic_Dictionary_System_String_System_Object__
-  commentId: M:PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name.vb: GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters(uint[], uint, System.Collections.Generic.Dictionary<string, object>?)
-  fullName.vb: PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters(UInteger(), UInteger, System.Collections.Generic.Dictionary(Of String, Object))
-  nameWithType: DeflateSharpZipLibFilter.GetParameters(uint[], uint, Dictionary<string, object>?)
-  nameWithType.vb: DeflateSharpZipLibFilter.GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters*
-  name: GetParameters
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_GetParameters_
-  commentId: Overload:PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.GetParameters
-  nameWithType: DeflateSharpZipLibFilter.GetParameters
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.Id
-  name: Id
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_Id
-  commentId: F:PureHDF.Filters.DeflateSharpZipLibFilter.Id
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.Id
-  nameWithType: DeflateSharpZipLibFilter.Id
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.Name
-  name: Name
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_Name
-  commentId: P:PureHDF.Filters.DeflateSharpZipLibFilter.Name
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.Name
-  nameWithType: DeflateSharpZipLibFilter.Name
-- uid: PureHDF.Filters.DeflateSharpZipLibFilter.Name*
-  name: Name
-  href: api/PureHDF.Filters.DeflateSharpZipLibFilter.html#PureHDF_Filters_DeflateSharpZipLibFilter_Name_
-  commentId: Overload:PureHDF.Filters.DeflateSharpZipLibFilter.Name
-  fullName: PureHDF.Filters.DeflateSharpZipLibFilter.Name
-  nameWithType: DeflateSharpZipLibFilter.Name
 - uid: PureHDF.Filters.FilterInfo
   name: FilterInfo
   href: api/PureHDF.Filters.FilterInfo.html
@@ -1490,87 +917,6 @@ references:
   commentId: Overload:PureHDF.Filters.IH5Filter.Name
   fullName: PureHDF.Filters.IH5Filter.Name
   nameWithType: IH5Filter.Name
-- uid: PureHDF.Filters.LzfFilter
-  name: LzfFilter
-  href: api/PureHDF.Filters.LzfFilter.html
-  commentId: T:PureHDF.Filters.LzfFilter
-  fullName: PureHDF.Filters.LzfFilter
-  nameWithType: LzfFilter
-- uid: PureHDF.Filters.LzfFilter.#ctor
-  name: LzfFilter()
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter__ctor
-  commentId: M:PureHDF.Filters.LzfFilter.#ctor
-  name.vb: New()
-  fullName: PureHDF.Filters.LzfFilter.LzfFilter()
-  fullName.vb: PureHDF.Filters.LzfFilter.New()
-  nameWithType: LzfFilter.LzfFilter()
-  nameWithType.vb: LzfFilter.New()
-- uid: PureHDF.Filters.LzfFilter.#ctor*
-  name: LzfFilter
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter__ctor_
-  commentId: Overload:PureHDF.Filters.LzfFilter.#ctor
-  name.vb: New
-  fullName: PureHDF.Filters.LzfFilter.LzfFilter
-  fullName.vb: PureHDF.Filters.LzfFilter.New
-  nameWithType: LzfFilter.LzfFilter
-  nameWithType.vb: LzfFilter.New
-- uid: PureHDF.Filters.LzfFilter.Filter(PureHDF.Filters.FilterInfo)
-  name: Filter(FilterInfo)
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_Filter_PureHDF_Filters_FilterInfo_
-  commentId: M:PureHDF.Filters.LzfFilter.Filter(PureHDF.Filters.FilterInfo)
-  fullName: PureHDF.Filters.LzfFilter.Filter(PureHDF.Filters.FilterInfo)
-  nameWithType: LzfFilter.Filter(FilterInfo)
-- uid: PureHDF.Filters.LzfFilter.Filter*
-  name: Filter
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_Filter_
-  commentId: Overload:PureHDF.Filters.LzfFilter.Filter
-  fullName: PureHDF.Filters.LzfFilter.Filter
-  nameWithType: LzfFilter.Filter
-- uid: PureHDF.Filters.LzfFilter.FilterId
-  name: FilterId
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_FilterId
-  commentId: P:PureHDF.Filters.LzfFilter.FilterId
-  fullName: PureHDF.Filters.LzfFilter.FilterId
-  nameWithType: LzfFilter.FilterId
-- uid: PureHDF.Filters.LzfFilter.FilterId*
-  name: FilterId
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_FilterId_
-  commentId: Overload:PureHDF.Filters.LzfFilter.FilterId
-  fullName: PureHDF.Filters.LzfFilter.FilterId
-  nameWithType: LzfFilter.FilterId
-- uid: PureHDF.Filters.LzfFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name: GetParameters(uint[], uint, Dictionary<string, object>?)
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_GetParameters_System_UInt32___System_UInt32_System_Collections_Generic_Dictionary_System_String_System_Object__
-  commentId: M:PureHDF.Filters.LzfFilter.GetParameters(System.UInt32[],System.UInt32,System.Collections.Generic.Dictionary{System.String,System.Object})
-  name.vb: GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-  fullName: PureHDF.Filters.LzfFilter.GetParameters(uint[], uint, System.Collections.Generic.Dictionary<string, object>?)
-  fullName.vb: PureHDF.Filters.LzfFilter.GetParameters(UInteger(), UInteger, System.Collections.Generic.Dictionary(Of String, Object))
-  nameWithType: LzfFilter.GetParameters(uint[], uint, Dictionary<string, object>?)
-  nameWithType.vb: LzfFilter.GetParameters(UInteger(), UInteger, Dictionary(Of String, Object))
-- uid: PureHDF.Filters.LzfFilter.GetParameters*
-  name: GetParameters
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_GetParameters_
-  commentId: Overload:PureHDF.Filters.LzfFilter.GetParameters
-  fullName: PureHDF.Filters.LzfFilter.GetParameters
-  nameWithType: LzfFilter.GetParameters
-- uid: PureHDF.Filters.LzfFilter.Id
-  name: Id
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_Id
-  commentId: F:PureHDF.Filters.LzfFilter.Id
-  fullName: PureHDF.Filters.LzfFilter.Id
-  nameWithType: LzfFilter.Id
-- uid: PureHDF.Filters.LzfFilter.Name
-  name: Name
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_Name
-  commentId: P:PureHDF.Filters.LzfFilter.Name
-  fullName: PureHDF.Filters.LzfFilter.Name
-  nameWithType: LzfFilter.Name
-- uid: PureHDF.Filters.LzfFilter.Name*
-  name: Name
-  href: api/PureHDF.Filters.LzfFilter.html#PureHDF_Filters_LzfFilter_Name_
-  commentId: Overload:PureHDF.Filters.LzfFilter.Name
-  fullName: PureHDF.Filters.LzfFilter.Name
-  nameWithType: LzfFilter.Name
 - uid: PureHDF.Filters.NbitFilter
   name: NbitFilter
   href: api/PureHDF.Filters.NbitFilter.html
@@ -2990,18 +2336,6 @@ references:
   commentId: Overload:PureHDF.H5WriteOptions.GetHashCode
   fullName: PureHDF.H5WriteOptions.GetHashCode
   nameWithType: H5WriteOptions.GetHashCode
-- uid: PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  name: GlobalHeapCollectionSize
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_GlobalHeapCollectionSize
-  commentId: P:PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  fullName: PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  nameWithType: H5WriteOptions.GlobalHeapCollectionSize
-- uid: PureHDF.H5WriteOptions.GlobalHeapCollectionSize*
-  name: GlobalHeapCollectionSize
-  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_GlobalHeapCollectionSize_
-  commentId: Overload:PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  fullName: PureHDF.H5WriteOptions.GlobalHeapCollectionSize
-  nameWithType: H5WriteOptions.GlobalHeapCollectionSize
 - uid: PureHDF.H5WriteOptions.GlobalHeapFlushThreshold
   name: GlobalHeapFlushThreshold
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_GlobalHeapFlushThreshold
@@ -3062,6 +2396,18 @@ references:
   commentId: Overload:PureHDF.H5WriteOptions.IncludeStructProperties
   fullName: PureHDF.H5WriteOptions.IncludeStructProperties
   nameWithType: H5WriteOptions.IncludeStructProperties
+- uid: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  name: MinimumGlobalHeapCollectionSize
+  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_MinimumGlobalHeapCollectionSize
+  commentId: P:PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  fullName: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  nameWithType: H5WriteOptions.MinimumGlobalHeapCollectionSize
+- uid: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize*
+  name: MinimumGlobalHeapCollectionSize
+  href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_MinimumGlobalHeapCollectionSize_
+  commentId: Overload:PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  fullName: PureHDF.H5WriteOptions.MinimumGlobalHeapCollectionSize
+  nameWithType: H5WriteOptions.MinimumGlobalHeapCollectionSize
 - uid: PureHDF.H5WriteOptions.PreferCompactDatasetLayout
   name: PreferCompactDatasetLayout
   href: api/PureHDF.H5WriteOptions.html#PureHDF_H5WriteOptions_PreferCompactDatasetLayout
@@ -3170,96 +2516,6 @@ references:
   commentId: Overload:PureHDF.H5WriteOptions.{Clone}$
   fullName: PureHDF.H5WriteOptions.<Clone>$
   nameWithType: H5WriteOptions.<Clone>$
-- uid: PureHDF.HyperslabSelection
-  name: HyperslabSelection
-  href: api/PureHDF.HyperslabSelection.html
-  commentId: T:PureHDF.HyperslabSelection
-  fullName: PureHDF.HyperslabSelection
-  nameWithType: HyperslabSelection
-- uid: PureHDF.HyperslabSelection.#ctor(System.Int32,System.UInt64[],System.UInt64[])
-  name: HyperslabSelection(int, ulong[], ulong[])
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection__ctor_System_Int32_System_UInt64___System_UInt64___
-  commentId: M:PureHDF.HyperslabSelection.#ctor(System.Int32,System.UInt64[],System.UInt64[])
-  name.vb: New(Integer, ULong(), ULong())
-  fullName: PureHDF.HyperslabSelection.HyperslabSelection(int, ulong[], ulong[])
-  fullName.vb: PureHDF.HyperslabSelection.New(Integer, ULong(), ULong())
-  nameWithType: HyperslabSelection.HyperslabSelection(int, ulong[], ulong[])
-  nameWithType.vb: HyperslabSelection.New(Integer, ULong(), ULong())
-- uid: PureHDF.HyperslabSelection.#ctor(System.Int32,System.UInt64[],System.UInt64[],System.UInt64[],System.UInt64[])
-  name: HyperslabSelection(int, ulong[], ulong[], ulong[], ulong[])
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection__ctor_System_Int32_System_UInt64___System_UInt64___System_UInt64___System_UInt64___
-  commentId: M:PureHDF.HyperslabSelection.#ctor(System.Int32,System.UInt64[],System.UInt64[],System.UInt64[],System.UInt64[])
-  name.vb: New(Integer, ULong(), ULong(), ULong(), ULong())
-  fullName: PureHDF.HyperslabSelection.HyperslabSelection(int, ulong[], ulong[], ulong[], ulong[])
-  fullName.vb: PureHDF.HyperslabSelection.New(Integer, ULong(), ULong(), ULong(), ULong())
-  nameWithType: HyperslabSelection.HyperslabSelection(int, ulong[], ulong[], ulong[], ulong[])
-  nameWithType.vb: HyperslabSelection.New(Integer, ULong(), ULong(), ULong(), ULong())
-- uid: PureHDF.HyperslabSelection.#ctor(System.UInt64,System.UInt64)
-  name: HyperslabSelection(ulong, ulong)
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection__ctor_System_UInt64_System_UInt64_
-  commentId: M:PureHDF.HyperslabSelection.#ctor(System.UInt64,System.UInt64)
-  name.vb: New(ULong, ULong)
-  fullName: PureHDF.HyperslabSelection.HyperslabSelection(ulong, ulong)
-  fullName.vb: PureHDF.HyperslabSelection.New(ULong, ULong)
-  nameWithType: HyperslabSelection.HyperslabSelection(ulong, ulong)
-  nameWithType.vb: HyperslabSelection.New(ULong, ULong)
-- uid: PureHDF.HyperslabSelection.#ctor(System.UInt64,System.UInt64,System.UInt64,System.UInt64)
-  name: HyperslabSelection(ulong, ulong, ulong, ulong)
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection__ctor_System_UInt64_System_UInt64_System_UInt64_System_UInt64_
-  commentId: M:PureHDF.HyperslabSelection.#ctor(System.UInt64,System.UInt64,System.UInt64,System.UInt64)
-  name.vb: New(ULong, ULong, ULong, ULong)
-  fullName: PureHDF.HyperslabSelection.HyperslabSelection(ulong, ulong, ulong, ulong)
-  fullName.vb: PureHDF.HyperslabSelection.New(ULong, ULong, ULong, ULong)
-  nameWithType: HyperslabSelection.HyperslabSelection(ulong, ulong, ulong, ulong)
-  nameWithType.vb: HyperslabSelection.New(ULong, ULong, ULong, ULong)
-- uid: PureHDF.HyperslabSelection.#ctor*
-  name: HyperslabSelection
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection__ctor_
-  commentId: Overload:PureHDF.HyperslabSelection.#ctor
-  name.vb: New
-  fullName: PureHDF.HyperslabSelection.HyperslabSelection
-  fullName.vb: PureHDF.HyperslabSelection.New
-  nameWithType: HyperslabSelection.HyperslabSelection
-  nameWithType.vb: HyperslabSelection.New
-- uid: PureHDF.HyperslabSelection.Rank
-  name: Rank
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection_Rank
-  commentId: P:PureHDF.HyperslabSelection.Rank
-  fullName: PureHDF.HyperslabSelection.Rank
-  nameWithType: HyperslabSelection.Rank
-- uid: PureHDF.HyperslabSelection.Rank*
-  name: Rank
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection_Rank_
-  commentId: Overload:PureHDF.HyperslabSelection.Rank
-  fullName: PureHDF.HyperslabSelection.Rank
-  nameWithType: HyperslabSelection.Rank
-- uid: PureHDF.HyperslabSelection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection_TotalElementCount
-  commentId: P:PureHDF.HyperslabSelection.TotalElementCount
-  fullName: PureHDF.HyperslabSelection.TotalElementCount
-  nameWithType: HyperslabSelection.TotalElementCount
-- uid: PureHDF.HyperslabSelection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection_TotalElementCount_
-  commentId: Overload:PureHDF.HyperslabSelection.TotalElementCount
-  fullName: PureHDF.HyperslabSelection.TotalElementCount
-  nameWithType: HyperslabSelection.TotalElementCount
-- uid: PureHDF.HyperslabSelection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection_Walk_System_UInt64___
-  commentId: M:PureHDF.HyperslabSelection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.HyperslabSelection.Walk(ulong[])
-  fullName.vb: PureHDF.HyperslabSelection.Walk(ULong())
-  nameWithType: HyperslabSelection.Walk(ulong[])
-  nameWithType.vb: HyperslabSelection.Walk(ULong())
-- uid: PureHDF.HyperslabSelection.Walk*
-  name: Walk
-  href: api/PureHDF.HyperslabSelection.html#PureHDF_HyperslabSelection_Walk_
-  commentId: Overload:PureHDF.HyperslabSelection.Walk
-  fullName: PureHDF.HyperslabSelection.Walk
-  nameWithType: HyperslabSelection.Walk
 - uid: PureHDF.IArrayType
   name: IArrayType
   href: api/PureHDF.IArrayType.html
@@ -3797,27 +3053,6 @@ references:
   commentId: Overload:PureHDF.IH5Dataset.Type
   fullName: PureHDF.IH5Dataset.Type
   nameWithType: IH5Dataset.Type
-- uid: PureHDF.IH5DatasetExtensions
-  name: IH5DatasetExtensions
-  href: api/PureHDF.IH5DatasetExtensions.html
-  commentId: T:PureHDF.IH5DatasetExtensions
-  fullName: PureHDF.IH5DatasetExtensions
-  nameWithType: IH5DatasetExtensions
-- uid: PureHDF.IH5DatasetExtensions.AsQueryable*
-  name: AsQueryable
-  href: api/PureHDF.IH5DatasetExtensions.html#PureHDF_IH5DatasetExtensions_AsQueryable_
-  commentId: Overload:PureHDF.IH5DatasetExtensions.AsQueryable
-  fullName: PureHDF.IH5DatasetExtensions.AsQueryable
-  nameWithType: IH5DatasetExtensions.AsQueryable
-- uid: PureHDF.IH5DatasetExtensions.AsQueryable``1(PureHDF.IH5Dataset,PureHDF.Selection,System.UInt64[])
-  name: AsQueryable<T>(IH5Dataset, Selection?, ulong[]?)
-  href: api/PureHDF.IH5DatasetExtensions.html#PureHDF_IH5DatasetExtensions_AsQueryable__1_PureHDF_IH5Dataset_PureHDF_Selection_System_UInt64___
-  commentId: M:PureHDF.IH5DatasetExtensions.AsQueryable``1(PureHDF.IH5Dataset,PureHDF.Selection,System.UInt64[])
-  name.vb: AsQueryable(Of T)(IH5Dataset, Selection, ULong())
-  fullName: PureHDF.IH5DatasetExtensions.AsQueryable<T>(PureHDF.IH5Dataset, PureHDF.Selection?, ulong[]?)
-  fullName.vb: PureHDF.IH5DatasetExtensions.AsQueryable(Of T)(PureHDF.IH5Dataset, PureHDF.Selection, ULong())
-  nameWithType: IH5DatasetExtensions.AsQueryable<T>(IH5Dataset, Selection?, ulong[]?)
-  nameWithType.vb: IH5DatasetExtensions.AsQueryable(Of T)(IH5Dataset, Selection, ULong())
 - uid: PureHDF.IH5Dataspace
   name: IH5Dataspace
   href: api/PureHDF.IH5Dataspace.html
@@ -4205,204 +3440,18 @@ references:
   commentId: T:PureHDF.IVariableLengthType
   fullName: PureHDF.IVariableLengthType
   nameWithType: IVariableLengthType
-- uid: PureHDF.IrregularHyperslabSelection
-  name: IrregularHyperslabSelection
-  href: api/PureHDF.IrregularHyperslabSelection.html
-  commentId: T:PureHDF.IrregularHyperslabSelection
-  fullName: PureHDF.IrregularHyperslabSelection
-  nameWithType: IrregularHyperslabSelection
-- uid: PureHDF.IrregularHyperslabSelection.Rank
-  name: Rank
-  href: api/PureHDF.IrregularHyperslabSelection.html#PureHDF_IrregularHyperslabSelection_Rank
-  commentId: P:PureHDF.IrregularHyperslabSelection.Rank
-  fullName: PureHDF.IrregularHyperslabSelection.Rank
-  nameWithType: IrregularHyperslabSelection.Rank
-- uid: PureHDF.IrregularHyperslabSelection.Rank*
-  name: Rank
-  href: api/PureHDF.IrregularHyperslabSelection.html#PureHDF_IrregularHyperslabSelection_Rank_
-  commentId: Overload:PureHDF.IrregularHyperslabSelection.Rank
-  fullName: PureHDF.IrregularHyperslabSelection.Rank
-  nameWithType: IrregularHyperslabSelection.Rank
-- uid: PureHDF.IrregularHyperslabSelection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.IrregularHyperslabSelection.html#PureHDF_IrregularHyperslabSelection_TotalElementCount
-  commentId: P:PureHDF.IrregularHyperslabSelection.TotalElementCount
-  fullName: PureHDF.IrregularHyperslabSelection.TotalElementCount
-  nameWithType: IrregularHyperslabSelection.TotalElementCount
-- uid: PureHDF.IrregularHyperslabSelection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.IrregularHyperslabSelection.html#PureHDF_IrregularHyperslabSelection_TotalElementCount_
-  commentId: Overload:PureHDF.IrregularHyperslabSelection.TotalElementCount
-  fullName: PureHDF.IrregularHyperslabSelection.TotalElementCount
-  nameWithType: IrregularHyperslabSelection.TotalElementCount
-- uid: PureHDF.IrregularHyperslabSelection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.IrregularHyperslabSelection.html#PureHDF_IrregularHyperslabSelection_Walk_System_UInt64___
-  commentId: M:PureHDF.IrregularHyperslabSelection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.IrregularHyperslabSelection.Walk(ulong[])
-  fullName.vb: PureHDF.IrregularHyperslabSelection.Walk(ULong())
-  nameWithType: IrregularHyperslabSelection.Walk(ulong[])
-  nameWithType.vb: IrregularHyperslabSelection.Walk(ULong())
-- uid: PureHDF.IrregularHyperslabSelection.Walk*
-  name: Walk
-  href: api/PureHDF.IrregularHyperslabSelection.html#PureHDF_IrregularHyperslabSelection_Walk_
-  commentId: Overload:PureHDF.IrregularHyperslabSelection.Walk
-  fullName: PureHDF.IrregularHyperslabSelection.Walk
-  nameWithType: IrregularHyperslabSelection.Walk
-- uid: PureHDF.NoneSelection
-  name: NoneSelection
-  href: api/PureHDF.NoneSelection.html
-  commentId: T:PureHDF.NoneSelection
-  fullName: PureHDF.NoneSelection
-  nameWithType: NoneSelection
-- uid: PureHDF.NoneSelection.#ctor
-  name: NoneSelection()
-  href: api/PureHDF.NoneSelection.html#PureHDF_NoneSelection__ctor
-  commentId: M:PureHDF.NoneSelection.#ctor
-  name.vb: New()
-  fullName: PureHDF.NoneSelection.NoneSelection()
-  fullName.vb: PureHDF.NoneSelection.New()
-  nameWithType: NoneSelection.NoneSelection()
-  nameWithType.vb: NoneSelection.New()
-- uid: PureHDF.NoneSelection.#ctor*
-  name: NoneSelection
-  href: api/PureHDF.NoneSelection.html#PureHDF_NoneSelection__ctor_
-  commentId: Overload:PureHDF.NoneSelection.#ctor
-  name.vb: New
-  fullName: PureHDF.NoneSelection.NoneSelection
-  fullName.vb: PureHDF.NoneSelection.New
-  nameWithType: NoneSelection.NoneSelection
-  nameWithType.vb: NoneSelection.New
-- uid: PureHDF.NoneSelection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.NoneSelection.html#PureHDF_NoneSelection_TotalElementCount
-  commentId: P:PureHDF.NoneSelection.TotalElementCount
-  fullName: PureHDF.NoneSelection.TotalElementCount
-  nameWithType: NoneSelection.TotalElementCount
-- uid: PureHDF.NoneSelection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.NoneSelection.html#PureHDF_NoneSelection_TotalElementCount_
-  commentId: Overload:PureHDF.NoneSelection.TotalElementCount
-  fullName: PureHDF.NoneSelection.TotalElementCount
-  nameWithType: NoneSelection.TotalElementCount
-- uid: PureHDF.NoneSelection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.NoneSelection.html#PureHDF_NoneSelection_Walk_System_UInt64___
-  commentId: M:PureHDF.NoneSelection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.NoneSelection.Walk(ulong[])
-  fullName.vb: PureHDF.NoneSelection.Walk(ULong())
-  nameWithType: NoneSelection.Walk(ulong[])
-  nameWithType.vb: NoneSelection.Walk(ULong())
-- uid: PureHDF.NoneSelection.Walk*
-  name: Walk
-  href: api/PureHDF.NoneSelection.html#PureHDF_NoneSelection_Walk_
-  commentId: Overload:PureHDF.NoneSelection.Walk
-  fullName: PureHDF.NoneSelection.Walk
-  nameWithType: NoneSelection.Walk
-- uid: PureHDF.PointSelection
-  name: PointSelection
-  href: api/PureHDF.PointSelection.html
-  commentId: T:PureHDF.PointSelection
-  fullName: PureHDF.PointSelection
-  nameWithType: PointSelection
-- uid: PureHDF.PointSelection.#ctor(System.UInt64[0:,0:])
-  name: PointSelection(ulong[,])
-  href: api/PureHDF.PointSelection.html#PureHDF_PointSelection__ctor_System_UInt64_0__0___
-  commentId: M:PureHDF.PointSelection.#ctor(System.UInt64[0:,0:])
-  name.vb: New(ULong(,))
-  fullName: PureHDF.PointSelection.PointSelection(ulong[,])
-  fullName.vb: PureHDF.PointSelection.New(ULong(,))
-  nameWithType: PointSelection.PointSelection(ulong[,])
-  nameWithType.vb: PointSelection.New(ULong(,))
-- uid: PureHDF.PointSelection.#ctor*
-  name: PointSelection
-  href: api/PureHDF.PointSelection.html#PureHDF_PointSelection__ctor_
-  commentId: Overload:PureHDF.PointSelection.#ctor
-  name.vb: New
-  fullName: PureHDF.PointSelection.PointSelection
-  fullName.vb: PureHDF.PointSelection.New
-  nameWithType: PointSelection.PointSelection
-  nameWithType.vb: PointSelection.New
-- uid: PureHDF.PointSelection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.PointSelection.html#PureHDF_PointSelection_TotalElementCount
-  commentId: P:PureHDF.PointSelection.TotalElementCount
-  fullName: PureHDF.PointSelection.TotalElementCount
-  nameWithType: PointSelection.TotalElementCount
-- uid: PureHDF.PointSelection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.PointSelection.html#PureHDF_PointSelection_TotalElementCount_
-  commentId: Overload:PureHDF.PointSelection.TotalElementCount
-  fullName: PureHDF.PointSelection.TotalElementCount
-  nameWithType: PointSelection.TotalElementCount
-- uid: PureHDF.PointSelection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.PointSelection.html#PureHDF_PointSelection_Walk_System_UInt64___
-  commentId: M:PureHDF.PointSelection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.PointSelection.Walk(ulong[])
-  fullName.vb: PureHDF.PointSelection.Walk(ULong())
-  nameWithType: PointSelection.Walk(ulong[])
-  nameWithType.vb: PointSelection.Walk(ULong())
-- uid: PureHDF.PointSelection.Walk*
-  name: Walk
-  href: api/PureHDF.PointSelection.html#PureHDF_PointSelection_Walk_
-  commentId: Overload:PureHDF.PointSelection.Walk
-  fullName: PureHDF.PointSelection.Walk
-  nameWithType: PointSelection.Walk
-- uid: PureHDF.Selection
-  name: Selection
-  href: api/PureHDF.Selection.html
-  commentId: T:PureHDF.Selection
-  fullName: PureHDF.Selection
-  nameWithType: Selection
-- uid: PureHDF.Selection.#ctor
-  name: Selection()
-  href: api/PureHDF.Selection.html#PureHDF_Selection__ctor
-  commentId: M:PureHDF.Selection.#ctor
-  name.vb: New()
-  fullName: PureHDF.Selection.Selection()
-  fullName.vb: PureHDF.Selection.New()
-  nameWithType: Selection.Selection()
-  nameWithType.vb: Selection.New()
-- uid: PureHDF.Selection.#ctor*
-  name: Selection
-  href: api/PureHDF.Selection.html#PureHDF_Selection__ctor_
-  commentId: Overload:PureHDF.Selection.#ctor
-  name.vb: New
-  fullName: PureHDF.Selection.Selection
-  fullName.vb: PureHDF.Selection.New
-  nameWithType: Selection.Selection
-  nameWithType.vb: Selection.New
-- uid: PureHDF.Selection.TotalElementCount
-  name: TotalElementCount
-  href: api/PureHDF.Selection.html#PureHDF_Selection_TotalElementCount
-  commentId: P:PureHDF.Selection.TotalElementCount
-  fullName: PureHDF.Selection.TotalElementCount
-  nameWithType: Selection.TotalElementCount
-- uid: PureHDF.Selection.TotalElementCount*
-  name: TotalElementCount
-  href: api/PureHDF.Selection.html#PureHDF_Selection_TotalElementCount_
-  commentId: Overload:PureHDF.Selection.TotalElementCount
-  fullName: PureHDF.Selection.TotalElementCount
-  nameWithType: Selection.TotalElementCount
-- uid: PureHDF.Selection.Walk(System.UInt64[])
-  name: Walk(ulong[])
-  href: api/PureHDF.Selection.html#PureHDF_Selection_Walk_System_UInt64___
-  commentId: M:PureHDF.Selection.Walk(System.UInt64[])
-  name.vb: Walk(ULong())
-  fullName: PureHDF.Selection.Walk(ulong[])
-  fullName.vb: PureHDF.Selection.Walk(ULong())
-  nameWithType: Selection.Walk(ulong[])
-  nameWithType.vb: Selection.Walk(ULong())
-- uid: PureHDF.Selection.Walk*
-  name: Walk
-  href: api/PureHDF.Selection.html#PureHDF_Selection_Walk_
-  commentId: Overload:PureHDF.Selection.Walk
-  fullName: PureHDF.Selection.Walk
-  nameWithType: Selection.Walk
+- uid: PureHDF.IVariableLengthType.BaseType
+  name: BaseType
+  href: api/PureHDF.IVariableLengthType.html#PureHDF_IVariableLengthType_BaseType
+  commentId: P:PureHDF.IVariableLengthType.BaseType
+  fullName: PureHDF.IVariableLengthType.BaseType
+  nameWithType: IVariableLengthType.BaseType
+- uid: PureHDF.IVariableLengthType.BaseType*
+  name: BaseType
+  href: api/PureHDF.IVariableLengthType.html#PureHDF_IVariableLengthType_BaseType_
+  commentId: Overload:PureHDF.IVariableLengthType.BaseType
+  fullName: PureHDF.IVariableLengthType.BaseType
+  nameWithType: IVariableLengthType.BaseType
 - uid: PureHDF.Selections
   name: PureHDF.Selections
   href: api/PureHDF.Selections.html
@@ -4943,261 +3992,6 @@ references:
   fullName.vb: PureHDF.Selections.Step.<>
   nameWithType: Step.operator !=
   nameWithType.vb: Step.<>
-- uid: PureHDF.Step
-  name: Step
-  href: api/PureHDF.Step.html
-  commentId: T:PureHDF.Step
-  fullName: PureHDF.Step
-  nameWithType: Step
-- uid: PureHDF.Step.Coordinates
-  name: Coordinates
-  href: api/PureHDF.Step.html#PureHDF_Step_Coordinates
-  commentId: P:PureHDF.Step.Coordinates
-  fullName: PureHDF.Step.Coordinates
-  nameWithType: Step.Coordinates
-- uid: PureHDF.Step.Coordinates*
-  name: Coordinates
-  href: api/PureHDF.Step.html#PureHDF_Step_Coordinates_
-  commentId: Overload:PureHDF.Step.Coordinates
-  fullName: PureHDF.Step.Coordinates
-  nameWithType: Step.Coordinates
-- uid: PureHDF.Step.ElementCount
-  name: ElementCount
-  href: api/PureHDF.Step.html#PureHDF_Step_ElementCount
-  commentId: P:PureHDF.Step.ElementCount
-  fullName: PureHDF.Step.ElementCount
-  nameWithType: Step.ElementCount
-- uid: PureHDF.Step.ElementCount*
-  name: ElementCount
-  href: api/PureHDF.Step.html#PureHDF_Step_ElementCount_
-  commentId: Overload:PureHDF.Step.ElementCount
-  fullName: PureHDF.Step.ElementCount
-  nameWithType: Step.ElementCount
-- uid: PureHDF.VFD.AmazonS3
-  name: PureHDF.VFD.AmazonS3
-  href: api/PureHDF.VFD.AmazonS3.html
-  commentId: N:PureHDF.VFD.AmazonS3
-  fullName: PureHDF.VFD.AmazonS3
-  nameWithType: PureHDF.VFD.AmazonS3
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream
-  name: AmazonS3Stream
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html
-  commentId: T:PureHDF.VFD.AmazonS3.AmazonS3Stream
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream
-  nameWithType: AmazonS3Stream
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.#ctor(Amazon.S3.AmazonS3Client,System.String,System.String,System.Int32)
-  name: AmazonS3Stream(AmazonS3Client, string, string, int)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream__ctor_Amazon_S3_AmazonS3Client_System_String_System_String_System_Int32_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.#ctor(Amazon.S3.AmazonS3Client,System.String,System.String,System.Int32)
-  name.vb: New(AmazonS3Client, String, String, Integer)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.AmazonS3Stream(Amazon.S3.AmazonS3Client, string, string, int)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.New(Amazon.S3.AmazonS3Client, String, String, Integer)
-  nameWithType: AmazonS3Stream.AmazonS3Stream(AmazonS3Client, string, string, int)
-  nameWithType.vb: AmazonS3Stream.New(AmazonS3Client, String, String, Integer)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.#ctor*
-  name: AmazonS3Stream
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream__ctor_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.#ctor
-  name.vb: New
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.AmazonS3Stream
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.New
-  nameWithType: AmazonS3Stream.AmazonS3Stream
-  nameWithType.vb: AmazonS3Stream.New
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanRead
-  name: CanRead
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_CanRead
-  commentId: P:PureHDF.VFD.AmazonS3.AmazonS3Stream.CanRead
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanRead
-  nameWithType: AmazonS3Stream.CanRead
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanRead*
-  name: CanRead
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_CanRead_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.CanRead
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanRead
-  nameWithType: AmazonS3Stream.CanRead
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanSeek
-  name: CanSeek
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_CanSeek
-  commentId: P:PureHDF.VFD.AmazonS3.AmazonS3Stream.CanSeek
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanSeek
-  nameWithType: AmazonS3Stream.CanSeek
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanSeek*
-  name: CanSeek
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_CanSeek_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.CanSeek
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanSeek
-  nameWithType: AmazonS3Stream.CanSeek
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanWrite
-  name: CanWrite
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_CanWrite
-  commentId: P:PureHDF.VFD.AmazonS3.AmazonS3Stream.CanWrite
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanWrite
-  nameWithType: AmazonS3Stream.CanWrite
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanWrite*
-  name: CanWrite
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_CanWrite_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.CanWrite
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.CanWrite
-  nameWithType: AmazonS3Stream.CanWrite
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose(System.Boolean)
-  name: Dispose(bool)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Dispose_System_Boolean_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose(System.Boolean)
-  name.vb: Dispose(Boolean)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose(bool)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose(Boolean)
-  nameWithType: AmazonS3Stream.Dispose(bool)
-  nameWithType.vb: AmazonS3Stream.Dispose(Boolean)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose*
-  name: Dispose
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Dispose_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Dispose
-  nameWithType: AmazonS3Stream.Dispose
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Flush
-  name: Flush()
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Flush
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.Flush
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Flush()
-  nameWithType: AmazonS3Stream.Flush()
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Flush*
-  name: Flush
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Flush_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Flush
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Flush
-  nameWithType: AmazonS3Stream.Flush
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Length
-  name: Length
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Length
-  commentId: P:PureHDF.VFD.AmazonS3.AmazonS3Stream.Length
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Length
-  nameWithType: AmazonS3Stream.Length
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Length*
-  name: Length
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Length_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Length
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Length
-  nameWithType: AmazonS3Stream.Length
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Position
-  name: Position
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Position
-  commentId: P:PureHDF.VFD.AmazonS3.AmazonS3Stream.Position
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Position
-  nameWithType: AmazonS3Stream.Position
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Position*
-  name: Position
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Position_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Position
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Position
-  nameWithType: AmazonS3Stream.Position
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Read(System.Byte[],System.Int32,System.Int32)
-  name: Read(byte[], int, int)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Read_System_Byte___System_Int32_System_Int32_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.Read(System.Byte[],System.Int32,System.Int32)
-  name.vb: Read(Byte(), Integer, Integer)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Read(byte[], int, int)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.Read(Byte(), Integer, Integer)
-  nameWithType: AmazonS3Stream.Read(byte[], int, int)
-  nameWithType.vb: AmazonS3Stream.Read(Byte(), Integer, Integer)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Read*
-  name: Read
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Read_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Read
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Read
-  nameWithType: AmazonS3Stream.Read
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset(System.Memory{System.Byte})
-  name: ReadDataset(Memory<byte>)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDataset_System_Memory_System_Byte__
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset(System.Memory{System.Byte})
-  name.vb: ReadDataset(Memory(Of Byte))
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset(System.Memory<byte>)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset(System.Memory(Of Byte))
-  nameWithType: AmazonS3Stream.ReadDataset(Memory<byte>)
-  nameWithType.vb: AmazonS3Stream.ReadDataset(Memory(Of Byte))
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset*
-  name: ReadDataset
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_ReadDataset_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.ReadDataset
-  nameWithType: AmazonS3Stream.ReadDataset
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek(System.Int64,System.IO.SeekOrigin)
-  name: Seek(long, SeekOrigin)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Seek_System_Int64_System_IO_SeekOrigin_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek(System.Int64,System.IO.SeekOrigin)
-  name.vb: Seek(Long, SeekOrigin)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek(long, System.IO.SeekOrigin)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek(Long, System.IO.SeekOrigin)
-  nameWithType: AmazonS3Stream.Seek(long, SeekOrigin)
-  nameWithType.vb: AmazonS3Stream.Seek(Long, SeekOrigin)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek*
-  name: Seek
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Seek_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Seek
-  nameWithType: AmazonS3Stream.Seek
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength(System.Int64)
-  name: SetLength(long)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_SetLength_System_Int64_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength(System.Int64)
-  name.vb: SetLength(Long)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength(long)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength(Long)
-  nameWithType: AmazonS3Stream.SetLength(long)
-  nameWithType.vb: AmazonS3Stream.SetLength(Long)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength*
-  name: SetLength
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_SetLength_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.SetLength
-  nameWithType: AmazonS3Stream.SetLength
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Write(System.Byte[],System.Int32,System.Int32)
-  name: Write(byte[], int, int)
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Write_System_Byte___System_Int32_System_Int32_
-  commentId: M:PureHDF.VFD.AmazonS3.AmazonS3Stream.Write(System.Byte[],System.Int32,System.Int32)
-  name.vb: Write(Byte(), Integer, Integer)
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Write(byte[], int, int)
-  fullName.vb: PureHDF.VFD.AmazonS3.AmazonS3Stream.Write(Byte(), Integer, Integer)
-  nameWithType: AmazonS3Stream.Write(byte[], int, int)
-  nameWithType.vb: AmazonS3Stream.Write(Byte(), Integer, Integer)
-- uid: PureHDF.VFD.AmazonS3.AmazonS3Stream.Write*
-  name: Write
-  href: api/PureHDF.VFD.AmazonS3.AmazonS3Stream.html#PureHDF_VFD_AmazonS3_AmazonS3Stream_Write_
-  commentId: Overload:PureHDF.VFD.AmazonS3.AmazonS3Stream.Write
-  fullName: PureHDF.VFD.AmazonS3.AmazonS3Stream.Write
-  nameWithType: AmazonS3Stream.Write
-- uid: PureHDF.VOL.Hsds
-  name: PureHDF.VOL.Hsds
-  href: api/PureHDF.VOL.Hsds.html
-  commentId: N:PureHDF.VOL.Hsds
-  fullName: PureHDF.VOL.Hsds
-  nameWithType: PureHDF.VOL.Hsds
-- uid: PureHDF.VOL.Hsds.HsdsConnector
-  name: HsdsConnector
-  href: api/PureHDF.VOL.Hsds.HsdsConnector.html
-  commentId: T:PureHDF.VOL.Hsds.HsdsConnector
-  fullName: PureHDF.VOL.Hsds.HsdsConnector
-  nameWithType: HsdsConnector
-- uid: PureHDF.VOL.Hsds.HsdsConnector.Create(System.String,Hsds.Api.HsdsClient)
-  name: Create(string, HsdsClient)
-  href: api/PureHDF.VOL.Hsds.HsdsConnector.html#PureHDF_VOL_Hsds_HsdsConnector_Create_System_String_Hsds_Api_HsdsClient_
-  commentId: M:PureHDF.VOL.Hsds.HsdsConnector.Create(System.String,Hsds.Api.HsdsClient)
-  name.vb: Create(String, HsdsClient)
-  fullName: PureHDF.VOL.Hsds.HsdsConnector.Create(string, Hsds.Api.HsdsClient)
-  fullName.vb: PureHDF.VOL.Hsds.HsdsConnector.Create(String, Hsds.Api.HsdsClient)
-  nameWithType: HsdsConnector.Create(string, HsdsClient)
-  nameWithType.vb: HsdsConnector.Create(String, HsdsClient)
-- uid: PureHDF.VOL.Hsds.HsdsConnector.Create*
-  name: Create
-  href: api/PureHDF.VOL.Hsds.HsdsConnector.html#PureHDF_VOL_Hsds_HsdsConnector_Create_
-  commentId: Overload:PureHDF.VOL.Hsds.HsdsConnector.Create
-  fullName: PureHDF.VOL.Hsds.HsdsConnector.Create
-  nameWithType: HsdsConnector.Create
-- uid: PureHDF.VOL.Hsds.IHsdsConnector
-  name: IHsdsConnector
-  href: api/PureHDF.VOL.Hsds.IHsdsConnector.html
-  commentId: T:PureHDF.VOL.Hsds.IHsdsConnector
-  fullName: PureHDF.VOL.Hsds.IHsdsConnector
-  nameWithType: IHsdsConnector
 - uid: PureHDF.VOL.Native
   name: PureHDF.VOL.Native
   href: api/PureHDF.VOL.Native.html
@@ -5813,6 +4607,81 @@ references:
   commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync
   fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync
   nameWithType: NativeAttributableObject.AttributesAsync
+- uid: PureHDF.VOL.Native.NativeAttribute
+  name: NativeAttribute
+  href: api/PureHDF.VOL.Native.NativeAttribute.html
+  commentId: T:PureHDF.VOL.Native.NativeAttribute
+  fullName: PureHDF.VOL.Native.NativeAttribute
+  nameWithType: NativeAttribute
+- uid: PureHDF.VOL.Native.NativeAttribute.Name
+  name: Name
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Name
+  commentId: P:PureHDF.VOL.Native.NativeAttribute.Name
+  fullName: PureHDF.VOL.Native.NativeAttribute.Name
+  nameWithType: NativeAttribute.Name
+- uid: PureHDF.VOL.Native.NativeAttribute.Name*
+  name: Name
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Name_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Name
+  fullName: PureHDF.VOL.Native.NativeAttribute.Name
+  nameWithType: NativeAttribute.Name
+- uid: PureHDF.VOL.Native.NativeAttribute.Read*
+  name: Read
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Read
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read
+  nameWithType: NativeAttribute.Read
+- uid: PureHDF.VOL.Native.NativeAttribute.Read``1(System.Span{``0},System.UInt64[])
+  name: Read<T>(Span<T>, ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read__1_System_Span___0__System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeAttribute.Read``1(System.Span{``0},System.UInt64[])
+  name.vb: Read(Of T)(Span(Of T), ULong())
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read<T>(System.Span<T>, ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeAttribute.Read(Of T)(System.Span(Of T), ULong())
+  nameWithType: NativeAttribute.Read<T>(Span<T>, ulong[]?)
+  nameWithType.vb: NativeAttribute.Read(Of T)(Span(Of T), ULong())
+- uid: PureHDF.VOL.Native.NativeAttribute.Read``1(System.UInt64[])
+  name: Read<T>(ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read__1_System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeAttribute.Read``1(System.UInt64[])
+  name.vb: Read(Of T)(ULong())
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read<T>(ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeAttribute.Read(Of T)(ULong())
+  nameWithType: NativeAttribute.Read<T>(ulong[]?)
+  nameWithType.vb: NativeAttribute.Read(Of T)(ULong())
+- uid: PureHDF.VOL.Native.NativeAttribute.Read``1(``0,System.UInt64[])
+  name: Read<T>(T, ulong[]?)
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Read__1___0_System_UInt64___
+  commentId: M:PureHDF.VOL.Native.NativeAttribute.Read``1(``0,System.UInt64[])
+  name.vb: Read(Of T)(T, ULong())
+  fullName: PureHDF.VOL.Native.NativeAttribute.Read<T>(T, ulong[]?)
+  fullName.vb: PureHDF.VOL.Native.NativeAttribute.Read(Of T)(T, ULong())
+  nameWithType: NativeAttribute.Read<T>(T, ulong[]?)
+  nameWithType.vb: NativeAttribute.Read(Of T)(T, ULong())
+- uid: PureHDF.VOL.Native.NativeAttribute.Space
+  name: Space
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Space
+  commentId: P:PureHDF.VOL.Native.NativeAttribute.Space
+  fullName: PureHDF.VOL.Native.NativeAttribute.Space
+  nameWithType: NativeAttribute.Space
+- uid: PureHDF.VOL.Native.NativeAttribute.Space*
+  name: Space
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Space_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Space
+  fullName: PureHDF.VOL.Native.NativeAttribute.Space
+  nameWithType: NativeAttribute.Space
+- uid: PureHDF.VOL.Native.NativeAttribute.Type
+  name: Type
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Type
+  commentId: P:PureHDF.VOL.Native.NativeAttribute.Type
+  fullName: PureHDF.VOL.Native.NativeAttribute.Type
+  nameWithType: NativeAttribute.Type
+- uid: PureHDF.VOL.Native.NativeAttribute.Type*
+  name: Type
+  href: api/PureHDF.VOL.Native.NativeAttribute.html#PureHDF_VOL_Native_NativeAttribute_Type_
+  commentId: Overload:PureHDF.VOL.Native.NativeAttribute.Type
+  fullName: PureHDF.VOL.Native.NativeAttribute.Type
+  nameWithType: NativeAttribute.Type
 - uid: PureHDF.VOL.Native.NativeDataset
   name: NativeDataset
   href: api/PureHDF.VOL.Native.NativeDataset.html
@@ -6233,114 +5102,126 @@ references:
   commentId: T:PureHDF.VOL.Native.NativeRegionReference1
   fullName: PureHDF.VOL.Native.NativeRegionReference1
   nameWithType: NativeRegionReference1
-- uid: PureHDF.VOL.Native.SimpleChunkCache
-  name: SimpleChunkCache
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html
-  commentId: T:PureHDF.VOL.Native.SimpleChunkCache
-  fullName: PureHDF.VOL.Native.SimpleChunkCache
-  nameWithType: SimpleChunkCache
-- uid: PureHDF.VOL.Native.SimpleChunkCache.#ctor(System.Int32,System.UInt64)
-  name: SimpleChunkCache(int, ulong)
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache__ctor_System_Int32_System_UInt64_
-  commentId: M:PureHDF.VOL.Native.SimpleChunkCache.#ctor(System.Int32,System.UInt64)
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache
+  name: SimpleReadingChunkCache
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html
+  commentId: T:PureHDF.VOL.Native.SimpleReadingChunkCache
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache
+  nameWithType: SimpleReadingChunkCache
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.#ctor(System.Int32,System.UInt64)
+  name: SimpleReadingChunkCache(int, ulong)
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache__ctor_System_Int32_System_UInt64_
+  commentId: M:PureHDF.VOL.Native.SimpleReadingChunkCache.#ctor(System.Int32,System.UInt64)
   name.vb: New(Integer, ULong)
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.SimpleChunkCache(int, ulong)
-  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.New(Integer, ULong)
-  nameWithType: SimpleChunkCache.SimpleChunkCache(int, ulong)
-  nameWithType.vb: SimpleChunkCache.New(Integer, ULong)
-- uid: PureHDF.VOL.Native.SimpleChunkCache.#ctor*
-  name: SimpleChunkCache
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache__ctor_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.#ctor
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.SimpleReadingChunkCache(int, ulong)
+  fullName.vb: PureHDF.VOL.Native.SimpleReadingChunkCache.New(Integer, ULong)
+  nameWithType: SimpleReadingChunkCache.SimpleReadingChunkCache(int, ulong)
+  nameWithType.vb: SimpleReadingChunkCache.New(Integer, ULong)
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.#ctor*
+  name: SimpleReadingChunkCache
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache__ctor_
+  commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.#ctor
   name.vb: New
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.SimpleChunkCache
-  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.New
-  nameWithType: SimpleChunkCache.SimpleChunkCache
-  nameWithType.vb: SimpleChunkCache.New
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ByteCount
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.SimpleReadingChunkCache
+  fullName.vb: PureHDF.VOL.Native.SimpleReadingChunkCache.New
+  nameWithType: SimpleReadingChunkCache.SimpleReadingChunkCache
+  nameWithType.vb: SimpleReadingChunkCache.New
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ByteCount
   name: ByteCount
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ByteCount
-  commentId: P:PureHDF.VOL.Native.SimpleChunkCache.ByteCount
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ByteCount
-  nameWithType: SimpleChunkCache.ByteCount
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ByteCount*
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ByteCount
+  commentId: P:PureHDF.VOL.Native.SimpleReadingChunkCache.ByteCount
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ByteCount
+  nameWithType: SimpleReadingChunkCache.ByteCount
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ByteCount*
   name: ByteCount
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ByteCount_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.ByteCount
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ByteCount
-  nameWithType: SimpleChunkCache.ByteCount
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ChunkSlotCount
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ByteCount_
+  commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.ByteCount
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ByteCount
+  nameWithType: SimpleReadingChunkCache.ByteCount
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ChunkSlotCount
   name: ChunkSlotCount
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ChunkSlotCount
-  commentId: P:PureHDF.VOL.Native.SimpleChunkCache.ChunkSlotCount
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ChunkSlotCount
-  nameWithType: SimpleChunkCache.ChunkSlotCount
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ChunkSlotCount*
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ChunkSlotCount
+  commentId: P:PureHDF.VOL.Native.SimpleReadingChunkCache.ChunkSlotCount
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ChunkSlotCount
+  nameWithType: SimpleReadingChunkCache.ChunkSlotCount
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ChunkSlotCount*
   name: ChunkSlotCount
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ChunkSlotCount_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.ChunkSlotCount
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ChunkSlotCount
-  nameWithType: SimpleChunkCache.ChunkSlotCount
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ConsumedBytes
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ChunkSlotCount_
+  commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.ChunkSlotCount
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ChunkSlotCount
+  nameWithType: SimpleReadingChunkCache.ChunkSlotCount
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedBytes
   name: ConsumedBytes
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ConsumedBytes
-  commentId: P:PureHDF.VOL.Native.SimpleChunkCache.ConsumedBytes
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ConsumedBytes
-  nameWithType: SimpleChunkCache.ConsumedBytes
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ConsumedBytes*
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ConsumedBytes
+  commentId: P:PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedBytes
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedBytes
+  nameWithType: SimpleReadingChunkCache.ConsumedBytes
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedBytes*
   name: ConsumedBytes
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ConsumedBytes_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.ConsumedBytes
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ConsumedBytes
-  nameWithType: SimpleChunkCache.ConsumedBytes
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ConsumedSlots
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ConsumedBytes_
+  commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedBytes
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedBytes
+  nameWithType: SimpleReadingChunkCache.ConsumedBytes
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
   name: ConsumedSlots
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ConsumedSlots
-  commentId: P:PureHDF.VOL.Native.SimpleChunkCache.ConsumedSlots
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ConsumedSlots
-  nameWithType: SimpleChunkCache.ConsumedSlots
-- uid: PureHDF.VOL.Native.SimpleChunkCache.ConsumedSlots*
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ConsumedSlots
+  commentId: P:PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
+  nameWithType: SimpleReadingChunkCache.ConsumedSlots
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots*
   name: ConsumedSlots
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_ConsumedSlots_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.ConsumedSlots
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.ConsumedSlots
-  nameWithType: SimpleChunkCache.ConsumedSlots
-- uid: PureHDF.VOL.Native.SimpleChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name: Flush(Action<ulong[], Memory<byte>>?)
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_Flush_System_Action_System_UInt64___System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.SimpleChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name.vb: Flush(Action(Of ULong(), Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.Flush(System.Action<ulong[], System.Memory<byte>>?)
-  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.Flush(System.Action(Of ULong(), System.Memory(Of Byte)))
-  nameWithType: SimpleChunkCache.Flush(Action<ulong[], Memory<byte>>?)
-  nameWithType.vb: SimpleChunkCache.Flush(Action(Of ULong(), Memory(Of Byte)))
-- uid: PureHDF.VOL.Native.SimpleChunkCache.Flush*
-  name: Flush
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_Flush_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.Flush
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.Flush
-  nameWithType: SimpleChunkCache.Flush
-- uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_ConsumedSlots_
+  commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
+  nameWithType: SimpleReadingChunkCache.ConsumedSlots
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
   name: GetChunk(ulong[], Func<Memory<byte>>)
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
   name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)))
-  nameWithType: SimpleChunkCache.GetChunk(ulong[], Func<Memory<byte>>)
-  nameWithType.vb: SimpleChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)))
-- uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name: GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___System_Action_System_UInt64___System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.SimpleChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>, System.Action<ulong[], System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.SimpleChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)), System.Action(Of ULong(), System.Memory(Of Byte)))
-  nameWithType: SimpleChunkCache.GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
-  nameWithType.vb: SimpleChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
-- uid: PureHDF.VOL.Native.SimpleChunkCache.GetChunk*
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)))
+  nameWithType: SimpleReadingChunkCache.GetChunk(ulong[], Func<Memory<byte>>)
+  nameWithType.vb: SimpleReadingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk*
   name: GetChunk
-  href: api/PureHDF.VOL.Native.SimpleChunkCache.html#PureHDF_VOL_Native_SimpleChunkCache_GetChunk_
-  commentId: Overload:PureHDF.VOL.Native.SimpleChunkCache.GetChunk
-  fullName: PureHDF.VOL.Native.SimpleChunkCache.GetChunk
-  nameWithType: SimpleChunkCache.GetChunk
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_
+  commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk
+  nameWithType: SimpleReadingChunkCache.GetChunk
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache
+  name: SimpleWritingChunkCache
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html
+  commentId: T:PureHDF.VOL.Native.SimpleWritingChunkCache
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache
+  nameWithType: SimpleWritingChunkCache
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
+  name: Flush(Action<ulong[], Memory<byte>>?)
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_Flush_System_Action_System_UInt64___System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
+  name.vb: Flush(Action(Of ULong(), Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action<ulong[], System.Memory<byte>>?)
+  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action(Of ULong(), System.Memory(Of Byte)))
+  nameWithType: SimpleWritingChunkCache.Flush(Action<ulong[], Memory<byte>>?)
+  nameWithType.vb: SimpleWritingChunkCache.Flush(Action(Of ULong(), Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush*
+  name: Flush
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_Flush_
+  commentId: Overload:PureHDF.VOL.Native.SimpleWritingChunkCache.Flush
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush
+  nameWithType: SimpleWritingChunkCache.Flush
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
+  name: GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___System_Action_System_UInt64___System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>, System.Action<ulong[], System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)), System.Action(Of ULong(), System.Memory(Of Byte)))
+  nameWithType: SimpleWritingChunkCache.GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
+  nameWithType.vb: SimpleWritingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk*
+  name: GetChunk
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_GetChunk_
+  commentId: Overload:PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk
+  nameWithType: SimpleWritingChunkCache.GetChunk
