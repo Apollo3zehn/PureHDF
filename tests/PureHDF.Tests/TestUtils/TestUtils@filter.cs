@@ -17,6 +17,7 @@ public partial class TestUtils
             2 => H5T.NATIVE_UINT16,
             4 => H5T.NATIVE_UINT32,
             8 => H5T.NATIVE_UINT64,
+            16 => H5T.NATIVE_LDOUBLE,
             _ => throw new Exception($"The value '{bytesOfType}' of the 'bytesOfType' parameter is not within the valid range.")
         };
 

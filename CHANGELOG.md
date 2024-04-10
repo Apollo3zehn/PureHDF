@@ -1,3 +1,8 @@
+## v1.0.0-beta.11 - 2024-04-10
+
+### Bugs fixed
+- #73 - Shuffle filter breaks roundtripping (seen in 3d array of variable-length lists)
+
 ## v1.0.0-beta.10 - 2024-03-27
 
 ### Bugs fixed

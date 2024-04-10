@@ -8,7 +8,7 @@ internal static class ShuffleGeneric
     {
         fixed (byte* src = source, dest = destination)
         {
-            ShuffleGeneric.shuffle_avx2(bytesOfType, 0, source.Length, src, dest);
+            shuffle_avx2(bytesOfType, 0, source.Length, src, dest);
         }
     }
 
@@ -16,7 +16,7 @@ internal static class ShuffleGeneric
     {
         fixed (byte* src = source, dest = destination)
         {
-            ShuffleGeneric.unshuffle_avx2(bytesOfType, 0, source.Length, src, dest);
+            unshuffle_avx2(bytesOfType, 0, source.Length, src, dest);
         }
     }
 
@@ -33,7 +33,7 @@ internal static class ShuffleGeneric
         /* Non-optimized shuffle */
         for (j = 0; j < type_size; j++)
         {
-            for (i = vectorizable_elements; i < (int)neblock_quot; i++)
+            for (i = vectorizable_elements; i < neblock_quot; i++)
             {
                 destination[j * neblock_quot + i] = source[i * type_size + j];
             }
@@ -58,7 +58,7 @@ internal static class ShuffleGeneric
         int vectorizable_elements = vectorizable_blocksize / type_size;
 
         /* Non-optimized unshuffle */
-        for (i = vectorizable_elements; i < (int)neblock_quot; i++)
+        for (i = vectorizable_elements; i < neblock_quot; i++)
         {
             for (j = 0; j < type_size; j++)
             {
