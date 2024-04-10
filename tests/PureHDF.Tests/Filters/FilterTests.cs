@@ -699,7 +699,7 @@ public class FilterTests
         Assert.True(MemoryMarshal.AsBytes<int>(actual).ToArray().SequenceEqual(expected));
     }
 
-    // TODO: 16 byte and arbitrary number of bytes tests missing
+    // TODO: arbitrary number of bytes tests missing
     [Theory]
     [InlineData((byte)1, 1001)]
     [InlineData((short)2, 732)]
@@ -739,6 +739,32 @@ public class FilterTests
             bytesOfType,
             source: actual_unshuffled,
             destination: MemoryMarshal.AsBytes<T>(actual));
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
+    [Fact]
+    public void CanShuffleGeneric_16()
+    {
+        // Arrange
+        var length = 32;
+        var bytesOfType = Unsafe.SizeOf<decimal>();
+
+        var actual_unshuffled = Enumerable
+            .Range(0, length * bytesOfType)
+            .Select(value => unchecked((byte)value))
+            .ToArray();
+
+        var expected = GetShuffledData<decimal>(length, actual_unshuffled);
+
+        // Act
+        var actual = new decimal[length];
+
+        ShuffleGeneric.DoShuffle(
+            bytesOfType,
+            source: actual_unshuffled,
+            destination: MemoryMarshal.AsBytes<decimal>(actual));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -831,6 +857,32 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
+    [Fact]
+    public void CanShuffleAvx2_16()
+    {
+        // Arrange
+        var length = 32;
+        var bytesOfType = Unsafe.SizeOf<decimal>();
+
+        var actual_unshuffled = Enumerable
+            .Range(0, length * bytesOfType)
+            .Select(value => unchecked((byte)value))
+            .ToArray();
+
+        var expected = GetShuffledData<decimal>(length, actual_unshuffled);
+
+        // Act
+        var actual = new decimal[length];
+
+        ShuffleAvx2.DoShuffle(
+            bytesOfType,
+            source: actual_unshuffled,
+            destination: MemoryMarshal.AsBytes<decimal>(actual));
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
     [Theory]
     [InlineData((byte)1, 1001)]
     [InlineData((short)2, 732)]
@@ -913,6 +965,32 @@ public class FilterTests
             bytesOfType,
             source: actual_unshuffled,
             destination: MemoryMarshal.AsBytes<T>(actual));
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
+    [Fact]
+    public void CanShuffleSse2_16()
+    {
+        // Arrange
+        var length = 32;
+        var bytesOfType = Unsafe.SizeOf<decimal>();
+
+        var actual_unshuffled = Enumerable
+            .Range(0, length * bytesOfType)
+            .Select(value => unchecked((byte)value))
+            .ToArray();
+
+        var expected = GetShuffledData<decimal>(length, actual_unshuffled);
+
+        // Act
+        var actual = new decimal[length];
+
+        ShuffleSse2.DoShuffle(
+            bytesOfType,
+            source: actual_unshuffled,
+            destination: MemoryMarshal.AsBytes<decimal>(actual));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
