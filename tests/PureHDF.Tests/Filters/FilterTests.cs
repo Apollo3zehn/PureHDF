@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Reflection;
-using Blosc2.PInvoke;
 #if NET5_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
@@ -131,8 +130,18 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
-    [Fact]
-    public void CanFilterBlosc2()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    [InlineData(9)]
+    public void CanFilterBlosc2(int compressionLevel)
     {
         // Arrange
         var expected = SharedTestData.SmallData;
@@ -147,7 +156,10 @@ public class FilterTests
         var options = new H5WriteOptions(
             Filters:
             [
-                Blosc2Filter.Id
+                new H5Filter(Blosc2Filter.Id, new() 
+                { 
+                    [Blosc2Filter.COMPRESSION_LEVEL] = compressionLevel 
+                })
             ]
         );
 

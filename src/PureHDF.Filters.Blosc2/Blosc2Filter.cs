@@ -34,6 +34,8 @@ public enum Blosc2ShuffleMode
 /// </summary>
 public class Blosc2Filter : IH5Filter
 {
+    private const int BLOSC2_MAX_OVERHEAD = 32;
+
     // adapted from https://github.com/Blosc/hdf5-blosc/blob/bd8ee59708f366ac561153858735165d3a543b18/src/blosc_filter.c#L145-L272
 
     /// <summary>
@@ -72,15 +74,15 @@ public class Blosc2Filter : IH5Filter
         string compname = string.Empty;
 
         /* Filter params that are always set */
-        var typesize = unchecked((int)parameters[2]);   /* The datatype size */
-        var outbuf_size = (ulong)parameters[3];         /* Precomputed buffer guess */
+        var typesize = unchecked((int)parameters[2]);       /* The datatype size */
+        var _ = (int)parameters[3];                         /* Precomputed buffer guess */
 
         /* Optional params */
         if (parameters.Length >= 5)
-            clevel = unchecked((int)parameters[4]);     /* The compression level */
+            clevel = unchecked((int)parameters[4]);         /* The compression level */
 
         if (parameters.Length >= 6)
-            doshuffle = unchecked((int)parameters[5]);  /* BLOSC_SHUFFLE, BLOSC_BITSHUFFLE */
+            doshuffle = unchecked((int)parameters[5]);      /* BLOSC_SHUFFLE, BLOSC_BITSHUFFLE */
 
         if (parameters.Length >= 7)
         {
@@ -98,8 +100,6 @@ public class Blosc2Filter : IH5Filter
             }
         }
 
-        var buffer = new byte[outbuf_size].AsMemory();
-
         /* We're decompressing */
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
@@ -110,46 +110,58 @@ public class Blosc2Filter : IH5Filter
                  * NOTE: the guess value got from "cd_values" corresponds to the
                  * uncompressed chunk size but it should not be used in a general
                  * cases since other filters in the pipeline can modify the buffer
-                 *  size.
+                 * size.
                  */
-                Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
+                var status = Blosc.blosc2_cbuffer_sizes(new IntPtr(srcPtr), out var outbuf_size, out var cbytes, out var blocksize);
+                var buffer = new byte[outbuf_size].AsMemory();
+
+                if (status < 0)
+                    throw new Exception($"Blosc decompression error (status {status}).");
 
                 fixed (byte* destPtr = buffer.Span)
                 {
-                    var status = Blosc.blosc2_decompress(
+                    var decompressedSize = Blosc.blosc2_decompress(
                         src: new IntPtr(srcPtr),
                         srcsize: info.Buffer.Length,
                         dest: new IntPtr(destPtr),
                         destsize: buffer.Length);
 
                     /* decompression failed */
-                    if (status <= 0)
-                        throw new Exception("Blosc decompression error.");
+                    if (decompressedSize <= 0)
+                        throw new Exception($"Blosc decompression error (status {status}).");
                 }
+
+                return buffer;
             }
         }
 
         /* We're compressing */
         else
         {
+            /* "The size of the dest buffer. Blosc guarantees that if you set destsize to, 
+             *  at least, (nbytes + BLOSC2_MAX_OVERHEAD), the compression will always succeed."
+             * - https://www.blosc.org/c-blosc2/reference/blosc1.html#c.blosc1_compress
+             */
+            var buffer = new byte[info.Buffer.Length + BLOSC2_MAX_OVERHEAD].AsMemory();
+
             Blosc.blosc1_set_compressor(compname);
 
             fixed (byte* srcPtr = info.Buffer.Span)
             {
                 fixed (byte* destPtr = buffer.Span)
                 {
-                    var status = Blosc.blosc2_compress(
+                    var compressedSize = Blosc.blosc2_compress(
                         clevel, doshuffle, typesize,
                         new IntPtr(srcPtr), info.Buffer.Length,
                         new IntPtr(destPtr), buffer.Length);
 
-                    if (status < 0)
-                        throw new Exception("Blosc compression error.");
+                    if (compressedSize < 0)
+                        throw new Exception($"Blosc compression error (status {compressedSize}).");
+
+                    return buffer.Slice(0, compressedSize);
                 }
             }
         }
-
-        return buffer;
     }
 
     /// <inheritdoc />
