@@ -1,3 +1,9 @@
+## v1.0.0-beta.12 - 2024-04-12
+
+### Bugs fixed
+- #68 - Does Blosc2 filter really work? It does not reduce file size in a manual test
+- #74 - Blosc decompression error at compression level 0
+
 ## v1.0.0-beta.11 - 2024-04-10
 
 ### Bugs fixed
