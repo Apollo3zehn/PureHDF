@@ -110,23 +110,28 @@ public class Blosc2Filter : IH5Filter
                  * NOTE: the guess value got from "cd_values" corresponds to the
                  * uncompressed chunk size but it should not be used in a general
                  * cases since other filters in the pipeline can modify the buffer
-                 *  size.
+                 * size.
                  */
-                Blosc.blosc1_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
+                var status = Blosc.blosc2_cbuffer_sizes(new IntPtr(srcPtr), out outbuf_size, out var cbytes, out var blocksize);
+
+                if (status <= 0)
+                    throw new Exception("Blosc decompression error.");
 
                 fixed (byte* destPtr = buffer.Span)
                 {
-                    var status = Blosc.blosc2_decompress(
+                    var decompressedSize = Blosc.blosc2_decompress(
                         src: new IntPtr(srcPtr),
                         srcsize: info.Buffer.Length,
                         dest: new IntPtr(destPtr),
                         destsize: buffer.Length);
 
                     /* decompression failed */
-                    if (status <= 0)
+                    if (decompressedSize <= 0)
                         throw new Exception("Blosc decompression error.");
                 }
             }
+
+            return buffer.Slice(0, (int)outbuf_size);
         }
 
         /* We're compressing */
@@ -138,18 +143,21 @@ public class Blosc2Filter : IH5Filter
             {
                 fixed (byte* destPtr = buffer.Span)
                 {
-                    var status = Blosc.blosc2_compress(
+                    var compressedSize = Blosc.blosc2_compress(
                         clevel, doshuffle, typesize,
                         new IntPtr(srcPtr), info.Buffer.Length,
                         new IntPtr(destPtr), buffer.Length);
 
-                    if (status < 0)
+                    if (compressedSize < 0)
                         throw new Exception("Blosc compression error.");
+
+                    if (clevel == 0)
+                        compressedSize = buffer.Length;
+
+                    return buffer.Slice(0, compressedSize);
                 }
             }
         }
-
-        return buffer;
     }
 
     /// <inheritdoc />
