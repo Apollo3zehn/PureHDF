@@ -248,11 +248,10 @@ partial class H5NativeWriter
         // fill value
         /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
         var fillValue = new byte[datatype.Size];
-
         var fillValueMessage = new FillValueMessage(
             AllocationTime: SpaceAllocationTime.Early,
             FillTime: FillValueWriteTime.Never,
-            Value: fillValue
+            Value: default
         )
         {
             Version = 3

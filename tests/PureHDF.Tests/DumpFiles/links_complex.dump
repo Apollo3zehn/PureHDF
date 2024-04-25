@@ -60,27 +60,7 @@ GROUP "/" {
    }
    GROUP "group_1" {
       GROUP "group_0" {
-         ATTRIBUTE "attr" {
-            DATATYPE  H5T_IEEE_F64LE
-            DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-            DATA {
-            (0): 2, 3.1, 4.2
-            }
-         }
-         DATASET "dset" {
-            DATATYPE  H5T_IEEE_F32LE
-            DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
-            DATA {
-            (0): 1.1, 2.2
-            }
-            ATTRIBUTE "attr" {
-               DATATYPE  H5T_STD_I32LE
-               DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
-               DATA {
-               (0): -2, -3, -4
-               }
-            }
-         }
+         HARDLINK "/group_0"
       }
    }
 }

@@ -4,7 +4,7 @@ namespace PureHDF.Tests.Writing;
 
 public partial class DatasetTests
 {
-    [Fact]
+    [Fact(Skip = "Reenable when https://forum.hdfgroup.org/t/getting-error-invalid-dataset-size-likely-file-corruption/12246 is solved")]
     public void CanWrite_Space_Null()
     {
         // Arrange

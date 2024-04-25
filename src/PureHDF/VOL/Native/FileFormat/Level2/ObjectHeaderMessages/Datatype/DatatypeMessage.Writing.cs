@@ -100,6 +100,11 @@ internal partial record class DatatypeMessage : Message
         if (stringLength == default)
             stringLength = context.WriteOptions.DefaultStringLength;
 
+        // special case: opaque (= byte[])
+        // use unique type to make cache happy
+        if (type == typeof(byte) && opaqueInfo is not null)
+            type = typeof(H5OpaqueInfo);
+
         var cache = context.TypeToMessageMap;
 
         if (cache.TryGetValue(type, out var cachedMessage))
@@ -111,6 +116,10 @@ internal partial record class DatatypeMessage : Message
 
         (var newMessage, var encode) = type switch
         {
+            /* unsigned fixed-point types */
+            Type when type == typeof(H5OpaqueInfo)
+                => GetTypeInfoForOpaque(opaqueInfo!),
+
             /* string */
             Type when type == typeof(string)
                 => stringLength == 0
@@ -144,11 +153,6 @@ internal partial record class DatatypeMessage : Message
             /* enumeration */
             Type when type.IsEnum
                 => GetTypeInfoForEnum(context, type),
-
-            /* unsigned fixed-point types */
-            Type when
-                type == typeof(byte) && opaqueInfo is not null
-                => GetTypeInfoForOpaque(opaqueInfo),
 
             /* unsigned fixed-point types */
             Type when
@@ -200,6 +204,7 @@ internal partial record class DatatypeMessage : Message
         };
 
         cache[type] = (newMessage, encode);
+
         return (newMessage, encode);
     }
 

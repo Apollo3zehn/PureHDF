@@ -39,18 +39,18 @@ jobs:
         id: cache-primes
         uses: actions/cache@v3
         with:
-          path: hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
+          path: hdf5-1.14.4-2-ubuntu-2204_gcc.tar.gz
           key: hdf5-installer
 
       - name: Download HDF5 installer
         if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: wget -q https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.14/hdf5-1.14.1/bin/unix/hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
+        run: wget -q https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.4.2/hdf5-1.14.4-2-ubuntu-2204_gcc.tar.gz
 
       - name: Install
         run: |
-          tar -xzf hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
-          hdf/HDF5-1.14.1-Linux.sh --prefix=hdf --skip-license
-          sudo ln -s $(pwd)/hdf/HDF_Group/HDF5/1.14.1/bin/h5dump /usr/bin/h5dump
+          tar -xzf hdf5-1.14.4-2-ubuntu-2204_gcc.tar.gz
+          tar -xzf hdf5/HDF5-1.14.4.2-Linux.tar.gz
+          sudo ln -s $(pwd)/HDF5-1.14.4.2-Linux/HDF_Group/HDF5/1.14.4.2/bin/h5dump /usr/bin/h5dump
           h5dump --version
 
       - name: Build

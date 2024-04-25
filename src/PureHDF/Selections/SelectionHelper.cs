@@ -169,18 +169,19 @@ internal static class SelectionHelper
                 }
 
                 /* copy */
-                var length = Math.Min(currentLength, currentSource.Length) * encodeInfo.SourceTypeSizeFactor;
+                var length = Math.Min(currentLength, currentSource.Length);
                 var sourceLength = length;
+                var sourceLengthInBytes = sourceLength * encodeInfo.SourceTypeSizeFactor;
 
                 targetStream.Seek(currentOffset * encodeInfo.TargetTypeSize, SeekOrigin.Begin);
 
                 encodeInfo.Encoder(
-                    currentSource[..sourceLength],
+                    currentSource[..sourceLengthInBytes],
                     targetStream);
 
                 currentOffset += length;
                 currentLength -= length;
-                currentSource = currentSource[sourceLength..];
+                currentSource = currentSource[sourceLengthInBytes..];
             }
         }
     }

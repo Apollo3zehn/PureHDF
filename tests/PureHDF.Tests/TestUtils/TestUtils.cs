@@ -18,7 +18,7 @@ public partial class TestUtils
             StartInfo = new ProcessStartInfo
             {
                 FileName = "h5dump",
-                Arguments = filePath,
+                Arguments = "--enable-error-stack " + filePath,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,

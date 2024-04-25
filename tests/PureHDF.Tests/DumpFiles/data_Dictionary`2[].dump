@@ -9,7 +9,7 @@ GROUP "/" {
             CTYPE H5T_C_S1;
          } "Key";
          H5T_STD_I32LE "Value";
-      }}
+      } }
       DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
       DATA {
       (0): ({

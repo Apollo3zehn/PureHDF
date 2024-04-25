@@ -1,7 +1,7 @@
 HDF5 "<file-path>" {
 GROUP "/" {
    <type> "Int32[][]" {
-      DATATYPE  H5T_VLEN { H5T_STD_I32LE}
+      DATATYPE  H5T_VLEN { H5T_STD_I32LE }
       DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
       (0): (1, -2, 3), (), (2, -4, 6)
