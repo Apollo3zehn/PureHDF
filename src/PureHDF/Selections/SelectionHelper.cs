@@ -22,6 +22,7 @@ internal record EncodeInfo<T>(
     Func<ulong[], Memory<T>> GetSourceBuffer,
     Func<ulong[], IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
+    int SourceTypeSizeFactor,
     int TargetTypeSize
 );
 
@@ -163,12 +164,12 @@ internal static class SelectionHelper
                     }
 
                     currentSource = sourceBuffer.Slice(
-                        (int)sourceStep.Offset,
-                        (int)sourceStep.Length);
+                        (int)sourceStep.Offset * encodeInfo.SourceTypeSizeFactor,
+                        (int)sourceStep.Length * encodeInfo.SourceTypeSizeFactor);
                 }
 
                 /* copy */
-                var length = Math.Min(currentLength, currentSource.Length);
+                var length = Math.Min(currentLength, currentSource.Length) * encodeInfo.SourceTypeSizeFactor;
                 var sourceLength = length;
 
                 targetStream.Seek(currentOffset * encodeInfo.TargetTypeSize, SeekOrigin.Begin);

@@ -27,7 +27,8 @@ internal partial record class DatatypeMessage : Message
     public static (DatatypeMessage, EncodeDelegate<T>) Create<T>(
         NativeWriteContext context,
         Memory<T> topLevelData,
-        bool isScalar
+        bool isScalar,
+        H5OpaqueInfo? opaqueInfo
     )
     {
         var isScalarDictionary = isScalar &&
@@ -42,11 +43,11 @@ internal partial record class DatatypeMessage : Message
 
         else
             return DataUtils.IsReferenceOrContainsReferences(typeof(T))
-                ? GetTypeInfoForTopLevelMemory<T>(context)
+                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo)
                 : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
                     // TODO cache
                     .MakeGenericMethod(typeof(T))
-                    .Invoke(default, new object[] { context })!;
+                    .Invoke(default, [context, opaqueInfo])!;
     }
 
     public override void Encode(H5DriverBase driver)
@@ -93,7 +94,8 @@ internal partial record class DatatypeMessage : Message
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForScalar(
         NativeWriteContext context,
         Type type,
-        int stringLength = default)
+        int stringLength = default,
+        H5OpaqueInfo? opaqueInfo = default)
     {
         if (stringLength == default)
             stringLength = context.WriteOptions.DefaultStringLength;
@@ -142,6 +144,11 @@ internal partial record class DatatypeMessage : Message
             /* enumeration */
             Type when type.IsEnum
                 => GetTypeInfoForEnum(context, type),
+
+            /* unsigned fixed-point types */
+            Type when
+                type == typeof(byte) && opaqueInfo is not null
+                => GetTypeInfoForOpaque(opaqueInfo),
 
             /* unsigned fixed-point types */
             Type when
@@ -645,6 +652,34 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForOpaque(
+        H5OpaqueInfo opaqueInfo)
+    {
+        var message = new DatatypeMessage(
+
+            opaqueInfo.TypeSize,
+
+            new OpaqueBitFieldDescription(
+                TagByteLength: (byte)MathUtils.Ceil_N(opaqueInfo.Tag.Length + 1, 8)
+            ),
+
+            new OpaquePropertyDescription[] {
+                new(Tag: opaqueInfo.Tag)
+            }
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.Opaque
+        };
+
+        void encode(object source, IH5WriteStream target)
+        {
+            // do nothing
+        }
+
+        return (message, encode);
+    }
+
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForUnsignedFixedPointTypes(
         Type type,
         ByteOrder endianness)
@@ -910,9 +945,10 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelMemory<T>(
-        NativeWriteContext context)
+        NativeWriteContext context,
+        H5OpaqueInfo? opaqueInfo)
     {
-        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T));
+        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T), opaqueInfo: opaqueInfo);
 
         void encode(Memory<T> source, IH5WriteStream target)
         {
@@ -928,9 +964,10 @@ internal partial record class DatatypeMessage : Message
     }
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelUnmanagedMemory<T>(
-        NativeWriteContext context) where T : struct
+        NativeWriteContext context,
+        H5OpaqueInfo? opaqueInfo) where T : struct
     {
-        var (message, _) = GetTypeInfoForScalar(context, typeof(T));
+        var (message, _) = GetTypeInfoForScalar(context, typeof(T), opaqueInfo: opaqueInfo);
 
         static void encode(Memory<T> source, IH5WriteStream target)
             => target.WriteDataset(MemoryMarshal.AsBytes(source.Span));

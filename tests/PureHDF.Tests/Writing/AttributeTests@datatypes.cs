@@ -222,6 +222,51 @@ public partial class AttributeTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CanWrite_Opaque(bool asMemory)
+    {
+        // Arrange
+        var file = new H5File();
+
+        var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+        var actualData = asMemory
+            ? data.AsMemory()
+            : data;
+
+        var opaqueInfo = new H5OpaqueInfo(
+            TypeSize: 2,
+            Tag: "My tag"
+        );
+
+        file.Attributes["opaque"] = new H5Attribute(actualData, opaqueInfo: opaqueInfo);
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_opaque.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "ATTRIBUTE");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
 #if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()

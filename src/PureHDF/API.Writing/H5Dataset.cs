@@ -16,13 +16,15 @@ public class H5Dataset : H5AttributableObject
     /// <param name="fileSelection">The file selection.</param>
     /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
+    /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
     public H5Dataset(
         object data,
         uint[]? chunks = default,
         Selection? memorySelection = default,
         Selection? fileSelection = default,
         ulong[]? fileDims = default,
-        H5DatasetCreation datasetCreation = default)
+        H5DatasetCreation datasetCreation = default,
+        H5OpaqueInfo? opaqueInfo = default)
         : this(
             data.GetType(),
             data,
@@ -30,7 +32,8 @@ public class H5Dataset : H5AttributableObject
             memorySelection,
             fileSelection,
             fileDims,
-            datasetCreation)
+            datasetCreation,
+            opaqueInfo)
     {
         //
     }
@@ -42,7 +45,8 @@ public class H5Dataset : H5AttributableObject
         Selection? memorySelection,
         Selection? fileSelection,
         ulong[]? fileDims,
-        H5DatasetCreation datasetCreation)
+        H5DatasetCreation datasetCreation,
+        H5OpaqueInfo? opaqueInfo)
     {
         Type = type;
         Data = data;
@@ -51,6 +55,7 @@ public class H5Dataset : H5AttributableObject
         FileSelection = fileSelection;
         FileDims = fileDims;
         DatasetCreation = datasetCreation;
+        OpaqueInfo = opaqueInfo;
     }
 
     internal Type Type { get; init; }
@@ -66,6 +71,8 @@ public class H5Dataset : H5AttributableObject
     internal ulong[]? FileDims { get; }
 
     internal H5DatasetCreation DatasetCreation { get; }
+
+    internal H5OpaqueInfo? OpaqueInfo { get; }
 }
 
 /// <summary>
@@ -80,10 +87,12 @@ public class H5Dataset<T> : H5Dataset
     /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
     /// <param name="chunks">The dataset's chunk dimensions.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
+    /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
     public H5Dataset(
         ulong[] fileDims,
         uint[]? chunks = default,
-        H5DatasetCreation datasetCreation = default)
+        H5DatasetCreation datasetCreation = default,
+        H5OpaqueInfo? opaqueInfo = default)
         : base(
             typeof(T),
             default,
@@ -91,7 +100,8 @@ public class H5Dataset<T> : H5Dataset
             default,
             default,
             fileDims,
-            datasetCreation)
+            datasetCreation,
+            opaqueInfo)
     {
         //
     }
@@ -106,7 +116,10 @@ public class H5NullDataset<T> : H5Dataset
     /// <summary>
     /// Initializes a new instance of the <see cref="H5NullDataset{T}"/> class.
     /// </summary>
-    public H5NullDataset()
+    /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
+    public H5NullDataset(
+        H5OpaqueInfo? opaqueInfo = default
+    )
         : base(
             typeof(T),
             data: null,
@@ -114,7 +127,8 @@ public class H5NullDataset<T> : H5Dataset
             default,
             default,
             fileDims: null,
-            default)
+            default,
+            opaqueInfo)
     {
         //
     }

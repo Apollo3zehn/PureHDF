@@ -92,7 +92,7 @@ internal partial record class DatatypeMessage(
                 DatatypeMessageClass.FloatingPoint => FloatingPointPropertyDescription.Decode(driver),
                 DatatypeMessageClass.Time => TimePropertyDescription.Decode(driver),
                 DatatypeMessageClass.BitField => BitFieldPropertyDescription.Decode(driver),
-                DatatypeMessageClass.Opaque => OpaquePropertyDescription.Decode(driver, ((OpaqueBitFieldDescription)bitField).AsciiTagByteLength),
+                DatatypeMessageClass.Opaque => OpaquePropertyDescription.Decode(driver, ((OpaqueBitFieldDescription)bitField).TagByteLength),
                 DatatypeMessageClass.Compound => CompoundPropertyDescription.Decode(driver, version, size),
                 DatatypeMessageClass.Enumerated => EnumerationPropertyDescription.Decode(driver, version, size, ((EnumerationBitFieldDescription)bitField).MemberCount),
                 DatatypeMessageClass.VariableLength => VariableLengthPropertyDescription.Decode(driver),

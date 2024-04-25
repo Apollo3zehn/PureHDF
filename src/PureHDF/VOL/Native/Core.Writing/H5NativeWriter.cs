@@ -168,7 +168,10 @@ partial class H5NativeWriter
 
         // datatype
         var (datatype, encode) =
-            DatatypeMessage.Create(Context, memoryData, isScalar);
+            DatatypeMessage.Create(Context, memoryData, isScalar, dataset.OpaqueInfo);
+
+        if (dataset.OpaqueInfo is not null && datatype.Class == DatatypeMessageClass.Opaque)
+            memoryDims = [(ulong)memoryData.Length / dataset.OpaqueInfo.TypeSize];
 
         // dataspace
         var fileDims = dataset.FileDims;
@@ -417,6 +420,10 @@ partial class H5NativeWriter
         }
 
         /* encode info */
+        var opaqueSoureTypeSizeFactor = datatype.Class == DatatypeMessageClass.Opaque
+            ? datatype.Size
+            : 1;
+
         var encodeInfo = new EncodeInfo<TElement>(
             SourceDims: memoryDims,
             SourceChunkDims: memoryDims,
@@ -427,6 +434,7 @@ partial class H5NativeWriter
             GetSourceBuffer: indiced => memoryData,
             GetTargetStream: getTargetStream,
             Encoder: encode,
+            SourceTypeSizeFactor: (int)opaqueSoureTypeSizeFactor,
             TargetTypeSize: (int)datatype.Size
         );
 
