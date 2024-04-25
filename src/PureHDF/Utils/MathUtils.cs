@@ -161,6 +161,11 @@ internal static partial class MathUtils
         return x % y == 0 ? x / y : x / y + 1;
     }
 
+    public static int Ceil_N(int x, int y)
+    {
+        return y * ((x - 1) / y + 1);
+    }
+
     public static ulong FindMinByteCount(ulong value)
     {
         ulong lg_v = 1;

@@ -216,7 +216,7 @@ internal record class FloatingPointBitFieldDescription(
 }
 
 internal record class OpaqueBitFieldDescription(
-    byte AsciiTagByteLength
+    byte TagByteLength
 ) : DatatypeBitFieldDescription
 {
     public static OpaqueBitFieldDescription Decode(H5DriverBase driver)
@@ -224,13 +224,21 @@ internal record class OpaqueBitFieldDescription(
         var data = driver.ReadBytes(3);
 
         return new OpaqueBitFieldDescription(
-            AsciiTagByteLength: data[0]
+            TagByteLength: data[0]
         );
     }
 
     public override void Encode(H5DriverBase driver)
     {
-        throw new NotImplementedException();
+        #if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        data[0] = TagByteLength;
+
+        driver.Write(data);
     }
 }
 

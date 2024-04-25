@@ -1,0 +1,13 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "opaque" {
+      DATATYPE  H5T_OPAQUE {
+         OPAQUE_TAG "My tag";
+      }
+      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      DATA {
+      (0): 01:02, 03:04
+      }
+   }
+}
+}

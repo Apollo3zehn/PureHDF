@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -14,33 +13,34 @@ internal partial record class AttributeMessage
         string name,
         object attribute)
     {
-        var data = attribute is H5Attribute h5Attribute
-            ? h5Attribute.Data
-            : attribute;
+        if (attribute is not H5Attribute h5attribute)
+            h5attribute = new H5Attribute(attribute);
 
-        var (elementType, isScalar) = WriteUtils.GetElementType(data.GetType());
+        var (elementType, isScalar) = WriteUtils.GetElementType(h5attribute.Data.GetType());
 
         // TODO cache this
-        var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(data.GetType(), elementType);
+        var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(h5attribute.Data.GetType(), elementType);
 
-        return (AttributeMessage)method.Invoke(default, [context, name, attribute, data, isScalar])!;
+        return (AttributeMessage)method.Invoke(default, [context, name, h5attribute, isScalar])!;
     }
 
     private static AttributeMessage InternalCreate<T, TElement>(
         NativeWriteContext context,
         string name,
-        object attribute,
-        object data,
+        H5Attribute attribute,
         bool isScalar)
     {
         var (memoryData, memoryDims)
-            = WriteUtils.ToMemory<T, TElement>(data ?? throw new Exception("This should never happen."));
+            = WriteUtils.ToMemory<T, TElement>(attribute.Data ?? throw new Exception("This should never happen."));
 
         var type = memoryData.GetType();
 
         /* datatype */
         var (datatype, encode) =
-            DatatypeMessage.Create(context, memoryData, isScalar);
+            DatatypeMessage.Create(context, memoryData, isScalar, attribute.OpaqueInfo);
+
+        if (attribute.OpaqueInfo is not null && datatype.Class == DatatypeMessageClass.Opaque)
+            memoryDims = [(ulong)memoryData.Length / attribute.OpaqueInfo.TypeSize];
 
         /* dataspace */
         var dataspace = attribute is H5Attribute h5Attribute

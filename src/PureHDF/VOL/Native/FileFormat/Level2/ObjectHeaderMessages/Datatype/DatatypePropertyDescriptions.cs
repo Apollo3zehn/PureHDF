@@ -394,12 +394,25 @@ internal record class OpaquePropertyDescription(
 
     public override ushort GetEncodeSize(uint typeSize)
     {
-        throw new NotImplementedException();
+        var unpaddedLength = Tag.Length + 1;
+
+        if (unpaddedLength > byte.MaxValue)
+            throw new Exception($"The maximum opaque tag length is {byte.MaxValue - 1} bytes");
+
+        return (ushort)MathUtils.Ceil_N(unpaddedLength, 8);
     }
 
     public override void Encode(H5DriverBase driver, uint typeSize)
     {
-        throw new NotImplementedException();
+        var bytes = Encoding.ASCII.GetBytes(Tag);
+        var length = bytes.Length + 1;
+        var padBytesCount = MathUtils.Ceil_N(length, 8) - length;
+
+        driver.Write(bytes);
+        driver.Write((byte)0);
+
+        Span<byte> padBytes = stackalloc byte[padBytesCount];
+        driver.Write(padBytes);
     }
 }
 
