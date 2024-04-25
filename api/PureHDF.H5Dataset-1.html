@@ -136,8 +136,8 @@
 
   <a id="PureHDF_H5Dataset_1__ctor_" data-uid="PureHDF.H5Dataset`1.#ctor*"></a>
 
-  <h3 id="PureHDF_H5Dataset_1__ctor_System_UInt64___System_UInt32___PureHDF_VOL_Native_H5DatasetCreation_" data-uid="PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation)">
-  H5Dataset(ulong[], uint[]?, H5DatasetCreation)
+  <h3 id="PureHDF_H5Dataset_1__ctor_System_UInt64___System_UInt32___PureHDF_VOL_Native_H5DatasetCreation_PureHDF_H5OpaqueInfo_" data-uid="PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)">
+  H5Dataset(ulong[], uint[]?, H5DatasetCreation, H5OpaqueInfo?)
   
   </h3>
 
@@ -146,7 +146,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5Dataset(ulong[] fileDims, uint[]? chunks = null, H5DatasetCreation datasetCreation = default)</code></pre>
+    <pre><code class="lang-csharp hljs">public H5Dataset(ulong[] fileDims, uint[]? chunks = null, H5DatasetCreation datasetCreation = default, H5OpaqueInfo? opaqueInfo = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -159,6 +159,9 @@
 </dd>
     <dt><code>datasetCreation</code> <a class="xref" href="PureHDF.VOL.Native.H5DatasetCreation.html">H5DatasetCreation</a></dt>
     <dd><p>The dataset creation properties.</p>
+</dd>
+    <dt><code>opaqueInfo</code> <a class="xref" href="PureHDF.H5OpaqueInfo.html">H5OpaqueInfo</a></dt>
+    <dd><p>Set this paramter to a non-null value to treat data of type byte[] as opaque.</p>
 </dd>
   </dl>
 

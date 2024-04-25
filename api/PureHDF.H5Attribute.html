@@ -120,8 +120,8 @@
 
   <a id="PureHDF_H5Attribute__ctor_" data-uid="PureHDF.H5Attribute.#ctor*"></a>
 
-  <h3 id="PureHDF_H5Attribute__ctor_System_Object_System_UInt64___" data-uid="PureHDF.H5Attribute.#ctor(System.Object,System.UInt64[])">
-  H5Attribute(object, ulong[]?)
+  <h3 id="PureHDF_H5Attribute__ctor_System_Object_System_UInt64___PureHDF_H5OpaqueInfo_" data-uid="PureHDF.H5Attribute.#ctor(System.Object,System.UInt64[],PureHDF.H5OpaqueInfo)">
+  H5Attribute(object, ulong[]?, H5OpaqueInfo?)
   
   </h3>
 
@@ -130,7 +130,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5Attribute(object data, ulong[]? dimensions = null)</code></pre>
+    <pre><code class="lang-csharp hljs">public H5Attribute(object data, ulong[]? dimensions = null, H5OpaqueInfo? opaqueInfo = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -140,6 +140,9 @@
 </dd>
     <dt><code>dimensions</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
     <dd><p>The attribute dimensions.</p>
+</dd>
+    <dt><code>opaqueInfo</code> <a class="xref" href="PureHDF.H5OpaqueInfo.html">H5OpaqueInfo</a></dt>
+    <dd><p>Set this paramter to a non-null value to treat data of type byte[] as opaque.</p>
 </dd>
   </dl>
 

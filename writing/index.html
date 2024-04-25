@@ -143,6 +143,22 @@ writer.Write(dataset, data, fileSelection: fileSelection);
 <h5>Note</h5>
 <p>See <a href="../reading/slicing.html">slicing</a> for information about available selections.</p>
 </div>
+<h2 id="opaque-data">Opaque data</h2>
+<p>Crate an instance of the <code>H5OpaqueInfo</code> type and pass it to the <code>H5Dataset</code> constructor to treat byte arrays as opaque data:</p>
+<pre><code class="lang-cs">var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+var opaqueInfo = new H5OpaqueInfo(
+    TypeSize: (uint)data.Length,
+    Tag: &quot;My tag&quot;
+);
+
+var file = new H5File
+{
+    [&quot;opaque&quot;] = new H5Dataset(data, opaqueInfo: opaqueInfo)
+};
+
+file.Write(&quot;path/to/file.h5&quot;);
+</code></pre>
 </article>
 
         <div class="contribution d-print-none">

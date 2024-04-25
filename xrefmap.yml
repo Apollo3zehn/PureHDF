@@ -1202,15 +1202,15 @@ references:
   commentId: T:PureHDF.H5Attribute
   fullName: PureHDF.H5Attribute
   nameWithType: H5Attribute
-- uid: PureHDF.H5Attribute.#ctor(System.Object,System.UInt64[])
-  name: H5Attribute(object, ulong[]?)
-  href: api/PureHDF.H5Attribute.html#PureHDF_H5Attribute__ctor_System_Object_System_UInt64___
-  commentId: M:PureHDF.H5Attribute.#ctor(System.Object,System.UInt64[])
-  name.vb: New(Object, ULong())
-  fullName: PureHDF.H5Attribute.H5Attribute(object, ulong[]?)
-  fullName.vb: PureHDF.H5Attribute.New(Object, ULong())
-  nameWithType: H5Attribute.H5Attribute(object, ulong[]?)
-  nameWithType.vb: H5Attribute.New(Object, ULong())
+- uid: PureHDF.H5Attribute.#ctor(System.Object,System.UInt64[],PureHDF.H5OpaqueInfo)
+  name: H5Attribute(object, ulong[]?, H5OpaqueInfo?)
+  href: api/PureHDF.H5Attribute.html#PureHDF_H5Attribute__ctor_System_Object_System_UInt64___PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Attribute.#ctor(System.Object,System.UInt64[],PureHDF.H5OpaqueInfo)
+  name.vb: New(Object, ULong(), H5OpaqueInfo)
+  fullName: PureHDF.H5Attribute.H5Attribute(object, ulong[]?, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Attribute.New(Object, ULong(), PureHDF.H5OpaqueInfo)
+  nameWithType: H5Attribute.H5Attribute(object, ulong[]?, H5OpaqueInfo?)
+  nameWithType.vb: H5Attribute.New(Object, ULong(), H5OpaqueInfo)
 - uid: PureHDF.H5Attribute.#ctor*
   name: H5Attribute
   href: api/PureHDF.H5Attribute.html#PureHDF_H5Attribute__ctor_
@@ -1340,15 +1340,15 @@ references:
   commentId: T:PureHDF.H5Dataset
   fullName: PureHDF.H5Dataset
   nameWithType: H5Dataset
-- uid: PureHDF.H5Dataset.#ctor(System.Object,System.UInt32[],PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetCreation)
-  name: H5Dataset(object, uint[]?, Selection?, Selection?, ulong[]?, H5DatasetCreation)
-  href: api/PureHDF.H5Dataset.html#PureHDF_H5Dataset__ctor_System_Object_System_UInt32___PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetCreation_
-  commentId: M:PureHDF.H5Dataset.#ctor(System.Object,System.UInt32[],PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetCreation)
-  name.vb: New(Object, UInteger(), Selection, Selection, ULong(), H5DatasetCreation)
-  fullName: PureHDF.H5Dataset.H5Dataset(object, uint[]?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, PureHDF.VOL.Native.H5DatasetCreation)
-  fullName.vb: PureHDF.H5Dataset.New(Object, UInteger(), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), PureHDF.VOL.Native.H5DatasetCreation)
-  nameWithType: H5Dataset.H5Dataset(object, uint[]?, Selection?, Selection?, ulong[]?, H5DatasetCreation)
-  nameWithType.vb: H5Dataset.New(Object, UInteger(), Selection, Selection, ULong(), H5DatasetCreation)
+- uid: PureHDF.H5Dataset.#ctor(System.Object,System.UInt32[],PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
+  name: H5Dataset(object, uint[]?, Selection?, Selection?, ulong[]?, H5DatasetCreation, H5OpaqueInfo?)
+  href: api/PureHDF.H5Dataset.html#PureHDF_H5Dataset__ctor_System_Object_System_UInt32___PureHDF_Selections_Selection_PureHDF_Selections_Selection_System_UInt64___PureHDF_VOL_Native_H5DatasetCreation_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Dataset.#ctor(System.Object,System.UInt32[],PureHDF.Selections.Selection,PureHDF.Selections.Selection,System.UInt64[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
+  name.vb: New(Object, UInteger(), Selection, Selection, ULong(), H5DatasetCreation, H5OpaqueInfo)
+  fullName: PureHDF.H5Dataset.H5Dataset(object, uint[]?, PureHDF.Selections.Selection?, PureHDF.Selections.Selection?, ulong[]?, PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Dataset.New(Object, UInteger(), PureHDF.Selections.Selection, PureHDF.Selections.Selection, ULong(), PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo)
+  nameWithType: H5Dataset.H5Dataset(object, uint[]?, Selection?, Selection?, ulong[]?, H5DatasetCreation, H5OpaqueInfo?)
+  nameWithType.vb: H5Dataset.New(Object, UInteger(), Selection, Selection, ULong(), H5DatasetCreation, H5OpaqueInfo)
 - uid: PureHDF.H5Dataset.#ctor*
   name: H5Dataset
   href: api/PureHDF.H5Dataset.html#PureHDF_H5Dataset__ctor_
@@ -1367,15 +1367,15 @@ references:
   fullName.vb: PureHDF.H5Dataset(Of T)
   nameWithType: H5Dataset<T>
   nameWithType.vb: H5Dataset(Of T)
-- uid: PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation)
-  name: H5Dataset(ulong[], uint[]?, H5DatasetCreation)
-  href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor_System_UInt64___System_UInt32___PureHDF_VOL_Native_H5DatasetCreation_
-  commentId: M:PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation)
-  name.vb: New(ULong(), UInteger(), H5DatasetCreation)
-  fullName: PureHDF.H5Dataset<T>.H5Dataset(ulong[], uint[]?, PureHDF.VOL.Native.H5DatasetCreation)
-  fullName.vb: PureHDF.H5Dataset(Of T).New(ULong(), UInteger(), PureHDF.VOL.Native.H5DatasetCreation)
-  nameWithType: H5Dataset<T>.H5Dataset(ulong[], uint[]?, H5DatasetCreation)
-  nameWithType.vb: H5Dataset(Of T).New(ULong(), UInteger(), H5DatasetCreation)
+- uid: PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
+  name: H5Dataset(ulong[], uint[]?, H5DatasetCreation, H5OpaqueInfo?)
+  href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor_System_UInt64___System_UInt32___PureHDF_VOL_Native_H5DatasetCreation_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
+  name.vb: New(ULong(), UInteger(), H5DatasetCreation, H5OpaqueInfo)
+  fullName: PureHDF.H5Dataset<T>.H5Dataset(ulong[], uint[]?, PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Dataset(Of T).New(ULong(), UInteger(), PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo)
+  nameWithType: H5Dataset<T>.H5Dataset(ulong[], uint[]?, H5DatasetCreation, H5OpaqueInfo?)
+  nameWithType.vb: H5Dataset(Of T).New(ULong(), UInteger(), H5DatasetCreation, H5OpaqueInfo)
 - uid: PureHDF.H5Dataset`1.#ctor*
   name: H5Dataset
   href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor_
@@ -1850,15 +1850,15 @@ references:
   fullName.vb: PureHDF.H5NullDataset(Of T)
   nameWithType: H5NullDataset<T>
   nameWithType.vb: H5NullDataset(Of T)
-- uid: PureHDF.H5NullDataset`1.#ctor
-  name: H5NullDataset()
-  href: api/PureHDF.H5NullDataset-1.html#PureHDF_H5NullDataset_1__ctor
-  commentId: M:PureHDF.H5NullDataset`1.#ctor
-  name.vb: New()
-  fullName: PureHDF.H5NullDataset<T>.H5NullDataset()
-  fullName.vb: PureHDF.H5NullDataset(Of T).New()
-  nameWithType: H5NullDataset<T>.H5NullDataset()
-  nameWithType.vb: H5NullDataset(Of T).New()
+- uid: PureHDF.H5NullDataset`1.#ctor(PureHDF.H5OpaqueInfo)
+  name: H5NullDataset(H5OpaqueInfo?)
+  href: api/PureHDF.H5NullDataset-1.html#PureHDF_H5NullDataset_1__ctor_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5NullDataset`1.#ctor(PureHDF.H5OpaqueInfo)
+  name.vb: New(H5OpaqueInfo)
+  fullName: PureHDF.H5NullDataset<T>.H5NullDataset(PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5NullDataset(Of T).New(PureHDF.H5OpaqueInfo)
+  nameWithType: H5NullDataset<T>.H5NullDataset(H5OpaqueInfo?)
+  nameWithType.vb: H5NullDataset(Of T).New(H5OpaqueInfo)
 - uid: PureHDF.H5NullDataset`1.#ctor*
   name: H5NullDataset
   href: api/PureHDF.H5NullDataset-1.html#PureHDF_H5NullDataset_1__ctor_
@@ -1892,6 +1892,198 @@ references:
   fullName.vb: PureHDF.H5Object.New
   nameWithType: H5Object.H5Object
   nameWithType.vb: H5Object.New
+- uid: PureHDF.H5OpaqueInfo
+  name: H5OpaqueInfo
+  href: api/PureHDF.H5OpaqueInfo.html
+  commentId: T:PureHDF.H5OpaqueInfo
+  fullName: PureHDF.H5OpaqueInfo
+  nameWithType: H5OpaqueInfo
+- uid: PureHDF.H5OpaqueInfo.#ctor(PureHDF.H5OpaqueInfo)
+  name: H5OpaqueInfo(H5OpaqueInfo)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo__ctor_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5OpaqueInfo.#ctor(PureHDF.H5OpaqueInfo)
+  name.vb: New(H5OpaqueInfo)
+  fullName: PureHDF.H5OpaqueInfo.H5OpaqueInfo(PureHDF.H5OpaqueInfo)
+  fullName.vb: PureHDF.H5OpaqueInfo.New(PureHDF.H5OpaqueInfo)
+  nameWithType: H5OpaqueInfo.H5OpaqueInfo(H5OpaqueInfo)
+  nameWithType.vb: H5OpaqueInfo.New(H5OpaqueInfo)
+- uid: PureHDF.H5OpaqueInfo.#ctor(System.UInt32,System.String)
+  name: H5OpaqueInfo(uint, string)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo__ctor_System_UInt32_System_String_
+  commentId: M:PureHDF.H5OpaqueInfo.#ctor(System.UInt32,System.String)
+  name.vb: New(UInteger, String)
+  fullName: PureHDF.H5OpaqueInfo.H5OpaqueInfo(uint, string)
+  fullName.vb: PureHDF.H5OpaqueInfo.New(UInteger, String)
+  nameWithType: H5OpaqueInfo.H5OpaqueInfo(uint, string)
+  nameWithType.vb: H5OpaqueInfo.New(UInteger, String)
+- uid: PureHDF.H5OpaqueInfo.#ctor*
+  name: H5OpaqueInfo
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo__ctor_
+  commentId: Overload:PureHDF.H5OpaqueInfo.#ctor
+  name.vb: New
+  fullName: PureHDF.H5OpaqueInfo.H5OpaqueInfo
+  fullName.vb: PureHDF.H5OpaqueInfo.New
+  nameWithType: H5OpaqueInfo.H5OpaqueInfo
+  nameWithType.vb: H5OpaqueInfo.New
+- uid: PureHDF.H5OpaqueInfo.Deconstruct(System.UInt32@,System.String@)
+  name: Deconstruct(out uint, out string)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Deconstruct_System_UInt32__System_String__
+  commentId: M:PureHDF.H5OpaqueInfo.Deconstruct(System.UInt32@,System.String@)
+  name.vb: Deconstruct(UInteger, String)
+  fullName: PureHDF.H5OpaqueInfo.Deconstruct(out uint, out string)
+  fullName.vb: PureHDF.H5OpaqueInfo.Deconstruct(UInteger, String)
+  nameWithType: H5OpaqueInfo.Deconstruct(out uint, out string)
+  nameWithType.vb: H5OpaqueInfo.Deconstruct(UInteger, String)
+- uid: PureHDF.H5OpaqueInfo.Deconstruct*
+  name: Deconstruct
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Deconstruct_
+  commentId: Overload:PureHDF.H5OpaqueInfo.Deconstruct
+  fullName: PureHDF.H5OpaqueInfo.Deconstruct
+  nameWithType: H5OpaqueInfo.Deconstruct
+- uid: PureHDF.H5OpaqueInfo.EqualityContract
+  name: EqualityContract
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_EqualityContract
+  commentId: P:PureHDF.H5OpaqueInfo.EqualityContract
+  fullName: PureHDF.H5OpaqueInfo.EqualityContract
+  nameWithType: H5OpaqueInfo.EqualityContract
+- uid: PureHDF.H5OpaqueInfo.EqualityContract*
+  name: EqualityContract
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_EqualityContract_
+  commentId: Overload:PureHDF.H5OpaqueInfo.EqualityContract
+  fullName: PureHDF.H5OpaqueInfo.EqualityContract
+  nameWithType: H5OpaqueInfo.EqualityContract
+- uid: PureHDF.H5OpaqueInfo.Equals(PureHDF.H5OpaqueInfo)
+  name: Equals(H5OpaqueInfo?)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Equals_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5OpaqueInfo.Equals(PureHDF.H5OpaqueInfo)
+  name.vb: Equals(H5OpaqueInfo)
+  fullName: PureHDF.H5OpaqueInfo.Equals(PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5OpaqueInfo.Equals(PureHDF.H5OpaqueInfo)
+  nameWithType: H5OpaqueInfo.Equals(H5OpaqueInfo?)
+  nameWithType.vb: H5OpaqueInfo.Equals(H5OpaqueInfo)
+- uid: PureHDF.H5OpaqueInfo.Equals(System.Object)
+  name: Equals(object?)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Equals_System_Object_
+  commentId: M:PureHDF.H5OpaqueInfo.Equals(System.Object)
+  name.vb: Equals(Object)
+  fullName: PureHDF.H5OpaqueInfo.Equals(object?)
+  fullName.vb: PureHDF.H5OpaqueInfo.Equals(Object)
+  nameWithType: H5OpaqueInfo.Equals(object?)
+  nameWithType.vb: H5OpaqueInfo.Equals(Object)
+- uid: PureHDF.H5OpaqueInfo.Equals*
+  name: Equals
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Equals_
+  commentId: Overload:PureHDF.H5OpaqueInfo.Equals
+  fullName: PureHDF.H5OpaqueInfo.Equals
+  nameWithType: H5OpaqueInfo.Equals
+- uid: PureHDF.H5OpaqueInfo.GetHashCode
+  name: GetHashCode()
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_GetHashCode
+  commentId: M:PureHDF.H5OpaqueInfo.GetHashCode
+  fullName: PureHDF.H5OpaqueInfo.GetHashCode()
+  nameWithType: H5OpaqueInfo.GetHashCode()
+- uid: PureHDF.H5OpaqueInfo.GetHashCode*
+  name: GetHashCode
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_GetHashCode_
+  commentId: Overload:PureHDF.H5OpaqueInfo.GetHashCode
+  fullName: PureHDF.H5OpaqueInfo.GetHashCode
+  nameWithType: H5OpaqueInfo.GetHashCode
+- uid: PureHDF.H5OpaqueInfo.PrintMembers(System.Text.StringBuilder)
+  name: PrintMembers(StringBuilder)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_PrintMembers_System_Text_StringBuilder_
+  commentId: M:PureHDF.H5OpaqueInfo.PrintMembers(System.Text.StringBuilder)
+  fullName: PureHDF.H5OpaqueInfo.PrintMembers(System.Text.StringBuilder)
+  nameWithType: H5OpaqueInfo.PrintMembers(StringBuilder)
+- uid: PureHDF.H5OpaqueInfo.PrintMembers*
+  name: PrintMembers
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_PrintMembers_
+  commentId: Overload:PureHDF.H5OpaqueInfo.PrintMembers
+  fullName: PureHDF.H5OpaqueInfo.PrintMembers
+  nameWithType: H5OpaqueInfo.PrintMembers
+- uid: PureHDF.H5OpaqueInfo.Tag
+  name: Tag
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Tag
+  commentId: P:PureHDF.H5OpaqueInfo.Tag
+  fullName: PureHDF.H5OpaqueInfo.Tag
+  nameWithType: H5OpaqueInfo.Tag
+- uid: PureHDF.H5OpaqueInfo.Tag*
+  name: Tag
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_Tag_
+  commentId: Overload:PureHDF.H5OpaqueInfo.Tag
+  fullName: PureHDF.H5OpaqueInfo.Tag
+  nameWithType: H5OpaqueInfo.Tag
+- uid: PureHDF.H5OpaqueInfo.ToString
+  name: ToString()
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_ToString
+  commentId: M:PureHDF.H5OpaqueInfo.ToString
+  fullName: PureHDF.H5OpaqueInfo.ToString()
+  nameWithType: H5OpaqueInfo.ToString()
+- uid: PureHDF.H5OpaqueInfo.ToString*
+  name: ToString
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_ToString_
+  commentId: Overload:PureHDF.H5OpaqueInfo.ToString
+  fullName: PureHDF.H5OpaqueInfo.ToString
+  nameWithType: H5OpaqueInfo.ToString
+- uid: PureHDF.H5OpaqueInfo.TypeSize
+  name: TypeSize
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_TypeSize
+  commentId: P:PureHDF.H5OpaqueInfo.TypeSize
+  fullName: PureHDF.H5OpaqueInfo.TypeSize
+  nameWithType: H5OpaqueInfo.TypeSize
+- uid: PureHDF.H5OpaqueInfo.TypeSize*
+  name: TypeSize
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_TypeSize_
+  commentId: Overload:PureHDF.H5OpaqueInfo.TypeSize
+  fullName: PureHDF.H5OpaqueInfo.TypeSize
+  nameWithType: H5OpaqueInfo.TypeSize
+- uid: PureHDF.H5OpaqueInfo.op_Equality(PureHDF.H5OpaqueInfo,PureHDF.H5OpaqueInfo)
+  name: operator ==(H5OpaqueInfo?, H5OpaqueInfo?)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_op_Equality_PureHDF_H5OpaqueInfo_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5OpaqueInfo.op_Equality(PureHDF.H5OpaqueInfo,PureHDF.H5OpaqueInfo)
+  name.vb: =(H5OpaqueInfo, H5OpaqueInfo)
+  fullName: PureHDF.H5OpaqueInfo.operator ==(PureHDF.H5OpaqueInfo?, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5OpaqueInfo.=(PureHDF.H5OpaqueInfo, PureHDF.H5OpaqueInfo)
+  nameWithType: H5OpaqueInfo.operator ==(H5OpaqueInfo?, H5OpaqueInfo?)
+  nameWithType.vb: H5OpaqueInfo.=(H5OpaqueInfo, H5OpaqueInfo)
+- uid: PureHDF.H5OpaqueInfo.op_Equality*
+  name: operator ==
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_op_Equality_
+  commentId: Overload:PureHDF.H5OpaqueInfo.op_Equality
+  name.vb: =
+  fullName: PureHDF.H5OpaqueInfo.operator ==
+  fullName.vb: PureHDF.H5OpaqueInfo.=
+  nameWithType: H5OpaqueInfo.operator ==
+  nameWithType.vb: H5OpaqueInfo.=
+- uid: PureHDF.H5OpaqueInfo.op_Inequality(PureHDF.H5OpaqueInfo,PureHDF.H5OpaqueInfo)
+  name: operator !=(H5OpaqueInfo?, H5OpaqueInfo?)
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_op_Inequality_PureHDF_H5OpaqueInfo_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5OpaqueInfo.op_Inequality(PureHDF.H5OpaqueInfo,PureHDF.H5OpaqueInfo)
+  name.vb: <>(H5OpaqueInfo, H5OpaqueInfo)
+  fullName: PureHDF.H5OpaqueInfo.operator !=(PureHDF.H5OpaqueInfo?, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5OpaqueInfo.<>(PureHDF.H5OpaqueInfo, PureHDF.H5OpaqueInfo)
+  nameWithType: H5OpaqueInfo.operator !=(H5OpaqueInfo?, H5OpaqueInfo?)
+  nameWithType.vb: H5OpaqueInfo.<>(H5OpaqueInfo, H5OpaqueInfo)
+- uid: PureHDF.H5OpaqueInfo.op_Inequality*
+  name: operator !=
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo_op_Inequality_
+  commentId: Overload:PureHDF.H5OpaqueInfo.op_Inequality
+  name.vb: <>
+  fullName: PureHDF.H5OpaqueInfo.operator !=
+  fullName.vb: PureHDF.H5OpaqueInfo.<>
+  nameWithType: H5OpaqueInfo.operator !=
+  nameWithType.vb: H5OpaqueInfo.<>
+- uid: PureHDF.H5OpaqueInfo.{Clone}$
+  name: <Clone>$()
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo__Clone__
+  commentId: M:PureHDF.H5OpaqueInfo.{Clone}$
+  fullName: PureHDF.H5OpaqueInfo.<Clone>$()
+  nameWithType: H5OpaqueInfo.<Clone>$()
+- uid: PureHDF.H5OpaqueInfo.{Clone}$*
+  name: <Clone>$
+  href: api/PureHDF.H5OpaqueInfo.html#PureHDF_H5OpaqueInfo__Clone___
+  commentId: Overload:PureHDF.H5OpaqueInfo.{Clone}$
+  fullName: PureHDF.H5OpaqueInfo.<Clone>$
+  nameWithType: H5OpaqueInfo.<Clone>$
 - uid: PureHDF.H5ReadOptions
   name: H5ReadOptions
   href: api/PureHDF.H5ReadOptions.html
