@@ -227,21 +227,6 @@ public partial class AttributeTests
     [InlineData(true)]
     public void CanWrite_Opaque(bool asMemory)
     {
-        
-        var data2 = File.ReadAllBytes("/home/vincent/Downloads/img.jpg");
-
-        var opaqueInfo2 = new H5OpaqueInfo(
-            TypeSize: (uint)data2.Length,
-            Tag: "My tag"
-        );
-
-        var file2 = new H5File
-        {
-            ["opaque"] = new H5Dataset(data2, opaqueInfo: opaqueInfo2)
-        };
-
-        file2.Write("/home/vincent/Downloads/testimg.h5");
-
         // Arrange
         var file = new H5File();
 
