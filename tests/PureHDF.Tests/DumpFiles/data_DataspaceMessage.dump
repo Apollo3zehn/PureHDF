@@ -15,9 +15,9 @@ GROUP "/" {
             "Simple"           1;
             "Null"             2;
          } "Type";
-         H5T_VLEN { H5T_STD_U64LE} "Dimensions";
-         H5T_VLEN { H5T_STD_U64LE} "MaxDimensions";
-         H5T_VLEN { H5T_STD_U64LE} "PermutationIndices";
+         H5T_VLEN { H5T_STD_U64LE } "Dimensions";
+         H5T_VLEN { H5T_STD_U64LE } "MaxDimensions";
+         H5T_VLEN { H5T_STD_U64LE } "PermutationIndices";
          H5T_STD_U8LE "Version";
       }
       DATASPACE  SCALAR
@@ -35,3 +35,10 @@ GROUP "/" {
    }
 }
 }
+HDF5-DIAG: Error detected in HDF5 (1.14.4-2) thread 0:
+  #000: /home/runner/work/hdf5/hdf5/hdf5-1.14.4-2/src/H5Tenum.c line 306 in H5Tenum_nameof(): nameof query failed
+    major: Datatype
+    minor: Unable to initialize object
+  #001: /home/runner/work/hdf5/hdf5/hdf5-1.14.4-2/src/H5Tenum.c line 378 in H5T__enum_nameof(): value is currently not defined
+    major: Datatype
+    minor: Object not found

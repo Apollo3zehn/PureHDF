@@ -1,3 +1,9 @@
+## v1.0.0-beta.14 - 2024-04-25
+
+### Bugs fixed
+- #78 - Large opaque datasets produce overflow
+- #79 - Opaque datasets do not properly save when combined with attributes
+
 ## v1.0.0-beta.13 - 2024-04-25
 
 ### Features

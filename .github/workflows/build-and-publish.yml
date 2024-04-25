@@ -44,7 +44,7 @@ jobs:
 
       - name: Download HDF5 installer
         if: steps.cache-primes.outputs.cache-hit != 'true'
-        run: wget -q https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.14/hdf5-1.14.1/bin/unix/hdf5-1.14.1-2-Std-ubuntu2204_64.tar.gz
+        run: wget -q https://github.com/HDFGroup/hdf5/releases/download/hdf5_1.14.4.2/hdf5-1.14.4-2-ubuntu-2204_gcc.tar.gz
 
       - name: Install
         run: |

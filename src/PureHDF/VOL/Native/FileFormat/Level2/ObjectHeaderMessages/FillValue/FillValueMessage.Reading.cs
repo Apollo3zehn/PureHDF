@@ -73,10 +73,10 @@ internal partial record class FillValueMessage(
             case 3:
 
                 var flags = driver.ReadByte();
-                allocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);   // take only bits 0 and 1
-                fillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);          // take only bits 2 and 3
-                var isUndefined = (flags & (1 << 4)) > 0;                           // take only bit 4
-                var isDefined3 = (flags & (1 << 5)) > 0;                            // take only bit 5
+                allocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);    // take only bits 0 and 1
+                fillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);           // take only bits 2 and 3
+                var isUndefined = (flags & (1 << 4)) > 0;                       // take only bit 4
+                var isDefined3 = (flags & (1 << 5)) > 0;                        // take only bit 5
 
                 // undefined
                 if (isUndefined)
