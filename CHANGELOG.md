@@ -1,3 +1,8 @@
+## v1.0.0-beta.13 - 2024-04-25
+
+### Features
+- #76 - Write Opaque Datatype
+
 ## v1.0.0-beta.12 - 2024-04-12
 
 ### Bugs fixed

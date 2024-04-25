@@ -295,7 +295,7 @@ public partial class DatasetTests
             Tag: "My tag"
         );
 
-        file[$"opaque"] = new H5Dataset(actualData, opaqueInfo: opaqueInfo);
+        file["opaque"] = new H5Dataset(actualData, opaqueInfo: opaqueInfo);
 
         var filePath = Path.GetTempFileName();
 
