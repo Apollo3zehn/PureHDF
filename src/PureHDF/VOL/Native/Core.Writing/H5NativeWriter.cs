@@ -241,13 +241,12 @@ partial class H5NativeWriter
             typeSize: datatype.Size,
             isFiltered: filterPipeline is not null,
             /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
-            isDeferred: data is null,
-            dataDimensions: dataspace.Dimensions,
+            isDeferred: dataspace.Type == DataspaceType.Null ? false : data is null,
+            dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
             chunkDimensions: chunkDimensions);
 
         // fill value
         /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
-        var fillValue = new byte[datatype.Size];
         var fillValueMessage = new FillValueMessage(
             AllocationTime: SpaceAllocationTime.Early,
             FillTime: FillValueWriteTime.Never,

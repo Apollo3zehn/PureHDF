@@ -7,15 +7,18 @@ internal partial record class DataLayoutMessage4
         uint typeSize,
         bool isFiltered,
         bool isDeferred,
-        ulong[] dataDimensions,
+        ulong[]? dataDimensions,
         uint[]? chunkDimensions)
     {
         var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
         var dataLayout = default(DataLayoutMessage4);
 
-        if (chunkDimensions is not null)
+        var dataBlockSize = dataDimensions is null
+            ? 0
+            : dataDimensions.Aggregate(1UL, (product, dimension) => product * dimension);
+
+        if (dataDimensions is not null && chunkDimensions is not null)
         {
-            var dataBlockSize = chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension);
             var chunkCount = 1UL;
 
             for (int dimension = 0; dimension < chunkDimensions.Length; dimension++)
@@ -96,7 +99,6 @@ internal partial record class DataLayoutMessage4
 
         else
         {
-            var dataBlockSize = dataDimensions.Aggregate(1UL, (product, dimension) => product * dimension);
             var dataEncodeSize = (long)(dataBlockSize * typeSize);
 
             // TODO: The ushort.MaxValue limit is not stated in the specification but

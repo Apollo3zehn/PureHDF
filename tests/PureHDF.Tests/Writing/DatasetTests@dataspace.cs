@@ -4,8 +4,10 @@ namespace PureHDF.Tests.Writing;
 
 public partial class DatasetTests
 {
-    [Fact(Skip = "Reenable when https://forum.hdfgroup.org/t/getting-error-invalid-dataset-size-likely-file-corruption/12246 is solved")]
-    public void CanWrite_Space_Null()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanWrite_Space_Null(bool preferCompact)
     {
         // Arrange
         var file = new H5File();
@@ -13,9 +15,10 @@ public partial class DatasetTests
         file["Null"] = new H5NullDataset<int[]>();
 
         var filePath = Path.GetTempFileName();
+        var options = new H5WriteOptions(PreferCompactDatasetLayout: preferCompact);
 
         // Act
-        file.Write(filePath);
+        file.Write(filePath, options);
 
         // Assert
         try

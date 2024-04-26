@@ -6,6 +6,9 @@ internal class FreeSpaceManager
 
     public long Allocate(long length)
     {
+        if (length == 0)
+            return Superblock.LongUndefinedAddress;
+
         var address = _length;
 
         _length += length;
