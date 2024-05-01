@@ -107,7 +107,8 @@ internal partial record class DatatypeMessage : Message
 
         var cache = context.TypeToMessageMap;
 
-        if (cache.TryGetValue(type, out var cachedMessage))
+        // Cannot use cache at all for H5OpaqueInfo as the size can be different for each instance of the type
+        if (type != typeof(H5OpaqueInfo) && cache.TryGetValue(type, out var cachedMessage))
             return cachedMessage;
 
         var endianness = BitConverter.IsLittleEndian
@@ -521,7 +522,7 @@ internal partial record class DatatypeMessage : Message
                 (globalHeapId, var memory) = context.GlobalHeapManager
                     .AddObject(totalLength);
 
-                /* Cannot use context.ShortlivedStream here because baseEncode could recursively call 
+                /* Cannot use context.ShortlivedStream here because baseEncode could recursively call
                  * this method and then the ShortlivedStream would be reset too early.
                  */
                 var localTarget = new SystemMemoryStream(memory);
