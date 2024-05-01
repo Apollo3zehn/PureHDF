@@ -321,6 +321,50 @@ public partial class DatasetTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void CanWrite_OpaqueWithDifferentSizes(bool asMemory)
+    {
+        // Arrange
+
+        var data = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09,0x10 };
+        var dataTwo = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+        var actualData = asMemory
+            ? data.AsMemory()
+            : data;
+
+        var actualDataTwo = asMemory
+            ? data.AsMemory()
+            : data;
+
+        var opaqueInfo = new H5OpaqueInfo(
+            TypeSize: (uint)data.Length,
+            Tag: "My tag"
+        );
+        var opaqueInfoTwo = new H5OpaqueInfo(
+            TypeSize: (uint)dataTwo.Length,
+            Tag: "My tag"
+        );
+
+
+        var file = new H5File();
+        file["opaque"] = new H5Dataset(actualData, opaqueInfo: opaqueInfo);
+        file["opaqueTwo"] = new H5Dataset(actualDataTwo, opaqueInfo: opaqueInfoTwo);
+
+        // Other order
+        var fileTwo = new H5File();
+        file["opaqueTwo"] = new H5Dataset(actualData, opaqueInfo: opaqueInfo);
+        file["opaque"] = new H5Dataset(actualDataTwo, opaqueInfo: opaqueInfoTwo);
+
+        var memStream = new MemoryStream();
+
+        // Act & Assert (Assert in this case is no exception is thrown)
+        file.Write(memStream);
+        fileTwo.Write(memStream);
+    }
+
 #if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()
