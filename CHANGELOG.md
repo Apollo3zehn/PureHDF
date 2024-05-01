@@ -1,3 +1,9 @@
+## v1.0.0-beta.15 - 2024-05-01
+
+### Bugs fixed
+- #83 - fix: Fixes exception on write with multiple opaque datasets of different sizes, thanks @Blackclaws
+- #81 - Do not allocate file space for null dataspace
+
 ## v1.0.0-beta.14 - 2024-04-25
 
 ### Bugs fixed

@@ -321,6 +321,77 @@ public partial class DatasetTests
         }
     }
 
+    [Fact]
+    public void CanWrite_OpaqueWithDifferentSizes()
+    {
+        // Arrange
+        var data1 = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10 };
+        var data2 = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+        var opaqueInfo1 = new H5OpaqueInfo(
+            TypeSize: (uint)data1.Length,
+            Tag: "My tag"
+        );
+
+        var opaqueInfo2 = new H5OpaqueInfo(
+            TypeSize: (uint)data2.Length,
+            Tag: "My tag"
+        );
+
+        var file1 = new H5File();
+        file1["opaque1"] = new H5Dataset(data1, opaqueInfo: opaqueInfo1);
+        file1["opaque2"] = new H5Dataset(data2, opaqueInfo: opaqueInfo2);
+
+        var filePath1 = Path.GetTempFileName();
+
+        /* Other order */
+        var file2 = new H5File();
+        file2["opaque1"] = new H5Dataset(data2, opaqueInfo: opaqueInfo2);
+        file2["opaque2"] = new H5Dataset(data1, opaqueInfo: opaqueInfo1);
+
+        var filePath2 = Path.GetTempFileName();
+
+        // Act
+        file1.Write(filePath1);
+        file2.Write(filePath2);
+
+        // Assert 1
+        try
+        {
+            var actual1 = TestUtils.DumpH5File(filePath1);
+
+            var expected1 = File
+                .ReadAllText($"DumpFiles/data_opaque_multiple_1.dump")
+                .Replace("<file-path>", filePath1)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected1, actual1);
+        }
+        finally
+        {
+            if (File.Exists(filePath1))
+                File.Delete(filePath1);
+        }
+
+        // Assert 2
+        try
+        {
+            var actual2 = TestUtils.DumpH5File(filePath2);
+
+            var expected2 = File
+                .ReadAllText($"DumpFiles/data_opaque_multiple_2.dump")
+                .Replace("<file-path>", filePath2)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected2, actual2);
+        }
+        finally
+        {
+            if (File.Exists(filePath2))
+                File.Delete(filePath2);
+        }
+    }
+
 #if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()
