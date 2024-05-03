@@ -1,3 +1,8 @@
+## v1.0.0-beta.16 - 2024-05-03
+
+### Bugs fixed
+- #84 - Over size in DataLayoutMessage4.Create
+
 ## v1.0.0-beta.15 - 2024-05-01
 
 ### Bugs fixed
