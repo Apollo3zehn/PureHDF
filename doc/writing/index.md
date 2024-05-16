@@ -98,7 +98,7 @@ writer.Write(dataset, data, fileSelection: fileSelection);
 
 ## Opaque data
 
-Crate an instance of the `H5OpaqueInfo` type and pass it to the `H5Dataset` constructor to treat byte arrays as opaque data:
+Create an instance of the `H5OpaqueInfo` type and pass it to the `H5Dataset` constructor to treat byte arrays as opaque data:
 
 ```cs
 var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };

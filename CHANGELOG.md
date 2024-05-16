@@ -1,3 +1,8 @@
+## v1.0.0-beta.17 - 2024-05-16
+
+### Bugs fixed
+- #86 - Stackoverflow exception when writing data set (only .NET Framework)
+
 ## v1.0.0-beta.16 - 2024-05-03
 
 ### Bugs fixed
