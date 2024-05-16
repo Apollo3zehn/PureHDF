@@ -21,7 +21,7 @@ internal static partial class StreamExtensions
 
     public static void Write(this Stream stream, Span<byte> buffer)
     {
-        stream.Write(buffer.ToArray());
+        stream.Write(buffer.ToArray(), 0, buffer.Length);
     }
 }
 
