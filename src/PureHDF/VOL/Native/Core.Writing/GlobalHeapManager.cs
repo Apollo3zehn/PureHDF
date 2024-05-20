@@ -154,7 +154,7 @@ internal class GlobalHeapManager
             driver.Write(memory.Span[..consumed]);
 
             // Global Heap Object 0
-            if (remainingSpace > OBJECT_HEADER_SIZE)
+            if (remainingSpace >= OBJECT_HEADER_SIZE)
             {
                 /* The field Object Size for Object 0 indicates the amount of possible free space 
                    in the collection INCLUDING the 16-byte header size of Object 0.  */
