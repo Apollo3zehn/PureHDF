@@ -1,3 +1,8 @@
+## v1.0.0-beta.18 - 2024-05-20
+
+### Bugs fixed
+- #88 - Unable to open file written with PureHDF
+
 ## v1.0.0-beta.17 - 2024-05-16
 
 ### Bugs fixed
