@@ -1,6 +1,6 @@
 HDF5 "<file-path>" {
 GROUP "/" {
-   DATASET "Null" {
+   <type> "Null" {
       DATATYPE  H5T_STD_I32LE
       DATASPACE  NULL
       DATA {

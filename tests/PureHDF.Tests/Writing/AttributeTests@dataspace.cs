@@ -2,23 +2,20 @@
 
 namespace PureHDF.Tests.Writing;
 
-public partial class DatasetTests
+public partial class AttributeTests
 {
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void CanWrite_Space_Null(bool preferCompact)
+    [Fact]
+    public void CanWrite_Space_Null()
     {
         // Arrange
         var file = new H5File();
 
-        file["Null"] = new H5Dataset<int[]>();
+        file.Attributes["Null"] = new H5Attribute<int[]>();
 
         var filePath = Path.GetTempFileName();
-        var options = new H5WriteOptions(PreferCompactDatasetLayout: preferCompact);
 
         // Act
-        file.Write(filePath, options);
+        file.Write(filePath);
 
         // Assert
         try
@@ -28,7 +25,7 @@ public partial class DatasetTests
             var expected = File
                 .ReadAllText($"DumpFiles/space_null.dump")
                 .Replace("<file-path>", filePath)
-                .Replace("<type>", "DATASET");
+                .Replace("<type>", "ATTRIBUTE");
 
             Assert.Equal(expected, actual);
         }
@@ -45,9 +42,9 @@ public partial class DatasetTests
         // Arrange
         var file = new H5File();
         var data = new int[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        var fileDims = new ulong[] { 3, 3 };
+        var dimensions = new ulong[] { 3, 3 };
 
-        file["2D"] = new H5Dataset(data, fileDims: fileDims);
+        file.Attributes["2D"] = new H5Attribute(data, dimensions);
 
         var filePath = Path.GetTempFileName();
 
@@ -62,7 +59,7 @@ public partial class DatasetTests
             var expected = File
                 .ReadAllText($"DumpFiles/space_2D.dump")
                 .Replace("<file-path>", filePath)
-                .Replace("<type>", "DATASET");
+                .Replace("<type>", "ATTRIBUTE");
 
             Assert.Equal(expected, actual);
         }

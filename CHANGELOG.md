@@ -1,3 +1,11 @@
+## v1.0.0-beta.19 - 2024-05-27
+
+### Features
+- Added write support for nullable values types (read support comes with the next version)
+
+### Bugs fixed
+- #89 - Nullable Property in compound type leads to exception
+
 ## v1.0.0-beta.18 - 2024-05-20
 
 ### Bugs fixed

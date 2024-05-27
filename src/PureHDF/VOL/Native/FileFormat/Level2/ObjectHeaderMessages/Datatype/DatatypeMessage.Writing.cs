@@ -42,8 +42,12 @@ internal partial record class DatatypeMessage : Message
                 : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength: default);
 
         else
-            return DataUtils.IsReferenceOrContainsReferences(typeof(T))
+            return
+                DataUtils.IsReferenceOrContainsReferences(typeof(T)) || 
+                Nullable.GetUnderlyingType(typeof(T)) is not null
+
                 ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo)
+
                 : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
                     // TODO cache
                     .MakeGenericMethod(typeof(T))
@@ -190,6 +194,10 @@ internal partial record class DatatypeMessage : Message
             /* 64 bit floating-point */
             Type when type == typeof(double)
                 => GetTypeInfoFor64BitFloatingPoint(type, endianness),
+
+            /* Nullable<ValueType> */
+            Type when Nullable.GetUnderlyingType(type) is not null
+                => GetTypeInfoForNullableValueType(context, type, Nullable.GetUnderlyingType(type)!),
 
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType
@@ -378,7 +386,7 @@ internal partial record class DatatypeMessage : Message
 
         /* H5Odtype.c (H5O_dtype_decode_helper: case H5T_COMPOUND) */
         if (bitfield.MemberCount == 0)
-            throw new Exception("The compound data type needs at least one member");
+            throw new Exception("The compound data type needs at least one member.");
 
         // propertyDescriptions
         var properties = new CompoundPropertyDescription[bitfield.MemberCount];
@@ -471,6 +479,73 @@ internal partial record class DatatypeMessage : Message
             Version = DATATYPE_MESSAGE_VERSION,
             Class = DatatypeMessageClass.Compound
         };
+
+        return (message, encode);
+    }
+
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForNullableValueType(
+        NativeWriteContext context,
+        Type type,
+        Type baseType)
+    {
+        var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, baseType);
+
+        var message = new DatatypeMessage(
+
+            VLEN_REFERENCE_SIZE,
+
+            new VariableLengthBitFieldDescription(
+                Type: InternalVariableLengthType.Sequence,
+                PaddingType: default,
+                Encoding: default
+            ),
+
+            new VariableLengthPropertyDescription[] {
+                new (
+                    BaseType: baseMessage
+                )
+            }
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.VariableLength
+        };
+
+        void encode(object source, IH5WriteStream target)
+        {
+            var globalHeapId = default(WritingGlobalHeapId);
+            Span<int> lengthArray = stackalloc int[] { 1 };
+
+            if (source is not null)
+            {
+                var itemCount = 1;
+
+                var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
+                    .BaseType
+                    .Size;
+
+                var totalLength = (int)typeSize * itemCount;
+
+                (globalHeapId, var memory) = context.GlobalHeapManager
+                    .AddObject(totalLength);
+
+                /* Cannot use context.ShortlivedStream here because baseEncode could recursively call
+                * this method and then the ShortlivedStream would be reset too early.
+                */
+                var localTarget = new SystemMemoryStream(memory);
+
+                // encode item
+                baseEncode(source, localTarget);
+            }
+
+            // encode variable length object
+            target.WriteDataset(MemoryMarshal.AsBytes(lengthArray));
+
+            Span<WritingGlobalHeapId> gheapIdArray
+                = stackalloc WritingGlobalHeapId[] { globalHeapId };
+
+            target.WriteDataset(MemoryMarshal.AsBytes(gheapIdArray));
+        }
 
         return (message, encode);
     }

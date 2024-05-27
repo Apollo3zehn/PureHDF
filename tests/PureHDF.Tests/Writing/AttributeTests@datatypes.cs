@@ -176,6 +176,82 @@ public partial class AttributeTests
         }
     }
 
+    [Theory]
+    [InlineData([1])]
+    [InlineData([null])]
+    public void CanWrite_NullableValueType_Scalar(int? data)
+    {
+        // Arrange
+        var file = new H5File();
+
+        file.Attributes["Nullable`1"] = new H5Attribute<int?>(data);
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+            var suffix = data is null ? "null" : "value";
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_Nullable`1_Int32_{suffix}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "ATTRIBUTE");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public void CanWrite_NullableValueType_Array()
+    {
+        // Arrange
+        var file = new H5File();
+
+        var data = new int?[]
+        {
+            1,
+            null,
+            -1
+        };
+
+        var type = data.GetType();
+
+        file.Attributes[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_Nullable`1_Int32[].dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "ATTRIBUTE");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     [Fact]
     public void CanWrite_Anonymous()
     {
@@ -520,40 +596,6 @@ public partial class AttributeTests
         }
     }
 #endif
-
-    [Fact]
-    public void CanWrite_Space_2D()
-    {
-        // Arrange
-        var file = new H5File();
-        var data = new int[9] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
-        var dimensions = new ulong[] { 3, 3 };
-
-        file.Attributes["2D"] = new H5Attribute(data, dimensions);
-
-        var filePath = Path.GetTempFileName();
-
-        // Act
-        file.Write(filePath);
-
-        // Assert
-        try
-        {
-            var actual = TestUtils.DumpH5File(filePath);
-
-            var expected = File
-                .ReadAllText($"DumpFiles/space_2D.dump")
-                .Replace("<file-path>", filePath)
-                .Replace("<type>", "ATTRIBUTE");
-
-            Assert.Equal(expected, actual);
-        }
-        finally
-        {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
-    }
 
     [Fact]
     public void ThrowsForInvalidNumberOfCompoundMembers()

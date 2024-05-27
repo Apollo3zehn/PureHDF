@@ -33,7 +33,8 @@ public class H5Dataset : H5AttributableObject
             fileSelection,
             fileDims,
             datasetCreation,
-            opaqueInfo)
+            opaqueInfo,
+            isNullDataspace: false)
     {
         //
     }
@@ -46,7 +47,8 @@ public class H5Dataset : H5AttributableObject
         Selection? fileSelection,
         ulong[]? fileDims,
         H5DatasetCreation datasetCreation,
-        H5OpaqueInfo? opaqueInfo)
+        H5OpaqueInfo? opaqueInfo,
+        bool isNullDataspace)
     {
         Type = type;
         Data = data;
@@ -56,9 +58,10 @@ public class H5Dataset : H5AttributableObject
         FileDims = fileDims;
         DatasetCreation = datasetCreation;
         OpaqueInfo = opaqueInfo;
+        IsNullDataspace = isNullDataspace;
     }
 
-    internal Type Type { get; init; }
+    internal Type Type { get; }
 
     internal object? Data { get; }
 
@@ -73,6 +76,8 @@ public class H5Dataset : H5AttributableObject
     internal H5DatasetCreation DatasetCreation { get; }
 
     internal H5OpaqueInfo? OpaqueInfo { get; }
+
+    internal bool IsNullDataspace { get; }
 }
 
 /// <summary>
@@ -95,40 +100,63 @@ public class H5Dataset<T> : H5Dataset
         H5OpaqueInfo? opaqueInfo = default)
         : base(
             typeof(T),
-            default,
+            data: default,
             chunks,
-            default,
-            default,
+            memorySelection: default,
+            fileSelection: default,
             fileDims,
             datasetCreation,
-            opaqueInfo)
+            opaqueInfo,
+            isNullDataspace: false)
     {
         //
     }
-}
 
-/// <summary>
-/// A null space dataset.
-/// </summary>
-/// <typeparam name="T">The type of the data.</typeparam>
-public class H5NullDataset<T> : H5Dataset
-{
     /// <summary>
-    /// Initializes a new instance of the <see cref="H5NullDataset{T}"/> class.
+    /// Initializes a new instance of the <see cref="H5Dataset"/> class. Use this constructor to preserve specific type information, e.g. for nullable value types like `int?`.
     /// </summary>
+    /// <param name="data">The dataset data.</param>
+    /// <param name="chunks">The dataset's chunk dimensions.</param>
+    /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
+    /// <param name="datasetCreation">The dataset creation properties.</param>
     /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
-    public H5NullDataset(
+    public H5Dataset(
+        T data,
+        uint[]? chunks = default,
+        ulong[]? fileDims = default,
+        H5DatasetCreation datasetCreation = default,
+        H5OpaqueInfo? opaqueInfo = default)
+        : base(
+            typeof(T),
+            data,
+            chunks,
+            memorySelection: default,
+            fileSelection: default,
+            fileDims,
+            datasetCreation,
+            opaqueInfo,
+            isNullDataspace: false)
+    {
+        //
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="H5Dataset"/> class with a null dataspace.
+    /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
+    /// </summary>
+    public H5Dataset(
         H5OpaqueInfo? opaqueInfo = default
     )
         : base(
             typeof(T),
-            data: null,
-            default,
-            default,
-            default,
-            fileDims: null,
-            default,
-            opaqueInfo)
+            data: default,
+            chunks: default,
+            memorySelection: default,
+            fileSelection: default,
+            fileDims: default,
+            datasetCreation: default,
+            opaqueInfo: opaqueInfo,
+            isNullDataspace: true)
     {
         //
     }

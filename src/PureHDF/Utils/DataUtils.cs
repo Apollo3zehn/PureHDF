@@ -17,8 +17,9 @@ internal static class DataUtils
 #else
         // TODO cache
         var generic = MethodInfoIsReferenceOrContainsReferences.MakeGenericMethod(type);
+        var isReferenceOrContainsReferences = (bool)generic.Invoke(null, null)!;
 
-        return (bool)generic.Invoke(null, null)!;
+        return isReferenceOrContainsReferences;
 #endif
     }
 
