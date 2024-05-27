@@ -1,0 +1,11 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   <type> "Nullable`1" {
+      DATATYPE  H5T_VLEN { H5T_STD_I32LE }
+      DATASPACE  SCALAR
+      DATA {
+      (0): ()
+      }
+   }
+}
+}

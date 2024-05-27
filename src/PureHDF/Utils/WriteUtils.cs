@@ -61,31 +61,37 @@ internal static class WriteUtils
             return (type, true);
     }
 
-    public static (Memory<TElement>, ulong[]?) ToMemory<T, TElement>(object? data)
+    public static (Memory<TElement?>, ulong[]?) ToMemory<T, TElement>(object? data)
     {
         var type = typeof(T);
 
         if (data is null)
-            return default;
+        {
+            if (Nullable.GetUnderlyingType(typeof(T)) is null)
+                return default;
+
+            else
+                return ElementToMemory((TElement?)data);
+        }
 
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
-            return ElementToMemory((TElement)data);
+            return ElementToMemory((TElement?)data);
 
         else if (DataUtils.IsArray(type))
             return ((Array)data).Rank == 1
-                ? Array1DToMemory((TElement[])data)
-                : ArrayNDToMemory<TElement>((Array)data);
+                ? Array1DToMemory((TElement?[])data)
+                : ArrayNDToMemory<TElement?>((Array)data);
 
         else if (DataUtils.IsMemory(type))
             return data.Equals(default(T))
                 ? default
-                : ((Memory<TElement>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
+                : ((Memory<TElement?>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
 
         else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
-            return EnumerableToMemory((IEnumerable<TElement>)data);
+            return EnumerableToMemory((IEnumerable<TElement?>)data);
 
         else
-            return ElementToMemory((TElement)data);
+            return ElementToMemory((TElement?)data);
     }
 
     // Convert element to memory
@@ -95,7 +101,7 @@ internal static class WriteUtils
 
         return (
             memory,
-            Array.Empty<ulong>()
+            []
         );
     }
 

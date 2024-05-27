@@ -16,10 +16,10 @@ internal partial record class AttributeMessage
         if (attribute is not H5Attribute h5attribute)
             h5attribute = new H5Attribute(attribute);
 
-        var (elementType, isScalar) = WriteUtils.GetElementType(h5attribute.Data.GetType());
+        var (elementType, isScalar) = WriteUtils.GetElementType(h5attribute.Type);
 
         // TODO cache this
-        var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(h5attribute.Data.GetType(), elementType);
+        var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(h5attribute.Type, elementType);
 
         return (AttributeMessage)method.Invoke(default, [context, name, h5attribute, isScalar])!;
     }
@@ -30,8 +30,14 @@ internal partial record class AttributeMessage
         H5Attribute attribute,
         bool isScalar)
     {
-        var (memoryData, memoryDims)
-            = WriteUtils.ToMemory<T, TElement>(attribute.Data ?? throw new Exception("This should never happen."));
+        var memoryData = default(Memory<TElement?>);
+        var memoryDims = default(ulong[]);
+
+        if (!attribute.IsNullDataspace)
+        {
+            (memoryData, memoryDims)
+                = WriteUtils.ToMemory<T, TElement>(attribute.Data);
+        }
 
         var type = memoryData.GetType();
 
@@ -43,30 +49,28 @@ internal partial record class AttributeMessage
             memoryDims = [(ulong)memoryData.Length / attribute.OpaqueInfo.TypeSize];
 
         /* dataspace */
-        var dataspace = attribute is H5Attribute h5Attribute
+        var fileDims = attribute.Dimensions ?? memoryDims;
 
-            ? DataspaceMessage.Create(
-                fileDims: h5Attribute.Dimensions ?? memoryDims
-                    ?? throw new Exception("This should never happen."))
-
-            : DataspaceMessage.Create(
-                fileDims: memoryDims
-                    ?? throw new Exception("This should never happen."));
+        var dataspace = DataspaceMessage.Create(
+            fileDims: fileDims);
 
         /* validation */
-        var fileTotalSize = dataspace.Dimensions
-            .Aggregate(1UL, (x, y) => x * y);
+        if (dataspace.Type != DataspaceType.Null)
+        {
+            var fileTotalSize = dataspace.Dimensions
+                .Aggregate(1UL, (x, y) => x * y);
 
-        var memoryTotalSize = (memoryDims ?? throw new Exception("This should never happen."))
-            .Aggregate(1UL, (x, y) => x * y);
+            var memoryTotalSize = (memoryDims ?? throw new Exception("This should never happen."))
+                .Aggregate(1UL, (x, y) => x * y);
 
-        if (memoryDims.Any() && fileTotalSize != memoryTotalSize)
-            throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
+            if (memoryDims.Any() && fileTotalSize != memoryTotalSize)
+                throw new Exception("The actual number of elements does not match the total number of elements given in the dimensions parameter.");
+        }
 
         // attribute
         // TODO avoid creation of system memory stream too often
         var dataEncodeSize = datatype.Size * dataspace.Dimensions
-            .Aggregate(1UL, (product, dimension) => product * dimension); ;
+            .Aggregate(1UL, (product, dimension) => product * dimension);
 
         var buffer = new byte[dataEncodeSize];
         var localWriter = new SystemMemoryStream(buffer);

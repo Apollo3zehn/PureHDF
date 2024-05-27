@@ -185,6 +185,82 @@ public partial class DatasetTests
         }
     }
 
+    [Theory]
+    [InlineData([1])]
+    [InlineData([null])]
+    public void CanWrite_NullableValueType_Scalar(int? data)
+    {
+        // Arrange
+        var file = new H5File();
+
+        file["Nullable`1"] = new H5Dataset<int?>(data);
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+            var suffix = data is null ? "null" : "value";
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_Nullable`1_Int32_{suffix}.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Fact]
+    public void CanWrite_NullableValueType_Array()
+    {
+        // Arrange
+        var file = new H5File();
+
+        var data = new int?[]
+        {
+            1,
+            null,
+            -1
+        };
+
+        var type = data.GetType();
+
+        file[type.Name] = data;
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_Nullable`1_Int32[].dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     [Fact]
     /* this test ensures that the global heap collection is also written to disk in deferred mode */
     public void CanWrite_VariableLength_Deferred()
