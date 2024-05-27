@@ -152,6 +152,7 @@ internal partial record class DatatypeMessage(
         return (memoryIsRef, fileIsRef) switch
         {
             (true, _) => GetDecodeInfoForReferenceMemory<TElement>(context),
+            (false, _) when IsNullableValueTypeAndCanDecode<TElement>() => ,
             (false, true) => throw new Exception("Unable to decode a reference type as value type."),
             (false, false) when memoryTypeSize == fileTypeSize => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
                 .MakeGenericMethod(typeof(TElement))
@@ -860,6 +861,39 @@ internal partial record class DatatypeMessage(
         }
 
         return decode;
+    }
+
+    private bool IsNullableValueTypeAndCanDecode<TElement>()
+    {
+        var underlyingType = Nullable.GetUnderlyingType(typeof(TElement));
+
+        if (underlyingType is null)
+            return false;
+
+        var underlyingTypeSize = Marshal.SizeOf(underlyingType);
+
+        if (Class == DatatypeMessageClass.VariableLength)
+        {
+            var variableLengthType = ((VariableLengthBitFieldDescription)BitField).Type;
+
+            if (variableLengthType != InternalVariableLengthType.Sequence)
+                return false;
+
+            var variableLengthBaseType = ((VariableLengthPropertyDescription)Properties[0])
+                .BaseType;
+
+            if (variableLengthBaseType.IsReferenceOrContainsReferences() || 
+                variableLengthBaseType.Size != underlyingTypeSize)
+                return false;           
+        }
+
+        // maybe more type classes should be supported in future
+        else
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private DecodeDelegate<T> GetDecodeInfoForReferenceMemory<T>(
