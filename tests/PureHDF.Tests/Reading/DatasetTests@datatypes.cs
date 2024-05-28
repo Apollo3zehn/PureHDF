@@ -457,6 +457,27 @@ public partial class DatasetTests
     }
 
     [Fact]
+    public void CanRead_Nullable_Value_Type()
+    {
+        TestUtils.RunForAllVersions(version =>
+        {
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(version, fileId
+                => TestUtils.AddVariableLengthSequence_NullableValueType(fileId, ContainerType.Dataset));
+
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var dataset = root.Group("sequence").Dataset("variable_nullable_value_type");
+            var actual = dataset.Read<int?[]>();
+
+            // Assert
+            var expected = new int?[] { 1, null };
+
+            Assert.Equal(expected, actual);
+        });
+    }
+
+    [Fact]
     public void CanRead_Shared_Message()
     {
         TestUtils.RunForAllVersions(version =>

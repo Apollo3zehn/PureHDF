@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -152,7 +153,7 @@ internal partial record class DatatypeMessage(
         return (memoryIsRef, fileIsRef) switch
         {
             (true, _) => GetDecodeInfoForReferenceMemory<TElement>(context),
-            (false, _) when IsNullableValueTypeAndCanDecode<TElement>() => ,
+            (false, _) when IsNullableValueTypeAndCanDecode<TElement>() => GetDecodeInfoForReferenceMemory<TElement>(context),
             (false, true) => throw new Exception("Unable to decode a reference type as value type."),
             (false, false) when memoryTypeSize == fileTypeSize => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
                 .MakeGenericMethod(typeof(TElement))
@@ -178,16 +179,21 @@ internal partial record class DatatypeMessage(
                     ? (typeof(string), GetDecodeInfoForVariableLengthString(context))
                     : throw new Exception($"Variable-length string data can only be decoded as string (incompatible type: {memoryType})."),
 
-            /* array / variable-length sequence */
+            /* array / nullable value type / variable-length sequence */
             DatatypeMessageClass.Array =>
                 memoryType is null || DataUtils.IsArray(memoryType)
                     ? GetDecodeInfoForArray(context, memoryType)
                     : throw new Exception($"Array data can only be decoded as array (incompatible type: {memoryType})."),
 
             DatatypeMessageClass.VariableLength when ((VariableLengthBitFieldDescription)BitField).Type == InternalVariableLengthType.Sequence =>
+
                 memoryType is null || DataUtils.IsArray(memoryType)
+
                     ? GetDecodeInfoForVariableLengthSequence(context, memoryType)
-                    : throw new Exception($"Variable-length sequence data can only be decoded as array (incompatible type: {memoryType})."),
+
+                    : Nullable.GetUnderlyingType(memoryType) is null
+                        ? throw new Exception($"Variable-length sequence data can only be decoded as array (incompatible type: {memoryType}).")
+                        : GetDecodeInfoForNullableValueType(context, memoryType),
 
             /* compound */
             DatatypeMessageClass.Compound =>
@@ -668,6 +674,85 @@ internal partial record class DatatypeMessage(
         }
 
         return decode;
+    }
+
+    private (Type, ElementDecodeDelegate) GetDecodeInfoForNullableValueType(
+        NativeReadContext context,
+        Type memoryType)
+    {
+        if (Properties[0] is not VariableLengthPropertyDescription property)
+            throw new Exception("Variable-length properties must not be null.");
+
+        var elementType = Nullable.GetUnderlyingType(memoryType);
+        (elementType, var elementDecode) = property.BaseType.GetDecodeInfoForScalar(context, elementType);
+
+        object? decode(IH5ReadStream source)
+        {
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
+            // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/test/tarray.c#L1113
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L234-L241
+            // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tvlen.c#L837-L941
+            //
+            // typedef struct {
+            //     size_t len; /**< Length of VL data (in base type units) */
+            //     void  *p;   /**< Pointer to VL data */
+            // } hvl_t;
+
+            /* read data into rented buffer */
+            var lengthSize = sizeof(uint);
+            var globalHeapIdSize = context.Superblock.OffsetsSize + sizeof(uint);
+            var totalSize = lengthSize + globalHeapIdSize;
+
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
+            var buffer = memoryOwner.Memory[0..totalSize];
+
+            source.ReadDataset(buffer.Span);
+
+            /* decode sequence length */
+            var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
+
+            buffer = buffer.Slice(lengthSize);
+
+            /* decode global heap IDs and get associated data */
+            var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer.Span);
+
+            if (globalHeapId.Equals(default))
+                return default;
+
+            if (sequenceLength != 1)
+                throw new Exception("Only variable-length sequence with length = 1 can be decoded into a nullable value type.");
+
+            buffer = buffer.Slice(globalHeapIdSize);
+
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+                context,
+                globalHeapId.CollectionAddress,
+                restoreAddress: true);
+
+            if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+            {
+                // TODO: cache short-lived stream?
+                var localSource = new SystemMemoryStream(globalHeapObject.ObjectData);
+                var value = elementDecode(localSource)!;
+
+                return value;
+            }
+
+            else
+            {
+                // It would be more correct to just throw an exception 
+                // when the object index is not found in the collection,
+                // but that would make the tests following test fail
+                // - CanRead_Array_nullable_struct.
+                // 
+                // And it would make the user's life a bit more complicated
+                // if the library cannot handle missing entries.
+                return default;
+            }
+        }
+
+        return (memoryType, decode);
     }
 
     private (Type, ElementDecodeDelegate) GetDecodeInfoForVariableLengthSequence(

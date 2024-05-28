@@ -357,7 +357,6 @@ public partial class TestUtils
     {
         // based on: https://svn.ssec.wisc.edu/repos/geoffc/C/HDF5/Examples_by_API/h5ex_t_vlen.c
 
-        var dims = new ulong[] { 3 };
         var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
 
         // data 1 (countdown)
@@ -391,7 +390,7 @@ public partial class TestUtils
 
             fixed (void* vlenDataPtr = vlenData)
             {
-                Add(container, fileId, "sequence", "variable_simple", typeId, vlenDataPtr, dims);
+                Add(container, fileId, "sequence", "variable_simple", typeId, vlenDataPtr, dims: [(ulong)vlenData.Length]);
             }
         }
 
@@ -402,7 +401,6 @@ public partial class TestUtils
     {
         using var data = Prepare_nullable_struct();
 
-        var dims = new ulong[] { 2 };
         var typeId = H5T.vlen_create(data.TypeId);
 
         // vlen data
@@ -417,7 +415,7 @@ public partial class TestUtils
 
         fixed (void* vlenDataPtr = vlenData)
         {
-            Add(container, fileId, "sequence", "variable_nullable_struct", typeId, vlenDataPtr, dims);
+            Add(container, fileId, "sequence", "variable_nullable_struct", typeId, vlenDataPtr, dims: [(ulong)vlenData.Length]);
         }
 
         _ = H5T.close(typeId);
@@ -429,7 +427,6 @@ public partial class TestUtils
     {
         // based on: https://svn.ssec.wisc.edu/repos/geoffc/C/HDF5/Examples_by_API/h5ex_t_vlen.c
 
-        var dims = new ulong[] { 1 };
         var typeId = H5T.vlen_create(H5T.NATIVE_INT32);
         var data = new int[1];
 
@@ -446,7 +443,7 @@ public partial class TestUtils
 
             fixed (void* vlenDataPtr = vlenData)
             {
-                Add(container, fileId, "sequence", "variable_nullable_value_type", typeId, vlenDataPtr, dims);
+                Add(container, fileId, "sequence", "variable_nullable_value_type", typeId, vlenDataPtr, dims: [(ulong)vlenData.Length]);
             }
         }
 

@@ -1,3 +1,8 @@
+## v1.0.0-beta.20 - 2024-05-28
+
+### Features
+- Added read support for nullable values types. Data must be variable-length sequence of length = 1 to be compatible with nullable value types like `int?`.
+
 ## v1.0.0-beta.19 - 2024-05-27
 
 ### Features
