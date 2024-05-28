@@ -153,6 +153,51 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     #region Methods
 
     /// <inheritdoc />
+    public void ReadRaw(
+        byte[] buffer, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null)
+    {
+        ReadRaw(
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess: default);
+    }
+
+    /// <summary>
+    /// Reads the data as raw byte array.
+    /// </summary>
+    /// <param name="buffer">The buffer to read the data into.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <returns>The read data as byte array.</returns>
+    public void ReadRaw(
+        byte[] buffer, 
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null, 
+        ulong[]? memoryDims = null,
+        H5DatasetAccess datasetAccess = default)
+    {
+        // TODO cache this
+        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(byte[]), typeof(byte));
+
+        method.Invoke(this,
+        [
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess,
+            /* skip shuffle: */ false 
+        ]);
+    }
+
+    /// <inheritdoc />
     public T Read<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
@@ -184,10 +229,10 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     /// Reads the data.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
-    /// <param name="datasetAccess">The dataset access properties.</param>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="datasetAccess">The dataset access properties.</param>
     /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
     public T Read<T>(
         Selection? fileSelection = default,
@@ -207,7 +252,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            false /* skip shuffle */
+            /* skip shuffle: */ false 
         ])!;
 
         return result;
@@ -241,7 +286,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            false /* skip shuffle */
+            /* skip shuffle: */ false 
         ]);
     }
 
@@ -273,8 +318,19 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            false /* skip shuffle */
+            /* skip shuffle: */ false 
         );
+    }
+
+    /// <inheritdoc />
+    public Task ReadRawAsync(
+        byte[] buffer,
+        Selection? fileSelection = null, 
+        Selection? memorySelection = null,
+        ulong[]? memoryDims = null, 
+        CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <inheritdoc />

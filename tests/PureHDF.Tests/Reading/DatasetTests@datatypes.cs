@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using HDF.PInvoke;
 using Xunit;
 
 namespace PureHDF.Tests.Reading;
@@ -496,5 +497,23 @@ public partial class DatasetTests
             // Assert
             Assert.True(expected.SequenceEqual(actual));
         });
+    }
+
+    [Fact]
+    public void CanRead_AsByteArray()
+    {
+        // Arrange
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
+            => TestUtils.AddSmall(fileId, ContainerType.Dataset));
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var dataset = root.Group("small").Dataset("small");
+        var actual = dataset.Read<byte[]>();
+
+        // Assert
+        var expected = new byte[] { 1, 0 };
+
+        Assert.Equal(expected, actual);
     }
 }
