@@ -457,6 +457,27 @@ public partial class AttributeTests
     }
 
     [Fact]
+    public void CanRead_Nullable_Value_Type()
+    {
+        TestUtils.RunForAllVersions(version =>
+        {
+            // Arrange
+            var filePath = TestUtils.PrepareTestFile(version, fileId
+                => TestUtils.AddVariableLengthSequence_NullableValueType(fileId, ContainerType.Attribute));
+
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var attribute = root.Group("sequence").Attribute("variable_nullable_value_type");
+            var actual = attribute.Read<int?[]>();
+
+            // Assert
+            var expected = new int?[] { 1, null };
+
+            Assert.Equal(expected, actual);
+        });
+    }
+
+    [Fact]
     public void CanRead_Shared_Message()
     {
         TestUtils.RunForAllVersions(version =>
