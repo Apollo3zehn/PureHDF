@@ -1220,6 +1220,42 @@ references:
   fullName.vb: PureHDF.H5Attribute.New
   nameWithType: H5Attribute.H5Attribute
   nameWithType.vb: H5Attribute.New
+- uid: PureHDF.H5Attribute`1
+  name: H5Attribute<T>
+  href: api/PureHDF.H5Attribute-1.html
+  commentId: T:PureHDF.H5Attribute`1
+  name.vb: H5Attribute(Of T)
+  fullName: PureHDF.H5Attribute<T>
+  fullName.vb: PureHDF.H5Attribute(Of T)
+  nameWithType: H5Attribute<T>
+  nameWithType.vb: H5Attribute(Of T)
+- uid: PureHDF.H5Attribute`1.#ctor(PureHDF.H5OpaqueInfo)
+  name: H5Attribute(H5OpaqueInfo?)
+  href: api/PureHDF.H5Attribute-1.html#PureHDF_H5Attribute_1__ctor_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Attribute`1.#ctor(PureHDF.H5OpaqueInfo)
+  name.vb: New(H5OpaqueInfo)
+  fullName: PureHDF.H5Attribute<T>.H5Attribute(PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Attribute(Of T).New(PureHDF.H5OpaqueInfo)
+  nameWithType: H5Attribute<T>.H5Attribute(H5OpaqueInfo?)
+  nameWithType.vb: H5Attribute(Of T).New(H5OpaqueInfo)
+- uid: PureHDF.H5Attribute`1.#ctor(`0,System.UInt64[],PureHDF.H5OpaqueInfo)
+  name: H5Attribute(T, ulong[]?, H5OpaqueInfo?)
+  href: api/PureHDF.H5Attribute-1.html#PureHDF_H5Attribute_1__ctor__0_System_UInt64___PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Attribute`1.#ctor(`0,System.UInt64[],PureHDF.H5OpaqueInfo)
+  name.vb: New(T, ULong(), H5OpaqueInfo)
+  fullName: PureHDF.H5Attribute<T>.H5Attribute(T, ulong[]?, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Attribute(Of T).New(T, ULong(), PureHDF.H5OpaqueInfo)
+  nameWithType: H5Attribute<T>.H5Attribute(T, ulong[]?, H5OpaqueInfo?)
+  nameWithType.vb: H5Attribute(Of T).New(T, ULong(), H5OpaqueInfo)
+- uid: PureHDF.H5Attribute`1.#ctor*
+  name: H5Attribute
+  href: api/PureHDF.H5Attribute-1.html#PureHDF_H5Attribute_1__ctor_
+  commentId: Overload:PureHDF.H5Attribute`1.#ctor
+  name.vb: New
+  fullName: PureHDF.H5Attribute<T>.H5Attribute
+  fullName.vb: PureHDF.H5Attribute(Of T).New
+  nameWithType: H5Attribute<T>.H5Attribute
+  nameWithType.vb: H5Attribute(Of T).New
 - uid: PureHDF.H5Constants
   name: H5Constants
   href: api/PureHDF.H5Constants.html
@@ -1367,6 +1403,15 @@ references:
   fullName.vb: PureHDF.H5Dataset(Of T)
   nameWithType: H5Dataset<T>
   nameWithType.vb: H5Dataset(Of T)
+- uid: PureHDF.H5Dataset`1.#ctor(PureHDF.H5OpaqueInfo)
+  name: H5Dataset(H5OpaqueInfo?)
+  href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Dataset`1.#ctor(PureHDF.H5OpaqueInfo)
+  name.vb: New(H5OpaqueInfo)
+  fullName: PureHDF.H5Dataset<T>.H5Dataset(PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Dataset(Of T).New(PureHDF.H5OpaqueInfo)
+  nameWithType: H5Dataset<T>.H5Dataset(H5OpaqueInfo?)
+  nameWithType.vb: H5Dataset(Of T).New(H5OpaqueInfo)
 - uid: PureHDF.H5Dataset`1.#ctor(System.UInt64[],System.UInt32[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
   name: H5Dataset(ulong[], uint[]?, H5DatasetCreation, H5OpaqueInfo?)
   href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor_System_UInt64___System_UInt32___PureHDF_VOL_Native_H5DatasetCreation_PureHDF_H5OpaqueInfo_
@@ -1376,6 +1421,15 @@ references:
   fullName.vb: PureHDF.H5Dataset(Of T).New(ULong(), UInteger(), PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo)
   nameWithType: H5Dataset<T>.H5Dataset(ulong[], uint[]?, H5DatasetCreation, H5OpaqueInfo?)
   nameWithType.vb: H5Dataset(Of T).New(ULong(), UInteger(), H5DatasetCreation, H5OpaqueInfo)
+- uid: PureHDF.H5Dataset`1.#ctor(`0,System.UInt32[],System.UInt64[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
+  name: H5Dataset(T, uint[]?, ulong[]?, H5DatasetCreation, H5OpaqueInfo?)
+  href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor__0_System_UInt32___System_UInt64___PureHDF_VOL_Native_H5DatasetCreation_PureHDF_H5OpaqueInfo_
+  commentId: M:PureHDF.H5Dataset`1.#ctor(`0,System.UInt32[],System.UInt64[],PureHDF.VOL.Native.H5DatasetCreation,PureHDF.H5OpaqueInfo)
+  name.vb: New(T, UInteger(), ULong(), H5DatasetCreation, H5OpaqueInfo)
+  fullName: PureHDF.H5Dataset<T>.H5Dataset(T, uint[]?, ulong[]?, PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo?)
+  fullName.vb: PureHDF.H5Dataset(Of T).New(T, UInteger(), ULong(), PureHDF.VOL.Native.H5DatasetCreation, PureHDF.H5OpaqueInfo)
+  nameWithType: H5Dataset<T>.H5Dataset(T, uint[]?, ulong[]?, H5DatasetCreation, H5OpaqueInfo?)
+  nameWithType.vb: H5Dataset(Of T).New(T, UInteger(), ULong(), H5DatasetCreation, H5OpaqueInfo)
 - uid: PureHDF.H5Dataset`1.#ctor*
   name: H5Dataset
   href: api/PureHDF.H5Dataset-1.html#PureHDF_H5Dataset_1__ctor_
@@ -1841,33 +1895,6 @@ references:
   fullName.vb: PureHDF.H5NativeWriter.Write(Of T)(PureHDF.H5Dataset(Of T), T, PureHDF.Selections.Selection, PureHDF.Selections.Selection)
   nameWithType: H5NativeWriter.Write<T>(H5Dataset<T>, T, Selection?, Selection?)
   nameWithType.vb: H5NativeWriter.Write(Of T)(H5Dataset(Of T), T, Selection, Selection)
-- uid: PureHDF.H5NullDataset`1
-  name: H5NullDataset<T>
-  href: api/PureHDF.H5NullDataset-1.html
-  commentId: T:PureHDF.H5NullDataset`1
-  name.vb: H5NullDataset(Of T)
-  fullName: PureHDF.H5NullDataset<T>
-  fullName.vb: PureHDF.H5NullDataset(Of T)
-  nameWithType: H5NullDataset<T>
-  nameWithType.vb: H5NullDataset(Of T)
-- uid: PureHDF.H5NullDataset`1.#ctor(PureHDF.H5OpaqueInfo)
-  name: H5NullDataset(H5OpaqueInfo?)
-  href: api/PureHDF.H5NullDataset-1.html#PureHDF_H5NullDataset_1__ctor_PureHDF_H5OpaqueInfo_
-  commentId: M:PureHDF.H5NullDataset`1.#ctor(PureHDF.H5OpaqueInfo)
-  name.vb: New(H5OpaqueInfo)
-  fullName: PureHDF.H5NullDataset<T>.H5NullDataset(PureHDF.H5OpaqueInfo?)
-  fullName.vb: PureHDF.H5NullDataset(Of T).New(PureHDF.H5OpaqueInfo)
-  nameWithType: H5NullDataset<T>.H5NullDataset(H5OpaqueInfo?)
-  nameWithType.vb: H5NullDataset(Of T).New(H5OpaqueInfo)
-- uid: PureHDF.H5NullDataset`1.#ctor*
-  name: H5NullDataset
-  href: api/PureHDF.H5NullDataset-1.html#PureHDF_H5NullDataset_1__ctor_
-  commentId: Overload:PureHDF.H5NullDataset`1.#ctor
-  name.vb: New
-  fullName: PureHDF.H5NullDataset<T>.H5NullDataset
-  fullName.vb: PureHDF.H5NullDataset(Of T).New
-  nameWithType: H5NullDataset<T>.H5NullDataset
-  nameWithType.vb: H5NullDataset(Of T).New
 - uid: PureHDF.H5Object
   name: H5Object
   href: api/PureHDF.H5Object.html

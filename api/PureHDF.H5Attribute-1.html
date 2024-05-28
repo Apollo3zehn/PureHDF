@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class H5NullDataset&lt;T&gt;
+      <title>Class H5Attribute&lt;T&gt;
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class H5NullDataset&lt;T&gt;
+      <meta name="title" content="Class H5Attribute&lt;T&gt;
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
@@ -73,12 +73,12 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.H5NullDataset`1">
+        <article data-uid="PureHDF.H5Attribute`1">
 
 
 
-  <h1 id="PureHDF_H5NullDataset_1" data-uid="PureHDF.H5NullDataset`1" class="text-break">
-    Class H5NullDataset&lt;T&gt;
+  <h1 id="PureHDF_H5Attribute_1" data-uid="PureHDF.H5Attribute`1" class="text-break">
+    Class H5Attribute&lt;T&gt;
   
   </h1>
 
@@ -87,12 +87,12 @@
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>A null space dataset.</p>
+  <div class="markdown summary"><p>An attribute.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class H5NullDataset&lt;T&gt; : H5Dataset</code></pre>
+    <pre><code class="lang-csharp hljs">public class H5Attribute&lt;T&gt; : H5Attribute</code></pre>
   </div>
 
 
@@ -100,30 +100,20 @@
   <h4 class="section">Type Parameters</h4>
   <dl class="parameters">
     <dt><code>T</code></dt>
-    <dd><p>The type of the data.</p>
-</dd>
+    <dd></dd>
   </dl>
 
   <dl class="typelist inheritance">
     <dt>Inheritance</dt>
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-      <div><a class="xref" href="PureHDF.H5Object.html">H5Object</a></div>
-      <div><a class="xref" href="PureHDF.H5AttributableObject.html">H5AttributableObject</a></div>
-      <div><a class="xref" href="PureHDF.H5Dataset.html">H5Dataset</a></div>
-      <div><span class="xref">H5NullDataset&lt;T&gt;</span></div>
+      <div><a class="xref" href="PureHDF.H5Attribute.html">H5Attribute</a></div>
+      <div><span class="xref">H5Attribute&lt;T&gt;</span></div>
     </dd>
   </dl>
 
 
 
-  <dl class="typelist derived">
-    <dt>Inherited Members</dt>
-    <dd>
-    <div>
-      <a class="xref" href="PureHDF.H5AttributableObject.html#PureHDF_H5AttributableObject_Attributes">H5AttributableObject.Attributes</a>
-    </div>
-  </dd></dl>
 
 
 
@@ -134,23 +124,62 @@
 </h2>
 
 
-  <a id="PureHDF_H5NullDataset_1__ctor_" data-uid="PureHDF.H5NullDataset`1.#ctor*"></a>
+  <a id="PureHDF_H5Attribute_1__ctor_" data-uid="PureHDF.H5Attribute`1.#ctor*"></a>
 
-  <h3 id="PureHDF_H5NullDataset_1__ctor_PureHDF_H5OpaqueInfo_" data-uid="PureHDF.H5NullDataset`1.#ctor(PureHDF.H5OpaqueInfo)">
-  H5NullDataset(H5OpaqueInfo?)
+  <h3 id="PureHDF_H5Attribute_1__ctor_PureHDF_H5OpaqueInfo_" data-uid="PureHDF.H5Attribute`1.#ctor(PureHDF.H5OpaqueInfo)">
+  H5Attribute(H5OpaqueInfo?)
   
   </h3>
 
-  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.H5NullDataset-1.html">H5NullDataset&lt;T&gt;</a> class.</p>
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.H5Attribute.html">H5Attribute</a> class with a null dataspace.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5NullDataset(H5OpaqueInfo? opaqueInfo = null)</code></pre>
+    <pre><code class="lang-csharp hljs">public H5Attribute(H5OpaqueInfo? opaqueInfo = null)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
+    <dt><code>opaqueInfo</code> <a class="xref" href="PureHDF.H5OpaqueInfo.html">H5OpaqueInfo</a></dt>
+    <dd><p>Set this paramter to a non-null value to treat data of type byte[] as opaque.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5Attribute_1__ctor_" data-uid="PureHDF.H5Attribute`1.#ctor*"></a>
+
+  <h3 id="PureHDF_H5Attribute_1__ctor__0_System_UInt64___PureHDF_H5OpaqueInfo_" data-uid="PureHDF.H5Attribute`1.#ctor(`0,System.UInt64[],PureHDF.H5OpaqueInfo)">
+  H5Attribute(T, ulong[]?, H5OpaqueInfo?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.H5Attribute.html">H5Attribute</a> class. Use this constructor to preserve specific type information, e.g. for nullable value types like <code>int?</code>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public H5Attribute(T data, ulong[]? dimensions = null, H5OpaqueInfo? opaqueInfo = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>data</code> <span class="xref">T</span></dt>
+    <dd><p>The attribute data.</p>
+</dd>
+    <dt><code>dimensions</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
+    <dd><p>The attribute dimensions.</p>
+</dd>
     <dt><code>opaqueInfo</code> <a class="xref" href="PureHDF.H5OpaqueInfo.html">H5OpaqueInfo</a></dt>
     <dd><p>Set this paramter to a non-null value to treat data of type byte[] as opaque.</p>
 </dd>

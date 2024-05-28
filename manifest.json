@@ -125,6 +125,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.H5Attribute-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.H5Attribute-1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.H5Attribute.yml",
       "output": {
         ".html": {
@@ -229,16 +239,6 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.H5NativeWriter.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.H5NullDataset-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.H5NullDataset-1.html"
         }
       },
       "version": ""
