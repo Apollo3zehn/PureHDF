@@ -354,7 +354,7 @@ public partial class AttributeTests
 
                 var method = typeof(TestUtils).GetMethod(nameof(TestUtils.ReadAndCompare), BindingFlags.Public | BindingFlags.Static);
                 var generic = method!.MakeGenericMethod(elementType);
-                var result = (bool)generic.Invoke(null, new object[] { dataset, expected })!;
+                var result = (bool)generic.Invoke(null, [ dataset, expected ])!;
 
                 Assert.True(result);
             }

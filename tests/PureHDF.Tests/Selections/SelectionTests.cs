@@ -571,7 +571,8 @@ public class SelectionTests
             targetSelection,
             default!,
             default!,
-            0
+            default,
+            default
         );
 
         // Act
@@ -616,7 +617,8 @@ public class SelectionTests
             memorySelection,
             indices => default!,
             Decoder: default!,
-            SourceTypeSize: 4
+            SourceTypeSize: 4,
+            TargetTypeSizeFactor: 1
         );
 
         // Act
@@ -658,7 +660,8 @@ public class SelectionTests
             memorySelection,
             indices => default!,
             Decoder: default!,
-            SourceTypeSize: 4
+            SourceTypeSize: 4,
+            TargetTypeSizeFactor: 1
         );
 
         // Act
@@ -770,7 +773,8 @@ public class SelectionTests
             memorySelection,
             indices => (IH5ReadStream)new SystemMemoryStream(chunksBuffers[indices.AsSpan().ToLinearIndex(scaledDatasetDims)]),
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
-            SourceTypeSize: 4
+            SourceTypeSize: 4,
+            TargetTypeSizeFactor: 1
         );
 
         // Act
@@ -888,7 +892,8 @@ public class SelectionTests
             targetSelection,
             getSourceStream,
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
-            SourceTypeSize: 4
+            SourceTypeSize: 4,
+            TargetTypeSizeFactor: 1
         );
 
         // Act
@@ -1018,7 +1023,8 @@ public class SelectionTests
             memorySelection,
             getSourceStream,
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
-            SourceTypeSize: 4
+            SourceTypeSize: 4,
+            TargetTypeSizeFactor: 1
         );
 
         // Act
@@ -1117,7 +1123,8 @@ public class SelectionTests
                 datasetSelection,
                 indices => h5dIntermediate.GetReadStream(indices),
                 (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
-                SourceTypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeSizeFactor: 1
             );
 
             SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfoInterMediate, intermediate);
@@ -1137,7 +1144,8 @@ public class SelectionTests
                 memorySelection,
                 indices => h5d.GetReadStream(indices),
                 Decoder: default!,
-                SourceTypeSize: 4
+                SourceTypeSize: 4,
+                TargetTypeSizeFactor: 1
             );
 
             // Act

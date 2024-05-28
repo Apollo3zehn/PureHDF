@@ -137,7 +137,8 @@ internal partial record class DatatypeMessage(
     }
 
     public DecodeDelegate<TElement> GetDecodeInfo<TElement>(
-        NativeReadContext context)
+        NativeReadContext context,
+        bool isRawMode)
     {
         var memoryIsRef = DataUtils.IsReferenceOrContainsReferences(typeof(TElement));
         var fileIsRef = IsReferenceOrContainsReferences();
@@ -152,13 +153,21 @@ internal partial record class DatatypeMessage(
         // TODO cache
         return (memoryIsRef, fileIsRef) switch
         {
-            (true, _) => GetDecodeInfoForReferenceMemory<TElement>(context),
-            (false, _) when IsNullableValueTypeAndCanDecode<TElement>() => GetDecodeInfoForReferenceMemory<TElement>(context),
-            (false, true) => throw new Exception("Unable to decode a reference type as value type."),
-            (false, false) when memoryTypeSize == fileTypeSize => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
-                .MakeGenericMethod(typeof(TElement))
-                .Invoke(default, new object[] { })!,
-            _ => throw new Exception("Unable to decode values types of different type size.")
+            (true, _) 
+                => GetDecodeInfoForReferenceMemory<TElement>(context),
+
+            (false, _) when IsNullableValueTypeAndCanDecode<TElement>() 
+                => GetDecodeInfoForReferenceMemory<TElement>(context),
+
+            (false, true) 
+                => throw new Exception("Unable to decode a reference type as value type."),
+
+            (false, false) when memoryTypeSize == fileTypeSize || isRawMode
+                => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
+                    .MakeGenericMethod(typeof(TElement))
+                    .Invoke(default, [])!,
+            _ 
+                => throw new Exception("Unable to decode values types of different type size.")
         };
     }
 

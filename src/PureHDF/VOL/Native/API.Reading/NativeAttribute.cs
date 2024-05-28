@@ -238,7 +238,9 @@ public class NativeAttribute : IH5Attribute
             throw new Exception("Attributes with null dataspace cannot be read.");
 
         /* get decoder (succeeds only if decoding is possible) */
-        var decoder = Message.Datatype.GetDecodeInfo<TElement>(_context);
+        var decoder = Message.Datatype.GetDecodeInfo<TElement>(
+            _context, 
+            isRawMode: false /* not useful for attributes, but could be implemented later */);
 
         /* file element count */
         var fileElementCount = Message.Dataspace.GetTotalElementCount();
