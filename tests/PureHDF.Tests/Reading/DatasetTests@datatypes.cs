@@ -502,8 +502,6 @@ public partial class DatasetTests
     [Fact]
     public void CanRead_Raw_ByteArray()
     {
-        // TODO: also test Span<byte> and Memory<byte>
-
         // Arrange
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddSmall(fileId, ContainerType.Dataset));
@@ -526,8 +524,6 @@ public partial class DatasetTests
     [Fact]
     public void CanRead_Raw_Memory()
     {
-        // TODO: also test Span<byte> and Memory<byte>
-
         // Arrange
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddSmall(fileId, ContainerType.Dataset));
@@ -550,8 +546,6 @@ public partial class DatasetTests
     [Fact]
     public void CanRead_Raw_Span()
     {
-        // TODO: also test Span<byte> and Memory<byte>
-
         // Arrange
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddSmall(fileId, ContainerType.Dataset));
