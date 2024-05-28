@@ -28,16 +28,6 @@ public interface IH5Dataset : IH5AttributableObject
     IH5FillValue FillValue { get; }
 
     /// <summary>
-    /// Reads the data as raw byte array.
-    /// </summary>
-    /// <param name="buffer">The buffer to read the data into.</param>
-    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
-    /// <param name="memorySelection">The selection within the destination memory.</param>
-    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
-    /// <returns>The read data as byte array.</returns>
-    void ReadRaw(byte[] buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
-
-    /// <summary>
     /// Reads the data.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
@@ -56,17 +46,6 @@ public interface IH5Dataset : IH5AttributableObject
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     void Read<T>(T buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
-
-    /// <summary>
-    /// Reads the data asynchronously as raw byte array.
-    /// </summary>
-    /// <param name="buffer">The buffer to read the data into.</param>
-    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
-    /// <param name="memorySelection">The selection within the target memory.</param>
-    /// <param name="memoryDims">The dimensions of the target memory buffer.</param>
-    /// <param name="cancellationToken">A token to cancel the current operation.</param>
-    /// <returns>A task which returns the read data as byte array.</returns>
-    Task ReadRawAsync(byte[] buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Reads the data asynchronously.

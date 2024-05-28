@@ -1,6 +1,7 @@
 using PureHDF.Selections;
 using System.Buffers;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 
 namespace PureHDF.VOL.Native;
 
@@ -11,7 +12,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
 {
     #region Fields
 
-    private static readonly MethodInfo _methodInfoReadCoreLevel1 = typeof(NativeDataset)
+    private static readonly MethodInfo _methodInfoReadCoreLevel1_Generic = typeof(NativeDataset)
         .GetMethod(nameof(ReadCoreLevel1_Generic), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
     private IH5Dataspace? _space;
@@ -153,51 +154,6 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
     #region Methods
 
     /// <inheritdoc />
-    public void ReadRaw(
-        byte[] buffer, 
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null)
-    {
-        ReadRaw(
-            buffer,
-            fileSelection,
-            memorySelection,
-            memoryDims,
-            datasetAccess: default);
-    }
-
-    /// <summary>
-    /// Reads the data as raw byte array.
-    /// </summary>
-    /// <param name="buffer">The buffer to read the data into.</param>
-    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
-    /// <param name="memorySelection">The selection within the destination memory.</param>
-    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
-    /// <param name="datasetAccess">The dataset access properties.</param>
-    /// <returns>The read data as byte array.</returns>
-    public void ReadRaw(
-        byte[] buffer, 
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null,
-        H5DatasetAccess datasetAccess = default)
-    {
-        // TODO cache this
-        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(byte[]), typeof(byte));
-
-        method.Invoke(this,
-        [
-            buffer,
-            fileSelection,
-            memorySelection,
-            memoryDims,
-            datasetAccess,
-            /* skip shuffle: */ false 
-        ]);
-    }
-
-    /// <inheritdoc />
     public T Read<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
@@ -243,7 +199,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
+        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
 
         var result = (T)method.Invoke(this,
         [
@@ -277,7 +233,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
+        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
 
         method.Invoke(this,
         [
@@ -320,17 +276,6 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             datasetAccess,
             /* skip shuffle: */ false 
         );
-    }
-
-    /// <inheritdoc />
-    public Task ReadRawAsync(
-        byte[] buffer,
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null,
-        ulong[]? memoryDims = null, 
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
     /// <inheritdoc />
@@ -413,7 +358,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memoryDims,
             fileDims,
             resultBuffer,
-            datasetAccess);
+            datasetAccess,
+            isRawMode: typeof(TResult) == typeof(byte[]) || typeof(TResult) == typeof(Memory<byte>));
 
         /* return */
         return resultArray is null
@@ -443,7 +389,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memoryDims,
             fileDims,
             resultBuffer,
-            datasetAccess);
+            datasetAccess,
+            isRawMode: typeof(TElement) == typeof(byte));
     }
 
     private void ReadCoreLevel2<TElement>(
@@ -452,7 +399,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         ulong[] memoryDims,
         ulong[] fileDims,
         Span<TElement> resultBuffer,
-        H5DatasetAccess datasetAccess)
+        H5DatasetAccess datasetAccess,
+        bool isRawMode)
     {
         /* memory selection */
         if (memorySelection is null || memorySelection is AllSelection)
@@ -460,7 +408,12 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection = new HyperslabSelection(
                 rank: memoryDims.Length,
                 starts: new ulong[memoryDims.Length],
-                blocks: memoryDims);
+                blocks: isRawMode
+                    ? memoryDims
+                        .Select(dim => dim / InternalDataType.Size)
+                        .ToArray()
+                    : memoryDims
+            );
         }
 
         /* validation */
@@ -474,6 +427,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection,
             fileDims,
             memoryDims,
+            isRawMode,
             datasetAccess
         );
     }
@@ -484,10 +438,11 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         Selection memorySelection,
         ulong[] fileDims,
         ulong[] memoryDims,
+        bool isRawMode,
         H5DatasetAccess datasetAccess = default)
     {
         /* get decoder (succeeds only if decoding is possible) */
-        var decoder = InternalDataType.GetDecodeInfo<TElement>(Context);
+        var decoder = InternalDataType.GetDecodeInfo<TElement>(Context, isRawMode);
 
         /* fill value */
         TElement? fillValue;
@@ -514,6 +469,7 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
                 memorySelection: new HyperslabSelection(0, (ulong)destination.Length),
                 fileDims: dataset.InternalDataspace.GetDims(),
                 memoryDims: [(ulong)destination.Length],
+                isRawMode: false,
                 datasetAccess: datasetAccess);
 
         /* dataset info */
@@ -572,6 +528,10 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
         var fileChunkDims = h5d.GetChunkDims();
 
         /* decode */
+        var rawModeTargetTypeSizeFactor = isRawMode
+            ? InternalDataType.Size
+            : 1;
+
         var decodeInfo = new DecodeInfo<TElement>(
             fileDims,
             fileChunkDims,
@@ -581,7 +541,8 @@ public class NativeDataset : NativeAttributableObject, IH5Dataset
             memorySelection,
             GetSourceStream: h5d.GetReadStream,
             Decoder: decoder,
-            SourceTypeSize: (int)InternalDataType.Size
+            SourceTypeSize: (int)InternalDataType.Size,
+            TargetTypeSizeFactor: (int)rawModeTargetTypeSizeFactor
         );
 
         SelectionHelper

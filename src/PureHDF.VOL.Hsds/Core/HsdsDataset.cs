@@ -53,15 +53,6 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
 
     public IH5FillValue FillValue => throw new NotImplementedException();
 
-    public void ReadRaw(
-        byte[] buffer, 
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null)
-    {
-        throw new NotImplementedException("The HSDS connector does not support this operation.");
-    }
-
     public T Read<T>(
         Selection? fileSelection = null,
         Selection? memorySelection = null,
@@ -111,16 +102,6 @@ internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
             memoryDims,
             default(CancellationToken)
         ]);
-    }
-
-    public Task ReadRawAsync(
-        byte[] buffer, 
-        Selection? fileSelection = null, 
-        Selection? memorySelection = null, 
-        ulong[]? memoryDims = null, 
-        CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException("The HSDS connector does not support this operation.");
     }
 
     public async Task<T> ReadAsync<T>(

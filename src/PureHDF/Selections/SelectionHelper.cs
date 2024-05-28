@@ -9,7 +9,8 @@ internal record DecodeInfo<T>(
     Selection TargetSelection,
     Func<ulong[], IH5ReadStream> GetSourceStream,
     DecodeDelegate<T> Decoder,
-    int SourceTypeSize
+    int SourceTypeSize,
+    int TargetTypeSizeFactor
 );
 
 internal record EncodeInfo<T>(
@@ -170,18 +171,17 @@ internal static class SelectionHelper
 
                 /* copy */
                 var length = Math.Min(currentLength, currentSource.Length);
-                var sourceLength = length;
-                var sourceLengthInBytes = sourceLength * encodeInfo.SourceTypeSizeFactor;
+                var sourceLength = length * encodeInfo.SourceTypeSizeFactor;
 
                 targetStream.Seek(currentOffset * encodeInfo.TargetTypeSize, SeekOrigin.Begin);
 
                 encodeInfo.Encoder(
-                    currentSource[..sourceLengthInBytes],
+                    currentSource[..sourceLength],
                     targetStream);
 
                 currentOffset += length;
                 currentLength -= length;
-                currentSource = currentSource[sourceLengthInBytes..];
+                currentSource = currentSource[sourceLength..];
             }
         }
     }
@@ -256,14 +256,14 @@ internal static class SelectionHelper
                         throw new FormatException("The target walker stopped early.");
 
                     currentTarget = targetBuffer.Slice(
-                        (int)targetStep.Offset,
-                        (int)targetStep.Length);
+                        (int)targetStep.Offset * decodeInfo.TargetTypeSizeFactor,
+                        (int)targetStep.Length * decodeInfo.TargetTypeSizeFactor);
                 }
 
                 /* copy */
 
                 var length = Math.Min(currentLength, currentTarget.Length);
-                var targetLength = length;
+                var targetLength = length * decodeInfo.TargetTypeSizeFactor;
 
                 if (virtualDatasetStream is null)
                 {
