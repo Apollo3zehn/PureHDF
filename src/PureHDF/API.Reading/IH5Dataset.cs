@@ -48,7 +48,7 @@ public interface IH5Dataset : IH5AttributableObject
     void Read<T>(T buffer, Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null);
 
     /// <summary>
-    /// Reads the data asynchronously. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
+    /// Reads the data asynchronously.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
@@ -59,7 +59,7 @@ public interface IH5Dataset : IH5AttributableObject
     Task<T> ReadAsync<T>(Selection? fileSelection = null, Selection? memorySelection = null, ulong[]? memoryDims = null, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Reads the data asynchronously into the provided buffer. More information: <seealso href="https://github.com/Apollo3zehn/PureHDF#8-asynchronous-data-access-net-6">PureHDF</seealso>.
+    /// Reads the data asynchronously into the provided buffer.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
     /// <param name="buffer">The buffer to read the data into.</param>

@@ -418,7 +418,7 @@ partial class H5NativeWriter
         }
 
         /* encode info */
-        var opaqueSoureTypeSizeFactor = datatype.Class == DatatypeMessageClass.Opaque
+        var opaqueSourceTypeSizeFactor = datatype.Class == DatatypeMessageClass.Opaque
             ? datatype.Size
             : 1;
 
@@ -432,7 +432,7 @@ partial class H5NativeWriter
             GetSourceBuffer: indiced => memoryData,
             GetTargetStream: getTargetStream,
             Encoder: encode,
-            SourceTypeSizeFactor: (int)opaqueSoureTypeSizeFactor,
+            SourceTypeSizeFactor: (int)opaqueSourceTypeSizeFactor,
             TargetTypeSize: (int)datatype.Size
         );
 

@@ -1,3 +1,8 @@
+## v1.0.0-beta.21 - 2024-05-28
+
+### Features
+- Added support to read data as raw byte array use the buffer overload `Read(buffer, ...)`. The `buffer` variable must be of type `byte[]` or `Memory<byte>`, respectively. Cast `IH5Dataset` to `NativeDataset` to be able to use `Span<byte>` as buffer type as well.
+
 ## v1.0.0-beta.20 - 2024-05-28
 
 ### Features
