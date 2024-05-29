@@ -1,6 +1,7 @@
 namespace PureHDF.VOL.Native;
 
 internal record NativeWriteContext(
+    H5NativeWriter Writer,
     H5File File,
     H5DriverBase Driver,
     FreeSpaceManager FreeSpaceManager,

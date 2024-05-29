@@ -27,6 +27,7 @@ partial class H5NativeWriter
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
         var writeContext = new NativeWriteContext(
+            Writer: this,
             File: file,
             Driver: driver,
             FreeSpaceManager: freeSpaceManager,
@@ -52,7 +53,7 @@ partial class H5NativeWriter
         _rootGroupAddress = EncodeGroup(File);
     }
 
-    private ulong EncodeGroup(
+    internal ulong EncodeGroup(
         H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
@@ -142,7 +143,7 @@ partial class H5NativeWriter
         return address;
     }
 
-    private ulong EncodeDataset(
+    internal ulong EncodeDataset(
         H5Dataset dataset)
     {
         var (elementType, isScalar) = WriteUtils.GetElementType(dataset.Type);
