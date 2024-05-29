@@ -1,0 +1,24 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   DATASET "data" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 1
+      }
+   }
+   GROUP "group" {
+   }
+   DATASET "references" {
+      DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
+      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      DATA {
+         DATASET "<file-path>"
+            DATA {
+            (0): 1
+            }
+         GROUP "<file-path>"
+      }
+   }
+}
+}

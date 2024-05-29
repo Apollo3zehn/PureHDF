@@ -3,7 +3,7 @@
 /// <summary>
 /// An HDF5 group.
 /// </summary>
-public interface IH5Group : IH5AttributableObject
+public interface IH5Group : IH5Object
 {
     /// <summary>
     /// Checks if the link with the specified <paramref name="path"/> exist.

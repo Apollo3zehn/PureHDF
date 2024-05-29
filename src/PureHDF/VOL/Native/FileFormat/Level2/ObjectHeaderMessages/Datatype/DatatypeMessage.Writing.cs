@@ -121,10 +121,6 @@ internal partial record class DatatypeMessage : Message
 
         (var newMessage, var encode) = type switch
         {
-            /* unsigned fixed-point types */
-            Type when type == typeof(H5OpaqueInfo)
-                => GetTypeInfoForOpaque(opaqueInfo!),
-
             /* string */
             Type when type == typeof(string)
                 => stringLength == 0
@@ -145,6 +141,14 @@ internal partial record class DatatypeMessage : Message
             /* generic IEnumerable */
             Type when typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType
                 => GetTypeInfoForVariableLengthSequence(context, type.GenericTypeArguments[0]),
+
+            /* object reference */
+            Type when type == typeof(H5ObjectReference)
+                => GetTypeInfoForObjectReference(context),
+
+            /* opaque */
+            Type when type == typeof(H5OpaqueInfo)
+                => GetTypeInfoForOpaque(opaqueInfo!),
 
             /* remaining reference types */
             Type when DataUtils.IsReferenceOrContainsReferences(type)
@@ -728,6 +732,46 @@ internal partial record class DatatypeMessage : Message
                     target.WriteDataset(paddingBufferOwner.Memory.Span[..padding]);
                 }
             }
+        }
+
+        return (message, encode);
+    }
+
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForObjectReference(
+        NativeWriteContext context)
+    {
+        var message = new DatatypeMessage(
+
+            (uint)Unsafe.SizeOf<NativeObjectReference1>(),
+
+            new ReferenceBitFieldDescription(
+                Type: InternalReferenceType.ObjectReference
+            ),
+
+            []
+        )
+        {
+            Version = DATATYPE_MESSAGE_VERSION,
+            Class = DatatypeMessageClass.Reference
+        };
+
+        void encode(object source, IH5WriteStream target)
+        {
+            var objectReference = (H5ObjectReference)source;
+
+            if (!context.ObjectToAddressMap
+                .TryGetValue(objectReference.ReferencedObject, out var address))
+            {
+                if (objectReference.ReferencedObject is H5Group group)
+                    address = context.Writer.EncodeGroup(group);
+
+                else if (objectReference.ReferencedObject is H5Dataset dataset)
+                    address = context.Writer.EncodeDataset(dataset);
+            }
+
+            Span<ulong> buffer = stackalloc ulong[] { address };
+
+            target.WriteDataset(MemoryMarshal.AsBytes(buffer));
         }
 
         return (message, encode);

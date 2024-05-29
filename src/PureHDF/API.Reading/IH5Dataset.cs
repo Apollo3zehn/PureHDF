@@ -5,7 +5,7 @@ namespace PureHDF;
 /// <summary>
 /// An HDF5 dataset.
 /// </summary>
-public interface IH5Dataset : IH5AttributableObject
+public interface IH5Dataset : IH5Object
 {
     /// <summary>
     /// Gets the data space.

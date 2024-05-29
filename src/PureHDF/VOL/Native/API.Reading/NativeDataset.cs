@@ -8,7 +8,7 @@ namespace PureHDF.VOL.Native;
 /// <summary>
 /// A native HDF5 dataset.
 /// </summary>
-public class NativeDataset : NativeAttributableObject, IH5Dataset
+public class NativeDataset : NativeObject, IH5Dataset
 {
     #region Fields
 
