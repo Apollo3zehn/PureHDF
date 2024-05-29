@@ -6,7 +6,7 @@ namespace PureHDF;
 /// <summary>
 /// A group.
 /// </summary>
-public class H5Group : H5AttributableObject, IDictionary<string, object>
+public class H5Group : H5Object, IDictionary<string, object>
 {
     private readonly IDictionary<string, object> _objects = new Dictionary<string, object>();
 

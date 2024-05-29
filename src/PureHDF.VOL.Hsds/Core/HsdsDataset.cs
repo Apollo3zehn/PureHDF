@@ -9,7 +9,7 @@ using PureHDF.VOL.Native;
 
 namespace PureHDF.VOL.Hsds;
 
-internal class HsdsDataset : HsdsAttributableObject, IH5Dataset
+internal class HsdsDataset : HsdsObject, IH5Dataset
 {
     private static readonly MethodInfo _methodInfoReadCoreAsync = typeof(HsdsDataset)
         .GetMethod(nameof(ReadCoreAsync), BindingFlags.NonPublic | BindingFlags.Instance)!;

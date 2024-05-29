@@ -414,6 +414,42 @@ public partial class AttributeTests
         }
     }
 
+    [Fact]
+    public void CanWrite_ObjectReference1()
+    {
+        // // Arrange
+        // var datasetToReference = new H5Dataset(data: 1);
+
+        // var file = new H5File
+        // {
+        //     ["data"] = datasetToReference,
+        //     ["reference"] = new H5Object[] { datasetToReference }
+        // };
+
+        // var filePath = Path.GetTempFileName();
+
+        // // Act
+        // file.Write(filePath);
+
+        // // Assert
+        // try
+        // {
+        //     var actual = TestUtils.DumpH5File(filePath);
+
+        //     var expected = File
+        //         .ReadAllText($"DumpFiles/data_opaque.dump")
+        //         .Replace("<file-path>", filePath)
+        //         .Replace("<type>", "ATTRIBUTE");
+
+        //     Assert.Equal(expected, actual);
+        // }
+        // finally
+        // {
+        //     if (File.Exists(filePath))
+        //         File.Delete(filePath);
+        // }
+    }
+
 #if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()

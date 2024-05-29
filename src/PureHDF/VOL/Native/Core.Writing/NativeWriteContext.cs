@@ -9,6 +9,6 @@ internal record NativeWriteContext(
     Dictionary<H5Dataset, (H5D_Base H5D, object Encode)> DatasetToInfoMap,
     Dictionary<DatasetInfo, (long ObjectHeaderStart, int ObjectHeaderLength)> DatasetInfoToObjectHeaderMap,
     Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
-    Dictionary<object, ulong> ObjectToAddressMap,
+    Dictionary<H5Object, ulong> ObjectToAddressMap,
     SystemMemoryStream ShortlivedStream
 );

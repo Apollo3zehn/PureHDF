@@ -2,7 +2,7 @@ using Hsds.Api;
 
 namespace PureHDF.VOL.Hsds;
 
-internal class HsdsGroup : HsdsAttributableObject, IH5Group
+internal class HsdsGroup : HsdsObject, IH5Group
 {
     // this constructor is only for the derived InternalHsdsConnector class
     public HsdsGroup(HsdsNamedReference reference)
