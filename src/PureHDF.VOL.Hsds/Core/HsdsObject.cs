@@ -5,16 +5,16 @@ internal class HsdsObject : IH5Object
     // this constructor is only for the derived InternalHsdsConnector class
     public HsdsObject(HsdsNamedReference reference)
     {
-        Reference = reference;
         Connector = (InternalHsdsConnector)this;
+        Reference = reference;
     }
 
     public HsdsObject(
         InternalHsdsConnector connector, 
         HsdsNamedReference reference)
-        : this(reference)
     {
         Connector = connector;
+        Reference = reference;
     }
 
     public string Name => Reference.Title;
