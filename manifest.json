@@ -115,16 +115,6 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.H5AttributableObject.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.H5AttributableObject.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.H5Attribute-1.yml",
       "output": {
         ".html": {
@@ -255,6 +245,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.H5ObjectReference.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.H5ObjectReference.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.H5OpaqueInfo.yml",
       "output": {
         ".html": {
@@ -369,16 +369,6 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.IFloatingPointType.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.IH5AttributableObject.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.IH5AttributableObject.html"
         }
       },
       "version": ""
@@ -679,16 +669,6 @@
       "output": {
         ".html": {
           "relative_path": "api/PureHDF.VOL.Native.IWritingChunkCache.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.VOL.Native.NativeAttributableObject.yml",
-      "output": {
-        ".html": {
-          "relative_path": "api/PureHDF.VOL.Native.NativeAttributableObject.html"
         }
       },
       "version": ""

@@ -2,10 +2,10 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Class H5AttributableObject
+      <title>Class H5ObjectReference
  | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Class H5AttributableObject
+      <meta name="title" content="Class H5ObjectReference
  | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
@@ -73,12 +73,12 @@
           <nav id="breadcrumb"></nav>
         </div>
 
-        <article data-uid="PureHDF.H5AttributableObject">
+        <article data-uid="PureHDF.H5ObjectReference">
 
 
 
-  <h1 id="PureHDF_H5AttributableObject" data-uid="PureHDF.H5AttributableObject" class="text-break">
-    Class H5AttributableObject
+  <h1 id="PureHDF_H5ObjectReference" data-uid="PureHDF.H5ObjectReference" class="text-break">
+    Class H5ObjectReference
   
   </h1>
 
@@ -87,12 +87,12 @@
   <dl><dt>Assembly</dt><dd>PureHDF.dll</dd></dl>
   </div>
 
-  <div class="markdown summary"><p>A base class for attributable objects.</p>
+  <div class="markdown summary"><p>An object reference.</p>
 </div>
   <div class="markdown conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public class H5AttributableObject : H5Object</code></pre>
+    <pre><code class="lang-csharp hljs">public class H5ObjectReference</code></pre>
   </div>
 
 
@@ -102,19 +102,11 @@
     <dt>Inheritance</dt>
     <dd>
       <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
-      <div><a class="xref" href="PureHDF.H5Object.html">H5Object</a></div>
-      <div><span class="xref">H5AttributableObject</span></div>
+      <div><span class="xref">H5ObjectReference</span></div>
     </dd>
   </dl>
 
 
-  <dl class="typelist derived">
-    <dt>Derived</dt>
-    <dd>
-      <div><a class="xref" href="PureHDF.H5Dataset.html">H5Dataset</a></div>
-      <div><a class="xref" href="PureHDF.H5Group.html">H5Group</a></div>
-    </dd>
-  </dl>
 
 
 
@@ -126,60 +118,72 @@
 </h2>
 
 
-  <a id="PureHDF_H5AttributableObject__ctor_" data-uid="PureHDF.H5AttributableObject.#ctor*"></a>
+  <a id="PureHDF_H5ObjectReference__ctor_" data-uid="PureHDF.H5ObjectReference.#ctor*"></a>
 
-  <h3 id="PureHDF_H5AttributableObject__ctor" data-uid="PureHDF.H5AttributableObject.#ctor">
-  H5AttributableObject()
+  <h3 id="PureHDF_H5ObjectReference__ctor_PureHDF_H5Object_" data-uid="PureHDF.H5ObjectReference.#ctor(PureHDF.H5Object)">
+  H5ObjectReference(H5Object)
   
   </h3>
 
-  <div class="markdown level1 summary"></div>
-  <div class="markdown level1 conceptual"></div>
-
-  <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5AttributableObject()</code></pre>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  <h2 class="section" id="properties">Properties
-</h2>
-
-
-  <a id="PureHDF_H5AttributableObject_Attributes_" data-uid="PureHDF.H5AttributableObject.Attributes*"></a>
-
-  <h3 id="PureHDF_H5AttributableObject_Attributes" data-uid="PureHDF.H5AttributableObject.Attributes">
-  Attributes
-  
-  </h3>
-
-  <div class="markdown level1 summary"><p>A map of attributes that belong to this object.</p>
+  <div class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="PureHDF.H5ObjectReference.html">H5ObjectReference</a> class.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public Dictionary&lt;string, object&gt; Attributes { get; set; }</code></pre>
+    <pre><code class="lang-csharp hljs">public H5ObjectReference(H5Object referencedObject)</code></pre>
   </div>
 
-
-
-
-
-  <h4 class="section">Property Value</h4>
+  <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.dictionary-2">Dictionary</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a>&gt;</dt>
+    <dt><code>referencedObject</code> <a class="xref" href="PureHDF.H5Object.html">H5Object</a></dt>
     <dd></dd>
   </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="operators">Operators
+</h2>
+
+
+  <a id="PureHDF_H5ObjectReference_op_Implicit_" data-uid="PureHDF.H5ObjectReference.op_Implicit*"></a>
+
+  <h3 id="PureHDF_H5ObjectReference_op_Implicit_PureHDF_H5Object__PureHDF_H5ObjectReference" data-uid="PureHDF.H5ObjectReference.op_Implicit(PureHDF.H5Object)~PureHDF.H5ObjectReference">
+  implicit operator H5ObjectReference(H5Object)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Converts the referenced object into an object reference.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static implicit operator H5ObjectReference(H5Object referencedObject)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>referencedObject</code> <a class="xref" href="PureHDF.H5Object.html">H5Object</a></dt>
+    <dd><p>The referenced object.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.H5ObjectReference.html">H5ObjectReference</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
 
 
 

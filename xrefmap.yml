@@ -1160,42 +1160,6 @@ references:
   commentId: Overload:PureHDF.Filters.ShuffleFilter.Name
   fullName: PureHDF.Filters.ShuffleFilter.Name
   nameWithType: ShuffleFilter.Name
-- uid: PureHDF.H5AttributableObject
-  name: H5AttributableObject
-  href: api/PureHDF.H5AttributableObject.html
-  commentId: T:PureHDF.H5AttributableObject
-  fullName: PureHDF.H5AttributableObject
-  nameWithType: H5AttributableObject
-- uid: PureHDF.H5AttributableObject.#ctor
-  name: H5AttributableObject()
-  href: api/PureHDF.H5AttributableObject.html#PureHDF_H5AttributableObject__ctor
-  commentId: M:PureHDF.H5AttributableObject.#ctor
-  name.vb: New()
-  fullName: PureHDF.H5AttributableObject.H5AttributableObject()
-  fullName.vb: PureHDF.H5AttributableObject.New()
-  nameWithType: H5AttributableObject.H5AttributableObject()
-  nameWithType.vb: H5AttributableObject.New()
-- uid: PureHDF.H5AttributableObject.#ctor*
-  name: H5AttributableObject
-  href: api/PureHDF.H5AttributableObject.html#PureHDF_H5AttributableObject__ctor_
-  commentId: Overload:PureHDF.H5AttributableObject.#ctor
-  name.vb: New
-  fullName: PureHDF.H5AttributableObject.H5AttributableObject
-  fullName.vb: PureHDF.H5AttributableObject.New
-  nameWithType: H5AttributableObject.H5AttributableObject
-  nameWithType.vb: H5AttributableObject.New
-- uid: PureHDF.H5AttributableObject.Attributes
-  name: Attributes
-  href: api/PureHDF.H5AttributableObject.html#PureHDF_H5AttributableObject_Attributes
-  commentId: P:PureHDF.H5AttributableObject.Attributes
-  fullName: PureHDF.H5AttributableObject.Attributes
-  nameWithType: H5AttributableObject.Attributes
-- uid: PureHDF.H5AttributableObject.Attributes*
-  name: Attributes
-  href: api/PureHDF.H5AttributableObject.html#PureHDF_H5AttributableObject_Attributes_
-  commentId: Overload:PureHDF.H5AttributableObject.Attributes
-  fullName: PureHDF.H5AttributableObject.Attributes
-  nameWithType: H5AttributableObject.Attributes
 - uid: PureHDF.H5Attribute
   name: H5Attribute
   href: api/PureHDF.H5Attribute.html
@@ -1919,6 +1883,61 @@ references:
   fullName.vb: PureHDF.H5Object.New
   nameWithType: H5Object.H5Object
   nameWithType.vb: H5Object.New
+- uid: PureHDF.H5Object.Attributes
+  name: Attributes
+  href: api/PureHDF.H5Object.html#PureHDF_H5Object_Attributes
+  commentId: P:PureHDF.H5Object.Attributes
+  fullName: PureHDF.H5Object.Attributes
+  nameWithType: H5Object.Attributes
+- uid: PureHDF.H5Object.Attributes*
+  name: Attributes
+  href: api/PureHDF.H5Object.html#PureHDF_H5Object_Attributes_
+  commentId: Overload:PureHDF.H5Object.Attributes
+  fullName: PureHDF.H5Object.Attributes
+  nameWithType: H5Object.Attributes
+- uid: PureHDF.H5ObjectReference
+  name: H5ObjectReference
+  href: api/PureHDF.H5ObjectReference.html
+  commentId: T:PureHDF.H5ObjectReference
+  fullName: PureHDF.H5ObjectReference
+  nameWithType: H5ObjectReference
+- uid: PureHDF.H5ObjectReference.#ctor(PureHDF.H5Object)
+  name: H5ObjectReference(H5Object)
+  href: api/PureHDF.H5ObjectReference.html#PureHDF_H5ObjectReference__ctor_PureHDF_H5Object_
+  commentId: M:PureHDF.H5ObjectReference.#ctor(PureHDF.H5Object)
+  name.vb: New(H5Object)
+  fullName: PureHDF.H5ObjectReference.H5ObjectReference(PureHDF.H5Object)
+  fullName.vb: PureHDF.H5ObjectReference.New(PureHDF.H5Object)
+  nameWithType: H5ObjectReference.H5ObjectReference(H5Object)
+  nameWithType.vb: H5ObjectReference.New(H5Object)
+- uid: PureHDF.H5ObjectReference.#ctor*
+  name: H5ObjectReference
+  href: api/PureHDF.H5ObjectReference.html#PureHDF_H5ObjectReference__ctor_
+  commentId: Overload:PureHDF.H5ObjectReference.#ctor
+  name.vb: New
+  fullName: PureHDF.H5ObjectReference.H5ObjectReference
+  fullName.vb: PureHDF.H5ObjectReference.New
+  nameWithType: H5ObjectReference.H5ObjectReference
+  nameWithType.vb: H5ObjectReference.New
+- uid: PureHDF.H5ObjectReference.op_Implicit(PureHDF.H5Object)~PureHDF.H5ObjectReference
+  name: implicit operator H5ObjectReference(H5Object)
+  href: api/PureHDF.H5ObjectReference.html#PureHDF_H5ObjectReference_op_Implicit_PureHDF_H5Object__PureHDF_H5ObjectReference
+  commentId: M:PureHDF.H5ObjectReference.op_Implicit(PureHDF.H5Object)~PureHDF.H5ObjectReference
+  name.vb: CType(H5Object)
+  fullName: PureHDF.H5ObjectReference.implicit operator PureHDF.H5ObjectReference(PureHDF.H5Object)
+  fullName.vb: PureHDF.H5ObjectReference.CType(PureHDF.H5Object)
+  nameWithType: H5ObjectReference.implicit operator H5ObjectReference(H5Object)
+  nameWithType.vb: H5ObjectReference.CType(H5Object)
+- uid: PureHDF.H5ObjectReference.op_Implicit*
+  name: implicit operator
+  href: api/PureHDF.H5ObjectReference.html#PureHDF_H5ObjectReference_op_Implicit_
+  commentId: Overload:PureHDF.H5ObjectReference.op_Implicit
+  isSpec: "True"
+  name.vb: CType
+  fullName: PureHDF.H5ObjectReference.implicit operator
+  fullName.vb: PureHDF.H5ObjectReference.CType
+  nameWithType: H5ObjectReference.implicit operator
+  nameWithType.vb: H5ObjectReference.CType
 - uid: PureHDF.H5OpaqueInfo
   name: H5OpaqueInfo
   href: api/PureHDF.H5OpaqueInfo.html
@@ -2828,96 +2847,6 @@ references:
   commentId: T:PureHDF.IFloatingPointType
   fullName: PureHDF.IFloatingPointType
   nameWithType: IFloatingPointType
-- uid: PureHDF.IH5AttributableObject
-  name: IH5AttributableObject
-  href: api/PureHDF.IH5AttributableObject.html
-  commentId: T:PureHDF.IH5AttributableObject
-  fullName: PureHDF.IH5AttributableObject
-  nameWithType: IH5AttributableObject
-- uid: PureHDF.IH5AttributableObject.Attribute(System.String)
-  name: Attribute(string)
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_Attribute_System_String_
-  commentId: M:PureHDF.IH5AttributableObject.Attribute(System.String)
-  name.vb: Attribute(String)
-  fullName: PureHDF.IH5AttributableObject.Attribute(string)
-  fullName.vb: PureHDF.IH5AttributableObject.Attribute(String)
-  nameWithType: IH5AttributableObject.Attribute(string)
-  nameWithType.vb: IH5AttributableObject.Attribute(String)
-- uid: PureHDF.IH5AttributableObject.Attribute*
-  name: Attribute
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_Attribute_
-  commentId: Overload:PureHDF.IH5AttributableObject.Attribute
-  fullName: PureHDF.IH5AttributableObject.Attribute
-  nameWithType: IH5AttributableObject.Attribute
-- uid: PureHDF.IH5AttributableObject.AttributeAsync(System.String,System.Threading.CancellationToken)
-  name: AttributeAsync(string, CancellationToken)
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeAsync_System_String_System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5AttributableObject.AttributeAsync(System.String,System.Threading.CancellationToken)
-  name.vb: AttributeAsync(String, CancellationToken)
-  fullName: PureHDF.IH5AttributableObject.AttributeAsync(string, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5AttributableObject.AttributeAsync(String, System.Threading.CancellationToken)
-  nameWithType: IH5AttributableObject.AttributeAsync(string, CancellationToken)
-  nameWithType.vb: IH5AttributableObject.AttributeAsync(String, CancellationToken)
-- uid: PureHDF.IH5AttributableObject.AttributeAsync*
-  name: AttributeAsync
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeAsync_
-  commentId: Overload:PureHDF.IH5AttributableObject.AttributeAsync
-  fullName: PureHDF.IH5AttributableObject.AttributeAsync
-  nameWithType: IH5AttributableObject.AttributeAsync
-- uid: PureHDF.IH5AttributableObject.AttributeExists(System.String)
-  name: AttributeExists(string)
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeExists_System_String_
-  commentId: M:PureHDF.IH5AttributableObject.AttributeExists(System.String)
-  name.vb: AttributeExists(String)
-  fullName: PureHDF.IH5AttributableObject.AttributeExists(string)
-  fullName.vb: PureHDF.IH5AttributableObject.AttributeExists(String)
-  nameWithType: IH5AttributableObject.AttributeExists(string)
-  nameWithType.vb: IH5AttributableObject.AttributeExists(String)
-- uid: PureHDF.IH5AttributableObject.AttributeExists*
-  name: AttributeExists
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeExists_
-  commentId: Overload:PureHDF.IH5AttributableObject.AttributeExists
-  fullName: PureHDF.IH5AttributableObject.AttributeExists
-  nameWithType: IH5AttributableObject.AttributeExists
-- uid: PureHDF.IH5AttributableObject.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
-  name: AttributeExistsAsync(string, CancellationToken)
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeExistsAsync_System_String_System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5AttributableObject.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
-  name.vb: AttributeExistsAsync(String, CancellationToken)
-  fullName: PureHDF.IH5AttributableObject.AttributeExistsAsync(string, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.IH5AttributableObject.AttributeExistsAsync(String, System.Threading.CancellationToken)
-  nameWithType: IH5AttributableObject.AttributeExistsAsync(string, CancellationToken)
-  nameWithType.vb: IH5AttributableObject.AttributeExistsAsync(String, CancellationToken)
-- uid: PureHDF.IH5AttributableObject.AttributeExistsAsync*
-  name: AttributeExistsAsync
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributeExistsAsync_
-  commentId: Overload:PureHDF.IH5AttributableObject.AttributeExistsAsync
-  fullName: PureHDF.IH5AttributableObject.AttributeExistsAsync
-  nameWithType: IH5AttributableObject.AttributeExistsAsync
-- uid: PureHDF.IH5AttributableObject.Attributes
-  name: Attributes()
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_Attributes
-  commentId: M:PureHDF.IH5AttributableObject.Attributes
-  fullName: PureHDF.IH5AttributableObject.Attributes()
-  nameWithType: IH5AttributableObject.Attributes()
-- uid: PureHDF.IH5AttributableObject.Attributes*
-  name: Attributes
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_Attributes_
-  commentId: Overload:PureHDF.IH5AttributableObject.Attributes
-  fullName: PureHDF.IH5AttributableObject.Attributes
-  nameWithType: IH5AttributableObject.Attributes
-- uid: PureHDF.IH5AttributableObject.AttributesAsync(System.Threading.CancellationToken)
-  name: AttributesAsync(CancellationToken)
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributesAsync_System_Threading_CancellationToken_
-  commentId: M:PureHDF.IH5AttributableObject.AttributesAsync(System.Threading.CancellationToken)
-  fullName: PureHDF.IH5AttributableObject.AttributesAsync(System.Threading.CancellationToken)
-  nameWithType: IH5AttributableObject.AttributesAsync(CancellationToken)
-- uid: PureHDF.IH5AttributableObject.AttributesAsync*
-  name: AttributesAsync
-  href: api/PureHDF.IH5AttributableObject.html#PureHDF_IH5AttributableObject_AttributesAsync_
-  commentId: Overload:PureHDF.IH5AttributableObject.AttributesAsync
-  fullName: PureHDF.IH5AttributableObject.AttributesAsync
-  nameWithType: IH5AttributableObject.AttributesAsync
 - uid: PureHDF.IH5Attribute
   name: IH5Attribute
   href: api/PureHDF.IH5Attribute.html
@@ -3581,6 +3510,90 @@ references:
   commentId: T:PureHDF.IH5Object
   fullName: PureHDF.IH5Object
   nameWithType: IH5Object
+- uid: PureHDF.IH5Object.Attribute(System.String)
+  name: Attribute(string)
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_Attribute_System_String_
+  commentId: M:PureHDF.IH5Object.Attribute(System.String)
+  name.vb: Attribute(String)
+  fullName: PureHDF.IH5Object.Attribute(string)
+  fullName.vb: PureHDF.IH5Object.Attribute(String)
+  nameWithType: IH5Object.Attribute(string)
+  nameWithType.vb: IH5Object.Attribute(String)
+- uid: PureHDF.IH5Object.Attribute*
+  name: Attribute
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_Attribute_
+  commentId: Overload:PureHDF.IH5Object.Attribute
+  fullName: PureHDF.IH5Object.Attribute
+  nameWithType: IH5Object.Attribute
+- uid: PureHDF.IH5Object.AttributeAsync(System.String,System.Threading.CancellationToken)
+  name: AttributeAsync(string, CancellationToken)
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributeAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PureHDF.IH5Object.AttributeAsync(System.String,System.Threading.CancellationToken)
+  name.vb: AttributeAsync(String, CancellationToken)
+  fullName: PureHDF.IH5Object.AttributeAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PureHDF.IH5Object.AttributeAsync(String, System.Threading.CancellationToken)
+  nameWithType: IH5Object.AttributeAsync(string, CancellationToken)
+  nameWithType.vb: IH5Object.AttributeAsync(String, CancellationToken)
+- uid: PureHDF.IH5Object.AttributeAsync*
+  name: AttributeAsync
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributeAsync_
+  commentId: Overload:PureHDF.IH5Object.AttributeAsync
+  fullName: PureHDF.IH5Object.AttributeAsync
+  nameWithType: IH5Object.AttributeAsync
+- uid: PureHDF.IH5Object.AttributeExists(System.String)
+  name: AttributeExists(string)
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributeExists_System_String_
+  commentId: M:PureHDF.IH5Object.AttributeExists(System.String)
+  name.vb: AttributeExists(String)
+  fullName: PureHDF.IH5Object.AttributeExists(string)
+  fullName.vb: PureHDF.IH5Object.AttributeExists(String)
+  nameWithType: IH5Object.AttributeExists(string)
+  nameWithType.vb: IH5Object.AttributeExists(String)
+- uid: PureHDF.IH5Object.AttributeExists*
+  name: AttributeExists
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributeExists_
+  commentId: Overload:PureHDF.IH5Object.AttributeExists
+  fullName: PureHDF.IH5Object.AttributeExists
+  nameWithType: IH5Object.AttributeExists
+- uid: PureHDF.IH5Object.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
+  name: AttributeExistsAsync(string, CancellationToken)
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributeExistsAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PureHDF.IH5Object.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
+  name.vb: AttributeExistsAsync(String, CancellationToken)
+  fullName: PureHDF.IH5Object.AttributeExistsAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PureHDF.IH5Object.AttributeExistsAsync(String, System.Threading.CancellationToken)
+  nameWithType: IH5Object.AttributeExistsAsync(string, CancellationToken)
+  nameWithType.vb: IH5Object.AttributeExistsAsync(String, CancellationToken)
+- uid: PureHDF.IH5Object.AttributeExistsAsync*
+  name: AttributeExistsAsync
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributeExistsAsync_
+  commentId: Overload:PureHDF.IH5Object.AttributeExistsAsync
+  fullName: PureHDF.IH5Object.AttributeExistsAsync
+  nameWithType: IH5Object.AttributeExistsAsync
+- uid: PureHDF.IH5Object.Attributes
+  name: Attributes()
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_Attributes
+  commentId: M:PureHDF.IH5Object.Attributes
+  fullName: PureHDF.IH5Object.Attributes()
+  nameWithType: IH5Object.Attributes()
+- uid: PureHDF.IH5Object.Attributes*
+  name: Attributes
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_Attributes_
+  commentId: Overload:PureHDF.IH5Object.Attributes
+  fullName: PureHDF.IH5Object.Attributes
+  nameWithType: IH5Object.Attributes
+- uid: PureHDF.IH5Object.AttributesAsync(System.Threading.CancellationToken)
+  name: AttributesAsync(CancellationToken)
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributesAsync_System_Threading_CancellationToken_
+  commentId: M:PureHDF.IH5Object.AttributesAsync(System.Threading.CancellationToken)
+  fullName: PureHDF.IH5Object.AttributesAsync(System.Threading.CancellationToken)
+  nameWithType: IH5Object.AttributesAsync(CancellationToken)
+- uid: PureHDF.IH5Object.AttributesAsync*
+  name: AttributesAsync
+  href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_AttributesAsync_
+  commentId: Overload:PureHDF.IH5Object.AttributesAsync
+  fullName: PureHDF.IH5Object.AttributesAsync
+  nameWithType: IH5Object.AttributesAsync
 - uid: PureHDF.IH5Object.Name
   name: Name
   href: api/PureHDF.IH5Object.html#PureHDF_IH5Object_Name
@@ -4736,96 +4749,6 @@ references:
   commentId: Overload:PureHDF.VOL.Native.IWritingChunkCache.GetChunk
   fullName: PureHDF.VOL.Native.IWritingChunkCache.GetChunk
   nameWithType: IWritingChunkCache.GetChunk
-- uid: PureHDF.VOL.Native.NativeAttributableObject
-  name: NativeAttributableObject
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html
-  commentId: T:PureHDF.VOL.Native.NativeAttributableObject
-  fullName: PureHDF.VOL.Native.NativeAttributableObject
-  nameWithType: NativeAttributableObject
-- uid: PureHDF.VOL.Native.NativeAttributableObject.Attribute(System.String)
-  name: Attribute(string)
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attribute_System_String_
-  commentId: M:PureHDF.VOL.Native.NativeAttributableObject.Attribute(System.String)
-  name.vb: Attribute(String)
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.Attribute(string)
-  fullName.vb: PureHDF.VOL.Native.NativeAttributableObject.Attribute(String)
-  nameWithType: NativeAttributableObject.Attribute(string)
-  nameWithType.vb: NativeAttributableObject.Attribute(String)
-- uid: PureHDF.VOL.Native.NativeAttributableObject.Attribute*
-  name: Attribute
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attribute_
-  commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.Attribute
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.Attribute
-  nameWithType: NativeAttributableObject.Attribute
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync(System.String,System.Threading.CancellationToken)
-  name: AttributeAsync(string, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeAsync_System_String_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync(System.String,System.Threading.CancellationToken)
-  name.vb: AttributeAsync(String, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync(string, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync(String, System.Threading.CancellationToken)
-  nameWithType: NativeAttributableObject.AttributeAsync(string, CancellationToken)
-  nameWithType.vb: NativeAttributableObject.AttributeAsync(String, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync*
-  name: AttributeAsync
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributeAsync
-  nameWithType: NativeAttributableObject.AttributeAsync
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributeExists(System.String)
-  name: AttributeExists(string)
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExists_System_String_
-  commentId: M:PureHDF.VOL.Native.NativeAttributableObject.AttributeExists(System.String)
-  name.vb: AttributeExists(String)
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributeExists(string)
-  fullName.vb: PureHDF.VOL.Native.NativeAttributableObject.AttributeExists(String)
-  nameWithType: NativeAttributableObject.AttributeExists(string)
-  nameWithType.vb: NativeAttributableObject.AttributeExists(String)
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributeExists*
-  name: AttributeExists
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExists_
-  commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.AttributeExists
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributeExists
-  nameWithType: NativeAttributableObject.AttributeExists
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
-  name: AttributeExistsAsync(string, CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExistsAsync_System_String_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
-  name.vb: AttributeExistsAsync(String, CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync(string, System.Threading.CancellationToken)
-  fullName.vb: PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync(String, System.Threading.CancellationToken)
-  nameWithType: NativeAttributableObject.AttributeExistsAsync(string, CancellationToken)
-  nameWithType.vb: NativeAttributableObject.AttributeExistsAsync(String, CancellationToken)
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync*
-  name: AttributeExistsAsync
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributeExistsAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributeExistsAsync
-  nameWithType: NativeAttributableObject.AttributeExistsAsync
-- uid: PureHDF.VOL.Native.NativeAttributableObject.Attributes
-  name: Attributes()
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attributes
-  commentId: M:PureHDF.VOL.Native.NativeAttributableObject.Attributes
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.Attributes()
-  nameWithType: NativeAttributableObject.Attributes()
-- uid: PureHDF.VOL.Native.NativeAttributableObject.Attributes*
-  name: Attributes
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_Attributes_
-  commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.Attributes
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.Attributes
-  nameWithType: NativeAttributableObject.Attributes
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync(System.Threading.CancellationToken)
-  name: AttributesAsync(CancellationToken)
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributesAsync_System_Threading_CancellationToken_
-  commentId: M:PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync(System.Threading.CancellationToken)
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync(System.Threading.CancellationToken)
-  nameWithType: NativeAttributableObject.AttributesAsync(CancellationToken)
-- uid: PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync*
-  name: AttributesAsync
-  href: api/PureHDF.VOL.Native.NativeAttributableObject.html#PureHDF_VOL_Native_NativeAttributableObject_AttributesAsync_
-  commentId: Overload:PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync
-  fullName: PureHDF.VOL.Native.NativeAttributableObject.AttributesAsync
-  nameWithType: NativeAttributableObject.AttributesAsync
 - uid: PureHDF.VOL.Native.NativeAttribute
   name: NativeAttribute
   href: api/PureHDF.VOL.Native.NativeAttribute.html
@@ -5297,6 +5220,90 @@ references:
   commentId: T:PureHDF.VOL.Native.NativeObject
   fullName: PureHDF.VOL.Native.NativeObject
   nameWithType: NativeObject
+- uid: PureHDF.VOL.Native.NativeObject.Attribute(System.String)
+  name: Attribute(string)
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Attribute_System_String_
+  commentId: M:PureHDF.VOL.Native.NativeObject.Attribute(System.String)
+  name.vb: Attribute(String)
+  fullName: PureHDF.VOL.Native.NativeObject.Attribute(string)
+  fullName.vb: PureHDF.VOL.Native.NativeObject.Attribute(String)
+  nameWithType: NativeObject.Attribute(string)
+  nameWithType.vb: NativeObject.Attribute(String)
+- uid: PureHDF.VOL.Native.NativeObject.Attribute*
+  name: Attribute
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Attribute_
+  commentId: Overload:PureHDF.VOL.Native.NativeObject.Attribute
+  fullName: PureHDF.VOL.Native.NativeObject.Attribute
+  nameWithType: NativeObject.Attribute
+- uid: PureHDF.VOL.Native.NativeObject.AttributeAsync(System.String,System.Threading.CancellationToken)
+  name: AttributeAsync(string, CancellationToken)
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributeAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PureHDF.VOL.Native.NativeObject.AttributeAsync(System.String,System.Threading.CancellationToken)
+  name.vb: AttributeAsync(String, CancellationToken)
+  fullName: PureHDF.VOL.Native.NativeObject.AttributeAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PureHDF.VOL.Native.NativeObject.AttributeAsync(String, System.Threading.CancellationToken)
+  nameWithType: NativeObject.AttributeAsync(string, CancellationToken)
+  nameWithType.vb: NativeObject.AttributeAsync(String, CancellationToken)
+- uid: PureHDF.VOL.Native.NativeObject.AttributeAsync*
+  name: AttributeAsync
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributeAsync_
+  commentId: Overload:PureHDF.VOL.Native.NativeObject.AttributeAsync
+  fullName: PureHDF.VOL.Native.NativeObject.AttributeAsync
+  nameWithType: NativeObject.AttributeAsync
+- uid: PureHDF.VOL.Native.NativeObject.AttributeExists(System.String)
+  name: AttributeExists(string)
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributeExists_System_String_
+  commentId: M:PureHDF.VOL.Native.NativeObject.AttributeExists(System.String)
+  name.vb: AttributeExists(String)
+  fullName: PureHDF.VOL.Native.NativeObject.AttributeExists(string)
+  fullName.vb: PureHDF.VOL.Native.NativeObject.AttributeExists(String)
+  nameWithType: NativeObject.AttributeExists(string)
+  nameWithType.vb: NativeObject.AttributeExists(String)
+- uid: PureHDF.VOL.Native.NativeObject.AttributeExists*
+  name: AttributeExists
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributeExists_
+  commentId: Overload:PureHDF.VOL.Native.NativeObject.AttributeExists
+  fullName: PureHDF.VOL.Native.NativeObject.AttributeExists
+  nameWithType: NativeObject.AttributeExists
+- uid: PureHDF.VOL.Native.NativeObject.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
+  name: AttributeExistsAsync(string, CancellationToken)
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributeExistsAsync_System_String_System_Threading_CancellationToken_
+  commentId: M:PureHDF.VOL.Native.NativeObject.AttributeExistsAsync(System.String,System.Threading.CancellationToken)
+  name.vb: AttributeExistsAsync(String, CancellationToken)
+  fullName: PureHDF.VOL.Native.NativeObject.AttributeExistsAsync(string, System.Threading.CancellationToken)
+  fullName.vb: PureHDF.VOL.Native.NativeObject.AttributeExistsAsync(String, System.Threading.CancellationToken)
+  nameWithType: NativeObject.AttributeExistsAsync(string, CancellationToken)
+  nameWithType.vb: NativeObject.AttributeExistsAsync(String, CancellationToken)
+- uid: PureHDF.VOL.Native.NativeObject.AttributeExistsAsync*
+  name: AttributeExistsAsync
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributeExistsAsync_
+  commentId: Overload:PureHDF.VOL.Native.NativeObject.AttributeExistsAsync
+  fullName: PureHDF.VOL.Native.NativeObject.AttributeExistsAsync
+  nameWithType: NativeObject.AttributeExistsAsync
+- uid: PureHDF.VOL.Native.NativeObject.Attributes
+  name: Attributes()
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Attributes
+  commentId: M:PureHDF.VOL.Native.NativeObject.Attributes
+  fullName: PureHDF.VOL.Native.NativeObject.Attributes()
+  nameWithType: NativeObject.Attributes()
+- uid: PureHDF.VOL.Native.NativeObject.Attributes*
+  name: Attributes
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Attributes_
+  commentId: Overload:PureHDF.VOL.Native.NativeObject.Attributes
+  fullName: PureHDF.VOL.Native.NativeObject.Attributes
+  nameWithType: NativeObject.Attributes
+- uid: PureHDF.VOL.Native.NativeObject.AttributesAsync(System.Threading.CancellationToken)
+  name: AttributesAsync(CancellationToken)
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributesAsync_System_Threading_CancellationToken_
+  commentId: M:PureHDF.VOL.Native.NativeObject.AttributesAsync(System.Threading.CancellationToken)
+  fullName: PureHDF.VOL.Native.NativeObject.AttributesAsync(System.Threading.CancellationToken)
+  nameWithType: NativeObject.AttributesAsync(CancellationToken)
+- uid: PureHDF.VOL.Native.NativeObject.AttributesAsync*
+  name: AttributesAsync
+  href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_AttributesAsync_
+  commentId: Overload:PureHDF.VOL.Native.NativeObject.AttributesAsync
+  fullName: PureHDF.VOL.Native.NativeObject.AttributesAsync
+  nameWithType: NativeObject.AttributesAsync
 - uid: PureHDF.VOL.Native.NativeObject.Name
   name: Name
   href: api/PureHDF.VOL.Native.NativeObject.html#PureHDF_VOL_Native_NativeObject_Name
