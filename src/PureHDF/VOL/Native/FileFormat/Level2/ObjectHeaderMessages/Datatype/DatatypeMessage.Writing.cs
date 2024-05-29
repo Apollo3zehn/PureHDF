@@ -767,6 +767,9 @@ internal partial record class DatatypeMessage : Message
 
                 else if (objectReference.ReferencedObject is H5Dataset dataset)
                     address = context.Writer.EncodeDataset(dataset);
+
+                else
+                    throw new Exception($"Named data types cannot yet be used in combination with H5ObjectReference.");
             }
 
             Span<ulong> buffer = stackalloc ulong[] { address };
