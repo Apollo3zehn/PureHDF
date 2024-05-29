@@ -468,6 +468,43 @@ public partial class DatasetTests
         }
     }
 
+    [Fact]
+    public void CanWrite_ObjectReference()
+    {
+        // Arrange
+        var dataset = new H5Dataset(data: 1);
+        var group = new H5Group();
+
+        var file = new H5File
+        {
+            ["references"] = new H5ObjectReference[] { dataset, group },
+            ["data"] = dataset,
+            ["group"] = group
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/data_object_reference_dataset.dump")
+                .Replace("<file-path>", filePath);
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
 #if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()

@@ -27,6 +27,7 @@ partial class H5NativeWriter
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
         var writeContext = new NativeWriteContext(
+            Writer: this,
             File: file,
             Driver: driver,
             FreeSpaceManager: freeSpaceManager,
@@ -52,7 +53,7 @@ partial class H5NativeWriter
         _rootGroupAddress = EncodeGroup(File);
     }
 
-    private ulong EncodeGroup(
+    internal ulong EncodeGroup(
         H5Group group)
     {
         var headerMessages = new List<HeaderMessage>();
@@ -87,27 +88,24 @@ partial class H5NativeWriter
                 }
             }
 
-            else if (entry.Value is H5Dataset dataset)
+            else if (entry.Value is H5Dataset dataset1)
             {
-                if (!Context.ObjectToAddressMap.TryGetValue(dataset, out linkAddress))
+                if (!Context.ObjectToAddressMap.TryGetValue(dataset1, out linkAddress))
                 {
-                    linkAddress = EncodeDataset(dataset);
-                    Context.ObjectToAddressMap[dataset] = linkAddress;
-                }
-            }
-
-            else if (entry.Value is object objectDataset)
-            {
-                if (!Context.ObjectToAddressMap.TryGetValue(objectDataset, out linkAddress))
-                {
-                    linkAddress = EncodeDataset(objectDataset);
-                    Context.ObjectToAddressMap[objectDataset] = linkAddress;
+                    linkAddress = EncodeDataset(dataset1);
+                    Context.ObjectToAddressMap[dataset1] = linkAddress;
                 }
             }
 
             else
             {
-                throw new Exception("This should never happen.");
+                var dataset2 = new H5Dataset(entry.Value);
+
+                if (!Context.ObjectToAddressMap.TryGetValue(dataset2, out linkAddress))
+                {
+                    linkAddress = EncodeDataset(dataset2);
+                    Context.ObjectToAddressMap[dataset2] = linkAddress;
+                }
             }
 
             var linkMessage = new LinkMessage(
@@ -145,18 +143,15 @@ partial class H5NativeWriter
         return address;
     }
 
-    private ulong EncodeDataset(
-        object dataset)
+    internal ulong EncodeDataset(
+        H5Dataset dataset)
     {
-        if (dataset is not H5Dataset h5Dataset)
-            h5Dataset = new H5Dataset(dataset);
-
-        var (elementType, isScalar) = WriteUtils.GetElementType(h5Dataset.Type);
+        var (elementType, isScalar) = WriteUtils.GetElementType(dataset.Type);
 
         // TODO cache this
-        var method = _methodInfoEncodeDataset.MakeGenericMethod(h5Dataset.Type, elementType);
+        var method = _methodInfoEncodeDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        return (ulong)method.Invoke(this, [h5Dataset, h5Dataset.Data, isScalar])!;
+        return (ulong)method.Invoke(this, [dataset, dataset.Data, isScalar])!;
     }
 
     private ulong InternalEncodeDataset<T, TElement>(

@@ -1,6 +1,7 @@
 namespace PureHDF.VOL.Native;
 
 internal record NativeWriteContext(
+    H5NativeWriter Writer,
     H5File File,
     H5DriverBase Driver,
     FreeSpaceManager FreeSpaceManager,
@@ -9,6 +10,6 @@ internal record NativeWriteContext(
     Dictionary<H5Dataset, (H5D_Base H5D, object Encode)> DatasetToInfoMap,
     Dictionary<DatasetInfo, (long ObjectHeaderStart, int ObjectHeaderLength)> DatasetInfoToObjectHeaderMap,
     Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
-    Dictionary<object, ulong> ObjectToAddressMap,
+    Dictionary<H5Object, ulong> ObjectToAddressMap,
     SystemMemoryStream ShortlivedStream
 );

@@ -1,3 +1,20 @@
+## v1.0.0-beta.22 - 2024-05-29
+
+### Features
+- Added write support for object references. Example:
+
+```cs
+var dataset = new H5Dataset(data: 1);
+var group = new H5Group();
+
+var file = new H5File
+{
+    ["data"] = dataset,
+    ["group"] = group,
+    ["references"] = new H5ObjectReference[] { dataset, group }
+};
+```
+
 ## v1.0.0-beta.21 - 2024-05-28
 
 ### Features

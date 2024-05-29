@@ -5,7 +5,7 @@ namespace PureHDF;
 /// <summary>
 /// A dataset.
 /// </summary>
-public class H5Dataset : H5AttributableObject
+public class H5Dataset : H5Object
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="H5Dataset"/> class.

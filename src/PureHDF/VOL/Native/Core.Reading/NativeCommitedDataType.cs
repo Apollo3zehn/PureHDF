@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal class NativeCommitedDatatype : NativeAttributableObject, IH5CommitedDatatype
+internal class NativeCommitedDatatype : NativeObject, IH5CommitedDatatype
 {
     #region Constructors
 

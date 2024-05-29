@@ -257,7 +257,15 @@ internal record class ReferenceBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-        throw new NotImplementedException();
+        #if NETSTANDARD2_1_OR_GREATER
+        Span<byte> data = stackalloc byte[3];
+#else
+        byte[] data = new byte[3];
+#endif
+
+        data[0] = (byte)((byte)Type & 0x07);
+
+        driver.Write(data);
     }
 }
 

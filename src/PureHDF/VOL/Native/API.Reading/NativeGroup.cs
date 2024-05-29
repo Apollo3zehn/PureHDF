@@ -7,7 +7,7 @@ namespace PureHDF.VOL.Native;
 /// <summary>
 /// An HDF5 group.
 /// </summary>
-public class NativeGroup : NativeAttributableObject, IH5Group
+public class NativeGroup : NativeObject, IH5Group
 {
     #region Fields
 
