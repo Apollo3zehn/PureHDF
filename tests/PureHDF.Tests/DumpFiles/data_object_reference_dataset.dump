@@ -11,13 +11,17 @@ GROUP "/" {
    }
    DATASET "references" {
       DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
-         DATASET "<file-path>"
+         DATASET "<file-path>/data"
             DATA {
             (0): 1
             }
-         GROUP "<file-path>"
+         DATASET "<file-path>/data"
+            DATA {
+            (0): 1
+            }
+         GROUP "<file-path>/group"
       }
    }
 }

@@ -1,3 +1,8 @@
+## v1.0.0-beta.23 - 2024-05-30
+
+### Bugs fixed
+- Fixed a bug where objects were encoded more than once (by using object references) and added a circular reference detection.
+
 ## v1.0.0-beta.22 - 2024-05-29
 
 ### Features

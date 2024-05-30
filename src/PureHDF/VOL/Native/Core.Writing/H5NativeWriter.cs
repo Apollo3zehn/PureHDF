@@ -79,33 +79,27 @@ partial class H5NativeWriter
         {
             ulong linkAddress;
 
-            if (entry.Value is H5Group childGroup)
+            var h5Object = entry.Value as H5Object ?? new H5Dataset(entry.Value);
+
+            if (!Context.ObjectToAddressMap.TryGetValue(h5Object, out linkAddress))
             {
-                if (!Context.ObjectToAddressMap.TryGetValue(childGroup, out linkAddress))
-                {
+                Context.ObjectToAddressMap[h5Object] = default;
+
+                if (entry.Value is H5Group childGroup)
                     linkAddress = EncodeGroup(childGroup);
-                    Context.ObjectToAddressMap[childGroup] = linkAddress;
-                }
-            }
 
-            else if (entry.Value is H5Dataset dataset1)
-            {
-                if (!Context.ObjectToAddressMap.TryGetValue(dataset1, out linkAddress))
-                {
+                else if (entry.Value is H5Dataset dataset1)
                     linkAddress = EncodeDataset(dataset1);
-                    Context.ObjectToAddressMap[dataset1] = linkAddress;
-                }
+
+                else
+                    linkAddress = EncodeDataset((H5Dataset)h5Object);
+
+                Context.ObjectToAddressMap[h5Object] = linkAddress;
             }
 
-            else
+            else if (linkAddress == default)
             {
-                var dataset2 = new H5Dataset(entry.Value);
-
-                if (!Context.ObjectToAddressMap.TryGetValue(dataset2, out linkAddress))
-                {
-                    linkAddress = EncodeDataset(dataset2);
-                    Context.ObjectToAddressMap[dataset2] = linkAddress;
-                }
+                throw new Exception("The current object is already being encoded which suggests a circular reference.");
             }
 
             var linkMessage = new LinkMessage(
