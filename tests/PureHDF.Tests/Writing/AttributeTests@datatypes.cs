@@ -425,7 +425,7 @@ public partial class AttributeTests
         {
             Attributes = 
             {
-                ["references"] = new H5ObjectReference[] { dataset, group }
+                ["references"] = new H5ObjectReference[] { dataset, dataset, group }
             },
             ["data"] = dataset,
             ["group"] = group

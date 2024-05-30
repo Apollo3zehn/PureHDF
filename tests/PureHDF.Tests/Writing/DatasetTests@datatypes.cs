@@ -477,7 +477,7 @@ public partial class DatasetTests
 
         var file = new H5File
         {
-            ["references"] = new H5ObjectReference[] { dataset, group },
+            ["references"] = new H5ObjectReference[] { dataset, dataset, group },
             ["data"] = dataset,
             ["group"] = group
         };
@@ -503,6 +503,38 @@ public partial class DatasetTests
             if (File.Exists(filePath))
                 File.Delete(filePath);
         }
+    }
+
+    [Fact]
+    public void ThrowsForCircularObjectReference()
+    {
+        // Arrange
+        var data1 = new H5ObjectReference[1];
+        var data2 = new H5ObjectReference[1];
+
+        var dataset1 = new H5Dataset(data1);
+        var dataset2 = new H5Dataset(data2);
+
+        data1[0] = dataset2;
+        data2[0] = dataset1;
+
+        var file = new H5File
+        {
+            ["data1"] = dataset1,
+            ["data2"] = dataset2
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        void action() => file.Write(filePath);
+
+        // Assert
+        var exception = Assert.Throws<TargetInvocationException>(action);
+
+        Assert.Equal(
+            "The current object is already being encoded which suggests a circular reference.", 
+            exception.InnerException!.InnerException!.Message);
     }
 
 #if NET6_0_OR_GREATER

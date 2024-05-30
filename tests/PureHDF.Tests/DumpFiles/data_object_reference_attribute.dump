@@ -2,8 +2,12 @@ HDF5 "<file-path>" {
 GROUP "/" {
    ATTRIBUTE "references" {
       DATATYPE  H5T_REFERENCE { H5T_STD_REF_OBJECT }
-      DATASPACE  SIMPLE { ( 2 ) / ( 2 ) }
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
       DATA {
+         DATASET "<file-path>/data"
+            DATA {
+            (0): 1
+            }
          DATASET "<file-path>/data"
             DATA {
             (0): 1
