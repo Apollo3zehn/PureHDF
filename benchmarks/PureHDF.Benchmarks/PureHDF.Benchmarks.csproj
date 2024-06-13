@@ -3,10 +3,14 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+    <!-- until https://github.com/dotnet/BenchmarkDotNet/issues/1215 is solved -->
+    <RestoreAdditionalProjectSources>
+      https://www.myget.org/F/benchmarkdotnet/api/v3/index.json
+    </RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.13-nightly.20240519.155" />
     <PackageReference Include="Intrinsics.ISA-L.PInvoke" Version="2.30.0-preview.6.final" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
   </ItemGroup>

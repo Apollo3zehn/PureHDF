@@ -79,7 +79,7 @@ internal partial record class DataLayoutMessage4
 
                 DimensionSizes: chunkDimensions
                     .Select(value => (ulong)value)
-                    .Concat(new ulong[] { typeSize })
+                    .Concat([typeSize])
                     .ToArray(),
 
                 IndexingInformation: indexInfo.IndexingInformation

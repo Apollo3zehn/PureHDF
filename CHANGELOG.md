@@ -1,3 +1,8 @@
+## v1.0.0-beta.24 - 2024-06-13
+
+### Bugs fixed
+- Created a workaround to not throw error "Byte order conversion is not (yet) support by PureHDF." (#101).
+
 ## v1.0.0-beta.23 - 2024-05-30
 
 ### Bugs fixed

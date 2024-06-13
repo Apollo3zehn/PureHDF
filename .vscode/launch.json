@@ -10,45 +10,6 @@
             "justMyCode": true
         },
         {
-            "name": "Benchmark: Inflate",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net7.0/PureHDF.Benchmarks.dll",
-            "args": [
-                "inflate"
-            ],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        },
-        {
-            "name": "Benchmark: Walk",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net7.0/PureHDF.Benchmarks.dll",
-            "args": [
-                "walk"
-            ],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        },
-        {
-            "name": "Benchmark: Shuffle",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build-benchmark",
-            "program": "${workspaceFolder}/artifacts/bin/PureHDF.Benchmarks/Release/net7.0/PureHDF.Benchmarks.dll",
-            "args": [
-                "shuffle"
-            ],
-            "cwd": "${workspaceFolder}",
-            "stopAtEntry": false,
-            "console": "internalConsole"
-        },
-        {
             "name": "Benchmark: Concurrency",
             "type": "coreclr",
             "request": "launch",

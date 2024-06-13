@@ -307,7 +307,14 @@ public class NativeDataset : NativeObject, IH5Dataset
         H5DatasetAccess datasetAccess = default,
         bool skipShuffle = false)
     {
-        (var fileDims, fileSelection) = GetFileDimsAndSelection(fileSelection, memorySelection, memoryDims, skipShuffle);
+        var isRawMode = typeof(TResult) == typeof(byte[]) || typeof(TResult) == typeof(Memory<byte>);
+
+        (var fileDims, fileSelection) = GetFileDimsAndSelection(
+            fileSelection, 
+            memorySelection, 
+            memoryDims, 
+            skipShuffle,
+            isRawMode);
 
         /* result buffer / result array */
         Span<TElement> resultBuffer;
@@ -359,7 +366,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             fileDims,
             resultBuffer,
             datasetAccess,
-            isRawMode: typeof(TResult) == typeof(byte[]) || typeof(TResult) == typeof(Memory<byte>));
+            isRawMode: isRawMode);
 
         /* return */
         return resultArray is null
@@ -375,7 +382,14 @@ public class NativeDataset : NativeObject, IH5Dataset
         H5DatasetAccess datasetAccess = default,
         bool skipShuffle = false)
     {
-        (var fileDims, fileSelection) = GetFileDimsAndSelection(fileSelection, memorySelection, memoryDims, skipShuffle);
+        var isRawMode = typeof(TElement) == typeof(byte);
+
+        (var fileDims, fileSelection) = GetFileDimsAndSelection(
+            fileSelection, 
+            memorySelection, 
+            memoryDims, 
+            skipShuffle,
+            isRawMode);
 
         /* result buffer */
         if (memoryDims is null)
@@ -390,7 +404,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             fileDims,
             resultBuffer,
             datasetAccess,
-            isRawMode: typeof(TElement) == typeof(byte));
+            isRawMode: isRawMode);
     }
 
     private void ReadCoreLevel2<TElement>(
@@ -553,7 +567,12 @@ public class NativeDataset : NativeObject, IH5Dataset
                 resultBuffer);
     }
 
-    private (ulong[], Selection) GetFileDimsAndSelection(Selection? fileSelection, Selection? memorySelection, ulong[]? memoryDims, bool skipShuffle)
+    private (ulong[], Selection) GetFileDimsAndSelection(
+        Selection? fileSelection, 
+        Selection? memorySelection, 
+        ulong[]? memoryDims, 
+        bool skipShuffle,
+        bool isRawMode)
     {
         /* for testing only */
         if (skipShuffle && InternalFilterPipeline is not null)
@@ -567,10 +586,13 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         /* check endianness */
-        var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
+        if (!isRawMode)
+        {
+            var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
 
-        if (byteOrderAware is not null)
-            DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
+                if (byteOrderAware is not null)
+                    DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
+        }
 
         /* fast path for null dataspace */
         if (InternalDataspace.Type == DataspaceType.Null)
