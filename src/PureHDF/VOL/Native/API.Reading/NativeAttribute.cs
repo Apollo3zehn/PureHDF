@@ -9,7 +9,7 @@ public class NativeAttribute : IH5Attribute
 {
     #region Fields
 
-    private static readonly MethodInfo _methodInfoReadCoreLevel1 = typeof(NativeAttribute)
+    private static readonly MethodInfo _methodInfoReadCoreLevel1_Generic = typeof(NativeAttribute)
         .GetMethod(nameof(ReadCoreLevel1_generic), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
     private IH5Dataspace? _space;
@@ -76,7 +76,7 @@ public class NativeAttribute : IH5Attribute
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
+        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
         var result = (T)method.Invoke(this,
@@ -97,7 +97,7 @@ public class NativeAttribute : IH5Attribute
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
         // TODO cache this
-        var method = _methodInfoReadCoreLevel1.MakeGenericMethod(typeof(T), elementType);
+        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
         method.Invoke(this,
@@ -240,7 +240,10 @@ public class NativeAttribute : IH5Attribute
         /* get decoder (succeeds only if decoding is possible) */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(
             _context, 
-            isRawMode: false /* not useful for attributes, but could be implemented later */);
+            /* isRawMode: not useful for attributes, but could be implemented later; 
+             * note: compare to NativeDataset (look for endianness related code and #101) 
+             */
+            isRawMode: false);
 
         /* file element count */
         var fileElementCount = Message.Dataspace.GetTotalElementCount();

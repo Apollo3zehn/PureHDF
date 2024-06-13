@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Win32.SafeHandles;
 
@@ -15,8 +17,6 @@ public class FileIO
         .Range(0, 100)
         .Select(i => _random.Next(0, SIZE))
         .ToArray();
-
-    private readonly byte[] _buffer = new byte[1];
 
     private FileStream _fileStream = default!;
 
@@ -43,31 +43,55 @@ public class FileIO
     }
 
     [Benchmark(Baseline = true)]
-    public void FileStream_Seek()
+    public ulong FileStream_Seek()
     {
+        var result = 0UL;
+        var size = Unsafe.SizeOf<ulong>();
+        Span<byte> buffer = stackalloc byte[size];
+
         foreach (var position in _positions)
         {
             _fileStream.Seek(position, SeekOrigin.Begin);
-            _fileStream.Read(_buffer);
+            _fileStream.Read(buffer);
+
+            result += MemoryMarshal.Cast<byte, ulong>(buffer)[0];
         }
+
+        return result;
     }
 
     [Benchmark]
-    public void FileStream_Position()
+    public ulong FileStream_Position()
     {
+        var result = 0UL;
+        var size = Unsafe.SizeOf<ulong>();
+        Span<byte> buffer = stackalloc byte[size];
+
         foreach (var position in _positions)
         {
             _fileStream.Position = position;
-            _fileStream.Read(_buffer);
+            _fileStream.Read(buffer);
+
+            result += MemoryMarshal.Cast<byte, ulong>(buffer)[0];
         }
+
+        return result;
     }
 
     [Benchmark]
-    public void SafeFileHandle()
+    public ulong SafeFileHandle()
     {
+        var result = 0UL;
+        var size = Unsafe.SizeOf<ulong>();
+        Span<byte> buffer = stackalloc byte[size];
+
         foreach (var position in _positions)
         {
-            RandomAccess.Read(_safeFileHandle, _buffer, position);
+            RandomAccess.Read(_safeFileHandle, buffer, position);
+
+            result += MemoryMarshal.Cast<byte, ulong>(buffer)[0];
         }
+
+        return result;
     }
 }
