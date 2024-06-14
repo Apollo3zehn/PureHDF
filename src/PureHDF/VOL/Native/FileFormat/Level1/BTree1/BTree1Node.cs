@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -14,7 +15,8 @@ internal readonly record struct BTree1Node<T>(
     ulong LeftSiblingAddress,
     ulong RightSiblingAddress,
     T[] Keys,
-    ulong[] ChildAddresses
+    ulong[] ChildAddresses,
+    ConcurrentDictionary<ulong, BTree1Node<T>> Cache
 ) where T : struct, IBTree1Key
 {
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
@@ -52,7 +54,8 @@ internal readonly record struct BTree1Node<T>(
             leftSiblingAddress,
             rightSiblingAddress,
             keys,
-            childAddresses
+            childAddresses,
+            Cache: new()
         );
     }
 
@@ -103,8 +106,13 @@ internal readonly record struct BTree1Node<T>(
 
         if (NodeLevel > 0)
         {
-            Context.Driver.Seek((long)childAddress, SeekOrigin.Begin);
-            var subtree = BTree1Node<T>.Decode(Context, DecodeKey);
+            var localThis = this;
+
+            var subtree = Cache.GetOrAdd(childAddress, childAddress =>
+            {
+                localThis.Context.Driver.Seek((long)childAddress, SeekOrigin.Begin);
+                return BTree1Node<T>.Decode(localThis.Context, localThis.DecodeKey);
+            });
 
             if (subtree.TryFindUserData(out userData, compare3, found))
                 return true;
