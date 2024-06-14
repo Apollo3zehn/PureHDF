@@ -1,4 +1,4 @@
-## v1.0.0-beta.24 - 2024-06-13
+## v1.0.0-beta.25 - 2024-06-13
 - Read performance of chunked datasets in the old version 1 B-tree format has been dramatically improved by adding a cache to avoid repeated deserialisation of in-file structures.
 
 ## v1.0.0-beta.24 - 2024-06-13
