@@ -166,14 +166,18 @@ internal record class CompoundPropertyDescription(
                 if (!(1 <= byteCount && byteCount <= 8))
                     throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");
 
-                var buffer = new byte[8];
+                Span<byte> buffer = stackalloc byte[8];
 
-                for (ulong i = 0; i < byteCount; i++)
+                for (int i = 0; i < (int)byteCount; i++)
                 {
                     buffer[i] = driver.ReadByte();
                 }
 
-                memberByteOffset = BitConverter.ToUInt64(buffer, 0);
+#if NETSTANDARD2_1_OR_GREATER
+                memberByteOffset = BitConverter.ToUInt64(buffer);
+#else
+                memberByteOffset = BitConverter.ToUInt64(buffer.ToArray(), 0);
+#endif
 
                 // member type message
                 memberTypeMessage = DatatypeMessage.Decode(driver);

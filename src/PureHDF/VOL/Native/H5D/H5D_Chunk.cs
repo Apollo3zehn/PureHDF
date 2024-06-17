@@ -226,10 +226,22 @@ internal abstract class H5D_Chunk : H5D_Base
         // TODO: This way, fill values will become part of the cache
         if (_readingChunkIndexAddressIsUndefined)
         {
-            chunk = new byte[ChunkByteSize];
+            if (Dataset.FillValue.Value is null)
+            {
+                chunk = new byte[ChunkByteSize];
+            }
 
-            if (Dataset.FillValue.Value is not null)
+            else
+            {
+#if NET5_0_OR_GREATER
+                chunk = GC
+                    .AllocateUninitializedArray<byte>((int)ChunkByteSize);
+#else
+                chunk = new byte[(int)ChunkByteSize];
+#endif
+
                 chunk.Span.Fill(Dataset.FillValue.Value);
+            }
         }
 
         else
@@ -238,17 +250,34 @@ internal abstract class H5D_Chunk : H5D_Base
 
             if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
-                chunk = new byte[ChunkByteSize];
+                if (Dataset.FillValue.Value is null)
+                {
+                    chunk = new byte[ChunkByteSize];
+                }
 
-                if (Dataset.FillValue.Value is not null)
+                else
+                {
+#if NET5_0_OR_GREATER
+                        chunk = GC
+                            .AllocateUninitializedArray<byte>((int)ChunkByteSize);
+#else
+                        chunk = new byte[(int)ChunkByteSize];
+#endif
+
                     chunk.Span.Fill(Dataset.FillValue.Value);
+                }
             }
 
             else
             {
                 if (Dataset.FilterPipeline is null)
                 {
-                    chunk = new byte[ChunkByteSize];
+#if NET5_0_OR_GREATER
+                        chunk = GC
+                            .AllocateUninitializedArray<byte>((int)ChunkByteSize);
+#else
+                        chunk = new byte[(int)ChunkByteSize];
+#endif
 
                     ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
                     ReadContext.Driver.ReadDataset(chunk.Span);

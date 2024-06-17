@@ -113,7 +113,14 @@ public class Blosc2Filter : IH5Filter
                  * size.
                  */
                 var status = Blosc.blosc2_cbuffer_sizes(new IntPtr(srcPtr), out var outbuf_size, out var cbytes, out var blocksize);
+
+#if NET5_0_OR_GREATER
+                var buffer = GC
+                    .AllocateUninitializedArray<byte>(outbuf_size)
+                    .AsMemory();
+#else
                 var buffer = new byte[outbuf_size].AsMemory();
+#endif
 
                 if (status < 0)
                     throw new Exception($"Blosc decompression error (status {status}).");
