@@ -14,16 +14,17 @@ internal class H5D_Chunk4_Implicit : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
     {
-        var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
         var chunkOffset = chunkIndex * ChunkByteSize;
 
         return new ChunkInfo(Chunked4.Address + chunkOffset, ChunkByteSize, 0);
     }
 
-    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
-        return GetReadChunkInfo(chunkIndices);
+        var chunkOffset = chunkIndex * ChunkByteSize;
+
+        return new ChunkInfo(Chunked4.Address + chunkOffset, ChunkByteSize, 0);
     }
 }

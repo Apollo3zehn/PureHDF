@@ -68,15 +68,14 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
     {
         // H5Dearray.c (H5D__earray_idx_get_addr)
 
         /* Check for unlimited dim. not being the slowest-changing dim. */
-        ulong chunkIndex;
-
         if (_unlimitedDim > 0)
         {
+            var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
             var swizzledCoords = new ulong[ChunkRank];
 
             /* Compute coordinate offset from scaled offset */
@@ -93,11 +92,6 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 .ToArray();
 
             chunkIndex = swizzledScaledDims.ToLinearIndexPrecomputed(_swizzledDownMaxChunkCounts);
-        }
-        else
-        {
-            /* Calculate the index of this chunk */
-            chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
         }
 
         /* Check for filters on chunks */
@@ -133,7 +127,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
         throw new NotImplementedException();
     }

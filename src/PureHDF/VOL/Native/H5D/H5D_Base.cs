@@ -29,9 +29,9 @@ internal abstract class H5D_Base : IDisposable
 
     public abstract ulong[] GetChunkDims();
 
-    public abstract IH5ReadStream GetReadStream(ulong[] chunkIndices);
+    public abstract IH5ReadStream GetReadStream(ulong chunkIndex);
 
-    public abstract IH5WriteStream GetWriteStream(ulong[] chunkIndices);
+    public abstract IH5WriteStream GetWriteStream(ulong chunkIndex);
 
     protected virtual void Dispose(bool disposing)
     {

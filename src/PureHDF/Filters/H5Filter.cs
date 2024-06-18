@@ -186,7 +186,15 @@ public class ShuffleFilter : IH5Filter
     public Memory<byte> Filter(FilterInfo info)
     {
         var sourceBuffer = info.Buffer;
+
+#if NET5_0_OR_GREATER
+        var resultBuffer = GC
+            .AllocateUninitializedArray<byte>(info.Buffer.Length)
+            .AsMemory();
+
+#else
         var resultBuffer = new byte[info.Buffer.Length].AsMemory();
+#endif
 
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))

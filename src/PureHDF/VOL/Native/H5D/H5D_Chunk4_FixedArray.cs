@@ -16,12 +16,9 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
     {
         // H5Dfarray.c (H5D__farray_idx_get_addr)
-
-        /* Calculate the index of this chunk */
-        var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
 
         /* Check for filters on chunks */
         if (Dataset.FilterPipeline is not null)
@@ -55,7 +52,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
         /* Check for filters on chunks */
         ChunkInfo chunkInfo;

@@ -556,7 +556,8 @@ public class NativeDataset : NativeObject, IH5Dataset
             GetSourceStream: h5d.GetReadStream,
             Decoder: decoder,
             SourceTypeSize: (int)InternalDataType.Size,
-            TargetTypeSizeFactor: (int)rawModeTargetTypeSizeFactor
+            TargetTypeSizeFactor: (int)rawModeTargetTypeSizeFactor,
+            AllowBulkCopy: InternalDataLayout.LayoutClass != LayoutClass.VirtualStorage
         );
 
         SelectionHelper

@@ -7,10 +7,11 @@ internal record DecodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong[], IH5ReadStream> GetSourceStream,
+    Func<ulong, IH5ReadStream> GetSourceStream,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
-    int TargetTypeSizeFactor
+    int TargetTypeSizeFactor,
+    bool AllowBulkCopy
 );
 
 internal record EncodeInfo<T>(
@@ -20,22 +21,29 @@ internal record EncodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong[], Memory<T>> GetSourceBuffer,
-    Func<ulong[], IH5WriteStream> GetTargetStream,
+    Func<ulong, Memory<T>> GetSourceBuffer,
+    Func<ulong, IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
-    int TargetTypeSize
+    int TargetTypeSize,
+    bool AllowBulkCopy
 );
 
 internal readonly record struct RelativeStep(
-    ulong[] Chunk,
+    ulong ChunkIndex,
     ulong Offset,
     ulong Length
 );
 
 internal static class SelectionHelper
 {
-    public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
+    public static IEnumerable<RelativeStep> Walk(
+        int rank, 
+        ulong[] dims, 
+        ulong[] chunkDims, 
+        Selection selection,
+        bool allowBulkCopy
+    )
     {
         /* check if there is anything to do */
         if (selection.TotalElementCount == 0)
@@ -45,6 +53,35 @@ internal static class SelectionHelper
         if (dims.Length != rank || chunkDims.Length != rank)
             throw new RankException($"The length of each array parameter must match the rank parameter.");
 
+        /* check for bulk copy (short cut) */
+        if (allowBulkCopy &&
+            chunkDims.SequenceEqual(dims) /* single chunk or not chunked at all */ &&
+            selection is HyperslabSelection hs &&
+            hs.Starts.All(start => start == 0) &&
+            hs.Strides.SequenceEqual(hs.Blocks)
+        )
+        {
+            var canBulkCopy = true;
+
+            for (int i = 0; i < rank; i++)
+            {
+                if (hs.Blocks[i] * hs.Counts[i] != dims[i])
+                    canBulkCopy = false;
+            }
+
+            if (canBulkCopy)
+            {
+                var relativeStep = new RelativeStep(
+                    ChunkIndex: 0,
+                    Offset: 0,
+                    Length: selection.TotalElementCount
+                );
+
+                yield return relativeStep;
+                yield break;
+            }
+        }
+
         /* prepare some useful arrays */
         var lastDim = rank - 1;
         var chunkLength = chunkDims.Aggregate(1UL, (x, y) => x * y);
@@ -52,6 +89,17 @@ internal static class SelectionHelper
         /* prepare last dimension variables */
         var lastChunkDim = chunkDims[lastDim];
 
+        /* Prepare efficient conversion from coordinates to linear index */
+        var scaledOffsets = new ulong[rank];
+
+        var scaledDims = dims
+            .Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i]))
+            .ToArray();
+
+        var downChunkCounts = scaledDims.AccumulateReverse();
+        var chunkIndex = 0UL;
+
+        /* walk */
         foreach (var step in selection.Walk(limits: dims))
         {
             /* validate rank */
@@ -63,22 +111,29 @@ internal static class SelectionHelper
             /* process slice */
             while (remaining > 0)
             {
-                // TODO: Performance issue.
-                var scaledOffsets = new ulong[rank];
                 Span<ulong> chunkOffsets = stackalloc ulong[rank];
+                var hasChunkIndexChanged = false;
 
                 for (int dimension = 0; dimension < rank; dimension++)
                 {
-                    scaledOffsets[dimension] = step.Coordinates[dimension] / chunkDims[dimension];
+                    var newScaledOffset = step.Coordinates[dimension] / chunkDims[dimension];
+
+                    if (!hasChunkIndexChanged && scaledOffsets[dimension] != newScaledOffset)
+                        hasChunkIndexChanged = true;
+
+                    scaledOffsets[dimension] = newScaledOffset;
                     chunkOffsets[dimension] = step.Coordinates[dimension] % chunkDims[dimension];
                 }
+
+                if (hasChunkIndexChanged)
+                    chunkIndex = scaledOffsets.ToLinearIndexPrecomputed(downChunkCounts);
 
                 var offset = chunkOffsets.ToLinearIndex(chunkDims);
                 var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
 
                 yield return new RelativeStep()
                 {
-                    Chunk = scaledOffsets,
+                    ChunkIndex = chunkIndex,
                     Offset = offset,
                     Length = currentLength
                 };
@@ -106,11 +161,21 @@ internal static class SelectionHelper
             throw new RankException($"The length of each array parameter must match the rank parameter.");
 
         /* walkers */
-        var sourceWalker = Walk(sourceRank, encodeInfo.SourceDims, encodeInfo.SourceChunkDims, encodeInfo.SourceSelection)
-            .GetEnumerator();
+        var sourceWalker = Walk(
+            sourceRank, 
+            encodeInfo.SourceDims, 
+            encodeInfo.SourceChunkDims, 
+            encodeInfo.SourceSelection,
+            encodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
-        var targetWalker = Walk(targetRank, encodeInfo.TargetDims, encodeInfo.TargetChunkDims, encodeInfo.TargetSelection)
-            .GetEnumerator();
+        var targetWalker = Walk(
+            targetRank, 
+            encodeInfo.TargetDims, 
+            encodeInfo.TargetChunkDims, 
+            encodeInfo.TargetSelection,
+            encodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
         /* select method */
         EncodeStream(sourceWalker, targetWalker, encodeInfo);
@@ -123,12 +188,12 @@ internal static class SelectionHelper
     {
         /* initialize source walker */
         var sourceBuffer = default(Memory<TResult>);
-        var lastSourceChunk = default(ulong[]);
+        var lastSourceChunkIndex = 0UL;
         var currentSource = default(Memory<TResult>);
 
         /* initialize target walker */
         var targetStream = default(IH5WriteStream);
-        var lastTargetChunk = default(ulong[]);
+        var lastTargetChunkIndex = 0UL;
 
         /* walk until end */
         while (targetWalker.MoveNext())
@@ -137,10 +202,10 @@ internal static class SelectionHelper
             var targetStep = targetWalker.Current;
 
             if (targetStream is null /* if stream not assigned yet */ ||
-                !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
+                targetStep.ChunkIndex != lastTargetChunkIndex /* or the chunk has changed */)
             {
-                targetStream = encodeInfo.GetTargetStream(targetStep.Chunk);
-                lastTargetChunk = targetStep.Chunk;
+                targetStream = encodeInfo.GetTargetStream(targetStep.ChunkIndex);
+                lastTargetChunkIndex = targetStep.ChunkIndex;
             }
 
             var currentOffset = (int)targetStep.Offset;
@@ -158,10 +223,10 @@ internal static class SelectionHelper
                         throw new FormatException("The source walker stopped early.");
 
                     if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                        !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
+                        sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
                     {
-                        sourceBuffer = encodeInfo.GetSourceBuffer(sourceStep.Chunk);
-                        lastSourceChunk = sourceStep.Chunk;
+                        sourceBuffer = encodeInfo.GetSourceBuffer(sourceStep.ChunkIndex);
+                        lastSourceChunkIndex = sourceStep.ChunkIndex;
                     }
 
                     currentSource = sourceBuffer.Slice(
@@ -204,11 +269,21 @@ internal static class SelectionHelper
             throw new RankException($"The length of each array parameter must match the rank parameter.");
 
         /* walkers */
-        var sourceWalker = Walk(sourceRank, decodeInfo.SourceDims, decodeInfo.SourceChunkDims, decodeInfo.SourceSelection)
-            .GetEnumerator();
+        var sourceWalker = Walk(
+            sourceRank, 
+            decodeInfo.SourceDims, 
+            decodeInfo.SourceChunkDims, 
+            decodeInfo.SourceSelection,
+            decodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
-        var targetWalker = Walk(targetRank, decodeInfo.TargetDims, decodeInfo.TargetChunkDims, decodeInfo.TargetSelection)
-            .GetEnumerator();
+        var targetWalker = Walk(
+            targetRank, 
+            decodeInfo.TargetDims, 
+            decodeInfo.TargetChunkDims, 
+            decodeInfo.TargetSelection,
+            decodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
         /* select method */
         DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer);
@@ -222,7 +297,7 @@ internal static class SelectionHelper
     {
         /* initialize source walker */
         var sourceStream = default(IH5ReadStream);
-        var lastSourceChunk = default(ulong[]);
+        var lastSourceChunkIndex = 0UL;
 
         /* initialize target walker */
         var currentTarget = default(Span<TResult>);
@@ -234,10 +309,10 @@ internal static class SelectionHelper
             var sourceStep = sourceWalker.Current;
 
             if (sourceStream is null /* if stream not assigned yet */ ||
-                !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
+                sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
             {
-                sourceStream = decodeInfo.GetSourceStream(sourceStep.Chunk);
-                lastSourceChunk = sourceStep.Chunk;
+                sourceStream = decodeInfo.GetSourceStream(sourceStep.ChunkIndex);
+                lastSourceChunkIndex = sourceStep.ChunkIndex;
             }
 
             var virtualDatasetStream = sourceStream as VirtualDatasetStream<TResult>;
@@ -261,7 +336,6 @@ internal static class SelectionHelper
                 }
 
                 /* copy */
-
                 var length = Math.Min(currentLength, currentTarget.Length);
                 var targetLength = length * decodeInfo.TargetTypeSizeFactor;
 

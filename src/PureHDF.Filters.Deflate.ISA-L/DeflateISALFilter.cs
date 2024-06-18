@@ -53,7 +53,14 @@ public class DeflateISALFilter : IH5Filter
             buffer = buffer.Slice(2); // skip ZLIB header to get only the DEFLATE stream
 
             var length = 0;
+
+#if NET5_0_OR_GREATER
+            var inflated = GC
+                .AllocateUninitializedArray<byte>(info.ChunkSize)
+                .AsMemory();
+#else
             var inflated = new byte[info.ChunkSize].AsMemory();
+#endif
 
             var sourceBuffer = buffer.Span;
             var targetBuffer = inflated.Span;
@@ -107,7 +114,14 @@ public class DeflateISALFilter : IH5Filter
             ISAL.isal_deflate_init(_stream_ptr.Value);
 
             var length = 0;
-            var deflated = new byte[info.ChunkSize].AsMemory();
+
+            #if NET5_0_OR_GREATER
+                var deflated = GC
+                    .AllocateUninitializedArray<byte>(info.ChunkSize)
+                    .AsMemory();
+            #else
+                var deflated = new byte[info.ChunkSize].AsMemory();
+            #endif
 
             var sourceBuffer = buffer.Span;
             var targetBuffer = deflated.Span;

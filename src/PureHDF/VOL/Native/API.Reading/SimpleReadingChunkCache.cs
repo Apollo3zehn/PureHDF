@@ -14,7 +14,7 @@ public class SimpleReadingChunkCache : IReadingChunkCache
         public DateTime LastAccess { get; set; }
     }
 
-    private readonly Dictionary<ulong[], ReadingChunkInfo> _chunkInfoMap;
+    private readonly Dictionary<ulong, ReadingChunkInfo> _chunkInfoMap = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SimpleReadingChunkCache"/> class.
@@ -31,8 +31,6 @@ public class SimpleReadingChunkCache : IReadingChunkCache
 
         ChunkSlotCount = chunkSlotCount;
         ByteCount = byteCount;
-
-        _chunkInfoMap = new Dictionary<ulong[], ReadingChunkInfo>(new ArrayEqualityComparer());
     }
 
     /// <summary>
@@ -56,9 +54,9 @@ public class SimpleReadingChunkCache : IReadingChunkCache
     public ulong ConsumedBytes { get; private set; }
 
     /// <inheritdoc />
-    public Memory<byte> GetChunk(ulong[] indices, Func<Memory<byte>> chunkReader)
+    public Memory<byte> GetChunk(ulong chunkIndex, Func<Memory<byte>> chunkReader)
     {
-        if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
+        if (_chunkInfoMap.TryGetValue(chunkIndex, out var chunkInfo))
         {
             chunkInfo.LastAccess = DateTime.Now;
         }
@@ -77,7 +75,7 @@ public class SimpleReadingChunkCache : IReadingChunkCache
                 }
 
                 ConsumedBytes += (ulong)chunk.Length;
-                _chunkInfoMap[indices] = chunkInfo;
+                _chunkInfoMap[chunkIndex] = chunkInfo;
             }
         }
 
