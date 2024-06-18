@@ -74,10 +74,10 @@ public class SelectionTests
 
         var expected = new RelativeStep[]
         {
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 3], ChunkIndex: 8, Offset: 7, Length: 1),
-            new RelativeStep(Chunk: [4, 0, 3], ChunkIndex: 103, Offset: 4, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 3], ChunkIndex: 38, Offset: 21, Length: 1),
+            new RelativeStep(ChunkIndex: 0, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 8, Offset: 7, Length: 1),
+            new RelativeStep(ChunkIndex: 103, Offset: 4, Length: 1),
+            new RelativeStep(ChunkIndex: 38, Offset: 21, Length: 1),
         };
 
         // Act
@@ -91,9 +91,6 @@ public class SelectionTests
         {
             var expected_current = expected[i];
 
-            Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
-            Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
-            Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
             Assert.Equal(actual_current.ChunkIndex, expected_current.ChunkIndex);
             Assert.Equal(actual_current.Offset, expected_current.Offset);
             Assert.Equal(actual_current.Length, expected_current.Length);
@@ -138,10 +135,10 @@ public class SelectionTests
 
         var expected = new RelativeStep[]
         {
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 3], ChunkIndex: 8, Offset: 7, Length: 1),
-            new RelativeStep(Chunk: [4, 0, 3], ChunkIndex: 103, Offset: 4, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 3], ChunkIndex: 38, Offset: 21, Length: 1),
+            new RelativeStep(ChunkIndex: 0, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 8, Offset: 7, Length: 1),
+            new RelativeStep(ChunkIndex: 103, Offset: 4, Length: 1),
+            new RelativeStep(ChunkIndex: 38, Offset: 21, Length: 1),
         };
 
         // Act
@@ -155,9 +152,6 @@ public class SelectionTests
         {
             var expected_current = expected[i];
 
-            Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
-            Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
-            Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
             Assert.Equal(actual_current.ChunkIndex, expected_current.ChunkIndex);
             Assert.Equal(actual_current.Offset, expected_current.Offset);
             Assert.Equal(actual_current.Length, expected_current.Length);
@@ -204,178 +198,178 @@ public class SelectionTests
         var expected = new RelativeStep[]
         {
             // row 0
-            new RelativeStep(Chunk: [0, 1, 0], ChunkIndex: 5, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 1], ChunkIndex: 6, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [0, 1, 2], ChunkIndex: 7, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 2], ChunkIndex: 7, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 3], ChunkIndex: 8, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [0, 1, 4], ChunkIndex: 9, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 5, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 6, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 7, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 7, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 8, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 9, Offset: 18, Length: 1),
 
-            new RelativeStep(Chunk: [0, 1, 0], ChunkIndex: 5, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 1], ChunkIndex: 6, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: [0, 1, 2], ChunkIndex: 7, Offset: 21, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 2], ChunkIndex: 7, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: [0, 1, 3], ChunkIndex: 8, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: [0, 1, 4], ChunkIndex: 9, Offset: 21, Length: 1),
+            new RelativeStep(ChunkIndex: 5, Offset: 23, Length: 1),
+            new RelativeStep(ChunkIndex: 6, Offset: 21, Length: 3),
+            new RelativeStep(ChunkIndex: 7, Offset: 21, Length: 1),
+            new RelativeStep(ChunkIndex: 7, Offset: 23, Length: 1),
+            new RelativeStep(ChunkIndex: 8, Offset: 21, Length: 3),
+            new RelativeStep(ChunkIndex: 9, Offset: 21, Length: 1),
 
-            new RelativeStep(Chunk: [0, 2, 0], ChunkIndex: 10, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: [0, 2, 1], ChunkIndex: 11, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: [0, 2, 2], ChunkIndex: 12, Offset: 24, Length: 1),
-            new RelativeStep(Chunk: [0, 2, 2], ChunkIndex: 12, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: [0, 2, 3], ChunkIndex: 13, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: [0, 2, 4], ChunkIndex: 14, Offset: 24, Length: 1),
+            new RelativeStep(ChunkIndex: 10, Offset: 26, Length: 1),
+            new RelativeStep(ChunkIndex: 11, Offset: 24, Length: 3),
+            new RelativeStep(ChunkIndex: 12, Offset: 24, Length: 1),
+            new RelativeStep(ChunkIndex: 12, Offset: 26, Length: 1),
+            new RelativeStep(ChunkIndex: 13, Offset: 24, Length: 3),
+            new RelativeStep(ChunkIndex: 14, Offset: 24, Length: 1),
 
-            new RelativeStep(Chunk: [0, 3, 0], ChunkIndex: 15, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [0, 3, 1], ChunkIndex: 16, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [0, 3, 2], ChunkIndex: 17, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: [0, 3, 2], ChunkIndex: 17, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [0, 3, 3], ChunkIndex: 18, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [0, 3, 4], ChunkIndex: 19, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 15, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 16, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 17, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 17, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 18, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 19, Offset: 18, Length: 1),
 
             // row 1
-            new RelativeStep(Chunk: [1, 1, 0], ChunkIndex: 30, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 1], ChunkIndex: 31, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 3], ChunkIndex: 33, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 4], ChunkIndex: 34, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 30, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 31, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 32, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 32, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 33, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 34, Offset: 0, Length: 1),
 
-            new RelativeStep(Chunk: [1, 1, 0], ChunkIndex: 30, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 1], ChunkIndex: 31, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 3, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 3], ChunkIndex: 33, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 4], ChunkIndex: 34, Offset: 3, Length: 1),
+            new RelativeStep(ChunkIndex: 30, Offset: 5, Length: 1),
+            new RelativeStep(ChunkIndex: 31, Offset: 3, Length: 3),
+            new RelativeStep(ChunkIndex: 32, Offset: 3, Length: 1),
+            new RelativeStep(ChunkIndex: 32, Offset: 5, Length: 1),
+            new RelativeStep(ChunkIndex: 33, Offset: 3, Length: 3),
+            new RelativeStep(ChunkIndex: 34, Offset: 3, Length: 1),
 
-            new RelativeStep(Chunk: [1, 2, 0], ChunkIndex: 35, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 1], ChunkIndex: 36, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: [1, 2, 2], ChunkIndex: 37, Offset: 6, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 2], ChunkIndex: 37, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 3], ChunkIndex: 38, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: [1, 2, 4], ChunkIndex: 39, Offset: 6, Length: 1),
+            new RelativeStep(ChunkIndex: 35, Offset: 8, Length: 1),
+            new RelativeStep(ChunkIndex: 36, Offset: 6, Length: 3),
+            new RelativeStep(ChunkIndex: 37, Offset: 6, Length: 1),
+            new RelativeStep(ChunkIndex: 37, Offset: 8, Length: 1),
+            new RelativeStep(ChunkIndex: 38, Offset: 6, Length: 3),
+            new RelativeStep(ChunkIndex: 39, Offset: 6, Length: 1),
 
-            new RelativeStep(Chunk: [1, 3, 0], ChunkIndex: 40, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [1, 3, 1], ChunkIndex: 41, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [1, 3, 2], ChunkIndex: 42, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: [1, 3, 2], ChunkIndex: 42, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [1, 3, 3], ChunkIndex: 43, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [1, 3, 4], ChunkIndex: 44, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 40, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 41, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 42, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 42, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 43, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 44, Offset: 0, Length: 1),
 
             // row 2
-            new RelativeStep(Chunk: [1, 1, 0], ChunkIndex: 30, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 1], ChunkIndex: 31, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 3], ChunkIndex: 33, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 4], ChunkIndex: 34, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 30, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 31, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 32, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 32, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 33, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 34, Offset: 9, Length: 1),
 
-            new RelativeStep(Chunk: [1, 1, 0], ChunkIndex: 30, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 1], ChunkIndex: 31, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 12, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 2], ChunkIndex: 32, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: [1, 1, 3], ChunkIndex: 33, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: [1, 1, 4], ChunkIndex: 34, Offset: 12, Length: 1),
+            new RelativeStep(ChunkIndex: 30, Offset: 14, Length: 1),
+            new RelativeStep(ChunkIndex: 31, Offset: 12, Length: 3),
+            new RelativeStep(ChunkIndex: 32, Offset: 12, Length: 1),
+            new RelativeStep(ChunkIndex: 32, Offset: 14, Length: 1),
+            new RelativeStep(ChunkIndex: 33, Offset: 12, Length: 3),
+            new RelativeStep(ChunkIndex: 34, Offset: 12, Length: 1),
 
-            new RelativeStep(Chunk: [1, 2, 0], ChunkIndex: 35, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 1], ChunkIndex: 36, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: [1, 2, 2], ChunkIndex: 37, Offset: 15, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 2], ChunkIndex: 37, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: [1, 2, 3], ChunkIndex: 38, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: [1, 2, 4], ChunkIndex: 39, Offset: 15, Length: 1),
+            new RelativeStep(ChunkIndex: 35, Offset: 17, Length: 1),
+            new RelativeStep(ChunkIndex: 36, Offset: 15, Length: 3),
+            new RelativeStep(ChunkIndex: 37, Offset: 15, Length: 1),
+            new RelativeStep(ChunkIndex: 37, Offset: 17, Length: 1),
+            new RelativeStep(ChunkIndex: 38, Offset: 15, Length: 3),
+            new RelativeStep(ChunkIndex: 39, Offset: 15, Length: 1),
 
-            new RelativeStep(Chunk: [1, 3, 0], ChunkIndex: 40, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [1, 3, 1], ChunkIndex: 41, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [1, 3, 2], ChunkIndex: 42, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: [1, 3, 2], ChunkIndex: 42, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [1, 3, 3], ChunkIndex: 43, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [1, 3, 4], ChunkIndex: 44, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 40, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 41, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 42, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 42, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 43, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 44, Offset: 9, Length: 1),
 
             // row 3
-            new RelativeStep(Chunk: [2, 1, 0], ChunkIndex: 55, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [2, 1, 1], ChunkIndex: 56, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [2, 1, 2], ChunkIndex: 57, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: [2, 1, 2], ChunkIndex: 57, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [2, 1, 3], ChunkIndex: 58, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [2, 1, 4], ChunkIndex: 59, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 55, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 56, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 57, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 57, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 58, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 59, Offset: 18, Length: 1),
 
-            new RelativeStep(Chunk: [2, 1, 0], ChunkIndex: 55, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: [2, 1, 1], ChunkIndex: 56, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: [2, 1, 2], ChunkIndex: 57, Offset: 21, Length: 1),
-            new RelativeStep(Chunk: [2, 1, 2], ChunkIndex: 57, Offset: 23, Length: 1),
-            new RelativeStep(Chunk: [2, 1, 3], ChunkIndex: 58, Offset: 21, Length: 3),
-            new RelativeStep(Chunk: [2, 1, 4], ChunkIndex: 59, Offset: 21, Length: 1),
+            new RelativeStep(ChunkIndex: 55, Offset: 23, Length: 1),
+            new RelativeStep(ChunkIndex: 56, Offset: 21, Length: 3),
+            new RelativeStep(ChunkIndex: 57, Offset: 21, Length: 1),
+            new RelativeStep(ChunkIndex: 57, Offset: 23, Length: 1),
+            new RelativeStep(ChunkIndex: 58, Offset: 21, Length: 3),
+            new RelativeStep(ChunkIndex: 59, Offset: 21, Length: 1),
 
-            new RelativeStep(Chunk: [2, 2, 0], ChunkIndex: 60, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: [2, 2, 1], ChunkIndex: 61, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: [2, 2, 2], ChunkIndex: 62, Offset: 24, Length: 1),
-            new RelativeStep(Chunk: [2, 2, 2], ChunkIndex: 62, Offset: 26, Length: 1),
-            new RelativeStep(Chunk: [2, 2, 3], ChunkIndex: 63, Offset: 24, Length: 3),
-            new RelativeStep(Chunk: [2, 2, 4], ChunkIndex: 64, Offset: 24, Length: 1),
+            new RelativeStep(ChunkIndex: 60, Offset: 26, Length: 1),
+            new RelativeStep(ChunkIndex: 61, Offset: 24, Length: 3),
+            new RelativeStep(ChunkIndex: 62, Offset: 24, Length: 1),
+            new RelativeStep(ChunkIndex: 62, Offset: 26, Length: 1),
+            new RelativeStep(ChunkIndex: 63, Offset: 24, Length: 3),
+            new RelativeStep(ChunkIndex: 64, Offset: 24, Length: 1),
 
-            new RelativeStep(Chunk: [2, 3, 0], ChunkIndex: 65, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [2, 3, 1], ChunkIndex: 66, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [2, 3, 2], ChunkIndex: 67, Offset: 18, Length: 1),
-            new RelativeStep(Chunk: [2, 3, 2], ChunkIndex: 67, Offset: 20, Length: 1),
-            new RelativeStep(Chunk: [2, 3, 3], ChunkIndex: 68, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [2, 3, 4], ChunkIndex: 69, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 65, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 66, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 67, Offset: 18, Length: 1),
+            new RelativeStep(ChunkIndex: 67, Offset: 20, Length: 1),
+            new RelativeStep(ChunkIndex: 68, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 69, Offset: 18, Length: 1),
 
             // row 4
-            new RelativeStep(Chunk: [3, 1, 0], ChunkIndex: 80, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 1], ChunkIndex: 81, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 3], ChunkIndex: 83, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 4], ChunkIndex: 84, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 80, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 81, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 82, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 82, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 83, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 84, Offset: 0, Length: 1),
 
-            new RelativeStep(Chunk: [3, 1, 0], ChunkIndex: 80, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 1], ChunkIndex: 81, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 3, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 5, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 3], ChunkIndex: 83, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 4], ChunkIndex: 84, Offset: 3, Length: 1),
+            new RelativeStep(ChunkIndex: 80, Offset: 5, Length: 1),
+            new RelativeStep(ChunkIndex: 81, Offset: 3, Length: 3),
+            new RelativeStep(ChunkIndex: 82, Offset: 3, Length: 1),
+            new RelativeStep(ChunkIndex: 82, Offset: 5, Length: 1),
+            new RelativeStep(ChunkIndex: 83, Offset: 3, Length: 3),
+            new RelativeStep(ChunkIndex: 84, Offset: 3, Length: 1),
 
-            new RelativeStep(Chunk: [3, 2, 0], ChunkIndex: 85, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: [3, 2, 1], ChunkIndex: 86, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: [3, 2, 2], ChunkIndex: 87, Offset: 6, Length: 1),
-            new RelativeStep(Chunk: [3, 2, 2], ChunkIndex: 87, Offset: 8, Length: 1),
-            new RelativeStep(Chunk: [3, 2, 3], ChunkIndex: 88, Offset: 6, Length: 3),
-            new RelativeStep(Chunk: [3, 2, 4], ChunkIndex: 89, Offset: 6, Length: 1),
+            new RelativeStep(ChunkIndex: 85, Offset: 8, Length: 1),
+            new RelativeStep(ChunkIndex: 86, Offset: 6, Length: 3),
+            new RelativeStep(ChunkIndex: 87, Offset: 6, Length: 1),
+            new RelativeStep(ChunkIndex: 87, Offset: 8, Length: 1),
+            new RelativeStep(ChunkIndex: 88, Offset: 6, Length: 3),
+            new RelativeStep(ChunkIndex: 89, Offset: 6, Length: 1),
 
-            new RelativeStep(Chunk: [3, 3, 0], ChunkIndex: 90, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [3, 3, 1], ChunkIndex: 91, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [3, 3, 2], ChunkIndex: 92, Offset: 0, Length: 1),
-            new RelativeStep(Chunk: [3, 3, 2], ChunkIndex: 92, Offset: 2, Length: 1),
-            new RelativeStep(Chunk: [3, 3, 3], ChunkIndex: 93, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [3, 3, 4], ChunkIndex: 94, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 90, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 91, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 92, Offset: 0, Length: 1),
+            new RelativeStep(ChunkIndex: 92, Offset: 2, Length: 1),
+            new RelativeStep(ChunkIndex: 93, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 94, Offset: 0, Length: 1),
 
             // row 5
-            new RelativeStep(Chunk: [3, 1, 0], ChunkIndex: 80, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 1], ChunkIndex: 81, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 3], ChunkIndex: 83, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 4], ChunkIndex: 84, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 80, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 81, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 82, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 82, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 83, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 84, Offset: 9, Length: 1),
 
-            new RelativeStep(Chunk: [3, 1, 0], ChunkIndex: 80, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 1], ChunkIndex: 81, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 12, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 2], ChunkIndex: 82, Offset: 14, Length: 1),
-            new RelativeStep(Chunk: [3, 1, 3], ChunkIndex: 83, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: [3, 1, 4], ChunkIndex: 84, Offset: 12, Length: 1),
+            new RelativeStep(ChunkIndex: 80, Offset: 14, Length: 1),
+            new RelativeStep(ChunkIndex: 81, Offset: 12, Length: 3),
+            new RelativeStep(ChunkIndex: 82, Offset: 12, Length: 1),
+            new RelativeStep(ChunkIndex: 82, Offset: 14, Length: 1),
+            new RelativeStep(ChunkIndex: 83, Offset: 12, Length: 3),
+            new RelativeStep(ChunkIndex: 84, Offset: 12, Length: 1),
 
-            new RelativeStep(Chunk: [3, 2, 0], ChunkIndex: 85, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: [3, 2, 1], ChunkIndex: 86, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: [3, 2, 2], ChunkIndex: 87, Offset: 15, Length: 1),
-            new RelativeStep(Chunk: [3, 2, 2], ChunkIndex: 87, Offset: 17, Length: 1),
-            new RelativeStep(Chunk: [3, 2, 3], ChunkIndex: 88, Offset: 15, Length: 3),
-            new RelativeStep(Chunk: [3, 2, 4], ChunkIndex: 89, Offset: 15, Length: 1),
+            new RelativeStep(ChunkIndex: 85, Offset: 17, Length: 1),
+            new RelativeStep(ChunkIndex: 86, Offset: 15, Length: 3),
+            new RelativeStep(ChunkIndex: 87, Offset: 15, Length: 1),
+            new RelativeStep(ChunkIndex: 87, Offset: 17, Length: 1),
+            new RelativeStep(ChunkIndex: 88, Offset: 15, Length: 3),
+            new RelativeStep(ChunkIndex: 89, Offset: 15, Length: 1),
 
-            new RelativeStep(Chunk: [3, 3, 0], ChunkIndex: 90, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [3, 3, 1], ChunkIndex: 91, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [3, 3, 2], ChunkIndex: 92, Offset: 9, Length: 1),
-            new RelativeStep(Chunk: [3, 3, 2], ChunkIndex: 92, Offset: 11, Length: 1),
-            new RelativeStep(Chunk: [3, 3, 3], ChunkIndex: 93, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [3, 3, 4], ChunkIndex: 94, Offset: 9, Length: 1)
+            new RelativeStep(ChunkIndex: 90, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 91, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 92, Offset: 9, Length: 1),
+            new RelativeStep(ChunkIndex: 92, Offset: 11, Length: 1),
+            new RelativeStep(ChunkIndex: 93, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 94, Offset: 9, Length: 1)
         };
 
         // Act
@@ -389,9 +383,6 @@ public class SelectionTests
         {
             var expected_current = expected[i];
 
-            Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
-            Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
-            Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
             Assert.Equal(actual_current.ChunkIndex, expected_current.ChunkIndex);
             Assert.Equal(actual_current.Offset, expected_current.Offset);
             Assert.Equal(actual_current.Length, expected_current.Length);
@@ -509,17 +500,17 @@ public class SelectionTests
 
         var expected = new RelativeStep[]
         {
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 0, Length: 3),
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 3, Length: 3),
-            new RelativeStep(Chunk: [0, 0, 1], ChunkIndex: 1, Offset: 3, Length: 2),
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 7, Length: 2),
-            new RelativeStep(Chunk: [0, 0, 1], ChunkIndex: 1, Offset: 6, Length: 2),
-            new RelativeStep(Chunk: [0, 1, 0], ChunkIndex: 5, Offset: 1, Length: 2),
-            new RelativeStep(Chunk: [0, 1, 1], ChunkIndex: 6, Offset: 0, Length: 2),
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 9, Length: 3),
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 12, Length: 3),
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 18, Length: 3),
-            new RelativeStep(Chunk: [0, 0, 0], ChunkIndex: 0, Offset: 21, Length: 3)
+            new RelativeStep(ChunkIndex: 0, Offset: 0, Length: 3),
+            new RelativeStep(ChunkIndex: 0, Offset: 3, Length: 3),
+            new RelativeStep(ChunkIndex: 1, Offset: 3, Length: 2),
+            new RelativeStep(ChunkIndex: 0, Offset: 7, Length: 2),
+            new RelativeStep(ChunkIndex: 1, Offset: 6, Length: 2),
+            new RelativeStep(ChunkIndex: 5, Offset: 1, Length: 2),
+            new RelativeStep(ChunkIndex: 6, Offset: 0, Length: 2),
+            new RelativeStep(ChunkIndex: 0, Offset: 9, Length: 3),
+            new RelativeStep(ChunkIndex: 0, Offset: 12, Length: 3),
+            new RelativeStep(ChunkIndex: 0, Offset: 18, Length: 3),
+            new RelativeStep(ChunkIndex: 0, Offset: 21, Length: 3)
         };
 
         // Act
@@ -533,9 +524,6 @@ public class SelectionTests
         {
             var expected_current = expected[i];
 
-            Assert.Equal(actual_current.Chunk[0], expected_current.Chunk[0]);
-            Assert.Equal(actual_current.Chunk[1], expected_current.Chunk[1]);
-            Assert.Equal(actual_current.Chunk[2], expected_current.Chunk[2]);
             Assert.Equal(actual_current.ChunkIndex, expected_current.ChunkIndex);
             Assert.Equal(actual_current.Offset, expected_current.Offset);
             Assert.Equal(actual_current.Length, expected_current.Length);

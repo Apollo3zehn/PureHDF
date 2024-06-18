@@ -20,7 +20,7 @@ internal record EncodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong[], Memory<T>> GetSourceBuffer,
+    Func<ulong, Memory<T>> GetSourceBuffer,
     Func<ulong, IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
@@ -28,7 +28,6 @@ internal record EncodeInfo<T>(
 );
 
 internal readonly record struct RelativeStep(
-    ulong[] Chunk,
     ulong ChunkIndex,
     ulong Offset,
     ulong Length
@@ -97,7 +96,6 @@ internal static class SelectionHelper
 
                 yield return new RelativeStep()
                 {
-                    Chunk = scaledOffsets,
                     ChunkIndex = chunkIndex,
                     Offset = offset,
                     Length = currentLength
@@ -143,7 +141,7 @@ internal static class SelectionHelper
     {
         /* initialize source walker */
         var sourceBuffer = default(Memory<TResult>);
-        var lastSourceChunk = default(ulong[]);
+        var lastSourceChunkIndex = 0UL;
         var currentSource = default(Memory<TResult>);
 
         /* initialize target walker */
@@ -178,10 +176,10 @@ internal static class SelectionHelper
                         throw new FormatException("The source walker stopped early.");
 
                     if (sourceBuffer.Length == 0 /* if buffer not assigned yet */ ||
-                        !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
+                        sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
                     {
-                        sourceBuffer = encodeInfo.GetSourceBuffer(sourceStep.Chunk);
-                        lastSourceChunk = sourceStep.Chunk;
+                        sourceBuffer = encodeInfo.GetSourceBuffer(sourceStep.ChunkIndex);
+                        lastSourceChunkIndex = sourceStep.ChunkIndex;
                     }
 
                     currentSource = sourceBuffer.Slice(
