@@ -422,7 +422,8 @@ partial class H5NativeWriter
             GetTargetStream: getTargetStream,
             Encoder: encode,
             SourceTypeSizeFactor: (int)opaqueSourceTypeSizeFactor,
-            TargetTypeSize: (int)datatype.Size
+            TargetTypeSize: (int)datatype.Size,
+            AllowBulkCopy: true
         );
 
         /* encode data */

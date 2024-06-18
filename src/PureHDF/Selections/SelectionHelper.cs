@@ -10,7 +10,8 @@ internal record DecodeInfo<T>(
     Func<ulong, IH5ReadStream> GetSourceStream,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
-    int TargetTypeSizeFactor
+    int TargetTypeSizeFactor,
+    bool AllowBulkCopy
 );
 
 internal record EncodeInfo<T>(
@@ -24,7 +25,8 @@ internal record EncodeInfo<T>(
     Func<ulong, IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
-    int TargetTypeSize
+    int TargetTypeSize,
+    bool AllowBulkCopy
 );
 
 internal readonly record struct RelativeStep(
@@ -35,7 +37,13 @@ internal readonly record struct RelativeStep(
 
 internal static class SelectionHelper
 {
-    public static IEnumerable<RelativeStep> Walk(int rank, ulong[] dims, ulong[] chunkDims, Selection selection)
+    public static IEnumerable<RelativeStep> Walk(
+        int rank, 
+        ulong[] dims, 
+        ulong[] chunkDims, 
+        Selection selection,
+        bool allowBulkCopy
+    )
     {
         /* check if there is anything to do */
         if (selection.TotalElementCount == 0)
@@ -44,6 +52,35 @@ internal static class SelectionHelper
         /* validate rank */
         if (dims.Length != rank || chunkDims.Length != rank)
             throw new RankException($"The length of each array parameter must match the rank parameter.");
+
+        /* check for bulk copy (short cut) */
+        if (allowBulkCopy &&
+            chunkDims.SequenceEqual(dims) /* single chunk or not chunked at all */ &&
+            selection is HyperslabSelection hs &&
+            hs.Starts.All(start => start == 0) &&
+            hs.Strides.SequenceEqual(hs.Blocks)
+        )
+        {
+            var canBulkCopy = true;
+
+            for (int i = 0; i < rank; i++)
+            {
+                if (hs.Blocks[i] * hs.Counts[i] != dims[i])
+                    canBulkCopy = false;
+            }
+
+            if (canBulkCopy)
+            {
+                var relativeStep = new RelativeStep(
+                    ChunkIndex: 0,
+                    Offset: 0,
+                    Length: selection.TotalElementCount
+                );
+
+                yield return relativeStep;
+                yield break;
+            }
+        }
 
         /* prepare some useful arrays */
         var lastDim = rank - 1;
@@ -124,11 +161,21 @@ internal static class SelectionHelper
             throw new RankException($"The length of each array parameter must match the rank parameter.");
 
         /* walkers */
-        var sourceWalker = Walk(sourceRank, encodeInfo.SourceDims, encodeInfo.SourceChunkDims, encodeInfo.SourceSelection)
-            .GetEnumerator();
+        var sourceWalker = Walk(
+            sourceRank, 
+            encodeInfo.SourceDims, 
+            encodeInfo.SourceChunkDims, 
+            encodeInfo.SourceSelection,
+            encodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
-        var targetWalker = Walk(targetRank, encodeInfo.TargetDims, encodeInfo.TargetChunkDims, encodeInfo.TargetSelection)
-            .GetEnumerator();
+        var targetWalker = Walk(
+            targetRank, 
+            encodeInfo.TargetDims, 
+            encodeInfo.TargetChunkDims, 
+            encodeInfo.TargetSelection,
+            encodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
         /* select method */
         EncodeStream(sourceWalker, targetWalker, encodeInfo);
@@ -222,11 +269,21 @@ internal static class SelectionHelper
             throw new RankException($"The length of each array parameter must match the rank parameter.");
 
         /* walkers */
-        var sourceWalker = Walk(sourceRank, decodeInfo.SourceDims, decodeInfo.SourceChunkDims, decodeInfo.SourceSelection)
-            .GetEnumerator();
+        var sourceWalker = Walk(
+            sourceRank, 
+            decodeInfo.SourceDims, 
+            decodeInfo.SourceChunkDims, 
+            decodeInfo.SourceSelection,
+            decodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
-        var targetWalker = Walk(targetRank, decodeInfo.TargetDims, decodeInfo.TargetChunkDims, decodeInfo.TargetSelection)
-            .GetEnumerator();
+        var targetWalker = Walk(
+            targetRank, 
+            decodeInfo.TargetDims, 
+            decodeInfo.TargetChunkDims, 
+            decodeInfo.TargetSelection,
+            decodeInfo.AllowBulkCopy
+        ).GetEnumerator();
 
         /* select method */
         DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer);

@@ -22,7 +22,7 @@ public class Walk
     public int Execute()
     {
         var steps = SelectionHelper
-            .Walk(rank: 3, Dims, ChunkDims, Selection)
+            .Walk(rank: 3, Dims, ChunkDims, Selection, allowBulkCopy: true)
             .ToArray();
 
         return steps.Length;

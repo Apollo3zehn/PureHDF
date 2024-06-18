@@ -27,12 +27,16 @@ public class SelectionTests
         var selection = new NoneSelection();
 
         // Act
-        var actual = SelectionHelper
-            .Walk(rank: 3, dims, chunkDims, selection)
-            .ToArray();
+        var actual = SelectionHelper.Walk(
+            rank: 3, 
+            dims, 
+            chunkDims, 
+            selection,
+            allowBulkCopy: true
+        );
 
         // Assert
-        Assert.Empty(actual);
+        Assert.Empty(actual.ToArray());
     }
 
     [Fact]
@@ -81,8 +85,13 @@ public class SelectionTests
         };
 
         // Act
-        var actual = SelectionHelper
-            .Walk(rank: 3, dims, chunkDims, selection);
+        var actual = SelectionHelper.Walk(
+            rank: 3, 
+            dims, 
+            chunkDims, 
+            selection,
+            allowBulkCopy: true
+        );
 
         // Assert
         var i = 0;
@@ -142,8 +151,13 @@ public class SelectionTests
         };
 
         // Act
-        var actual = SelectionHelper
-            .Walk(rank: 3, dims, chunkDims, selection);
+        var actual = SelectionHelper.Walk(
+            rank: 3, 
+            dims,
+            chunkDims, 
+            selection,
+            allowBulkCopy: true
+        );
 
         // Assert
         var i = 0;
@@ -373,8 +387,13 @@ public class SelectionTests
         };
 
         // Act
-        var actual = SelectionHelper
-            .Walk(rank: 3, dims, chunkDims, selection);
+        var actual = SelectionHelper.Walk(
+            rank: 3, 
+            dims, 
+            chunkDims, 
+            selection,
+            allowBulkCopy: true
+        );
 
         // Assert
         var i = 0;
@@ -514,8 +533,13 @@ public class SelectionTests
         };
 
         // Act
-        var actual = SelectionHelper
-            .Walk(rank: 3, dims, chunkDims, selection);
+        var actual = SelectionHelper.Walk(
+            rank: 3,
+            dims, 
+            chunkDims, 
+            selection,
+            allowBulkCopy: true
+        );
 
         // Assert
         var i = 0;
@@ -541,7 +565,13 @@ public class SelectionTests
         var selection = new HyperslabSelection(1, 4, 3, 3);
 
         // Act
-        void action() => _ = SelectionHelper.Walk(rank: 3, dims, chunkDims, selection).ToArray();
+        void action() => _ = SelectionHelper.Walk(
+            rank: 3, 
+            dims, 
+            chunkDims, 
+            selection,
+            allowBulkCopy: true
+        );
 
         // Assert
         Assert.Throws<RankException>(action);
@@ -572,7 +602,8 @@ public class SelectionTests
             default!,
             default!,
             default,
-            default
+            default,
+            AllowBulkCopy: true
         );
 
         // Act
@@ -618,7 +649,8 @@ public class SelectionTests
             index => default!,
             Decoder: default!,
             SourceTypeSize: 4,
-            TargetTypeSizeFactor: 1
+            TargetTypeSizeFactor: 1,
+            AllowBulkCopy: true
         );
 
         // Act
@@ -661,7 +693,8 @@ public class SelectionTests
             index => default!,
             Decoder: default!,
             SourceTypeSize: 4,
-            TargetTypeSizeFactor: 1
+            TargetTypeSizeFactor: 1,
+            AllowBulkCopy: true
         );
 
         // Act
@@ -773,7 +806,8 @@ public class SelectionTests
             index => new SystemMemoryStream(chunksBuffers[(int)index]),
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4,
-            TargetTypeSizeFactor: 1
+            TargetTypeSizeFactor: 1,
+            AllowBulkCopy: true
         );
 
         // Act
@@ -891,7 +925,8 @@ public class SelectionTests
             getSourceStream,
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4,
-            TargetTypeSizeFactor: 1
+            TargetTypeSizeFactor: 1,
+            AllowBulkCopy: true
         );
 
         // Act
@@ -1021,7 +1056,8 @@ public class SelectionTests
             getSourceStream,
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4,
-            TargetTypeSizeFactor: 1
+            TargetTypeSizeFactor: 1,
+            AllowBulkCopy: true
         );
 
         // Act
@@ -1121,7 +1157,8 @@ public class SelectionTests
                 index => h5dIntermediate.GetReadStream(index),
                 (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
                 SourceTypeSize: 4,
-                TargetTypeSizeFactor: 1
+                TargetTypeSizeFactor: 1,
+                AllowBulkCopy: true
             );
 
             SelectionHelper.Decode(sourceRank: 3, targetRank: 3, decodeInfoInterMediate, intermediate);
@@ -1142,7 +1179,8 @@ public class SelectionTests
                 index => h5dIntermediate.GetReadStream(index),
                 Decoder: default!,
                 SourceTypeSize: 4,
-                TargetTypeSizeFactor: 1
+                TargetTypeSizeFactor: 1,
+                AllowBulkCopy: true
             );
 
             // Act
