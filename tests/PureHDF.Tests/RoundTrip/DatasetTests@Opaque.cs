@@ -22,5 +22,8 @@ public class DataSetsRoundTripTests
 
         var dataRead = dataset.Read<byte[]>();
         Assert.True(dataRead.SequenceEqual(data));
+        // TODO: Does currently not work
+        /*var dataReadMemory = dataset.Read<Memory<byte>>();
+        Assert.True(dataReadMemory.Span.SequenceEqual(data));*/
     }
 }

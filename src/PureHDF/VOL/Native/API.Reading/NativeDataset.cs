@@ -325,12 +325,14 @@ public class NativeDataset : NativeObject, IH5Dataset
             var resultType = typeof(TResult);
 
             /* memory dims */
-            if (DataUtils.IsArray(resultType))
+            if (isRawMode && InternalDataType.Class == DatatypeMessageClass.Opaque)
+            {
+                memoryDims ??= [InternalDataType.Size];
+            }
+            else if (DataUtils.IsArray(resultType))
             {
                 var rank = resultType.GetArrayRank();
 
-                if (rank == 1 && isRawMode && InternalDataType.Class == DatatypeMessageClass.Opaque)
-                    memoryDims ??= [InternalDataType.Size];
                 if (rank == 1)
                     memoryDims ??= [fileSelection.TotalElementCount];
 
@@ -340,7 +342,6 @@ public class NativeDataset : NativeObject, IH5Dataset
                 else
                     throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
             }
-
             else
             {
                 memoryDims ??= [1];
