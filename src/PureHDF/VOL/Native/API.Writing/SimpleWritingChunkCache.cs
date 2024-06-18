@@ -7,20 +7,15 @@ public partial class SimpleWritingChunkCache : IWritingChunkCache
 {
     private record WritingChunkInfo(Memory<byte> Chunk);
 
-    private readonly Dictionary<ulong[], WritingChunkInfo> _chunkInfoMap;
-
-    internal SimpleWritingChunkCache()
-    {
-        _chunkInfoMap = new Dictionary<ulong[], WritingChunkInfo>(new ArrayEqualityComparer());
-    }
+    private readonly Dictionary<ulong, WritingChunkInfo> _chunkInfoMap = new();
 
     /// <inheritdoc />
     public Memory<byte> GetChunk(
-        ulong[] indices,
+        ulong chunkIndex,
         Func<Memory<byte>> chunkAllocator,
-        Action<ulong[], Memory<byte>> chunkWriter)
+        Action<ulong, Memory<byte>> chunkWriter)
     {
-        if (_chunkInfoMap.TryGetValue(indices, out var chunkInfo))
+        if (_chunkInfoMap.TryGetValue(chunkIndex, out var chunkInfo))
         {
             //
         }
@@ -29,14 +24,14 @@ public partial class SimpleWritingChunkCache : IWritingChunkCache
         {
             var buffer = chunkAllocator();
             chunkInfo = new WritingChunkInfo(buffer);
-            _chunkInfoMap[indices] = chunkInfo;
+            _chunkInfoMap[chunkIndex] = chunkInfo;
         }
 
         return chunkInfo.Chunk;
     }
 
     /// <inheritdoc />
-    public void Flush(Action<ulong[], Memory<byte>>? chunkWriter = null)
+    public void Flush(Action<ulong, Memory<byte>>? chunkWriter = null)
     {
         foreach (var entry in _chunkInfoMap)
         {

@@ -26,7 +26,7 @@ internal class H5D_Contiguous : H5D_Base
         return Dataset.Space.GetDims();
     }
 
-    public override IH5ReadStream GetReadStream(ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong chunkIndex, ulong[] chunkIndices)
     {
         if (_readStream is null)
         {
@@ -52,7 +52,7 @@ internal class H5D_Contiguous : H5D_Base
         return _readStream;
     }
 
-    public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong chunkIndex, ulong[] chunkIndices)
     {
         if (Dataset.Layout is DataLayoutMessage4)
         {

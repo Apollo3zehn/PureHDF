@@ -174,11 +174,11 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override IH5ReadStream GetReadStream(ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong chunkIndex, ulong[] chunkIndices)
     {
         var buffer = _readingChunkCache
             .GetChunk(
-                chunkIndices,
+                chunkIndex,
                 chunkReader: () => ReadChunk(chunkIndices));
 
         var stream = new SystemMemoryStream(buffer);
@@ -186,13 +186,13 @@ internal abstract class H5D_Chunk : H5D_Base
         return stream;
     }
 
-    public override IH5WriteStream GetWriteStream(ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong chunkIndex, ulong[] chunkIndices)
     {
         var buffer = _writingChunkCache
             .GetChunk(
-                chunkIndices,
+                chunkIndex,
                 chunkAllocator: () => new byte[ChunkByteSize],
-                chunkWriter: WriteChunk);
+                chunkWriter: (_, chunk) => WriteChunk(chunkIndices, chunk));
 
         var stream = new SystemMemoryStream(buffer);
 
@@ -202,7 +202,9 @@ internal abstract class H5D_Chunk : H5D_Base
     public void FlushChunkCache()
     {
         if (WriteContext is not null)
-            _writingChunkCache.Flush(WriteChunk);
+        {
+            _writingChunkCache.Flush((chunkIndex, chunk) => WriteChunk(MathUtils.ToCoordinates(chunkIndex, ScaledDims), chunk));
+        }
     }
 
     protected abstract ulong[] GetRawChunkDims();
@@ -258,10 +260,10 @@ internal abstract class H5D_Chunk : H5D_Base
                 else
                 {
 #if NET5_0_OR_GREATER
-                        chunk = GC
-                            .AllocateUninitializedArray<byte>((int)ChunkByteSize);
+                    chunk = GC
+                        .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 #else
-                        chunk = new byte[(int)ChunkByteSize];
+                    chunk = new byte[(int)ChunkByteSize];
 #endif
 
                     chunk.Span.Fill(Dataset.FillValue.Value);
@@ -273,10 +275,10 @@ internal abstract class H5D_Chunk : H5D_Base
                 if (Dataset.FilterPipeline is null)
                 {
 #if NET5_0_OR_GREATER
-                        chunk = GC
-                            .AllocateUninitializedArray<byte>((int)ChunkByteSize);
+                    chunk = GC
+                        .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 #else
-                        chunk = new byte[(int)ChunkByteSize];
+                    chunk = new byte[(int)ChunkByteSize];
 #endif
 
                     ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
@@ -326,7 +328,8 @@ internal abstract class H5D_Chunk : H5D_Base
                 filterMask,
                 H5FilterFlags.None,
                 (int)ChunkByteSize,
-                chunk);
+                chunk
+            );
 
             var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)buffer.Length, filterMask);
 

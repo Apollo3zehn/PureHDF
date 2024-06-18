@@ -7,7 +7,7 @@ internal record DecodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong[], IH5ReadStream> GetSourceStream,
+    Func<ulong, ulong[], IH5ReadStream> GetSourceStream,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
     int TargetTypeSizeFactor
@@ -21,7 +21,7 @@ internal record EncodeInfo<T>(
     Selection SourceSelection,
     Selection TargetSelection,
     Func<ulong[], Memory<T>> GetSourceBuffer,
-    Func<ulong[], IH5WriteStream> GetTargetStream,
+    Func<ulong, ulong[], IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
     int TargetTypeSize
@@ -29,6 +29,7 @@ internal record EncodeInfo<T>(
 
 internal readonly record struct RelativeStep(
     ulong[] Chunk,
+    ulong ChunkIndex,
     ulong Offset,
     ulong Length
 );
@@ -52,6 +53,17 @@ internal static class SelectionHelper
         /* prepare last dimension variables */
         var lastChunkDim = chunkDims[lastDim];
 
+        /* Prepare efficient conversion from coordinates to linear index */
+        var scaledOffsets = new ulong[rank];
+
+        var scaledDims = dims
+            .Select((dim, i) => MathUtils.CeilDiv(dim, chunkDims[i]))
+            .ToArray();
+
+        var downChunkCounts = scaledDims.AccumulateReverse();
+        var chunkIndex = 0UL;
+
+        /* walk */
         foreach (var step in selection.Walk(limits: dims))
         {
             /* validate rank */
@@ -63,15 +75,22 @@ internal static class SelectionHelper
             /* process slice */
             while (remaining > 0)
             {
-                // TODO: Performance issue.
-                var scaledOffsets = new ulong[rank];
                 Span<ulong> chunkOffsets = stackalloc ulong[rank];
+                var hasChunkIndexChanged = false;
 
                 for (int dimension = 0; dimension < rank; dimension++)
                 {
-                    scaledOffsets[dimension] = step.Coordinates[dimension] / chunkDims[dimension];
+                    var newScaledOffset = step.Coordinates[dimension] / chunkDims[dimension];
+
+                    if (!hasChunkIndexChanged && scaledOffsets[dimension] != newScaledOffset)
+                        hasChunkIndexChanged = true;
+
+                    scaledOffsets[dimension] = newScaledOffset;
                     chunkOffsets[dimension] = step.Coordinates[dimension] % chunkDims[dimension];
                 }
+
+                if (hasChunkIndexChanged)
+                    chunkIndex = scaledOffsets.ToLinearIndexPrecomputed(downChunkCounts);
 
                 var offset = chunkOffsets.ToLinearIndex(chunkDims);
                 var currentLength = Math.Min(lastChunkDim - chunkOffsets[lastDim], remaining);
@@ -79,6 +98,7 @@ internal static class SelectionHelper
                 yield return new RelativeStep()
                 {
                     Chunk = scaledOffsets,
+                    ChunkIndex = chunkIndex,
                     Offset = offset,
                     Length = currentLength
                 };
@@ -128,7 +148,7 @@ internal static class SelectionHelper
 
         /* initialize target walker */
         var targetStream = default(IH5WriteStream);
-        var lastTargetChunk = default(ulong[]);
+        var lastTargetChunkIndex = 0UL;
 
         /* walk until end */
         while (targetWalker.MoveNext())
@@ -137,10 +157,10 @@ internal static class SelectionHelper
             var targetStep = targetWalker.Current;
 
             if (targetStream is null /* if stream not assigned yet */ ||
-                !targetStep.Chunk.SequenceEqual(lastTargetChunk!) /* or the chunk has changed */)
+                targetStep.ChunkIndex != lastTargetChunkIndex /* or the chunk has changed */)
             {
-                targetStream = encodeInfo.GetTargetStream(targetStep.Chunk);
-                lastTargetChunk = targetStep.Chunk;
+                targetStream = encodeInfo.GetTargetStream(targetStep.ChunkIndex, targetStep.Chunk);
+                lastTargetChunkIndex = targetStep.ChunkIndex;
             }
 
             var currentOffset = (int)targetStep.Offset;
@@ -222,7 +242,7 @@ internal static class SelectionHelper
     {
         /* initialize source walker */
         var sourceStream = default(IH5ReadStream);
-        var lastSourceChunk = default(ulong[]);
+        var lastSourceChunkIndex = 0UL;
 
         /* initialize target walker */
         var currentTarget = default(Span<TResult>);
@@ -234,10 +254,10 @@ internal static class SelectionHelper
             var sourceStep = sourceWalker.Current;
 
             if (sourceStream is null /* if stream not assigned yet */ ||
-                !sourceStep.Chunk.SequenceEqual(lastSourceChunk!) /* or the chunk has changed */)
+                sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
             {
-                sourceStream = decodeInfo.GetSourceStream(sourceStep.Chunk);
-                lastSourceChunk = sourceStep.Chunk;
+                sourceStream = decodeInfo.GetSourceStream(sourceStep.ChunkIndex, sourceStep.Chunk);
+                lastSourceChunkIndex = sourceStep.ChunkIndex;
             }
 
             var virtualDatasetStream = sourceStream as VirtualDatasetStream<TResult>;
@@ -261,7 +281,6 @@ internal static class SelectionHelper
                 }
 
                 /* copy */
-
                 var length = Math.Min(currentLength, currentTarget.Length);
                 var targetLength = length * decodeInfo.TargetTypeSizeFactor;
 

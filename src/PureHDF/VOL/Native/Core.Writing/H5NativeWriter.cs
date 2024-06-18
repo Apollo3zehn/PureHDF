@@ -362,7 +362,7 @@ partial class H5NativeWriter
         var datatype = datasetInfo.Type;
 
         /* buffer provider */
-        IH5WriteStream getTargetStream(ulong[] indices) => h5d.GetWriteStream(indices);
+        IH5WriteStream getTargetStream(ulong index, ulong[] indices) => h5d.GetWriteStream(index, indices);
 
         /* memory dims */
         memoryDims = h5d.Dataset.Space.Type switch
