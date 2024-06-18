@@ -1,3 +1,6 @@
+## v1.0.0-beta.26 - 2024-06-18
+- Read performance of multidimensional, contiguous, compact or single-chunked datasets has been dramatically improved by adding special case handling which allows bulk copying of data if the whole dataset is to be read (no slicing).
+
 ## v1.0.0-beta.25 - 2024-06-13
 - Read performance of chunked datasets in the old version 1 B-tree format has been dramatically improved by adding a cache to avoid repeated deserialisation of in-file structures.
 
