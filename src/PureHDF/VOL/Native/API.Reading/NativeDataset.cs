@@ -329,6 +329,8 @@ public class NativeDataset : NativeObject, IH5Dataset
             {
                 var rank = resultType.GetArrayRank();
 
+                if (rank == 1 && isRawMode && InternalDataType.Class == DatatypeMessageClass.Opaque)
+                    memoryDims ??= [InternalDataType.Size];
                 if (rank == 1)
                     memoryDims ??= [fileSelection.TotalElementCount];
 
