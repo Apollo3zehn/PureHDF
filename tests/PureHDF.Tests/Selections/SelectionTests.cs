@@ -571,7 +571,7 @@ public class SelectionTests
             chunkDims, 
             selection,
             allowBulkCopy: true
-        );
+        ).ToArray();
 
         // Assert
         Assert.Throws<RankException>(action);
