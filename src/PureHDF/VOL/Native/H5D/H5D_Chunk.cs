@@ -192,7 +192,7 @@ internal abstract class H5D_Chunk : H5D_Base
             .GetChunk(
                 chunkIndex,
                 chunkAllocator: () => new byte[ChunkByteSize],
-                chunkWriter: (_, chunk) => WriteChunk(chunkIndices, chunk));
+                chunkWriter: (_, chunk) => WriteChunk(chunkIndex, chunk));
 
         var stream = new SystemMemoryStream(buffer);
 
@@ -203,7 +203,7 @@ internal abstract class H5D_Chunk : H5D_Base
     {
         if (WriteContext is not null)
         {
-            _writingChunkCache.Flush((chunkIndex, chunk) => WriteChunk(MathUtils.ToCoordinates(chunkIndex, ScaledDims), chunk));
+            _writingChunkCache.Flush(WriteChunk);
         }
     }
 
@@ -211,7 +211,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     protected abstract ChunkInfo GetReadChunkInfo(ulong[] chunkIndices);
 
-    protected abstract ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask);
+    protected abstract ChunkInfo GetWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);
 
     protected override void Dispose(bool disposing)
     {
@@ -308,12 +308,12 @@ internal abstract class H5D_Chunk : H5D_Base
     }
 
     private void WriteChunk(
-        ulong[] chunkIndices,
+        ulong chunkIndex,
         Memory<byte> chunk)
     {
         if (Dataset.FilterPipeline is null)
         {
-            var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)chunk.Length, 0);
+            var chunkInfo = GetWriteChunkInfo(chunkIndex, (uint)chunk.Length, 0);
 
             WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
             WriteContext.Driver.Write(chunk.Span);
@@ -331,7 +331,7 @@ internal abstract class H5D_Chunk : H5D_Base
                 chunk
             );
 
-            var chunkInfo = GetWriteChunkInfo(chunkIndices, (uint)buffer.Length, filterMask);
+            var chunkInfo = GetWriteChunkInfo(chunkIndex, (uint)buffer.Length, filterMask);
 
             WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
             WriteContext.Driver.Write(buffer.Span);

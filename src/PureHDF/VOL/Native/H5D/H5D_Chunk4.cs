@@ -73,15 +73,13 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         }
     }
 
-    protected abstract ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask);
+    protected abstract ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);
 
-    protected override ChunkInfo GetWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
-        var chunkIndex = chunkIndices.ToLinearIndexPrecomputed(DownMaxChunkCounts);
-
         if (WriteChunkInfos[chunkIndex].Address == Superblock.UndefinedAddress)
         {
-            var chunkInfo = GetActualWriteChunkInfo(chunkIndices, chunkSize, filterMask);
+            var chunkInfo = GetActualWriteChunkInfo(chunkIndex, chunkSize, filterMask);
             WriteChunkInfos[chunkIndex] = chunkInfo;
 
             return chunkInfo;

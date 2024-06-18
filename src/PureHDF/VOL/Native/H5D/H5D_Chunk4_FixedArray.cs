@@ -55,7 +55,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
         /* Check for filters on chunks */
         ChunkInfo chunkInfo;

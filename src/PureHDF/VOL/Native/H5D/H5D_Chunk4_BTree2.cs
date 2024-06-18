@@ -77,7 +77,7 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetActualWriteChunkInfo(ulong[] chunkIndices, uint chunkSize, uint filterMask)
+    protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
         throw new NotImplementedException();
     }
