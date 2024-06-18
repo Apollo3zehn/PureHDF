@@ -298,23 +298,23 @@
 
   <a id="PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_" data-uid="PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk*"></a>
 
-  <h3 id="PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___" data-uid="PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})">
-  GetChunk(ulong[], Func&lt;Memory&lt;byte&gt;&gt;)
+  <h3 id="PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_System_UInt64_System_Func_System_Memory_System_Byte___" data-uid="PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}})">
+  GetChunk(ulong, Func&lt;Memory&lt;byte&gt;&gt;)
   
   </h3>
 
-  <div class="markdown level1 summary"><p>Tries to get the chunk at the given position.</p>
+  <div class="markdown level1 summary"><p>Tries to get the chunk at the given index.</p>
 </div>
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public Memory&lt;byte&gt; GetChunk(ulong[] indices, Func&lt;Memory&lt;byte&gt;&gt; chunkReader)</code></pre>
+    <pre><code class="lang-csharp hljs">public Memory&lt;byte&gt; GetChunk(ulong chunkIndex, Func&lt;Memory&lt;byte&gt;&gt; chunkReader)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
   <dl class="parameters">
-    <dt><code>indices</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a>[]</dt>
-    <dd><p>The chunk position.</p>
+    <dt><code>chunkIndex</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.uint64">ulong</a></dt>
+    <dd><p>The linear chunk index.</p>
 </dd>
     <dt><code>chunkReader</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-1">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.memory-1">Memory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;&gt;</dt>
     <dd><p>The chunk reader is used whenever the chunk is not already cached.</p>

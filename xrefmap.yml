@@ -4698,15 +4698,15 @@ references:
   commentId: T:PureHDF.VOL.Native.IReadingChunkCache
   fullName: PureHDF.VOL.Native.IReadingChunkCache
   nameWithType: IReadingChunkCache
-- uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
-  name: GetChunk(ulong[], Func<Memory<byte>>)
-  href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.IReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
-  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)))
-  nameWithType: IReadingChunkCache.GetChunk(ulong[], Func<Memory<byte>>)
-  nameWithType.vb: IReadingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}})
+  name: GetChunk(ulong, Func<Memory<byte>>)
+  href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunk_System_UInt64_System_Func_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.IReadingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong, Func(Of Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(ulong, System.Func<System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.IReadingChunkCache.GetChunk(ULong, System.Func(Of System.Memory(Of Byte)))
+  nameWithType: IReadingChunkCache.GetChunk(ulong, Func<Memory<byte>>)
+  nameWithType.vb: IReadingChunkCache.GetChunk(ULong, Func(Of Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.IReadingChunkCache.GetChunk*
   name: GetChunk
   href: api/PureHDF.VOL.Native.IReadingChunkCache.html#PureHDF_VOL_Native_IReadingChunkCache_GetChunk_
@@ -4719,30 +4719,30 @@ references:
   commentId: T:PureHDF.VOL.Native.IWritingChunkCache
   fullName: PureHDF.VOL.Native.IWritingChunkCache
   nameWithType: IWritingChunkCache
-- uid: PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name: Flush(Action<ulong[], Memory<byte>>)
-  href: api/PureHDF.VOL.Native.IWritingChunkCache.html#PureHDF_VOL_Native_IWritingChunkCache_Flush_System_Action_System_UInt64___System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name.vb: Flush(Action(Of ULong(), Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action<ulong[], System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action(Of ULong(), System.Memory(Of Byte)))
-  nameWithType: IWritingChunkCache.Flush(Action<ulong[], Memory<byte>>)
-  nameWithType.vb: IWritingChunkCache.Flush(Action(Of ULong(), Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action{System.UInt64,System.Memory{System.Byte}})
+  name: Flush(Action<ulong, Memory<byte>>)
+  href: api/PureHDF.VOL.Native.IWritingChunkCache.html#PureHDF_VOL_Native_IWritingChunkCache_Flush_System_Action_System_UInt64_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action{System.UInt64,System.Memory{System.Byte}})
+  name.vb: Flush(Action(Of ULong, Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action<ulong, System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.IWritingChunkCache.Flush(System.Action(Of ULong, System.Memory(Of Byte)))
+  nameWithType: IWritingChunkCache.Flush(Action<ulong, Memory<byte>>)
+  nameWithType.vb: IWritingChunkCache.Flush(Action(Of ULong, Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.IWritingChunkCache.Flush*
   name: Flush
   href: api/PureHDF.VOL.Native.IWritingChunkCache.html#PureHDF_VOL_Native_IWritingChunkCache_Flush_
   commentId: Overload:PureHDF.VOL.Native.IWritingChunkCache.Flush
   fullName: PureHDF.VOL.Native.IWritingChunkCache.Flush
   nameWithType: IWritingChunkCache.Flush
-- uid: PureHDF.VOL.Native.IWritingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name: GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
-  href: api/PureHDF.VOL.Native.IWritingChunkCache.html#PureHDF_VOL_Native_IWritingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___System_Action_System_UInt64___System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.IWritingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.IWritingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>, System.Action<ulong[], System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.IWritingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)), System.Action(Of ULong(), System.Memory(Of Byte)))
-  nameWithType: IWritingChunkCache.GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
-  nameWithType.vb: IWritingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.IWritingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}},System.Action{System.UInt64,System.Memory{System.Byte}})
+  name: GetChunk(ulong, Func<Memory<byte>>, Action<ulong, Memory<byte>>)
+  href: api/PureHDF.VOL.Native.IWritingChunkCache.html#PureHDF_VOL_Native_IWritingChunkCache_GetChunk_System_UInt64_System_Func_System_Memory_System_Byte___System_Action_System_UInt64_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.IWritingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}},System.Action{System.UInt64,System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong, Func(Of Memory(Of Byte)), Action(Of ULong, Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.IWritingChunkCache.GetChunk(ulong, System.Func<System.Memory<byte>>, System.Action<ulong, System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.IWritingChunkCache.GetChunk(ULong, System.Func(Of System.Memory(Of Byte)), System.Action(Of ULong, System.Memory(Of Byte)))
+  nameWithType: IWritingChunkCache.GetChunk(ulong, Func<Memory<byte>>, Action<ulong, Memory<byte>>)
+  nameWithType.vb: IWritingChunkCache.GetChunk(ULong, Func(Of Memory(Of Byte)), Action(Of ULong, Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.IWritingChunkCache.GetChunk*
   name: GetChunk
   href: api/PureHDF.VOL.Native.IWritingChunkCache.html#PureHDF_VOL_Native_IWritingChunkCache_GetChunk_
@@ -5400,15 +5400,15 @@ references:
   commentId: Overload:PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
   fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.ConsumedSlots
   nameWithType: SimpleReadingChunkCache.ConsumedSlots
-- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
-  name: GetChunk(ulong[], Func<Memory<byte>>)
-  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}})
-  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)))
-  nameWithType: SimpleReadingChunkCache.GetChunk(ulong[], Func<Memory<byte>>)
-  nameWithType.vb: SimpleReadingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}})
+  name: GetChunk(ulong, Func<Memory<byte>>)
+  href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_System_UInt64_System_Func_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong, Func(Of Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(ulong, System.Func<System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk(ULong, System.Func(Of System.Memory(Of Byte)))
+  nameWithType: SimpleReadingChunkCache.GetChunk(ulong, Func<Memory<byte>>)
+  nameWithType.vb: SimpleReadingChunkCache.GetChunk(ULong, Func(Of Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.SimpleReadingChunkCache.GetChunk*
   name: GetChunk
   href: api/PureHDF.VOL.Native.SimpleReadingChunkCache.html#PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_
@@ -5421,30 +5421,48 @@ references:
   commentId: T:PureHDF.VOL.Native.SimpleWritingChunkCache
   fullName: PureHDF.VOL.Native.SimpleWritingChunkCache
   nameWithType: SimpleWritingChunkCache
-- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name: Flush(Action<ulong[], Memory<byte>>?)
-  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_Flush_System_Action_System_UInt64___System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name.vb: Flush(Action(Of ULong(), Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action<ulong[], System.Memory<byte>>?)
-  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action(Of ULong(), System.Memory(Of Byte)))
-  nameWithType: SimpleWritingChunkCache.Flush(Action<ulong[], Memory<byte>>?)
-  nameWithType.vb: SimpleWritingChunkCache.Flush(Action(Of ULong(), Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.#ctor
+  name: SimpleWritingChunkCache()
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache__ctor
+  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.#ctor
+  name.vb: New()
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.SimpleWritingChunkCache()
+  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.New()
+  nameWithType: SimpleWritingChunkCache.SimpleWritingChunkCache()
+  nameWithType.vb: SimpleWritingChunkCache.New()
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.#ctor*
+  name: SimpleWritingChunkCache
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache__ctor_
+  commentId: Overload:PureHDF.VOL.Native.SimpleWritingChunkCache.#ctor
+  name.vb: New
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.SimpleWritingChunkCache
+  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.New
+  nameWithType: SimpleWritingChunkCache.SimpleWritingChunkCache
+  nameWithType.vb: SimpleWritingChunkCache.New
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action{System.UInt64,System.Memory{System.Byte}})
+  name: Flush(Action<ulong, Memory<byte>>?)
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_Flush_System_Action_System_UInt64_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action{System.UInt64,System.Memory{System.Byte}})
+  name.vb: Flush(Action(Of ULong, Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action<ulong, System.Memory<byte>>?)
+  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush(System.Action(Of ULong, System.Memory(Of Byte)))
+  nameWithType: SimpleWritingChunkCache.Flush(Action<ulong, Memory<byte>>?)
+  nameWithType.vb: SimpleWritingChunkCache.Flush(Action(Of ULong, Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush*
   name: Flush
   href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_Flush_
   commentId: Overload:PureHDF.VOL.Native.SimpleWritingChunkCache.Flush
   fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.Flush
   nameWithType: SimpleWritingChunkCache.Flush
-- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name: GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
-  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_GetChunk_System_UInt64___System_Func_System_Memory_System_Byte___System_Action_System_UInt64___System_Memory_System_Byte___
-  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(System.UInt64[],System.Func{System.Memory{System.Byte}},System.Action{System.UInt64[],System.Memory{System.Byte}})
-  name.vb: GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
-  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(ulong[], System.Func<System.Memory<byte>>, System.Action<ulong[], System.Memory<byte>>)
-  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(ULong(), System.Func(Of System.Memory(Of Byte)), System.Action(Of ULong(), System.Memory(Of Byte)))
-  nameWithType: SimpleWritingChunkCache.GetChunk(ulong[], Func<Memory<byte>>, Action<ulong[], Memory<byte>>)
-  nameWithType.vb: SimpleWritingChunkCache.GetChunk(ULong(), Func(Of Memory(Of Byte)), Action(Of ULong(), Memory(Of Byte)))
+- uid: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}},System.Action{System.UInt64,System.Memory{System.Byte}})
+  name: GetChunk(ulong, Func<Memory<byte>>, Action<ulong, Memory<byte>>)
+  href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_GetChunk_System_UInt64_System_Func_System_Memory_System_Byte___System_Action_System_UInt64_System_Memory_System_Byte___
+  commentId: M:PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(System.UInt64,System.Func{System.Memory{System.Byte}},System.Action{System.UInt64,System.Memory{System.Byte}})
+  name.vb: GetChunk(ULong, Func(Of Memory(Of Byte)), Action(Of ULong, Memory(Of Byte)))
+  fullName: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(ulong, System.Func<System.Memory<byte>>, System.Action<ulong, System.Memory<byte>>)
+  fullName.vb: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk(ULong, System.Func(Of System.Memory(Of Byte)), System.Action(Of ULong, System.Memory(Of Byte)))
+  nameWithType: SimpleWritingChunkCache.GetChunk(ulong, Func<Memory<byte>>, Action<ulong, Memory<byte>>)
+  nameWithType.vb: SimpleWritingChunkCache.GetChunk(ULong, Func(Of Memory(Of Byte)), Action(Of ULong, Memory(Of Byte)))
 - uid: PureHDF.VOL.Native.SimpleWritingChunkCache.GetChunk*
   name: GetChunk
   href: api/PureHDF.VOL.Native.SimpleWritingChunkCache.html#PureHDF_VOL_Native_SimpleWritingChunkCache_GetChunk_
