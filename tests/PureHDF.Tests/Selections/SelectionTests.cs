@@ -627,7 +627,7 @@ public class SelectionTests
             memoryDims,
             datasetSelection,
             memorySelection,
-            (index, indices) => default!,
+            index => default!,
             Decoder: default!,
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1
@@ -670,7 +670,7 @@ public class SelectionTests
             memoryDims,
             datasetSelection,
             memorySelection,
-            (index, indices) => default!,
+            index => default!,
             Decoder: default!,
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1
@@ -782,7 +782,7 @@ public class SelectionTests
             memoryDims,
             datasetSelection,
             memorySelection,
-            (index, indices) => new SystemMemoryStream(chunksBuffers[(int)index]),
+            index => new SystemMemoryStream(chunksBuffers[(int)index]),
             (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1
@@ -890,7 +890,7 @@ public class SelectionTests
 
         var actual = new int[5 * 6 * 11];
 
-        IH5ReadStream getSourceStream(ulong index, ulong[] indices)
+        IH5ReadStream getSourceStream(ulong index)
             => new SystemMemoryStream(chunksBuffers[index]);
 
         var decodeInfo = new DecodeInfo<int>(
@@ -1020,7 +1020,7 @@ public class SelectionTests
 
         var actual = new int[11 * 11 * 12];
 
-        IH5ReadStream getSourceStream(ulong index, ulong[] indices)
+        IH5ReadStream getSourceStream(ulong index)
             => new SystemMemoryStream(chunksBuffers[index]);
 
         var decodeInfo = new DecodeInfo<int>(
@@ -1130,7 +1130,7 @@ public class SelectionTests
                 datasetDims,
                 datasetSelection,
                 datasetSelection,
-                (index, indices) => h5dIntermediate.GetReadStream(index, indices),
+                index => h5dIntermediate.GetReadStream(index),
                 (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
                 SourceTypeSize: 4,
                 TargetTypeSizeFactor: 1
@@ -1151,7 +1151,7 @@ public class SelectionTests
                 memoryDims,
                 datasetSelection,
                 memorySelection,
-                (index, indices) => h5dIntermediate.GetReadStream(index, indices),
+                index => h5dIntermediate.GetReadStream(index),
                 Decoder: default!,
                 SourceTypeSize: 4,
                 TargetTypeSizeFactor: 1

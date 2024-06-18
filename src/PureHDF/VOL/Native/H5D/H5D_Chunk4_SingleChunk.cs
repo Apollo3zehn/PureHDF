@@ -14,7 +14,7 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
     {
         var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
 

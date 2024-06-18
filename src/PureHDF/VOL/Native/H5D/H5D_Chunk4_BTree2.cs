@@ -28,8 +28,10 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
 
     #region Methods
 
-    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
     {
+        var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
+
         if (Dataset.FilterPipeline is null)
         {
             if (_btree2_no_filter is null)

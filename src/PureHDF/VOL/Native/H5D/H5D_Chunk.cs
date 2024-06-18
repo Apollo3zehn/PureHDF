@@ -174,19 +174,19 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override IH5ReadStream GetReadStream(ulong chunkIndex, ulong[] chunkIndices)
+    public override IH5ReadStream GetReadStream(ulong chunkIndex)
     {
         var buffer = _readingChunkCache
             .GetChunk(
                 chunkIndex,
-                chunkReader: () => ReadChunk(chunkIndices));
+                chunkReader: () => ReadChunk(chunkIndex));
 
         var stream = new SystemMemoryStream(buffer);
 
         return stream;
     }
 
-    public override IH5WriteStream GetWriteStream(ulong chunkIndex, ulong[] chunkIndices)
+    public override IH5WriteStream GetWriteStream(ulong chunkIndex)
     {
         var buffer = _writingChunkCache
             .GetChunk(
@@ -209,7 +209,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     protected abstract ulong[] GetRawChunkDims();
 
-    protected abstract ChunkInfo GetReadChunkInfo(ulong[] chunkIndices);
+    protected abstract ChunkInfo GetReadChunkInfo(ulong chunkIndex);
 
     protected abstract ChunkInfo GetWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);
 
@@ -221,7 +221,7 @@ internal abstract class H5D_Chunk : H5D_Base
     }
 
     private Memory<byte> ReadChunk(
-        ulong[] chunkIndices)
+        ulong chunkIndex)
     {
         Memory<byte> chunk;
 
@@ -248,7 +248,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
         else
         {
-            var chunkInfo = GetReadChunkInfo(chunkIndices);
+            var chunkInfo = GetReadChunkInfo(chunkIndex);
 
             if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {

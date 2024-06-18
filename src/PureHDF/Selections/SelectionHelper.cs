@@ -7,7 +7,7 @@ internal record DecodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong, ulong[], IH5ReadStream> GetSourceStream,
+    Func<ulong, IH5ReadStream> GetSourceStream,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
     int TargetTypeSizeFactor
@@ -21,7 +21,7 @@ internal record EncodeInfo<T>(
     Selection SourceSelection,
     Selection TargetSelection,
     Func<ulong[], Memory<T>> GetSourceBuffer,
-    Func<ulong, ulong[], IH5WriteStream> GetTargetStream,
+    Func<ulong, IH5WriteStream> GetTargetStream,
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
     int TargetTypeSize
@@ -159,7 +159,7 @@ internal static class SelectionHelper
             if (targetStream is null /* if stream not assigned yet */ ||
                 targetStep.ChunkIndex != lastTargetChunkIndex /* or the chunk has changed */)
             {
-                targetStream = encodeInfo.GetTargetStream(targetStep.ChunkIndex, targetStep.Chunk);
+                targetStream = encodeInfo.GetTargetStream(targetStep.ChunkIndex);
                 lastTargetChunkIndex = targetStep.ChunkIndex;
             }
 
@@ -256,7 +256,7 @@ internal static class SelectionHelper
             if (sourceStream is null /* if stream not assigned yet */ ||
                 sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
             {
-                sourceStream = decodeInfo.GetSourceStream(sourceStep.ChunkIndex, sourceStep.Chunk);
+                sourceStream = decodeInfo.GetSourceStream(sourceStep.ChunkIndex);
                 lastSourceChunkIndex = sourceStep.ChunkIndex;
             }
 

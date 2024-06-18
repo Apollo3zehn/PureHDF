@@ -63,8 +63,10 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             throw new Exception("No layout information found.");
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong[] chunkIndices)
+    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
     {
+        var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
+
         // load B-Tree 1
         if (!_btree1.HasValue)
         {
@@ -126,12 +128,18 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             if (indices[0] > rightKey.ScaledChunkOffsets[0])
                 return 1;
 
-            else if (indices[0] == rightKey.ScaledChunkOffsets[0] &&
-                        indices[1] >= rightKey.ScaledChunkOffsets[1])
+            else if (
+                indices[0] == rightKey.ScaledChunkOffsets[0] &&
+                indices[1] >= rightKey.ScaledChunkOffsets[1]
+            )
+            {
                 return 1;
+            }
 
             else if (indices[0] < leftKey.ScaledChunkOffsets[0])
+            {
                 return -1;
+            }
         }
 
         else
