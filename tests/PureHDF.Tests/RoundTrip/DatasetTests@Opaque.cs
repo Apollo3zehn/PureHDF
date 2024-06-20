@@ -2,28 +2,32 @@ using Xunit;
 
 namespace PureHDF.Tests.RoundTrip;
 
-public class DataSetsRoundTripTests
+public class DatasetsRoundTripTests
 {
     [Fact]
     public void WriteAndReadOpaqueDataset()
     {
-        var reproducibleProblem = new H5File();
+        // Arrange
+        var h5FileWrite = new H5File();
+        var expected = new byte[] { 0x01, 0x02, 0x13 };
 
-        var data = new byte[] { 0x01, 0x02, 0x13 };
-        reproducibleProblem["test"] = new H5Dataset(data, opaqueInfo: new H5OpaqueInfo((uint) data.Length, "New"));
+        h5FileWrite["test"] = new H5Dataset(
+            data: expected, 
+            opaqueInfo: new H5OpaqueInfo((uint) expected.Length, "New")
+        );
 
         var memoryStream = new MemoryStream();
 
-        reproducibleProblem.Write(memoryStream);
+        h5FileWrite.Write(memoryStream);
         memoryStream.Seek(0, SeekOrigin.Begin);
 
-        var open = H5File.Open(memoryStream);
-        var dataset = open.Dataset("test");
+        var h5FileRead = H5File.Open(memoryStream);
+        var dataset = h5FileRead.Dataset("test");
 
-        var dataRead = dataset.Read<byte[]>();
-        Assert.True(dataRead.SequenceEqual(data));
-        // TODO: Does currently not work
-        /*var dataReadMemory = dataset.Read<Memory<byte>>();
-        Assert.True(dataReadMemory.Span.SequenceEqual(data));*/
+        // Act
+        var actual = dataset.Read<byte[]>();
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
     }
 }
