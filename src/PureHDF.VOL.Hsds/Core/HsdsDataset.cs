@@ -167,6 +167,7 @@ internal class HsdsDataset : HsdsObject, IH5Dataset
             where TElement : struct
     {
         var resultType = typeof(TResult);
+        var isRawMode = typeof(TResult) == typeof(byte[]) || typeof(TResult) == typeof(Memory<byte>);
 
         /* fast path for null dataspace */
         if (Space.Type == H5DataspaceType.Null)
@@ -266,7 +267,12 @@ internal class HsdsDataset : HsdsObject, IH5Dataset
         if (buffer is null || buffer.Equals(default(TResult)))
         {
             /* memory dims */
-            if (DataUtils.IsArray(resultType))
+            if (isRawMode)
+            {
+                memoryDims ??= [fileSelection.TotalElementCount * (ulong)Type.Size];
+            }
+
+            else if (DataUtils.IsArray(resultType))
             {
                 var rank = resultType.GetArrayRank();
 
@@ -286,7 +292,7 @@ internal class HsdsDataset : HsdsObject, IH5Dataset
             }
 
             /* result buffer */
-            resultArray = DataUtils.IsArray(resultType)
+            resultArray = DataUtils.IsArray(resultType) || DataUtils.IsMemory(resultType)
                 ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
                 : new TResult[1];
 
@@ -361,9 +367,17 @@ internal class HsdsDataset : HsdsObject, IH5Dataset
         }
 
         /* return */
-        return resultArray is null
-            ? default
-            : ReadUtils.FromArray<TResult, TElement>(resultArray);
+        if (DataUtils.IsMemory(resultType))
+        {
+            return (TResult)(object)resultBuffer;
+        }
+
+        else
+        {
+            return resultArray is null
+                ? default
+                : ReadUtils.FromArray<TResult, TElement>(resultArray);
+        }
     }
 
     private static async Task ReadExactlyAsync(Stream stream, Memory<byte> buffer, bool useAsync, CancellationToken cancellationToken)

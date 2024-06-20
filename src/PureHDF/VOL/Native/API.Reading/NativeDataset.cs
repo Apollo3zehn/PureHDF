@@ -1,7 +1,6 @@
 using PureHDF.Selections;
 using System.Buffers;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 
 namespace PureHDF.VOL.Native;
 
@@ -307,6 +306,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         H5DatasetAccess datasetAccess = default,
         bool skipShuffle = false)
     {
+        var resultType = typeof(TResult);
         var isRawMode = typeof(TResult) == typeof(byte[]) || typeof(TResult) == typeof(Memory<byte>);
 
         (var fileDims, fileSelection) = GetFileDimsAndSelection(
@@ -317,18 +317,17 @@ public class NativeDataset : NativeObject, IH5Dataset
             isRawMode);
 
         /* result buffer / result array */
-        Span<TElement> resultBuffer;
+        Memory<TElement> resultBuffer;
         var resultArray = default(Array);
 
         if (buffer is null || buffer.Equals(default(TResult)))
         {
-            var resultType = typeof(TResult);
-
             /* memory dims */
-            if (isRawMode && InternalDataType.Class == DatatypeMessageClass.Opaque)
+            if (isRawMode)
             {
-                memoryDims ??= [InternalDataType.Size];
+                memoryDims ??= [fileSelection.TotalElementCount * InternalDataType.Size];
             }
+
             else if (DataUtils.IsArray(resultType))
             {
                 var rank = resultType.GetArrayRank();
@@ -348,18 +347,18 @@ public class NativeDataset : NativeObject, IH5Dataset
             }
 
             /* result buffer */
-            resultArray = DataUtils.IsArray(resultType)
+            resultArray = DataUtils.IsArray(resultType) || DataUtils.IsMemory(resultType)
                 ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
                 : new TResult[1];
 
-            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory.Span;
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
         }
 
         else
         {
             /* result buffer */
             (var resultMemoryBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
-            resultBuffer = resultMemoryBuffer.Span;
+            resultBuffer = resultMemoryBuffer;
         }
 
         ReadCoreLevel2(
@@ -367,14 +366,22 @@ public class NativeDataset : NativeObject, IH5Dataset
             memorySelection,
             memoryDims,
             fileDims,
-            resultBuffer,
+            resultBuffer.Span,
             datasetAccess,
             isRawMode: isRawMode);
 
         /* return */
-        return resultArray is null
-            ? default
-            : ReadUtils.FromArray<TResult, TElement>(resultArray);
+        if (DataUtils.IsMemory(resultType))
+        {
+            return (TResult)(object)resultBuffer;
+        }
+
+        else
+        {
+            return resultArray is null
+                ? default
+                : ReadUtils.FromArray<TResult, TElement>(resultArray);
+        }
     }
 
     private void ReadCoreLevel1<TElement>(
@@ -594,8 +601,8 @@ public class NativeDataset : NativeObject, IH5Dataset
         {
             var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
 
-                if (byteOrderAware is not null)
-                    DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
+            if (byteOrderAware is not null)
+                DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
         }
 
         /* fast path for null dataspace */
