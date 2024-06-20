@@ -499,8 +499,10 @@ public partial class DatasetTests
         });
     }
 
-    [Fact]
-    public void CanRead_Raw_ByteArray()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanRead_Raw_ByteArray(bool withBuffer)
     {
         // Arrange
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
@@ -511,7 +513,12 @@ public partial class DatasetTests
         // Act
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var dataset = root.Group("small").Dataset("small");
-        dataset.Read(buffer: actual);
+        
+        if (withBuffer)
+            dataset.Read(buffer: actual);
+
+        else
+            actual = dataset.Read<byte[]>();
 
         // Assert
         var expected = MemoryMarshal
@@ -521,26 +528,33 @@ public partial class DatasetTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact]
-    public void CanRead_Raw_Memory()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanRead_Raw_Memory(bool withBuffer)
     {
         // Arrange
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId
             => TestUtils.AddSmall(fileId, ContainerType.Dataset));
 
-        var actual = new byte[SharedTestData.SmallData.Length * sizeof(int)];
+        var actual = new byte[SharedTestData.SmallData.Length * sizeof(int)].AsMemory();
 
         // Act
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
         var dataset = root.Group("small").Dataset("small");
-        dataset.Read(buffer: actual.AsMemory());
+
+        if (withBuffer)
+            dataset.Read(buffer: actual);
+
+        else
+            actual = dataset.Read<Memory<byte>>();
 
         // Assert
         var expected = MemoryMarshal
             .AsBytes(SharedTestData.SmallData.AsSpan())
             .ToArray();
 
-        Assert.Equal(expected, actual);
+        Assert.Equal(expected, actual.ToArray());
     }
 
     [Fact]
