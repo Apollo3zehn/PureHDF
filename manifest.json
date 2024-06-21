@@ -275,6 +275,16 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "api/PureHDF.H5SoftLink.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/PureHDF.H5SoftLink.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "api/PureHDF.H5SourceGeneratorAttribute.yml",
       "output": {
         ".html": {

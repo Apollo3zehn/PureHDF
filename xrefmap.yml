@@ -2370,6 +2370,186 @@ references:
   commentId: Overload:PureHDF.H5ReadOptions.{Clone}$
   fullName: PureHDF.H5ReadOptions.<Clone>$
   nameWithType: H5ReadOptions.<Clone>$
+- uid: PureHDF.H5SoftLink
+  name: H5SoftLink
+  href: api/PureHDF.H5SoftLink.html
+  commentId: T:PureHDF.H5SoftLink
+  fullName: PureHDF.H5SoftLink
+  nameWithType: H5SoftLink
+- uid: PureHDF.H5SoftLink.#ctor(PureHDF.H5SoftLink)
+  name: H5SoftLink(H5SoftLink)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink__ctor_PureHDF_H5SoftLink_
+  commentId: M:PureHDF.H5SoftLink.#ctor(PureHDF.H5SoftLink)
+  name.vb: New(H5SoftLink)
+  fullName: PureHDF.H5SoftLink.H5SoftLink(PureHDF.H5SoftLink)
+  fullName.vb: PureHDF.H5SoftLink.New(PureHDF.H5SoftLink)
+  nameWithType: H5SoftLink.H5SoftLink(H5SoftLink)
+  nameWithType.vb: H5SoftLink.New(H5SoftLink)
+- uid: PureHDF.H5SoftLink.#ctor(System.String)
+  name: H5SoftLink(string)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink__ctor_System_String_
+  commentId: M:PureHDF.H5SoftLink.#ctor(System.String)
+  name.vb: New(String)
+  fullName: PureHDF.H5SoftLink.H5SoftLink(string)
+  fullName.vb: PureHDF.H5SoftLink.New(String)
+  nameWithType: H5SoftLink.H5SoftLink(string)
+  nameWithType.vb: H5SoftLink.New(String)
+- uid: PureHDF.H5SoftLink.#ctor*
+  name: H5SoftLink
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink__ctor_
+  commentId: Overload:PureHDF.H5SoftLink.#ctor
+  name.vb: New
+  fullName: PureHDF.H5SoftLink.H5SoftLink
+  fullName.vb: PureHDF.H5SoftLink.New
+  nameWithType: H5SoftLink.H5SoftLink
+  nameWithType.vb: H5SoftLink.New
+- uid: PureHDF.H5SoftLink.Deconstruct(System.String@)
+  name: Deconstruct(out string)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Deconstruct_System_String__
+  commentId: M:PureHDF.H5SoftLink.Deconstruct(System.String@)
+  name.vb: Deconstruct(String)
+  fullName: PureHDF.H5SoftLink.Deconstruct(out string)
+  fullName.vb: PureHDF.H5SoftLink.Deconstruct(String)
+  nameWithType: H5SoftLink.Deconstruct(out string)
+  nameWithType.vb: H5SoftLink.Deconstruct(String)
+- uid: PureHDF.H5SoftLink.Deconstruct*
+  name: Deconstruct
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Deconstruct_
+  commentId: Overload:PureHDF.H5SoftLink.Deconstruct
+  fullName: PureHDF.H5SoftLink.Deconstruct
+  nameWithType: H5SoftLink.Deconstruct
+- uid: PureHDF.H5SoftLink.EqualityContract
+  name: EqualityContract
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_EqualityContract
+  commentId: P:PureHDF.H5SoftLink.EqualityContract
+  fullName: PureHDF.H5SoftLink.EqualityContract
+  nameWithType: H5SoftLink.EqualityContract
+- uid: PureHDF.H5SoftLink.EqualityContract*
+  name: EqualityContract
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_EqualityContract_
+  commentId: Overload:PureHDF.H5SoftLink.EqualityContract
+  fullName: PureHDF.H5SoftLink.EqualityContract
+  nameWithType: H5SoftLink.EqualityContract
+- uid: PureHDF.H5SoftLink.Equals(PureHDF.H5SoftLink)
+  name: Equals(H5SoftLink?)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Equals_PureHDF_H5SoftLink_
+  commentId: M:PureHDF.H5SoftLink.Equals(PureHDF.H5SoftLink)
+  name.vb: Equals(H5SoftLink)
+  fullName: PureHDF.H5SoftLink.Equals(PureHDF.H5SoftLink?)
+  fullName.vb: PureHDF.H5SoftLink.Equals(PureHDF.H5SoftLink)
+  nameWithType: H5SoftLink.Equals(H5SoftLink?)
+  nameWithType.vb: H5SoftLink.Equals(H5SoftLink)
+- uid: PureHDF.H5SoftLink.Equals(System.Object)
+  name: Equals(object?)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Equals_System_Object_
+  commentId: M:PureHDF.H5SoftLink.Equals(System.Object)
+  name.vb: Equals(Object)
+  fullName: PureHDF.H5SoftLink.Equals(object?)
+  fullName.vb: PureHDF.H5SoftLink.Equals(Object)
+  nameWithType: H5SoftLink.Equals(object?)
+  nameWithType.vb: H5SoftLink.Equals(Object)
+- uid: PureHDF.H5SoftLink.Equals*
+  name: Equals
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Equals_
+  commentId: Overload:PureHDF.H5SoftLink.Equals
+  fullName: PureHDF.H5SoftLink.Equals
+  nameWithType: H5SoftLink.Equals
+- uid: PureHDF.H5SoftLink.GetHashCode
+  name: GetHashCode()
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_GetHashCode
+  commentId: M:PureHDF.H5SoftLink.GetHashCode
+  fullName: PureHDF.H5SoftLink.GetHashCode()
+  nameWithType: H5SoftLink.GetHashCode()
+- uid: PureHDF.H5SoftLink.GetHashCode*
+  name: GetHashCode
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_GetHashCode_
+  commentId: Overload:PureHDF.H5SoftLink.GetHashCode
+  fullName: PureHDF.H5SoftLink.GetHashCode
+  nameWithType: H5SoftLink.GetHashCode
+- uid: PureHDF.H5SoftLink.PrintMembers(System.Text.StringBuilder)
+  name: PrintMembers(StringBuilder)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_PrintMembers_System_Text_StringBuilder_
+  commentId: M:PureHDF.H5SoftLink.PrintMembers(System.Text.StringBuilder)
+  fullName: PureHDF.H5SoftLink.PrintMembers(System.Text.StringBuilder)
+  nameWithType: H5SoftLink.PrintMembers(StringBuilder)
+- uid: PureHDF.H5SoftLink.PrintMembers*
+  name: PrintMembers
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_PrintMembers_
+  commentId: Overload:PureHDF.H5SoftLink.PrintMembers
+  fullName: PureHDF.H5SoftLink.PrintMembers
+  nameWithType: H5SoftLink.PrintMembers
+- uid: PureHDF.H5SoftLink.Target
+  name: Target
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Target
+  commentId: P:PureHDF.H5SoftLink.Target
+  fullName: PureHDF.H5SoftLink.Target
+  nameWithType: H5SoftLink.Target
+- uid: PureHDF.H5SoftLink.Target*
+  name: Target
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_Target_
+  commentId: Overload:PureHDF.H5SoftLink.Target
+  fullName: PureHDF.H5SoftLink.Target
+  nameWithType: H5SoftLink.Target
+- uid: PureHDF.H5SoftLink.ToString
+  name: ToString()
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_ToString
+  commentId: M:PureHDF.H5SoftLink.ToString
+  fullName: PureHDF.H5SoftLink.ToString()
+  nameWithType: H5SoftLink.ToString()
+- uid: PureHDF.H5SoftLink.ToString*
+  name: ToString
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_ToString_
+  commentId: Overload:PureHDF.H5SoftLink.ToString
+  fullName: PureHDF.H5SoftLink.ToString
+  nameWithType: H5SoftLink.ToString
+- uid: PureHDF.H5SoftLink.op_Equality(PureHDF.H5SoftLink,PureHDF.H5SoftLink)
+  name: operator ==(H5SoftLink?, H5SoftLink?)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_op_Equality_PureHDF_H5SoftLink_PureHDF_H5SoftLink_
+  commentId: M:PureHDF.H5SoftLink.op_Equality(PureHDF.H5SoftLink,PureHDF.H5SoftLink)
+  name.vb: =(H5SoftLink, H5SoftLink)
+  fullName: PureHDF.H5SoftLink.operator ==(PureHDF.H5SoftLink?, PureHDF.H5SoftLink?)
+  fullName.vb: PureHDF.H5SoftLink.=(PureHDF.H5SoftLink, PureHDF.H5SoftLink)
+  nameWithType: H5SoftLink.operator ==(H5SoftLink?, H5SoftLink?)
+  nameWithType.vb: H5SoftLink.=(H5SoftLink, H5SoftLink)
+- uid: PureHDF.H5SoftLink.op_Equality*
+  name: operator ==
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_op_Equality_
+  commentId: Overload:PureHDF.H5SoftLink.op_Equality
+  name.vb: =
+  fullName: PureHDF.H5SoftLink.operator ==
+  fullName.vb: PureHDF.H5SoftLink.=
+  nameWithType: H5SoftLink.operator ==
+  nameWithType.vb: H5SoftLink.=
+- uid: PureHDF.H5SoftLink.op_Inequality(PureHDF.H5SoftLink,PureHDF.H5SoftLink)
+  name: operator !=(H5SoftLink?, H5SoftLink?)
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_op_Inequality_PureHDF_H5SoftLink_PureHDF_H5SoftLink_
+  commentId: M:PureHDF.H5SoftLink.op_Inequality(PureHDF.H5SoftLink,PureHDF.H5SoftLink)
+  name.vb: <>(H5SoftLink, H5SoftLink)
+  fullName: PureHDF.H5SoftLink.operator !=(PureHDF.H5SoftLink?, PureHDF.H5SoftLink?)
+  fullName.vb: PureHDF.H5SoftLink.<>(PureHDF.H5SoftLink, PureHDF.H5SoftLink)
+  nameWithType: H5SoftLink.operator !=(H5SoftLink?, H5SoftLink?)
+  nameWithType.vb: H5SoftLink.<>(H5SoftLink, H5SoftLink)
+- uid: PureHDF.H5SoftLink.op_Inequality*
+  name: operator !=
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink_op_Inequality_
+  commentId: Overload:PureHDF.H5SoftLink.op_Inequality
+  name.vb: <>
+  fullName: PureHDF.H5SoftLink.operator !=
+  fullName.vb: PureHDF.H5SoftLink.<>
+  nameWithType: H5SoftLink.operator !=
+  nameWithType.vb: H5SoftLink.<>
+- uid: PureHDF.H5SoftLink.{Clone}$
+  name: <Clone>$()
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink__Clone__
+  commentId: M:PureHDF.H5SoftLink.{Clone}$
+  fullName: PureHDF.H5SoftLink.<Clone>$()
+  nameWithType: H5SoftLink.<Clone>$()
+- uid: PureHDF.H5SoftLink.{Clone}$*
+  name: <Clone>$
+  href: api/PureHDF.H5SoftLink.html#PureHDF_H5SoftLink__Clone___
+  commentId: Overload:PureHDF.H5SoftLink.{Clone}$
+  fullName: PureHDF.H5SoftLink.<Clone>$
+  nameWithType: H5SoftLink.<Clone>$
 - uid: PureHDF.H5SourceGeneratorAttribute
   name: H5SourceGeneratorAttribute
   href: api/PureHDF.H5SourceGeneratorAttribute.html
