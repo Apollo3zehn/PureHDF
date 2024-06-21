@@ -232,29 +232,35 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 /* Compute the element index */
                 var elementIndex = index % dataBlock.ElementsPerPage;
 
-                /* Compute the address of the data block */
-                var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                var pageAddress = ReadContext.Driver.Position + (long)(pageIndex * pageSize);
+                var elements = (T?[])ReadContext.FixedArrayPageIndexToElementsMap.GetOrAdd(pageIndex, pageIndex =>
+                    {
+                        /* Compute the address of the data block */
+                        var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
+                        var pageAddress = ReadContext.Driver.Position + (long)(pageIndex * pageSize);
 
-                /* Check for using last page, to set the number of elements on the page */
-                ulong elementCount;
+                        /* Check for using last page, to set the number of elements on the page */
+                        ulong elementCount;
 
-                if (pageIndex + 1 == dataBlock.PageCount)
-                    elementCount = dataBlock.LastPageElementCount;
+                        if (pageIndex + 1 == dataBlock.PageCount)
+                            elementCount = dataBlock.LastPageElementCount;
 
-                else
-                    elementCount = dataBlock.ElementsPerPage;
+                        else
+                            elementCount = dataBlock.ElementsPerPage;
 
-                /* Protect the data block page */
-                ReadContext.Driver.Seek(pageAddress, SeekOrigin.Begin);
+                        /* Decode the data block page */
+                        ReadContext.Driver.Seek(pageAddress, SeekOrigin.Begin);
 
-                var page = DataBlockPage<T>.Decode(
-                    ReadContext.Driver,
-                    elementCount,
-                    decode);
+                        var page = DataBlockPage<T>.Decode(
+                            ReadContext.Driver,
+                            elementCount,
+                            decode);
+
+                        return page.Elements;
+                    }
+                );
 
                 /* Retrieve element from data block */
-                return page.Elements[elementIndex];
+                return elements[elementIndex];
             }
             else
             {

@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Collections.Concurrent;
+
+namespace PureHDF.VOL.Native;
 
 internal record class NativeReadContext(
     H5DriverBase Driver,
@@ -8,4 +10,6 @@ internal record class NativeReadContext(
     public required H5ReadOptions ReadOptions { get; init; }
 
     public NativeFile File { get; set; } = default!;
+
+    public ConcurrentDictionary<ulong, object> FixedArrayPageIndexToElementsMap { get; } = new();
 };
