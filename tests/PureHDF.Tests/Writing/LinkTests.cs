@@ -5,6 +5,39 @@ namespace PureHDF.Tests.Writing;
 public class LinkTests
 {
     [Fact]
+    public void CanWrite_SoftLinks()
+    {
+        // Arrange
+        var file = new H5File
+        {
+            ["group_1"] = new H5Group
+            {
+                ["dataset"] = new int[] { 1, 2, 3 }
+            },
+
+            ["group_2"] = new H5Group
+            {
+                ["soft_link_1"] = new H5SoftLink("/group_1"),
+                ["soft_link_2"] = new H5SoftLink("/group_1/dataset")
+            }
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText("DumpFiles/links_soft.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
     public void CanWrite_Mass()
     {
         // Arrange

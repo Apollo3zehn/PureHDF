@@ -73,41 +73,64 @@ partial class H5NativeWriter
 
         headerMessages.Add(ToHeaderMessage(linkInfoMessage));
 
-        AppendAttributesToHeaderMessages(group.Attributes, headerMessages, Context);
+        if (group.InternalAttributes is not null)
+            AppendAttributesToHeaderMessages(group.InternalAttributes, headerMessages, Context);
 
         foreach (var entry in group)
         {
             ulong linkAddress;
 
-            var h5Object = entry.Value as H5Object ?? new H5Dataset(entry.Value);
+            LinkType linkType;
+            LinkInfo linkInfo;
 
-            if (!Context.ObjectToAddressMap.TryGetValue(h5Object, out linkAddress))
+            if (entry.Value is H5SoftLink softLink)
             {
-                Context.ObjectToAddressMap[h5Object] = default;
-
-                if (entry.Value is H5Group childGroup)
-                    linkAddress = EncodeGroup(childGroup);
-
-                else if (entry.Value is H5Dataset dataset1)
-                    linkAddress = EncodeDataset(dataset1);
-
-                else
-                    linkAddress = EncodeDataset((H5Dataset)h5Object);
-
-                Context.ObjectToAddressMap[h5Object] = linkAddress;
+                linkType = LinkType.Soft;
+                linkInfo = new SoftLinkInfo(softLink.Target);
             }
 
-            else if (linkAddress == default)
+            else
             {
-                throw new Exception("The current object is already being encoded which suggests a circular reference.");
+                var h5Object = entry.Value as H5Object ?? new H5Dataset(entry.Value);
+
+                if (!Context.ObjectToAddressMap.TryGetValue(h5Object, out linkAddress))
+                {
+                    Context.ObjectToAddressMap[h5Object] = default;
+
+                    if (entry.Value is H5Group childGroup)
+                        linkAddress = EncodeGroup(childGroup);
+
+                    else if (entry.Value is H5Dataset dataset1)
+                        linkAddress = EncodeDataset(dataset1);
+
+                    else
+                        linkAddress = EncodeDataset((H5Dataset)h5Object);
+
+                    Context.ObjectToAddressMap[h5Object] = linkAddress;
+                }
+
+                else if (linkAddress == default)
+                {
+                    throw new Exception("The current object is already being encoded which suggests a circular reference.");
+                }
+
+                linkType = LinkType.Hard;
+                linkInfo = new HardLinkInfo(HeaderAddress: linkAddress);
             }
+
+            var flags =
+                LinkInfoFlags.LinkNameLengthSizeUpperBit |
+                LinkInfoFlags.LinkNameEncodingFieldIsPresent;
+
+            if (linkType == LinkType.Soft)
+                flags |= LinkInfoFlags.LinkTypeFieldIsPresent;
 
             var linkMessage = new LinkMessage(
-                Flags: LinkInfoFlags.LinkNameLengthSizeUpperBit | LinkInfoFlags.LinkNameEncodingFieldIsPresent,
-                LinkType: default,
+                Flags: flags,
+                LinkType: linkType,
                 CreationOrder: default,
                 LinkName: entry.Key,
-                LinkInfo: new HardLinkInfo(HeaderAddress: linkAddress)
+                LinkInfo: linkInfo
             )
             {
                 Version = 1
@@ -257,7 +280,8 @@ partial class H5NativeWriter
         if (filterPipeline is not null)
             headerMessages.Add(ToHeaderMessage(filterPipeline));
 
-        AppendAttributesToHeaderMessages(dataset.Attributes, headerMessages, Context);
+        if (dataset.InternalAttributes is not null)
+            AppendAttributesToHeaderMessages(dataset.InternalAttributes, headerMessages, Context);
 
         // object header
         var objectHeader = new ObjectHeader2(
