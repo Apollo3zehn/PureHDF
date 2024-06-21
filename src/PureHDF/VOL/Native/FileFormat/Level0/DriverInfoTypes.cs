@@ -93,13 +93,13 @@ internal readonly record struct DriverInfoBlock()
         driver.ReadBytes(3);
 
         // driver info size
-        var _2 = driver.ReadUInt32();
+        var _1 = driver.ReadUInt32();
 
         // driver id
         var driverId = ReadUtils.ReadFixedLengthString(driver, 8);
 
         // driver info
-        DriverInfo _3 = driverId switch
+        DriverInfo _2 = driverId switch
         {
             "NCSAmulti" => MultiDriverInfo.Decode(driver),
             "NCSAfami" => FamilyDriverInfo.Decode(driver),

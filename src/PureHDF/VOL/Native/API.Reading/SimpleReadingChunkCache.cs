@@ -11,7 +11,7 @@ public class SimpleReadingChunkCache : IReadingChunkCache
 {
     private record ReadingChunkInfo(Memory<byte> Chunk)
     {
-        public DateTime LastAccess { get; set; }
+        public long LastAccess { get; set; }
     }
 
     private readonly Dictionary<ulong, ReadingChunkInfo> _chunkInfoMap = new();
@@ -58,13 +58,21 @@ public class SimpleReadingChunkCache : IReadingChunkCache
     {
         if (_chunkInfoMap.TryGetValue(chunkIndex, out var chunkInfo))
         {
-            chunkInfo.LastAccess = DateTime.Now;
+#if NET5_0_OR_GREATER
+            chunkInfo.LastAccess = Environment.TickCount64;
+#else
+            chunkInfo.LastAccess = Environment.TickCount;
+#endif
         }
 
         else
         {
             var buffer = chunkReader();
-            chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = DateTime.Now };
+#if NET5_0_OR_GREATER
+            chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = Environment.TickCount64 };
+#else
+            chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = Environment.TickCount };
+#endif
             var chunk = chunkInfo.Chunk;
 
             if ((ulong)chunk.Length <= ByteCount)

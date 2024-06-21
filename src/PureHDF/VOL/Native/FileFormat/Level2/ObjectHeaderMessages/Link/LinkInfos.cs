@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Text;
+
+namespace PureHDF.VOL.Native;
 
 internal abstract record class LinkInfo()
 {
@@ -47,12 +49,20 @@ internal record class SoftLinkInfo(
 
     public override ushort GetEncodeSize()
     {
-        throw new NotImplementedException();
+        var nameBytes = Encoding.UTF8.GetBytes(Value);
+
+        return (ushort)(
+            sizeof(ushort) + 
+            (ushort)nameBytes.Length
+        );
     }
 
     public override void Encode(H5DriverBase driver)
     {
-        throw new NotImplementedException();
+        var nameBytes = Encoding.UTF8.GetBytes(Value);
+
+        driver.Write((ushort)nameBytes.Length);
+        driver.Write(nameBytes);
     }
 }
 

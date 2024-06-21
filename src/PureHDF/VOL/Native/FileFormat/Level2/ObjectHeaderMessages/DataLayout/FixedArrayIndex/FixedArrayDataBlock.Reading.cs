@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -15,6 +16,8 @@ internal partial record class FixedArrayDataBlock<T>(
     private byte _version;
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("FADB");
+
+    public ConcurrentDictionary<ulong, object> PageIndexToElementsMap { get; } = new();
 
     public required byte Version
     {

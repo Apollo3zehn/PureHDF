@@ -1,5 +1,11 @@
-## v1.0.0-beta.26 - 2024-06-18
-- Read performance of multidimensional, contiguous, compact or single-chunked datasets has been dramatically improved by adding special case handling which allows bulk copying of data if the whole dataset is to be read (no slicing).
+## v1.0.0-beta.27 - 2024-06-21
+
+### Features
+- Added soft link support
+
+### Performance
+- The lookup performance of chunks in the chunk cache has been improved.
+- Read performance of chunked datasets encoded with the fixed array index has been improved.
 
 ## v1.0.0-beta.25 - 2024-06-13
 - Read performance of chunked datasets in the old version 1 B-tree format has been dramatically improved by adding a cache to avoid repeated deserialisation of in-file structures.

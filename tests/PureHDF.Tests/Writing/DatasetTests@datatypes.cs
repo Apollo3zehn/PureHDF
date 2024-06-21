@@ -362,16 +362,16 @@ public partial class DatasetTests
 
         var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
 
-        var actualData = asMemory
-            ? data.AsMemory()
-            : data;
-
         var opaqueInfo = new H5OpaqueInfo(
             TypeSize: 2,
             Tag: "My tag"
         );
 
-        file["opaque"] = new H5Dataset(actualData, opaqueInfo: opaqueInfo);
+        var dataset = asMemory
+            ? new H5Dataset(data.AsMemory(), opaqueInfo: opaqueInfo)
+            : new H5Dataset(data, opaqueInfo: opaqueInfo);
+
+        file["opaque"] = dataset;
 
         var filePath = Path.GetTempFileName();
 

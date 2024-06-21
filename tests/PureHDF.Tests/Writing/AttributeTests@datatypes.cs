@@ -308,16 +308,16 @@ public partial class AttributeTests
 
         var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
 
-        var actualData = asMemory
-            ? data.AsMemory()
-            : data;
-
         var opaqueInfo = new H5OpaqueInfo(
             TypeSize: 2,
             Tag: "My tag"
         );
 
-        file.Attributes["opaque"] = new H5Attribute(actualData, opaqueInfo: opaqueInfo);
+        var attribute = asMemory
+            ? new H5Attribute(data.AsMemory(), opaqueInfo: opaqueInfo)
+            : new H5Attribute(data, opaqueInfo: opaqueInfo);
+
+        file.Attributes["opaque"] = attribute;
 
         var filePath = Path.GetTempFileName();
 
