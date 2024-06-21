@@ -4,6 +4,10 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 {
     private FixedArrayHeader? _header;
 
+    private object? _dataBlock;
+
+    private long _firstPageAddress;
+
     public H5D_Chunk4_FixedArray(
         NativeReadContext readContext,
         NativeWriteContext writeContext,
@@ -195,29 +199,44 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
             /* Call the class's 'fill' callback */
             return null;
         }
+
         else
         {
-            return LookupElement(_header, index, decode);
+            if (_dataBlock is null)
+            {
+                // H5FA.c (H5FA_get)
+
+                /* Get the data block */
+                ReadContext.Driver.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
+
+                var (elementsPerPage, pageCount, pageBitmapSize) = GetInfo(
+                    _header.PageBits, 
+                    _header.EntriesCount
+                );
+
+                _dataBlock = FixedArrayDataBlock<T>.Decode(
+                    ReadContext,
+                    elementsPerPage,
+                    pageCount,
+                    pageBitmapSize,
+                    _header.EntriesCount,
+                    decode);
+
+                _firstPageAddress = ReadContext.Driver.Position;
+            }
+
+            return LookupElement(_header, (FixedArrayDataBlock<T>)_dataBlock, index, decode);
         }
     }
 
-    private T? LookupElement<T>(FixedArrayHeader header, ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
+    private T? LookupElement<T>(
+        FixedArrayHeader header, 
+        FixedArrayDataBlock<T> dataBlock, 
+        ulong index, 
+        Func<H5DriverBase, T> decode
+    ) 
+        where T : DataBlockElement
     {
-        // H5FA.c (H5FA_get)
-
-        /* Get the data block */
-        ReadContext.Driver.Seek((long)header.DataBlockAddress, SeekOrigin.Begin);
-
-        var (elementsPerPage, pageCount, pageBitmapSize) = GetInfo(header.PageBits, header.EntriesCount);
-
-        var dataBlock = FixedArrayDataBlock<T>.Decode(
-            ReadContext,
-            elementsPerPage,
-            pageCount,
-            pageBitmapSize,
-            header.EntriesCount,
-            decode);
-
         /* Check for paged data block */
         if (dataBlock.PageCount > 0)
         {
@@ -232,11 +251,12 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 /* Compute the element index */
                 var elementIndex = index % dataBlock.ElementsPerPage;
 
-                var elements = (T?[])ReadContext.FixedArrayPageIndexToElementsMap.GetOrAdd(pageIndex, pageIndex =>
+                var elements = (T?[])dataBlock.PageIndexToElementsMap
+                    .GetOrAdd(pageIndex, pageIndex =>
                     {
                         /* Compute the address of the data block */
                         var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                        var pageAddress = ReadContext.Driver.Position + (long)(pageIndex * pageSize);
+                        var pageAddress = _firstPageAddress + (long)(pageIndex * pageSize);
 
                         /* Check for using last page, to set the number of elements on the page */
                         ulong elementCount;
@@ -253,7 +273,8 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                         var page = DataBlockPage<T>.Decode(
                             ReadContext.Driver,
                             elementCount,
-                            decode);
+                            decode
+                        );
 
                         return page.Elements;
                     }
