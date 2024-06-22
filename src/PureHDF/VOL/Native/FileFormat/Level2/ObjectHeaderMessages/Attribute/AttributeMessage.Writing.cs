@@ -30,7 +30,7 @@ internal partial record class AttributeMessage
         H5Attribute attribute,
         bool isScalar)
     {
-        var memoryData = default(Memory<TElement?>);
+        var memoryData = default(Memory<TElement>);
         var memoryDims = default(ulong[]);
 
         if (!attribute.IsNullDataspace)
