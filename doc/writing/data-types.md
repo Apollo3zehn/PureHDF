@@ -7,7 +7,23 @@ var file = new H5File()
 };
 ```
 
-However, there are a few cases where a little bit more work is required. These are described below:
+However, there are a few cases where a little bit more work is required. These are described in the following sections.
+
+# Object References
+
+Use the `H5ObjectReference` type to create object references. Variables of type `H5Dataset` can be implicitly casted to `H5ObjectReference`, i.e. no explicit casting is required. Here is an example:
+
+```
+var dataset1 = new H5Dataset(data: 1);
+var dataset2 = new H5Dataset(data: 2);
+
+var file = new H5File
+{
+    ["data1"] = dataset1,
+    ["data2"] = dataset2,
+    ["reference"] = new H5ObjectReference[] { dataset1, dataset2 }
+};
+```
 
 # Nullable Value Types
 
