@@ -71,3 +71,41 @@ var file = new H5File
 
 file.Write("path/to/file.h5");
 ```
+
+# Compound Data
+
+HDF5 datasets of data type `compound` are created when the input data is a reference type (`class`) or a complex value (`struct`). By default, PureHDF writes only class properties and struct fields to the file.
+
+This behavior can be changed by creating a new instance of the `H5WriteOptions` class with the desired values for `IncludeClassProperties`, `IncludeClassFields`, `IncludeStructProperties` and `IncludeStructFields`. The options should then be passed to the `H5File.Write(string, H5WriteOptions)` method.
+
+## Field Name Mapping
+
+You can control the mapping of .NET property names or field names to HDF5 compound field names by setting the appropriate values for `FieldNameMapper` or `PropertyNameMapper`, respectively, in the `H5WriteOptions`.
+
+A name mapper is a function which takes a `PropertyInfo` or `FieldInfo`, respectively, and returns the desired name of the specific field in the HDF5 file.
+
+You are free to derive a proper name from the input data but if you have control over the type definitions of the data to be written you can use the predefined `H5Name` attribute like this:
+
+```cs
+class MyClass
+{
+    [property: H5Name("my-name")]
+    public double Y { get; set; }
+}
+```
+
+And then define and use the property name mapper as follows:
+
+```cs
+string? PropertyNameMapper(PropertyInfo propertyInfo)
+{
+    var attribute = propertyInfo.GetCustomAttribute<H5NameAttribute>();
+    return attribute is not null ? attribute.Name : default;
+}
+
+var options = new H5WriteOptions(
+    PropertyNameMapper: propertyNameMapper
+);
+
+file.Write(filePath, options);
+```
