@@ -51,4 +51,4 @@ var floatJaggedArray = dataset.Read<float[][]>(); /* This works only for variabl
 ```
 
 > [!NOTE]
-> An overview over compatible generic types can be found here in the [Simple Data](simple.md) or the [Complex Data](complex.md) sections.
+> An overview over compatible generic types can be found here in the [Simple Data](simple.md) or the [Compound Data](compound.md) sections.

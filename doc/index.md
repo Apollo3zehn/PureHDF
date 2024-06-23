@@ -18,7 +18,7 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 # Installation
 
 ```bash
-dotnet add package PureHDF --prerelease
+dotnet add package PureHDF
 ```
 
 # Feature overview

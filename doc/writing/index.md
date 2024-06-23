@@ -67,6 +67,9 @@ The last step is to write the defined file to the drive:
 file.Write("path/to/file.h5");
 ```
 
+> [!NOTE]
+> Please refer to [data types](data-types.md) for more information about how to write special data types.
+
 ## Deferred writing
 
 You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the `H5File.BeginWrite(...)` method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being disposed.
@@ -96,22 +99,25 @@ writer.Write(dataset, data, fileSelection: fileSelection);
 > [!NOTE]
 > See [slicing](../reading/slicing.md) for information about available selections.
 
-## Opaque data
+## Soft Links
 
-Create an instance of the `H5OpaqueInfo` type and pass it to the `H5Dataset` constructor to treat byte arrays as opaque data:
+You can create soft links via the `H5SoftLink` type:
 
 ```cs
-var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
-
-var opaqueInfo = new H5OpaqueInfo(
-    TypeSize: (uint)data.Length,
-    Tag: "My tag"
-);
-
 var file = new H5File
 {
-    ["opaque"] = new H5Dataset(data, opaqueInfo: opaqueInfo)
-};
+    ["group_1"] = new H5Group
+    {
+        ["dataset"] = new int[] { 1, 2, 3 }
+    },
 
-file.Write("path/to/file.h5");
+    ["group_2"] = new H5Group
+    {
+        /* soft link to a group */
+        ["soft_link_1"] = new H5SoftLink("/group_1"),
+
+        /* soft link to a dataset */
+        ["soft_link_2"] = new H5SoftLink("/group_1/dataset")
+    }
+};
 ```
