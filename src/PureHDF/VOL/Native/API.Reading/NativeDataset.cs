@@ -159,10 +159,10 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = null)
     {
         return Read<T>(
+            datasetAccess: default,
             fileSelection,
             memorySelection,
-            memoryDims,
-            datasetAccess: default);
+            memoryDims);
     }
 
     /// <inheritdoc />
@@ -173,27 +173,27 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = null)
     {
         Read(
+            datasetAccess: default,
             buffer,
             fileSelection,
             memorySelection,
-            memoryDims,
-            datasetAccess: default);
+            memoryDims);
     }
 
     /// <summary>
     /// Reads the data.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
-    /// <param name="datasetAccess">The dataset access properties.</param>
     /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
     public T Read<T>(
+        H5DatasetAccess datasetAccess,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        ulong[]? memoryDims = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
@@ -217,17 +217,17 @@ public class NativeDataset : NativeObject, IH5Dataset
     /// Reads the data into the provided buffer.
     /// </summary>
     /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
     /// <param name="buffer">The buffer to read the data into.</param>
     /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
     /// <param name="memorySelection">The selection within the destination memory.</param>
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
-    /// <param name="datasetAccess">The dataset access properties.</param>
     public void Read<T>(
+        H5DatasetAccess datasetAccess,
         T buffer,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        ulong[]? memoryDims = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
@@ -245,11 +245,36 @@ public class NativeDataset : NativeObject, IH5Dataset
         ]);
     }
 
-    /* This overload is required because Span<T> is not allowed as generic argument and
-     * ReadUtils.ToMemory(...) would have trouble to cast generic type to Span<T>.
-     * https://github.com/dotnet/csharplang/issues/7608 tracks support for the generic
-     * argument issue.
+    /* The following two methods are required because Span<T> is not allowed as generic
+     * argument and ReadUtils.ToMemory(...) would have trouble to cast generic type to
+     * Span<T>. https://github.com/dotnet/csharplang/issues/7608 tracks support for the
+     * generic argument issue. These methods could also be moved to `IH5Dataset` but the
+     * only effect would be that the HsdsDataset would have to throw a
+     * `NotImplementedException`.
      */
+
+    /// <summary>
+    /// Reads the data into the provided buffer.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="buffer">The buffer to read the data into.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    public void Read<T>(
+        Span<T> buffer,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default)
+    {
+        Read(
+            datasetAccess: default,
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims
+        );
+    }
 
     /// <summary>
     /// Reads the data into the provided buffer.
@@ -261,11 +286,11 @@ public class NativeDataset : NativeObject, IH5Dataset
     /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
     /// <param name="datasetAccess">The dataset access properties.</param>
     public void Read<T>(
+        H5DatasetAccess datasetAccess,
         Span<T> buffer,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
-        ulong[]? memoryDims = default,
-        H5DatasetAccess datasetAccess = default)
+        ulong[]? memoryDims = default)
     {
         ReadCoreLevel1(
             buffer,
