@@ -101,30 +101,53 @@ public class Inflate
     [Benchmark]
     public unsafe Memory<byte> Intel_ISA_L_Inflate()
     {
-        var state = new Span<inflate_state>(_state_ptr.ToPointer(), _state_length);
+        var stateSpan = new Span<inflate_state>(_state_ptr.ToPointer(), _state_length);
+        ref var state = ref stateSpan[0];
 
-        _ = ISAL.isal_inflate_reset(_state_ptr);
+        ISAL.isal_inflate_init(_state_ptr);
 
-        fixed (byte* ptrOut = _inflated)
+        var length = 0;
+
+        var sourceBuffer = _deflated.AsSpan();
+        var targetBuffer = _inflated.AsSpan();
+
+        fixed (byte* ptrIn = sourceBuffer)
         {
-            fixed (byte* ptrIn = _deflated)
+            state.next_in = ptrIn;
+            state.avail_in = (uint)sourceBuffer.Length;
+
+            while (true)
             {
-                state[0].next_in = ptrIn;
-                state[0].avail_in = (uint)_deflated.Length;
+                fixed (byte* ptrOut = targetBuffer)
+                {
+                    state.next_out = ptrOut;
+                    state.avail_out = (uint)targetBuffer.Length;
 
-                state[0].next_out = ptrOut;
-                state[0].avail_out = (uint)_inflated.Length;
+                    var status = ISAL.isal_inflate(_state_ptr);
+
+                    if (status != inflate_return_values.ISAL_DECOMP_OK)
+                        throw new Exception($"Error encountered while decompressing: {status}.");
+
+                    length += targetBuffer.Length - (int)state.avail_out;
+
+                    if (state.block_state != isal_block_state.ISAL_BLOCK_FINISH &&
+                        state.avail_out == 0)
+                    {
+                        // double array size
+                        var tmp = _inflated;
+                        _inflated = new byte[tmp.Length * 2];
+                        tmp.CopyTo(_inflated.AsSpan());
+                        targetBuffer = _inflated.AsSpan(tmp.Length);
+                    }
+
+                    else
+                    {
+                        break;
+                    }
+                }
             }
-
-            var status = ISAL.isal_inflate(_state_ptr);
-
-            if (status != inflate_return_values.ISAL_DECOMP_OK)
-                throw new Exception($"Error encountered while decompressing: {status}.");
         }
 
-        if (_inflated[0] != _original[0] || _inflated[^1] != _original[^1])
-            throw new Exception("Inflate failed.");
-
-        return _inflated;
+        return _inflated.AsMemory(0, length);
     }
 }
