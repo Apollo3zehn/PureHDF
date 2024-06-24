@@ -47,11 +47,7 @@ internal partial record class DataLayoutMessage4
                         (
                             new FixedArrayIndexingInformation(
                                 /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
-#if NETSTANDARD2_0 || NETSTANDARD2_1
-                                PageBits: (byte)Math.Ceiling(Math.Log(chunkCount, newBase: 2))
-#else
                                 PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
-#endif
                             ),
                             FixedArrayHeader.ENCODE_SIZE,
                             ChunkedStoragePropertyFlags.None

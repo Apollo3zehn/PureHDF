@@ -187,7 +187,7 @@ public class ShuffleFilter : IH5Filter
     {
         var sourceBuffer = info.Buffer;
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         var resultBuffer = GC
             .AllocateUninitializedArray<byte>(info.Buffer.Length)
             .AsMemory();

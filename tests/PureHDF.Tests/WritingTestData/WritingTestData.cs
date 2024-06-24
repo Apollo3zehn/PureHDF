@@ -102,7 +102,7 @@ public static class WritingTestData
         /* signed fixed-point */
         new object[] { -2 },
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         /* 16 bit floating-point */
         new object[] { (Half)99.38f },
 #endif
@@ -144,7 +144,7 @@ public static class WritingTestData
     public static IList<object> Numerical { get; }
 
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     public static IList<object> Numerical_Int128 { get; }
 #endif
 
@@ -165,7 +165,7 @@ public static class WritingTestData
             ReadingTestData.EnumData,
         };
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         Numerical_Int128 = new List<object>
         {
             new UInt128[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 },

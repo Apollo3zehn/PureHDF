@@ -43,7 +43,7 @@ public class SourceGenerator : ISourceGenerator
                 {
                     var classDeclarationSyntax = (ClassDeclarationSyntax)attributeSyntax.Parent!.Parent!;
                     var sourceFilePath = classDeclarationSyntax.SyntaxTree.FilePath;
-                    var sourceFolderPath = Path.GetDirectoryName(sourceFilePath);
+                    var sourceFolderPath = Path.GetDirectoryName(sourceFilePath)!;
 
                     var isPartial = classDeclarationSyntax.Modifiers
                         .Any(modifier => modifier.IsKind(SyntaxKind.PartialKeyword));
@@ -78,7 +78,7 @@ public class SourceGenerator : ISourceGenerator
                     if (attribute is null)
                         continue;
 
-                    var filePath = attribute.ConstructorArguments[0].Value!.ToString();
+                    var filePath = attribute.ConstructorArguments[0].Value!.ToString()!;
 
                     if (!Path.IsPathRooted(filePath))
                         filePath = Path.Combine(sourceFolderPath, filePath);
