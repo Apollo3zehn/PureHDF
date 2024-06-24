@@ -1,5 +1,25 @@
 # Performance
 
+## Memory Management
+
+PureHDF allows you to provide your own buffer so you can using for example the .NET `MemoryPool` to rent a buffer:
+
+```cs
+var dataset = (NativeDataset)file.Dataset("/the/dataset");
+var length = (int)dataset.Space.Dimensions[0] * sizeof(double);
+
+using var memoryOwner = MemoryPool<byte>.Shared.Rent(minBufferSize: length);
+var memory = memoryOwner.Memory.Slice(0, length);
+
+dataset.Read(buffer: memory);
+
+var doubleData = MemoryMarshal.Cast<byte, double>(memory.Span);
+```
+
+Supported buffer types are `T` (in case of `dataset.Read<T>(...)`), `byte[]`, `Memory<byte>` and `Span<byte>`.
+
+## Chunking
+
 The HDF5 file format is a good choice for storing compressed data in chunks, which can actually improve speed by reducing the amount of data that needs to be read from disk. However, chunked data can only be accessed as a whole (due to compression), so it is important to choose an appropriate chunk size.
 
 For example, consider a two-dimensional data set with dimensions of `10.000 x 100`. This dataset will be filled with real-time sampled data where the first dimension is the time axis, i.e. there will be `100` values per sample. You could now choose a chunk size of `1 x 100`, which means that the chunk is the size of a single sample. This chunk size works well for write operations. 
@@ -11,7 +31,6 @@ To do this, PureHDF has to open all the `10.000` chunks, decompress them, extrac
 The best solution to this problem is to use chunk caches. A chunk cache holds the decompressed data, so in case of a write operation the pattern `decompress -> append new value -> compress` changes to `find chunk in cache -> append new value`, which is generally much faster. 
 
 Performance will be degraded again if the chunk cache is too small. The default *reading* chunk cache properties are
-
 
 - `521` chunk entries 
 - with a maximum total size of `1 MB`
