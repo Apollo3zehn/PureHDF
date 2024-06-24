@@ -11,16 +11,11 @@ internal static class DataUtils
 
     public static bool IsReferenceOrContainsReferences(Type type)
     {
-#if NETSTANDARD2_0
-        var isSimpleValueType = type.IsPrimitive || type.IsEnum;
-        return !isSimpleValueType;
-#else
         // TODO cache
         var generic = MethodInfoIsReferenceOrContainsReferences.MakeGenericMethod(type);
         var isReferenceOrContainsReferences = (bool)generic.Invoke(null, null)!;
 
         return isReferenceOrContainsReferences;
-#endif
     }
 
     public static void CheckEndianness(ByteOrder byteOrder)

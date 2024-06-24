@@ -220,7 +220,7 @@ public partial class TestUtils
         else if (type == typeof(long))
             return H5T.NATIVE_INT64;
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
         else if (type == typeof(UInt128))
         {
             var typeId = H5T.copy(H5T.NATIVE_UINT64);
@@ -240,7 +240,7 @@ public partial class TestUtils
         }
 #endif
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         else if (type == typeof(Half))
         {
             var typeId = H5T.copy(H5T.NATIVE_FLOAT);

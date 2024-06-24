@@ -6,7 +6,7 @@
     <PackageTags>HDF HDF5 hierarchical data file H5 source generator</PackageTags>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <SuppressWarnings>NU5128</SuppressWarnings>

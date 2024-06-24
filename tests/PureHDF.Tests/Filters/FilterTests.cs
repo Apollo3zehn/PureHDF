@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Reflection;
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
 using Xunit;
@@ -446,7 +446,7 @@ public class FilterTests
     [Theory]
     [InlineData("DeflateDotnetFilter")]
     [InlineData("DeflateSharpZipLibFilter")]
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
     // https://iobservable.net/blog/2013/08/06/clr-limitations/
     // "It seems that the maximum array base element size is limited to 64KB."
     [InlineData("DeflateISALFilter")]
@@ -507,7 +507,7 @@ public class FilterTests
     [Theory]
     [InlineData("DeflateDotnetFilter")]
     [InlineData("DeflateSharpZipLibFilter")]
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
     // https://iobservable.net/blog/2013/08/06/clr-limitations/
     // "It seems that the maximum array base element size is limited to 64KB."
     [InlineData("DeflateISALFilter")]
@@ -825,7 +825,7 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
     [Theory]
     [InlineData((byte)1, 1001)]
     [InlineData((short)2, 732)]
@@ -1072,7 +1072,7 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
     [Theory]
     [InlineData((byte)1, 1001)]
     [InlineData((short)2, 732)]
@@ -1139,7 +1139,7 @@ public class FilterTests
         EndiannessConverterGeneric.Convert(bytesOfType, actual_converted, actual);
         var generic = sw.Elapsed.TotalMilliseconds;
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         ///* SSE2 */
         //if (Sse2.IsSupported)
         //{

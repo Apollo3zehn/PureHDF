@@ -1,3 +1,8 @@
+## v2.0.0 - 2024-06-24
+
+### Breaking changes
+- Version 2 of PureHDF drops support for old frameworks and supports [active frameworks](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only which are .NET 6 and .NET 8 at the time of this release. Bug fixes will be backported to version 1 as well as features (upon request and if feasible).
+
 ## v1.0.0 - 2024-06-24
 
 ### Features

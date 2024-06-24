@@ -231,7 +231,7 @@ internal partial record class DatatypeMessage(
                             (4, true) => (typeof(int), GetDecodeInfoForUnmanagedElement<int>()),
                             (8, false) => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
                             (8, true) => (typeof(long), GetDecodeInfoForUnmanagedElement<long>()),
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                             (16, false) => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
                             (16, true) => (typeof(Int128), GetDecodeInfoForUnmanagedElement<Int128>()),
 #endif
@@ -246,7 +246,7 @@ internal partial record class DatatypeMessage(
                     ? memoryType is null
                         ? Size switch
                         {
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
                             2 => (typeof(Half), GetDecodeInfoForUnmanagedElement<Half>()),
 #endif
                             4 => (typeof(float), GetDecodeInfoForUnmanagedElement<float>()),
@@ -266,7 +266,7 @@ internal partial record class DatatypeMessage(
                             2 => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
                             4 => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
                             8 => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                             16 => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
 #endif
                             _ => throw new Exception("Unable to decode bitfield data without additional runtime type information.")
@@ -932,11 +932,7 @@ internal partial record class DatatypeMessage(
 
             Func<string, string> trim = bitField.PaddingType switch
             {
-#if NETSTANDARD2_0
-                PaddingType.NullTerminate => value => value.Split(['\0'], 2)[0],
-#else
                 PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
-#endif
                 PaddingType.NullPad => value => value.TrimEnd('\0'),
                 PaddingType.SpacePad => value => value.TrimEnd(' '),
                 _ => throw new Exception("Unsupported padding type.")

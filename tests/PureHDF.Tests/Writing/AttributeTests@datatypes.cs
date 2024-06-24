@@ -599,7 +599,7 @@ public partial class AttributeTests
         }
     }
 
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
     [Fact]
     public void CanWrite_Large_Array_Int128()
     {

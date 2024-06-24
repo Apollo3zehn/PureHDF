@@ -173,11 +173,7 @@ internal record class CompoundPropertyDescription(
                     buffer[i] = driver.ReadByte();
                 }
 
-#if NETSTANDARD2_1_OR_GREATER
                 memberByteOffset = BitConverter.ToUInt64(buffer);
-#else
-                memberByteOffset = BitConverter.ToUInt64(buffer.ToArray(), 0);
-#endif
 
                 // member type message
                 memberTypeMessage = DatatypeMessage.Decode(driver);
@@ -226,11 +222,7 @@ internal record class CompoundPropertyDescription(
         var memberByteOffsetBytes = BitConverter.GetBytes(MemberByteOffset);
         var slicedMemberByteOffsetBytes = memberByteOffsetBytes.AsSpan(0, (int)byteCount);
 
-#if NETSTANDARD2_1_OR_GREATER
         driver.Write(slicedMemberByteOffsetBytes);
-#else
-        driver.Write(slicedMemberByteOffsetBytes.ToArray());
-#endif
 
         // member type message
         MemberTypeMessage.Encode(driver);

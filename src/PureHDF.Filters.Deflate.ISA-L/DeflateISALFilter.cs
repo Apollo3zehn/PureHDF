@@ -54,7 +54,7 @@ public class DeflateISALFilter : IH5Filter
 
             var length = 0;
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
             var inflated = GC
                 .AllocateUninitializedArray<byte>(info.ChunkSize)
                 .AsMemory();
@@ -115,7 +115,7 @@ public class DeflateISALFilter : IH5Filter
 
             var length = 0;
 
-            #if NET5_0_OR_GREATER
+            #if NET6_0_OR_GREATER
                 var deflated = GC
                     .AllocateUninitializedArray<byte>(info.ChunkSize)
                     .AsMemory();

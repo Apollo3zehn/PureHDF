@@ -164,10 +164,10 @@ public class ReadingTestData
             new object[] { "D9", new float[] { 0, 1, 2, 3, 4, 5, 6, -7.99f, 8, 9, 10, 11 } },
             new object[] {"D10", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 } },
             new object[] {"D11", EnumData },
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             new object[] {"D12", new double[] { 0, 1, 2, 3, 4, 5, 6, -7.99, 8, 9, 10, 11 }.Select(value => (Half)value).ToArray() },
 #endif
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
             new object[] {"D13", new UInt128[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 } },
             new object[] {"D14", new Int128[] { 0, 1, 2, 3, 4, 5, 6, -7, 8, 9, 10, 11 } }
 #endif

@@ -4,7 +4,7 @@
     <Description>Provides an Amazon S3 virtual file driver for PureHDF.</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 Amazon S3</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
