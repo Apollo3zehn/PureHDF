@@ -1,4 +1,4 @@
-## v1.0.0-beta.27 - 2024-06-21
+## v1.0.0 - 2024-06-24
 
 ### Features
 - The documentation has been improved.
