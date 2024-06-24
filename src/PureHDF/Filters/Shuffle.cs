@@ -1,4 +1,4 @@
-﻿#if NET5_0_OR_GREATER
+﻿#if NET6_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
 #endif
 
@@ -8,7 +8,7 @@ internal static class Shuffle
 {
     public static unsafe void DoShuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
     {
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         if (Avx2.IsSupported)
             ShuffleAvx2.DoShuffle(bytesOfType, source, destination);
 
@@ -22,7 +22,7 @@ internal static class Shuffle
 
     public static unsafe void DoUnshuffle(int bytesOfType, Span<byte> source, Span<byte> destination)
     {
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
         if (Avx2.IsSupported)
             ShuffleAvx2.DoUnshuffle(bytesOfType, source, destination);
 

@@ -91,7 +91,7 @@ public class Blosc2Filter : IH5Filter
             /* Check that we actually have support for the compressor code */
             var compnamePtr = IntPtr.Zero;
             var code = Blosc.blosc2_compcode_to_compname(compcode, ref compnamePtr);
-            compname = Marshal.PtrToStringAnsi(compnamePtr);
+            compname = Marshal.PtrToStringAnsi(compnamePtr)!;
 
             if (code == -1)
             {
@@ -114,7 +114,7 @@ public class Blosc2Filter : IH5Filter
                  */
                 var status = Blosc.blosc2_cbuffer_sizes(new IntPtr(srcPtr), out var outbuf_size, out var cbytes, out var blocksize);
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
                 var buffer = GC
                     .AllocateUninitializedArray<byte>(outbuf_size)
                     .AsMemory();

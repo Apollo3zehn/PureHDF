@@ -62,11 +62,7 @@ internal record class CompoundBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-#if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = (byte)(MemberCount & 0xFF);
         data[1] = (byte)((MemberCount >> 8) & 0xFF);
@@ -90,11 +86,7 @@ internal record class EnumerationBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-#if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = (byte)(MemberCount & 0xFF);
         data[1] = (byte)((MemberCount >> 8) & 0xFF);
@@ -124,11 +116,7 @@ internal record class FixedPointBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-#if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = (byte)(
             (byte)ByteOrder & 0x01 |
@@ -186,11 +174,7 @@ internal record class FloatingPointBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-#if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         if (ByteOrder == ByteOrder.LittleEndian)
             data[0] = 0 << 0;
@@ -230,11 +214,7 @@ internal record class OpaqueBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-        #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = TagByteLength;
 
@@ -257,11 +237,7 @@ internal record class ReferenceBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-        #if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = (byte)((byte)Type & 0x07);
 
@@ -286,11 +262,7 @@ internal record class StringBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-#if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = (byte)((byte)PaddingType & 0x0F);
         data[0] |= (byte)(((byte)Encoding & 0x0F) << 4);
@@ -337,11 +309,7 @@ internal record class VariableLengthBitFieldDescription(
 
     public override void Encode(H5DriverBase driver)
     {
-#if NETSTANDARD2_1_OR_GREATER
         Span<byte> data = stackalloc byte[3];
-#else
-        byte[] data = new byte[3];
-#endif
 
         data[0] = (byte)((byte)Type & 0x0F);
         data[0] |= (byte)(((byte)PaddingType & 0x0F) << 4);

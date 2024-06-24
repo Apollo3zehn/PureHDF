@@ -53,7 +53,7 @@ public class LzfFilter : IH5Filter
 
             while (status == 0)
             {
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
                 var buffer = GC
                     .AllocateUninitializedArray<byte>((int)targetSize)
                     .AsMemory();

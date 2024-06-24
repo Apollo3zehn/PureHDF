@@ -169,7 +169,7 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(ushort) ||
                 type == typeof(uint) ||
                 type == typeof(ulong)
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 || type == typeof(UInt128)
 #endif
                 => GetTypeInfoForUnsignedFixedPointTypes(type, endianness),
@@ -180,12 +180,12 @@ internal partial record class DatatypeMessage : Message
                 type == typeof(short) ||
                 type == typeof(int) ||
                 type == typeof(long)
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
                 || type == typeof(Int128)
 #endif
                 => GetTypeInfoForSignedFixedPointTypes(type, endianness),
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
             /* 16 bit floating-point */
             Type when type == typeof(Half)
                 => GetTypeInfoFor16BitFloatingPoint(type, endianness),
@@ -895,7 +895,7 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoFor16BitFloatingPoint(
         Type type,
         ByteOrder endianness)

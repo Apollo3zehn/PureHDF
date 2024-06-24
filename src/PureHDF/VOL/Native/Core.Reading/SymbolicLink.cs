@@ -72,11 +72,7 @@ internal class SymbolicLink
                 var externalFile = NativeCache
                     .GetNativeFile(_parent.Context.Driver, absoluteFilePath);
 
-#if NETSTANDARD2_0
-                return externalFile.InternalGet(_objectPath!, linkAccess);
-#else
                 return externalFile.InternalGet(_objectPath, linkAccess);
-#endif
             }
             catch (Exception ex)
             {

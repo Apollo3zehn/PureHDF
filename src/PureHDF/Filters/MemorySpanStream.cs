@@ -57,14 +57,12 @@ internal class MemorySpanStream : Stream
         Position += count;
     }
 
-#if NETSTANDARD2_1_OR_GREATER
     public override void Write(ReadOnlySpan<byte> buffer)
     {
         buffer.CopyTo(_sliced.Span);
 
         Position += buffer.Length;
     }
-#endif
 
     public override long Seek(long offset, SeekOrigin origin)
     {

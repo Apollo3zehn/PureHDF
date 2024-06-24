@@ -85,7 +85,7 @@ public class H5Group : H5Object, IDictionary<string, object>
         return _objects.Remove(item);
     }
 
-#if NETSTANDARD2_0 || NETSTANDARD2_1
+#if NETSTANDARD2_1
     /// <inheritdoc />
     public bool TryGetValue(string key, out object value)
     {

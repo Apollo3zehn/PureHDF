@@ -1,6 +1,6 @@
 namespace PureHDF;
 
-#if !NET7_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 
 internal static partial class StreamExtensions
 {

@@ -4,7 +4,7 @@
     <Description>Enables Deflate filter support for PureHDF (based on SharpZipLib).</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 Deflate SharpZipLib</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

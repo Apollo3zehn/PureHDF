@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
 
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 
 using System;
 using System.Runtime.Intrinsics;
