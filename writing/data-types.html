@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Object References | PureHDF </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Object References | PureHDF ">
+      
+      <link rel="icon" href="../images/icon.png">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../toc.html">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/data-types.md/#L1">
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/icon.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+
+<p>Most data can simply be added to the <code>H5File</code> or <code>H5Group</code> dictionary like this:</p>
+<pre><code>var file = new H5File()
+{
+    [&quot;my-dataset&quot;] = data // data contains the simple or complex data you want to write
+};
+</code></pre>
+<p>However, there are a few cases where a little bit more work is required. These are described in the following sections.</p>
+<h1 id="object-references">Object References</h1>
+<p>Use the <code>H5ObjectReference</code> type to create object references. Variables of type <code>H5Dataset</code> can be implicitly casted to <code>H5ObjectReference</code>, i.e. no explicit casting is required. Here is an example:</p>
+<pre><code>var dataset1 = new H5Dataset(data: 1);
+var dataset2 = new H5Dataset(data: 2);
+
+var file = new H5File
+{
+    [&quot;data1&quot;] = dataset1,
+    [&quot;data2&quot;] = dataset2,
+    [&quot;reference&quot;] = new H5ObjectReference[] { dataset1, dataset2 }
+};
+</code></pre>
+<h1 id="nullable-value-types">Nullable Value Types</h1>
+<p>To write nullable value type data use the generic version of <code>H5Dataset</code> (or <code>H5Attribute</code>). If you use the non-generic one instead, you will get a compiler warning. It is necessary to use the generic <code>H5Dataset&lt;T&gt;</code> in combination with <code>null</code> data because <code>null</code> looses all type information at runtime and then PureHDF does not know how to encode it. The generic type parameter keeps that type information.</p>
+<p>Example:</p>
+<pre><code>var file = new H5File()
+{
+    int? value = 1; // or null
+    [&quot;my-dataset&quot;] = new H5Dataset&lt;int?&gt;(value)
+};
+</code></pre>
+<p>As there is no native support for nullable values types in the HDF5 file format, here is some technical background about the workaround PureHDF uses:</p>
+<p>Nullable value types (e.g. <code>int?</code>) require special handling within the HDF5 file because we need a way to store the possible <code>null</code> value. The HDF5 <code>variable-length sequence</code> data type is a good, though not perfect solution, for this problem if we only use the first element of the sequence. Since a variable-length sequence has no predefined length, a reference (or pointer) is stored in the dataset itself. And this reference points to the global heap where the actual data lives. In case this reference consists only of zeros, it means that the value is undefined (= <code>null</code>).</p>
+<p>Summary: To represent nullable value types, we use the HDF5 internal variable-length sequence data type with a sequence length of <code>1</code>.</p>
+<pre><code>var file = new H5File
+{
+    [&quot;opaque&quot;] = new H5Dataset(data, opaqueInfo: opaqueInfo)
+};
+</code></pre>
+<h1 id="opaque-data">Opaque Data</h1>
+<p>Create an instance of the <code>H5OpaqueInfo</code> type and pass it to the <code>H5Dataset</code> constructor to treat byte arrays as opaque data:</p>
+<pre><code class="lang-cs">var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+
+var opaqueInfo = new H5OpaqueInfo(
+    TypeSize: (uint)data.Length,
+    Tag: &quot;My tag&quot;
+);
+
+var file = new H5File
+{
+    [&quot;opaque&quot;] = new H5Dataset(data, opaqueInfo: opaqueInfo)
+};
+
+file.Write(&quot;path/to/file.h5&quot;);
+</code></pre>
+<h1 id="compound-data">Compound Data</h1>
+<p>HDF5 datasets of data type <code>compound</code> are created when the input data is a reference type (<code>class</code>) or a complex value (<code>struct</code>). By default, PureHDF writes only class properties and struct fields to the file.</p>
+<p>This behavior can be changed by creating a new instance of the <code>H5WriteOptions</code> class with the desired values for <code>IncludeClassProperties</code>, <code>IncludeClassFields</code>, <code>IncludeStructProperties</code> and <code>IncludeStructFields</code>. The options should then be passed to the <code>H5File.Write(string, H5WriteOptions)</code> method.</p>
+<h2 id="field-name-mapping">Field Name Mapping</h2>
+<p>You can control the mapping of .NET property names or field names to HDF5 compound field names by setting the appropriate values for <code>FieldNameMapper</code> or <code>PropertyNameMapper</code>, respectively, in the <code>H5WriteOptions</code>.</p>
+<p>A name mapper is a function which takes a <code>PropertyInfo</code> or <code>FieldInfo</code>, respectively, and returns the desired name of the specific field in the HDF5 file.</p>
+<p>You are free to derive a proper name from the input data but if you have control over the type definitions of the data to be written you can use the predefined <code>H5Name</code> attribute like this:</p>
+<pre><code class="lang-cs">class MyClass
+{
+    [property: H5Name(&quot;my-name&quot;)]
+    public double Y { get; set; }
+}
+</code></pre>
+<p>And then define and use the property name mapper as follows:</p>
+<pre><code class="lang-cs">string? PropertyNameMapper(PropertyInfo propertyInfo)
+{
+    var attribute = propertyInfo.GetCustomAttribute&lt;H5NameAttribute&gt;();
+    return attribute is not null ? attribute.Name : default;
+}
+
+var options = new H5WriteOptions(
+    PropertyNameMapper: propertyNameMapper
+);
+
+file.Write(filePath, options);
+</code></pre>
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/writing/data-types.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          Copyright © 2024 Vincent Wilms
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

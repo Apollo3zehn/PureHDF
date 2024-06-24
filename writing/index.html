@@ -120,6 +120,10 @@ var file = new H5File()
 <p>The last step is to write the defined file to the drive:</p>
 <pre><code class="lang-cs">file.Write(&quot;path/to/file.h5&quot;);
 </code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Please refer to <a href="data-types.html">data types</a> for more information about how to write special data types.</p>
+</div>
 <h2 id="deferred-writing">Deferred writing</h2>
 <p>You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the <code>H5File.BeginWrite(...)</code> method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being disposed.</p>
 <pre><code class="lang-cs">var data = Enumerable.Range(0, 100).ToArray();
@@ -143,21 +147,24 @@ writer.Write(dataset, data, fileSelection: fileSelection);
 <h5>Note</h5>
 <p>See <a href="../reading/slicing.html">slicing</a> for information about available selections.</p>
 </div>
-<h2 id="opaque-data">Opaque data</h2>
-<p>Create an instance of the <code>H5OpaqueInfo</code> type and pass it to the <code>H5Dataset</code> constructor to treat byte arrays as opaque data:</p>
-<pre><code class="lang-cs">var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
-
-var opaqueInfo = new H5OpaqueInfo(
-    TypeSize: (uint)data.Length,
-    Tag: &quot;My tag&quot;
-);
-
-var file = new H5File
+<h2 id="soft-links">Soft Links</h2>
+<p>You can create soft links via the <code>H5SoftLink</code> type:</p>
+<pre><code class="lang-cs">var file = new H5File
 {
-    [&quot;opaque&quot;] = new H5Dataset(data, opaqueInfo: opaqueInfo)
-};
+    [&quot;group_1&quot;] = new H5Group
+    {
+        [&quot;dataset&quot;] = new int[] { 1, 2, 3 }
+    },
 
-file.Write(&quot;path/to/file.h5&quot;);
+    [&quot;group_2&quot;] = new H5Group
+    {
+        /* soft link to a group */
+        [&quot;soft_link_1&quot;] = new H5SoftLink(&quot;/group_1&quot;),
+
+        /* soft link to a dataset */
+        [&quot;soft_link_2&quot;] = new H5SoftLink(&quot;/group_1/dataset&quot;)
+    }
+};
 </code></pre>
 </article>
 

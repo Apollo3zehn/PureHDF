@@ -888,6 +888,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "performance.md",
+      "output": {
+        ".html": {
+          "relative_path": "performance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "reading/amazon-s3.md",
       "output": {
         ".html": {
@@ -898,10 +908,10 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "reading/complex.md",
+      "source_relative_path": "reading/compound.md",
       "output": {
         ".html": {
-          "relative_path": "reading/complex.html"
+          "relative_path": "reading/compound.html"
         }
       },
       "version": ""
@@ -918,10 +928,10 @@
     },
     {
       "type": "Conceptual",
-      "source_relative_path": "reading/external_files.md",
+      "source_relative_path": "reading/external-files.md",
       "output": {
         ".html": {
-          "relative_path": "reading/external_files.html"
+          "relative_path": "reading/external-files.html"
         }
       },
       "version": ""
@@ -1018,6 +1028,16 @@
       "output": {
         ".html": {
           "relative_path": "writing/chunks.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "writing/data-types.md",
+      "output": {
+        ".html": {
+          "relative_path": "writing/data-types.html"
         }
       },
       "version": ""

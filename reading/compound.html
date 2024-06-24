@@ -2,9 +2,9 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Complex Data | PureHDF </title>
+      <title>Compound Data | PureHDF </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Complex Data | PureHDF ">
+      <meta name="title" content="Compound Data | PureHDF ">
       
       <link rel="icon" href="../images/icon.png">
       <link rel="stylesheet" href="../public/docfx.min.css">
@@ -15,7 +15,7 @@
       
       
       
-      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/complex.md/#L1">
+      <meta name="docfx:docurl" content="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/compound.md/#L1">
   </head>
 
   <script type="module">
@@ -72,7 +72,7 @@
         </div>
 
         <article data-uid="">
-<h1 id="complex-data">Complex Data</h1>
+<h1 id="compound-data">Compound Data</h1>
 
 <p>There are three ways to read compound data which are explained in the following sections. Here is an overview:</p>
 <table>
@@ -130,7 +130,7 @@ var compoundData = dataset.Read&lt;SimpleStruct&gt;();
 </div>
 <div class="NOTE">
 <h5>Note</h5>
-<p>This method does not require that the structs field names match since they are simply mapped by their offset.</p>
+<p>This method does not require that the struct field names match since they are simply mapped by their offset.</p>
 </div>
 <p>If the compound contains fixed size array data (here: <code>3</code>), you would need to add the <code>unsafe</code> modifier to the struct definition and define the corresponding struct field as follows:</p>
 <pre><code class="lang-cs">[StructLayout(LayoutKind.Explicit, Size = 8)]
@@ -291,7 +291,7 @@ var compoundData = dataset.Read&lt;NullableStructWithCustomFieldName&gt;();
 </article>
 
         <div class="contribution d-print-none">
-          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/complex.md/#L1" class="edit-link">Edit this page</a>
+          <a href="https://github.com/Apollo3zehn/PureHDF/blob/master/doc/reading/compound.md/#L1" class="edit-link">Edit this page</a>
         </div>
 
         <div class="next-article d-print-none border-top" id="nextArticle"></div>

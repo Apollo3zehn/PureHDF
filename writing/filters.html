@@ -100,6 +100,21 @@ var options = new H5WriteOptions(
 
 var dataset = new H5Dataset(..., datasetCreation: datasetCreation);
 </code></pre>
+<h2 id="parameters">Parameters</h2>
+<p>Some filters can be configured to set the compression level or other parameters. The values for these parameters can be provided as a dictionary via the <code>H5Filter</code> class. The dictionary keys are usually constants in the respective filter class. For example, the <a href="https://www.nuget.org/packages/PureHDF.Filters.Blosc2">Blosc2Filter</a> offers the options <code>Blosc2Filter.COMPRESSION_LEVEL</code> and <code>Blosc2Filter.COMPRESSOR_CODE</code>, among others. You can use them like this:</p>
+<pre><code class="lang-cs">var options = new H5WriteOptions(
+    Filters:
+    [
+        new H5Filter(Id: ShuffleFilter.Id, Options: new() 
+        { 
+            [Blosc2Filter.COMPRESSION_LEVEL] = 9,
+            [Blosc2Filter.COMPRESSOR_CODE] = &quot;blosclz&quot;
+        })
+    ]
+);
+
+file.Write(&quot;path/to/file.h5&quot;, options);
+</code></pre>
 </article>
 
         <div class="contribution d-print-none">

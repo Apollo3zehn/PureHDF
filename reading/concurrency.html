@@ -104,7 +104,7 @@
 </blockquote>
 <div class="WARNING">
 <h5>Warning</h5>
-<p>The default <code>SimpleChunkCache</code> is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.</p>
+<p>The default <code>SimpleReadingChunkCache</code> is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.</p>
 </div>
 <h2 id="multi-threading-memory-mapped-file">Multi-Threading (Memory-Mapped File)</h2>
 <p>If you have opened a file as memory-mapped file, you may read the data in parallel like this:</p>
