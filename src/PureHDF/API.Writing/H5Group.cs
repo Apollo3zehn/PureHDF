@@ -85,19 +85,11 @@ public class H5Group : H5Object, IDictionary<string, object>
         return _objects.Remove(item);
     }
 
-#if NETSTANDARD2_1
-    /// <inheritdoc />
-    public bool TryGetValue(string key, out object value)
-    {
-        return _objects.TryGetValue(key, out value);
-    }
-#else
     /// <inheritdoc />
     public bool TryGetValue(string key, [MaybeNullWhen(false)] out object value)
     {
         return _objects.TryGetValue(key, out value);
     }
-#endif
 
     IEnumerator IEnumerable.GetEnumerator()
     {
