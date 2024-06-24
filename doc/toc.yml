@@ -10,5 +10,8 @@
 - name: Filters
   href: filters.md
 
+- name: Performance
+  href: performance.md
+
 - name: API
   href: api/
