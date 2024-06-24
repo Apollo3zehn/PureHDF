@@ -1,6 +1,9 @@
 - name: Writing
   href: index.md
 
+- name: Data Types
+  href: data-types.md
+
 - name: Dimensions
   href: dimensions.md
 

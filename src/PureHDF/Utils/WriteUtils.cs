@@ -61,7 +61,7 @@ internal static class WriteUtils
             return (type, true);
     }
 
-    public static (Memory<TElement?>, ulong[]?) ToMemory<T, TElement>(object? data)
+    public static (Memory<TElement>, ulong[]?) ToMemory<T, TElement>(object? data)
     {
         var type = typeof(T);
 
@@ -71,27 +71,57 @@ internal static class WriteUtils
                 return default;
 
             else
-                return ElementToMemory((TElement?)data);
+            {
+                /* Why 'data!' with an exclamation mark? 
+                 * 
+                 * I did not find a clear explanation for the nullable behavior
+                 * of generic types (aka 'T'). It seems that T includes nullable
+                 * value types and nullable reference types and so there is
+                 * no need for 'T?' as return type in functions. It would actually
+                 * be quite problematic for value types which would now become 
+                 * nullable value types, i.e. their type is changed which is not
+                 * desired.
+                 *
+                 * So the function input parameter is of type 'object?' and the
+                 * return type is `Memory<TElement>`, i.e. in theory `TElement` 
+                 * could also be a type which allows null.
+                 * 
+                 * But for some reason the cast from `object?` to `TElement` gives
+                 * warning CS8600: `Converting null literal or possible null value 
+                 * to non-nullable type.`. So we need the exclamation to tell the
+                 * compiler that data is not null (although it is!).
+                 * 
+                 * Probably the behavior is like that because T is not known and
+                 * could be a non-nullable type and in that case the cast would be 
+                 * invalid. But we know better: When data is null, T will be a 
+                 * nullable type as well so we can safely use the exclamation mark!
+                 * 
+                 *
+                 * More info about nullability:
+                 * - https://stackoverflow.com/a/69353768
+                 */
+                return ElementToMemory((TElement)data!);
+            }
         }
 
         if (typeof(IDictionary).IsAssignableFrom(type) && type.GenericTypeArguments[0] == typeof(string))
-            return ElementToMemory((TElement?)data);
+            return ElementToMemory((TElement)data);
 
         else if (DataUtils.IsArray(type))
             return ((Array)data).Rank == 1
-                ? Array1DToMemory((TElement?[])data)
-                : ArrayNDToMemory<TElement?>((Array)data);
+                ? Array1DToMemory((TElement[])data)
+                : ArrayNDToMemory<TElement>((Array)data);
 
         else if (DataUtils.IsMemory(type))
             return data.Equals(default(T))
                 ? default
-                : ((Memory<TElement?>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
+                : ((Memory<TElement>)data, new ulong[] { (ulong)((Memory<TElement>)data).Length });
 
         else if (typeof(IEnumerable).IsAssignableFrom(type) && type.IsGenericType)
-            return EnumerableToMemory((IEnumerable<TElement?>)data);
+            return EnumerableToMemory((IEnumerable<TElement>)data);
 
         else
-            return ElementToMemory((TElement?)data);
+            return ElementToMemory((TElement)data);
     }
 
     // Convert element to memory

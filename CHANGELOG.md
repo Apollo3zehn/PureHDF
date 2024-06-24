@@ -1,3 +1,14 @@
+## v1.0.0 - 2024-06-24
+
+### Features
+- The documentation has been improved.
+
+### Performance
+- Read performance of chunked datasets encoded with the extensible array index as well as the btree2 index has been improved.
+
+### Breaking changes
+- To solve a problem with ambiguity, the signature of the `NativeDataset.Read(...)` overloads has been changed to make the provision of the `datasetAccess` parameter mandatory.
+
 ## v1.0.0-beta.27 - 2024-06-21
 
 ### Features

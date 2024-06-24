@@ -15,10 +15,16 @@ The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https:
 
 > Please read the [docs](https://apollo3zehn.github.io/PureHDF/) for samples and API documentation.
 
+# Version 2 changes
+
+To keep the code base clean, version 2 of PureHDF supports [active .NET versions](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only, which are `.NET 6` and `.NET 8` as of now (June 2024).
+
+Version 1 of PureHDF supports all .NET versions starting with `.NET 4.7.2` and continues to receive bug fixes. Features will be backported upon request if feasible.
+
 # Installation
 
 ```bash
-dotnet add package PureHDF --prerelease
+dotnet add package PureHDF
 ```
 
 # Quick Start

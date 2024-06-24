@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Concurrent;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -15,6 +16,8 @@ internal record class BTree2Header<T>(
 {
     private byte _version;
 
+    private ConcurrentDictionary<ulong, BTree2InternalNode<T>> _addressToNodeMap { get; } = new();
+
     public static BTree2Header<T> Decode(
         NativeReadContext context,
         Func<T> decodeKey
@@ -24,7 +27,7 @@ internal record class BTree2Header<T>(
 
         // signature
         var signature = driver.ReadBytes(4);
-        MathUtils.ValidateSignature(signature, BTree2Header<T>.Signature);
+        MathUtils.ValidateSignature(signature, Signature);
 
         // version
         var version = driver.ReadByte();
@@ -185,18 +188,23 @@ internal record class BTree2Header<T>(
 
         while (depth > 0)
         {
-            Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+            var address = currentNodePointer.Address;
 
-            var internalNode = BTree2InternalNode<T>.Decode(
-                Context,
-                this,
-                currentNodePointer.RecordCount,
-                depth,
-                DecodeKey)
-                ?? throw new Exception("Unable to load B-tree internal node.");
+            var internalNode = _addressToNodeMap.GetOrAdd(address, address =>
+            {
+                Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+
+                return BTree2InternalNode<T>.Decode(
+                    Context,
+                    this,
+                    currentNodePointer.RecordCount,
+                    depth,
+                    DecodeKey
+                ) ?? throw new Exception("Unable to load B-tree internal node.");
+            });
 
             /* Locate node pointer for child */
-            (index, cmp) = BTree2Header<T>.LocateRecord(internalNode.Records, compare);
+            (index, cmp) = LocateRecord(internalNode.Records, compare);
 
             if (cmp > 0)
                 index++;

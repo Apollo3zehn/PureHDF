@@ -1,5 +1,5 @@
 
-# Complex Data
+# Compound Data
 
 There are three ways to read compound data which are explained in the following sections. Here is an overview:
 
@@ -36,7 +36,7 @@ var compoundData = dataset.Read<SimpleStruct>();
 > Make sure the field offset attributes match the field offsets defined in the HDF5 file when the dataset was created.
 
 > [!NOTE]
-> This method does not require that the structs field names match since they are simply mapped by their offset.
+> This method does not require that the struct field names match since they are simply mapped by their offset.
 
 If the compound contains fixed size array data (here: `3`), you would need to add the `unsafe` modifier to the struct definition and define the corresponding struct field as follows:
 

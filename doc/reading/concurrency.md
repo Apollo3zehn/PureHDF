@@ -10,7 +10,7 @@ Reading data from a dataset is thread-safe in the following cases, depending on 
 > The multi-threading support comes **without** significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
 > [!WARNING]
-> The default `SimpleChunkCache` is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.
+> The default `SimpleReadingChunkCache` is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.
 
 ## Multi-Threading (Memory-Mapped File)
 

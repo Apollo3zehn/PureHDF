@@ -4,11 +4,11 @@
 - name: Simple Data
   href: simple.md
 
-- name: Complex Data
-  href: complex.md
+- name: Compound Data
+  href: compound.md
 
 - name: External Files
-  href: external_files.md
+  href: external-files.md
 
 - name: Slicing
   href: slicing.md

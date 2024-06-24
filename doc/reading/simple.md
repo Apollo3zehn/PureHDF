@@ -100,4 +100,4 @@ The following section shows you how to read 1D datasets of any datatype. All sam
 // -> not supported (reason: the HDF5 C lib itself does not fully support H5T_TIME)
 ```
 > [!NOTE]
-> For more information about complex data (compounds), see section [Complex Data](complex.md).
+> For more information about compound data, see section [Compound Data](compound.md).

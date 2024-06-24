@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Collections.Concurrent;
+
+namespace PureHDF.VOL.Native;
 
 internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 {
@@ -8,13 +10,15 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
     private long _firstPageAddress;
 
+    private ConcurrentDictionary<long, object> _addressToObjectMap { get; } = new();
+
     public H5D_Chunk4_FixedArray(
         NativeReadContext readContext,
         NativeWriteContext writeContext,
         DatasetInfo dataset,
         DataLayoutMessage4 layout,
         H5DatasetAccess datasetAccess,
-        H5DatasetCreation datasetCreation) :
+        H5DatasetCreation datasetCreation):
         base(readContext, writeContext, dataset, layout, datasetAccess, datasetCreation)
     {
         //
@@ -225,7 +229,12 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 _firstPageAddress = ReadContext.Driver.Position;
             }
 
-            return LookupElement(_header, (FixedArrayDataBlock<T>)_dataBlock, index, decode);
+            return LookupElement(
+                _header, 
+                (FixedArrayDataBlock<T>)_dataBlock, 
+                index, 
+                decode
+            );
         }
     }
 
@@ -251,34 +260,33 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 /* Compute the element index */
                 var elementIndex = index % dataBlock.ElementsPerPage;
 
-                var elements = (T?[])dataBlock.PageIndexToElementsMap
-                    .GetOrAdd(pageIndex, pageIndex =>
-                    {
-                        /* Compute the address of the data block */
-                        var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
-                        var pageAddress = _firstPageAddress + (long)(pageIndex * pageSize);
+                /* Compute the address of the data block */
+                var pageSize = dataBlock.ElementsPerPage * header.EntrySize + 4;
+                var pageAddress = _firstPageAddress + (long)(pageIndex * pageSize);
 
-                        /* Check for using last page, to set the number of elements on the page */
-                        ulong elementCount;
+                /* Check for using last page, to set the number of elements on the page */
+                ulong elementCount;
 
-                        if (pageIndex + 1 == dataBlock.PageCount)
-                            elementCount = dataBlock.LastPageElementCount;
+                if (pageIndex + 1 == dataBlock.PageCount)
+                    elementCount = dataBlock.LastPageElementCount;
 
-                        else
-                            elementCount = dataBlock.ElementsPerPage;
+                else
+                    elementCount = dataBlock.ElementsPerPage;
 
-                        /* Decode the data block page */
-                        ReadContext.Driver.Seek(pageAddress, SeekOrigin.Begin);
+                /* Decode the data block page */
+                var page = (DataBlockPage<T>)_addressToObjectMap
+                    .GetOrAdd(pageAddress, address =>
+                {
+                    ReadContext.Driver.Seek(address, SeekOrigin.Begin);
 
-                        var page = DataBlockPage<T>.Decode(
-                            ReadContext.Driver,
-                            elementCount,
-                            decode
-                        );
+                    return DataBlockPage<T>.Decode(
+                        ReadContext.Driver,
+                        elementCount,
+                        decode
+                    );
+                });
 
-                        return page.Elements;
-                    }
-                );
+                var elements = page.Elements;
 
                 /* Retrieve element from data block */
                 return elements[elementIndex];
