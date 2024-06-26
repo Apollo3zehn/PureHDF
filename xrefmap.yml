@@ -3003,6 +3003,18 @@ references:
   commentId: T:PureHDF.IEnumerationType
   fullName: PureHDF.IEnumerationType
   nameWithType: IEnumerationType
+- uid: PureHDF.IEnumerationType.BaseType
+  name: BaseType
+  href: api/PureHDF.IEnumerationType.html#PureHDF_IEnumerationType_BaseType
+  commentId: P:PureHDF.IEnumerationType.BaseType
+  fullName: PureHDF.IEnumerationType.BaseType
+  nameWithType: IEnumerationType.BaseType
+- uid: PureHDF.IEnumerationType.BaseType*
+  name: BaseType
+  href: api/PureHDF.IEnumerationType.html#PureHDF_IEnumerationType_BaseType_
+  commentId: Overload:PureHDF.IEnumerationType.BaseType
+  fullName: PureHDF.IEnumerationType.BaseType
+  nameWithType: IEnumerationType.BaseType
 - uid: PureHDF.IFixedPointType
   name: IFixedPointType
   href: api/PureHDF.IFixedPointType.html
