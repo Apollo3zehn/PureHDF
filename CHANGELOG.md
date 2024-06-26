@@ -1,3 +1,8 @@
+## v2.0.1 - 2024-06-26
+
+### Features
+- The base type of an enumeration is now being exposed in the type information (i.e. `dataset.Type.Enumeration`) (#119)
+
 ## v2.0.0 - 2024-06-24
 
 ### Breaking changes

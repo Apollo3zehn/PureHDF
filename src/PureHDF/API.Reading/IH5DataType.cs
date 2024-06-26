@@ -82,7 +82,10 @@ public interface IReferenceType
 /// </summary>
 public interface IEnumerationType
 {
-    //
+    /// <summary>
+    /// Gets the base data type.
+    /// </summary>
+    IH5DataType BaseType { get; }
 }
 
 /// <summary>
