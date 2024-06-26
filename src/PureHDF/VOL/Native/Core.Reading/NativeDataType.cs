@@ -68,7 +68,17 @@ internal class NativeReferenceType : IReferenceType
 
 internal class NativeEnumerationType : IEnumerationType
 {
-    //
+    private readonly EnumerationPropertyDescription _property;
+
+    internal NativeEnumerationType(
+        EnumerationPropertyDescription property)
+    {
+        _property = property;
+
+        BaseType = new NativeDataType(_property.BaseType);
+    }
+
+    public IH5DataType BaseType { get; }
 }
 
 internal class NativeVariableLengthType : IVariableLengthType
@@ -146,7 +156,7 @@ internal class NativeDataType : IH5DataType
                         (FixedPointBitFieldDescription)_dataType.BitField);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FixedPoint}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.FixedPoint}.");
             }
 
             return _fixedPoint;
@@ -163,7 +173,7 @@ internal class NativeDataType : IH5DataType
                     _floatingPoint = new NativeFloatingPointType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FloatingPoint}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.FloatingPoint}.");
             }
 
             return _floatingPoint;
@@ -180,7 +190,7 @@ internal class NativeDataType : IH5DataType
                     _string = new NativeStringType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.String}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.String}.");
             }
 
             return _string;
@@ -197,7 +207,7 @@ internal class NativeDataType : IH5DataType
                     _bitField = new NativeBitFieldType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.BitField}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.BitField}.");
             }
 
             return _bitField;
@@ -214,7 +224,7 @@ internal class NativeDataType : IH5DataType
                     _opaque = new NativeOpaqueType((OpaquePropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Opaque}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Opaque}.");
             }
 
             return _opaque;
@@ -232,7 +242,7 @@ internal class NativeDataType : IH5DataType
                         _dataType.Properties.Cast<CompoundPropertyDescription>().ToArray());
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Compound}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Compound}.");
             }
 
             return _compound;
@@ -249,7 +259,7 @@ internal class NativeDataType : IH5DataType
                     _reference = new NativeReferenceType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Reference}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Reference}.");
             }
 
             return _reference;
@@ -263,10 +273,10 @@ internal class NativeDataType : IH5DataType
             if (_enumeration is null)
             {
                 if (Class == H5DataTypeClass.Enumerated)
-                    _enumeration = new NativeEnumerationType();
-
+                    _enumeration = new NativeEnumerationType(
+                        (EnumerationPropertyDescription)_dataType.Properties[0]);
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Enumerated}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Enumerated}.");
             }
 
             return _enumeration;
@@ -284,7 +294,7 @@ internal class NativeDataType : IH5DataType
                         (VariableLengthPropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.VariableLength}.");
             }
 
             return _variableLength;
@@ -302,7 +312,7 @@ internal class NativeDataType : IH5DataType
                         (ArrayPropertyDescription)_dataType.Properties[0]);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Array}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Array}.");
             }
 
             return _array;

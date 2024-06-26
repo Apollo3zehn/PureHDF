@@ -56,7 +56,7 @@ internal class HsdsReferenceType : IReferenceType
 
 internal class HsdsEnumerationType : IEnumerationType
 {
-    //
+    public IH5DataType BaseType => throw new NotImplementedException();
 }
 
 internal class HsdsVariableLengthType : IVariableLengthType
@@ -111,7 +111,7 @@ internal class HsdsDataType : IH5DataType
                     _fixedPoint = new HsdsFixedPointType(_type.Base!);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FixedPoint}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.FixedPoint}.");
             }
 
             return _fixedPoint;
@@ -128,7 +128,7 @@ internal class HsdsDataType : IH5DataType
                     _floatingPoint = new HsdsFloatingPointType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.FloatingPoint}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.FloatingPoint}.");
             }
 
             return _floatingPoint;
@@ -145,7 +145,7 @@ internal class HsdsDataType : IH5DataType
                     _string = new HsdsStringType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.String}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.String}.");
             }
 
             return _string;
@@ -162,7 +162,7 @@ internal class HsdsDataType : IH5DataType
                     _bitField = new HsdsBitFieldType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.BitField}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.BitField}.");
             }
 
             return _bitField;
@@ -179,7 +179,7 @@ internal class HsdsDataType : IH5DataType
                     _opaque = new HsdsOpaqueType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Opaque}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Opaque}.");
             }
 
             return _opaque;
@@ -196,7 +196,7 @@ internal class HsdsDataType : IH5DataType
                     _compound = new HsdsCompoundType(_type.Fields!);
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Compound}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Compound}.");
             }
 
             return _compound;
@@ -213,7 +213,7 @@ internal class HsdsDataType : IH5DataType
                     _reference = new HsdsReferenceType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Reference}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Reference}.");
             }
 
             return _reference;
@@ -230,7 +230,7 @@ internal class HsdsDataType : IH5DataType
                     _enumeration = new HsdsEnumerationType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Enumerated}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Enumerated}.");
             }
 
             return _enumeration;
@@ -247,7 +247,7 @@ internal class HsdsDataType : IH5DataType
                     _variableLength = new HsdsVariableLengthType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.VariableLength}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.VariableLength}.");
             }
 
             return _variableLength;
@@ -264,7 +264,7 @@ internal class HsdsDataType : IH5DataType
                     _array = new HsdsArrayType();
 
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Array}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Array}.");
             }
 
             return _array;
