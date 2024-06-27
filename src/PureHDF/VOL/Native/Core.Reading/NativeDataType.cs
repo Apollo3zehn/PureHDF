@@ -68,17 +68,13 @@ internal class NativeReferenceType : IReferenceType
 
 internal class NativeEnumerationType : IEnumerationType
 {
-    private readonly EnumerationPropertyDescription _property;
-
     internal NativeEnumerationType(
-        EnumerationPropertyDescription property)
+        Dictionary<string, int> enumerates)
     {
-        _property = property;
-
-        BaseType = new NativeDataType(_property.BaseType);
+        Enumerates = enumerates;
     }
 
-    public IH5DataType BaseType { get; }
+    public Dictionary<string, int> Enumerates { get; }
 }
 
 internal class NativeVariableLengthType : IVariableLengthType
@@ -273,10 +269,23 @@ internal class NativeDataType : IH5DataType
             if (_enumeration is null)
             {
                 if (Class == H5DataTypeClass.Enumerated)
-                    _enumeration = new NativeEnumerationType(
-                        (EnumerationPropertyDescription)_dataType.Properties[0]);
+                {
+                    var enumProperties = (EnumerationPropertyDescription)_dataType.Properties[0];
+                    if(enumProperties.Names.Length == enumProperties.Values.Length)
+                    {
+                        var tempEnumeration = new Dictionary<string, int>();
+                        for (int i = 0; i < enumProperties.Names.Length; i++)
+                        {
+                            // Using 0 index in values for now, but it isn't correct since Values is an 2d array of bytes mimicking an array of 32 bits.
+                            tempEnumeration.Add(enumProperties.Names[i], enumProperties.Values[i][0]);
+                        }
+                        _enumeration = new NativeEnumerationType(new Dictionary<string, int>(tempEnumeration));
+                    }
+                    else
+                        throw new Exception($"The number of enumeration Names does not match the number of enumeration Values.");
+                }
                 else
-                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Enumerated}.");
+                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Enumerated}.");
             }
 
             return _enumeration;
