@@ -86,6 +86,11 @@ public interface IEnumerationType
     /// Gets the base data type.
     /// </summary>
     IH5DataType BaseType { get; }
+
+    /// <summary>
+    /// Gets the enumeration members.
+    /// </summary>
+    IDictionary<string, T> GetMembers<T>() where T : unmanaged;
 }
 
 /// <summary>

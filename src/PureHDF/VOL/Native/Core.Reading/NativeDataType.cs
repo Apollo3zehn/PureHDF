@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Runtime.InteropServices;
+
+namespace PureHDF.VOL.Native;
 
 internal class NativeFixedPointType : IFixedPointType
 {
@@ -79,6 +81,16 @@ internal class NativeEnumerationType : IEnumerationType
     }
 
     public IH5DataType BaseType { get; }
+
+    public IDictionary<string, T> GetMembers<T>() where T : unmanaged
+    {
+        return _property.Names
+            .Zip(_property.Values)
+            .ToDictionary(
+                entry => entry.First, 
+                entry => MemoryMarshal.Cast<byte, T>(entry.Second)[0]
+            );
+    }
 }
 
 internal class NativeVariableLengthType : IVariableLengthType
