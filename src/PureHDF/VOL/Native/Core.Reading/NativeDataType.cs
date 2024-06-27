@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Runtime.InteropServices;
+
+namespace PureHDF.VOL.Native;
 
 internal class NativeFixedPointType : IFixedPointType
 {
@@ -68,13 +70,27 @@ internal class NativeReferenceType : IReferenceType
 
 internal class NativeEnumerationType : IEnumerationType
 {
+    private readonly EnumerationPropertyDescription _property;
+
     internal NativeEnumerationType(
-        Dictionary<string, int> enumerates)
+        EnumerationPropertyDescription property)
     {
-        Enumerates = enumerates;
+        _property = property;
+
+        BaseType = new NativeDataType(_property.BaseType);
     }
 
-    public Dictionary<string, int> Enumerates { get; }
+    public IH5DataType BaseType { get; }
+
+    public IDictionary<string, T> GetMembers<T>() where T : unmanaged
+    {
+        return _property.Names
+            .Zip(_property.Values)
+            .ToDictionary(
+                entry => entry.First, 
+                entry => MemoryMarshal.Cast<byte, T>(entry.Second)[0]
+            );
+    }
 }
 
 internal class NativeVariableLengthType : IVariableLengthType
@@ -269,23 +285,10 @@ internal class NativeDataType : IH5DataType
             if (_enumeration is null)
             {
                 if (Class == H5DataTypeClass.Enumerated)
-                {
-                    var enumProperties = (EnumerationPropertyDescription)_dataType.Properties[0];
-                    if(enumProperties.Names.Length == enumProperties.Values.Length)
-                    {
-                        var tempEnumeration = new Dictionary<string, int>();
-                        for (int i = 0; i < enumProperties.Names.Length; i++)
-                        {
-                            // Using 0 index in values for now, but it isn't correct since Values is an 2d array of bytes mimicking an array of 32 bits.
-                            tempEnumeration.Add(enumProperties.Names[i], enumProperties.Values[i][0]);
-                        }
-                        _enumeration = new NativeEnumerationType(new Dictionary<string, int>(tempEnumeration));
-                    }
-                    else
-                        throw new Exception($"The number of enumeration Names does not match the number of enumeration Values.");
-                }
+                    _enumeration = new NativeEnumerationType(
+                        (EnumerationPropertyDescription)_dataType.Properties[0]);
                 else
-                    throw new Exception($"This property can only be called for data of class {H5DataTypeClass.Enumerated}.");
+                    throw new Exception($"This property can only be accessed for data of class {H5DataTypeClass.Enumerated}.");
             }
 
             return _enumeration;

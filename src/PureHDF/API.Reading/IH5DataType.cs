@@ -83,9 +83,14 @@ public interface IReferenceType
 public interface IEnumerationType
 {
     /// <summary>
-    /// Gets the enumerations.
+    /// Gets the base data type.
     /// </summary>
-    Dictionary<string, int> Enumerates { get; }
+    IH5DataType BaseType { get; }
+
+    /// <summary>
+    /// Gets the enumeration members.
+    /// </summary>
+    IDictionary<string, T> GetMembers<T>() where T : unmanaged;
 }
 
 /// <summary>
