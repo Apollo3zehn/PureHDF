@@ -246,9 +246,7 @@ internal partial record class DatatypeMessage(
                     ? memoryType is null
                         ? Size switch
                         {
-#if NET6_0_OR_GREATER
                             2 => (typeof(Half), GetDecodeInfoForUnmanagedElement<Half>()),
-#endif
                             4 => (typeof(float), GetDecodeInfoForUnmanagedElement<float>()),
                             8 => (typeof(double), GetDecodeInfoForUnmanagedElement<double>()),
                             _ => throw new Exception("Unable to decode floating-point data without additional runtime type information.")

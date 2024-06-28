@@ -73,8 +73,6 @@ This is automatically translated code from https://github.com/Blosc/c-blosc2
 <# Write(license); #> 
 */
 
-#if NET6_0_OR_GREATER
-
 using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -101,5 +99,3 @@ public static class ShuffleSse2
 
     <# Write(csstring); #>
 }
-
-#endif

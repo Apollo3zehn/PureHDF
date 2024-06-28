@@ -4,9 +4,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Reflection;
-#if NET6_0_OR_GREATER
 using System.Runtime.Intrinsics.X86;
-#endif
 using Xunit;
 
 // TODO: Add test with additional filter (shuffle) to detect wrongly returned filter sizes
@@ -307,6 +305,100 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
+    [Theory]
+    [InlineData([true])]
+    [InlineData([false])]
+    public void CanFilterBitshuffle(bool withLZ4)
+    {
+        // Arrange
+        var expected = SharedTestData.MediumData;
+
+        var file = new H5File()
+        {
+            ["filtered"] = new H5Dataset(expected)
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        var options = new H5WriteOptions(
+            Filters:
+            [
+                new H5Filter(
+                    BitshuffleFilter.Id,
+                    new Dictionary<string, object> {
+                        [BitshuffleFilter.COMPRESSION_MODE] = withLZ4
+                            ? BitshuffleCompressionMode.LZ4
+                            : BitshuffleCompressionMode.NoCompression
+                    }
+                )
+            ]
+        );
+
+        H5Filter.ResetRegistrations();
+        H5Filter.Register(new BitshuffleFilter());
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var h5File = H5File.OpenRead(filePath);
+            var dataset = h5File.Dataset("filtered");
+            var actual = dataset.Read<int[]>();
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    [Theory]
+    [InlineData([true])]
+    [InlineData([false])]
+    public void CanDefilterBitshuffle(bool withLZ4)
+    {
+        // # https://github.com/silx-kit/hdf5plugin
+        // import h5py
+        // import hdf5plugin
+
+        // data = list(range(0, 1000))
+
+        // with h5py.File('bitshuffle.h5', 'w') as f:
+
+        //     f.create_dataset(
+        //         'bitshuffle', 
+        //         data=data,
+        //         **hdf5plugin.Bitshuffle(nelems=0, cname='none'))
+
+        //     f.create_dataset(
+        //         'bitshuffle_with_lz4', 
+        //         data=data,
+        //         **hdf5plugin.Bitshuffle(nelems=0, cname='lz4'))
+
+        // Arrange
+        var filePath = "./TestFiles/bitshuffle.h5";
+
+        var expected = Enumerable
+            .Range(0, 1000)
+            .Select(x => (long)x)
+            .ToArray();
+
+        H5Filter.ResetRegistrations();
+        H5Filter.Register(new BitshuffleFilter());
+
+        // Act
+        using var root = H5File.OpenRead(filePath);
+        var dataset = root.Dataset(withLZ4 ? "/bitshuffle_with_lz4" : "/bitshuffle");
+        var actual = dataset.Read<long[]>();
+
+        // Assert
+        Assert.True(expected.SequenceEqual(actual));
+    }
+
     [Fact]
     public void CanFilterBZip2()
     {
@@ -446,11 +538,9 @@ public class FilterTests
     [Theory]
     [InlineData("DeflateDotnetFilter")]
     [InlineData("DeflateSharpZipLibFilter")]
-#if NET6_0_OR_GREATER
     // https://iobservable.net/blog/2013/08/06/clr-limitations/
     // "It seems that the maximum array base element size is limited to 64KB."
     [InlineData("DeflateISALFilter")]
-#endif
     public void CanFilterZlib(string implementation)
     {
         // Arrange
@@ -507,11 +597,9 @@ public class FilterTests
     [Theory]
     [InlineData("DeflateDotnetFilter")]
     [InlineData("DeflateSharpZipLibFilter")]
-#if NET6_0_OR_GREATER
     // https://iobservable.net/blog/2013/08/06/clr-limitations/
     // "It seems that the maximum array base element size is limited to 64KB."
     [InlineData("DeflateISALFilter")]
-#endif
     public void CanDefilterZLib(string implementation)
     {
         // Arrange
@@ -825,7 +913,6 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
-#if NET6_0_OR_GREATER
     [Theory]
     [InlineData((byte)1, 1001)]
     [InlineData((short)2, 732)]
@@ -1050,7 +1137,6 @@ public class FilterTests
         // Assert
         Assert.True(actual.AsSpan().SequenceEqual(expected));
     }
-#endif
 
     [Theory]
     [InlineData(1, new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x9 })]
@@ -1072,7 +1158,6 @@ public class FilterTests
         Assert.True(expected.SequenceEqual(actual));
     }
 
-#if NET6_0_OR_GREATER
     [Theory]
     [InlineData((byte)1, 1001)]
     [InlineData((short)2, 732)]
@@ -1112,7 +1197,6 @@ public class FilterTests
         // Assert
         Assert.True(expected.SequenceEqual(actual));
     }
-#endif
 
     // TODO: move to benchmark
 
@@ -1139,7 +1223,6 @@ public class FilterTests
         EndiannessConverterGeneric.Convert(bytesOfType, actual_converted, actual);
         var generic = sw.Elapsed.TotalMilliseconds;
 
-#if NET6_0_OR_GREATER
         ///* SSE2 */
         //if (Sse2.IsSupported)
         //{
@@ -1158,7 +1241,6 @@ public class FilterTests
             EndiannessConverterAvx2.Convert(bytesOfType, actual_converted, actual);
             var avx2 = sw.Elapsed.TotalMilliseconds;
         }
-#endif
     }
 
 

@@ -187,14 +187,9 @@ public class ShuffleFilter : IH5Filter
     {
         var sourceBuffer = info.Buffer;
 
-#if NET6_0_OR_GREATER
         var resultBuffer = GC
             .AllocateUninitializedArray<byte>(info.Buffer.Length)
             .AsMemory();
-
-#else
-        var resultBuffer = new byte[info.Buffer.Length].AsMemory();
-#endif
 
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
@@ -352,15 +347,9 @@ public class ScaleOffsetFilter : IH5Filter
     }
 }
 
-#if NET6_0_OR_GREATER
 /// <summary>
 /// Deflate filter based on <see cref="ZLibStream"/>.
 /// </summary>
-#else
-/// <summary>
-/// Deflate filter based on <see cref="DeflateStream"/>.
-/// </summary>
-#endif
 public class DeflateFilter : IH5Filter
 {
     /// <summary>
@@ -388,7 +377,6 @@ public class DeflateFilter : IH5Filter
         // read
         if (info.Flags.HasFlag(H5FilterFlags.Decompress))
         {
-#if NET6_0_OR_GREATER
             using var sourceStream = new MemorySpanStream(info.Buffer);
             using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* minimum size to expect */);
             using var decompressionStream = new ZLibStream(sourceStream, CompressionMode.Decompress);
@@ -398,27 +386,11 @@ public class DeflateFilter : IH5Filter
             return decompressedStream
                 .GetBuffer()
                 .AsMemory(0, (int)decompressedStream.Length);
-#else
-            using var sourceStream = new MemorySpanStream(info.Buffer);
-
-            // skip ZLIB header to get only the DEFLATE stream
-            sourceStream.Seek(2, SeekOrigin.Begin);
-
-            using var decompressionStream = new DeflateStream(sourceStream, CompressionMode.Decompress);
-            using var decompressedStream = new MemoryStream(capacity: info.ChunkSize /* minimum size to expect */);
-
-            decompressionStream.CopyTo(decompressedStream);
-
-            return decompressedStream
-                .GetBuffer()
-                .AsMemory(0, (int)decompressedStream.Length);
-#endif
         }
 
         // write
         else
         {
-#if NET6_0_OR_GREATER
             using var sourceStream = new MemorySpanStream(info.Buffer);
             using var compressedStream = new MemoryStream(capacity: info.ChunkSize /* maximum size to expect */);
 
@@ -441,16 +413,12 @@ public class DeflateFilter : IH5Filter
             return compressedStream
                 .GetBuffer()
                 .AsMemory(0, (int)compressedStream.Length);
-#else
-            throw new Exception(".NET 6+ is required for zlib compression support.");
-#endif
         }
     }
 
     /// <inheritdoc />
     public uint[] GetParameters(uint[] chunkDimensions, uint typeSize, Dictionary<string, object>? options)
     {
-#if NET6_0_OR_GREATER
         var value = GetCompressionLevelValue(options);
 
         /* workaround for https://forum.hdfgroup.org/t/is-deflate-filter-compression-level-1-default-supported/11416 */
@@ -461,12 +429,8 @@ public class DeflateFilter : IH5Filter
             throw new Exception("The compression level must be one of [-1, 0, 1, 9].");
 
         return [unchecked((uint)value)];
-#else
-        throw new Exception(".NET 6+ is required for zlib compression support.");
-#endif
     }
 
-#if NET6_0_OR_GREATER
     private static int GetCompressionLevelValue(Dictionary<string, object>? options)
     {
         if (
@@ -499,7 +463,6 @@ public class DeflateFilter : IH5Filter
             _ => throw new Exception("Only compression levels 0, 1, 9 or -1 are supported. Note that the HDF group's HDF5 library does not support the compression level -1."),
         };
     }
-#endif
 }
 
 #endregion

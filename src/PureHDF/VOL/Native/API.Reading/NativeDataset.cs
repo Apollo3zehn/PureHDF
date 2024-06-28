@@ -363,7 +363,7 @@ public class NativeDataset : NativeObject, IH5Dataset
                 else if (rank == fileDims.Length)
                     memoryDims ??= fileDims;
 
-                else
+                else if (memoryDims is null)
                     throw new Exception("The rank of the memory space must match the rank of the file space if no memory dimensions are provided.");
             }
             else

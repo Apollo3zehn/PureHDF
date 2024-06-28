@@ -1,6 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -122,5 +120,3 @@ internal partial class H5FileHandleDriver : H5DriverBase
         base.Dispose(disposing);
     }
 }
-
-#endif

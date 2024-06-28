@@ -58,21 +58,15 @@ public class SimpleReadingChunkCache : IReadingChunkCache
     {
         if (_chunkInfoMap.TryGetValue(chunkIndex, out var chunkInfo))
         {
-#if NET6_0_OR_GREATER
             chunkInfo.LastAccess = Environment.TickCount64;
-#else
-            chunkInfo.LastAccess = Environment.TickCount;
-#endif
         }
 
         else
         {
             var buffer = chunkReader();
-#if NET6_0_OR_GREATER
+
             chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = Environment.TickCount64 };
-#else
-            chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = Environment.TickCount };
-#endif
+
             var chunk = chunkInfo.Chunk;
 
             if ((ulong)chunk.Length <= ByteCount)

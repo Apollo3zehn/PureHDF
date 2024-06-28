@@ -102,10 +102,8 @@ public static class WritingTestData
         /* signed fixed-point */
         new object[] { -2 },
 
-#if NET6_0_OR_GREATER
         /* 16 bit floating-point */
         new object[] { (Half)99.38f },
-#endif
 
         /* 32 bit floating-point */
         new object[] { 99.38f },

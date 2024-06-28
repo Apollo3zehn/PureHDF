@@ -235,12 +235,10 @@ internal abstract class H5D_Chunk : H5D_Base
 
             else
             {
-#if NET6_0_OR_GREATER
                 chunk = GC
                     .AllocateUninitializedArray<byte>((int)ChunkByteSize);
-#else
+
                 chunk = new byte[(int)ChunkByteSize];
-#endif
 
                 chunk.Span.Fill(Dataset.FillValue.Value);
             }
@@ -259,12 +257,10 @@ internal abstract class H5D_Chunk : H5D_Base
 
                 else
                 {
-#if NET6_0_OR_GREATER
                     chunk = GC
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
-#else
+
                     chunk = new byte[(int)ChunkByteSize];
-#endif
 
                     chunk.Span.Fill(Dataset.FillValue.Value);
                 }
@@ -274,12 +270,8 @@ internal abstract class H5D_Chunk : H5D_Base
             {
                 if (Dataset.FilterPipeline is null)
                 {
-#if NET6_0_OR_GREATER
                     chunk = GC
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
-#else
-                    chunk = new byte[(int)ChunkByteSize];
-#endif
 
                     ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
                     ReadContext.Driver.ReadDataset(chunk.Span);

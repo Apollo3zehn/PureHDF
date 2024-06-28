@@ -54,13 +54,9 @@ public class DeflateISALFilter : IH5Filter
 
             var length = 0;
 
-#if NET6_0_OR_GREATER
             var inflated = GC
                 .AllocateUninitializedArray<byte>(info.ChunkSize)
                 .AsMemory();
-#else
-            var inflated = new byte[info.ChunkSize].AsMemory();
-#endif
 
             var sourceBuffer = buffer.Span;
             var targetBuffer = inflated.Span;
@@ -115,13 +111,9 @@ public class DeflateISALFilter : IH5Filter
 
             var length = 0;
 
-            #if NET6_0_OR_GREATER
-                var deflated = GC
-                    .AllocateUninitializedArray<byte>(info.ChunkSize)
-                    .AsMemory();
-            #else
-                var deflated = new byte[info.ChunkSize].AsMemory();
-            #endif
+            var deflated = GC
+                .AllocateUninitializedArray<byte>(info.ChunkSize)
+                .AsMemory();
 
             var sourceBuffer = buffer.Span;
             var targetBuffer = deflated.Span;

@@ -531,15 +531,12 @@ public class NativeGroup : NativeObject, IH5Group
         return linkMessage.LinkInfo switch
         {
             HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, Context.File),
-            SoftLinkInfo soft => new SymbolicLink(linkMessage, this, Context.File)
+
+            SoftLinkInfo _ => new SymbolicLink(linkMessage, this, Context.File)
                 .GetTarget(linkAccess),
-#if NET6_0_OR_GREATER
-            ExternalLinkInfo external => new SymbolicLink(linkMessage, this, Context.File)
+
+            ExternalLinkInfo _ => new SymbolicLink(linkMessage, this, Context.File)
                 .GetTarget(linkAccess),
-#else
-            ExternalLinkInfo external => new SymbolicLink(linkMessage, this, Context.File)
-                .GetTarget(linkAccess),
-#endif
 
             _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
         };

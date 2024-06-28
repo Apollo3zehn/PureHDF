@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/PureHDF/PureHDF.csproj" />
+    <ProjectReference Include="../../src/PureHDF.Filters.Bitshuffle/PureHDF.Filters.Bitshuffle.csproj" />
     <ProjectReference Include="../../src/PureHDF.Filters.Blosc2/PureHDF.Filters.Blosc2.csproj" />
     <ProjectReference Include="../../src/PureHDF.Filters.BZip2.SharpZipLib/PureHDF.Filters.BZip2.SharpZipLib.csproj" />
     <ProjectReference Include="../../src/PureHDF.Filters.Deflate.ISA-L/PureHDF.Filters.Deflate.ISA-L.csproj" />

@@ -35,8 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  
 */
 
-#if NET6_0_OR_GREATER
-
 using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -718,5 +716,3 @@ internal static class ShuffleSse2
     }
 
 }
-
-#endif

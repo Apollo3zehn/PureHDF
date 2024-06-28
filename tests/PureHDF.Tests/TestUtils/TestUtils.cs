@@ -240,7 +240,6 @@ public partial class TestUtils
         }
 #endif
 
-#if NET6_0_OR_GREATER
         else if (type == typeof(Half))
         {
             var typeId = H5T.copy(H5T.NATIVE_FLOAT);
@@ -258,7 +257,6 @@ public partial class TestUtils
 
             return typeId;
         }
-#endif
 
         else if (type == typeof(float))
             return H5T.NATIVE_FLOAT;
