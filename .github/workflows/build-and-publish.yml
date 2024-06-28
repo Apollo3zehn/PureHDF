@@ -56,6 +56,7 @@ jobs:
       - name: Build
         run: |
           dotnet build -c Release src/PureHDF/PureHDF.csproj
+          dotnet build -c Release src/PureHDF.Filters.Bitshuffle/PureHDF.Filters.Bitshuffle.csproj
           dotnet build -c Release src/PureHDF.Filters.Blosc2/PureHDF.Filters.Blosc2.csproj
           dotnet build -c Release src/PureHDF.Filters.BZip2.SharpZipLib/PureHDF.Filters.BZip2.SharpZipLib.csproj
           dotnet build -c Release src/PureHDF.Filters.Deflate.ISA-L/PureHDF.Filters.Deflate.ISA-L.csproj
