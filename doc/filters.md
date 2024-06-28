@@ -56,6 +56,7 @@ The first group of filters is built into PureHDF.
 | Deflate                                                                                     | &check;  | &check;    | based on [ZLibStream](https://learn.microsoft.com/de-de/dotnet/api/system.io.compression.zlibstream?view=net-7.0) |
 |                                                                                             |          |            |                                                                                                                   |
 | [C-Blosc2](https://www.nuget.org/packages/PureHDF.Filters.Blosc2)                           | &check;  | &check;    | native, hardware-accelerated                                                                                      |
+| [Bitshuffle](https://www.nuget.org/packages/PureHDF.Filters.Bitshuffle)                     | &check;  | &check;    | native, hardware-accelerated                                                                                      |
 | [BZip2 (SharpZipLib)](https://www.nuget.org/packages/PureHDF.Filters.BZip2.SharpZipLib)     | &check;  | &check;    |                                                                                                                   |
 | [Deflate (ISA-L)](https://www.nuget.org/packages/PureHDF.Filters.Deflate.ISA-L)             | &check;  | &check;    | native, hardware-accelerated                                                                                      |
 | [Deflate (SharpZipLib)](https://www.nuget.org/packages/PureHDF.Filters.Deflate.SharpZipLib) | &check;  | &check;    |                                                                                                                   |
@@ -74,6 +75,19 @@ The first group of filters is built into PureHDF.
 using PureHDF.Filters;
 
 H5Filter.Register(new Blosc2Filter());
+```
+
+**Bitshuffle***
+
+- based on [Bitshuffle.PInvoke](https://www.nuget.org/packages/Bitshuffle.PInvoke)
+- hardware accelerated: `AVX2`
+
+`dotnet add package PureHDF.Filters.Bitshuffle`
+
+```cs
+using PureHDF.Filters;
+
+H5Filter.Register(new BitshuffleFilter());
 ```
 
 **bzip2 (SharpZipLib)**

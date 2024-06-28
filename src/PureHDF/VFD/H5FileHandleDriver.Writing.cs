@@ -1,6 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-
-namespace PureHDF.VFD;
+﻿namespace PureHDF.VFD;
 
 internal partial class H5FileHandleDriver : H5DriverBase
 {
@@ -19,5 +17,3 @@ internal partial class H5FileHandleDriver : H5DriverBase
         throw new NotImplementedException();
     }
 }
-
-#endif

@@ -1,3 +1,8 @@
+## v2.1.0 - 2024-06-28
+
+### Features
+- Added support for the Bitshuffle filter (hardware accelerated, AVX2).
+
 ## v2.0.1 - 2024-06-26
 
 ### Features

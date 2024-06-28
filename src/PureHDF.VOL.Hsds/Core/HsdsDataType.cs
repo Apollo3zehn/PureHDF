@@ -57,6 +57,8 @@ internal class HsdsReferenceType : IReferenceType
 internal class HsdsEnumerationType : IEnumerationType
 {
     public IH5DataType BaseType => throw new NotImplementedException();
+
+    public IDictionary<string, T> GetMembers<T>() where T : unmanaged => throw new NotImplementedException();
 }
 
 internal class HsdsVariableLengthType : IVariableLengthType

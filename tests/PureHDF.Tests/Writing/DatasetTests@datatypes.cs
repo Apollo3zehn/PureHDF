@@ -537,7 +537,6 @@ public partial class DatasetTests
             exception.InnerException!.InnerException!.Message);
     }
 
-#if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()
     {
@@ -590,8 +589,6 @@ public partial class DatasetTests
                 File.Delete(filePath);
         }
     }
-
-# endif
 
     [Fact]
     public void CanWrite_MultiDimensionalArray_reference_type()

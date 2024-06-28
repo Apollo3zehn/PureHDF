@@ -53,14 +53,9 @@ public class LzfFilter : IH5Filter
 
             while (status == 0)
             {
-#if NET6_0_OR_GREATER
                 var buffer = GC
                     .AllocateUninitializedArray<byte>((int)targetSize)
                     .AsMemory();
-
-#else
-                var buffer = new byte[(int)targetSize].AsMemory();
-#endif
 
                 status = Decompress(info.Buffer.Span, buffer.Span);
 

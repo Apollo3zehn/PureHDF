@@ -1,6 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-
-using System.IO.MemoryMappedFiles;
+﻿using System.IO.MemoryMappedFiles;
 using HDF.PInvoke;
 using PureHDF.Selections;
 using Xunit;
@@ -76,5 +74,3 @@ public class ConcurrencyTests
         });
     }
 }
-
-#endif

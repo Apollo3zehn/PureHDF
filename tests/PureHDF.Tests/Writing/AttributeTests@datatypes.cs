@@ -454,7 +454,6 @@ public partial class AttributeTests
         }
     }
 
-#if NET6_0_OR_GREATER
     [Fact]
     public void CanWrite_MultiDimensionalArray_value_type()
     {
@@ -507,8 +506,6 @@ public partial class AttributeTests
                 File.Delete(filePath);
         }
     }
-
-# endif
 
     [Fact]
     public void CanWrite_MultiDimensionalArray_reference_type()

@@ -75,11 +75,7 @@ public class NativeFile : NativeGroup, IDisposable
             fileShare,
             4096);
 
-#if NET6_0_OR_GREATER
         var driver = new H5FileHandleDriver(stream, leaveOpen: false);
-#else
-        var driver = new H5StreamDriver(stream, leaveOpen: false);
-#endif
 
         return InternalOpen(
             driver,

@@ -1,6 +1,4 @@
-﻿#if NET6_0_OR_GREATER
-
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 namespace PureHDF.Filters;
@@ -135,5 +133,3 @@ internal class EndiannessConverterAvx2
             EndiannessConverterGeneric.Convert(bytesOfType, vectorizable_bytes, blocksize, _src, _dest);
     }
 }
-
-#endif
