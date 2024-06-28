@@ -3015,6 +3015,21 @@ references:
   commentId: Overload:PureHDF.IEnumerationType.BaseType
   fullName: PureHDF.IEnumerationType.BaseType
   nameWithType: IEnumerationType.BaseType
+- uid: PureHDF.IEnumerationType.GetMembers*
+  name: GetMembers
+  href: api/PureHDF.IEnumerationType.html#PureHDF_IEnumerationType_GetMembers_
+  commentId: Overload:PureHDF.IEnumerationType.GetMembers
+  fullName: PureHDF.IEnumerationType.GetMembers
+  nameWithType: IEnumerationType.GetMembers
+- uid: PureHDF.IEnumerationType.GetMembers``1
+  name: GetMembers<T>()
+  href: api/PureHDF.IEnumerationType.html#PureHDF_IEnumerationType_GetMembers__1
+  commentId: M:PureHDF.IEnumerationType.GetMembers``1
+  name.vb: GetMembers(Of T)()
+  fullName: PureHDF.IEnumerationType.GetMembers<T>()
+  fullName.vb: PureHDF.IEnumerationType.GetMembers(Of T)()
+  nameWithType: IEnumerationType.GetMembers<T>()
+  nameWithType.vb: IEnumerationType.GetMembers(Of T)()
 - uid: PureHDF.IFixedPointType
   name: IFixedPointType
   href: api/PureHDF.IFixedPointType.html

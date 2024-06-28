@@ -167,6 +167,12 @@ H5Filter.Register(new Blosc2Filter());
 <td>native, hardware-accelerated</td>
 </tr>
 <tr>
+<td><a href="https://www.nuget.org/packages/PureHDF.Filters.Bitshuffle">Bitshuffle</a></td>
+<td>✓</td>
+<td>✓</td>
+<td>native, hardware-accelerated</td>
+</tr>
+<tr>
 <td><a href="https://www.nuget.org/packages/PureHDF.Filters.BZip2.SharpZipLib">BZip2 (SharpZipLib)</a></td>
 <td>✓</td>
 <td>✓</td>
@@ -202,6 +208,16 @@ H5Filter.Register(new Blosc2Filter());
 <pre><code class="lang-cs">using PureHDF.Filters;
 
 H5Filter.Register(new Blosc2Filter());
+</code></pre>
+<p><strong>Bitshuffle</strong>*</p>
+<ul>
+<li>based on <a href="https://www.nuget.org/packages/Bitshuffle.PInvoke">Bitshuffle.PInvoke</a></li>
+<li>hardware accelerated: <code>AVX2</code></li>
+</ul>
+<p><code>dotnet add package PureHDF.Filters.Bitshuffle</code></p>
+<pre><code class="lang-cs">using PureHDF.Filters;
+
+H5Filter.Register(new BitshuffleFilter());
 </code></pre>
 <p><strong>bzip2 (SharpZipLib)</strong></p>
 <ul>
