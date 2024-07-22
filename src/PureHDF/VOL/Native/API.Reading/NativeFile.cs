@@ -25,7 +25,7 @@ public class NativeFile : NativeGroup, IDisposable
         bool deleteOnClose) : base(context, reference, header)
     {
         Path = absoluteFilePath;
-        FolderPath = System.IO.Path.GetDirectoryName(absoluteFilePath);
+        FolderPath = absoluteFilePath.Length > 0 ? System.IO.Path.GetDirectoryName(absoluteFilePath) : string.Empty;
         _deleteOnClose = deleteOnClose;
     }
 
