@@ -1,3 +1,9 @@
+## v1.0.1 - 2024-07-24
+
+### Bugs fixed
+- #123: H5File.Open() on an already opened file fails on .net framework, thanks @audunska
+- #124: Integer overflow in SelectionHelper.DecodeStream
+
 ## v1.0.0 - 2024-06-24
 
 ### Features
