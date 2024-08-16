@@ -129,6 +129,9 @@ internal class GlobalHeapManager
     {
         var driver = _driver;
 
+        // capture current position
+        var position = driver.Position;
+
         foreach (var entry in _collectionMap)
         {
             var address = entry.Key;
@@ -168,5 +171,8 @@ internal class GlobalHeapManager
             if (driver.Length < endAddress)
                 driver.SetLength(endAddress);
         }
+
+        // restore original position
+        driver.Seek(position, SeekOrigin.Begin);
     }
 }

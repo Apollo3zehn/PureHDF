@@ -302,13 +302,13 @@ internal partial record class DatatypeMessage(
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
         // TODO: cache
-        var invokeEncodeUnmanagedElement = ReadUtils.MethodInfoDecodeUnmanagedElement.MakeGenericMethod(type);
+        var invokeDecodeUnmanagedElement = ReadUtils.MethodInfoDecodeUnmanagedElement.MakeGenericMethod(type);
         var parameters = new object[1];
 
         object? decode(IH5ReadStream source)
         {
             parameters[0] = source;
-            return invokeEncodeUnmanagedElement.Invoke(default, parameters);
+            return invokeDecodeUnmanagedElement.Invoke(default, parameters);
         }
 
         return decode;

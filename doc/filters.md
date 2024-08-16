@@ -77,7 +77,7 @@ using PureHDF.Filters;
 H5Filter.Register(new Blosc2Filter());
 ```
 
-**Bitshuffle***
+**Bitshuffle**
 
 - based on [Bitshuffle.PInvoke](https://www.nuget.org/packages/Bitshuffle.PInvoke)
 - hardware accelerated: `AVX2`
