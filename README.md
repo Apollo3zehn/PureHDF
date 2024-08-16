@@ -4,22 +4,26 @@
 
 A pure C# library without native dependencies that makes reading and writing of HDF5 files (groups, datasets, attributes, ...) very easy.
 
-The minimum supported target framework is .NET Standard 2.0 which includes
-- .NET Framework 4.6.1+ 
-- .NET Core (all versions)
-- .NET 5+
-
 This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.
 
 The implemention follows the [HDF5 File Format Specification (HDF5 1.10)](https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html).
 
 > Please read the [docs](https://apollo3zehn.github.io/PureHDF/) for samples and API documentation.
 
-# Version 2 changes
+# Version 1
 
-To keep the code base clean, version 2 of PureHDF supports [active .NET versions](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only, which are `.NET 6` and `.NET 8` as of now (June 2024).
+The minimum supported target framework is .NET Standard 2.0 which includes
+- `.NET Framework 4.6.1+`
+- `.NET Core (all versions)`
+- `.NET 5+`
 
 Version 1 of PureHDF supports all .NET versions starting with `.NET 4.7.2` and continues to receive bug fixes. Features will be backported upon request if feasible.
+
+# Version 2
+
+The minimum supported target framework version is `.NET 6.0+`.
+
+To keep the code base clean, version 2 of PureHDF targets [active .NET versions](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only, which are `.NET 6` and `.NET 8` as of now (August 2024).
 
 # Installation
 
@@ -118,7 +122,7 @@ See the [docs](https://apollo3zehn.github.io/PureHDF/writing/index.html) to lear
 
 # Development
 
-The tests of PureHDF are executed against `.NET 6` and `.NET 7` so these two runtimes are required. Please note that due to an currently unknown reason the writing tests cannot be run in parallel to other tests because some unrelated temp files are in use although they should not be and thus cannot be accessed by the unit tests.
+The tests of PureHDF are executed against `.NET 6` and `.NET 8` so these two runtimes are required. Please note that due to an currently unknown reason the writing tests cannot be run in parallel to other tests because some unrelated temp files are in use although they should not be and thus cannot be accessed by the unit tests.
 
 If you are using Visual Studio Code as your IDE, you can simply execute one of the predefined test tasks by selecting `Run Tasks` from the global menu (`Ctrl+Shift+P`). The following test tasks are predefined:
 

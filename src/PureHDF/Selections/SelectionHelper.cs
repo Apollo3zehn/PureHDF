@@ -208,7 +208,7 @@ internal static class SelectionHelper
                 lastTargetChunkIndex = targetStep.ChunkIndex;
             }
 
-            var currentOffset = (int)targetStep.Offset;
+            var currentOffset = (long)targetStep.Offset;
             var currentLength = (int)targetStep.Length;
 
             while (currentLength > 0)
@@ -316,7 +316,7 @@ internal static class SelectionHelper
             }
 
             var virtualDatasetStream = sourceStream as VirtualDatasetStream<TResult>;
-            var currentOffset = (int)sourceStep.Offset;
+            var currentOffset = (long)sourceStep.Offset;
             var currentLength = (int)sourceStep.Length;
 
             while (currentLength > 0)

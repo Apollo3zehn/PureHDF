@@ -1,3 +1,8 @@
+## v2.1.1 - 2024-08-16
+
+### Bugs fixed
+- Fixed a bug that caused written variable-length data to become corrupted. (#131)
+
 ## v2.1.0 - 2024-06-28
 
 ### Features
