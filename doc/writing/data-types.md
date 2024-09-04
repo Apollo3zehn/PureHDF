@@ -32,9 +32,10 @@ To write nullable value type data use the generic version of `H5Dataset` (or `H5
 Example:
 
 ```
+int? value = 1; // or null
+
 var file = new H5File()
 {
-    int? value = 1; // or null
     ["my-dataset"] = new H5Dataset<int?>(value)
 };
 ```
