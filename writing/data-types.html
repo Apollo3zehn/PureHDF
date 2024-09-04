@@ -95,9 +95,10 @@ var file = new H5File
 <h1 id="nullable-value-types">Nullable Value Types</h1>
 <p>To write nullable value type data use the generic version of <code>H5Dataset</code> (or <code>H5Attribute</code>). If you use the non-generic one instead, you will get a compiler warning. It is necessary to use the generic <code>H5Dataset&lt;T&gt;</code> in combination with <code>null</code> data because <code>null</code> looses all type information at runtime and then PureHDF does not know how to encode it. The generic type parameter keeps that type information.</p>
 <p>Example:</p>
-<pre><code>var file = new H5File()
+<pre><code>int? value = 1; // or null
+
+var file = new H5File()
 {
-    int? value = 1; // or null
     [&quot;my-dataset&quot;] = new H5Dataset&lt;int?&gt;(value)
 };
 </code></pre>
