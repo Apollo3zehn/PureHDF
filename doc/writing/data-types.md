@@ -46,13 +46,6 @@ Nullable value types (e.g. `int?`) require special handling within the HDF5 file
 
 Summary: To represent nullable value types, we use the HDF5 internal variable-length sequence data type with a sequence length of `1`.
 
-```
-var file = new H5File
-{
-    ["opaque"] = new H5Dataset(data, opaqueInfo: opaqueInfo)
-};
-```
-
 # Opaque Data
 
 Create an instance of the `H5OpaqueInfo` type and pass it to the `H5Dataset` constructor to treat byte arrays as opaque data:
