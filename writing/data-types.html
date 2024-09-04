@@ -105,11 +105,6 @@ var file = new H5File()
 <p>As there is no native support for nullable values types in the HDF5 file format, here is some technical background about the workaround PureHDF uses:</p>
 <p>Nullable value types (e.g. <code>int?</code>) require special handling within the HDF5 file because we need a way to store the possible <code>null</code> value. The HDF5 <code>variable-length sequence</code> data type is a good, though not perfect solution, for this problem if we only use the first element of the sequence. Since a variable-length sequence has no predefined length, a reference (or pointer) is stored in the dataset itself. And this reference points to the global heap where the actual data lives. In case this reference consists only of zeros, it means that the value is undefined (= <code>null</code>).</p>
 <p>Summary: To represent nullable value types, we use the HDF5 internal variable-length sequence data type with a sequence length of <code>1</code>.</p>
-<pre><code>var file = new H5File
-{
-    [&quot;opaque&quot;] = new H5Dataset(data, opaqueInfo: opaqueInfo)
-};
-</code></pre>
 <h1 id="opaque-data">Opaque Data</h1>
 <p>Create an instance of the <code>H5OpaqueInfo</code> type and pass it to the <code>H5Dataset</code> constructor to treat byte arrays as opaque data:</p>
 <pre><code class="lang-cs">var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
