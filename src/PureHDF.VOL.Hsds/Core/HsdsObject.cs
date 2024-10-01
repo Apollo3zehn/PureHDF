@@ -79,11 +79,11 @@ internal class HsdsObject : IH5Object
 
         var attribute = useAsync
 
-            ? await Connector.Client.Attribute
+            ? await Connector.Client.V2_0.Attribute
                 .GetAttributeAsync(Connector.DomainName, collection, Id, name, cancellationToken: cancellationToken)
                 .ConfigureAwait(false)
 
-            : Connector.Client.Attribute
+            : Connector.Client.V2_0.Attribute
                 .GetAttribute(Connector.DomainName, collection, Id, name);
 
         return new HsdsAttribute(attribute);
@@ -101,11 +101,11 @@ internal class HsdsObject : IH5Object
 
         var getAttributesResponse = useAsync
 
-            ? await Connector.Client.Attribute
+            ? await Connector.Client.V2_0.Attribute
                 .GetAttributesAsync(collection, Id, Connector.DomainName, cancellationToken: cancellationToken)
                 .ConfigureAwait(false)
 
-            : Connector.Client.Attribute
+            : Connector.Client.V2_0.Attribute
                 .GetAttributes(collection, Id, Connector.DomainName);
 
         return getAttributesResponse.Attributes
