@@ -280,13 +280,13 @@ internal partial record class DatatypeMessage(
                     ? memoryType is null
                         ? (typeof(byte[]), GetDecodeInfoForOpaqueAsByteArray())
                         : (memoryType, GetDecodeInfoForUnmanagedElement(memoryType))
-                    : throw new Exception($"Bitfield data can only be decoded into types that match the struct constraint of the same size (incompatible type: {memoryType})."),
+                    : throw new Exception($"Opaque data can only be decoded into types that match the struct constraint of the same size (incompatible type: {memoryType})."),
 
             /* reference */
             DatatypeMessageClass.Reference =>
                 memoryType is null || memoryType == typeof(NativeObjectReference1)
                     ? (typeof(NativeObjectReference1), GetDecodeInfoForUnmanagedElement<NativeObjectReference1>())
-                    : throw new Exception($"Bitfield data can only be decoded as NativeObjectReference1 (incompatible type: {memoryType})."),
+                    : throw new Exception($"Reference data can only be decoded as NativeObjectReference1 (incompatible type: {memoryType})."),
 
             /* default */
             _ => throw new NotSupportedException($"The class '{Class}' is not supported.")
