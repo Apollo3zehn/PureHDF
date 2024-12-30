@@ -1,4 +1,5 @@
 using Hsds.Api;
+using Hsds.Api.V2_0;
 
 namespace PureHDF.VOL.Hsds;
 
@@ -65,8 +66,8 @@ internal class HsdsGroup : HsdsObject, IH5Group
     private async Task<IEnumerable<HsdsNamedReference>> EnumerateReferencesAsync(bool useAsync, CancellationToken cancellationToken)
     {
         var response = useAsync
-            ? await Connector.Client.Link.GetLinksAsync(Id, Connector.DomainName, cancellationToken: cancellationToken).ConfigureAwait(false)
-            : Connector.Client.Link.GetLinks(Id, Connector.DomainName);
+            ? await Connector.Client.V2_0.Link.GetLinksAsync(Id, Connector.DomainName, cancellationToken: cancellationToken).ConfigureAwait(false)
+            : Connector.Client.V2_0.Link.GetLinks(Id, Connector.DomainName);
 
         return response.Links
             .Select(link => new HsdsNamedReference(link.Collection, link.Title, link.Id, Connector));
@@ -93,13 +94,13 @@ internal class HsdsGroup : HsdsObject, IH5Group
 
                     if (useAsync)
                     {
-                        linkResponse = await Connector.Client.Link
+                        linkResponse = await Connector.Client.V2_0.Link
                             .GetLinkAsync(id: key.ParentId, linkname: key.LinkName, domain: Connector.DomainName, cancellationToken)
                             .ConfigureAwait(false);
                     }
                     else
                     {
-                        linkResponse = Connector.Client.Link
+                        linkResponse = Connector.Client.V2_0.Link
                             .GetLink(id: key.ParentId, linkname: key.LinkName, domain: Connector.DomainName);
                     }
 

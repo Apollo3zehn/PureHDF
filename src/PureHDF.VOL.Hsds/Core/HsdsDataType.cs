@@ -1,4 +1,4 @@
-using Hsds.Api;
+using Hsds.Api.V2_0;
 
 namespace PureHDF.VOL.Hsds;
 

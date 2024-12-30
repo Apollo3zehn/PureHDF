@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-   <!-- dotnet build /p:EmitCompilerGeneratedFiles=true -->
+  <!-- dotnet build /p:EmitCompilerGeneratedFiles=true -->
   <PropertyGroup>
     <Description>Generates strongly-typed bindings for your specific HDF5 file.</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 source generator</PackageTags>
@@ -32,7 +32,7 @@
     <None Include="../../README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
-  <!-- https://github.com/dotnet/roslyn/discussions/47517 -->
+  <!-- https://github.com/dotnet/roslyn/issues/52017#issuecomment-1046216200 -->
   <Target Name="AddGenerationTimeReferences" AfterTargets="ResolvePackageDependenciesForBuild">
     <ItemGroup>
       <None Include="@(ResolvedCompileFileDefinitions)" Pack="true" PackagePath="analyzers/dotnet/cs" CopyToOutputDirectory="Always" />

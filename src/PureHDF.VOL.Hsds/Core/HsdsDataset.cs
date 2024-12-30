@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using Hsds.Api;
+using Hsds.Api.V2_0;
 using PureHDF.Selections;
 using PureHDF.VOL.Native;
 
@@ -21,7 +21,7 @@ internal class HsdsDataset : HsdsObject, IH5Dataset
 
     public HsdsDataset(InternalHsdsConnector connector, HsdsNamedReference reference) : base(connector, reference)
     {
-        _dataset = connector.Client.Dataset.GetDataset(Id, connector.DomainName);
+        _dataset = connector.Client.V2_0.Dataset.GetDataset(Id, connector.DomainName);
     }
 
     public IH5Dataspace Space
@@ -325,12 +325,12 @@ internal class HsdsDataset : HsdsObject, IH5Dataset
             hyperSlabSelectString is null
 
                 ? useAsync
-                    ? await Connector.Client.Dataset.PostValuesAsStreamAsync(_dataset.Id, Connector.DomainName, body: pointSelectionJsonElement, cancellationToken: cancellationToken)
-                    : Connector.Client.Dataset.PostValuesAsStream(_dataset.Id, Connector.DomainName, body: pointSelectionJsonElement)
+                    ? await Connector.Client.V2_0.Dataset.PostValuesAsStreamAsync(_dataset.Id, Connector.DomainName, body: pointSelectionJsonElement, cancellationToken: cancellationToken)
+                    : Connector.Client.V2_0.Dataset.PostValuesAsStream(_dataset.Id, Connector.DomainName, body: pointSelectionJsonElement)
 
                 : useAsync
-                    ? await Connector.Client.Dataset.GetValuesAsStreamAsync(_dataset.Id, Connector.DomainName, select: hyperSlabSelectString, cancellationToken: cancellationToken)
-                    : Connector.Client.Dataset.GetValuesAsStream(_dataset.Id, Connector.DomainName, select: hyperSlabSelectString);
+                    ? await Connector.Client.V2_0.Dataset.GetValuesAsStreamAsync(_dataset.Id, Connector.DomainName, select: hyperSlabSelectString, cancellationToken: cancellationToken)
+                    : Connector.Client.V2_0.Dataset.GetValuesAsStream(_dataset.Id, Connector.DomainName, select: hyperSlabSelectString);
 
         var stream = useAsync
             ? await streamResponse.Content.ReadAsStreamAsync(cancellationToken)
