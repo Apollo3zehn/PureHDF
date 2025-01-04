@@ -30,13 +30,13 @@ internal record class HugeObjectsFractalHeapIdSubType1(
         // huge objects b-tree v2
         if (record01Cache is null)
         {
-            driver.Seek((long)HeapHeader.HugeObjectsBTree2Address, SeekOrigin.Begin);
+            driver.SeekRelativeToBaseAddress((long)HeapHeader.HugeObjectsBTree2Address);
             var hugeBtree2 = BTree2Header<BTree2Record01>.Decode(Context, DecodeRecord01);
             record01Cache = hugeBtree2.EnumerateRecords().ToList();
         }
 
         var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
-        driver.Seek((long)hugeRecord.HugeObjectAddress, SeekOrigin.Begin);
+        driver.SeekRelativeToBaseAddress((long)hugeRecord.HugeObjectAddress);
 
         return func(driver);
     }

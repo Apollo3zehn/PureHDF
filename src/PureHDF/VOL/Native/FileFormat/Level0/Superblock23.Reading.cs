@@ -49,7 +49,7 @@ internal partial record class Superblock23(
     //     {
     //         if (_extension is null)
     //         {
-    //             Driver.Seek((long)ExtensionAddress, SeekOrigin.Begin);
+    //             Driver.SeekRelativeToBaseAddressSeek((long)ExtensionAddress);
     //             _extension = ObjectHeader.Construct(new NativeReadContext(Driver, this));
     //         }
 

@@ -30,7 +30,7 @@ internal record class SharedMessageTableMessage(
         {
             if (_sharedObjectHeaderMessageTable.Equals(default))
             {
-                Driver.Seek((long)SharedObjectHeaderMessageTableAddress, SeekOrigin.Begin);
+                Driver.SeekRelativeToBaseAddress((long)SharedObjectHeaderMessageTableAddress);
                 _sharedObjectHeaderMessageTable = SharedObjectHeaderMessageTable.Decode(Driver);
             }
 

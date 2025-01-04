@@ -27,7 +27,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         switch (seekOrigin)
         {
             case SeekOrigin.Begin:
-                _position.Value = (long)BaseAddress + offset; break;
+                _position.Value = offset; break;
 
             case SeekOrigin.Current:
                 _position.Value += offset; break;

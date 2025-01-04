@@ -8,6 +8,7 @@ namespace PureHDF;
 /// <param name="DefaultStringLength">A value that indicates how strings are handled during serialization. A nonzero positve value means that strings are treated as fixed-length strings, otherwise they are variable-length strings. The default value is 0.</param>
 /// <param name="MinimumGlobalHeapCollectionSize">A value that indicates the minimum size of a global heap collection in bytes. The default value is 4096 bytes which is the absolute minimum allowed size.</param>
 /// <param name="GlobalHeapFlushThreshold">A value that indicates the threshold after which global heap collections will be flushed. The default value is 4096 * 1024 = 4 MB.</param>
+/// <param name="UserBlockSize">Set the file user block size, in bytes. The default user block size is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024, 2048, etc.).</param>
 /// <param name="PreferCompactDatasetLayout">A value that indicates whether the writer tries to use the compact layout for datasets if the total data size is &lt; 64 kB and it should not be chunked.</param>
 /// <param name="IncludeStructFields">A value that indicates whether struct fields are handled during serialization. The default value is <see langword="true"/>.</param>
 /// <param name="IncludeStructProperties">A value that indicates whether struct properties are handled during serialization. The default value is <see langword="false"/>.</param>
@@ -22,6 +23,7 @@ public record H5WriteOptions(
     int DefaultStringLength = default,
     int MinimumGlobalHeapCollectionSize = 4096,
     long GlobalHeapFlushThreshold = 4096 * 1024,
+    ulong UserBlockSize = 0,
     bool PreferCompactDatasetLayout = true,
     bool IncludeStructFields = true,
     bool IncludeStructProperties = false,

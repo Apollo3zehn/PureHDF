@@ -36,7 +36,7 @@ internal record struct LocalHeap(
         {
             if (_data is null)
             {
-                Driver.Seek((long)DataSegmentAddress, SeekOrigin.Begin);
+                Driver.SeekRelativeToBaseAddress((long)DataSegmentAddress);
                 _data = Driver.ReadBytes((int)DataSegmentSize);
             }
 

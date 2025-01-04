@@ -30,7 +30,7 @@ internal record class ManagedObjectsFractalHeapId(
     {
         var address = Header.GetAddress(this);
 
-        Driver.Seek((long)address, SeekOrigin.Begin);
+        Driver.SeekRelativeToBaseAddress((long)address);
         return func(Driver);
     }
 }

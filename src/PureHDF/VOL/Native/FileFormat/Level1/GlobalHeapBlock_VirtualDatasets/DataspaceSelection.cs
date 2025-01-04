@@ -31,7 +31,7 @@ internal readonly record struct DataspaceSelection(
         var jumpPosition = driver.ReadUInt32();
         var points = H5S_SEL_POINTS.Decode(driver);
 
-        driver.Seek(jumpPosition, SeekOrigin.Begin);
+        driver.SeekRelativeToBaseAddress(jumpPosition);
 
         return points;
     }

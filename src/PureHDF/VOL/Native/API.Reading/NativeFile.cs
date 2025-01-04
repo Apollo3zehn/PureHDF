@@ -138,7 +138,7 @@ public class NativeFile : NativeGroup, IDisposable
                 throw new Exception($"The superblock of type '{superblock.GetType().Name}' is not supported.");
         }
 
-        driver.Seek((long)address, SeekOrigin.Begin);
+        driver.SeekRelativeToBaseAddress((long)address);
 
         var context = new NativeReadContext(
             driver,
@@ -174,7 +174,7 @@ public class NativeFile : NativeGroup, IDisposable
         if (reference.Equals(default))
             throw new Exception("The reference is invalid");
 
-        Context.Driver.Seek((long)reference.CollectionAddress, SeekOrigin.Begin);
+        Context.Driver.SeekRelativeToBaseAddress((long)reference.CollectionAddress);
 
         var globalHeapId = new ReadingGlobalHeapId(
             CollectionAddress: reference.CollectionAddress,

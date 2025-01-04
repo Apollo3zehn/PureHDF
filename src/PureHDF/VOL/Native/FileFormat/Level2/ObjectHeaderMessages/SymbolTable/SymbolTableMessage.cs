@@ -26,7 +26,7 @@ internal record class SymbolTableMessage(
         {
             if (_localHeap.Equals(default))
             {
-                Context.Driver.Seek((long)LocalHeapAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
                 _localHeap = LocalHeap.Decode(Context);
             }
 
@@ -38,7 +38,7 @@ internal record class SymbolTableMessage(
     {
         if (_bTree1.Equals(default))
         {
-            Context.Driver.Seek((long)BTree1Address, SeekOrigin.Begin);
+            Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
             _bTree1 = BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey);
         }
 

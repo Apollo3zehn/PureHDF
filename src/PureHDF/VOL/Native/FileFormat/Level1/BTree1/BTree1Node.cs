@@ -63,7 +63,7 @@ internal readonly record struct BTree1Node<T>(
     {
         get
         {
-            Context.Driver.Seek((long)LeftSiblingAddress, SeekOrigin.Begin);
+            Context.Driver.SeekRelativeToBaseAddress((long)LeftSiblingAddress);
             return BTree1Node<T>.Decode(Context, DecodeKey);
         }
     }
@@ -72,7 +72,7 @@ internal readonly record struct BTree1Node<T>(
     {
         get
         {
-            Context.Driver.Seek((long)RightSiblingAddress, SeekOrigin.Begin);
+            Context.Driver.SeekRelativeToBaseAddress((long)RightSiblingAddress);
             return BTree1Node<T>.Decode(Context, DecodeKey);
         }
     }
@@ -110,7 +110,7 @@ internal readonly record struct BTree1Node<T>(
 
             var subtree = Cache.GetOrAdd(childAddress, childAddress =>
             {
-                localThis.Context.Driver.Seek((long)childAddress, SeekOrigin.Begin);
+                localThis.Context.Driver.SeekRelativeToBaseAddress((long)childAddress);
                 return BTree1Node<T>.Decode(localThis.Context, localThis.DecodeKey);
             });
 
@@ -138,7 +138,7 @@ internal readonly record struct BTree1Node<T>(
         {
             foreach (var address in node.ChildAddresses)
             {
-                Context.Driver.Seek((long)address, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)address);
 
                 var childNode = BTree1Node<T>.Decode(Context, DecodeKey);
 

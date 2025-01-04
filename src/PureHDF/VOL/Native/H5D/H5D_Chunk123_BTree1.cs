@@ -74,7 +74,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
                 ? ((ChunkedStoragePropertyDescription3)_layout3!.Properties).Address
                 : _layout12.Address;
 
-            ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
+            ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
             BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 

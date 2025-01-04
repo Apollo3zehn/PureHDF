@@ -38,7 +38,7 @@ internal record class FractalHeapDirectBlock(
         {
             if (_header is null)
             {
-                Context.Driver.Seek((long)HeapHeaderAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)HeapHeaderAddress);
                 _header = FractalHeapHeader.Decode(Context);
             }
 

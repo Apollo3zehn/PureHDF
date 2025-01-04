@@ -43,7 +43,7 @@ internal record class ObjectHeaderScratchPad(
         {
             if (_localHeap.Equals(default))
             {
-                Context.Driver.Seek((long)NameHeapAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
                 _localHeap = LocalHeap.Decode(Context);
             }
 
@@ -55,7 +55,7 @@ internal record class ObjectHeaderScratchPad(
     {
         if (_btree1Node.Equals(default))
         {
-            Context.Driver.Seek((long)BTree1Address, SeekOrigin.Begin);
+            Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
             _btree1Node = BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey);
         }
 

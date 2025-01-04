@@ -37,7 +37,7 @@ internal partial record class LinkInfoMessage(
         {
             if (_fractalHeap is null)
             {
-                Context.Driver.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
                 _fractalHeap = FractalHeapHeader.Decode(Context);
             }
 
@@ -51,7 +51,7 @@ internal partial record class LinkInfoMessage(
         {
             if (_bTree2NameIndex is null)
             {
-                Context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
                 _bTree2NameIndex = BTree2Header<BTree2Record05>.Decode(Context, DecodeRecord05);
             }
 
@@ -65,7 +65,7 @@ internal partial record class LinkInfoMessage(
         {
             if (_bTree2CreationOrder is null)
             {
-                Context.Driver.Seek((long)BTree2CreationOrderIndexAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)BTree2CreationOrderIndexAddress);
                 _bTree2CreationOrder = BTree2Header<BTree2Record06>.Decode(Context, DecodeRecord06);
             }
 
@@ -75,7 +75,9 @@ internal partial record class LinkInfoMessage(
 
     public static LinkInfoMessage Decode(NativeReadContext context)
     {
+
         var (driver, superblock) = context;
+        var b = driver.Position;
 
         // version
         var version = driver.ReadByte();

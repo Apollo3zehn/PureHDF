@@ -13,7 +13,7 @@ internal partial record class ObjectHeader2
         var address = freeSpaceManager.Allocate((long)encodeSize);
 
         var driver = context.Driver;
-        driver.Seek(address, SeekOrigin.Begin);
+        driver.SeekRelativeToBaseAddress(address);
 
         // signature
         driver.Write(Signature);
@@ -56,7 +56,7 @@ internal partial record class ObjectHeader2
         using var buffer = MemoryPool<byte>.Shared.Rent(encodeSizeWithoutChecksum);
         var checksumData = buffer.Memory.Span[..encodeSizeWithoutChecksum];
 
-        driver.Seek(address, SeekOrigin.Begin);
+        driver.SeekRelativeToBaseAddress(address);
         driver.Read(checksumData);
 
         var checksum = ChecksumUtils.JenkinsLookup3(checksumData);

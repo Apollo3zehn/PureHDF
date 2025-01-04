@@ -20,7 +20,7 @@ internal partial class H5StreamDriver : H5DriverBase
         _leaveOpen = leaveOpen;
     }
 
-    public override long Position { get => _stream.Position - (long)BaseAddress; }
+    public override long Position { get => _stream.Position; }
 
     public override long Length => _stream.Length;
 
@@ -29,7 +29,7 @@ internal partial class H5StreamDriver : H5DriverBase
         switch (seekOrigin)
         {
             case SeekOrigin.Begin:
-                _stream.Seek((long)BaseAddress + offset, SeekOrigin.Begin);
+                _stream.Seek(offset, SeekOrigin.Begin);
                 break;
 
             case SeekOrigin.Current:
