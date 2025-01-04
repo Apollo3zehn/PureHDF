@@ -114,7 +114,7 @@ internal partial record class DatatypeMessage : Message
         
         {
             // Cannot use cache for string as the 'stringLength' can be different for each instance of the type
-            if (type == typeof(string))
+            if (type == typeof(string) && stringLength != default)
             {
                 //    
             }
