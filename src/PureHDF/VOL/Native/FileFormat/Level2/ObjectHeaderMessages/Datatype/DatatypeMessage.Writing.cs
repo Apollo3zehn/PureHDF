@@ -109,12 +109,29 @@ internal partial record class DatatypeMessage : Message
         if (type == typeof(byte) && opaqueInfo is not null)
             type = typeof(H5OpaqueInfo);
 
+        // Cache
         var cache = context.TypeToMessageMap;
+        
+        {
+            // Cannot use cache for string as the 'stringLength' can be different for each instance of the type
+            if (type == typeof(string))
+            {
+                //    
+            }
 
-        // Cannot use cache at all for H5OpaqueInfo as the size can be different for each instance of the type
-        if (type != typeof(H5OpaqueInfo) && cache.TryGetValue(type, out var cachedMessage))
-            return cachedMessage;
+            // Cannot use cache for H5OpaqueInfo as the size can be different for each instance of the type
+            else if (type == typeof(H5OpaqueInfo))
+            {
+                //
+            }
 
+            else if (cache.TryGetValue(type, out var cachedMessage))
+            {
+                return cachedMessage;
+            }
+        }
+
+        //
         var endianness = BitConverter.IsLittleEndian
             ? ByteOrder.LittleEndian
             : ByteOrder.BigEndian;
@@ -278,9 +295,9 @@ internal partial record class DatatypeMessage : Message
                 MemberCount: (ushort)Enum.GetNames(type).Length
             ),
 
-            new EnumerationPropertyDescription[] {
+            [
                 properties
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -502,11 +519,11 @@ internal partial record class DatatypeMessage : Message
                 Encoding: default
             ),
 
-            new VariableLengthPropertyDescription[] {
-                new (
+            [
+                new VariableLengthPropertyDescription (
                     BaseType: baseMessage
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -568,11 +585,11 @@ internal partial record class DatatypeMessage : Message
                 Encoding: default
             ),
 
-            new VariableLengthPropertyDescription[] {
-                new (
+            [
+                new VariableLengthPropertyDescription (
                     BaseType: baseMessage
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -638,11 +655,11 @@ internal partial record class DatatypeMessage : Message
                 Encoding: CharacterSetEncoding.UTF8
             ),
 
-            new VariableLengthPropertyDescription[] {
-                new (
+            [
+                new VariableLengthPropertyDescription (
                     BaseType: baseMessage
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -691,7 +708,7 @@ internal partial record class DatatypeMessage : Message
             (uint)length,
 
             new StringBitFieldDescription(
-                PaddingType: PaddingType.NullPad,
+                PaddingType: PaddingType.NullTerminate,
                 Encoding: CharacterSetEncoding.UTF8
             ),
 
@@ -798,9 +815,9 @@ internal partial record class DatatypeMessage : Message
                 TagByteLength: (byte)MathUtils.Ceil_N(opaqueInfo.Tag.Length + 1, 8)
             ),
 
-            new OpaquePropertyDescription[] {
-                new(Tag: opaqueInfo.Tag)
-            }
+            [
+                new OpaquePropertyDescription(Tag: opaqueInfo.Tag)
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -830,11 +847,11 @@ internal partial record class DatatypeMessage : Message
                 IsSigned: false
             ),
 
-            new FixedPointPropertyDescription[] {
-                new(BitOffset: 0,
+            [
+                new FixedPointPropertyDescription(BitOffset: 0,
                     BitPrecision: (ushort)(Marshal.SizeOf(type) * 8)
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -869,11 +886,11 @@ internal partial record class DatatypeMessage : Message
                 IsSigned: true
             ),
 
-            new FixedPointPropertyDescription[] {
-                new(BitOffset: 0,
+            [
+                new FixedPointPropertyDescription(BitOffset: 0,
                     BitPrecision: (ushort)(Marshal.SizeOf(type) * 8)
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -911,8 +928,8 @@ internal partial record class DatatypeMessage : Message
             ),
 
             // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
-            new FloatingPointPropertyDescription[] {
-                new(BitOffset: 0,
+            [
+                new FloatingPointPropertyDescription(BitOffset: 0,
                     BitPrecision: 16,
                     ExponentLocation: 10,
                     ExponentSize: 5,
@@ -920,7 +937,7 @@ internal partial record class DatatypeMessage : Message
                     MantissaSize: 10,
                     ExponentBias: 15
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -954,8 +971,8 @@ internal partial record class DatatypeMessage : Message
             ),
 
             // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
-            new FloatingPointPropertyDescription[] {
-                new(BitOffset: 0,
+            [
+                new FloatingPointPropertyDescription(BitOffset: 0,
                     BitPrecision: 32,
                     ExponentLocation: 23,
                     ExponentSize: 8,
@@ -963,7 +980,7 @@ internal partial record class DatatypeMessage : Message
                     MantissaSize: 23,
                     ExponentBias: 127
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
@@ -997,8 +1014,8 @@ internal partial record class DatatypeMessage : Message
             ),
 
             // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
-            new FloatingPointPropertyDescription[] {
-                new(BitOffset: 0,
+            [
+                new FloatingPointPropertyDescription(BitOffset: 0,
                     BitPrecision: 64,
                     ExponentLocation: 52,
                     ExponentSize: 11,
@@ -1006,7 +1023,7 @@ internal partial record class DatatypeMessage : Message
                     MantissaSize: 52,
                     ExponentBias: 1023
                 )
-            }
+            ]
         )
         {
             Version = DATATYPE_MESSAGE_VERSION,
