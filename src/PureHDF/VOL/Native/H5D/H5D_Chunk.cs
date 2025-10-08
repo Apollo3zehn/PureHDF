@@ -238,8 +238,6 @@ internal abstract class H5D_Chunk : H5D_Base
                 chunk = GC
                     .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
-                chunk = new byte[(int)ChunkByteSize];
-
                 chunk.Span.Fill(Dataset.FillValue.Value);
             }
         }
@@ -259,8 +257,6 @@ internal abstract class H5D_Chunk : H5D_Base
                 {
                     chunk = GC
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
-
-                    chunk = new byte[(int)ChunkByteSize];
 
                     chunk.Span.Fill(Dataset.FillValue.Value);
                 }

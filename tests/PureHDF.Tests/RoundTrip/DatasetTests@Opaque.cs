@@ -12,8 +12,8 @@ public class DatasetsRoundTripTests
         var expected = new byte[] { 0x01, 0x02, 0x13 };
 
         h5FileWrite["test"] = new H5Dataset(
-            data: expected, 
-            opaqueInfo: new H5OpaqueInfo((uint) expected.Length, "New")
+            data: expected,
+            opaqueInfo: new H5OpaqueInfo((uint)expected.Length, "New")
         );
 
         var memoryStream = new MemoryStream();
