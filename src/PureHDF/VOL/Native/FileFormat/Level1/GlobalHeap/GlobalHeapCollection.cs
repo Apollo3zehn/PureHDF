@@ -59,6 +59,21 @@ internal readonly record struct GlobalHeapCollection(
 
         // collection size
         var collectionSize = superblock.ReadLength(driver);
+        if (collectionSize > int.MaxValue)
+        {
+            throw new NotSupportedException("The collection size is too big.");
+        }
+
+        var buffer = ArrayPool<byte>.Shared.Rent((int)collectionSize);
+        driver.ReadDataset(buffer.AsSpan()[..(int)collectionSize]);
+
+        var memoryStream = new MemoryStream(buffer);
+        var subDriver = new H5StreamDriver(memoryStream, false);
+        var subContext = new NativeReadContext(subDriver, superblock)
+        {
+            ReadOptions = context.ReadOptions,
+            File = context.File,
+        };
 
         // global heap objects
         var globalHeapObjects = new Dictionary<int, GlobalHeapObject>();
@@ -68,19 +83,21 @@ internal readonly record struct GlobalHeapCollection(
 
         while (remaining > headerSize)
         {
-            var before = driver.Position;
-            var globalHeapObject = GlobalHeapObject.Decode(context);
+            var before = subDriver.Position;
+            var globalHeapObject = GlobalHeapObject.Decode(subContext);
 
             // Global Heap Object 0 (free space) can appear at the end of the collection.
             if (globalHeapObject.ObjectIndex == 0)
                 break;
 
             globalHeapObjects[globalHeapObject.ObjectIndex] = globalHeapObject;
-            var after = driver.Position;
+            var after = subDriver.Position;
             var consumed = (ulong)(after - before);
 
             remaining -= consumed;
         }
+
+        ArrayPool<byte>.Shared.Return(buffer);
 
         return new GlobalHeapCollection(
             GlobalHeapObjects: globalHeapObjects
