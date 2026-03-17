@@ -46,6 +46,6 @@ internal readonly partial record struct FilterDescription
             driver.Write(identifierBytes);
 
         // client data
-        driver.Write(MemoryMarshal.AsBytes<uint>(ClientData));
+        driver.Write(MemoryMarshal.AsBytes(ClientData.AsSpan()));
     }
 }
