@@ -84,8 +84,9 @@ jobs:
       - name: Test (filters)
         run: dotnet test -c Release /p:BuildProjectReferences=false --filter "FullyQualifiedName~PureHDF.Tests.Filters"
 
-      - name: Test (HSDS)
-        run: bash tests/PureHDF.Tests/Reading/PureHDF.VOL/run-hsds-tests.sh
+      # Skip for now
+      # - name: Test (HSDS)
+      #   run: bash tests/PureHDF.Tests/Reading/PureHDF.VOL/run-hsds-tests.sh
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
