@@ -142,7 +142,7 @@ internal record class BTree2Header<T>(
             }
             else
             {
-                Context.Driver.Seek((long)RootNodePointer.Address, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)RootNodePointer.Address);
 
                 return Depth != 0
 
@@ -192,7 +192,7 @@ internal record class BTree2Header<T>(
 
             var internalNode = _addressToNodeMap.GetOrAdd(address, address =>
             {
-                Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
 
                 return BTree2InternalNode<T>.Decode(
                     Context,
@@ -252,7 +252,7 @@ internal record class BTree2Header<T>(
         }
 
         {
-            Context.Driver.Seek((long)currentNodePointer.Address, SeekOrigin.Begin);
+            Context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
 
             var leafNode = BTree2LeafNode<T>.Decode(
                 Context.Driver,
@@ -309,7 +309,7 @@ internal record class BTree2Header<T>(
                     yield return records[i];
 
                 var nodePointer = nodePointers[i];
-                Context.Driver.Seek((long)nodePointer.Address, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)nodePointer.Address);
                 var childNodeLevel = (ushort)(nodeLevel - 1);
                 IEnumerable<T> childRecords;
 

@@ -58,7 +58,7 @@ internal static class NativeCache
         {
             var position = context.Driver.Position;
 
-            context.Driver.Seek((long)address, SeekOrigin.Begin);
+            context.Driver.SeekRelativeToBaseAddress((long)address);
             collection = GlobalHeapCollection.Decode(context);
 
             addressToCollectionMap[address] = collection;

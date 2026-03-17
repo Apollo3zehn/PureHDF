@@ -2,9 +2,7 @@
 
 internal abstract partial class H5DriverBase : IH5ReadStream
 {
-    private ulong _baseAddress;
-
-    public ulong BaseAddress { get => _baseAddress; }
+    public ulong BaseAddress { get; private set; }
 
     public abstract long Position { get; }
     public abstract long Length { get; }
@@ -20,9 +18,14 @@ internal abstract partial class H5DriverBase : IH5ReadStream
     public abstract uint ReadUInt32();
     public abstract ulong ReadUInt64();
 
+    public void SeekRelativeToBaseAddress(long offset)
+    {
+        Seek((long)BaseAddress + offset, SeekOrigin.Begin);
+    }
+
     public void SetBaseAddress(ulong baseAddress)
     {
-        _baseAddress = baseAddress;
+        BaseAddress = baseAddress;
     }
 
     #region IDisposable

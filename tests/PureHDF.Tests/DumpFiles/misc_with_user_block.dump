@@ -1,0 +1,20 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   ATTRIBUTE "a" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SCALAR
+      DATA {
+      (0): 1
+      }
+   }
+   GROUP "g" {
+      DATASET "d" {
+         DATATYPE  H5T_IEEE_F64LE
+         DATASPACE  SCALAR
+         DATA {
+         (0): 1.1
+         }
+      }
+   }
+}
+}

@@ -71,7 +71,7 @@ public partial class H5NativeWriter : IDisposable
                     Driver: default!,
                     Version: 3,
                     FileConsistencyFlags: default,
-                    BaseAddress: 0,
+                    BaseAddress: Context.Driver.BaseAddress,
                     ExtensionAddress: Superblock.UndefinedAddress,
                     EndOfFileAddress: endOfFileAddress,
                     RootGroupObjectHeaderAddress: _rootGroupAddress)
@@ -80,7 +80,7 @@ public partial class H5NativeWriter : IDisposable
                     LengthsSize = sizeof(ulong)
                 };
 
-                Context.Driver.Seek(0, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress(0);
                 superblock.Encode(Context.Driver);
 
                 // close driver

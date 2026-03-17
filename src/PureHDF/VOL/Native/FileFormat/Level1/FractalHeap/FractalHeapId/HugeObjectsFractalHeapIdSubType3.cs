@@ -22,7 +22,7 @@ internal record class HugeObjectsFractalHeapIdSubType3(
         Func<H5DriverBase, T> func,
         [AllowNull] ref List<BTree2Record01> record01Cache)
     {
-        Driver.Seek((long)Address, SeekOrigin.Begin);
+        Driver.SeekRelativeToBaseAddress((long)Address);
         return func(Driver);
     }
 }

@@ -21,6 +21,18 @@ partial class H5NativeWriter
 
         var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
+        if (options.UserBlockSize != 0)
+        {
+            /* https://stackoverflow.com/a/600306/1636629 */
+            var isPowerOfTwo = (options.UserBlockSize & (options.UserBlockSize - 1)) == 0;
+
+            if (isPowerOfTwo && options.UserBlockSize >= 512)
+                driver.SetBaseAddress(options.UserBlockSize);
+
+            else
+                throw new Exception("The user block size is invalid.");
+        }
+
         var freeSpaceManager = new FreeSpaceManager();
         freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
 
@@ -49,7 +61,7 @@ partial class H5NativeWriter
     internal void Write()
     {
         // root group
-        Context.Driver.Seek(Superblock23.ENCODE_SIZE, SeekOrigin.Begin);
+        Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
         _rootGroupAddress = EncodeGroup(File);
     }
 
@@ -345,7 +357,7 @@ partial class H5NativeWriter
 
         // encode object header
         var address = objectHeader.Encode(Context);
-        var end = (ulong)Context.Driver.Position;
+        var end = (ulong)Context.Driver.Position - Context.Driver.BaseAddress;
 
         Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)address, (int)(end - address));
 

@@ -139,7 +139,7 @@ internal class GlobalHeapManager
             var consumed = entry.Value.Consumed;
             var remainingSpace = (ulong)(memory.Length - consumed);
 
-            driver.Seek(address, SeekOrigin.Begin);
+            driver.SeekRelativeToBaseAddress(address);
 
             // signature
             driver.Write(GlobalHeapCollection.Signature);

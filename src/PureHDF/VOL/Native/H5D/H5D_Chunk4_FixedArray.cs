@@ -140,11 +140,11 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 };
 
                 // header
-                WriteContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
+                WriteContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
                 header.Encode(WriteContext.Driver);
 
                 // data block
-                WriteContext.Driver.Seek(dataBlockAddress, SeekOrigin.Begin);
+                WriteContext.Driver.SeekRelativeToBaseAddress(dataBlockAddress);
 
                 dataBlock.Encode(
                     driver: WriteContext.Driver,
@@ -191,7 +191,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
     {
         if (_header is null)
         {
-            ReadContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
+            ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
             _header = FixedArrayHeader.Decode(ReadContext);
         }
 
@@ -211,7 +211,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 // H5FA.c (H5FA_get)
 
                 /* Get the data block */
-                ReadContext.Driver.Seek((long)_header.DataBlockAddress, SeekOrigin.Begin);
+                ReadContext.Driver.SeekRelativeToBaseAddress((long)_header.DataBlockAddress);
 
                 var (elementsPerPage, pageCount, pageBitmapSize) = GetInfo(
                     _header.PageBits, 
@@ -277,7 +277,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 var page = (DataBlockPage<T>)_addressToObjectMap
                     .GetOrAdd(pageAddress, address =>
                 {
-                    ReadContext.Driver.Seek(address, SeekOrigin.Begin);
+                    ReadContext.Driver.SeekRelativeToBaseAddress(address);
 
                     return DataBlockPage<T>.Decode(
                         ReadContext.Driver,

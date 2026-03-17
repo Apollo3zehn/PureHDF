@@ -139,7 +139,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
     {
         if (_header is null)
         {
-            ReadContext.Driver.Seek((long)Chunked4.Address, SeekOrigin.Begin);
+            ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
             _header = ExtensibleArrayHeader.Decode(ReadContext);
         }
 
@@ -160,7 +160,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
             /* Get the index block */
             if (_indexBlock is null)
             {
-                ReadContext.Driver.Seek((long)_header.IndexBlockAddress, SeekOrigin.Begin);
+                ReadContext.Driver.SeekRelativeToBaseAddress((long)_header.IndexBlockAddress);
 
                 _indexBlock = ExtensibleArrayIndexBlock<T>.Decode(
                     ReadContext.Driver,
@@ -221,7 +221,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 {
                     var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
                     
-                    ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
+                    ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
                     return ExtensibleArrayDataBlock<T>.Decode(
                         ReadContext,
@@ -252,7 +252,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 var secondaryBlock = (ExtensibleArraySecondaryBlock)_addressToObjectMap
                     .GetOrAdd(secondaryBlockAddress, address =>
                 {
-                    ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
+                    ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
                     return ExtensibleArraySecondaryBlock.Decode(
                         ReadContext,
@@ -306,7 +306,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                     var dataBlockPage = (DataBlockPage<T>)_addressToObjectMap
                         .GetOrAdd(dataBlockPageAddress, address =>
                     {
-                        ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
+                        ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
                         return DataBlockPage<T>.Decode(
                             ReadContext.Driver,
@@ -326,7 +326,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                     var dataBlock = (ExtensibleArrayDataBlock<T>)_addressToObjectMap
                         .GetOrAdd(dataBlockAddress, address =>
                     {
-                        ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
+                        ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
                         return ExtensibleArrayDataBlock<T>.Decode(
                             ReadContext,

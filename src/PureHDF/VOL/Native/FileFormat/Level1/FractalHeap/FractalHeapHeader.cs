@@ -379,7 +379,7 @@ internal record class FractalHeapHeader(
             directBlockAddress = indirectBlock.Entries[entry].Address;
         }
 
-        Context.Driver.Seek((long)directBlockAddress, SeekOrigin.Begin);
+        Context.Driver.SeekRelativeToBaseAddress((long)directBlockAddress);
         directBlock = FractalHeapDirectBlock.Decode(Context, this);
 
         /* Compute offset of object within block */
@@ -404,7 +404,7 @@ internal record class FractalHeapHeader(
     {
         var (row, column) = Lookup(offset);
 
-        Context.Driver.Seek((long)RootBlockAddress, SeekOrigin.Begin);
+        Context.Driver.SeekRelativeToBaseAddress((long)RootBlockAddress);
         var indirectBlock = FractalHeapIndirectBlock.Decode(Context, this, RootIndirectBlockRowsCount);
 
         uint entry;
@@ -424,7 +424,7 @@ internal record class FractalHeapHeader(
             var indirectBlockEntry = indirectBlock.Entries[entry];
 
             /* Use new indirect block */
-            Context.Driver.Seek((long)indirectBlockEntry.Address, SeekOrigin.Begin);
+            Context.Driver.SeekRelativeToBaseAddress((long)indirectBlockEntry.Address);
             indirectBlock = FractalHeapIndirectBlock.Decode(Context, this, nrows);
 
             /* Look up row & column in new indirect block for object */

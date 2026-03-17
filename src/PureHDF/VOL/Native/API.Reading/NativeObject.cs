@@ -59,7 +59,7 @@ public abstract class NativeObject : IH5Object
         {
             if (_header is null)
             {
-                Context.Driver.Seek((long)Reference.Value, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)Reference.Value);
                 _header = ObjectHeader.Construct(Context);
             }
 

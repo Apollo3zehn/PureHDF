@@ -101,7 +101,7 @@ internal abstract record class ObjectHeader(
 
         foreach (var continuationMessage in continuationMessages)
         {
-            context.Driver.Seek((long)continuationMessage.Offset, SeekOrigin.Begin);
+            context.Driver.SeekRelativeToBaseAddress((long)continuationMessage.Offset);
 
             if (version == 1)
             {

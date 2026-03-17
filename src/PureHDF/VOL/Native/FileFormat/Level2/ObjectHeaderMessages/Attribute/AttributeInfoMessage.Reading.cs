@@ -37,7 +37,7 @@ internal partial record class AttributeInfoMessage(
         {
             if (_fractalHeap is null)
             {
-                Context.Driver.Seek((long)FractalHeapAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
                 _fractalHeap = FractalHeapHeader.Decode(Context);
             }
 
@@ -51,7 +51,7 @@ internal partial record class AttributeInfoMessage(
         {
             if (_bTree2NameIndex is null)
             {
-                Context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
                 _bTree2NameIndex = BTree2Header<BTree2Record08>.Decode(Context, DecodeRecord08);
             }
 
@@ -65,7 +65,7 @@ internal partial record class AttributeInfoMessage(
         {
             if (_bTree2CreationOrder is null)
             {
-                Context.Driver.Seek((long)BTree2NameIndexAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
                 _bTree2CreationOrder = BTree2Header<BTree2Record09>.Decode(Context, DecodeRecord09);
             }
 

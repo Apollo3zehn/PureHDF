@@ -47,13 +47,13 @@ internal abstract partial record class Message
                 /* The shared message is in another object header */
 
                 // TODO: This would greatly benefit from a caching mechanism!
-                var currentAddress = context.Driver.Position;
-                context.Driver.Seek((long)message.Address, SeekOrigin.Begin);
+                var position = context.Driver.Position;
+                context.Driver.SeekRelativeToBaseAddress((long)message.Address);
 
                 var header = ObjectHeader.Construct(context);
                 var sharedMessage = header.GetMessage<T>();
 
-                context.Driver.Seek(currentAddress, SeekOrigin.Begin);
+                context.Driver.Seek(position, SeekOrigin.Begin);
 
                 return sharedMessage;
             }

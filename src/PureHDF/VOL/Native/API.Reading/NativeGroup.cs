@@ -581,7 +581,7 @@ public class NativeGroup : NativeObject, IH5Group
         {
             return node.ChildAddresses.Select(address =>
             {
-                Context.Driver.Seek((long)address, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)address);
                 return SymbolTableNode.Decode(Context);
             });
         });
@@ -629,7 +629,7 @@ public class NativeGroup : NativeObject, IH5Group
         /*
          * Load the symbol table node for exclusive access.
          */
-        Context.Driver.Seek((long)address, SeekOrigin.Begin);
+        Context.Driver.SeekRelativeToBaseAddress((long)address);
         var symbolTableNode = SymbolTableNode.Decode(Context);
 
         /*

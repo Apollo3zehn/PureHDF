@@ -43,7 +43,7 @@ internal class H5D_Contiguous : H5D_Base
 
             else
             {
-                ReadContext.Driver.Seek((long)address, SeekOrigin.Begin);
+                ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
                 _readStream = new OffsetStream(ReadContext.Driver);
             }
@@ -58,7 +58,7 @@ internal class H5D_Contiguous : H5D_Base
         {
             if (_writeStream is null)
             {
-                WriteContext.Driver.Seek((long)GetAddress(), SeekOrigin.Begin);
+                WriteContext.Driver.SeekRelativeToBaseAddress((long)GetAddress());
                 _writeStream = new OffsetStream(WriteContext.Driver);
             }
         }

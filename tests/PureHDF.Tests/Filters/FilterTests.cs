@@ -838,7 +838,7 @@ public class FilterTests
         ShuffleGeneric.DoShuffle(
             bytesOfType,
             source: actual_unshuffled,
-            destination: MemoryMarshal.AsBytes<T>(actual));
+            destination: MemoryMarshal.AsBytes(actual.AsSpan()));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -864,7 +864,7 @@ public class FilterTests
         ShuffleGeneric.DoShuffle(
             bytesOfType,
             source: actual_unshuffled,
-            destination: MemoryMarshal.AsBytes<decimal>(actual));
+            destination: MemoryMarshal.AsBytes(actual.AsSpan()));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -950,7 +950,7 @@ public class FilterTests
         ShuffleAvx2.DoShuffle(
             bytesOfType,
             source: actual_unshuffled,
-            destination: MemoryMarshal.AsBytes<T>(actual));
+            destination: MemoryMarshal.AsBytes(actual.AsSpan()));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -976,7 +976,7 @@ public class FilterTests
         ShuffleAvx2.DoShuffle(
             bytesOfType,
             source: actual_unshuffled,
-            destination: MemoryMarshal.AsBytes<decimal>(actual));
+            destination: MemoryMarshal.AsBytes(actual.AsSpan()));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -1063,7 +1063,7 @@ public class FilterTests
         ShuffleSse2.DoShuffle(
             bytesOfType,
             source: actual_unshuffled,
-            destination: MemoryMarshal.AsBytes<T>(actual));
+            destination: MemoryMarshal.AsBytes(actual.AsSpan()));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));
@@ -1089,7 +1089,7 @@ public class FilterTests
         ShuffleSse2.DoShuffle(
             bytesOfType,
             source: actual_unshuffled,
-            destination: MemoryMarshal.AsBytes<decimal>(actual));
+            destination: MemoryMarshal.AsBytes(actual.AsSpan()));
 
         // Assert
         Assert.True(expected.SequenceEqual(actual));

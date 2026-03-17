@@ -764,19 +764,19 @@ public class SelectionTests
 
         // s0
         var sourceBuffer0 = new byte[6 * 6 * sizeof(int)];
-        var s0 = MemoryMarshal.Cast<byte, int>(sourceBuffer0);
+        var s0 = MemoryMarshal.Cast<byte, int>(sourceBuffer0.AsSpan());
         s0[1] = 1; s0[2] = 2; s0[7] = 5; s0[8] = 6; s0[13] = 9; s0[14] = 10; s0[31] = 13; s0[32] = 14;
 
         var sourceBuffer1 = new byte[6 * 6 * sizeof(int)];
-        var s1 = MemoryMarshal.Cast<byte, int>(sourceBuffer1);
+        var s1 = MemoryMarshal.Cast<byte, int>(sourceBuffer1.AsSpan());
         s1[0] = 3; s1[1] = 4; s1[6] = 7; s1[7] = 8; s1[12] = 11; s1[13] = 12; s1[30] = 15; s1[31] = 16;
 
         var sourceBuffer2 = new byte[6 * 6 * sizeof(int)];
-        var s2 = MemoryMarshal.Cast<byte, int>(sourceBuffer2);
+        var s2 = MemoryMarshal.Cast<byte, int>(sourceBuffer2.AsSpan());
         s2[1] = 17; s2[2] = 18; s2[7] = 21; s2[8] = 22;
 
         var sourceBuffer3 = new byte[6 * 6 * sizeof(int)];
-        var s3 = MemoryMarshal.Cast<byte, int>(sourceBuffer3);
+        var s3 = MemoryMarshal.Cast<byte, int>(sourceBuffer3.AsSpan());
         s3[0] = 19; s3[1] = 20; s3[6] = 23; s3[7] = 24;
 
         var chunksBuffers = new Memory<byte>[]
@@ -858,35 +858,35 @@ public class SelectionTests
 
         // source
         var sourceBuffer1 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s1 = MemoryMarshal.Cast<byte, int>(sourceBuffer1);
+        var s1 = MemoryMarshal.Cast<byte, int>(sourceBuffer1.AsSpan());
         s1[0] = 0; s1[1] = 1; s1[2] = 2; s1[3] = 6; s1[4] = 7; s1[5] = 8;
 
         var sourceBuffer2 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s2 = MemoryMarshal.Cast<byte, int>(sourceBuffer2);
+        var s2 = MemoryMarshal.Cast<byte, int>(sourceBuffer2.AsSpan());
         s2[0] = 3; s2[1] = 4; s2[2] = 5; s2[3] = 9; s2[4] = 10; s2[5] = 11;
 
         var sourceBuffer3 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s3 = MemoryMarshal.Cast<byte, int>(sourceBuffer3);
+        var s3 = MemoryMarshal.Cast<byte, int>(sourceBuffer3.AsSpan());
         s3[0] = 12; s3[1] = 13; s3[2] = 14; s3[3] = 0; s3[4] = 0; s3[5] = 0;
 
         var sourceBuffer4 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s4 = MemoryMarshal.Cast<byte, int>(sourceBuffer4);
+        var s4 = MemoryMarshal.Cast<byte, int>(sourceBuffer4.AsSpan());
         s4[0] = 15; s4[1] = 16; s4[2] = 17; s4[3] = 0; s4[4] = 0; s4[5] = 0;
 
         var sourceBuffer5 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s5 = MemoryMarshal.Cast<byte, int>(sourceBuffer5);
+        var s5 = MemoryMarshal.Cast<byte, int>(sourceBuffer5.AsSpan());
         s5[0] = 18; s5[1] = 19; s5[2] = 20; s5[3] = 24; s5[4] = 25; s5[5] = 26;
 
         var sourceBuffer6 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s6 = MemoryMarshal.Cast<byte, int>(sourceBuffer6);
+        var s6 = MemoryMarshal.Cast<byte, int>(sourceBuffer6.AsSpan());
         s6[0] = 21; s6[1] = 22; s6[2] = 23; s6[3] = 27; s6[4] = 28; s6[5] = 29;
 
         var sourceBuffer7 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s7 = MemoryMarshal.Cast<byte, int>(sourceBuffer7);
+        var s7 = MemoryMarshal.Cast<byte, int>(sourceBuffer7.AsSpan());
         s7[0] = 30; s7[1] = 31; s7[2] = 32; s7[3] = 0; s7[4] = 0; s7[5] = 0;
 
         var sourceBuffer8 = new byte[1 * 2 * 3 * sizeof(int)];
-        var s8 = MemoryMarshal.Cast<byte, int>(sourceBuffer8);
+        var s8 = MemoryMarshal.Cast<byte, int>(sourceBuffer8.AsSpan());
         s8[0] = 33; s8[1] = 34; s8[2] = 35; s8[3] = 0; s8[4] = 0; s8[5] = 0;
 
         var chunksBuffers = new Memory<byte>[]
@@ -978,45 +978,45 @@ public class SelectionTests
 
         // s0
         var sourceBuffer0 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s0 = MemoryMarshal.Cast<byte, int>(sourceBuffer0);
+        var s0 = MemoryMarshal.Cast<byte, int>(sourceBuffer0.AsSpan());
         s0[86] = 1;
 
         // s2
         var sourceBuffer2 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s2 = MemoryMarshal.Cast<byte, int>(sourceBuffer2);
+        var s2 = MemoryMarshal.Cast<byte, int>(sourceBuffer2.AsSpan());
         s2[84] = 2;
 
         // s4
         var sourceBuffer4 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s4 = MemoryMarshal.Cast<byte, int>(sourceBuffer4);
+        var s4 = MemoryMarshal.Cast<byte, int>(sourceBuffer4.AsSpan());
         s4[74] = 3;
         s4[80] = 5;
 
         // s6
         var sourceBuffer6 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s6 = MemoryMarshal.Cast<byte, int>(sourceBuffer6);
+        var s6 = MemoryMarshal.Cast<byte, int>(sourceBuffer6.AsSpan());
         s6[72] = 4;
         s6[78] = 6;
 
         // s8
         var sourceBuffer8 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s8 = MemoryMarshal.Cast<byte, int>(sourceBuffer8);
+        var s8 = MemoryMarshal.Cast<byte, int>(sourceBuffer8.AsSpan());
         s8[14] = 7;
 
         // s10
         var sourceBuffer10 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s10 = MemoryMarshal.Cast<byte, int>(sourceBuffer10);
+        var s10 = MemoryMarshal.Cast<byte, int>(sourceBuffer10.AsSpan());
         s10[12] = 8;
 
         // s12
         var sourceBuffer12 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s12 = MemoryMarshal.Cast<byte, int>(sourceBuffer12);
+        var s12 = MemoryMarshal.Cast<byte, int>(sourceBuffer12.AsSpan());
         s12[2] = 9;
         s12[8] = 11;
 
         // s14
         var sourceBuffer14 = new byte[6 * 6 * 3 * sizeof(int)];
-        var s14 = MemoryMarshal.Cast<byte, int>(sourceBuffer14);
+        var s14 = MemoryMarshal.Cast<byte, int>(sourceBuffer14.AsSpan());
         s14[0] = 10;
         s14[6] = 12;
 

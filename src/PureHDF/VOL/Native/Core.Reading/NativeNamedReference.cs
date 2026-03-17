@@ -55,7 +55,7 @@ internal struct NativeNamedReference
         else
         {
             var context = File.Context;
-            context.Driver.Seek((long)Value, SeekOrigin.Begin);
+            context.Driver.SeekRelativeToBaseAddress((long)Value);
             var objectHeader = ObjectHeader.Construct(context);
 
             return objectHeader.ObjectType switch

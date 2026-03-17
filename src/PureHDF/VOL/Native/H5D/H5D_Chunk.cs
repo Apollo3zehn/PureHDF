@@ -238,8 +238,6 @@ internal abstract class H5D_Chunk : H5D_Base
                 chunk = GC
                     .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
-                chunk = new byte[(int)ChunkByteSize];
-
                 chunk.Span.Fill(Dataset.FillValue.Value);
             }
         }
@@ -260,8 +258,6 @@ internal abstract class H5D_Chunk : H5D_Base
                     chunk = GC
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
-                    chunk = new byte[(int)ChunkByteSize];
-
                     chunk.Span.Fill(Dataset.FillValue.Value);
                 }
             }
@@ -273,7 +269,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     chunk = GC
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
-                    ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
                     ReadContext.Driver.ReadDataset(chunk.Span);
                 }
 
@@ -283,7 +279,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     using var filterBufferOwner = MemoryPool<byte>.Shared.Rent(rawChunkSize);
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
-                    ReadContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+                    ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
                     ReadContext.Driver.ReadDataset(buffer.Span);
 
                     chunk = H5Filter.ExecutePipeline(
@@ -307,7 +303,7 @@ internal abstract class H5D_Chunk : H5D_Base
         {
             var chunkInfo = GetWriteChunkInfo(chunkIndex, (uint)chunk.Length, 0);
 
-            WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+            WriteContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
             WriteContext.Driver.Write(chunk.Span);
         }
 
@@ -325,7 +321,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
             var chunkInfo = GetWriteChunkInfo(chunkIndex, (uint)buffer.Length, filterMask);
 
-            WriteContext.Driver.Seek((long)chunkInfo.Address, SeekOrigin.Begin);
+            WriteContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
             WriteContext.Driver.Write(buffer.Span);
         }
     }

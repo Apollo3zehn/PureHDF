@@ -32,7 +32,7 @@ internal record class ExternalFileListMessage(
         {
             if (_heap.Equals(default))
             {
-                Context.Driver.Seek((long)HeapAddress, SeekOrigin.Begin);
+                Context.Driver.SeekRelativeToBaseAddress((long)HeapAddress);
                 _heap = LocalHeap.Decode(Context);
             }
 

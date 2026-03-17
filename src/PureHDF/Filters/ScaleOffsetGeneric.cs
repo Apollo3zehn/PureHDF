@@ -67,16 +67,16 @@ internal static class ScaleOffsetGeneric
                 if (parameters.Sign == Sign.Unsigned)
                 {
                     if (parameters.Size == 1)
-                        PostdecompressByte(MemoryMarshal.Cast<byte, byte>(output), parameters, minbits, minval);
+                        PostdecompressByte(MemoryMarshal.Cast<byte, byte>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 2)
-                        PostdecompressInteger(MemoryMarshal.Cast<byte, ushort>(output), parameters, minbits, minval);
+                        PostdecompressInteger(MemoryMarshal.Cast<byte, ushort>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 4)
-                        PostdecompressInteger(MemoryMarshal.Cast<byte, uint>(output), parameters, minbits, minval);
+                        PostdecompressInteger(MemoryMarshal.Cast<byte, uint>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 8)
-                        PostdecompressInteger(MemoryMarshal.Cast<byte, ulong>(output), parameters, minbits, minval);
+                        PostdecompressInteger(MemoryMarshal.Cast<byte, ulong>(output.AsSpan()), parameters, minbits, minval);
 
                     else
                         throw new Exception("Unsupported data type.");
@@ -85,16 +85,16 @@ internal static class ScaleOffsetGeneric
                 else
                 {
                     if (parameters.Size == 1)
-                        PostdecompressSByte(MemoryMarshal.Cast<byte, sbyte>(output), parameters, minbits, minval);
+                        PostdecompressSByte(MemoryMarshal.Cast<byte, sbyte>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 2)
-                        PostdecompressInteger(MemoryMarshal.Cast<byte, short>(output), parameters, minbits, minval);
+                        PostdecompressInteger(MemoryMarshal.Cast<byte, short>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 4)
-                        PostdecompressInteger(MemoryMarshal.Cast<byte, int>(output), parameters, minbits, minval);
+                        PostdecompressInteger(MemoryMarshal.Cast<byte, int>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 8)
-                        PostdecompressInteger(MemoryMarshal.Cast<byte, long>(output), parameters, minbits, minval);
+                        PostdecompressInteger(MemoryMarshal.Cast<byte, long>(output.AsSpan()), parameters, minbits, minval);
 
                     else
                         throw new Exception("Unsupported data type.");
@@ -106,10 +106,10 @@ internal static class ScaleOffsetGeneric
                 if (parameters.ScaleType == ScaleType.FLOAT_DSCALE)
                 {
                     if (parameters.Size == 4)
-                        PostdecompressFloat32(MemoryMarshal.Cast<byte, float>(output), parameters, minbits, minval);
+                        PostdecompressFloat32(MemoryMarshal.Cast<byte, float>(output.AsSpan()), parameters, minbits, minval);
 
                     else if (parameters.Size == 8)
-                        PostdecompressFloat64(MemoryMarshal.Cast<byte, double>(output), parameters, minbits, minval);
+                        PostdecompressFloat64(MemoryMarshal.Cast<byte, double>(output.AsSpan()), parameters, minbits, minval);
 
                     else
                         throw new Exception("Unsupported data type.");

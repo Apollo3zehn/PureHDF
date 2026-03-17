@@ -64,7 +64,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             using var memorOwner = MemoryPool<byte>.Shared.Rent(lengthWithoutChecksum);
             var checksumData = memorOwner.Memory.Span.Slice(0, lengthWithoutChecksum);
 
-            WriteContext.Driver.Seek(objectHeaderAddress, SeekOrigin.Begin);
+            WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
             WriteContext.Driver.Read(checksumData);
 
             var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
