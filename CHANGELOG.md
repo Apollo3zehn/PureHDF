@@ -1,3 +1,8 @@
+## v2.1.2 - 2026-03-17
+
+### Bugs fixed
+- The global heap collection was not read properly. (#153)
+
 ## v2.1.1 - 2024-08-16
 
 ### Bugs fixed

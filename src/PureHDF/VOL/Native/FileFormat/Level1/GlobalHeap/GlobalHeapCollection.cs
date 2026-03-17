@@ -44,7 +44,7 @@ internal readonly record struct GlobalHeapCollection(
     public static GlobalHeapCollection Decode(NativeReadContext context)
     {
         // TODO: do not decode individual global heap objects and use a Memory<byte> of size 4096 instead
-
+        
         var (driver, superblock) = context;
 
         // signature
@@ -64,7 +64,7 @@ internal readonly record struct GlobalHeapCollection(
         var globalHeapObjects = new Dictionary<int, GlobalHeapObject>();
 
         var headerSize = 8UL + superblock.LengthsSize;
-        var remaining = collectionSize;
+        var remaining = collectionSize - headerSize;
 
         while (remaining > headerSize)
         {
@@ -83,8 +83,8 @@ internal readonly record struct GlobalHeapCollection(
         }
 
         return new GlobalHeapCollection(
-            GlobalHeapObjects: globalHeapObjects
-        )
+GlobalHeapObjects: globalHeapObjects
+)
         {
             Version = version,
             CollectionSize = collectionSize
