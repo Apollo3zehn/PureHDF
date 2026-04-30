@@ -1,5 +1,6 @@
 ﻿using Xunit;
 using System.Reflection;
+using HDF.PInvoke;
 using PureHDF.Filters;
 
 namespace PureHDF.Tests.Writing;
@@ -379,6 +380,86 @@ public partial class DatasetTests
         try
         {
             Assert.Throws<TargetInvocationException>(action);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    // Cross-library compatibility test for chunk dimension encoded length.
+    // Pre-fix: chunked layouts always wrote (byte)8 as the encoded length, which
+    // libhdf5's H5D__chunk_set_sizes() rejects with
+    //   "stored chunk dimension encoding length does not match value calculated from chunk dimensions"
+    // because libhdf5 expects the *minimum* number of bytes needed to hold the
+    // largest chunk dimension. This test writes a chunked file through PureHDF
+    // and opens it through libhdf5 (via HDF.PInvoke); regression of the
+    // encoded-length bug surfaces as H5F.open returning a negative handle.
+    [Theory]
+    [InlineData(new uint[] { 10U })]                            // 1D, max 10 → 1 byte
+    [InlineData(new uint[] { 256U })]                           // 1D, max 256 → 2 bytes
+    [InlineData(new uint[] { 65536U })]                         // 1D, max 65536 → 3 bytes
+    [InlineData(new uint[] { 4U, 4U, 32U, 32U, 16U, 1U })]      // 6D real-world (microscopy)
+    public void ChunkedFile_IsReadableBy_libhdf5(uint[] chunkDims)
+    {
+        // Arrange — build N-D mock data matching the chunk shape (one chunk per dim)
+        var totalElements = 1;
+        foreach (var d in chunkDims)
+            totalElements *= (int)d;
+        var rawData = new int[totalElements];
+        for (var i = 0; i < totalElements; i++)
+            rawData[i] = i;
+
+        Array data;
+        if (chunkDims.Length == 1)
+        {
+            data = rawData;
+        }
+        else
+        {
+            var shape = new int[chunkDims.Length];
+            for (var i = 0; i < chunkDims.Length; i++)
+                shape[i] = (int)chunkDims[i];
+            var nd = Array.CreateInstance(typeof(int), shape);
+            Buffer.BlockCopy(rawData, 0, nd, 0, rawData.Length * sizeof(int));
+            data = nd;
+        }
+
+        var file = new H5File
+        {
+            ["chunked"] = new H5Dataset(data, chunks: chunkDims)
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert — libhdf5 must accept the file (negative handle = error)
+        try
+        {
+            var fileId = H5F.open(filePath, H5F.ACC_RDONLY);
+            try
+            {
+                Assert.True(fileId >= 0, $"H5F.open rejected PureHDF chunked file (handle={fileId})");
+
+                var datasetId = H5D.open(fileId, "chunked");
+                try
+                {
+                    Assert.True(datasetId >= 0, $"H5D.open rejected chunked dataset (handle={datasetId})");
+                }
+                finally
+                {
+                    if (datasetId >= 0)
+                        _ = H5D.close(datasetId);
+                }
+            }
+            finally
+            {
+                if (fileId >= 0)
+                    _ = H5F.close(fileId);
+            }
         }
         finally
         {

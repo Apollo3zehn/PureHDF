@@ -196,14 +196,16 @@ internal record class ChunkedStoragePropertyDescription4(
 
     public override ushort GetEncodeSize()
     {
+        var encLen = ComputeEncodedLength(DimensionSizes);
+
         var encodeSize =
-            sizeof(byte) +
-            sizeof(byte) +
-            sizeof(byte) +
-            sizeof(ulong) * Rank +
-            sizeof(byte) +
+            sizeof(byte) +              // flags
+            sizeof(byte) +              // dimensionality (rank)
+            sizeof(byte) +              // dimension size encoded length
+            encLen * Rank +             // dimension sizes (variable byte width)
+            sizeof(byte) +              // chunk indexing type
             IndexingInformation.GetEncodeSize(Flags) +
-            sizeof(ulong);
+            sizeof(ulong);              // address
 
         return (ushort)encodeSize;
     }
@@ -218,16 +220,20 @@ internal record class ChunkedStoragePropertyDescription4(
         // dimensionality
         driver.Write(Rank);
 
-        // dimension size encoded length
-        driver.Write((byte)8);
+        // dimension size encoded length: minimum number of bytes needed to encode
+        // the largest chunk dimension. libhdf5's H5D__chunk_set_sizes() in
+        // src/H5Dchunk.c strictly enforces (`!=` check) that this value matches its
+        // own calculation; hardcoding a different value (e.g. 8) produces files h5py /
+        // HDFView / MATLAB / Imaris reject with "stored chunk dimension encoding
+        // length does not match value calculated from chunk dimensions".
+        var encLen = ComputeEncodedLength(DimensionSizes);
+        driver.Write(encLen);
 
-        // dimension sizes
-        for (int i = 0; i < Rank - 1; i++)
+        // dimension sizes (variable byte width per encLen, last entry is element size)
+        for (int i = 0; i < Rank; i++)
         {
-            driver.Write(DimensionSizes[i]);
+            WriteUtils.WriteUlongArbitrary(driver, DimensionSizes[i], encLen);
         }
-
-        driver.Write((ulong)4);
 
         // chunk indexing type
         var indexingType = IndexingInformation switch
@@ -249,6 +255,33 @@ internal record class ChunkedStoragePropertyDescription4(
         driver.Write(Address);
 
         IsDirty = false;
+    }
+
+    // Mirrors libhdf5 H5D__chunk_set_sizes() byte-counting logic: counts how many
+    // 8-bit-shifted iterations bring the largest dimension value to zero. Returns 1
+    // even when all dims are zero (encoded length must be at least 1 per HDF5 spec).
+    private static byte ComputeEncodedLength(ulong[] dimensionSizes)
+    {
+        var maxValue = 0UL;
+
+        for (int i = 0; i < dimensionSizes.Length; i++)
+        {
+            if (dimensionSizes[i] > maxValue)
+                maxValue = dimensionSizes[i];
+        }
+
+        if (maxValue == 0)
+            return 1;
+
+        byte length = 0;
+
+        while (maxValue != 0)
+        {
+            length++;
+            maxValue >>= 8;
+        }
+
+        return length;
     }
 }
 
