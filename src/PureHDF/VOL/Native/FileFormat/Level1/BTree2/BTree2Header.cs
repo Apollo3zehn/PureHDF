@@ -304,10 +304,6 @@ internal record class BTree2Header<T>(
 
             for (int i = 0; i < nodePointers.Length; i++)
             {
-                // there is one more node pointer than records
-                if (i < records.Count)
-                    yield return records[i];
-
                 var nodePointer = nodePointers[i];
                 Context.Driver.SeekRelativeToBaseAddress((long)nodePointer.Address);
                 var childNodeLevel = (ushort)(nodeLevel - 1);
@@ -341,6 +337,10 @@ internal record class BTree2Header<T>(
                 {
                     yield return record;
                 }
+
+                // there is one more node pointer than records
+                if (i < records.Count)
+                    yield return records[i];
             }
         }
         // leaf node

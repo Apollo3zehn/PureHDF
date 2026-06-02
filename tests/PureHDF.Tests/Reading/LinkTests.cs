@@ -1,5 +1,6 @@
 using HDF.PInvoke;
 using PureHDF.VFD;
+using System.Text;
 using Xunit;
 
 namespace PureHDF.Tests.Reading;
@@ -98,6 +99,29 @@ public class LinkTests
             var actual = group.Children().Count();
             Assert.Equal(expected, actual);
         });
+    }
+
+    [Fact]
+    public void CanEnumerateDenseIndexedChildrenInNameIndexOrder()
+    {
+        // Arrange
+        const int childCount = 1000;
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddMassLinks(fileId));
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var group = root.Group("mass_links");
+        var actual = group.Children();
+
+        var expected = Enumerable
+            .Range(0, childCount)
+            .Select(index => $"mass_{index:D4}")
+            .OrderBy(name => ChecksumUtils.JenkinsLookup3(Encoding.UTF8.GetBytes(name)))
+            .ThenBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        // Assert
+        Assert.Equal(expected, actual.Select(child => child.Name));
     }
 
     [Fact]
