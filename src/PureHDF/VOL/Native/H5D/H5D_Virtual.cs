@@ -8,6 +8,12 @@ internal class H5D_Virtual<TResult> : H5D_Base
     private readonly TResult? _fillValue;
     private readonly ReadVirtualDelegate<TResult> _readVirtualDelegate;
 
+    // The stream owns the cache of opened source files (one per VdsDatasetEntry).
+    // We create it lazily on first GetReadStream call and tie its lifetime to
+    // this instance, so the source-file handles are released when
+    // we're disposed.
+    private VirtualDatasetStream<TResult>? _stream;
+
     #endregion
 
     #region Constructors
@@ -61,7 +67,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
 
     public override IH5ReadStream GetReadStream(ulong chunkIndex)
     {
-        IH5ReadStream stream = new VirtualDatasetStream<TResult>(
+        _stream ??= new VirtualDatasetStream<TResult>(
             ReadContext.File,
             _block.VdsDatasetEntries,
             dimensions: Dataset.Space.Dimensions,
@@ -70,12 +76,23 @@ internal class H5D_Virtual<TResult> : H5D_Base
             _readVirtualDelegate
         );
 
-        return stream;
+        return _stream;
     }
 
     public override IH5WriteStream GetWriteStream(ulong chunkIndex)
     {
         throw new NotImplementedException();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        if (disposing)
+        {
+            _stream?.Dispose();
+            _stream = null;
+        }
     }
 
     #endregion

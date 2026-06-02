@@ -35,8 +35,8 @@ public class Shuffle
 
         ShuffleAvx2.DoShuffle(
             _bytesOfType,
-            MemoryMarshal.AsBytes<long>(source),
-            MemoryMarshal.AsBytes<long>(destination));
+            MemoryMarshal.AsBytes<long>(source.AsSpan()),
+            MemoryMarshal.AsBytes<long>(destination.AsSpan()));
 
         _shuffledData = destination;
 
@@ -54,8 +54,8 @@ public class Shuffle
     {
         ShuffleGeneric.DoUnshuffle(
             _bytesOfType,
-            MemoryMarshal.AsBytes<long>(_shuffledData),
-            MemoryMarshal.AsBytes<long>(_unshuffledData));
+            MemoryMarshal.AsBytes<long>(_shuffledData.AsSpan()),
+            MemoryMarshal.AsBytes<long>(_unshuffledData.AsSpan()));
 
         return _unshuffledData;
     }
@@ -65,8 +65,8 @@ public class Shuffle
     {
         ShuffleSse2.DoUnshuffle(
             _bytesOfType,
-            MemoryMarshal.AsBytes<long>(_shuffledData),
-            MemoryMarshal.AsBytes<long>(_unshuffledData));
+            MemoryMarshal.AsBytes<long>(_shuffledData.AsSpan()),
+            MemoryMarshal.AsBytes<long>(_unshuffledData.AsSpan()));
 
         return _unshuffledData;
     }
@@ -76,8 +76,8 @@ public class Shuffle
     {
         ShuffleAvx2.DoUnshuffle(
             _bytesOfType,
-            MemoryMarshal.AsBytes<long>(_shuffledData),
-            MemoryMarshal.AsBytes<long>(_unshuffledData));
+            MemoryMarshal.AsBytes<long>(_shuffledData.AsSpan()),
+            MemoryMarshal.AsBytes<long>(_unshuffledData.AsSpan()));
 
         return _unshuffledData;
     }

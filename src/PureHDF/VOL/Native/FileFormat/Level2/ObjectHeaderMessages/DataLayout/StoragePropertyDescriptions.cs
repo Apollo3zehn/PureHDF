@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Numerics;
+
+namespace PureHDF.VOL.Native;
 
 internal abstract record class StoragePropertyDescription(
 //
@@ -194,13 +196,32 @@ internal record class ChunkedStoragePropertyDescription4(
         };
     }
 
+    // HDF5 2.1.x rejects the file at H5Dchunk.c:859 if the stored
+    // dimension-size encoded length is not the minimum number of bytes
+    // needed to encode the largest dimension. 1.14.x accepted any
+    // self-consistent value.
+    private byte GetDimensionSizeEncodedLength()
+    {
+        var maxDimensionSize = 1UL;
+
+        for (var i = 0; i < Rank; i++)
+        {
+            if (DimensionSizes[i] > maxDimensionSize)
+                maxDimensionSize = DimensionSizes[i];
+        }
+
+        return (byte)((BitOperations.Log2(maxDimensionSize) / 8) + 1);
+    }
+
     public override ushort GetEncodeSize()
     {
+        var dimensionSizeEncodedLength = GetDimensionSizeEncodedLength();
+
         var encodeSize =
             sizeof(byte) +
             sizeof(byte) +
             sizeof(byte) +
-            sizeof(ulong) * Rank +
+            dimensionSizeEncodedLength * Rank +
             sizeof(byte) +
             IndexingInformation.GetEncodeSize(Flags) +
             sizeof(ulong);
@@ -219,15 +240,15 @@ internal record class ChunkedStoragePropertyDescription4(
         driver.Write(Rank);
 
         // dimension size encoded length
-        driver.Write((byte)8);
+        var dimensionSizeEncodedLength = GetDimensionSizeEncodedLength();
+        driver.Write(dimensionSizeEncodedLength);
 
-        // dimension sizes
-        for (int i = 0; i < Rank - 1; i++)
+        // dimension sizes (chunk dims, then the element-size pseudo-dim
+        // already set by DataLayoutMessage4.Create)
+        for (var i = 0; i < Rank; i++)
         {
-            driver.Write(DimensionSizes[i]);
+            WriteUtils.WriteUlongArbitrary(driver, DimensionSizes[i], dimensionSizeEncodedLength);
         }
-
-        driver.Write((ulong)4);
 
         // chunk indexing type
         var indexingType = IndexingInformation switch

@@ -3,6 +3,7 @@ using Xunit;
 
 namespace PureHDF.Tests.Reading;
 
+[Collection(SharedHdf5StateCollection.Name)]
 public partial class AttributeTests
 {
     [Fact]
