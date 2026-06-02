@@ -26,7 +26,7 @@ internal record class ManagedObjectsFractalHeapId(
 
     public override T Read<T>(
         Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+        [AllowNull] ref BTree2Header<BTree2Record01> record01Cache)
     {
         var address = Header.GetAddress(this);
 

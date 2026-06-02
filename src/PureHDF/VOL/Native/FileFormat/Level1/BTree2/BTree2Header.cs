@@ -283,7 +283,7 @@ internal record class BTree2Header<T>(
             return EnumerateRecords(rootNode, Depth);
 
         else
-            return new List<T>();
+            return Enumerable.Empty<T>();
     }
 
     private IEnumerable<T> EnumerateRecords(BTree2Node<T> node, ushort nodeLevel)
@@ -296,9 +296,7 @@ internal record class BTree2Header<T>(
 
         if (internalNode is not null)
         {
-            var records = node.Records
-                .Cast<T>()
-                .ToList();
+            var records = internalNode.Records;
 
             var nodePointers = internalNode.NodePointers;
 
@@ -339,7 +337,7 @@ internal record class BTree2Header<T>(
                 }
 
                 // there is one more node pointer than records
-                if (i < records.Count)
+                if (i < records.Length)
                     yield return records[i];
             }
         }

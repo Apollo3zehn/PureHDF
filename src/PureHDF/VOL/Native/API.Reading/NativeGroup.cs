@@ -457,8 +457,7 @@ public class NativeGroup : NativeObject, IH5Group
                         if (lmessage.Flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
                         {
                             linkMessages = linkMessages
-                                .OrderBy(message => message.CreationOrder)
-                                .ToList();
+                                .OrderBy(message => message.CreationOrder);
                         }
                     }
 
@@ -492,14 +491,11 @@ public class NativeGroup : NativeObject, IH5Group
     {
         var fractalHeap = infoMessage.FractalHeap;
         var btree2NameIndex = infoMessage.BTree2NameIndex;
-        var records = btree2NameIndex
-            .EnumerateRecords()
-            .ToList();
 
         // local cache: indirectly accessed, non-filtered
-        List<BTree2Record01>? record01Cache = null;
+        BTree2Header<BTree2Record01>? record01Cache = null;
 
-        foreach (var record in records)
+        foreach (var record in btree2NameIndex.EnumerateRecords())
         {
             yield return ReadLinkMessage(fractalHeap, record.HeapId, ref record01Cache);
         }
@@ -510,8 +506,7 @@ public class NativeGroup : NativeObject, IH5Group
         if (Context.Superblock.IsUndefinedAddress(infoMessage.BTree2CreationOrderIndexAddress))
         {
             return EnumerateLinkMessagesByName(infoMessage)
-                .OrderBy(message => message.CreationOrder)
-                .ToList();
+                .OrderBy(message => message.CreationOrder);
         }
 
         return EnumerateLinkMessagesByCreationOrderIndex(infoMessage);
@@ -521,14 +516,11 @@ public class NativeGroup : NativeObject, IH5Group
     {
         var fractalHeap = infoMessage.FractalHeap;
         var btree2CreationOrder = infoMessage.BTree2CreationOrder;
-        var records = btree2CreationOrder
-            .EnumerateRecords()
-            .ToList();
 
         // local cache: indirectly accessed, non-filtered
-        List<BTree2Record01>? record01Cache = null;
+        BTree2Header<BTree2Record01>? record01Cache = null;
 
-        foreach (var record in records)
+        foreach (var record in btree2CreationOrder.EnumerateRecords())
         {
             yield return ReadLinkMessage(fractalHeap, record.HeapId, ref record01Cache);
         }
@@ -547,7 +539,7 @@ public class NativeGroup : NativeObject, IH5Group
         return linkInfoMessages.First();
     }
 
-    private LinkMessage ReadLinkMessage(FractalHeapHeader fractalHeap, byte[] heapIdBytes, ref List<BTree2Record01>? record01Cache)
+    private LinkMessage ReadLinkMessage(FractalHeapHeader fractalHeap, byte[] heapIdBytes, ref BTree2Header<BTree2Record01>? record01Cache)
     {
         using var localDriver = new H5StreamDriver(new MemoryStream(heapIdBytes), leaveOpen: false);
         var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);

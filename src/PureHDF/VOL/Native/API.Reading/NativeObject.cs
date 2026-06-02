@@ -186,16 +186,13 @@ public abstract class NativeObject : IH5Object
         AttributeInfoMessage attributeInfoMessage)
     {
         var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
-        var records = btree2NameIndex
-            .EnumerateRecords()
-            .ToList();
 
         var fractalHeap = attributeInfoMessage.FractalHeap;
 
         // local cache: indirectly accessed, non-filtered
-        List<BTree2Record01>? record01Cache = null;
+        BTree2Header<BTree2Record01>? record01Cache = null;
 
-        foreach (var record in records)
+        foreach (var record in btree2NameIndex.EnumerateRecords())
         {
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
