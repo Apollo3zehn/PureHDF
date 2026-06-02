@@ -131,6 +131,27 @@ public class NativeGroup : NativeObject, IH5Group
             .Select(reference => reference.Dereference());
     }
 
+    /// <summary>
+    /// Gets the number of children in this group without dereferencing them.
+    /// </summary>
+    /// <returns>The number of children in this group.</returns>
+    public ulong GetChildCount()
+    {
+        var linkInfoMessage = GetLinkInfoMessage();
+
+        if (!Context.Superblock.IsUndefinedAddress(linkInfoMessage.BTree2NameIndexAddress))
+        {
+            return linkInfoMessage.BTree2NameIndex.RootNodePointer.TotalRecordCount;
+        }
+
+        if (Context.Superblock.IsUndefinedAddress(linkInfoMessage.FractalHeapAddress))
+        {
+            return (ulong)Header.GetMessages<LinkMessage>().Count();
+        }
+
+        throw new NotSupportedException("The group does not use compact or indexed dense link storage.");
+    }
+
     private bool InternalLinkExists(string path, H5LinkAccess linkAccess)
     {
         if (path == "/")
@@ -430,7 +451,16 @@ public class NativeGroup : NativeObject, IH5Group
                      * A group is storing its links compactly when the fractal heap address 
                      * in the Link Info Message is set to the "undefined address" value. */
                     else
+                    {
                         linkMessages = Header.GetMessages<LinkMessage>();
+
+                        if (lmessage.Flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
+                        {
+                            linkMessages = linkMessages
+                                .OrderBy(message => message.CreationOrder)
+                                .ToList();
+                        }
+                    }
 
                     // build links
                     foreach (var linkMessage in linkMessages)
@@ -452,6 +482,14 @@ public class NativeGroup : NativeObject, IH5Group
 
     private IEnumerable<LinkMessage> EnumerateLinkMessagesFromLinkInfoMessage(LinkInfoMessage infoMessage)
     {
+        if (infoMessage.Flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
+            return EnumerateLinkMessagesByCreationOrder(infoMessage);
+
+        return EnumerateLinkMessagesByName(infoMessage);
+    }
+
+    private IEnumerable<LinkMessage> EnumerateLinkMessagesByName(LinkInfoMessage infoMessage)
+    {
         var fractalHeap = infoMessage.FractalHeap;
         var btree2NameIndex = infoMessage.BTree2NameIndex;
         var records = btree2NameIndex
@@ -463,15 +501,58 @@ public class NativeGroup : NativeObject, IH5Group
 
         foreach (var record in records)
         {
-            using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-            var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-
-            yield return heapId.Read(driver =>
-            {
-                var message = LinkMessage.Decode(Context);
-                return message;
-            }, ref record01Cache);
+            yield return ReadLinkMessage(fractalHeap, record.HeapId, ref record01Cache);
         }
+    }
+
+    private IEnumerable<LinkMessage> EnumerateLinkMessagesByCreationOrder(LinkInfoMessage infoMessage)
+    {
+        if (Context.Superblock.IsUndefinedAddress(infoMessage.BTree2CreationOrderIndexAddress))
+        {
+            return EnumerateLinkMessagesByName(infoMessage)
+                .OrderBy(message => message.CreationOrder)
+                .ToList();
+        }
+
+        return EnumerateLinkMessagesByCreationOrderIndex(infoMessage);
+    }
+
+    private IEnumerable<LinkMessage> EnumerateLinkMessagesByCreationOrderIndex(LinkInfoMessage infoMessage)
+    {
+        var fractalHeap = infoMessage.FractalHeap;
+        var btree2CreationOrder = infoMessage.BTree2CreationOrder;
+        var records = btree2CreationOrder
+            .EnumerateRecords()
+            .ToList();
+
+        // local cache: indirectly accessed, non-filtered
+        List<BTree2Record01>? record01Cache = null;
+
+        foreach (var record in records)
+        {
+            yield return ReadLinkMessage(fractalHeap, record.HeapId, ref record01Cache);
+        }
+    }
+
+    private LinkInfoMessage GetLinkInfoMessage()
+    {
+        var linkInfoMessages = Header.GetMessages<LinkInfoMessage>();
+
+        if (!linkInfoMessages.Any())
+            throw new Exception("No link information found in object header.");
+
+        if (linkInfoMessages.Count() != 1)
+            throw new Exception("There may be only a single link info message.");
+
+        return linkInfoMessages.First();
+    }
+
+    private LinkMessage ReadLinkMessage(FractalHeapHeader fractalHeap, byte[] heapIdBytes, ref List<BTree2Record01>? record01Cache)
+    {
+        using var localDriver = new H5StreamDriver(new MemoryStream(heapIdBytes), leaveOpen: false);
+        var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
+
+        return heapId.Read(driver => LinkMessage.Decode(Context), ref record01Cache);
     }
 
     private bool TryGetLinkMessageFromLinkInfoMessage(LinkInfoMessage linkInfoMessage,

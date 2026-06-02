@@ -125,6 +125,80 @@ public class LinkTests
     }
 
     [Fact]
+    public void CanCountDenseIndexedChildren()
+    {
+        // Arrange
+        const int childCount = 32;
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddCreationOrderIndexedLinks(fileId, childCount));
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var group = (NativeGroup)root.Group("creation_order_links");
+        var actual = group.GetChildCount();
+
+        // Assert
+        Assert.Equal((ulong)childCount, actual);
+    }
+
+    [Fact]
+    public void CanCountCompactChildren()
+    {
+        // Arrange
+        const int childCount = 4;
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddCreationOrderIndexedLinks(fileId, childCount));
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var group = (NativeGroup)root.Group("creation_order_links");
+        var actual = group.GetChildCount();
+
+        // Assert
+        Assert.Equal((ulong)childCount, actual);
+    }
+
+    [Fact]
+    public void CanEnumerateDenseIndexedChildrenInCreationOrder()
+    {
+        // Arrange
+        const int childCount = 128;
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddCreationOrderIndexedLinks(fileId, childCount));
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var group = (NativeGroup)root.Group("creation_order_links");
+        var actual = group.Children();
+
+        var expected = Enumerable
+            .Range(0, childCount)
+            .Select(index => $"child_{childCount - index:D4}")
+            .ToArray();
+
+        // Assert
+        Assert.Equal(expected, actual.Select(child => child.Name));
+    }
+
+    [Fact]
+    public void CanEnumerateCompactChildrenInCreationOrder()
+    {
+        // Arrange
+        const int childCount = 4;
+        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddCreationOrderIndexedLinks(fileId, childCount));
+
+        // Act
+        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+        var group = (NativeGroup)root.Group("creation_order_links");
+        var actual = group.Children().Take(2);
+
+        var expected = Enumerable
+            .Range(0, 2)
+            .Select(index => $"child_{childCount - index:D4}")
+            .ToArray();
+
+        // Assert
+        Assert.Equal(expected, actual.Select(child => child.Name));
+    }
+
+    [Fact]
     public void CanOpenDataset_DataLayoutMessage12()
     {
         /* We use a simple binary file which encodes a data layout message because 
