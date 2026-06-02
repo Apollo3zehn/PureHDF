@@ -8,8 +8,8 @@ internal static class NativeCache
 
     static NativeCache()
     {
-        _globalHeapMap = new ConcurrentDictionary<H5DriverBase, Dictionary<ulong, GlobalHeapCollection>>();
-        _fileMap = new ConcurrentDictionary<H5DriverBase, Dictionary<string, NativeFile>>();
+        _globalHeapMap = new ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<ulong, GlobalHeapCollection>>();
+        _fileMap = new ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<string, NativeFile>>();
     }
 
     #endregion
@@ -41,7 +41,7 @@ internal static class NativeCache
 
     #region Global Heap
 
-    private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+    private static readonly ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
     public static GlobalHeapCollection GetGlobalHeapObject(
         NativeReadContext context,
@@ -50,8 +50,8 @@ internal static class NativeCache
     {
         if (!_globalHeapMap.TryGetValue(context.Driver, out var addressToCollectionMap))
         {
-            addressToCollectionMap = new Dictionary<ulong, GlobalHeapCollection>();
-            _globalHeapMap.AddOrUpdate(context.Driver, addressToCollectionMap, (_, oldAddressToCollectionMap) => addressToCollectionMap);
+            addressToCollectionMap = new ConcurrentDictionary<ulong, GlobalHeapCollection>();
+            _globalHeapMap.AddOrUpdate(context.Driver, addressToCollectionMap, (_, oldAddressToCollectionMap) => oldAddressToCollectionMap);
         }
 
         if (!addressToCollectionMap.TryGetValue(address, out var collection))
@@ -74,7 +74,7 @@ internal static class NativeCache
 
     #region File Handles
 
-    private static readonly ConcurrentDictionary<H5DriverBase, Dictionary<string, NativeFile>> _fileMap;
+    private static readonly ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<string, NativeFile>> _fileMap;
 
     public static NativeFile GetNativeFile(H5DriverBase driver, string absoluteFilePath)
     {
@@ -86,8 +86,8 @@ internal static class NativeCache
 
         if (!_fileMap.TryGetValue(driver, out var pathToNativeFileMap))
         {
-            pathToNativeFileMap = new Dictionary<string, NativeFile>();
-            _fileMap.AddOrUpdate(driver, pathToNativeFileMap, (_, oldPathToNativeFileMap) => pathToNativeFileMap);
+            pathToNativeFileMap = new ConcurrentDictionary<string, NativeFile>();
+            _fileMap.AddOrUpdate(driver, pathToNativeFileMap, (_, oldPathToNativeFileMap) => oldPathToNativeFileMap);
         }
 
         if (!pathToNativeFileMap.TryGetValue(uri.AbsoluteUri, out var nativeFile))
