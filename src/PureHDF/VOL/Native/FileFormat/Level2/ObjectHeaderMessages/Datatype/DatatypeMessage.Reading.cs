@@ -16,6 +16,9 @@ internal partial record class DatatypeMessage(
     private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedMemory = typeof(DatatypeMessage)
         .GetMethod(nameof(GetDecodeInfoForUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    private static readonly MethodInfo _methodInfoBuildVariableLengthSequenceUnmanagedDecoder = typeof(DatatypeMessage)
+        .GetMethod(nameof(BuildVariableLengthSequenceUnmanagedDecoder), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     private byte _version;
 
     private DatatypeMessageClass _class;
@@ -771,6 +774,23 @@ internal partial record class DatatypeMessage(
         var elementType = memoryType?.GetElementType();
         (elementType, var elementDecode) = property.BaseType.GetDecodeInfoForScalar(context, elementType);
 
+        // Fast path: blittable element type whose in-memory size matches the on-disk size.
+        // Eliminates per-element boxing and the staging object[] allocation by casting the
+        // global-heap object bytes directly into a freshly allocated typed array.
+        if (!DataUtils.IsReferenceOrContainsReferences(elementType) &&
+            !property.BaseType.IsReferenceOrContainsReferences() &&
+            DataUtils.UnmanagedSizeOf(elementType) == (int)property.BaseType.Size)
+        {
+            var fastDecode = (ElementDecodeDelegate)_methodInfoBuildVariableLengthSequenceUnmanagedDecoder
+                .MakeGenericMethod(elementType)
+                .Invoke(default, [context, (int)property.BaseType.Size])!;
+
+            memoryType ??= Type.GetType($"{elementType}[]")
+                ?? throw new Exception($"Unable to find array type for element type {elementType}.");
+
+            return (memoryType, fastDecode);
+        }
+
         object? decode(IH5ReadStream source)
         {
             // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
@@ -1007,6 +1027,54 @@ internal partial record class DatatypeMessage(
     {
         static void decode(IH5ReadStream source, Span<T> target)
             => source.ReadDataset(MemoryMarshal.AsBytes(target));
+
+        return decode;
+    }
+
+    private static ElementDecodeDelegate BuildVariableLengthSequenceUnmanagedDecoder<TElement>(
+        NativeReadContext context,
+        int fileTypeSize)
+        where TElement : unmanaged
+    {
+        var lengthSize = sizeof(uint);
+        var globalHeapIdSize = (int)context.Superblock.OffsetsSize + sizeof(uint);
+        var headerSize = lengthSize + globalHeapIdSize;
+
+        object? decode(IH5ReadStream source)
+        {
+            using var memoryOwner = MemoryPool<byte>.Shared.Rent(headerSize);
+            var headerBuffer = memoryOwner.Memory[..headerSize];
+
+            source.ReadDataset(headerBuffer.Span);
+
+            var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(headerBuffer.Span);
+            var globalHeapId = ReadingGlobalHeapId.Decode(
+                context.Superblock,
+                headerBuffer.Span[lengthSize..]);
+
+            if (globalHeapId.Equals(default))
+                return default;
+
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+                context,
+                globalHeapId.CollectionAddress,
+                restoreAddress: true);
+
+            if (!globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+                return default;
+
+            var count = (int)sequenceLength;
+            var result = GC.AllocateUninitializedArray<TElement>(count);
+
+            if (count == 0)
+                return result;
+
+            var byteCount = count * fileTypeSize;
+            var source2 = MemoryMarshal.Cast<byte, TElement>(globalHeapObject.ObjectData.AsSpan(0, byteCount));
+            source2.CopyTo(result);
+
+            return result;
+        }
 
         return decode;
     }
