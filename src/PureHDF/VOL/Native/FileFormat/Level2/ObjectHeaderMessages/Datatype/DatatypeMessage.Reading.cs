@@ -989,6 +989,55 @@ internal partial record class DatatypeMessage(
     {
         var elementDecode = GetDecodeInfoForScalar(context, typeof(T)).Decode;
 
+        // Variable-length sequences and strings store a fixed-size (length + global
+        // heap id) header per cell in the dataset stream, with the payload living
+        // in the global heap. The per-cell element decoder reads that header via
+        // source.ReadDataset(headerBytes) before resolving the heap object — and on
+        // an N-cell decode pass that becomes N small ReadDataset calls into the
+        // underlying IH5ReadStream. Pre-reading all N headers in one bulk call and
+        // feeding the per-cell decoder from an in-memory wrapper collapses the
+        // per-call dispatch + position-tracking overhead. The per-cell element
+        // decoder itself is unchanged.
+        var isVariableLengthHeaderBatchable =
+            Class == DatatypeMessageClass.VariableLength &&
+            BitField is VariableLengthBitFieldDescription vlBitField &&
+            (vlBitField.Type == InternalVariableLengthType.Sequence ||
+                vlBitField.Type == InternalVariableLengthType.String);
+
+        if (isVariableLengthHeaderBatchable)
+        {
+            var cellHeaderSize = sizeof(uint) + (int)context.Superblock.OffsetsSize + sizeof(uint);
+
+            void decodeBatched(IH5ReadStream source, Span<T> target)
+            {
+                if (target.Length == 0)
+                    return;
+
+                var totalBytes = target.Length * cellHeaderSize;
+                var rented = ArrayPool<byte>.Shared.Rent(totalBytes);
+
+                try
+                {
+                    var bulk = rented.AsMemory(0, totalBytes);
+                    source.ReadDataset(bulk.Span);
+
+                    var localSource = new SystemMemoryStream(bulk);
+                    var targetSpan = target;
+
+                    for (int i = 0; i < target.Length; i++)
+                    {
+                        targetSpan[i] = (T)elementDecode(localSource)!;
+                    }
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(rented);
+                }
+            }
+
+            return decodeBatched;
+        }
+
         void decode(IH5ReadStream source, Span<T> target)
         {
             var targetSpan = target;
