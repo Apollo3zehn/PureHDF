@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Xunit;
+﻿using Xunit;
 
 namespace PureHDF.Tests.Reading;
 
@@ -42,7 +41,7 @@ public partial class AttributeTests
             void action() => attribute.Read<double[]>();
 
             // Assert
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         });
     }
 }
