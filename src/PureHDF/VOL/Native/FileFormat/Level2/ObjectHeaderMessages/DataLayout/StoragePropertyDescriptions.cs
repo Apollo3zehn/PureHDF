@@ -222,12 +222,10 @@ internal record class ChunkedStoragePropertyDescription4(
         driver.Write((byte)8);
 
         // dimension sizes
-        for (int i = 0; i < Rank - 1; i++)
+        for (int i = 0; i < Rank; i++)
         {
             driver.Write(DimensionSizes[i]);
         }
-
-        driver.Write((ulong)4);
 
         // chunk indexing type
         var indexingType = IndexingInformation switch

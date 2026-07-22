@@ -24,6 +24,42 @@ public partial class DatasetTests
         Assert.Equal(typeof(T), properties.IndexingInformation.GetType());
     }
 
+    // https://github.com/Apollo3zehn/PureHDF/issues/164
+    [Fact]
+    public void CanWrite_Chunked_StoresCorrectElementSize()
+    {
+        // Arrange
+        var data = new double[100];
+
+        var file = new H5File
+        {
+            ["chunked"] = new H5Dataset(data, chunks: [10U])
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            using var h5File = H5File.OpenRead(filePath);
+            var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
+            var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
+            var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
+
+            // The last chunk dimension stores the element size, which must
+            // match the datatype size (8 bytes for double), not a hardcoded 4.
+            Assert.Equal(sizeof(double), (int)properties.DimensionSizes[properties.Rank - 1]);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     [Fact]
     public void CanWrite_Chunked_single_chunk_filtered()
     {

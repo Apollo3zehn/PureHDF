@@ -26,7 +26,7 @@ public interface IH5Object
     /// </summary>
     /// <param name="name">The name of the attribute.</param>
     /// <returns>A boolean which indicates if the attribute exists.</returns>
-    IH5Attribute Attribute(string name);
+    bool AttributeExists(string name);
 
     /// <summary>
     /// Checks if the attribute with the specified <paramref name="name"/> exist.
@@ -34,14 +34,14 @@ public interface IH5Object
     /// <param name="name">The name of the attribute.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>A boolean which indicates if the attribute exists.</returns>
-    Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default);
+    Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets the attribute named <paramref name="name"/>.
     /// </summary>
     /// <param name="name">The name of the attribute.</param>
     /// <returns>The requested attribute.</returns>
-    bool AttributeExists(string name);
+    IH5Attribute Attribute(string name);
 
     /// <summary>
     /// Gets the attribute named <paramref name="name"/>.
@@ -49,5 +49,5 @@ public interface IH5Object
     /// <param name="name">The name of the attribute.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <returns>The requested attribute.</returns>
-    Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default);
+    Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default);
 }
