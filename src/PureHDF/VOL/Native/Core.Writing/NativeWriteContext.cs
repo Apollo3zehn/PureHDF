@@ -12,5 +12,6 @@ internal record NativeWriteContext(
     Dictionary<Type, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, ulong> ObjectToAddressMap,
     Dictionary<H5Object, int> ObjectReferenceCountMap,
+    Dictionary<object, H5Dataset> RawValueToDatasetMap,
     SystemMemoryStream ShortlivedStream
 );

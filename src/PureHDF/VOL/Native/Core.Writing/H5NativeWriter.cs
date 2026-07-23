@@ -50,6 +50,7 @@ partial class H5NativeWriter
             TypeToMessageMap: new(),
             ObjectToAddressMap: new(),
             ObjectReferenceCountMap: new(),
+            RawValueToDatasetMap: new(ReferenceEqualityComparer.Instance),
             ShortlivedStream: new(memory: default)
         );
 
@@ -70,7 +71,7 @@ partial class H5NativeWriter
         _rootGroupAddress = EncodeGroup(File);
     }
 
-    private static void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
+    private void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
     {
         var visitedGroups = new HashSet<H5Group>();
 
@@ -78,20 +79,39 @@ partial class H5NativeWriter
         {
             foreach (var entry in group)
             {
-                // Only actual H5Object instances can be shared; raw values are wrapped
-                // into a fresh H5Dataset per occurrence and are therefore never linked.
-                if (entry.Value is H5Object h5Object)
-                {
-                    counts.TryGetValue(h5Object, out var current);
-                    counts[h5Object] = current + 1;
+                // Soft links do not contribute to the target's hard-link count.
+                if (entry.Value is H5SoftLink)
+                    continue;
 
-                    if (entry.Value is H5Group childGroup && visitedGroups.Add(childGroup))
-                        Walk(childGroup);
-                }
+                // Resolve to the (possibly cached) H5Object so that both actual H5Object
+                // instances and shared raw values are counted by object identity.
+                var h5Object = GetH5Object(entry.Value);
+
+                counts.TryGetValue(h5Object, out var current);
+                counts[h5Object] = current + 1;
+
+                if (entry.Value is H5Group childGroup && visitedGroups.Add(childGroup))
+                    Walk(childGroup);
             }
         }
 
         Walk(root);
+    }
+
+    private H5Object GetH5Object(object value)
+    {
+        if (value is H5Object h5Object)
+            return h5Object;
+
+        // Wrap raw values into a single H5Dataset per instance so that a value assigned
+        // to multiple locations is deduplicated and hard-linked just like an H5Object.
+        if (!Context.RawValueToDatasetMap.TryGetValue(value, out var dataset))
+        {
+            dataset = new H5Dataset(value);
+            Context.RawValueToDatasetMap[value] = dataset;
+        }
+
+        return dataset;
     }
 
     private void AppendReferenceCountToHeaderMessages(H5Object h5Object, List<HeaderMessage> headerMessages)
@@ -149,7 +169,7 @@ partial class H5NativeWriter
 
             else
             {
-                var h5Object = entry.Value as H5Object ?? new H5Dataset(entry.Value);
+                var h5Object = GetH5Object(entry.Value);
 
                 if (!Context.ObjectToAddressMap.TryGetValue(h5Object, out linkAddress))
                 {
