@@ -64,6 +64,74 @@ public class LinkTests
     }
 
     [Fact]
+    public void CanWrite_SharedDataset()
+    {
+        // A single H5Dataset instance attached at multiple locations must be
+        // encoded once and referenced by hard links (HDF5 hard-link semantics).
+
+        // Arrange
+        var shared = new H5Dataset(data: new int[] { 1, 2, 3 });
+
+        var file = new H5File
+        {
+            ["dataset_a"] = shared,
+
+            ["group"] = new H5Group
+            {
+                ["dataset_b"] = shared
+            }
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        var actual = TestUtils.DumpH5File(filePath);
+
+        var expected = File
+            .ReadAllText("DumpFiles/links_shared_dataset.dump")
+            .Replace("<file-path>", filePath);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void SharedDataset_RoundTrips()
+    {
+        // Both hard links must resolve to the same data when read back.
+
+        // Arrange
+        var expected = new int[] { 1, 2, 3 };
+        var shared = new H5Dataset(data: expected);
+
+        var file = new H5File
+        {
+            ["dataset_a"] = shared,
+
+            ["group"] = new H5Group
+            {
+                ["dataset_b"] = shared
+            }
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        using var root = H5File.OpenRead(filePath);
+
+        var actualA = root.Dataset("dataset_a").Read<int[]>();
+        var actualB = root.Group("group").Dataset("dataset_b").Read<int[]>();
+
+        Assert.Equal(expected, actualA);
+        Assert.Equal(expected, actualB);
+    }
+
+    [Fact]
     public void CanWrite_Complex()
     {
         // Arrange

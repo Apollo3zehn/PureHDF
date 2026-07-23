@@ -1,0 +1,16 @@
+HDF5 "<file-path>" {
+GROUP "/" {
+   DATASET "dataset_a" {
+      DATATYPE  H5T_STD_I32LE
+      DATASPACE  SIMPLE { ( 3 ) / ( 3 ) }
+      DATA {
+      (0): 1, 2, 3
+      }
+   }
+   GROUP "group" {
+      DATASET "dataset_b" {
+         HARDLINK "/dataset_a"
+      }
+   }
+}
+}

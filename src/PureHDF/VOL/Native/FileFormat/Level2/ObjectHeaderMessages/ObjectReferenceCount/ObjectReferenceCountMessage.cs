@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class ObjectReferenceCountMessage(
+internal partial record class ObjectReferenceCountMessage(
     uint ReferenceCount
 ) : Message
 {

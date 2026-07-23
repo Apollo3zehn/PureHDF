@@ -49,6 +49,7 @@ partial class H5NativeWriter
             DatasetInfoToObjectHeaderMap: new(),
             TypeToMessageMap: new(),
             ObjectToAddressMap: new(),
+            ObjectReferenceCountMap: new(),
             ShortlivedStream: new(memory: default)
         );
 
@@ -60,9 +61,54 @@ partial class H5NativeWriter
 
     internal void Write()
     {
+        // Count the incoming links for every shared object so that multiply-linked
+        // objects can carry an accurate object reference count message (hard links).
+        CountReferences(File, Context.ObjectReferenceCountMap);
+
         // root group
         Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
         _rootGroupAddress = EncodeGroup(File);
+    }
+
+    private static void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
+    {
+        var visitedGroups = new HashSet<H5Group>();
+
+        void Walk(H5Group group)
+        {
+            foreach (var entry in group)
+            {
+                // Only actual H5Object instances can be shared; raw values are wrapped
+                // into a fresh H5Dataset per occurrence and are therefore never linked.
+                if (entry.Value is H5Object h5Object)
+                {
+                    counts.TryGetValue(h5Object, out var current);
+                    counts[h5Object] = current + 1;
+
+                    if (entry.Value is H5Group childGroup && visitedGroups.Add(childGroup))
+                        Walk(childGroup);
+                }
+            }
+        }
+
+        Walk(root);
+    }
+
+    private void AppendReferenceCountToHeaderMessages(H5Object h5Object, List<HeaderMessage> headerMessages)
+    {
+        // The object reference count message is only required for multiply-linked
+        // objects; a missing message is interpreted as a reference count of 1.
+        if (Context.ObjectReferenceCountMap.TryGetValue(h5Object, out var count) && count > 1)
+        {
+            var objectReferenceCountMessage = new ObjectReferenceCountMessage(
+                ReferenceCount: (uint)count
+            )
+            {
+                Version = 0
+            };
+
+            headerMessages.Add(ToHeaderMessage(objectReferenceCountMessage));
+        }
     }
 
     internal ulong EncodeGroup(
@@ -150,6 +196,8 @@ partial class H5NativeWriter
 
             headerMessages.Add(ToHeaderMessage(linkMessage));
         }
+
+        AppendReferenceCountToHeaderMessages(group, headerMessages);
 
         var objectHeader = new ObjectHeader2(
             Address: default,
@@ -294,6 +342,8 @@ partial class H5NativeWriter
 
         if (dataset.InternalAttributes is not null)
             AppendAttributesToHeaderMessages(dataset.InternalAttributes, headerMessages, Context);
+
+        AppendReferenceCountToHeaderMessages(dataset, headerMessages);
 
         // object header
         var objectHeader = new ObjectHeader2(
