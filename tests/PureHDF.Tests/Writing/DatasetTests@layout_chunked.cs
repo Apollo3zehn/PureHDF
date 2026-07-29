@@ -60,6 +60,52 @@ public partial class DatasetTests
         }
     }
 
+    // https://github.com/Apollo3zehn/PureHDF/issues/164
+    [Theory]
+    [InlineData(10U, (byte)1)]        // max(10, 8)          -> 1 byte
+    [InlineData(300U, (byte)2)]       // max(300, 8)         -> 2 bytes
+    [InlineData(70000U, (byte)3)]     // max(70000, 8)       -> 3 bytes, not 4
+    [InlineData(20000000U, (byte)4)]  // max(20000000, 8)    -> 4 bytes
+    public void CanWrite_Chunked_StoresMinimalDimensionSizeEncodedLength(uint chunkSize, byte expectedEncodedLength)
+    {
+        // Arrange
+        var data = new double[chunkSize * 2];
+
+        var file = new H5File
+        {
+            ["chunked"] = new H5Dataset(data, chunks: [chunkSize])
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        // Act
+        file.Write(filePath);
+
+        // Assert
+        try
+        {
+            // HDF5 recomputes the encoding length from the chunk dimensions and rejects
+            // the layout when it differs, so it must be the minimum width that holds the
+            // largest dimension - see H5D__chunk_set_sizes(). A fixed width, or one
+            // rounded up to a power of two, makes the dataset unopenable by HDF5 2.x.
+            using var h5File = H5File.OpenRead(filePath);
+            var nativeDataset = (NativeDataset)h5File.Dataset("chunked");
+            var layout = (DataLayoutMessage4)nativeDataset.InternalDataLayout;
+            var properties = (ChunkedStoragePropertyDescription4)layout.Properties;
+
+            Assert.Equal(expectedEncodedLength, properties.DimensionSizeEncodedLength);
+
+            // and the dimension sizes must survive the narrower encoding
+            Assert.Equal(chunkSize, (uint)properties.DimensionSizes[0]);
+            Assert.Equal(sizeof(double), (int)properties.DimensionSizes[properties.Rank - 1]);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     [Fact]
     public void CanWrite_Chunked_single_chunk_filtered()
     {

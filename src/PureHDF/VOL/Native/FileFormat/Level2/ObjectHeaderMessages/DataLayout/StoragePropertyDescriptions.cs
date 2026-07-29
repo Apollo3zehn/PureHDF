@@ -194,13 +194,49 @@ internal record class ChunkedStoragePropertyDescription4(
         };
     }
 
+    /// <summary>
+    /// The number of bytes used to encode each dimension size.
+    /// <para>
+    /// The HDF5 library recomputes this value when opening the dataset and fails with
+    /// "stored chunk dimension encoding length does not match value calculated from
+    /// chunk dimensions" if it differs, so it cannot be a fixed width. This mirrors
+    /// <c>H5D__chunk_set_sizes()</c>, which computes
+    /// <c>(H5VM_log2_gen(dim[u]) + 8) / 8</c> for every dimension - including the last,
+    /// which holds the datatype size - and takes the maximum. That is the minimum
+    /// number of bytes able to hold the largest dimension size, so any width from 1 to
+    /// 8 is possible (a dimension of 65536 needs 3, not 4).
+    /// </para>
+    /// </summary>
+    internal byte DimensionSizeEncodedLength
+    {
+        get
+        {
+            var max = 0UL;
+
+            for (int i = 0; i < Rank; i++)
+            {
+                if (DimensionSizes[i] > max)
+                    max = DimensionSizes[i];
+            }
+
+            var length = 1;
+
+            while (length < 8 && max > (1UL << (length * 8)) - 1)
+            {
+                length++;
+            }
+
+            return (byte)length;
+        }
+    }
+
     public override ushort GetEncodeSize()
     {
         var encodeSize =
             sizeof(byte) +
             sizeof(byte) +
             sizeof(byte) +
-            sizeof(ulong) * Rank +
+            DimensionSizeEncodedLength * Rank +
             sizeof(byte) +
             IndexingInformation.GetEncodeSize(Flags) +
             sizeof(ulong);
@@ -219,12 +255,13 @@ internal record class ChunkedStoragePropertyDescription4(
         driver.Write(Rank);
 
         // dimension size encoded length
-        driver.Write((byte)8);
+        var dimensionSizeEncodedLength = DimensionSizeEncodedLength;
+        driver.Write(dimensionSizeEncodedLength);
 
         // dimension sizes
         for (int i = 0; i < Rank; i++)
         {
-            driver.Write(DimensionSizes[i]);
+            WriteUtils.WriteUlongArbitrary(driver, DimensionSizes[i], dimensionSizeEncodedLength);
         }
 
         // chunk indexing type
