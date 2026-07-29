@@ -1006,17 +1006,58 @@ internal partial record class DatatypeMessage(
     {
         var elementDecode = GetDecodeInfoForScalar(context, typeof(T)).Decode;
 
-        void decode(IH5ReadStream source, Span<T> target)
+        // Variable-length sequences and strings store a fixed-size (length + global
+        // heap id) header per cell in the dataset stream, with the payload living
+        // in the global heap. The per-cell element decoder reads that header via
+        // source.ReadDataset(headerBytes) before resolving the heap object — and on
+        // an N-cell decode pass that becomes N small ReadDataset calls into the
+        // underlying IH5ReadStream. Pre-reading all N headers in one bulk call and
+        // feeding the per-cell decoder from an in-memory wrapper collapses the
+        // per-call dispatch + position-tracking overhead. The per-cell element
+        // decoder itself is unchanged.
+
+        if (Class == DatatypeMessageClass.VariableLength)
         {
-            var targetSpan = target;
+            var cellHeaderSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
 
-            for (int i = 0; i < target.Length; i++)
+            void decodeBatched(IH5ReadStream source, Span<T> target)
             {
-                targetSpan[i] = (T)elementDecode(source)!;
-            }
-        };
+                if (target.Length == 0)
+                    return;
 
-        return decode;
+                var totalBytes = target.Length * cellHeaderSize;
+
+                using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalBytes);
+                var bulk = memoryOwner.Memory[..totalBytes];
+
+                source.ReadDataset(bulk.Span);
+
+                var localSource = new SystemMemoryStream(bulk);
+                var targetSpan = target;
+
+                for (int i = 0; i < target.Length; i++)
+                {
+                    targetSpan[i] = (T)elementDecode(localSource)!;
+                }
+            }
+
+            return decodeBatched;
+        }
+
+        else
+        {
+            void decode(IH5ReadStream source, Span<T> target)
+            {
+                var targetSpan = target;
+
+                for (int i = 0; i < target.Length; i++)
+                {
+                    targetSpan[i] = (T)elementDecode(source)!;
+                }
+            };
+
+            return decode;
+        }
     }
 
     private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
