@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices;
-
 namespace PureHDF;
 
 internal static class FilePathUtils
@@ -77,24 +75,13 @@ internal static class FilePathUtils
 
         if (envVariable is not null)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // Path.PathSeparator is ':' on Unix and ';' on Windows
+            foreach (var envPrefix in envVariable.Split(Path.PathSeparator))
             {
-                var envResult = Path.Combine(envVariable, filePath);
+                var envResult = Path.Combine(envPrefix, filePath);
 
                 if (fileExists(envResult))
                     return envResult;
-            }
-            else
-            {
-                var envPrefixes = envVariable.Split(':');
-
-                foreach (var envPrefix in envPrefixes)
-                {
-                    var envResult = Path.Combine(envPrefix, filePath);
-
-                    if (fileExists(envResult))
-                        return envResult;
-                }
             }
         }
 
@@ -157,15 +144,21 @@ internal static class FilePathUtils
 
         if (envVariable is not null)
         {
-            if (envVariable.StartsWith(ORIGIN_TOKEN) && thisFolderPath is not null)
-                envVariable = Path.Combine(
-                    thisFolderPath,
-                    envVariable[ORIGIN_TOKEN.Length..]);
+            // Path.PathSeparator is ':' on Unix and ';' on Windows.
+            foreach (var rawPrefix in envVariable.Split(Path.PathSeparator))
+            {
+                var envPrefix = rawPrefix;
 
-            var envResult = Path.Combine(envVariable, filePath);
+                if (envPrefix.StartsWith(ORIGIN_TOKEN) && thisFolderPath is not null)
+                    envPrefix = Path.Combine(
+                        thisFolderPath,
+                        envPrefix[ORIGIN_TOKEN.Length..]);
 
-            if (fileExists(envResult))
-                return envResult;
+                var envResult = Path.Combine(envPrefix, filePath);
+
+                if (fileExists(envResult))
+                    return envResult;
+            }
         }
 
         // 2. dataset access property list

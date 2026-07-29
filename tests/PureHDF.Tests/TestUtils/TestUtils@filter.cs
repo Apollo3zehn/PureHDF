@@ -17,12 +17,28 @@ public partial class TestUtils
             2 => H5T.NATIVE_UINT16,
             4 => H5T.NATIVE_UINT32,
             8 => H5T.NATIVE_UINT64,
-            16 => H5T.NATIVE_LDOUBLE,
+            16 => CreateOpaque16(), // H5T.NATIVE_LDOUBLE is 16 bytes on posix, 8 bytes on windows
             _ => throw new Exception($"The value '{bytesOfType}' of the 'bytesOfType' parameter is not within the valid range.")
         };
 
-        Add(ContainerType.Dataset, fileId, "filtered", $"shuffle_{bytesOfType}", typeId, dataset, (ulong)length, cpl: dcpl_id);
-        _ = H5P.close(dcpl_id);
+        try
+        {
+	        Add(ContainerType.Dataset, fileId, "filtered", $"shuffle_{bytesOfType}", typeId, dataset, (ulong)length, cpl: dcpl_id);
+        }
+        finally
+        {
+            _ = H5P.close(dcpl_id);
+
+            if (bytesOfType == 16)
+                _ = H5T.close(typeId);
+        }
+
+        static long CreateOpaque16()
+        {
+            var id = H5T.create(H5T.class_t.OPAQUE, new IntPtr(16));
+            H5T.set_tag(id, "16-byte opaque");
+            return id;
+        }
     }
 
     public static unsafe void AddFilteredDataset_ZLib(long fileId)
