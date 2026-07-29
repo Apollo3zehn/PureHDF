@@ -200,6 +200,11 @@ internal record class ChunkedStoragePropertyDescription4(
     // dimension-size encoded length is not the minimum number of bytes
     // needed to encode the largest dimension. 1.14.x accepted any
     // self-consistent value.
+    //
+    // This issue is already solved in the C-library and it now behaves
+    // according to the spec (https://github.com/HDFGroup/hdf5/issues/6409)
+    // but it still make sense to minimize required amount of bytes to
+    // encode the dimension size.
     private byte GetDimensionSizeEncodedLength()
     {
         var maxDimensionSize = 1UL;
