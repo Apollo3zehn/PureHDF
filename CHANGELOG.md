@@ -1,3 +1,27 @@
+## v2.1.4 - 2026-07-29
+
+- [Make tests runnable on Windows and with newer h5dump, with related fixes](https://github.com/Apollo3zehn/PureHDF/pull/160)
+  - Add SharedHdf5StateCollection to serialize tests using HDF5/global state, preventing failures from sharing problems.
+  - Update xUnit dependencies and add Xunit.SkippableFact for conditional test skipping.
+  - Fix FilePathUtils handling of Windows environment variables.
+  - Make TestUtils.DumpH5File work with newer h5dump.
+  - Use 'using' for H5File in tests to prevent attempts to delete in-use files.
+  - Add .AsSpan() to fix build problem in .net 10 sdk.
+  - Handle 16-byte types in filter tests with opaque type for portability (because LDOUBLE is 8 bytes in Windows).
+  - Make HSDS Skip (not fail) if server is unreachable.
+  - Fix a chunked storage encoding problem reported by h5dump 2.1.
+  - Dispose VirtualDatasetStream in H5D_Virtual (tests failed when the files couldn't be replaced).
+
+- [Cache reflection dispatch on hot Read paths](https://github.com/Apollo3zehn/PureHDF/pull/161)
+
+- [Add fast path for blittable variable-length sequence read](https://github.com/Apollo3zehn/PureHDF/pull/162)
+
+- [Batch variable-length cell header reads](https://github.com/Apollo3zehn/PureHDF/pull/163)
+
+- [feat(writing): hard links for shared objects and raw values](https://github.com/Apollo3zehn/PureHDF/pull/166)
+
+Thanks @marklam and @Blackclaws for your contributions!
+
 ## v2.1.3 - 2026-07-22
 
 ### Bugs fixed
