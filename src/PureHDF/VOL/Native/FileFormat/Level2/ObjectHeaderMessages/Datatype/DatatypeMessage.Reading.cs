@@ -998,15 +998,10 @@ internal partial record class DatatypeMessage(
         // feeding the per-cell decoder from an in-memory wrapper collapses the
         // per-call dispatch + position-tracking overhead. The per-cell element
         // decoder itself is unchanged.
-        var isVariableLengthHeaderBatchable =
-            Class == DatatypeMessageClass.VariableLength &&
-            BitField is VariableLengthBitFieldDescription vlBitField &&
-            (vlBitField.Type == InternalVariableLengthType.Sequence ||
-                vlBitField.Type == InternalVariableLengthType.String);
 
-        if (isVariableLengthHeaderBatchable)
+        if (Class == DatatypeMessageClass.VariableLength)
         {
-            var cellHeaderSize = sizeof(uint) + (int)context.Superblock.OffsetsSize + sizeof(uint);
+            var cellHeaderSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
 
             void decodeBatched(IH5ReadStream source, Span<T> target)
             {
@@ -1014,41 +1009,38 @@ internal partial record class DatatypeMessage(
                     return;
 
                 var totalBytes = target.Length * cellHeaderSize;
-                var rented = ArrayPool<byte>.Shared.Rent(totalBytes);
 
-                try
+                using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalBytes);
+                var bulk = memoryOwner.Memory[..totalBytes];
+
+                source.ReadDataset(bulk.Span);
+
+                var localSource = new SystemMemoryStream(bulk);
+                var targetSpan = target;
+
+                for (int i = 0; i < target.Length; i++)
                 {
-                    var bulk = rented.AsMemory(0, totalBytes);
-                    source.ReadDataset(bulk.Span);
-
-                    var localSource = new SystemMemoryStream(bulk);
-                    var targetSpan = target;
-
-                    for (int i = 0; i < target.Length; i++)
-                    {
-                        targetSpan[i] = (T)elementDecode(localSource)!;
-                    }
-                }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(rented);
+                    targetSpan[i] = (T)elementDecode(localSource)!;
                 }
             }
 
             return decodeBatched;
         }
 
-        void decode(IH5ReadStream source, Span<T> target)
+        else
         {
-            var targetSpan = target;
-
-            for (int i = 0; i < target.Length; i++)
+            void decode(IH5ReadStream source, Span<T> target)
             {
-                targetSpan[i] = (T)elementDecode(source)!;
-            }
-        };
+                var targetSpan = target;
 
-        return decode;
+                for (int i = 0; i < target.Length; i++)
+                {
+                    targetSpan[i] = (T)elementDecode(source)!;
+                }
+            };
+
+            return decode;
+        }
     }
 
     private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
