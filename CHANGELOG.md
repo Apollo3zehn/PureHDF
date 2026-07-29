@@ -1,3 +1,8 @@
+## v2.1.3 - 2026-07-22
+
+### Bugs fixed
+- Compatibility warning: HDF5 2.0.0 / h5py 3.16.0 regression breaks reading PureHDF files. (#164)
+
 ## v2.1.2 - 2026-03-17
 
 ### Bugs fixed
