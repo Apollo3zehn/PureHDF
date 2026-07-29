@@ -40,6 +40,10 @@ internal record class SoftLinkInfo(
     public static SoftLinkInfo Decode(H5DriverBase driver)
     {
         var valueLength = driver.ReadUInt16();
+
+        // The value has no character set field of its own and is a path made of link names,
+        // which may be UTF-8; decoded as ASCII it no longer names the object it points at
+        // and the link silently fails to resolve. Encode below writes UTF-8.
         var value = ReadUtils.ReadFixedLengthString(driver, valueLength);
 
         return new SoftLinkInfo(

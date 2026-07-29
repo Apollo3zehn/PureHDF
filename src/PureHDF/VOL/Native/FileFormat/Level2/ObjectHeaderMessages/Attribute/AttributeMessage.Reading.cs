@@ -50,19 +50,19 @@ internal partial record class AttributeMessage(
         var dataspaceSize = context.Driver.ReadUInt16();
 
         // name character set encoding
-        var nameEncoding = default(CharacterSetEncoding);
-
+        // The field is consumed to keep the driver aligned but not acted upon: names are
+        // decoded as UTF-8 either way, which is correct for ASCII too. See ReadUtils.
         if (version == 3)
-            nameEncoding = (CharacterSetEncoding)context.Driver.ReadByte();
+            _ = context.Driver.ReadByte();
 
         // name
         string name;
 
         if (version == 1)
-            name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: true, encoding: nameEncoding);
+            name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: true);
 
         else
-            name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: false, encoding: nameEncoding);
+            name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: false);
 
         // datatype
         var flags1 = flags.HasFlag(AttributeMessageFlags.SharedDatatype)
