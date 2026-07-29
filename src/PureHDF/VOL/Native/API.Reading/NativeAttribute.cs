@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
 
 namespace PureHDF.VOL.Native;
 
@@ -11,6 +12,29 @@ public class NativeAttribute : IH5Attribute
 
     private static readonly MethodInfo _methodInfoReadCoreLevel1_Generic = typeof(NativeAttribute)
         .GetMethod(nameof(ReadCoreLevel1_generic), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+	// Delegate type for reads, including an instance parameter.
+    // Statically cached keyed by (TResult, TElement).
+    private delegate TResult? ReaderDelegate<TResult>(
+        NativeAttribute @this,
+        TResult? buffer,
+        IH5ReadStream source,
+        ulong[]? memoryDims);
+
+    private static readonly ConcurrentDictionary<(Type, Type), Delegate> _readerCache = new();
+
+    private static ReaderDelegate<TResult> GetReader<TResult>(Type elementType)
+    {
+        return (ReaderDelegate<TResult>)_readerCache.GetOrAdd(
+            (typeof(TResult), elementType),
+            static key =>
+            {
+                var method = _methodInfoReadCoreLevel1_Generic
+                    .MakeGenericMethod(key.Item1, key.Item2);
+                var delegateType = typeof(ReaderDelegate<>).MakeGenericType(key.Item1);
+                return method.CreateDelegate(delegateType);
+            });
+    }
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
@@ -74,19 +98,10 @@ public class NativeAttribute : IH5Attribute
         ulong[]? memoryDims = null)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
-
-        // TODO cache this
-        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
+        var reader = GetReader<T>(elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        var result = (T)method.Invoke(this,
-        [
-            default /* buffer */,
-            source,
-            memoryDims
-        ])!;
-
-        return result;
+        return reader(this, buffer: default, source, memoryDims)!;
     }
 
     /// <inheritdoc />
@@ -95,17 +110,10 @@ public class NativeAttribute : IH5Attribute
         ulong[]? memoryDims = null)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
-
-        // TODO cache this
-        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
+        var reader = GetReader<T>(elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        method.Invoke(this,
-        [
-            buffer,
-            source,
-            memoryDims
-        ]);
+        reader(this, buffer, source, memoryDims);
     }
 
     /* This overload is required because Span<T> is not allowed as generic argument and

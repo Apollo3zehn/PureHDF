@@ -1,5 +1,6 @@
 using PureHDF.Selections;
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace PureHDF.VOL.Native;
@@ -13,6 +14,32 @@ public class NativeDataset : NativeObject, IH5Dataset
 
     private static readonly MethodInfo _methodInfoReadCoreLevel1_Generic = typeof(NativeDataset)
         .GetMethod(nameof(ReadCoreLevel1_Generic), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+	// Delegate type for reads, including an instance parameter.
+    // Statically cached keyed by (TResult, TElement).
+    private delegate TResult? ReaderDelegate<TResult>(
+        NativeDataset @this,
+        TResult? buffer,
+        Selection? fileSelection,
+        Selection? memorySelection,
+        ulong[]? memoryDims,
+        H5DatasetAccess datasetAccess,
+        bool skipShuffle);
+
+    private static readonly ConcurrentDictionary<(Type, Type), Delegate> _readerCache = new();
+
+    private static ReaderDelegate<TResult> GetReader<TResult>(Type elementType)
+    {
+        return (ReaderDelegate<TResult>)_readerCache.GetOrAdd(
+            (typeof(TResult), elementType),
+            static key =>
+            {
+                var method = _methodInfoReadCoreLevel1_Generic
+                    .MakeGenericMethod(key.Item1, key.Item2);
+                var delegateType = typeof(ReaderDelegate<>).MakeGenericType(key.Item1);
+                return method.CreateDelegate(delegateType);
+            });
+    }
 
     private IH5Dataspace? _space;
     private IH5DataType? _type;
@@ -196,21 +223,16 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
 
-        // TODO cache this
-        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
-
-        var result = (T)method.Invoke(this,
-        [
-            default /* buffer */,
+        return reader(
+            this,
+            buffer: default,
             fileSelection,
             memorySelection,
             memoryDims,
             datasetAccess,
-            /* skip shuffle: */ false 
-        ])!;
-
-        return result;
+            skipShuffle: false)!;
     }
 
     /// <summary>
@@ -230,19 +252,16 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = default)
     {
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
 
-        // TODO cache this
-        var method = _methodInfoReadCoreLevel1_Generic.MakeGenericMethod(typeof(T), elementType);
-
-        method.Invoke(this,
-        [
+        reader(
+            this,
             buffer,
             fileSelection,
             memorySelection,
             memoryDims,
             datasetAccess,
-            /* skip shuffle: */ false 
-        ]);
+            skipShuffle: false);
     }
 
     /* The following two methods are required because Span<T> is not allowed as generic
