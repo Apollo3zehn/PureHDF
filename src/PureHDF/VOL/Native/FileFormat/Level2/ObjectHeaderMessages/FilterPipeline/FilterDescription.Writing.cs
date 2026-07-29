@@ -14,7 +14,7 @@ internal readonly partial record struct FilterDescription
             (isUnknown ? 2 : 0) +
             sizeof(ushort) +
             sizeof(ushort) +
-            (isUnknown ? Name.Length : 0) +
+            (isUnknown ? Encoding.UTF8.GetByteCount(Name) : 0) +
             sizeof(uint) * ClientData.Length;
 
         return (ushort)size;
@@ -31,7 +31,7 @@ internal readonly partial record struct FilterDescription
         // name length
         if (isUnknown)
         {
-            identifierBytes = Encoding.ASCII.GetBytes(Name);
+            identifierBytes = Encoding.UTF8.GetBytes(Name);
             driver.Write((ushort)identifierBytes.Count());
         }
 
