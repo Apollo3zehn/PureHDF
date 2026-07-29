@@ -5,6 +5,7 @@ using Xunit;
 
 namespace PureHDF.Tests.Reading;
 
+[Collection(SharedHdf5StateCollection.Name)]
 public class ConcurrencyTests
 {
     [Fact]

@@ -11,9 +11,10 @@ public partial class TestUtils
 {
     public static string? DumpH5File(string filePath)
     {
-        var dump = default(string);
-
-        var h5dumpProcess = new Process
+        // Read stdout and stderr concurrently on background tasks to
+        // avoid deadlock if h5dump writes more than ~64 KB to stderr before
+        // exiting.
+        using var h5dumpProcess = new Process
         {
             StartInfo = new ProcessStartInfo
             {
@@ -28,26 +29,42 @@ public partial class TestUtils
 
         h5dumpProcess.Start();
 
-        while (!h5dumpProcess.StandardOutput.EndOfStream)
+        var stdoutTask = Task.Run(() => h5dumpProcess.StandardOutput.ReadToEnd());
+        var stderrTask = Task.Run(() => h5dumpProcess.StandardError.ReadToEnd());
+
+        // Cap wall time so a hung h5dump surfaces as a clear test failure rather than the
+        // whole test run hanging indefinitely.
+        const int timeoutMs = 30_000;
+
+        if (!h5dumpProcess.WaitForExit(timeoutMs))
         {
-            var line = h5dumpProcess.StandardOutput.ReadLine();
+            try { h5dumpProcess.Kill(entireProcessTree: true); }
+            catch { }
 
-            if (dump is null)
-                dump = line;
-
-            else
-                dump += Environment.NewLine + line;
+            throw new TimeoutException(
+                $"h5dump did not exit within {timeoutMs} ms for '{filePath}'.");
         }
 
-        while (!h5dumpProcess.StandardError.EndOfStream)
+        var stdoutStr = stdoutTask.GetAwaiter().GetResult().TrimEnd('\r', '\n');
+        var stderrStr = stderrTask.GetAwaiter().GetResult().TrimEnd('\r', '\n');
+        if (stdoutStr.Length == 0)
         {
-            var line = h5dumpProcess.StandardError.ReadLine();
+            throw new InvalidOperationException(
+                $"h5dump produced no stdout for '{filePath}' (exit code {h5dumpProcess.ExitCode}). " +
+                $"stderr:{Environment.NewLine}{stderrStr}");
+        }
 
-            if (dump is null)
-                dump = line;
-
-            else
-                dump += Environment.NewLine + line;
+        var dump = stderrStr.Length > 0
+            ? stdoutStr + Environment.NewLine + stderrStr
+            : stdoutStr;
+			
+        // Strip h5dump's trailing HDF5-DIAG error stack so the comparison
+        // doesn't depend on the locally-installed h5dump version. 
+        if (dump is not null)
+        {
+            var diagIdx = dump.IndexOf("HDF5-DIAG:", StringComparison.Ordinal);
+            if (diagIdx >= 0)
+                dump = dump[..diagIdx].TrimEnd('\r', '\n');
         }
 
         return dump;

@@ -30,8 +30,8 @@ public class FilePathUtilsTests
     {
         // Arrange
         var relativePath = "path/file.h5";
-        var envPrefix = "/env/variable:/env/variable2";
-        var expected = Path.Combine(envPrefix.Split(':')[1], relativePath);
+        var envPrefix = $"/env/variable{Path.PathSeparator}/env/variable2";
+        var expected = Path.Combine(envPrefix.Split(Path.PathSeparator)[1], relativePath);
 
         bool fileExists(string filePath) => filePath == expected;
 
@@ -114,7 +114,7 @@ public class FilePathUtilsTests
     {
         // Arrange
         var expected = "path/file.h5";
-        var envPrefix = "/env/variable:/env/variable2";
+        var envPrefix = $"/env/variable{Path.PathSeparator}/env/variable2";
         var linkAccessPrefix = "/link/access";
 
         var linkAccess = new H5LinkAccess(ExternalLinkPrefix: linkAccessPrefix);
@@ -144,7 +144,7 @@ public class FilePathUtilsTests
     {
         // Arrange
         var filePath = "path/file.h5";
-        var envPrefix = "/env/variable:/env/variable2";
+        var envPrefix = $"/env/variable{Path.PathSeparator}/env/variable2";
         var linkAccessPrefix = "/link/access";
 
         var linkAccess = new H5LinkAccess(ExternalLinkPrefix: linkAccessPrefix);
@@ -193,8 +193,8 @@ public class FilePathUtilsTests
     {
         // Arrange
         var relativePath = "path/file.h5";
-        var envPrefix = "/env/variable:/env/variable2";
-        var expected = Path.Combine(envPrefix.Split(':')[1], relativePath);
+        var envPrefix = $"/env/variable{Path.PathSeparator}/env/variable2";
+        var expected = Path.Combine(envPrefix.Split(Path.PathSeparator)[1], relativePath);
 
         bool fileExists(string filePath) => filePath == expected;
 
@@ -277,7 +277,7 @@ public class FilePathUtilsTests
     {
         // Arrange
         var expected = "path/file.h5";
-        var envPrefix = "/env/variable:/env/variable2";
+        var envPrefix = $"/env/variable{Path.PathSeparator}/env/variable2";
         var datasetAccessPrefix = "/dataset/access";
 
         var datasetAccess = new H5DatasetAccess(ExternalFilePrefix: datasetAccessPrefix);
@@ -307,7 +307,7 @@ public class FilePathUtilsTests
     {
         // Arrange
         var filePath = "path/file.h5";
-        var envPrefix = "/env/variable:/env/variable2";
+        var envPrefix = $"/env/variable{Path.PathSeparator}/env/variable2";
         var datasetAccessPrefix = "/dataset/access";
 
         var datasetAccess = new H5DatasetAccess(ExternalFilePrefix: datasetAccessPrefix);

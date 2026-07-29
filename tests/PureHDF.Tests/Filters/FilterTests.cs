@@ -11,6 +11,7 @@ using Xunit;
 
 namespace PureHDF.Tests.Filters;
 
+[Collection(PureHDF.Tests.SharedHdf5StateCollection.Name)]
 public class FilterTests
 {
     [Theory]
@@ -170,7 +171,7 @@ public class FilterTests
         // Assert
         try
         {
-            var h5File = H5File.OpenRead(filePath);
+            using var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
             var actual = dataset.Read<int[]>();
 
@@ -267,7 +268,7 @@ public class FilterTests
         // Assert
         try
         {
-            var h5File = H5File.OpenRead(filePath);
+            using var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
             var actual = dataset.Read<int[]>();
 
@@ -343,7 +344,7 @@ public class FilterTests
         // Assert
         try
         {
-            var h5File = H5File.OpenRead(filePath);
+            using var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
             var actual = dataset.Read<int[]>();
 
@@ -428,7 +429,7 @@ public class FilterTests
         // Assert
         try
         {
-            var h5File = H5File.OpenRead(filePath);
+            using var h5File = H5File.OpenRead(filePath);
             var dataset = h5File.Dataset("filtered");
             var actual = dataset.Read<int[]>();
 
