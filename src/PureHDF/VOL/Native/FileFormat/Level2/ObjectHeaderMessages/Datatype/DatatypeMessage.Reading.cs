@@ -1,5 +1,6 @@
 ﻿using System.Buffers;
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -135,7 +136,31 @@ internal partial record class DatatypeMessage(
         };
     }
 
+    // Caches the DecodeDelegate<TElement> produced for each (TElement, isRawMode)
+    // pair on this DatatypeMessage instance, so repeated Read calls on the same
+    // dataset reuse one decoder instead of rebuilding the closure tree (and paying
+    // its inner MethodInfo.Invoke into GetDecodeInfoForUnmanagedMemory) every time.
+    //
+    // The cached closures capture the NativeReadContext seen on first build. That
+    // is safe because each NativeDataset / NativeAttribute owns its own
+    // DatatypeMessage, which is only ever used with the single NativeReadContext
+    // belonging to the file it was decoded from.
+    private readonly ConcurrentDictionary<(Type, bool), Delegate> _decodeInfoCache = new();
+
     public DecodeDelegate<TElement> GetDecodeInfo<TElement>(
+        NativeReadContext context,
+        bool isRawMode)
+    {
+        var key = (typeof(TElement), isRawMode);
+
+        if (_decodeInfoCache.TryGetValue(key, out var cached))
+            return (DecodeDelegate<TElement>)cached;
+
+        var built = BuildDecodeInfo<TElement>(context, isRawMode);
+        return (DecodeDelegate<TElement>)_decodeInfoCache.GetOrAdd(key, built);
+    }
+
+    private DecodeDelegate<TElement> BuildDecodeInfo<TElement>(
         NativeReadContext context,
         bool isRawMode)
     {
@@ -149,7 +174,6 @@ internal partial record class DatatypeMessage(
         var fileTypeSize = Size;
 
         // according to type-mismatch-behavior.md
-        // TODO cache
         return (memoryIsRef, fileIsRef) switch
         {
             (true, _) 
@@ -299,19 +323,30 @@ internal partial record class DatatypeMessage(
         return decode;
     }
 
+    // Builds and caches one ElementDecodeDelegate per element Type. Previously the
+    // closure performed MethodInfo.Invoke on every element, which allocated a boxed
+    // argument array per call and dominated CPU on element-heavy reads. Routing
+    // through a typed delegate built once per element type pays the reflection
+    // once at cache-miss time and makes the per-element call a direct invocation
+    // of the generic GetDecodeInfoForUnmanagedElement<T>.
+    private static readonly ConcurrentDictionary<Type, ElementDecodeDelegate> _unmanagedElementDecoderCache = new();
+
+    private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedElement = typeof(DatatypeMessage)
+        .GetMethod(
+            nameof(GetDecodeInfoForUnmanagedElement),
+            genericParameterCount: 1,
+            BindingFlags.NonPublic | BindingFlags.Instance,
+            binder: null,
+            types: Type.EmptyTypes,
+            modifiers: null)!;
+
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
-        // TODO: cache
-        var invokeDecodeUnmanagedElement = ReadUtils.MethodInfoDecodeUnmanagedElement.MakeGenericMethod(type);
-        var parameters = new object[1];
-
-        object? decode(IH5ReadStream source)
+        return _unmanagedElementDecoderCache.GetOrAdd(type, t =>
         {
-            parameters[0] = source;
-            return invokeDecodeUnmanagedElement.Invoke(default, parameters);
-        }
-
-        return decode;
+            var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(t);
+            return (ElementDecodeDelegate)method.Invoke(this, parameters: null)!;
+        });
     }
 
     private (Type, ElementDecodeDelegate) GetDecodeInfoForCompound(
