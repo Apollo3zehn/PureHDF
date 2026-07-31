@@ -197,6 +197,20 @@ internal partial record class DatatypeMessage(
         };
     }
 
+    private (Type Type, ElementDecodeDelegateBuffered Decode)? GetDecodeInfoForScalarBuffered(NativeReadContext context, Type? memoryType)
+    {
+        return Class switch
+        {
+            DatatypeMessageClass.VariableLength when ((VariableLengthBitFieldDescription)BitField).Type == InternalVariableLengthType.String =>
+                memoryType is null || memoryType == typeof(string)
+                    ? (typeof(string), GetDecodeInfoForVariableLengthStringBuffered(context))
+                    : throw new Exception($"Variable-length string data can only be decoded as string (incompatible type: {memoryType})."),
+
+            /* default */
+            _ => null
+        };
+    }
+
     private (Type Type, ElementDecodeDelegate Decode) GetDecodeInfoForScalar(
         NativeReadContext context,
         Type? memoryType)
@@ -918,6 +932,70 @@ internal partial record class DatatypeMessage(
 
             else
             {
+                // It would be more correct to just throw an exception
+                // when the object index is not found in the collection,
+                // but that would make the following test fail
+                // - CanRead_Array_nullable_struct.
+                //
+                // And it would make the user's life a bit more complicated
+                // if the library cannot handle missing entries.
+                return default;
+            }
+        }
+
+        return decode;
+    }
+
+    private ElementDecodeDelegateBuffered GetDecodeInfoForVariableLengthStringBuffered(
+        NativeReadContext context)
+    {
+        object? decode(IH5ReadStream source, Span<byte> buffer)
+        {
+            /* Padding
+             * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
+             * Search for "null terminate": null terminate and null padding are essentially
+             * the same when simply reading them from file.
+             */
+
+            /* String is always split after first \0 when writing data to file.
+             * In other words, padding type only matters when reading data.
+             */
+
+            if (BitField is not VariableLengthBitFieldDescription bitField)
+                throw new Exception("Variable-length bit field description must not be null.");
+
+            // see IV.B. Disk Format: Level 2B - Data Object Data Storage
+            Func<string, string> trim = bitField.PaddingType switch
+            {
+                PaddingType.NullTerminate => value => value,
+                PaddingType.NullPad => value => value,
+                PaddingType.SpacePad => value => value.TrimEnd(' '),
+                _ => throw new Exception("Unsupported padding type.")
+            };
+
+            /* skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
+            buffer = buffer.Slice(sizeof(uint));
+
+            /* decode global heap IDs and get associated data */
+            var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, buffer);
+
+            if (globalHeapId.Equals(default))
+                return default;
+
+            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+                context,
+                globalHeapId.CollectionAddress,
+                restoreAddress: true);
+
+            if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+            {
+                var value = Encoding.UTF8.GetString(globalHeapObject.ObjectData);
+                value = trim(value);
+                return value;
+            }
+
+            else
+            {
                 // It would be more correct to just throw an exception 
                 // when the object index is not found in the collection,
                 // but that would make the following test fail
@@ -1004,6 +1082,26 @@ internal partial record class DatatypeMessage(
         NativeReadContext context
     )
     {
+        var elementDecodeBuffered = GetDecodeInfoForScalarBuffered(context, typeof(T))?.Decode;
+        if (elementDecodeBuffered is not null)
+        {
+            void decodeBuffered(IH5ReadStream source, Span<T> target)
+            {
+                var totalSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
+                using var memoryOwner = MemoryPool<byte>.Shared.Rent(target.Length * totalSize);
+                source.ReadDataset(memoryOwner.Memory.Slice(0, target.Length * totalSize).Span);
+                var targetSpan = target;
+
+                for (int i = 0; i < target.Length; i++)
+                {
+                    var elementBuffer = memoryOwner.Memory.Slice(i * totalSize, totalSize).Span;
+                    targetSpan[i] = (T)elementDecodeBuffered(source, elementBuffer)!;
+                }
+            }
+
+            return decodeBuffered;
+        }
+
         var elementDecode = GetDecodeInfoForScalar(context, typeof(T)).Decode;
 
         // Variable-length sequences and strings store a fixed-size (length + global
