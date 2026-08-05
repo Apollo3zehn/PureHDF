@@ -53,6 +53,33 @@ public partial class TestUtils
         _ = H5G.close(groupId);
     }
 
+    public static unsafe void AddCreationOrderIndexedLinks(long fileId, int count = 32)
+    {
+        var gcplId = H5P.create(H5P.GROUP_CREATE);
+        var flags = H5P.CRT_ORDER_TRACKED | H5P.CRT_ORDER_INDEXED;
+
+        if (H5P.set_link_creation_order(gcplId, flags) < 0)
+            throw new Exception("Could not enable link creation-order tracking and indexing.");
+
+        var groupId = H5G.create(fileId, "creation_order_links", 0, gcplId, 0);
+
+        if (groupId < 0)
+            throw new Exception("Could not create creation-order indexed group.");
+
+        for (int i = 0; i < count; i++)
+        {
+            var linkId = H5G.create(groupId, $"child_{count - i:D4}");
+
+            if (linkId < 0)
+                throw new Exception("Could not create child group.");
+
+            _ = H5G.close(linkId);
+        }
+
+        _ = H5G.close(groupId);
+        _ = H5P.close(gcplId);
+    }
+
     public static unsafe void AddLinks(long fileId)
     {
         var groupId = H5G.create(fileId, "links");

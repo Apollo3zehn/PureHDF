@@ -50,11 +50,11 @@ internal abstract record class FractalHeapId(
     public T Read<T>(Func<H5DriverBase, T> func)
     {
         // TODO: Is there a better way?
-        List<BTree2Record01>? cache = null;
+        BTree2Header<BTree2Record01>? cache = null;
         return Read(func, ref cache);
     }
 
     public abstract T Read<T>(
         Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache);
+        [AllowNull] ref BTree2Header<BTree2Record01> record01Cache);
 }

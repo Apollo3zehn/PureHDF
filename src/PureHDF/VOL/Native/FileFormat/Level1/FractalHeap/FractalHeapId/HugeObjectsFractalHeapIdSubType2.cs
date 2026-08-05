@@ -22,7 +22,7 @@ internal record class HugeObjectsFractalHeapIdSubType2(
 
     public override T Read<T>(
         Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+        [AllowNull] ref BTree2Header<BTree2Record01> record01Cache)
     {
         throw new Exception("Filtered data is not yet supported.");
     }

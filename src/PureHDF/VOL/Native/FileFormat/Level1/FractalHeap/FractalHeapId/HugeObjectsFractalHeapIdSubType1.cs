@@ -23,7 +23,7 @@ internal record class HugeObjectsFractalHeapIdSubType1(
 
     public override T Read<T>(
         Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+        [AllowNull] ref BTree2Header<BTree2Record01> record01Cache)
     {
         var driver = Context.Driver;
 
@@ -31,11 +31,14 @@ internal record class HugeObjectsFractalHeapIdSubType1(
         if (record01Cache is null)
         {
             driver.SeekRelativeToBaseAddress((long)HeapHeader.HugeObjectsBTree2Address);
-            var hugeBtree2 = BTree2Header<BTree2Record01>.Decode(Context, DecodeRecord01);
-            record01Cache = hugeBtree2.EnumerateRecords().ToList();
+            record01Cache = BTree2Header<BTree2Record01>.Decode(Context, DecodeRecord01);
         }
 
-        var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
+        var success = record01Cache.TryFindRecord(out var hugeRecord, record => BTree2Key.CompareTo(record.HugeObjectId));
+
+        if (!success)
+            throw new Exception("Could not find huge fractal heap object.");
+
         driver.SeekRelativeToBaseAddress((long)hugeRecord.HugeObjectAddress);
 
         return func(driver);
