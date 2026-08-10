@@ -1,4 +1,4 @@
-﻿namespace PureHDF;
+namespace PureHDF;
 
 internal static class MemoryExtensions
 {

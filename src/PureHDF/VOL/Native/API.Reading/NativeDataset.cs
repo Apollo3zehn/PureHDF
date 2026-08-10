@@ -410,7 +410,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             memorySelection,
             memoryDims,
             fileDims,
-            resultBuffer.Span,
+            resultBuffer,
             datasetAccess,
             isRawMode: isRawMode);
 
@@ -449,7 +449,17 @@ public class NativeDataset : NativeObject, IH5Dataset
         if (memoryDims is null)
             memoryDims = [(ulong)buffer.Length];
 
-        var resultBuffer = buffer;
+        // The public Read<T>(Span<T>) overload cannot hand its Span to an async decoder (a Span
+        // cannot cross an await), so decode into a pooled Memory<TElement> and copy out. The
+        // array/Memory overloads pass their buffer through with no copy.
+        //
+        // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
+        // and a decode that only partially fills it must leave the caller's remaining elements
+        // untouched - which is what happened when the caller's own span was decoded into directly.
+        using var spanOwner = MemoryPool<TElement>.Shared.Rent(buffer.Length);
+        var resultBuffer = spanOwner.Memory[..buffer.Length];
+
+        buffer.CopyTo(resultBuffer.Span);
 
         ReadCoreLevel2(
             fileSelection,
@@ -459,6 +469,8 @@ public class NativeDataset : NativeObject, IH5Dataset
             resultBuffer,
             datasetAccess,
             isRawMode: isRawMode);
+
+        resultBuffer.Span.CopyTo(buffer);
     }
 
     private void ReadCoreLevel2<TElement>(
@@ -466,7 +478,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         Selection? memorySelection,
         ulong[] memoryDims,
         ulong[] fileDims,
-        Span<TElement> resultBuffer,
+        Memory<TElement> resultBuffer,
         H5DatasetAccess datasetAccess,
         bool isRawMode)
     {
@@ -501,7 +513,7 @@ public class NativeDataset : NativeObject, IH5Dataset
     }
 
     private void ReadCoreLevel3<TElement>(
-        Span<TElement> resultBuffer,
+        Memory<TElement> resultBuffer,
         Selection fileSelection,
         Selection memorySelection,
         ulong[] fileDims,
@@ -530,15 +542,25 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         /* read virtual delegate */
+        // ReadVirtualDelegate<T> is Span-based (it is invoked from VirtualDatasetStream, itself
+        // driven by a synchronous Stream contract), while ReadCoreLevel3 now takes Memory<T>.
+        // Bridge with a pooled buffer and copy out; virtual datasets are the uncommon path.
         void readVirtualDelegate(NativeDataset dataset, Span<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
-            => dataset.ReadCoreLevel3(
-                resultBuffer: destination,
+        {
+            using var owner = MemoryPool<TElement>.Shared.Rent(destination.Length);
+            var target = owner.Memory[..destination.Length];
+
+            dataset.ReadCoreLevel3(
+                resultBuffer: target,
                 fileSelection: fileSelection,
                 memorySelection: new HyperslabSelection(0, (ulong)destination.Length),
                 fileDims: dataset.InternalDataspace.GetDims(),
                 memoryDims: [(ulong)destination.Length],
                 isRawMode: false,
                 datasetAccess: datasetAccess);
+
+            target.Span.CopyTo(destination);
+        }
 
         /* dataset info */
         var datasetInfo = new DatasetInfo(
@@ -584,7 +606,14 @@ public class NativeDataset : NativeObject, IH5Dataset
              * mapping information. The mapping associates the VDS to the source
              * dataset elements that are stored across a collection of HDF5 files.
              */
-            LayoutClass.VirtualStorage => new H5D_Virtual<TElement>(Context, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate),
+            // NOTE (async-first, wave 3): H5D_Virtual's constructor is now private; construction
+            // goes through the async static factory `Create` because it performs a driver read
+            // (VdsGlobalHeapBlock.Decode) that can no longer be synchronous. This method and its
+            // callers (ReadCoreLevel1/2/3) operate on `Span<TElement>`, a ref struct that cannot
+            // be used inside an `async` method (CS4012) — so this whole call chain cannot be
+            // converted to propagate the awaitable itself. Blocking here is therefore unavoidable
+            // given the current method shape; see wave-3 report for the out-of-scope note.
+            LayoutClass.VirtualStorage => H5D_Virtual<TElement>.Create(Context, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate).GetAwaiter().GetResult(),
 
             /* default */
             _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
@@ -614,12 +643,16 @@ public class NativeDataset : NativeObject, IH5Dataset
             AllowBulkCopy: InternalDataLayout.LayoutClass != LayoutClass.VirtualStorage
         );
 
+        // SYNC SURFACE: NativeDataset.Read<T> is synchronous public API (IH5Dataset.Read).
+        // Leaving this unawaited (CS4014) would return before the data was decoded.
         SelectionHelper
             .Decode(
                 sourceRank: fileDims.Length,
                 targetRank: memoryDims.Length,
                 decodeInfo,
-                resultBuffer);
+                resultBuffer)
+            .GetAwaiter()
+            .GetResult();
     }
 
     private (ulong[], Selection) GetFileDimsAndSelection(

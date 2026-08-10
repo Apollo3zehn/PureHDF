@@ -1,12 +1,23 @@
-﻿using System.Runtime.CompilerServices;
+using System.Buffers;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
 namespace PureHDF.VFD;
 
+// CONCURRENCY MODEL (async-first): a driver instance is owned by exactly one logical reader and
+// must not be shared across concurrent readers. This replaces the previous model, where a single
+// driver was shared and the cursor lived in a ThreadLocal<long>.
+//
+// The change is forced, not stylistic: with async reads a continuation may resume on a different
+// thread, where the ThreadLocal cursor reads back as 0. The result was silent corruption - the
+// superblock scan desynced and every file reported "not a valid HDF 5 file".
+//
+// Isolating per reader instead of per thread costs almost nothing here, because the actual reads go
+// through RandomAccess.ReadAsync(handle, buffer, offset), which is stateless - the cursor below is
+// just bookkeeping. Callers that want parallel reads open one reader per thread.
 internal partial class H5FileHandleDriver : H5DriverBase
 {
-    private readonly ThreadLocal<long> _position = new();
+    private long _position;
     private readonly FileStream _stream; // it is important to keep a reference, otherwise the SafeFileHandle gets closed during the next GC
     private readonly SafeFileHandle _handle;
     private readonly bool _leaveOpen;
@@ -18,7 +29,7 @@ internal partial class H5FileHandleDriver : H5DriverBase
         _leaveOpen = leaveOpen;
     }
 
-    public override long Position { get => _position.Value; }
+    public override long Position { get => _position; }
 
     public override long Length => _stream.Length;
 
@@ -27,79 +38,80 @@ internal partial class H5FileHandleDriver : H5DriverBase
         switch (seekOrigin)
         {
             case SeekOrigin.Begin:
-                _position.Value = offset; break;
+                _position = offset; break;
 
             case SeekOrigin.Current:
-                _position.Value += offset; break;
+                _position += offset; break;
 
             default:
                 throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
         }
     }
 
-    public override void ReadDataset(Span<byte> buffer)
+    public override ValueTask ReadDataset(Memory<byte> buffer)
     {
-        ReadCore(buffer);
+        return ReadCore(buffer);
     }
 
-    public override void Read(Span<byte> buffer)
+    public override ValueTask Read(Memory<byte> buffer)
     {
         throw new NotImplementedException();
     }
 
-    public override byte ReadByte()
+    public override async ValueTask<byte> ReadByte()
     {
-        return Read<byte>();
+        return await ReadScalar<byte>().ConfigureAwait(false);
     }
 
-    public override byte[] ReadBytes(int count)
+    public override async ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
-        ReadCore(buffer);
+        await ReadCore(buffer).ConfigureAwait(false);
 
         return buffer;
     }
 
-    public override ushort ReadUInt16()
+    public override async ValueTask<ushort> ReadUInt16()
     {
-        return Read<ushort>();
+        return await ReadScalar<ushort>().ConfigureAwait(false);
     }
 
-    public override short ReadInt16()
+    public override async ValueTask<short> ReadInt16()
     {
-        return Read<short>();
+        return await ReadScalar<short>().ConfigureAwait(false);
     }
 
-    public override uint ReadUInt32()
+    public override async ValueTask<uint> ReadUInt32()
     {
-        return Read<uint>();
+        return await ReadScalar<uint>().ConfigureAwait(false);
     }
 
-    public override ulong ReadUInt64()
+    public override async ValueTask<ulong> ReadUInt64()
     {
-        return Read<ulong>();
+        return await ReadScalar<ulong>().ConfigureAwait(false);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReadCore(Span<byte> buffer)
+    private async ValueTask ReadCore(Memory<byte> buffer)
     {
-        var count = RandomAccess.Read(_handle, buffer, Position);
+        var count = await RandomAccess.ReadAsync(_handle, buffer, Position).ConfigureAwait(false);
 
         if (count != buffer.Length)
             throw new Exception("The file is too small");
 
-        _position.Value += count;
+        _position += count;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private T Read<T>() where T : unmanaged
+    // Was: stackalloc + MemoryMarshal.Cast — a Span cannot cross an await.
+    private async ValueTask<T> ReadScalar<T>() where T : unmanaged
     {
-        var size = Unsafe.SizeOf<T>();
-        Span<byte> buffer = stackalloc byte[size];
-        RandomAccess.Read(_handle, buffer, Position);
-        _position.Value += size;
+        var size = Marshal.SizeOf<T>();
+        using var owner = MemoryPool<byte>.Shared.Rent(size);
+        var buffer = owner.Memory[..size];
 
-        return MemoryMarshal.Cast<byte, T>(buffer)[0];
+        await RandomAccess.ReadAsync(_handle, buffer, Position).ConfigureAwait(false);
+        _position += size;
+
+        return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
 
     private bool _disposedValue;

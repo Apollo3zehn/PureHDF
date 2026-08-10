@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -60,7 +59,7 @@ public abstract class NativeObject : IH5Object
             if (_header is null)
             {
                 Context.Driver.SeekRelativeToBaseAddress((long)Reference.Value);
-                _header = ObjectHeader.Construct(Context);
+                _header = ObjectHeader.Construct(Context).GetAwaiter().GetResult();
             }
 
             return _header;
@@ -86,7 +85,11 @@ public abstract class NativeObject : IH5Object
     /// <inheritdoc />
     public IH5Attribute Attribute(string name)
     {
-        if (!TryGetAttributeMessage(name, out var attributeMessage))
+        // NOTE (async propagation): Attribute() is part of the synchronous public API
+        // surface and must block on the async internals by design.
+        var (success, attributeMessage) = TryGetAttributeMessage(name).GetAwaiter().GetResult();
+
+        if (!success || attributeMessage is null)
             throw new Exception($"Could not find attribute '{name}'.");
 
         return new NativeAttribute(Context, attributeMessage);
@@ -101,7 +104,10 @@ public abstract class NativeObject : IH5Object
     /// <inheritdoc />
     public bool AttributeExists(string name)
     {
-        return TryGetAttributeMessage(name, out var _);
+        // NOTE (async propagation): AttributeExists() is part of the synchronous
+        // public API surface and must block on the async internals by design.
+        var (success, _) = TryGetAttributeMessage(name).GetAwaiter().GetResult();
+        return success;
     }
 
     /// <inheritdoc />
@@ -110,16 +116,21 @@ public abstract class NativeObject : IH5Object
         throw new NotImplementedException("The native VOL connector does not support async read operations.");
     }
 
-    private bool TryGetAttributeMessage(string name, [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)
+    // NOTE (async propagation): this helper exclusively serves the synchronous
+    // public API surface (Attribute()/AttributeExists()). It must itself become
+    // async because it awaits TryGetAttributeMessageFromAttributeInfoMessage below
+    // (an `out` parameter cannot coexist with `async`, CS1988), so it now returns a
+    // tuple instead; the two public callers bridge once via GetAwaiter().GetResult().
+    private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessage(string name)
     {
         // get attribute from attribute message
-        attributeMessage = Header
+        var attributeMessage = Header
             .GetMessages<AttributeMessage>()
             .FirstOrDefault(message => message.Name == name);
 
         if (attributeMessage is not null)
         {
-            return true;
+            return (true, attributeMessage);
         }
 
         // get attribute from attribute info
@@ -136,13 +147,15 @@ public abstract class NativeObject : IH5Object
 
                 if (!Context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                 {
-                    if (TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name, out attributeMessage))
-                        return true;
+                    var (success, foundAttributeMessage) = await TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name).ConfigureAwait(false);
+
+                    if (success)
+                        return (true, foundAttributeMessage);
                 }
             }
         }
 
-        return false;
+        return (false, null);
     }
 
     private IEnumerable<IH5Attribute> EnumerateAttributes()
@@ -185,12 +198,30 @@ public abstract class NativeObject : IH5Object
     private IEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfoMessage(
         AttributeInfoMessage attributeInfoMessage)
     {
-        var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
-        var records = btree2NameIndex
-            .EnumerateRecords()
-            .ToList();
+        // NOTE (async propagation): AttributeInfoMessage.BTree2NameIndex()/FractalHeap()
+        // are now async methods (were properties) and BTree2Header<T>.EnumerateRecords()
+        // is now IAsyncEnumerable<T> (rule 8). This method must stay a synchronous
+        // iterator (see report), so all of the above are drained/bridged synchronously.
+        var btree2NameIndex = attributeInfoMessage.BTree2NameIndex().GetAwaiter().GetResult();
+        var records = new List<BTree2Record08>();
 
-        var fractalHeap = attributeInfoMessage.FractalHeap;
+        {
+            var recordEnumerator = btree2NameIndex.EnumerateRecords().GetAsyncEnumerator();
+
+            try
+            {
+                while (recordEnumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+                {
+                    records.Add(recordEnumerator.Current);
+                }
+            }
+            finally
+            {
+                recordEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            }
+        }
+
+        var fractalHeap = attributeInfoMessage.FractalHeap().GetAwaiter().GetResult();
 
         // local cache: indirectly accessed, non-filtered
         List<BTree2Record01>? record01Cache = null;
@@ -199,27 +230,30 @@ public abstract class NativeObject : IH5Object
         {
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-            var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-            var message = heapId.Read(driver => AttributeMessage.Decode(Context, Header.Address), ref record01Cache);
+            var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap).GetAwaiter().GetResult();
+            var message = heapId.Read(driver => AttributeMessage.Decode(Context, Header.Address).GetAwaiter().GetResult(), ref record01Cache);
 
             yield return message;
         }
     }
 
-    private bool TryGetAttributeMessageFromAttributeInfoMessage(
+    // NOTE (async propagation): this is a private helper of TryGetAttributeMessage
+    // above, not itself on the sync public API surface, so it is converted fully to
+    // async (an `out` parameter cannot coexist with `async`, CS1988 — replaced with a
+    // tuple return, matching FoundDelegate/TryFindRecord's own tuple-return shape).
+    // The comparator lambda below must also become async: BTree2Header<T>.
+    // TryFindRecord now takes Func<T, ValueTask<int>> (wave 4 addendum).
+    private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessageFromAttributeInfoMessage(
         AttributeInfoMessage attributeInfoMessage,
-        string name,
-        [NotNullWhen(returnValue: true)] out AttributeMessage? attributeMessage)
+        string name)
     {
-        attributeMessage = null;
-
-        var fractalHeap = attributeInfoMessage.FractalHeap;
-        var btree2NameIndex = attributeInfoMessage.BTree2NameIndex;
+        var fractalHeap = await attributeInfoMessage.FractalHeap().ConfigureAwait(false);
+        var btree2NameIndex = await attributeInfoMessage.BTree2NameIndex().ConfigureAwait(false);
         var nameBytes = Encoding.UTF8.GetBytes(name);
         var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(AttributeMessage);
 
-        var success = btree2NameIndex.TryFindRecord(out var record, record =>
+        var (success, record) = await btree2NameIndex.TryFindRecord(async record =>
         {
             // H5Abtree2.c (H5A__dense_btree2_name_compare, H5A__dense_fh_name_cmp)
 
@@ -235,25 +269,32 @@ public abstract class NativeObject : IH5Object
             {
                 // TODO: duplicate2_of_3
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-                var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap);
-                candidate = heapId.Read(driver => AttributeMessage.Decode(Context, Header.Address));
+                var heapId = await FractalHeapId.Construct(Context, localDriver, fractalHeap).ConfigureAwait(false);
+
+                // NOTE (async propagation): FractalHeapId.Read is a genuinely
+                // synchronous abstract method (its subtype overrides take a `ref
+                // List<BTree2Record01>` cache parameter, and `ref` cannot coexist
+                // with `async` — CS1988, wave 4's stated known blocker). FractalHeapId
+                // is owned by another agent's file, so its `Func<H5DriverBase, T>`
+                // callback parameter cannot be changed to an async delegate from
+                // here; this bridge is unavoidable without an out-of-scope edit.
+                candidate = heapId.Read(driver => AttributeMessage.Decode(Context, Header.Address).GetAwaiter().GetResult());
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
                 return string.CompareOrdinal(name, candidate.Name);
             }
-        });
+        }).ConfigureAwait(false);
 
         if (success)
         {
             if (candidate is null)
                 throw new Exception("This should never happen. Just to satisfy the compiler.");
 
-            attributeMessage = candidate;
-            return true;
+            return (true, candidate);
         }
 
-        return false;
+        return (false, null);
     }
 
     private uint GetReferenceCount()

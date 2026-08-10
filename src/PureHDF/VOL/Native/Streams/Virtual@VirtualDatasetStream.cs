@@ -35,7 +35,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public void ReadDataset(Span<byte> buffer) => throw new NotImplementedException();
+    public ValueTask ReadDataset(Memory<byte> buffer) => throw new NotImplementedException();
 
     public void ReadVirtual(Span<TResult> buffer)
     {

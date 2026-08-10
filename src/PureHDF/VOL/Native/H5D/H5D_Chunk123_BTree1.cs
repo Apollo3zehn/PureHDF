@@ -63,7 +63,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             throw new Exception("No layout information found.");
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    protected override async ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
 
@@ -76,9 +76,9 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
 
             ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
-            BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
+            ValueTask<BTree1RawDataChunksKey> decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
 
-            _btree1 = BTree1Node<BTree1RawDataChunksKey>.Decode(ReadContext, decodeKey);
+            _btree1 = await BTree1Node<BTree1RawDataChunksKey>.Decode(ReadContext, decodeKey).ConfigureAwait(false);
         }
 
         // get key and child address
@@ -86,12 +86,14 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             .Append(0UL)
             .ToArray();
 
-        var success = _btree1.Value.TryFindUserData(
-            out var userData,
+        var (success, userData) = await _btree1.Value.TryFindUserData<BTree1RawDataChunkUserData>(
             (leftKey, rightKey)
-                => NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey),
-            (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
-                => NodeFound(ChunkRank, chunkIndices, address, leftKey, out userData));
+                => new ValueTask<int>(NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey)),
+            (ulong address, BTree1RawDataChunksKey leftKey) =>
+            {
+                var found = NodeFound(ChunkRank, chunkIndices, address, leftKey, out var userData);
+                return new ValueTask<(bool, BTree1RawDataChunkUserData)>((found, userData));
+            }).ConfigureAwait(false);
 
         return success
             ? new ChunkInfo(userData.ChildAddress, userData.ChunkSize, userData.FilterMask)
@@ -108,7 +110,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
     #region Callbacks
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
+    private ValueTask<BTree1RawDataChunksKey> DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
     {
         return BTree1RawDataChunksKey.Decode(ReadContext.Driver, rank, rawChunkDims);
     }

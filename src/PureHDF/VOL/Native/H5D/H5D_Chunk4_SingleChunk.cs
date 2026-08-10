@@ -14,7 +14,8 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    // Pure arithmetic, no IO: sync-completing ValueTask, no allocation.
+    protected override ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
 
@@ -22,7 +23,7 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
             ? ChunkByteSize
             : single.FilteredChunkSize;
 
-        return new ChunkInfo(Chunked4.Address, chunkSize, single.ChunkFilters);
+        return new ValueTask<ChunkInfo>(new ChunkInfo(Chunked4.Address, chunkSize, single.ChunkFilters));
     }
 
     protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)

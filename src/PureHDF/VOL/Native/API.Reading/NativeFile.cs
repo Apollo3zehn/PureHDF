@@ -44,21 +44,60 @@ public class NativeFile : NativeGroup, IDisposable
 
     #region Methods
 
+    // NOTE (async-first): the *Async variants below are the real implementation. These three
+    // synchronous entry points are preserved under their original names and block on them, so the
+    // existing synchronous public surface (H5File.OpenRead/Open) and every existing caller keep
+    // working unchanged. Blocking here is safe on a thread-backed host; a WebAssembly caller must
+    // use the *Async entry points instead, where nothing blocks.
     internal static NativeFile InternalOpenRead(
         string filePath,
         bool deleteOnClose = false,
         H5ReadOptions? options = default)
     {
-        return InternalOpen(
+        return InternalOpenReadAsync(filePath, deleteOnClose, options)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    internal static NativeFile InternalOpen(
+        string filePath,
+        FileMode fileMode,
+        FileAccess fileAccess,
+        FileShare fileShare,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
+    {
+        return InternalOpenAsync(filePath, fileMode, fileAccess, fileShare, deleteOnClose, options)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    internal static NativeFile InternalOpen(
+        H5DriverBase driver,
+        string absoluteFilePath,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
+    {
+        return InternalOpenAsync(driver, absoluteFilePath, deleteOnClose, options)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    internal static async ValueTask<NativeFile> InternalOpenReadAsync(
+        string filePath,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
+    {
+        return await InternalOpenAsync(
             filePath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
             deleteOnClose: deleteOnClose,
-            options: options);
+            options: options).ConfigureAwait(false);
     }
 
-    internal static NativeFile InternalOpen(
+    internal static async ValueTask<NativeFile> InternalOpenAsync(
         string filePath,
         FileMode fileMode,
         FileAccess fileAccess,
@@ -77,14 +116,14 @@ public class NativeFile : NativeGroup, IDisposable
 
         var driver = new H5FileHandleDriver(stream, leaveOpen: false);
 
-        return InternalOpen(
+        return await InternalOpenAsync(
             driver,
             absoluteFilePath,
             deleteOnClose,
-            options);
+            options).ConfigureAwait(false);
     }
 
-    internal static NativeFile InternalOpen(
+    internal static async ValueTask<NativeFile> InternalOpenAsync(
         H5DriverBase driver,
         string absoluteFilePath,
         bool deleteOnClose = false,
@@ -95,7 +134,7 @@ public class NativeFile : NativeGroup, IDisposable
 
         // superblock
         var stepSize = 512;
-        var signature = driver.ReadBytes(8);
+        var signature = await driver.ReadBytes(8).ConfigureAwait(false);
 
         while (!ValidateSignature(signature, Superblock.Signature))
         {
@@ -104,16 +143,16 @@ public class NativeFile : NativeGroup, IDisposable
             if (driver.Position >= driver.Length)
                 throw new Exception("The file is not a valid HDF 5 file.");
 
-            signature = driver.ReadBytes(8);
+            signature = await driver.ReadBytes(8).ConfigureAwait(false);
             stepSize *= 2;
         }
 
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         Superblock superblock = version switch
         {
-            >= 0 and < 2 => Superblock01.Decode(driver, version),
-            >= 2 and < 4 => Superblock23.Decode(driver, version),
+            >= 0 and < 2 => await Superblock01.Decode(driver, version).ConfigureAwait(false),
+            >= 2 and < 4 => await Superblock23.Decode(driver, version).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
         };
 
@@ -147,7 +186,7 @@ public class NativeFile : NativeGroup, IDisposable
             ReadOptions = options ?? new()
         };
 
-        var header = ObjectHeader.Construct(context);
+        var header = await ObjectHeader.Construct(context).ConfigureAwait(false);
 
         var file = new NativeFile(context, default, header, absoluteFilePath, deleteOnClose);
         var reference = new NativeNamedReference("/", address, file);
@@ -184,8 +223,8 @@ public class NativeFile : NativeGroup, IDisposable
         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
 
         using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-        var address = Context.Superblock.ReadOffset(localDriver);
-        var dataspaceSelection = DataspaceSelection.Decode(localDriver);
+        var address = Context.Superblock.ReadOffset(localDriver).GetAwaiter().GetResult();
+        var dataspaceSelection = DataspaceSelection.Decode(localDriver).GetAwaiter().GetResult();
 
         Selection selection = dataspaceSelection.Info switch
         {

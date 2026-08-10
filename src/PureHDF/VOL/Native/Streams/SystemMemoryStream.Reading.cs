@@ -15,14 +15,17 @@ internal partial class SystemMemoryStream : IH5ReadStream
 
     public Memory<byte> SlicedMemory { get; private set; }
 
-    public void ReadDataset(Span<byte> buffer)
+    // In-memory source: already-completed ValueTask, no allocation.
+    public ValueTask ReadDataset(Memory<byte> buffer)
     {
         var length = Math.Min(SlicedMemory.Length, buffer.Length);
 
         SlicedMemory.Span[..length]
-            .CopyTo(buffer);
+            .CopyTo(buffer.Span);
 
         Seek(length, SeekOrigin.Current);
+
+        return default;
     }
 
     public void Seek(long offset, SeekOrigin origin)

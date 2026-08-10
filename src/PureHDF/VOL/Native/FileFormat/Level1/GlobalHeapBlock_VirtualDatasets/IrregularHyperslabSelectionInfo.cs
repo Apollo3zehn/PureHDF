@@ -27,23 +27,23 @@ internal record class IrregularHyperslabSelectionInfo(
      *     ...
      */
 
-    public static IrregularHyperslabSelectionInfo Decode(H5DriverBase driver, uint rank, byte encodeSize)
+    public static async ValueTask<IrregularHyperslabSelectionInfo> Decode(H5DriverBase driver, uint rank, byte encodeSize)
     {
         // block count
-        var blockCount = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+        var blockCount = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
 
         // block offsets / compact starts
         var totalOffsetGroups = blockCount * rank;
         var blockOffsets = new ulong[totalOffsetGroups * 2];
         var blockLinearIndices = new ulong[blockCount];
 
-        Initialize(
+        await Initialize(
             driver,
             rank,
             encodeSize,
             blockCount,
             blockOffsets,
-            blockLinearIndices);
+            blockLinearIndices).ConfigureAwait(false);
 
         return new IrregularHyperslabSelectionInfo(
             Rank: rank,
@@ -53,7 +53,7 @@ internal record class IrregularHyperslabSelectionInfo(
         );
     }
 
-    private static void Initialize(
+    private static async ValueTask Initialize(
         H5DriverBase driver,
         uint rank,
         byte encodeSize,
@@ -63,9 +63,14 @@ internal record class IrregularHyperslabSelectionInfo(
     {
         var isFirst = true;
 
-        Span<ulong> previousStarts = stackalloc ulong[(int)rank];
-        Span<ulong> previousEnds = stackalloc ulong[(int)rank];
-        Span<ulong> sizes = stackalloc ulong[(int)rank];
+        // NOTE (async conversion): these were `Span<ulong> ... = stackalloc ulong[...]`.
+        // A Span<T> (ref struct) cannot be preserved across an `await` boundary (CS4007),
+        // and these locals are read/written both before and after the awaits in the loop
+        // below, so they were changed to plain heap arrays. Same values, same lifetime,
+        // just not stack-allocated. See report for details.
+        var previousStarts = new ulong[(int)rank];
+        var previousEnds = new ulong[(int)rank];
+        var sizes = new ulong[(int)rank];
 
         // for each block
         for (ulong block = 0; block < blockCount; block++)
@@ -98,7 +103,7 @@ internal record class IrregularHyperslabSelectionInfo(
             // starts
             for (int dimension = 0; dimension < rank; dimension++)
             {
-                var start = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+                var start = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
                 var dimensionIndex = (int)blockOffsetsIndex * 2 + 0 + dimension;
                 blockOffsets[dimensionIndex] = start;
                 previousStarts[dimension] = start;
@@ -107,7 +112,7 @@ internal record class IrregularHyperslabSelectionInfo(
             // ends
             for (int dimension = 0; dimension < rank; dimension++)
             {
-                var end = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+                var end = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
                 var dimensionIndex = (int)blockOffsetsIndex * 2 + rank + dimension;
                 blockOffsets[dimensionIndex] = end;
                 previousEnds[dimension] = end;

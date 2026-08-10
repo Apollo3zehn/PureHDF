@@ -33,28 +33,28 @@ internal abstract record class ObjectHeader(
             .Cast<T>();
     }
 
-    internal static ObjectHeader Construct(NativeReadContext context)
+    internal static async ValueTask<ObjectHeader> Construct(NativeReadContext context)
     {
         // get version
-        var version = context.Driver.ReadByte();
+        var version = await context.Driver.ReadByte().ConfigureAwait(false);
 
         // must be a version 2+ object header
         if (version != 1)
         {
-            var signature = new byte[] { version }.Concat(context.Driver.ReadBytes(3)).ToArray();
+            var signature = new byte[] { version }.Concat(await context.Driver.ReadBytes(3).ConfigureAwait(false)).ToArray();
             MathUtils.ValidateSignature(signature, ObjectHeader2.Signature);
-            version = context.Driver.ReadByte();
+            version = await context.Driver.ReadByte().ConfigureAwait(false);
         }
 
         return version switch
         {
-            1 => ObjectHeader1.Decode(context, version),
-            2 => ObjectHeader2.Decode(context, version),
+            1 => await ObjectHeader1.Decode(context, version).ConfigureAwait(false),
+            2 => await ObjectHeader2.Decode(context, version).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The object header version '{version}' is not supported.")
         };
     }
 
-    private protected static List<HeaderMessage> ReadHeaderMessages(
+    private protected static async ValueTask<List<HeaderMessage>> ReadHeaderMessages(
         NativeReadContext context,
         ulong objectHeaderAddress,
         ulong objectHeaderSize,
@@ -87,8 +87,9 @@ internal abstract record class ObjectHeader(
 
         while (remainingBytes > gapSize)
         {
-            var message = HeaderMessage
-                .Decode(context, version, objectHeaderAddress, withCreationOrder);
+            var message = await HeaderMessage
+                .Decode(context, version, objectHeaderAddress, withCreationOrder)
+                .ConfigureAwait(false);
 
             remainingBytes -= message.DataSize + prefixSize;
 
@@ -105,23 +106,23 @@ internal abstract record class ObjectHeader(
 
             if (version == 1)
             {
-                var moreHeaderMessages = ReadHeaderMessages(
+                var moreHeaderMessages = await ReadHeaderMessages(
                     context,
                     objectHeaderAddress,
                     continuationMessage.Length,
                     version,
-                    withCreationOrder: false);
+                    withCreationOrder: false).ConfigureAwait(false);
 
                 headerMessages.AddRange(moreHeaderMessages);
             }
             else if (version == 2)
             {
-                var continuationBlock = ObjectHeaderContinuationBlock2.Decode(
+                var continuationBlock = await ObjectHeaderContinuationBlock2.Decode(
                     context,
                     objectHeaderAddress,
                     continuationMessage.Length,
                     version,
-                    withCreationOrder);
+                    withCreationOrder).ConfigureAwait(false);
 
                 headerMessages.AddRange(continuationBlock.HeaderMessages);
             }

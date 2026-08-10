@@ -21,13 +21,13 @@ internal record class H5S_SEL_HYPER(
         }
     }
 
-    public static H5S_SEL_HYPER Decode(H5DriverBase driver)
+    public static async ValueTask<H5S_SEL_HYPER> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadUInt32();
+        var version = await driver.ReadUInt32().ConfigureAwait(false);
 
         // SelectionInfo
-        var selectionInfo = HyperslabSelectionInfo.Create(driver, version);
+        var selectionInfo = await HyperslabSelectionInfo.Create(driver, version).ConfigureAwait(false);
 
         return new H5S_SEL_HYPER(
             SelectionInfo: selectionInfo

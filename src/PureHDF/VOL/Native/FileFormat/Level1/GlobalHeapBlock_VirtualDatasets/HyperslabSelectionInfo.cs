@@ -4,7 +4,7 @@ internal abstract record class HyperslabSelectionInfo(
     uint Rank
 )
 {
-    public static HyperslabSelectionInfo Create(H5DriverBase driver, uint version)
+    public static async ValueTask<HyperslabSelectionInfo> Create(H5DriverBase driver, uint version)
     {
         uint rank;
 
@@ -12,42 +12,42 @@ internal abstract record class HyperslabSelectionInfo(
         {
             case 1:
                 // reserved
-                _ = driver.ReadBytes(4);
+                _ = await driver.ReadBytes(4).ConfigureAwait(false);
 
                 // length
-                _ = driver.ReadUInt32();
+                _ = await driver.ReadUInt32().ConfigureAwait(false);
 
                 // rank
-                rank = driver.ReadUInt32();
+                rank = await driver.ReadUInt32().ConfigureAwait(false);
 
-                return IrregularHyperslabSelectionInfo.Decode(driver, rank, encodeSize: 4);
+                return await IrregularHyperslabSelectionInfo.Decode(driver, rank, encodeSize: 4).ConfigureAwait(false);
 
             case 2:
                 // flags
-                _ = driver.ReadByte();
+                _ = await driver.ReadByte().ConfigureAwait(false);
 
                 // length
-                _ = driver.ReadUInt32();
+                _ = await driver.ReadUInt32().ConfigureAwait(false);
 
                 // rank
-                rank = driver.ReadUInt32();
+                rank = await driver.ReadUInt32().ConfigureAwait(false);
 
-                return RegularHyperslabSelectionInfo.Decode(driver, rank, encodeSize: 8);
+                return await RegularHyperslabSelectionInfo.Decode(driver, rank, encodeSize: 8).ConfigureAwait(false);
 
             case 3:
                 // flags
-                var flags = driver.ReadByte();
+                var flags = await driver.ReadByte().ConfigureAwait(false);
 
                 // encode size
-                var encodeSize = driver.ReadByte();
+                var encodeSize = await driver.ReadByte().ConfigureAwait(false);
 
                 // rank
-                rank = driver.ReadUInt32();
+                rank = await driver.ReadUInt32().ConfigureAwait(false);
 
                 if ((flags & 0x01) == 1)
-                    return RegularHyperslabSelectionInfo.Decode(driver, rank, encodeSize);
+                    return await RegularHyperslabSelectionInfo.Decode(driver, rank, encodeSize).ConfigureAwait(false);
                 else
-                    return IrregularHyperslabSelectionInfo.Decode(driver, rank, encodeSize);
+                    return await IrregularHyperslabSelectionInfo.Decode(driver, rank, encodeSize).ConfigureAwait(false);
 
             default:
                 throw new NotSupportedException($"Only {nameof(H5S_SEL_HYPER)} of version 1, 2 or 3 are supported.");

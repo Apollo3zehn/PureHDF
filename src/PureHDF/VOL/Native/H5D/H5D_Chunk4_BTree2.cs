@@ -29,7 +29,7 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
 
     #region Methods
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    protected override async ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
 
@@ -39,17 +39,17 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
             {
                 ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
 
-                BTree2Record10 decodeKey() => DecodeRecord10(ChunkRank);
+                ValueTask<BTree2Record10> decodeKey() => DecodeRecord10(ChunkRank);
 
-                _btree2_no_filter = BTree2Header<BTree2Record10>.Decode(ReadContext, decodeKey);
+                _btree2_no_filter = await BTree2Header<BTree2Record10>.Decode(ReadContext, decodeKey).ConfigureAwait(false);
             }
 
             // get record
-            var success = _btree2_no_filter.TryFindRecord(out var record, record =>
+            var (success, record) = await _btree2_no_filter.TryFindRecord(record =>
             {
                 // H5Dbtree2.c (H5D__bt2_compare)
-                return MathUtils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
-            });
+                return new ValueTask<int>(MathUtils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets));
+            }).ConfigureAwait(false);
 
             return success
                 ? new ChunkInfo(record.Address, ChunkByteSize, 0)
@@ -62,17 +62,17 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
                 ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
                 var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
-                BTree2Record11 decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);
+                ValueTask<BTree2Record11> decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);
 
-                _btree2_filter = BTree2Header<BTree2Record11>.Decode(ReadContext, decodeKey);
+                _btree2_filter = await BTree2Header<BTree2Record11>.Decode(ReadContext, decodeKey).ConfigureAwait(false);
             }
 
             // get record
-            var success = _btree2_filter.TryFindRecord(out var record, record =>
+            var (success, record) = await _btree2_filter.TryFindRecord(record =>
             {
                 // H5Dbtree2.c (H5D__bt2_compare)
-                return MathUtils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets);
-            });
+                return new ValueTask<int>(MathUtils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets));
+            }).ConfigureAwait(false);
 
             return success
                 ? new ChunkInfo(record.Address, record.ChunkSize, record.FilterMask)
@@ -90,13 +90,13 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
     #region Callbacks
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record10 DecodeRecord10(byte rank)
+    private ValueTask<BTree2Record10> DecodeRecord10(byte rank)
     {
         return BTree2Record10.Decode(ReadContext, rank);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record11 DecodeRecord11(byte rank, uint chunkSizeLength)
+    private ValueTask<BTree2Record11> DecodeRecord11(byte rank, uint chunkSizeLength)
     {
         return BTree2Record11.Decode(ReadContext, rank, chunkSizeLength);
     }

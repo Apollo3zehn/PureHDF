@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace PureHDF.VOL.Native;
@@ -149,7 +150,7 @@ public class NativeAttribute : IH5Attribute
         var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>();
 
         /* result buffer / result array */
-        Span<TElement> resultBuffer;
+        Memory<TElement> resultBuffer;
         var resultArray = default(Array);
 
         if (buffer is null || buffer.Equals(default(TResult)))
@@ -181,14 +182,14 @@ public class NativeAttribute : IH5Attribute
                 ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
                 : new TResult[1];
 
-            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory.Span;
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
         }
 
         else
         {
             /* result buffer */
             (var resultMemoryBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
-            resultBuffer = resultMemoryBuffer.Span;
+            resultBuffer = resultMemoryBuffer;
         }
 
         ReadCoreLevel2(source, memoryDims, fileElementCount, decoder, resultBuffer);
@@ -210,9 +211,21 @@ public class NativeAttribute : IH5Attribute
         if (memoryDims is null)
             memoryDims = [(ulong)buffer.Length];
 
-        var resultBuffer = buffer;
+        // The public Read<T>(Span<T>) overload cannot hand its Span to an async decoder (a Span
+        // cannot cross an await), so decode into a pooled Memory<TElement> and copy out. This is
+        // the unavoidable cost of the Span-based overload; the array/Memory overloads above pass
+        // their buffer straight through with no copy.
+        // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
+        // so a decode that only partially fills it must not write garbage back over the caller's
+        // remaining elements.
+        using var owner = MemoryPool<TElement>.Shared.Rent(buffer.Length);
+        var resultBuffer = owner.Memory[..buffer.Length];
+
+        buffer.CopyTo(resultBuffer.Span);
 
         ReadCoreLevel2(source, memoryDims, fileElementCount, decoder, resultBuffer);
+
+        resultBuffer.Span.CopyTo(buffer);
     }
 
     private static void ReadCoreLevel2<TElement>(
@@ -220,7 +233,7 @@ public class NativeAttribute : IH5Attribute
         ulong[] memoryDims,
         ulong fileElementCount,
         DecodeDelegate<TElement> decoder,
-        Span<TElement> resultBuffer)
+        Memory<TElement> resultBuffer)
     {
         /* memory element count */
         var memoryElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
@@ -230,7 +243,9 @@ public class NativeAttribute : IH5Attribute
             throw new Exception("The total file element count does not match the total memory element count.");
 
         /* decode */
-        decoder(source, resultBuffer);
+        // SYNC SURFACE: NativeAttribute.Read<T> is synchronous public API (IH5Attribute.Read);
+        // AttributeAsync/ReadAsync is the non-blocking entry point.
+        decoder(source, resultBuffer).GetAwaiter().GetResult();
     }
 
     private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>()

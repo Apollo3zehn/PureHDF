@@ -8,7 +8,7 @@ internal record class HugeObjectsFractalHeapIdSubType2(
     ulong BTree2Key
 ) : HugeObjectsFractalHeapIdSubType1(Context, HeapHeader, BTree2Key)
 {
-    public static new HugeObjectsFractalHeapIdSubType2 Decode(
+    public static new async ValueTask<HugeObjectsFractalHeapIdSubType2> Decode(
         NativeReadContext context,
         H5DriverBase localDriver,
         FractalHeapHeader header)
@@ -16,7 +16,7 @@ internal record class HugeObjectsFractalHeapIdSubType2(
         return new HugeObjectsFractalHeapIdSubType2(
             Context: context,
             HeapHeader: header,
-            BTree2Key: ReadUtils.ReadUlong(localDriver, header.HugeIdsSize)
+            BTree2Key: await ReadUtils.ReadUlong(localDriver, header.HugeIdsSize).ConfigureAwait(false)
         );
     }
 

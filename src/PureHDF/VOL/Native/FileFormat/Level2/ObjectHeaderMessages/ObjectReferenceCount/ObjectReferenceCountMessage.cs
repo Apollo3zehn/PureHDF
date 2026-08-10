@@ -21,12 +21,12 @@ internal partial record class ObjectReferenceCountMessage(
         }
     }
 
-    public static ObjectReferenceCountMessage Decode(H5DriverBase driver)
+    public static async ValueTask<ObjectReferenceCountMessage> Decode(H5DriverBase driver)
     {
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         return new ObjectReferenceCountMessage(
-            ReferenceCount: driver.ReadUInt32()
+            ReferenceCount: await driver.ReadUInt32().ConfigureAwait(false)
         )
         {
             Version = version

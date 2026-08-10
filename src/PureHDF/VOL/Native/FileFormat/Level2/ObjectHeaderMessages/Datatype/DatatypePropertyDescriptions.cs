@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Buffers;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -16,22 +17,22 @@ internal record class ArrayPropertyDescription(
     DatatypeMessage BaseType)
     : DatatypePropertyDescription
 {
-    public static ArrayPropertyDescription Decode(
+    public static async ValueTask<ArrayPropertyDescription> Decode(
         H5DriverBase driver, byte version)
     {
         // rank
-        var rank = driver.ReadByte();
+        var rank = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
         if (version == 2)
-            driver.ReadBytes(3);
+            await driver.ReadBytes(3).ConfigureAwait(false);
 
         // dimension sizes
         var dimensionSizes = new uint[rank];
 
         for (int i = 0; i < rank; i++)
         {
-            dimensionSizes[i] = driver.ReadUInt32();
+            dimensionSizes[i] = await driver.ReadUInt32().ConfigureAwait(false);
         }
 
         // permutation indices
@@ -41,12 +42,12 @@ internal record class ArrayPropertyDescription(
         {
             for (int i = 0; i < rank; i++)
             {
-                permutationIndices[i] = driver.ReadUInt32();
+                permutationIndices[i] = await driver.ReadUInt32().ConfigureAwait(false);
             }
         }
 
         // base type
-        var baseType = DatatypeMessage.Decode(driver);
+        var baseType = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
 
         return new ArrayPropertyDescription(
             Rank: rank,
@@ -71,12 +72,12 @@ internal record class BitFieldPropertyDescription(
     ushort BitPrecision)
     : DatatypePropertyDescription
 {
-    public static BitFieldPropertyDescription Decode(
+    public static async ValueTask<BitFieldPropertyDescription> Decode(
         H5DriverBase driver)
     {
         return new BitFieldPropertyDescription(
-            BitOffset: driver.ReadUInt16(),
-            BitPrecision: driver.ReadUInt16()
+            BitOffset: await driver.ReadUInt16().ConfigureAwait(false),
+            BitPrecision: await driver.ReadUInt16().ConfigureAwait(false)
         );
     }
 
@@ -98,7 +99,7 @@ internal record class CompoundPropertyDescription(
     DatatypeMessage MemberTypeMessage)
     : DatatypePropertyDescription
 {
-    public static CompoundPropertyDescription Decode(
+    public static async ValueTask<CompoundPropertyDescription> Decode(
         H5DriverBase driver,
         byte version,
         uint valueSize)
@@ -112,53 +113,53 @@ internal record class CompoundPropertyDescription(
             case 1:
 
                 // name
-                name = ReadUtils.ReadNullTerminatedString(driver, pad: true);
+                name = await ReadUtils.ReadNullTerminatedString(driver, pad: true).ConfigureAwait(false);
 
                 // member byte offset
-                memberByteOffset = driver.ReadUInt32();
+                memberByteOffset = await driver.ReadUInt32().ConfigureAwait(false);
 
                 // rank
-                _ = driver.ReadByte();
+                _ = await driver.ReadByte().ConfigureAwait(false);
 
                 // padding bytes
-                driver.ReadBytes(3);
+                await driver.ReadBytes(3).ConfigureAwait(false);
 
                 // dimension permutation
-                _ = driver.ReadUInt32();
+                _ = await driver.ReadUInt32().ConfigureAwait(false);
 
                 // padding byte
-                driver.ReadBytes(4);
+                await driver.ReadBytes(4).ConfigureAwait(false);
 
                 // dimension sizes
                 var dimensionSizes = new uint[4];
 
                 for (int i = 0; i < 4; i++)
                 {
-                    dimensionSizes[i] = driver.ReadUInt32();
+                    dimensionSizes[i] = await driver.ReadUInt32().ConfigureAwait(false);
                 }
 
                 // member type message
-                memberTypeMessage = DatatypeMessage.Decode(driver);
+                memberTypeMessage = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
 
                 break;
 
             case 2:
 
                 // name
-                name = ReadUtils.ReadNullTerminatedString(driver, pad: true);
+                name = await ReadUtils.ReadNullTerminatedString(driver, pad: true).ConfigureAwait(false);
 
                 // member byte offset
-                memberByteOffset = driver.ReadUInt32();
+                memberByteOffset = await driver.ReadUInt32().ConfigureAwait(false);
 
                 // member type message
-                memberTypeMessage = DatatypeMessage.Decode(driver);
+                memberTypeMessage = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
 
                 break;
 
             case 3:
 
                 // name
-                name = ReadUtils.ReadNullTerminatedString(driver, pad: false);
+                name = await ReadUtils.ReadNullTerminatedString(driver, pad: false).ConfigureAwait(false);
 
                 // member byte offset
                 var byteCount = MathUtils.FindMinByteCount(valueSize);
@@ -166,17 +167,27 @@ internal record class CompoundPropertyDescription(
                 if (!(1 <= byteCount && byteCount <= 8))
                     throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");
 
-                Span<byte> buffer = stackalloc byte[8];
-
-                for (int i = 0; i < (int)byteCount; i++)
+                using (var byteOffsetOwner = MemoryPool<byte>.Shared.Rent(8))
                 {
-                    buffer[i] = driver.ReadByte();
+                    var buffer = byteOffsetOwner.Memory[..8];
+
+                    // This was `stackalloc byte[8]`, which the runtime zero-initialises. A pooled
+                    // buffer is recycled and arbitrary, and only `byteCount` of the 8 bytes are
+                    // written below, so the remainder must be cleared or the high bytes of the
+                    // offset are garbage.
+                    buffer.Span.Clear();
+
+                    for (int i = 0; i < (int)byteCount; i++)
+                    {
+                        var b = await driver.ReadByte().ConfigureAwait(false);
+                        buffer.Span[i] = b;
+                    }
+
+                    memberByteOffset = BitConverter.ToUInt64(buffer.Span);
                 }
 
-                memberByteOffset = BitConverter.ToUInt64(buffer);
-
                 // member type message
-                memberTypeMessage = DatatypeMessage.Decode(driver);
+                memberTypeMessage = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
 
                 break;
 
@@ -236,21 +247,21 @@ internal record class EnumerationPropertyDescription(
     byte[][] Values)
     : DatatypePropertyDescription
 {
-    public static EnumerationPropertyDescription Decode(
+    public static async ValueTask<EnumerationPropertyDescription> Decode(
         H5DriverBase driver,
         byte version,
         uint valueSize,
         ushort memberCount)
     {
         // base type
-        var baseType = DatatypeMessage.Decode(driver);
+        var baseType = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
 
         // names
         var names = new string[memberCount];
 
         for (int i = 0; i < memberCount; i++)
         {
-            names[i] = ReadUtils.ReadNullTerminatedString(driver, pad: version <= 2);
+            names[i] = await ReadUtils.ReadNullTerminatedString(driver, pad: version <= 2).ConfigureAwait(false);
         }
 
         // values
@@ -258,7 +269,7 @@ internal record class EnumerationPropertyDescription(
 
         for (int i = 0; i < memberCount; i++)
         {
-            values[i] = driver.ReadBytes((int)valueSize);
+            values[i] = await driver.ReadBytes((int)valueSize).ConfigureAwait(false);
         }
 
         return new EnumerationPropertyDescription(
@@ -308,12 +319,12 @@ internal record class FixedPointPropertyDescription(
     ushort BitPrecision)
     : DatatypePropertyDescription
 {
-    public static FixedPointPropertyDescription Decode(
+    public static async ValueTask<FixedPointPropertyDescription> Decode(
         H5DriverBase driver)
     {
         return new FixedPointPropertyDescription(
-            BitOffset: driver.ReadUInt16(),
-            BitPrecision: driver.ReadUInt16()
+            BitOffset: await driver.ReadUInt16().ConfigureAwait(false),
+            BitPrecision: await driver.ReadUInt16().ConfigureAwait(false)
         );
     }
 
@@ -341,17 +352,17 @@ internal record class FloatingPointPropertyDescription(
     uint ExponentBias)
     : DatatypePropertyDescription
 {
-    public static FloatingPointPropertyDescription Decode(
+    public static async ValueTask<FloatingPointPropertyDescription> Decode(
         H5DriverBase driver)
     {
         return new FloatingPointPropertyDescription(
-            BitOffset: driver.ReadUInt16(),
-            BitPrecision: driver.ReadUInt16(),
-            ExponentLocation: driver.ReadByte(),
-            ExponentSize: driver.ReadByte(),
-            MantissaLocation: driver.ReadByte(),
-            MantissaSize: driver.ReadByte(),
-            ExponentBias: driver.ReadUInt32()
+            BitOffset: await driver.ReadUInt16().ConfigureAwait(false),
+            BitPrecision: await driver.ReadUInt16().ConfigureAwait(false),
+            ExponentLocation: await driver.ReadByte().ConfigureAwait(false),
+            ExponentSize: await driver.ReadByte().ConfigureAwait(false),
+            MantissaLocation: await driver.ReadByte().ConfigureAwait(false),
+            MantissaSize: await driver.ReadByte().ConfigureAwait(false),
+            ExponentBias: await driver.ReadUInt32().ConfigureAwait(false)
         );
     }
 
@@ -383,13 +394,14 @@ internal record class OpaquePropertyDescription(
     string Tag)
     : DatatypePropertyDescription
 {
-    public static OpaquePropertyDescription Decode(
+    public static async ValueTask<OpaquePropertyDescription> Decode(
         H5DriverBase driver,
         byte tagByteLength)
     {
         return new OpaquePropertyDescription(
-            Tag: ReadUtils
+            Tag: (await ReadUtils
                 .ReadFixedLengthString(driver, tagByteLength)
+                .ConfigureAwait(false))
                 .TrimEnd('\0')
         );
     }
@@ -423,11 +435,11 @@ internal record class TimePropertyDescription(
     ushort BitPrecision)
     : DatatypePropertyDescription
 {
-    public static TimePropertyDescription Decode(
+    public static async ValueTask<TimePropertyDescription> Decode(
         H5DriverBase driver)
     {
         return new TimePropertyDescription(
-            BitPrecision: driver.ReadUInt16()
+            BitPrecision: await driver.ReadUInt16().ConfigureAwait(false)
         );
     }
 
@@ -446,11 +458,11 @@ internal record class VariableLengthPropertyDescription(
     DatatypeMessage BaseType)
     : DatatypePropertyDescription
 {
-    public static VariableLengthPropertyDescription Decode(
+    public static async ValueTask<VariableLengthPropertyDescription> Decode(
         H5DriverBase driver)
     {
         return new VariableLengthPropertyDescription(
-            BaseType: DatatypeMessage.Decode(driver)
+            BaseType: await DatatypeMessage.Decode(driver).ConfigureAwait(false)
         );
     }
 

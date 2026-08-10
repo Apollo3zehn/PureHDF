@@ -26,46 +26,46 @@ internal record class ExternalFileListMessage(
         }
     }
 
-    public LocalHeap Heap
+    // NOTE (async propagation): a lazily-cached property getter cannot await, so
+    // this became a method with the same name. Callers outside this file need
+    // updating — see report.
+    public async ValueTask<LocalHeap> Heap()
     {
-        get
+        if (_heap.Equals(default))
         {
-            if (_heap.Equals(default))
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)HeapAddress);
-                _heap = LocalHeap.Decode(Context);
-            }
-
-            return _heap;
+            Context.Driver.SeekRelativeToBaseAddress((long)HeapAddress);
+            _heap = await LocalHeap.Decode(Context).ConfigureAwait(false);
         }
+
+        return _heap;
     }
 
-    public static ExternalFileListMessage Decode(NativeReadContext context)
+    public static async ValueTask<ExternalFileListMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // TODO: Its value must be at least as large as the value contained in the Used Slots field.
         // allocated slot count
-        var allocatedSlotCount = driver.ReadUInt16();
+        var allocatedSlotCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         // used slot count
-        var usedSlotCount = driver.ReadUInt16();
+        var usedSlotCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         // heap address
-        var heapAddress = superblock.ReadOffset(driver);
+        var heapAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // slot definitions
         var slotDefinitions = new ExternalFileListSlot[usedSlotCount];
 
         for (int i = 0; i < usedSlotCount; i++)
         {
-            slotDefinitions[i] = ExternalFileListSlot.Decode(context);
+            slotDefinitions[i] = await ExternalFileListSlot.Decode(context).ConfigureAwait(false);
         }
 
         return new ExternalFileListMessage(

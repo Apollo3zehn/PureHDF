@@ -26,66 +26,66 @@ internal partial record class AttributeMessage(
         }
     }
 
-    public static AttributeMessage Decode(NativeReadContext context, ulong objectHeaderAddress)
+    public static async ValueTask<AttributeMessage> Decode(NativeReadContext context, ulong objectHeaderAddress)
     {
         // version
-        var version = context.Driver.ReadByte();
+        var version = await context.Driver.ReadByte().ConfigureAwait(false);
 
         // flags
         var flags = default(AttributeMessageFlags);
 
         if (version == 1)
-            context.Driver.ReadByte();
+            await context.Driver.ReadByte().ConfigureAwait(false);
 
         else
-            flags = (AttributeMessageFlags)context.Driver.ReadByte();
+            flags = (AttributeMessageFlags)await context.Driver.ReadByte().ConfigureAwait(false);
 
         // name size
-        var nameSize = context.Driver.ReadUInt16();
+        var nameSize = await context.Driver.ReadUInt16().ConfigureAwait(false);
 
         // datatype size
-        var datatypeSize = context.Driver.ReadUInt16();
+        var datatypeSize = await context.Driver.ReadUInt16().ConfigureAwait(false);
 
         // dataspace size
-        var dataspaceSize = context.Driver.ReadUInt16();
+        var dataspaceSize = await context.Driver.ReadUInt16().ConfigureAwait(false);
 
         // name character set encoding
         // The field is consumed to keep the driver aligned but not acted upon: names are
         // decoded as UTF-8 either way, which is correct for ASCII too. See ReadUtils.
         if (version == 3)
-            _ = context.Driver.ReadByte();
+            _ = await context.Driver.ReadByte().ConfigureAwait(false);
 
         // name
         string name;
 
         if (version == 1)
-            name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: true);
+            name = await ReadUtils.ReadNullTerminatedString(context.Driver, pad: true).ConfigureAwait(false);
 
         else
-            name = ReadUtils.ReadNullTerminatedString(context.Driver, pad: false);
+            name = await ReadUtils.ReadNullTerminatedString(context.Driver, pad: false).ConfigureAwait(false);
 
         // datatype
         var flags1 = flags.HasFlag(AttributeMessageFlags.SharedDatatype)
             ? MessageFlags.Shared
             : MessageFlags.NoFlags;
 
-        var datatype = Decode(context, objectHeaderAddress, flags1,
-            () => DatatypeMessage.Decode(context.Driver));
+        var datatype = await Decode(context, objectHeaderAddress, flags1,
+            () => DatatypeMessage.Decode(context.Driver)).ConfigureAwait(false);
 
         if (version == 1)
         {
             var paddedSize = (int)(Math.Ceiling(datatypeSize / 8.0) * 8);
             var remainingSize = paddedSize - datatypeSize;
-            context.Driver.ReadBytes(remainingSize);
+            await context.Driver.ReadBytes(remainingSize).ConfigureAwait(false);
         }
 
-        // dataspace 
+        // dataspace
         var flags2 = flags.HasFlag(AttributeMessageFlags.SharedDataspace)
             ? MessageFlags.Shared
             : MessageFlags.NoFlags;
 
-        var dataspace = Decode(context, objectHeaderAddress, flags2,
-            () => DataspaceMessage.Decode(context));
+        var dataspace = await Decode(context, objectHeaderAddress, flags2,
+            () => DataspaceMessage.Decode(context)).ConfigureAwait(false);
 
         if (version == 1)
         {
@@ -96,7 +96,7 @@ internal partial record class AttributeMessage(
 
         // data
         var byteSize = dataspace.GetTotalElementCount() * datatype.Size;
-        var data = context.Driver.ReadBytes((int)byteSize);
+        var data = await context.Driver.ReadBytes((int)byteSize).ConfigureAwait(false);
 
         return new AttributeMessage(
             Flags: flags,

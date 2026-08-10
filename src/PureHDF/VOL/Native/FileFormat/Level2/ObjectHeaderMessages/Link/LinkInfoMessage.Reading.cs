@@ -31,76 +31,72 @@ internal partial record class LinkInfoMessage(
         }
     }
 
-    public FractalHeapHeader FractalHeap
+    // NOTE (async propagation): a lazily-cached property getter cannot await, so
+    // this became a method with the same name. Callers outside this file need
+    // updating — see report.
+    public async ValueTask<FractalHeapHeader> FractalHeap()
     {
-        get
+        if (_fractalHeap is null)
         {
-            if (_fractalHeap is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
-                _fractalHeap = FractalHeapHeader.Decode(Context);
-            }
-
-            return _fractalHeap;
+            Context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
+            _fractalHeap = await FractalHeapHeader.Decode(Context).ConfigureAwait(false);
         }
+
+        return _fractalHeap;
     }
 
-    public BTree2Header<BTree2Record05> BTree2NameIndex
+    // NOTE (async propagation): see FractalHeap() above.
+    public async ValueTask<BTree2Header<BTree2Record05>> BTree2NameIndex()
     {
-        get
+        if (_bTree2NameIndex is null)
         {
-            if (_bTree2NameIndex is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
-                _bTree2NameIndex = BTree2Header<BTree2Record05>.Decode(Context, DecodeRecord05);
-            }
-
-            return _bTree2NameIndex;
+            Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
+            _bTree2NameIndex = await BTree2Header<BTree2Record05>.Decode(Context, DecodeRecord05).ConfigureAwait(false);
         }
+
+        return _bTree2NameIndex;
     }
 
-    public BTree2Header<BTree2Record06> BTree2CreationOrder
+    // NOTE (async propagation): see FractalHeap() above.
+    public async ValueTask<BTree2Header<BTree2Record06>> BTree2CreationOrder()
     {
-        get
+        if (_bTree2CreationOrder is null)
         {
-            if (_bTree2CreationOrder is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)BTree2CreationOrderIndexAddress);
-                _bTree2CreationOrder = BTree2Header<BTree2Record06>.Decode(Context, DecodeRecord06);
-            }
-
-            return _bTree2CreationOrder;
+            Context.Driver.SeekRelativeToBaseAddress((long)BTree2CreationOrderIndexAddress);
+            _bTree2CreationOrder = await BTree2Header<BTree2Record06>.Decode(Context, DecodeRecord06).ConfigureAwait(false);
         }
+
+        return _bTree2CreationOrder;
     }
 
-    public static LinkInfoMessage Decode(NativeReadContext context)
+    public static async ValueTask<LinkInfoMessage> Decode(NativeReadContext context)
     {
 
         var (driver, superblock) = context;
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // flags
-        var flags = (CreationOrderFlags)driver.ReadByte();
+        var flags = (CreationOrderFlags)await driver.ReadByte().ConfigureAwait(false);
 
         // maximum creation index
         var maximumCreationIndex = default(ulong);
 
         if (flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
-            maximumCreationIndex = driver.ReadUInt64();
+            maximumCreationIndex = await driver.ReadUInt64().ConfigureAwait(false);
 
         // fractal heap address
-        var fractalHeapAddress = superblock.ReadOffset(driver);
+        var fractalHeapAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // BTree2 name index address
-        var bTree2NameIndexAddress = superblock.ReadOffset(driver);
+        var bTree2NameIndexAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // BTree2 creation order index address
         var bTree2CreationOrderIndexAddress = default(ulong);
 
         if (flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-            bTree2CreationOrderIndexAddress = superblock.ReadOffset(driver);
+            bTree2CreationOrderIndexAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new LinkInfoMessage(
             context,
@@ -116,8 +112,8 @@ internal partial record class LinkInfoMessage(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record05 DecodeRecord05() => BTree2Record05.Decode(Context.Driver);
+    private async ValueTask<BTree2Record05> DecodeRecord05() => await BTree2Record05.Decode(Context.Driver).ConfigureAwait(false);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record06 DecodeRecord06() => BTree2Record06.Decode(Context.Driver);
+    private async ValueTask<BTree2Record06> DecodeRecord06() => await BTree2Record06.Decode(Context.Driver).ConfigureAwait(false);
 }

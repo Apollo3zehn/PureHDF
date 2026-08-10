@@ -55,11 +55,22 @@ internal partial record class FixedArrayDataBlock<T>
         // Checksum
         var bufferSize = (int)(driver.Position - position);
         using var buffer = MemoryPool<byte>.Shared.Rent(bufferSize);
-        var checksumData = buffer.Memory.Span[..bufferSize];
+        var checksumData = buffer.Memory[..bufferSize];
 
         driver.Seek(position, SeekOrigin.Begin);
-        driver.Read(checksumData);
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+
+        // SYNC SURFACE: Encode is synchronous (the writer is), while driver.Read is async now. This
+        // ValueTask was previously discarded outright - no CS4014 warning, because the enclosing
+        // method is not async - so the checksum was computed over uninitialized pooled memory.
+        // AsTask() is required: blocking directly on an IValueTaskSource-backed ValueTask is not
+        // supported and throws.
+        driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
+
+        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
+
+        // Absolute seek: the async read leaves a BufferedFileStream's read buffer in a state where
+        // the sync Write below can fail inside its internal FlushRead.
+        driver.Seek(position + bufferSize, SeekOrigin.Begin);
 
         driver.Write(checksum);
     }

@@ -32,48 +32,45 @@ internal record class FractalHeapDirectBlock(
         }
     }
 
-    public FractalHeapHeader HeapHeader
+    public async ValueTask<FractalHeapHeader> GetHeapHeader()
     {
-        get
+        if (_header is null)
         {
-            if (_header is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)HeapHeaderAddress);
-                _header = FractalHeapHeader.Decode(Context);
-            }
-
-            return _header;
+            Context.Driver.SeekRelativeToBaseAddress((long)HeapHeaderAddress);
+            _header = await FractalHeapHeader.Decode(Context).ConfigureAwait(false);
         }
+
+        return _header;
     }
 
-    public static FractalHeapDirectBlock Decode(NativeReadContext context, FractalHeapHeader header)
+    public static async ValueTask<FractalHeapDirectBlock> Decode(NativeReadContext context, FractalHeapHeader header)
     {
         var (driver, superblock) = context;
 
         var headerSize = 0UL;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         headerSize += 4;
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
         headerSize += 1;
 
         // heap header address
-        var heapHeaderAddress = superblock.ReadOffset(driver);
+        var heapHeaderAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
         headerSize += superblock.OffsetsSize;
 
         // block offset
         var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-        var blockOffset = ReadUtils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
+        var blockOffset = await ReadUtils.ReadUlong(driver, (ulong)blockOffsetFieldSize).ConfigureAwait(false);
         headerSize += (ulong)blockOffsetFieldSize;
 
         // checksum
         if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
         {
-            var _ = driver.ReadUInt32();
+            var _ = await driver.ReadUInt32().ConfigureAwait(false);
             headerSize += 4;
         }
 

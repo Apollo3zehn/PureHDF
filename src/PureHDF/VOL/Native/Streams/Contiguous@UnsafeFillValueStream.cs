@@ -17,8 +17,11 @@ internal class UnsafeFillValueStream : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public unsafe void ReadDataset(Span<byte> buffer)
+    // No IO at all: stays sync-completing. Not async, so `fixed` over the Span is still legal.
+    public unsafe ValueTask ReadDataset(Memory<byte> memory)
     {
+        var buffer = memory.Span;
+
         if (_fillValue is null)
         {
             buffer.Clear();
@@ -39,6 +42,8 @@ internal class UnsafeFillValueStream : IH5ReadStream
 
             _position += buffer.Length;
         }
+
+        return default;
     }
 
     public void Seek(long offset, SeekOrigin origin)

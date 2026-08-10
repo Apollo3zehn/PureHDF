@@ -6,14 +6,14 @@ internal record class TinyObjectsFractalHeapIdSubType1(
     byte[] Data
 ) : FractalHeapId
 {
-    public static TinyObjectsFractalHeapIdSubType1 Decode(
+    public static async ValueTask<TinyObjectsFractalHeapIdSubType1> Decode(
         H5DriverBase localDriver,
         byte firstByte)
     {
         var length = (byte)(((firstByte & 0x0F) >> 0) + 1);
 
         return new TinyObjectsFractalHeapIdSubType1(
-            Data: localDriver.ReadBytes(length)
+            Data: await localDriver.ReadBytes(length).ConfigureAwait(false)
         );
     }
 

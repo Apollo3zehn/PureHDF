@@ -2,26 +2,28 @@
 
 internal abstract partial record class Message
 {
-    public static T Decode<T>(
+    // The decode delegate now returns a ValueTask<T>; without this the compiler infers
+    // T = ValueTask<TMessage> and the `where T : Message` constraint fails (CS0315).
+    public static async ValueTask<T> Decode<T>(
         NativeReadContext context,
         ulong address,
         MessageFlags messageFlags,
-        Func<T> decode) where T : Message
+        Func<ValueTask<T>> decode) where T : Message
     {
         // H5OShared.h (H5O_SHARED_DECODE)
         if (messageFlags.HasFlag(MessageFlags.Shared))
         {
-            var sharedMessage = SharedMessage.Decode(context);
-            return DecodeSharedMessage<T>(context, address, sharedMessage);
+            var sharedMessage = await SharedMessage.Decode(context).ConfigureAwait(false);
+            return await DecodeSharedMessage<T>(context, address, sharedMessage).ConfigureAwait(false);
         }
 
         else
         {
-            return decode();
+            return await decode().ConfigureAwait(false);
         }
     }
 
-    private static T DecodeSharedMessage<T>(NativeReadContext context, ulong address, SharedMessage message) where T : Message
+    private static async ValueTask<T> DecodeSharedMessage<T>(NativeReadContext context, ulong address, SharedMessage message) where T : Message
     {
         // H5Oshared.c (H5O__shared_read)
 
@@ -50,7 +52,7 @@ internal abstract partial record class Message
                 var position = context.Driver.Position;
                 context.Driver.SeekRelativeToBaseAddress((long)message.Address);
 
-                var header = ObjectHeader.Construct(context);
+                var header = await ObjectHeader.Construct(context).ConfigureAwait(false);
                 var sharedMessage = header.GetMessage<T>();
 
                 context.Driver.Seek(position, SeekOrigin.Begin);

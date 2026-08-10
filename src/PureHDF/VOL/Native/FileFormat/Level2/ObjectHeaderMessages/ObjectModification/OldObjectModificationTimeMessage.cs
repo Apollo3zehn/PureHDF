@@ -9,18 +9,18 @@ internal record class OldObjectModificationTimeMessage(
     int Second
 ) : Message
 {
-    public static OldObjectModificationTimeMessage Decode(H5DriverBase driver)
+    public static async ValueTask<OldObjectModificationTimeMessage> Decode(H5DriverBase driver)
     {
         // date / time
-        var year = int.Parse(ReadUtils.ReadFixedLengthString(driver, 4));
-        var month = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
-        var dayOfMonth = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
-        var hour = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
-        var minute = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
-        var second = int.Parse(ReadUtils.ReadFixedLengthString(driver, 2));
+        var year = int.Parse(await ReadUtils.ReadFixedLengthString(driver, 4).ConfigureAwait(false));
+        var month = int.Parse(await ReadUtils.ReadFixedLengthString(driver, 2).ConfigureAwait(false));
+        var dayOfMonth = int.Parse(await ReadUtils.ReadFixedLengthString(driver, 2).ConfigureAwait(false));
+        var hour = int.Parse(await ReadUtils.ReadFixedLengthString(driver, 2).ConfigureAwait(false));
+        var minute = int.Parse(await ReadUtils.ReadFixedLengthString(driver, 2).ConfigureAwait(false));
+        var second = int.Parse(await ReadUtils.ReadFixedLengthString(driver, 2).ConfigureAwait(false));
 
         // reserved
-        driver.ReadBytes(2);
+        await driver.ReadBytes(2).ConfigureAwait(false);
 
         return new OldObjectModificationTimeMessage(
             Year: year,

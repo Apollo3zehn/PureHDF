@@ -30,42 +30,28 @@ internal record struct LocalHeap(
         }
     }
 
-    public byte[] Data
-    {
-        get
-        {
-            if (_data is null)
-            {
-                Driver.SeekRelativeToBaseAddress((long)DataSegmentAddress);
-                _data = Driver.ReadBytes((int)DataSegmentSize);
-            }
-
-            return _data;
-        }
-    }
-
-    public static LocalHeap Decode(NativeReadContext context)
+    public static async ValueTask<LocalHeap> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // data segment size
-        var dataSegmentSize = superblock.ReadLength(driver);
+        var dataSegmentSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // free list head offset
-        var freeListHeadOffset = superblock.ReadLength(driver);
+        var freeListHeadOffset = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // data segment address
-        var dataSegmentAddress = superblock.ReadOffset(driver);
+        var dataSegmentAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new LocalHeap(
             Driver: driver,
@@ -78,10 +64,16 @@ internal record struct LocalHeap(
         };
     }
 
-    public string GetObjectName(ulong offset)
+    public async ValueTask<string> GetObjectName(ulong offset)
     {
-        var end = Array.IndexOf(Data, (byte)0, (int)offset);
-        var bytes = Data[(int)offset..end];
+        if (_data is null)
+        {
+            Driver.SeekRelativeToBaseAddress((long)DataSegmentAddress);
+            _data = await Driver.ReadBytes((int)DataSegmentSize).ConfigureAwait(false);
+        }
+
+        var end = Array.IndexOf(_data, (byte)0, (int)offset);
+        var bytes = _data[(int)offset..end];
 
         return Encoding.UTF8.GetString(bytes);
     }

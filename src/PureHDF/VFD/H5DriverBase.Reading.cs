@@ -1,4 +1,4 @@
-﻿namespace PureHDF.VFD;
+namespace PureHDF.VFD;
 
 internal abstract partial class H5DriverBase : IH5ReadStream
 {
@@ -7,16 +7,18 @@ internal abstract partial class H5DriverBase : IH5ReadStream
     public abstract long Position { get; }
     public abstract long Length { get; }
 
-    public abstract void ReadDataset(Span<byte> buffer);
+    public abstract ValueTask ReadDataset(Memory<byte> buffer);
+
+    // Pure arithmetic — deliberately left synchronous.
     public abstract void Seek(long offset, SeekOrigin origin);
 
-    public abstract void Read(Span<byte> buffer);
-    public abstract byte ReadByte();
-    public abstract byte[] ReadBytes(int count);
-    public abstract ushort ReadUInt16();
-    public abstract short ReadInt16();
-    public abstract uint ReadUInt32();
-    public abstract ulong ReadUInt64();
+    public abstract ValueTask Read(Memory<byte> buffer);
+    public abstract ValueTask<byte> ReadByte();
+    public abstract ValueTask<byte[]> ReadBytes(int count);
+    public abstract ValueTask<ushort> ReadUInt16();
+    public abstract ValueTask<short> ReadInt16();
+    public abstract ValueTask<uint> ReadUInt32();
+    public abstract ValueTask<ulong> ReadUInt64();
 
     public void SeekRelativeToBaseAddress(long offset)
     {

@@ -56,7 +56,12 @@ internal struct NativeNamedReference
         {
             var context = File.Context;
             context.Driver.SeekRelativeToBaseAddress((long)Value);
-            var objectHeader = ObjectHeader.Construct(context);
+
+            // NOTE (async propagation): ObjectHeader.Construct is now async. This
+            // method has many synchronous, non-async-aware callers (NativeGroup.cs
+            // iterates/LINQ-projects over it) and cannot itself become async, so
+            // the call is bridged here — see report.
+            var objectHeader = ObjectHeader.Construct(context).GetAwaiter().GetResult();
 
             return objectHeader.ObjectType switch
             {

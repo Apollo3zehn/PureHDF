@@ -38,58 +38,58 @@ internal record class FreeSpaceManagerHeader(
         }
     }
 
-    public static FreeSpaceManagerHeader Decode(NativeReadContext context)
+    public static async ValueTask<FreeSpaceManagerHeader> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, FreeSpaceManagerHeader.Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // client ID
-        var clientId = (ClientId)driver.ReadByte();
+        var clientId = (ClientId)(await driver.ReadByte().ConfigureAwait(false));
 
         // total space tracked
-        var totalSpaceTracked = superblock.ReadLength(driver);
+        var totalSpaceTracked = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // total sections count
-        var totalSectionsCount = superblock.ReadLength(driver);
+        var totalSectionsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // serialized sections count
-        var serializedSectionsCount = superblock.ReadLength(driver);
+        var serializedSectionsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // un-serialized sections count
-        var unSerializedSectionsCount = superblock.ReadLength(driver);
+        var unSerializedSectionsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // section classes count
-        var sectionClassesCount = driver.ReadUInt16();
+        var sectionClassesCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         // shrink percent
-        var shrinkPercent = driver.ReadUInt16();
+        var shrinkPercent = await driver.ReadUInt16().ConfigureAwait(false);
 
         // expand percent
-        var expandPercent = driver.ReadUInt16();
+        var expandPercent = await driver.ReadUInt16().ConfigureAwait(false);
 
         // address space size
-        var addressSpaceSize = driver.ReadUInt16();
+        var addressSpaceSize = await driver.ReadUInt16().ConfigureAwait(false);
 
         // maximum section size
-        var maximumSectionSize = superblock.ReadLength(driver);
+        var maximumSectionSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // serialized section list address
-        var serializedSectionListAddress = superblock.ReadOffset(driver);
+        var serializedSectionListAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // serialized section list used
-        var serializedSectionListUsed = superblock.ReadLength(driver);
+        var serializedSectionListUsed = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // serialized section list allocated size
-        var serializedSectionListAllocatedSize = superblock.ReadLength(driver);
+        var serializedSectionListAllocatedSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new FreeSpaceManagerHeader(
             ClientId: clientId,

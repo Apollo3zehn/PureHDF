@@ -4,20 +4,30 @@ internal class SlotStream : IH5ReadStream
 {
     private long _position;
     private readonly NativeFile _file;
-    private readonly LocalHeap _heap;
+    private readonly string _name;
     private Stream? _stream;
     private readonly ExternalFileListSlot _slot;
     private readonly H5DatasetAccess _datasetAccess;
 
-    public SlotStream(NativeFile file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
+    private SlotStream(NativeFile file, string name, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
     {
         _file = file;
-        _heap = heap;
+        _name = name;
         _slot = slot;
         Offset = offset;
         _datasetAccess = datasetAccess;
 
         Length = (long)_slot.Size;
+    }
+
+    // RULE 4 CONVERSION: the constructor resolved the external-file name via
+    // LocalHeap.GetObjectName, which performs a driver read; constructors cannot be
+    // async, so construction is now via this static factory.
+    public static async ValueTask<SlotStream> Create(NativeFile file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
+    {
+        var name = await heap.GetObjectName(slot.NameHeapOffset).ConfigureAwait(false);
+
+        return new SlotStream(file, name, slot, offset, datasetAccess);
     }
 
     public long Offset { get; private set; }
@@ -26,16 +36,16 @@ internal class SlotStream : IH5ReadStream
 
     public long Length { get; }
 
-    public void ReadDataset(Span<byte> buffer)
+    public async ValueTask ReadDataset(Memory<byte> buffer)
     {
         var length = (int)Math.Min(Length - Position, buffer.Length);
 
         _stream = EnsureStream();
 
-        var actualLength = _stream.Read(buffer[..length]);
+        var actualLength = await _stream.ReadAsync(buffer[..length]).ConfigureAwait(false);
 
         // If file is shorter than slot: fill remaining buffer with zeros.
-        buffer[actualLength..length]
+        buffer.Span[actualLength..length]
             .Clear();
 
         _position += length;
@@ -65,8 +75,7 @@ internal class SlotStream : IH5ReadStream
     {
         if (_stream is null)
         {
-            var name = _heap.GetObjectName(_slot.NameHeapOffset);
-            var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, name, _datasetAccess);
+            var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, _name, _datasetAccess);
 
             if (!File.Exists(filePath))
                 throw new Exception($"External file '{filePath}' does not exist.");

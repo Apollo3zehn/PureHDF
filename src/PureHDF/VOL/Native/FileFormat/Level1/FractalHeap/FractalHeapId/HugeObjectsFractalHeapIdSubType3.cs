@@ -8,14 +8,14 @@ internal record class HugeObjectsFractalHeapIdSubType3(
     ulong Length
 ) : FractalHeapId
 {
-    public static HugeObjectsFractalHeapIdSubType3 Decode(NativeReadContext context, H5DriverBase localDriver)
+    public static async ValueTask<HugeObjectsFractalHeapIdSubType3> Decode(NativeReadContext context, H5DriverBase localDriver)
     {
         var (driver, superblock) = context;
 
         return new HugeObjectsFractalHeapIdSubType3(
             Driver: driver,
-            Address: superblock.ReadOffset(localDriver),
-            Length: superblock.ReadLength(localDriver)
+            Address: await superblock.ReadOffset(localDriver).ConfigureAwait(false),
+            Length: await superblock.ReadLength(localDriver).ConfigureAwait(false)
         );
     }
     public override T Read<T>(

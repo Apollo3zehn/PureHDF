@@ -4,16 +4,16 @@ internal abstract record class DataLayoutMessage(
     LayoutClass LayoutClass)
     : Message
 {
-    public static DataLayoutMessage Construct(NativeReadContext context)
+    public static async ValueTask<DataLayoutMessage> Construct(NativeReadContext context)
     {
         // get version
-        var version = context.Driver.ReadByte();
+        var version = await context.Driver.ReadByte().ConfigureAwait(false);
 
         return version switch
         {
-            >= 1 and < 3 => DataLayoutMessage12.Decode(context, version),
-            3 => DataLayoutMessage3.Decode(context, version),
-            4 => DataLayoutMessage4.Decode(context, version),
+            >= 1 and < 3 => await DataLayoutMessage12.Decode(context, version).ConfigureAwait(false),
+            3 => await DataLayoutMessage3.Decode(context, version).ConfigureAwait(false),
+            4 => await DataLayoutMessage4.Decode(context, version).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The data layout message version '{version}' is not supported.")
         };
     }

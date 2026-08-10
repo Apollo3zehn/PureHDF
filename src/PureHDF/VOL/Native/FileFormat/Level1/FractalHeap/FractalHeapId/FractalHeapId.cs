@@ -6,12 +6,12 @@ internal abstract record class FractalHeapId(
 //
 )
 {
-    internal static FractalHeapId Construct(
+    internal static async ValueTask<FractalHeapId> Construct(
         NativeReadContext context,
         H5DriverBase localDriver,
-        in FractalHeapHeader header)
+        FractalHeapHeader header)
     {
-        var firstByte = localDriver.ReadByte();
+        var firstByte = await localDriver.ReadByte().ConfigureAwait(false);
 
         // bits 6-7
         var version = (byte)((firstByte & 0xB0) >> 6);
@@ -30,17 +30,17 @@ internal abstract record class FractalHeapId(
         // H5HF.c (H5HF_op)
         return (FractalHeapId)((type, header.HugeIdsAreDirect, header.IOFilterEncodedLength, header.TinyObjectsAreExtended) switch
         {
-            (FractalHeapIdType.Managed, _, _, _) => ManagedObjectsFractalHeapId.Decode(context.Driver, localDriver, header, offsetSize, lengthSize),
+            (FractalHeapIdType.Managed, _, _, _) => await ManagedObjectsFractalHeapId.Decode(context.Driver, localDriver, header, offsetSize, lengthSize).ConfigureAwait(false),
 
             // H5HFhuge.c (H5HF__huge_op_real)
-            (FractalHeapIdType.Huge, false, 0, _) => HugeObjectsFractalHeapIdSubType1.Decode(context, localDriver, header),
-            (FractalHeapIdType.Huge, false, _, _) => HugeObjectsFractalHeapIdSubType2.Decode(context, localDriver, header),
-            (FractalHeapIdType.Huge, true, 0, _) => HugeObjectsFractalHeapIdSubType3.Decode(context, localDriver),
-            (FractalHeapIdType.Huge, true, _, _) => HugeObjectsFractalHeapIdSubType4.Decode(context.Superblock, localDriver),
+            (FractalHeapIdType.Huge, false, 0, _) => await HugeObjectsFractalHeapIdSubType1.Decode(context, localDriver, header).ConfigureAwait(false),
+            (FractalHeapIdType.Huge, false, _, _) => await HugeObjectsFractalHeapIdSubType2.Decode(context, localDriver, header).ConfigureAwait(false),
+            (FractalHeapIdType.Huge, true, 0, _) => await HugeObjectsFractalHeapIdSubType3.Decode(context, localDriver).ConfigureAwait(false),
+            (FractalHeapIdType.Huge, true, _, _) => await HugeObjectsFractalHeapIdSubType4.Decode(context.Superblock, localDriver).ConfigureAwait(false),
 
             // H5HFtiny.c (H5HF_tiny_op_real)
-            (FractalHeapIdType.Tiny, _, _, false) => TinyObjectsFractalHeapIdSubType1.Decode(localDriver, firstByte),
-            (FractalHeapIdType.Tiny, _, _, true) => TinyObjectsFractalHeapIdSubType2.Decode(localDriver, firstByte),
+            (FractalHeapIdType.Tiny, _, _, false) => await TinyObjectsFractalHeapIdSubType1.Decode(localDriver, firstByte).ConfigureAwait(false),
+            (FractalHeapIdType.Tiny, _, _, true) => await TinyObjectsFractalHeapIdSubType2.Decode(localDriver, firstByte).ConfigureAwait(false),
 
             // default
             _ => throw new Exception($"Unknown heap ID type '{type}'.")

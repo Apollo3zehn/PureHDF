@@ -26,13 +26,13 @@ internal partial record class DataspaceMessage(
         }
     }
 
-    public static DataspaceMessage Decode(NativeReadContext context)
+    public static async ValueTask<DataspaceMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
-        var version = driver.ReadByte();
-        var rank = driver.ReadByte();
-        var flags = (DataspaceMessageFlags)driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
+        var rank = await driver.ReadByte().ConfigureAwait(false);
+        var flags = (DataspaceMessageFlags)await driver.ReadByte().ConfigureAwait(false);
 
         DataspaceType type;
 
@@ -44,11 +44,11 @@ internal partial record class DataspaceMessage(
             else
                 type = DataspaceType.Scalar;
 
-            driver.ReadBytes(5);
+            await driver.ReadBytes(5).ConfigureAwait(false);
         }
         else
         {
-            type = (DataspaceType)driver.ReadByte();
+            type = (DataspaceType)await driver.ReadByte().ConfigureAwait(false);
         }
 
         var dimensionSizes = new ulong[rank];
@@ -58,7 +58,7 @@ internal partial record class DataspaceMessage(
 
         for (int i = 0; i < rank; i++)
         {
-            dimensionSizes[i] = superblock.ReadLength(driver);
+            dimensionSizes[i] = await superblock.ReadLength(driver).ConfigureAwait(false);
         }
 
         ulong[] dimensionMaxSizes;
@@ -69,7 +69,7 @@ internal partial record class DataspaceMessage(
 
             for (int i = 0; i < rank; i++)
             {
-                dimensionMaxSizes[i] = superblock.ReadLength(driver);
+                dimensionMaxSizes[i] = await superblock.ReadLength(driver).ConfigureAwait(false);
             }
         }
 
@@ -86,7 +86,7 @@ internal partial record class DataspaceMessage(
 
             for (int i = 0; i < rank; i++)
             {
-                permutationIndices[i] = superblock.ReadLength(driver);
+                permutationIndices[i] = await superblock.ReadLength(driver).ConfigureAwait(false);
             }
         }
 

@@ -584,7 +584,7 @@ public class SelectionTests
     [InlineData(
         new ulong[] { 1, 1 }, new ulong[] { 4, 4 }, new ulong[] { 4, 4 }, new ulong[] { 3, 4 },
         new ulong[] { 1, 1 }, new ulong[] { 4, 4 }, new ulong[] { 5, 5 }, new ulong[] { 3, 2 })]
-    public void CopyThrowsForMismatchingSelectionSizes(
+    public async Task CopyThrowsForMismatchingSelectionSizes(
         ulong[] sourceStarts, ulong[] sourceStrides, ulong[] sourceCounts, ulong[] sourceBlocks,
         ulong[] targetStarts, ulong[] targetStrides, ulong[] targetCounts, ulong[] targetBlocks)
     {
@@ -607,10 +607,12 @@ public class SelectionTests
         );
 
         // Act
-        void action() => SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo, default);
+        // SelectionHelper.Decode is async now, so its validation exception surfaces on the awaited
+        // task rather than on the call itself.
+        async Task action() => await SelectionHelper.Decode(sourceRank: 2, targetRank: 2, decodeInfo, default);
 
         // Assert
-        Assert.Throws<ArgumentException>(action);
+        await Assert.ThrowsAsync<ArgumentException>(action);
     }
 
     [Theory]
@@ -804,7 +806,7 @@ public class SelectionTests
             datasetSelection,
             memorySelection,
             index => new SystemMemoryStream(chunksBuffers[(int)index]),
-            (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
+            (source, target) => source.ReadDataset(target.Cast<int, byte>()),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1,
             AllowBulkCopy: true
@@ -923,7 +925,7 @@ public class SelectionTests
             sourceSelection,
             targetSelection,
             getSourceStream,
-            (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
+            (source, target) => source.ReadDataset(target.Cast<int, byte>()),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1,
             AllowBulkCopy: true
@@ -1054,7 +1056,7 @@ public class SelectionTests
             datasetSelection,
             memorySelection,
             getSourceStream,
-            (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
+            (source, target) => source.ReadDataset(target.Cast<int, byte>()),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1,
             AllowBulkCopy: true
@@ -1155,7 +1157,7 @@ public class SelectionTests
                 datasetSelection,
                 datasetSelection,
                 index => h5dIntermediate.GetReadStream(index),
-                (source, target) => source.ReadDataset(MemoryMarshal.AsBytes(target)),
+                (source, target) => source.ReadDataset(target.Cast<int, byte>()),
                 SourceTypeSize: 4,
                 TargetTypeSizeFactor: 1,
                 AllowBulkCopy: true

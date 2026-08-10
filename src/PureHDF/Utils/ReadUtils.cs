@@ -30,15 +30,15 @@ internal static partial class ReadUtils
         };
     }
 
-    public static ulong ReadUlong(H5DriverBase driver, ulong size)
+    public static async ValueTask<ulong> ReadUlong(H5DriverBase driver, ulong size)
     {
         return size switch
         {
-            1 => driver.ReadByte(),
-            2 => driver.ReadUInt16(),
-            4 => driver.ReadUInt32(),
-            8 => driver.ReadUInt64(),
-            _ => ReadUlongArbitrary(driver, size)
+            1 => await driver.ReadByte().ConfigureAwait(false),
+            2 => await driver.ReadUInt16().ConfigureAwait(false),
+            4 => await driver.ReadUInt32().ConfigureAwait(false),
+            8 => await driver.ReadUInt64().ConfigureAwait(false),
+            _ => await ReadUlongArbitrary(driver, size).ConfigureAwait(false)
         };
     }
 
@@ -58,14 +58,14 @@ internal static partial class ReadUtils
         return result;
     }
 
-    private static ulong ReadUlongArbitrary(H5DriverBase driver, ulong size)
+    private static async ValueTask<ulong> ReadUlongArbitrary(H5DriverBase driver, ulong size)
     {
         var result = 0UL;
         var shift = 0;
 
         for (ulong i = 0; i < size; i++)
         {
-            var value = driver.ReadByte();
+            var value = await driver.ReadByte().ConfigureAwait(false);
             result += (ulong)(value << shift);
             shift += 8;
         }
@@ -135,37 +135,46 @@ internal static partial class ReadUtils
             return (TResult)buffer.GetValue(0)!;
     }
 
-    public static T DecodeUnmanagedElement<T>(IH5ReadStream source) where T : struct
+    public static async ValueTask<T> DecodeUnmanagedElement<T>(IH5ReadStream source) where T : struct
     {
         var bytesOfType = Unsafe.SizeOf<T>();
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(bytesOfType);
         var buffer = memoryOwner.Memory[..bytesOfType];
 
-        source.ReadDataset(buffer.Span);
+        await source.ReadDataset(buffer).ConfigureAwait(false);
 
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
 
-    public static object DecodeReferenceArray<TElement>(IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
+    // NOTE (async-first): the per-element decode is awaited, so the destination is held as
+    // Memory<T> and indexed through .Span per iteration (a Span local cannot survive an await).
+    public static async ValueTask<object> DecodeReferenceArray<TElement>(IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
     {
         var array = Array.CreateInstance(typeof(TElement), dims);
-        var span = new ArrayMemoryManager<TElement>(array).Memory.Span;
+        var memory = new ArrayMemoryManager<TElement>(array).Memory;
 
         for (int index = 0; index < array.Length; index++)
         {
-            span[index] = (TElement)elementDecode(source)!;
+            var element = await elementDecode(source).ConfigureAwait(false);
+            memory.Span[index] = (TElement)element!;
         }
 
         return array;
     }
 
-    public static object DecodeUnmanagedArray<TElement>(IH5ReadStream source, int[] dims)
+    public static async ValueTask<object> DecodeUnmanagedArray<TElement>(IH5ReadStream source, int[] dims)
         where TElement : unmanaged
     {
         var array = Array.CreateInstance(typeof(TElement), dims);
         var memory = new ArrayMemoryManager<TElement>(array).Memory;
+        var byteLength = memory.Length * Unsafe.SizeOf<TElement>();
 
-        source.ReadDataset(MemoryMarshal.AsBytes(memory.Span));
+        using var memoryOwner = MemoryPool<byte>.Shared.Rent(byteLength);
+        var buffer = memoryOwner.Memory[..byteLength];
+
+        await source.ReadDataset(buffer).ConfigureAwait(false);
+
+        MemoryMarshal.Cast<byte, TElement>(buffer.Span).CopyTo(memory.Span);
 
         return array;
     }
@@ -188,22 +197,22 @@ internal static partial class ReadUtils
         return Encoding.UTF8.GetString(data);
     }
 
-    public static string ReadFixedLengthString(H5DriverBase driver, int length)
+    public static async ValueTask<string> ReadFixedLengthString(H5DriverBase driver, int length)
     {
-        var data = driver.ReadBytes(length);
+        var data = await driver.ReadBytes(length).ConfigureAwait(false);
 
         return Encoding.UTF8.GetString(data);
     }
 
-    public static string ReadNullTerminatedString(H5DriverBase driver, bool pad, int padSize = 8)
+    public static async ValueTask<string> ReadNullTerminatedString(H5DriverBase driver, bool pad, int padSize = 8)
     {
         var data = new List<byte>();
-        var byteValue = driver.ReadByte();
+        var byteValue = await driver.ReadByte().ConfigureAwait(false);
 
         while (byteValue != '\0')
         {
             data.Add(byteValue);
-            byteValue = driver.ReadByte();
+            byteValue = await driver.ReadByte().ConfigureAwait(false);
         }
 
         var destination = Encoding.UTF8.GetString(data.ToArray());

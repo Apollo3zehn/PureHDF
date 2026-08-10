@@ -30,11 +30,11 @@ internal record class ExtensibleArrayIndexBlock<T>(
         }
     }
 
-    public static ExtensibleArrayIndexBlock<T> Decode(
+    public static async ValueTask<ExtensibleArrayIndexBlock<T>> Decode(
         H5DriverBase driver,
         Superblock superblock,
         ExtensibleArrayHeader header,
-        Func<H5DriverBase, T> decode)
+        Func<H5DriverBase, ValueTask<T>> decode)
     {
         // H5EAiblock.c (H5EA__iblock_alloc)
         var secondaryBlockDataBlockAddressCount = 2 * (ulong)Math.Log(header.SecondaryBlockMinimumDataBlockPointerCount, 2);
@@ -42,30 +42,32 @@ internal record class ExtensibleArrayIndexBlock<T>(
         ulong secondaryBlockPointerCount = header.SecondaryBlockCount - secondaryBlockDataBlockAddressCount;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, ExtensibleArrayIndexBlock<T>.Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // client ID
-        var clientID = (ClientID)driver.ReadByte();
+        var clientID = (ClientID)await driver.ReadByte().ConfigureAwait(false);
 
         // header address
-        var headerAddress = superblock.ReadOffset(driver);
+        var headerAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // elements
-        var elements = Enumerable
-            .Range(0, header.IndexBlockElementsCount)
-            .Select(i => decode(driver))
-            .ToArray();
+        var elements = new T[header.IndexBlockElementsCount];
+
+        for (var i = 0; i < header.IndexBlockElementsCount; i++)
+        {
+            elements[i] = await decode(driver).ConfigureAwait(false);
+        }
 
         // data block addresses
         var dataBlockAddresses = new ulong[dataBlockPointerCount];
 
         for (ulong i = 0; i < dataBlockPointerCount; i++)
         {
-            dataBlockAddresses[i] = superblock.ReadOffset(driver);
+            dataBlockAddresses[i] = await superblock.ReadOffset(driver).ConfigureAwait(false);
         }
 
         // secondary block addresses
@@ -73,11 +75,11 @@ internal record class ExtensibleArrayIndexBlock<T>(
 
         for (ulong i = 0; i < secondaryBlockPointerCount; i++)
         {
-            secondaryBlockAddresses[i] = superblock.ReadOffset(driver);
+            secondaryBlockAddresses[i] = await superblock.ReadOffset(driver).ConfigureAwait(false);
         }
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new ExtensibleArrayIndexBlock<T>(
             ClientID: clientID,

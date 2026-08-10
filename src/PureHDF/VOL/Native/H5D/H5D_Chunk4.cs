@@ -62,12 +62,22 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             var (objectHeaderAddress, length) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
             var lengthWithoutChecksum = length - sizeof(uint);
             using var memorOwner = MemoryPool<byte>.Shared.Rent(lengthWithoutChecksum);
-            var checksumData = memorOwner.Memory.Span.Slice(0, lengthWithoutChecksum);
+            var checksumData = memorOwner.Memory.Slice(0, lengthWithoutChecksum);
 
             WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
-            WriteContext.Driver.Read(checksumData);
 
-            var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+            // SYNC SURFACE: this runs from Dispose on the synchronous writer, while driver.Read is
+            // async now. The ValueTask was previously discarded outright - and because the enclosing
+            // method is not async there is no CS4014 warning - so the checksum was computed over
+            // uninitialized pooled memory, producing a file h5dump rejects. AsTask() is required:
+            // blocking directly on an IValueTaskSource-backed ValueTask is unsupported.
+            WriteContext.Driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
+
+            var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
+
+            // Absolute seek: the async read leaves a BufferedFileStream's read buffer in a state
+            // where the sync Write below can fail inside its internal FlushRead.
+            WriteContext.Driver.SeekRelativeToBaseAddress((long)objectHeaderAddress + lengthWithoutChecksum);
 
             WriteContext.Driver.Write(checksum);
         }

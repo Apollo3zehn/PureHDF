@@ -26,29 +26,29 @@ internal readonly record struct SymbolTableNode(
         }
     }
 
-    public static SymbolTableNode Decode(NativeReadContext context)
+    public static async ValueTask<SymbolTableNode> Decode(NativeReadContext context)
     {
         var driver = context.Driver;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadByte();
+        await driver.ReadByte().ConfigureAwait(false);
 
         // symbol count
-        var symbolCount = driver.ReadUInt16();
+        var symbolCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         // group entries
         var groupEntries = new List<SymbolTableEntry>();
 
         for (int i = 0; i < symbolCount; i++)
         {
-            groupEntries.Add(SymbolTableEntry.Decode(context));
+            groupEntries.Add(await SymbolTableEntry.Decode(context).ConfigureAwait(false));
         }
 
         return new SymbolTableNode(

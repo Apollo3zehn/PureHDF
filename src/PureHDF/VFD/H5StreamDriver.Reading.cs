@@ -1,4 +1,4 @@
-﻿using System.Runtime.CompilerServices;
+using System.Buffers;
 using System.Runtime.InteropServices;
 
 namespace PureHDF.VFD;
@@ -41,62 +41,67 @@ internal partial class H5StreamDriver : H5DriverBase
         };
     }
 
-    public override void ReadDataset(Span<byte> buffer)
+    public override async ValueTask ReadDataset(Memory<byte> buffer)
     {
         if (_stream is IDatasetStream datasetStream)
-            datasetStream.ReadDataset(buffer);
+            await datasetStream.ReadDataset(buffer).ConfigureAwait(false);
 
+        // ReadExactlyAsyncCompat, never a hand-rolled loop: it advances the buffer it reads into and
+        // treats a zero-byte read as end of stream. Getting either wrong is silent data corruption on
+        // any stream that returns partial reads.
         else
-            _stream.ReadExactly(buffer);
+            await _stream.ReadExactlyAsyncCompat(buffer).ConfigureAwait(false);
     }
 
-    public override void Read(Span<byte> buffer)
+    public override ValueTask Read(Memory<byte> buffer)
     {
-        _stream.ReadExactly(buffer);
+        return _stream.ReadExactlyAsyncCompat(buffer);
     }
 
-    public override byte ReadByte()
+    public override async ValueTask<byte> ReadByte()
     {
-        return Read<byte>();
+        return await ReadScalar<byte>().ConfigureAwait(false);
     }
 
-    public override byte[] ReadBytes(int count)
+    public override async ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
-        _stream.ReadExactly(buffer);
+        await _stream.ReadExactlyAsyncCompat(buffer).ConfigureAwait(false);
 
         return buffer;
     }
 
-    public override ushort ReadUInt16()
+    public override async ValueTask<ushort> ReadUInt16()
     {
-        return Read<ushort>();
+        return await ReadScalar<ushort>().ConfigureAwait(false);
     }
 
-    public override short ReadInt16()
+    public override async ValueTask<short> ReadInt16()
     {
-        return Read<short>();
+        return await ReadScalar<short>().ConfigureAwait(false);
     }
 
-    public override uint ReadUInt32()
+    public override async ValueTask<uint> ReadUInt32()
     {
-        return Read<uint>();
+        return await ReadScalar<uint>().ConfigureAwait(false);
     }
 
-    public override ulong ReadUInt64()
+    public override async ValueTask<ulong> ReadUInt64()
     {
-        return Read<ulong>();
+        return await ReadScalar<ulong>().ConfigureAwait(false);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private T Read<T>() where T : unmanaged
+    // Was: stackalloc + MemoryMarshal.Cast. A Span cannot cross an await, so the scratch
+    // buffer now comes from the shared pool. This is the per-scalar-read cost of async-first.
+    private async ValueTask<T> ReadScalar<T>() where T : unmanaged
     {
-        var size = Unsafe.SizeOf<T>();
-        Span<byte> buffer = stackalloc byte[size];
+        var size = Marshal.SizeOf<T>();
+        using var owner = MemoryPool<byte>.Shared.Rent(size);
+        var buffer = owner.Memory[..size];
 
-        _stream.ReadExactly(buffer);
+        await _stream.ReadExactlyAsyncCompat(buffer).ConfigureAwait(false);
 
-        return MemoryMarshal.Cast<byte, T>(buffer)[0];
+        return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
 
     private bool _disposedValue;

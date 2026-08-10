@@ -26,13 +26,13 @@ internal partial record class GroupInfoMessage(
         }
     }
 
-    public static GroupInfoMessage Decode(H5DriverBase driver)
+    public static async ValueTask<GroupInfoMessage> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // flags
-        var flags = (GroupInfoMessageFlags)driver.ReadByte();
+        var flags = (GroupInfoMessageFlags)await driver.ReadByte().ConfigureAwait(false);
 
         // maximum compact value and minimum dense value
         var maximumCompactValue = default(ushort);
@@ -40,8 +40,8 @@ internal partial record class GroupInfoMessage(
 
         if (flags.HasFlag(GroupInfoMessageFlags.StoreLinkPhaseChangeValues))
         {
-            maximumCompactValue = driver.ReadUInt16();
-            minimumDenseValue = driver.ReadUInt16();
+            maximumCompactValue = await driver.ReadUInt16().ConfigureAwait(false);
+            minimumDenseValue = await driver.ReadUInt16().ConfigureAwait(false);
         }
 
         // estimated entry count and estimated entry link name length
@@ -50,8 +50,8 @@ internal partial record class GroupInfoMessage(
 
         if (flags.HasFlag(GroupInfoMessageFlags.StoreNonDefaultEntryInformation))
         {
-            estimatedEntryCount = driver.ReadUInt16();
-            estimatedEntryLinkNameLength = driver.ReadUInt16();
+            estimatedEntryCount = await driver.ReadUInt16().ConfigureAwait(false);
+            estimatedEntryLinkNameLength = await driver.ReadUInt16().ConfigureAwait(false);
         }
 
         return new GroupInfoMessage(

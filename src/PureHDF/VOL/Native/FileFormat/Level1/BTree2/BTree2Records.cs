@@ -1,4 +1,4 @@
-﻿namespace PureHDF.VOL.Native;
+namespace PureHDF.VOL.Native;
 
 internal interface IBTree2Record
 {
@@ -11,14 +11,18 @@ internal readonly record struct BTree2Record01(
     ulong HugeObjectId
 ) : IBTree2Record
 {
-    public static BTree2Record01 Decode(NativeReadContext context)
+    public static async ValueTask<BTree2Record01> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var hugeObjectAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
+        var hugeObjectLength = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var hugeObjectId = await superblock.ReadLength(driver).ConfigureAwait(false);
+
         return new BTree2Record01(
-            HugeObjectAddress: superblock.ReadOffset(driver),
-            HugeObjectLength: superblock.ReadLength(driver),
-            HugeObjectId: superblock.ReadLength(driver)
+            HugeObjectAddress: hugeObjectAddress,
+            HugeObjectLength: hugeObjectLength,
+            HugeObjectId: hugeObjectId
         );
     }
 }
@@ -31,16 +35,22 @@ internal readonly record struct BTree2Record02(
     ulong HugeObjectId
 ) : IBTree2Record
 {
-    public static BTree2Record02 Decode(NativeReadContext context)
+    public static async ValueTask<BTree2Record02> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var filteredHugeObjectAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
+        var filteredHugeObjectLength = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var filterMask = await driver.ReadUInt32().ConfigureAwait(false);
+        var filteredHugeObjectMemorySize = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var hugeObjectId = await superblock.ReadLength(driver).ConfigureAwait(false);
+
         return new BTree2Record02(
-            FilteredHugeObjectAddress: superblock.ReadOffset(driver),
-            FilteredHugeObjectLength: superblock.ReadLength(driver),
-            FilterMask: driver.ReadUInt32(),
-            FilteredHugeObjectMemorySize: superblock.ReadLength(driver),
-            HugeObjectId: superblock.ReadLength(driver)
+            FilteredHugeObjectAddress: filteredHugeObjectAddress,
+            FilteredHugeObjectLength: filteredHugeObjectLength,
+            FilterMask: filterMask,
+            FilteredHugeObjectMemorySize: filteredHugeObjectMemorySize,
+            HugeObjectId: hugeObjectId
         );
     }
 }
@@ -50,13 +60,16 @@ internal readonly record struct BTree2Record03(
     ulong HugeObjectLength
 ) : IBTree2Record
 {
-    public static BTree2Record03 Decode(NativeReadContext context)
+    public static async ValueTask<BTree2Record03> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var hugeObjectAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
+        var hugeObjectLength = await superblock.ReadLength(driver).ConfigureAwait(false);
+
         return new BTree2Record03(
-            HugeObjectAddress: superblock.ReadOffset(driver),
-            HugeObjectLength: superblock.ReadLength(driver)
+            HugeObjectAddress: hugeObjectAddress,
+            HugeObjectLength: hugeObjectLength
         );
     }
 }
@@ -68,15 +81,20 @@ internal readonly record struct BTree2Record04(
     ulong FilteredHugeObjectMemorySize
 ) : IBTree2Record
 {
-    public static BTree2Record04 Decode(NativeReadContext context)
+    public static async ValueTask<BTree2Record04> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var filteredHugeObjectAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
+        var filteredHugeObjectLength = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var filterMask = await driver.ReadUInt32().ConfigureAwait(false);
+        var filteredHugeObjectMemorySize = await superblock.ReadLength(driver).ConfigureAwait(false);
+
         return new BTree2Record04(
-            FilteredHugeObjectAddress: superblock.ReadOffset(driver),
-            FilteredHugeObjectLength: superblock.ReadLength(driver),
-            FilterMask: driver.ReadUInt32(),
-            FilteredHugeObjectMemorySize: superblock.ReadLength(driver)
+            FilteredHugeObjectAddress: filteredHugeObjectAddress,
+            FilteredHugeObjectLength: filteredHugeObjectLength,
+            FilterMask: filterMask,
+            FilteredHugeObjectMemorySize: filteredHugeObjectMemorySize
         );
     }
 }
@@ -86,11 +104,14 @@ internal readonly record struct BTree2Record05(
     byte[] HeapId
 ) : IBTree2Record
 {
-    public static BTree2Record05 Decode(H5DriverBase driver)
+    public static async ValueTask<BTree2Record05> Decode(H5DriverBase driver)
     {
+        var nameHash = await driver.ReadUInt32().ConfigureAwait(false);
+        var heapId = await driver.ReadBytes(7).ConfigureAwait(false);
+
         return new BTree2Record05(
-            NameHash: driver.ReadUInt32(),
-            HeapId: driver.ReadBytes(7)
+            NameHash: nameHash,
+            HeapId: heapId
         );
     }
 }
@@ -100,11 +121,14 @@ internal readonly record struct BTree2Record06(
     byte[] HeapId
 ) : IBTree2Record
 {
-    public static BTree2Record06 Decode(H5DriverBase driver)
+    public static async ValueTask<BTree2Record06> Decode(H5DriverBase driver)
     {
+        var creationOrder = await driver.ReadUInt64().ConfigureAwait(false);
+        var heapId = await driver.ReadBytes(7).ConfigureAwait(false);
+
         return new BTree2Record06(
-            CreationOrder: driver.ReadUInt64(),
-            HeapId: driver.ReadBytes(7)
+            CreationOrder: creationOrder,
+            HeapId: heapId
         );
     }
 }
@@ -178,13 +202,18 @@ internal readonly record struct BTree2Record08(
     uint NameHash
 ) : IBTree2Record
 {
-    public static BTree2Record08 Decode(H5DriverBase driver)
+    public static async ValueTask<BTree2Record08> Decode(H5DriverBase driver)
     {
+        var heapId = await driver.ReadBytes(8).ConfigureAwait(false);
+        var messageFlags = (MessageFlags)(await driver.ReadByte().ConfigureAwait(false));
+        var creationOrder = await driver.ReadUInt32().ConfigureAwait(false);
+        var nameHash = await driver.ReadUInt32().ConfigureAwait(false);
+
         return new BTree2Record08(
-            HeapId: driver.ReadBytes(8),
-            MessageFlags: (MessageFlags)driver.ReadByte(),
-            CreationOrder: driver.ReadUInt32(),
-            NameHash: driver.ReadUInt32()
+            HeapId: heapId,
+            MessageFlags: messageFlags,
+            CreationOrder: creationOrder,
+            NameHash: nameHash
         );
     }
 }
@@ -195,12 +224,16 @@ internal readonly record struct BTree2Record09(
     uint CreationOrder
 ) : IBTree2Record
 {
-    public static BTree2Record09 Decode(H5DriverBase driver)
+    public static async ValueTask<BTree2Record09> Decode(H5DriverBase driver)
     {
+        var heapId = await driver.ReadBytes(8).ConfigureAwait(false);
+        var messageFlags = (MessageFlags)(await driver.ReadByte().ConfigureAwait(false));
+        var creationOrder = await driver.ReadUInt32().ConfigureAwait(false);
+
         return new BTree2Record09(
-            HeapId: driver.ReadBytes(8),
-            MessageFlags: (MessageFlags)driver.ReadByte(),
-            CreationOrder: driver.ReadUInt32()
+            HeapId: heapId,
+            MessageFlags: messageFlags,
+            CreationOrder: creationOrder
         );
     }
 }
@@ -210,19 +243,19 @@ internal readonly record struct BTree2Record10(
     ulong[] ScaledOffsets
 ) : IBTree2Record
 {
-    public static BTree2Record10 Decode(NativeReadContext context, byte rank)
+    public static async ValueTask<BTree2Record10> Decode(NativeReadContext context, byte rank)
     {
         var (driver, superblock) = context;
 
         // address
-        var address = superblock.ReadOffset(driver);
+        var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // scaled offsets
         var scaledOffsets = new ulong[rank];
 
         for (int i = 0; i < rank; i++)
         {
-            scaledOffsets[i] = driver.ReadUInt64();
+            scaledOffsets[i] = await driver.ReadUInt64().ConfigureAwait(false);
         }
 
         return new BTree2Record10(
@@ -239,25 +272,25 @@ internal readonly record struct BTree2Record11(
     ulong[] ScaledOffsets
 ) : IBTree2Record
 {
-    public static BTree2Record11 Decode(NativeReadContext context, byte rank, uint chunkSizeLength)
+    public static async ValueTask<BTree2Record11> Decode(NativeReadContext context, byte rank, uint chunkSizeLength)
     {
         var (driver, superblock) = context;
 
         // address
-        var address = superblock.ReadOffset(driver);
+        var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // chunk size
-        var chunkSize = ReadUtils.ReadUlong(driver, chunkSizeLength);
+        var chunkSize = await ReadUtils.ReadUlong(driver, chunkSizeLength).ConfigureAwait(false);
 
         // filter mask
-        var filterMask = driver.ReadUInt32();
+        var filterMask = await driver.ReadUInt32().ConfigureAwait(false);
 
         // scaled offsets
         var scaledOffsets = new ulong[rank];
 
         for (int i = 0; i < rank; i++)
         {
-            scaledOffsets[i] = driver.ReadUInt64();
+            scaledOffsets[i] = await driver.ReadUInt64().ConfigureAwait(false);
         }
 
         return new BTree2Record11(

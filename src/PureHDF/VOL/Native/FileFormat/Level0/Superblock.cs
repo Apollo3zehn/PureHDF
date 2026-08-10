@@ -67,12 +67,14 @@ internal abstract partial record class Superblock(
         return ReadUtils.ReadUlong(buffer, OffsetsSize);
     }
 
-    public ulong ReadOffset(H5DriverBase driver)
+    // Driver overloads are async (the driver reads are); the Span overload above stays
+    // synchronous because it decodes from an already-materialized buffer.
+    public ValueTask<ulong> ReadOffset(H5DriverBase driver)
     {
         return ReadUtils.ReadUlong(driver, OffsetsSize);
     }
 
-    public ulong ReadLength(H5DriverBase driver)
+    public ValueTask<ulong> ReadLength(H5DriverBase driver)
     {
         return ReadUtils.ReadUlong(driver, LengthsSize);
     }

@@ -209,7 +209,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     protected abstract ulong[] GetRawChunkDims();
 
-    protected abstract ChunkInfo GetReadChunkInfo(ulong chunkIndex);
+    protected abstract ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex);
 
     protected abstract ChunkInfo GetWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);
 
@@ -244,7 +244,10 @@ internal abstract class H5D_Chunk : H5D_Base
 
         else
         {
-            var chunkInfo = GetReadChunkInfo(chunkIndex);
+            // SYNC SURFACE: ReadChunk is invoked through IReadingChunkCache's synchronous
+            // Func<Memory<byte>> chunkReader, so it blocks here. The async read path needs an
+            // async chunk-cache twin instead (see ASYNC-TWINS.md).
+            var chunkInfo = GetReadChunkInfo(chunkIndex).GetAwaiter().GetResult();
 
             if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
@@ -270,7 +273,7 @@ internal abstract class H5D_Chunk : H5D_Base
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
-                    ReadContext.Driver.ReadDataset(chunk.Span);
+                    ReadContext.Driver.ReadDataset(chunk).GetAwaiter().GetResult();
                 }
 
                 else
@@ -280,7 +283,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
-                    ReadContext.Driver.ReadDataset(buffer.Span);
+                    ReadContext.Driver.ReadDataset(buffer).GetAwaiter().GetResult();
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,

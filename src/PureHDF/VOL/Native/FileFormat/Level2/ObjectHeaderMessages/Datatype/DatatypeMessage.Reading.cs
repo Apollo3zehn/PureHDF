@@ -54,29 +54,29 @@ internal partial record class DatatypeMessage(
         }
     }
 
-    public static DatatypeMessage Decode(H5DriverBase driver)
+    public static async ValueTask<DatatypeMessage> Decode(H5DriverBase driver)
     {
-        var classVersion = driver.ReadByte();
+        var classVersion = await driver.ReadByte().ConfigureAwait(false);
         var version = (byte)(classVersion >> 4);
         var @class = (DatatypeMessageClass)(classVersion & 0x0F);
 
         DatatypeBitFieldDescription bitField = @class switch
         {
-            DatatypeMessageClass.FixedPoint => FixedPointBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.FloatingPoint => FloatingPointBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.Time => TimeBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.String => StringBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.BitField => BitFieldBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.Opaque => OpaqueBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.Compound => CompoundBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.Reference => ReferenceBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.Enumerated => EnumerationBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.VariableLength => VariableLengthBitFieldDescription.Decode(driver),
-            DatatypeMessageClass.Array => ArrayBitFieldDescription.Decode(driver),
+            DatatypeMessageClass.FixedPoint => await FixedPointBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.FloatingPoint => await FloatingPointBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.Time => await TimeBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.String => await StringBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.BitField => await BitFieldBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.Opaque => await OpaqueBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.Compound => await CompoundBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.Reference => await ReferenceBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.Enumerated => await EnumerationBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.VariableLength => await VariableLengthBitFieldDescription.Decode(driver).ConfigureAwait(false),
+            DatatypeMessageClass.Array => await ArrayBitFieldDescription.Decode(driver).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The data type message class '{@class}' is not supported.")
         };
 
-        var size = driver.ReadUInt32();
+        var size = await driver.ReadUInt32().ConfigureAwait(false);
 
         var memberCount = @class switch
         {
@@ -92,15 +92,15 @@ internal partial record class DatatypeMessage(
         {
             DatatypePropertyDescription singleProperties = @class switch
             {
-                DatatypeMessageClass.FixedPoint => FixedPointPropertyDescription.Decode(driver),
-                DatatypeMessageClass.FloatingPoint => FloatingPointPropertyDescription.Decode(driver),
-                DatatypeMessageClass.Time => TimePropertyDescription.Decode(driver),
-                DatatypeMessageClass.BitField => BitFieldPropertyDescription.Decode(driver),
-                DatatypeMessageClass.Opaque => OpaquePropertyDescription.Decode(driver, ((OpaqueBitFieldDescription)bitField).TagByteLength),
-                DatatypeMessageClass.Compound => CompoundPropertyDescription.Decode(driver, version, size),
-                DatatypeMessageClass.Enumerated => EnumerationPropertyDescription.Decode(driver, version, size, ((EnumerationBitFieldDescription)bitField).MemberCount),
-                DatatypeMessageClass.VariableLength => VariableLengthPropertyDescription.Decode(driver),
-                DatatypeMessageClass.Array => ArrayPropertyDescription.Decode(driver, version),
+                DatatypeMessageClass.FixedPoint => await FixedPointPropertyDescription.Decode(driver).ConfigureAwait(false),
+                DatatypeMessageClass.FloatingPoint => await FloatingPointPropertyDescription.Decode(driver).ConfigureAwait(false),
+                DatatypeMessageClass.Time => await TimePropertyDescription.Decode(driver).ConfigureAwait(false),
+                DatatypeMessageClass.BitField => await BitFieldPropertyDescription.Decode(driver).ConfigureAwait(false),
+                DatatypeMessageClass.Opaque => await OpaquePropertyDescription.Decode(driver, ((OpaqueBitFieldDescription)bitField).TagByteLength).ConfigureAwait(false),
+                DatatypeMessageClass.Compound => await CompoundPropertyDescription.Decode(driver, version, size).ConfigureAwait(false),
+                DatatypeMessageClass.Enumerated => await EnumerationPropertyDescription.Decode(driver, version, size, ((EnumerationBitFieldDescription)bitField).MemberCount).ConfigureAwait(false),
+                DatatypeMessageClass.VariableLength => await VariableLengthPropertyDescription.Decode(driver).ConfigureAwait(false),
+                DatatypeMessageClass.Array => await ArrayPropertyDescription.Decode(driver, version).ConfigureAwait(false),
                 _ => throw new NotSupportedException($"The data type message '{@class}' is not supported.")
             };
 
@@ -320,8 +320,9 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>() where T : struct
     {
-        object? decode(IH5ReadStream source)
-            => ReadUtils.DecodeUnmanagedElement<T>(source);
+        // Without the await this returns a boxed ValueTask<T> as the element value.
+        async ValueTask<object?> decode(IH5ReadStream source)
+            => await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
 
         return decode;
     }
@@ -378,7 +379,7 @@ internal partial record class DatatypeMessage(
                 .OrderBy(tuple => tuple.Item1.MemberByteOffset)
                 .ToArray();
 
-            object? decode(IH5ReadStream source)
+            async ValueTask<object?> decode(IH5ReadStream source)
             {
                 var result = new Dictionary<string, object?>();
                 var basePosition = source.Position;
@@ -398,7 +399,7 @@ internal partial record class DatatypeMessage(
                         source.Seek(padding, SeekOrigin.Current);
 
                     // decode
-                    result[property.Name] = decoder(source);
+                    result[property.Name] = await decoder(source).ConfigureAwait(false);
                 }
 
                 // skip padding
@@ -583,7 +584,7 @@ internal partial record class DatatypeMessage(
         }
 
         // decode
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             var result = Activator.CreateInstance(type)!;
             var basePosition = source.Position;
@@ -603,7 +604,11 @@ internal partial record class DatatypeMessage(
                     source.Seek(padding, SeekOrigin.Current);
 
                 // decode
-                setValue?.Invoke(result, decoder(source));
+                // The decode must run even when there is no setter, so that the source advances
+                // past this member; only the assignment is conditional.
+                var value = await decoder(source).ConfigureAwait(false);
+
+                setValue?.Invoke(result, value);
             }
 
             // skip padding
@@ -672,13 +677,17 @@ internal partial record class DatatypeMessage(
         var invokeDecodeArray = ReadUtils.MethodInfoDecodeReferenceArray.MakeGenericMethod(elementType);
         var parameters = new object[3];
 
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             parameters[0] = source;
             parameters[1] = dims;
             parameters[2] = elementDecode;
 
-            return invokeDecodeArray.Invoke(default, parameters);
+            // DecodeReferenceArray is async now, so Invoke hands back a boxed ValueTask<object>.
+            // Without unwrapping it here the ValueTask itself becomes the decoded element value.
+            var task = (ValueTask<object>)invokeDecodeArray.Invoke(default, parameters)!;
+
+            return await task.ConfigureAwait(false);
         }
 
         return decode;
@@ -697,12 +706,15 @@ internal partial record class DatatypeMessage(
         var invokeDecodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(elementType);
         var parameters = new object[2];
 
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             parameters[0] = source;
             parameters[1] = dims;
 
-            return invokeDecodeUnmanagedArray.Invoke(default, parameters);
+            // See GetDecodeInfoForReferenceArray: unwrap the boxed ValueTask<object>.
+            var task = (ValueTask<object>)invokeDecodeUnmanagedArray.Invoke(default, parameters)!;
+
+            return await task.ConfigureAwait(false);
         }
 
         return decode;
@@ -712,9 +724,9 @@ internal partial record class DatatypeMessage(
     {
         var dims = new int[] { (int)Size };
 
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
-            return ReadUtils.DecodeUnmanagedArray<byte>(source, dims);
+            return await ReadUtils.DecodeUnmanagedArray<byte>(source, dims).ConfigureAwait(false);
         }
 
         return decode;
@@ -730,7 +742,7 @@ internal partial record class DatatypeMessage(
         var elementType = Nullable.GetUnderlyingType(memoryType);
         (elementType, var elementDecode) = property.BaseType.GetDecodeInfoForScalar(context, elementType);
 
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
             // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
@@ -751,7 +763,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            source.ReadDataset(buffer.Span);
+            await source.ReadDataset(buffer).ConfigureAwait(false);
 
             /* decode sequence length */
             var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
@@ -778,7 +790,7 @@ internal partial record class DatatypeMessage(
             {
                 // TODO: cache short-lived stream?
                 var localSource = new SystemMemoryStream(globalHeapObject.ObjectData);
-                var value = elementDecode(localSource)!;
+                var value = (await elementDecode(localSource).ConfigureAwait(false))!;
 
                 return value;
             }
@@ -826,7 +838,7 @@ internal partial record class DatatypeMessage(
             return (memoryType, fastDecode);
         }
 
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
             // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
@@ -849,7 +861,7 @@ internal partial record class DatatypeMessage(
 
             for (int i = 0; i < sequenceLength; i++)
             {
-                array.SetValue(elementDecode(localSource), i);
+                array.SetValue(await elementDecode(localSource).ConfigureAwait(false), i);
             }
 
             return array;
@@ -864,7 +876,7 @@ internal partial record class DatatypeMessage(
     private ElementDecodeDelegate GetDecodeInfoForVariableLengthString(
         NativeReadContext context)
     {
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -893,7 +905,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            source.ReadDataset(buffer.Span);
+            await source.ReadDataset(buffer).ConfigureAwait(false);
 
             /* skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
             buffer = buffer.Slice(sizeof(uint));
@@ -934,7 +946,7 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForFixedLengthString()
     {
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -956,7 +968,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = MemoryPool<byte>.Shared.Rent((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
-            source.ReadDataset(memory.Span);
+            await source.ReadDataset(memory).ConfigureAwait(false);
 
             // Decoded as UTF-8, which is correct for H5T_CSET_ASCII too, and matches
             // GetDecodeInfoForVariableLengthString. See ReadUtils.
@@ -1022,7 +1034,10 @@ internal partial record class DatatypeMessage(
         {
             var cellHeaderSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
 
-            void decodeBatched(IH5ReadStream source, Span<T> target)
+            // FAST PATH (#163): one bulk ReadDataset for all N cell headers, ArrayPool-rented,
+            // then per-cell decode from an in-memory wrapper. Preserved exactly; the only change
+            // is that the bulk read is awaited instead of blocking.
+            async ValueTask decodeBatched(IH5ReadStream source, Memory<T> target)
             {
                 if (target.Length == 0)
                     return;
@@ -1032,14 +1047,14 @@ internal partial record class DatatypeMessage(
                 using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalBytes);
                 var bulk = memoryOwner.Memory[..totalBytes];
 
-                source.ReadDataset(bulk.Span);
+                await source.ReadDataset(bulk).ConfigureAwait(false);
 
                 var localSource = new SystemMemoryStream(bulk);
-                var targetSpan = target;
 
                 for (int i = 0; i < target.Length; i++)
                 {
-                    targetSpan[i] = (T)elementDecode(localSource)!;
+                    var element = await elementDecode(localSource).ConfigureAwait(false);
+                    target.Span[i] = (T)element!;
                 }
             }
 
@@ -1048,13 +1063,12 @@ internal partial record class DatatypeMessage(
 
         else
         {
-            void decode(IH5ReadStream source, Span<T> target)
+            async ValueTask decode(IH5ReadStream source, Memory<T> target)
             {
-                var targetSpan = target;
-
                 for (int i = 0; i < target.Length; i++)
                 {
-                    targetSpan[i] = (T)elementDecode(source)!;
+                    var element = await elementDecode(source).ConfigureAwait(false);
+                    target.Span[i] = (T)element!;
                 }
             };
 
@@ -1065,8 +1079,14 @@ internal partial record class DatatypeMessage(
     private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
         where T : struct
     {
-        static void decode(IH5ReadStream source, Span<T> target)
-            => source.ReadDataset(MemoryMarshal.AsBytes(target));
+        // HOT PATH: plain unmanaged (numeric) datasets. The baseline did
+        //     source.ReadDataset(MemoryMarshal.AsBytes(target))
+        // i.e. a single zero-copy read straight into the caller's buffer. An intermediate version
+        // of this conversion regressed it to a pooled rent plus a full copy because Span<T> cannot
+        // be reinterpreted as Memory<byte>. Now that DecodeDelegate<T> carries Memory<T>, the
+        // zero-copy read is restored via CastMemoryManager - no rent, no copy, one read.
+        static ValueTask decode(IH5ReadStream source, Memory<T> target)
+            => source.ReadDataset(target.Cast<T, byte>());
 
         return decode;
     }
@@ -1084,7 +1104,7 @@ internal partial record class DatatypeMessage(
         using var memoryOwner = MemoryPool<byte>.Shared.Rent(headerSize);
         var headerBuffer = memoryOwner.Memory[..headerSize];
 
-        source.ReadDataset(headerBuffer.Span);
+        source.ReadDataset(headerBuffer).GetAwaiter().GetResult();
 
         sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(headerBuffer.Span);
         var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, headerBuffer.Span[lengthSize..]);
@@ -1115,7 +1135,7 @@ internal partial record class DatatypeMessage(
         int fileTypeSize)
         where TElement : unmanaged
     {
-        object? decode(IH5ReadStream source)
+        async ValueTask<object?> decode(IH5ReadStream source)
         {
             if (!TryReadVariableLengthHeader(context, source, out var sequenceLength, out var objectData))
                 return default;

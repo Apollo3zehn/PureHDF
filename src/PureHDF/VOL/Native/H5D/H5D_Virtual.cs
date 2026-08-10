@@ -18,25 +18,19 @@ internal class H5D_Virtual<TResult> : H5D_Base
 
     #region Constructors
 
-    public H5D_Virtual(
+    private H5D_Virtual(
         NativeReadContext readContext,
         NativeWriteContext writeContext,
         DatasetInfo dataset,
         H5DatasetAccess datasetAccess,
         TResult? fillValue,
-        ReadVirtualDelegate<TResult> readVirtualDelegate)
+        ReadVirtualDelegate<TResult> readVirtualDelegate,
+        VdsGlobalHeapBlock block)
         : base(readContext, writeContext, dataset, datasetAccess)
     {
         _fillValue = fillValue;
         _readVirtualDelegate = readVirtualDelegate;
-
-        var layoutMessage = (DataLayoutMessage4)dataset.Layout;
-        var collection = NativeCache.GetGlobalHeapObject(readContext, ((VirtualStoragePropertyDescription)layoutMessage.Properties).Address);
-        var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
-        var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
-        using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
-
-        _block = VdsGlobalHeapBlock.Decode(localDriver, readContext.Superblock);
+        _block = block;
 
         // https://docs.hdfgroup.org/archive/support/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
         // "A source dataset may have different rank and dimension sizes than the VDS. However, if a
@@ -50,6 +44,34 @@ internal class H5D_Virtual<TResult> : H5D_Base
             if (dimension == H5Constants.Unlimited)
                 throw new Exception("Virtual datasets with unlimited dimensions are not supported.");
         }
+    }
+
+    // RULE 4 CONVERSION: the constructor performed a driver read (VdsGlobalHeapBlock.Decode)
+    // and constructors cannot be async, so construction is now via this static factory.
+    public static async ValueTask<H5D_Virtual<TResult>> Create(
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        H5DatasetAccess datasetAccess,
+        TResult? fillValue,
+        ReadVirtualDelegate<TResult> readVirtualDelegate)
+    {
+        var layoutMessage = (DataLayoutMessage4)dataset.Layout;
+        var collection = NativeCache.GetGlobalHeapObject(readContext, ((VirtualStoragePropertyDescription)layoutMessage.Properties).Address);
+        var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
+        var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
+        using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
+
+        var block = await VdsGlobalHeapBlock.Decode(localDriver, readContext.Superblock).ConfigureAwait(false);
+
+        return new H5D_Virtual<TResult>(
+            readContext,
+            writeContext,
+            dataset,
+            datasetAccess,
+            fillValue,
+            readVirtualDelegate,
+            block);
     }
 
     #endregion

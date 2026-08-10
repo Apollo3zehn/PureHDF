@@ -260,7 +260,11 @@ partial class H5NativeWriter
         };
 
         // encode object header
-        var address = objectHeader.Encode(Context);
+        // NOTE (async propagation): ObjectHeader2.Encode() is now async (it reads
+        // back the just-written bytes to compute a checksum). This method and its
+        // public entry point (H5File.Write(), no async counterpart exists) stay
+        // synchronous, so the call is bridged here — see report.
+        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
 
         return address;
     }
@@ -451,7 +455,8 @@ partial class H5NativeWriter
             chunk.FlushChunkCache();
 
         // encode object header
-        var address = objectHeader.Encode(Context);
+        // NOTE (async propagation): see the matching note in EncodeGroup above.
+        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
         var end = (ulong)Context.Driver.Position - Context.Driver.BaseAddress;
 
         Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)address, (int)(end - address));

@@ -1,4 +1,4 @@
-﻿using System.IO.MemoryMappedFiles;
+using System.IO.MemoryMappedFiles;
 
 namespace PureHDF.VFD;
 
@@ -8,9 +8,16 @@ namespace PureHDF.VFD;
 // Does it make sense to acquire pointer only once instead of every read operation?
 // https://stackoverflow.com/questions/49339804/memorymappedviewaccessor-performance-workaround
 // -> I think the synchrnonization complaint is not valid anymore: https://github.com/dotnet/runtime/blob/9b76c28567640e4cbe0d20e18b765b8f1a47473f/src/libraries/System.Private.CoreLib/src/System/Runtime/InteropServices/SafeBuffer.cs#L27-L28
+//
+// NOTE (async-first spike): a memory-mapped view is a genuinely synchronous source, so every
+// member here returns an already-completed ValueTask. Sync-completing ValueTasks do not allocate,
+// which is the whole point of async-first: remote sources get real async, local ones pay nothing.
+// CONCURRENCY MODEL (async-first): as with H5FileHandleDriver, a driver instance belongs to one
+// logical reader. The cursor was a ThreadLocal<long>, which async breaks (a continuation may resume
+// on another thread, where it reads back as 0). Callers wanting parallelism open one reader each.
 internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
 {
-    private readonly ThreadLocal<long> _position = new();
+    private long _position;
     private readonly MemoryMappedViewAccessor _accessor;
 
     public H5MemoryMappedFileDriver(MemoryMappedViewAccessor accessor)
@@ -18,7 +25,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         _accessor = accessor;
     }
 
-    public override long Position { get => _position.Value; }
+    public override long Position { get => _position; }
 
     public override long Length => _accessor.Capacity;
 
@@ -27,72 +34,74 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         switch (seekOrigin)
         {
             case SeekOrigin.Begin:
-                _position.Value = offset; break;
+                _position = offset; break;
 
             case SeekOrigin.Current:
-                _position.Value += offset; break;
+                _position += offset; break;
 
             default:
                 throw new Exception($"Seek origin '{seekOrigin}' is not supported.");
         }
     }
 
-    public override void ReadDataset(Span<byte> buffer)
+    public override ValueTask ReadDataset(Memory<byte> buffer)
     {
-        ReadCore(buffer);
+        ReadCore(buffer.Span);
+
+        return default;
     }
 
-    public override void Read(Span<byte> buffer)
+    public override ValueTask Read(Memory<byte> buffer)
     {
         throw new NotImplementedException();
     }
 
-    public override byte ReadByte()
+    public override ValueTask<byte> ReadByte()
     {
-        var value = _accessor.ReadByte(_position.Value);
-        _position.Value += sizeof(byte);
+        var value = _accessor.ReadByte(_position);
+        _position += sizeof(byte);
 
-        return value;
+        return new ValueTask<byte>(value);
     }
 
-    public override byte[] ReadBytes(int count)
+    public override ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
         ReadCore(buffer);
 
-        return buffer;
+        return new ValueTask<byte[]>(buffer);
     }
 
-    public override ushort ReadUInt16()
+    public override ValueTask<ushort> ReadUInt16()
     {
-        var value = _accessor.ReadUInt16(_position.Value);
-        _position.Value += sizeof(ushort);
+        var value = _accessor.ReadUInt16(_position);
+        _position += sizeof(ushort);
 
-        return value;
+        return new ValueTask<ushort>(value);
     }
 
-    public override short ReadInt16()
+    public override ValueTask<short> ReadInt16()
     {
-        var value = _accessor.ReadInt16(_position.Value);
-        _position.Value += sizeof(short);
+        var value = _accessor.ReadInt16(_position);
+        _position += sizeof(short);
 
-        return value;
+        return new ValueTask<short>(value);
     }
 
-    public override uint ReadUInt32()
+    public override ValueTask<uint> ReadUInt32()
     {
-        var value = _accessor.ReadUInt32(_position.Value);
-        _position.Value += sizeof(uint);
+        var value = _accessor.ReadUInt32(_position);
+        _position += sizeof(uint);
 
-        return value;
+        return new ValueTask<uint>(value);
     }
 
-    public override ulong ReadUInt64()
+    public override ValueTask<ulong> ReadUInt64()
     {
-        var value = _accessor.ReadUInt64(_position.Value);
-        _position.Value += sizeof(ulong);
+        var value = _accessor.ReadUInt64(_position);
+        _position += sizeof(ulong);
 
-        return value;
+        return new ValueTask<ulong>(value);
     }
 
     private void ReadCore(Span<byte> buffer)
@@ -104,7 +113,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
             try
             {
                 _accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref ptr);
-                var ptrSrc = _accessor.PointerOffset + ptr + _position.Value;
+                var ptrSrc = _accessor.PointerOffset + ptr + _position;
 
                 fixed (byte* ptrDst = buffer)
                 {
@@ -117,7 +126,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
             }
         }
 
-        _position.Value += buffer.Length;
+        _position += buffer.Length;
     }
 
     private bool _disposedValue;

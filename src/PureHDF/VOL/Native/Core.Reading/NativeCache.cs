@@ -54,7 +54,12 @@ internal static class NativeCache
             var position = context.Driver.Position;
 
             context.Driver.SeekRelativeToBaseAddress((long)address);
-            collection = GlobalHeapCollection.Decode(context);
+
+            // NOTE (async propagation): GlobalHeapCollection.Decode is now async.
+            // This method is called from a constructor (H5D_Virtual) and other
+            // fully synchronous call sites with no async counterpart, and cannot
+            // itself become async, so the call is bridged here — see report.
+            collection = GlobalHeapCollection.Decode(context).GetAwaiter().GetResult();
 
             // Prefer whatever is already installed, so two readers that miss on the same collection
             // converge on one instance instead of one of them discarding its work.

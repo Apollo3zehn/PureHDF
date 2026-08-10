@@ -42,7 +42,7 @@ internal readonly partial record struct HeaderMessage(
         }
     }
 
-    internal static HeaderMessage Decode(
+    internal static async ValueTask<HeaderMessage> Decode(
         NativeReadContext context,
         byte version,
         ulong objectHeaderAddress,
@@ -52,25 +52,25 @@ internal readonly partial record struct HeaderMessage(
         var type = MessageType.NIL;
 
         if (version == 1)
-            type = (MessageType)context.Driver.ReadUInt16();
+            type = (MessageType)await context.Driver.ReadUInt16().ConfigureAwait(false);
 
         else if (version == 2)
-            type = (MessageType)context.Driver.ReadByte();
+            type = (MessageType)await context.Driver.ReadByte().ConfigureAwait(false);
 
         // data size
-        var dataSize = context.Driver.ReadUInt16();
+        var dataSize = await context.Driver.ReadUInt16().ConfigureAwait(false);
 
         // flags
-        var flags = (MessageFlags)context.Driver.ReadByte();
+        var flags = (MessageFlags)await context.Driver.ReadByte().ConfigureAwait(false);
 
         // reserved / creation order
         var creationOrder = default(ushort);
 
         if (version == 1)
-            context.Driver.ReadBytes(3);
+            await context.Driver.ReadBytes(3).ConfigureAwait(false);
 
         else if (version == 2 && withCreationOrder)
-            creationOrder = context.Driver.ReadUInt16();
+            creationOrder = await context.Driver.ReadUInt16().ConfigureAwait(false);
 
         // data
         var driverPosition1 = context.Driver.Position;
@@ -80,28 +80,28 @@ internal readonly partial record struct HeaderMessage(
         Message data = type switch
         {
             MessageType.NIL => new NilMessage(),
-            MessageType.Dataspace => Message.Decode(context, objectHeaderAddress, flags, () => DataspaceMessage.Decode(context)),
-            MessageType.LinkInfo => LinkInfoMessage.Decode(context),
-            MessageType.Datatype => Message.Decode(context, objectHeaderAddress, flags, () => DatatypeMessage.Decode(context.Driver)),
-            MessageType.OldFillValue => Message.Decode(context, objectHeaderAddress, flags, () => OldFillValueMessage.Decode(context.Driver)),
-            MessageType.FillValue => Message.Decode(context, objectHeaderAddress, flags, () => FillValueMessage.Decode(context.Driver)),
-            MessageType.Link => LinkMessage.Decode(context),
-            MessageType.ExternalDataFiles => ExternalFileListMessage.Decode(context),
-            MessageType.DataLayout => DataLayoutMessage.Construct(context),
-            MessageType.Bogus => BogusMessage.Decode(context.Driver),
-            MessageType.GroupInfo => GroupInfoMessage.Decode(context.Driver),
-            MessageType.FilterPipeline => Message.Decode(context, objectHeaderAddress, flags, () => FilterPipelineMessage.Decode(context.Driver)),
-            MessageType.Attribute => Message.Decode(context, objectHeaderAddress, flags, () => AttributeMessage.Decode(context, objectHeaderAddress)),
-            MessageType.ObjectComment => ObjectCommentMessage.Decode(context.Driver),
-            MessageType.OldObjectModificationTime => OldObjectModificationTimeMessage.Decode(context.Driver).ToObjectModificationMessage(),
-            MessageType.SharedMessageTable => SharedMessageTableMessage.Decode(context),
-            MessageType.ObjectHeaderContinuation => ObjectHeaderContinuationMessage.Decode(context),
-            MessageType.SymbolTable => SymbolTableMessage.Decode(context),
-            MessageType.ObjectModification => ObjectModificationMessage.Decode(context.Driver),
-            MessageType.BTreeKValues => BTreeKValuesMessage.Decode(context.Driver),
-            MessageType.DriverInfo => DriverInfoMessage.Decode(context.Driver),
-            MessageType.AttributeInfo => AttributeInfoMessage.Decode(context),
-            MessageType.ObjectReferenceCount => ObjectReferenceCountMessage.Decode(context.Driver),
+            MessageType.Dataspace => await Message.Decode(context, objectHeaderAddress, flags, () => DataspaceMessage.Decode(context)).ConfigureAwait(false),
+            MessageType.LinkInfo => await LinkInfoMessage.Decode(context).ConfigureAwait(false),
+            MessageType.Datatype => await Message.Decode(context, objectHeaderAddress, flags, () => DatatypeMessage.Decode(context.Driver)).ConfigureAwait(false),
+            MessageType.OldFillValue => await Message.Decode(context, objectHeaderAddress, flags, () => OldFillValueMessage.Decode(context.Driver)).ConfigureAwait(false),
+            MessageType.FillValue => await Message.Decode(context, objectHeaderAddress, flags, () => FillValueMessage.Decode(context.Driver)).ConfigureAwait(false),
+            MessageType.Link => await LinkMessage.Decode(context).ConfigureAwait(false),
+            MessageType.ExternalDataFiles => await ExternalFileListMessage.Decode(context).ConfigureAwait(false),
+            MessageType.DataLayout => await DataLayoutMessage.Construct(context).ConfigureAwait(false),
+            MessageType.Bogus => await BogusMessage.Decode(context.Driver).ConfigureAwait(false),
+            MessageType.GroupInfo => await GroupInfoMessage.Decode(context.Driver).ConfigureAwait(false),
+            MessageType.FilterPipeline => await Message.Decode(context, objectHeaderAddress, flags, () => FilterPipelineMessage.Decode(context.Driver)).ConfigureAwait(false),
+            MessageType.Attribute => await Message.Decode(context, objectHeaderAddress, flags, () => AttributeMessage.Decode(context, objectHeaderAddress)).ConfigureAwait(false),
+            MessageType.ObjectComment => await ObjectCommentMessage.Decode(context.Driver).ConfigureAwait(false),
+            MessageType.OldObjectModificationTime => (await OldObjectModificationTimeMessage.Decode(context.Driver).ConfigureAwait(false)).ToObjectModificationMessage(),
+            MessageType.SharedMessageTable => await SharedMessageTableMessage.Decode(context).ConfigureAwait(false),
+            MessageType.ObjectHeaderContinuation => await ObjectHeaderContinuationMessage.Decode(context).ConfigureAwait(false),
+            MessageType.SymbolTable => await SymbolTableMessage.Decode(context).ConfigureAwait(false),
+            MessageType.ObjectModification => await ObjectModificationMessage.Decode(context.Driver).ConfigureAwait(false),
+            MessageType.BTreeKValues => await BTreeKValuesMessage.Decode(context.Driver).ConfigureAwait(false),
+            MessageType.DriverInfo => await DriverInfoMessage.Decode(context.Driver).ConfigureAwait(false),
+            MessageType.AttributeInfo => await AttributeInfoMessage.Decode(context).ConfigureAwait(false),
+            MessageType.ObjectReferenceCount => await ObjectReferenceCountMessage.Decode(context.Driver).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The message type '{type}' is not supported.")
         };
 
@@ -111,7 +111,7 @@ internal readonly partial record struct HeaderMessage(
         if (paddingBytes < 0)
             throw new Exception("Unexpected HDF5 file data.");
 
-        context.Driver.ReadBytes((int)paddingBytes);
+        await context.Driver.ReadBytes((int)paddingBytes).ConfigureAwait(false);
 
         return new HeaderMessage(
             type,

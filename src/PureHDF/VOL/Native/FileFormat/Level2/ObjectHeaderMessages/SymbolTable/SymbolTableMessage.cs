@@ -9,37 +9,43 @@ internal record class SymbolTableMessage(
     private LocalHeap _localHeap;
     private BTree1Node<BTree1GroupKey> _bTree1;
 
-    public static SymbolTableMessage Decode(NativeReadContext context)
+    public static async ValueTask<SymbolTableMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var btree1Address = await superblock.ReadOffset(driver).ConfigureAwait(false);
+        var localHeapAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
+
         return new SymbolTableMessage(
             Context: context,
-            BTree1Address: superblock.ReadOffset(driver),
-            LocalHeapAddress: superblock.ReadOffset(driver)
+            BTree1Address: btree1Address,
+            LocalHeapAddress: localHeapAddress
         );
     }
 
-    public LocalHeap LocalHeap
+    // NOTE (async propagation): was a property; C# has no async property getters,
+    // so this became a method with the same name pattern used elsewhere in this
+    // wave (see ScratchPadTypes.cs). Callers outside this file (NativeGroup.cs)
+    // need updating — see report.
+    public async ValueTask<LocalHeap> GetLocalHeap()
     {
-        get
+        if (_localHeap.Equals(default))
         {
-            if (_localHeap.Equals(default))
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
-                _localHeap = LocalHeap.Decode(Context);
-            }
-
-            return _localHeap;
+            Context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
+            _localHeap = await LocalHeap.Decode(Context).ConfigureAwait(false);
         }
+
+        return _localHeap;
     }
 
-    public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
+    // NOTE (async propagation): kept the existing method name; body now awaits.
+    // Callers outside this file (NativeGroup.cs) need updating — see report.
+    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(Func<ValueTask<BTree1GroupKey>> decodeKey)
     {
         if (_bTree1.Equals(default))
         {
             Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-            _bTree1 = BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey);
+            _bTree1 = await BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey).ConfigureAwait(false);
         }
 
         return _bTree1;

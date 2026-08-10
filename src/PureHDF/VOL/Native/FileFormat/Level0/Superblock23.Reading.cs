@@ -15,16 +15,16 @@ internal partial record class Superblock23(
     EndOfFileAddress
 )
 {
-    public static Superblock23 Decode(H5DriverBase driver, byte version)
+    public static async ValueTask<Superblock23> Decode(H5DriverBase driver, byte version)
     {
-        var offsetsSize = driver.ReadByte();
-        var lengthsSize = driver.ReadByte();
-        var fileConsistencyFlags = (FileConsistencyFlags)driver.ReadByte();
-        var baseAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var extensionAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var endOfFileAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var rootGroupObjectHeaderAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var _ = driver.ReadUInt32();
+        var offsetsSize = await driver.ReadByte().ConfigureAwait(false);
+        var lengthsSize = await driver.ReadByte().ConfigureAwait(false);
+        var fileConsistencyFlags = (FileConsistencyFlags)(await driver.ReadByte().ConfigureAwait(false));
+        var baseAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var extensionAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var endOfFileAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var rootGroupObjectHeaderAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new Superblock23(
             driver,

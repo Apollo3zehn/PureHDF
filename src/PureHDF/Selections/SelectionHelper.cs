@@ -251,11 +251,13 @@ internal static class SelectionHelper
         }
     }
 
-    public static void Decode<TResult>(
+    // NOTE (async-first): Span<TResult> became Memory<TResult> throughout the walk because a Span
+    // cannot cross an await, and the per-step decode is now awaited.
+    public static async ValueTask Decode<TResult>(
         int sourceRank,
         int targetRank,
         DecodeInfo<TResult> decodeInfo,
-        Span<TResult> targetBuffer)
+        Memory<TResult> targetBuffer)
     {
         /* validate selections */
         if (decodeInfo.SourceSelection.TotalElementCount != decodeInfo.TargetSelection.TotalElementCount)
@@ -286,21 +288,21 @@ internal static class SelectionHelper
         ).GetEnumerator();
 
         /* select method */
-        DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer);
+        await DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer).ConfigureAwait(false);
     }
 
-    private static void DecodeStream<TResult>(
+    private static async ValueTask DecodeStream<TResult>(
         IEnumerator<RelativeStep> sourceWalker,
         IEnumerator<RelativeStep> targetWalker,
         DecodeInfo<TResult> decodeInfo,
-        Span<TResult> targetBuffer)
+        Memory<TResult> targetBuffer)
     {
         /* initialize source walker */
         var sourceStream = default(IH5ReadStream);
         var lastSourceChunkIndex = 0UL;
 
         /* initialize target walker */
-        var currentTarget = default(Span<TResult>);
+        var currentTarget = default(Memory<TResult>);
 
         /* walk until end */
         while (sourceWalker.MoveNext())
@@ -343,9 +345,9 @@ internal static class SelectionHelper
                 {
                     sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
-                    decodeInfo.Decoder(
+                    await decodeInfo.Decoder(
                         sourceStream,
-                        currentTarget[..targetLength]);
+                        currentTarget[..targetLength]).ConfigureAwait(false);
                 }
 
                 else
@@ -353,7 +355,7 @@ internal static class SelectionHelper
                     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
 
                     virtualDatasetStream.ReadVirtual(
-                        currentTarget[..targetLength]);
+                        currentTarget[..targetLength].Span);
                 }
 
                 currentOffset += length;

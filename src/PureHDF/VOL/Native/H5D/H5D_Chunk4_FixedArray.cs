@@ -24,21 +24,21 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    protected override async ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         // H5Dfarray.c (H5D__farray_idx_get_addr)
 
         /* Check for filters on chunks */
         if (Dataset.FilterPipeline is not null)
         {
-            var element = GetElement(chunkIndex, driver =>
+            var element = await GetElement(chunkIndex, async driver =>
             {
                 return new FilteredDataBlockElement(
-                    Address: ReadContext.Superblock.ReadOffset(driver),
-                    ChunkSize: (uint)ReadUtils.ReadUlong(driver, ChunkSizeLength),
-                    FilterMask: driver.ReadUInt32()
+                    Address: await ReadContext.Superblock.ReadOffset(driver).ConfigureAwait(false),
+                    ChunkSize: (uint)await ReadUtils.ReadUlong(driver, ChunkSizeLength).ConfigureAwait(false),
+                    FilterMask: await driver.ReadUInt32().ConfigureAwait(false)
                 );
-            });
+            }).ConfigureAwait(false);
 
             return element is not null
                 ? new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask)
@@ -47,12 +47,12 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
         else
         {
-            var element = GetElement(chunkIndex, driver =>
+            var element = await GetElement(chunkIndex, async driver =>
             {
                 return new DataBlockElement(
-                    Address: ReadContext.Superblock.ReadOffset(driver)
+                    Address: await ReadContext.Superblock.ReadOffset(driver).ConfigureAwait(false)
                 );
-            });
+            }).ConfigureAwait(false);
 
             return element is not null
                 ? new ChunkInfo(element.Address, ChunkByteSize, 0)
@@ -141,7 +141,10 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
                 // header
                 WriteContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-                header.Encode(WriteContext.Driver);
+
+                // SYNC SURFACE: Encode became async with the driver; this is the synchronous write
+                // path, so it must block. Unawaited it would race the data-block write below.
+                header.Encode(WriteContext.Driver).GetAwaiter().GetResult();
 
                 // data block
                 WriteContext.Driver.SeekRelativeToBaseAddress(dataBlockAddress);
@@ -187,12 +190,12 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         return (elementsPerPage, pageCount, pageBitmapSize);
     }
 
-    private T? GetElement<T>(ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
+    private async ValueTask<T?> GetElement<T>(ulong index, Func<H5DriverBase, ValueTask<T>> decode) where T : DataBlockElement
     {
         if (_header is null)
         {
             ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-            _header = FixedArrayHeader.Decode(ReadContext);
+            _header = await FixedArrayHeader.Decode(ReadContext).ConfigureAwait(false);
         }
 
         // H5FA.c (H5FA_get)
@@ -214,36 +217,36 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 ReadContext.Driver.SeekRelativeToBaseAddress((long)_header.DataBlockAddress);
 
                 var (elementsPerPage, pageCount, pageBitmapSize) = GetInfo(
-                    _header.PageBits, 
+                    _header.PageBits,
                     _header.EntriesCount
                 );
 
-                _dataBlock = FixedArrayDataBlock<T>.Decode(
+                _dataBlock = await FixedArrayDataBlock<T>.Decode(
                     ReadContext,
                     elementsPerPage,
                     pageCount,
                     pageBitmapSize,
                     _header.EntriesCount,
-                    decode);
+                    decode).ConfigureAwait(false);
 
                 _firstPageAddress = ReadContext.Driver.Position;
             }
 
-            return LookupElement(
-                _header, 
-                (FixedArrayDataBlock<T>)_dataBlock, 
-                index, 
+            return await LookupElement(
+                _header,
+                (FixedArrayDataBlock<T>)_dataBlock,
+                index,
                 decode
-            );
+            ).ConfigureAwait(false);
         }
     }
 
-    private T? LookupElement<T>(
-        FixedArrayHeader header, 
-        FixedArrayDataBlock<T> dataBlock, 
-        ulong index, 
-        Func<H5DriverBase, T> decode
-    ) 
+    private async ValueTask<T?> LookupElement<T>(
+        FixedArrayHeader header,
+        FixedArrayDataBlock<T> dataBlock,
+        ulong index,
+        Func<H5DriverBase, ValueTask<T>> decode
+    )
         where T : DataBlockElement
     {
         /* Check for paged data block */
@@ -274,17 +277,20 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                     elementCount = dataBlock.ElementsPerPage;
 
                 /* Decode the data block page */
-                var page = (DataBlockPage<T>)_addressToObjectMap
-                    .GetOrAdd(pageAddress, address =>
+                if (!_addressToObjectMap.TryGetValue(pageAddress, out var pageObj))
                 {
-                    ReadContext.Driver.SeekRelativeToBaseAddress(address);
+                    ReadContext.Driver.SeekRelativeToBaseAddress(pageAddress);
 
-                    return DataBlockPage<T>.Decode(
+                    var decoded = await DataBlockPage<T>.Decode(
                         ReadContext.Driver,
                         elementCount,
                         decode
-                    );
-                });
+                    ).ConfigureAwait(false);
+
+                    pageObj = _addressToObjectMap.GetOrAdd(pageAddress, decoded);
+                }
+
+                var page = (DataBlockPage<T>)pageObj;
 
                 var elements = page.Elements;
 

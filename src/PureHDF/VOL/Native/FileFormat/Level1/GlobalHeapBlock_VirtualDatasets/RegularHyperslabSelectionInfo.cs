@@ -9,7 +9,7 @@ internal record class RegularHyperslabSelectionInfo(
     ulong[] CompactDimensions
 ) : HyperslabSelectionInfo(Rank: Rank)
 {
-    public static RegularHyperslabSelectionInfo Decode(H5DriverBase driver, uint rank, byte encodeSize)
+    public static async ValueTask<RegularHyperslabSelectionInfo> Decode(H5DriverBase driver, uint rank, byte encodeSize)
     {
         var starts = new ulong[rank];
         var strides = new ulong[rank];
@@ -20,10 +20,10 @@ internal record class RegularHyperslabSelectionInfo(
 
         for (int i = 0; i < rank; i++)
         {
-            starts[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
-            strides[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
-            counts[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
-            blocks[i] = H5S_SEL.ReadEncodedValue(driver, encodeSize);
+            starts[i] = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
+            strides[i] = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
+            counts[i] = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
+            blocks[i] = await H5S_SEL.ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
 
             compactDimensions[i] = blocks[i] * counts[i];
         }

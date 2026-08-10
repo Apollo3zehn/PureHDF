@@ -17,12 +17,12 @@ internal record class CompactStoragePropertyDescription(
     byte[] Data
 ) : StoragePropertyDescription
 {
-    public static CompactStoragePropertyDescription Decode(H5DriverBase driver)
+    public static async ValueTask<CompactStoragePropertyDescription> Decode(H5DriverBase driver)
     {
-        var size = driver.ReadUInt16();
+        var size = await driver.ReadUInt16().ConfigureAwait(false);
 
         return new CompactStoragePropertyDescription(
-            Data: driver.ReadBytes(size)
+            Data: await driver.ReadBytes(size).ConfigureAwait(false)
         )
         {
             Address = Superblock.UndefinedAddress
@@ -52,15 +52,15 @@ internal record class ContiguousStoragePropertyDescription(
     ulong Size
 ) : StoragePropertyDescription
 {
-    public static ContiguousStoragePropertyDescription Decode(NativeReadContext context)
+    public static async ValueTask<ContiguousStoragePropertyDescription> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // address
-        var address = superblock.ReadOffset(driver);
+        var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
-        // 
-        var size = superblock.ReadLength(driver);
+        //
+        var size = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         return new ContiguousStoragePropertyDescription(
             Size: size
@@ -98,22 +98,22 @@ internal record class ChunkedStoragePropertyDescription3(
     uint[] DimensionSizes
 ) : ChunkedStoragePropertyDescription(Rank)
 {
-    public static ChunkedStoragePropertyDescription3 Decode(NativeReadContext context)
+    public static async ValueTask<ChunkedStoragePropertyDescription3> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // rank
-        var rank = driver.ReadByte();
+        var rank = await driver.ReadByte().ConfigureAwait(false);
 
         // address
-        var address = superblock.ReadOffset(driver);
+        var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // dimension sizes
         var dimensionSizes = new uint[rank];
 
         for (uint i = 0; i < rank; i++)
         {
-            dimensionSizes[i] = driver.ReadUInt32();
+            dimensionSizes[i] = await driver.ReadUInt32().ConfigureAwait(false);
         }
 
         return new ChunkedStoragePropertyDescription3(
@@ -147,43 +147,43 @@ internal record class ChunkedStoragePropertyDescription4(
 
     public bool IsDirty { get; set; }
 
-    public static ChunkedStoragePropertyDescription4 Decode(NativeReadContext context)
+    public static async ValueTask<ChunkedStoragePropertyDescription4> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // flags
-        var flags = (ChunkedStoragePropertyFlags)driver.ReadByte();
+        var flags = (ChunkedStoragePropertyFlags)await driver.ReadByte().ConfigureAwait(false);
 
         // rank
-        var rank = driver.ReadByte();
+        var rank = await driver.ReadByte().ConfigureAwait(false);
 
         // dimension size encoded length
-        var dimensionSizeEncodedLength = driver.ReadByte();
+        var dimensionSizeEncodedLength = await driver.ReadByte().ConfigureAwait(false);
 
         // dimension sizes
         var dimensionSizes = new ulong[rank];
 
         for (uint i = 0; i < rank; i++)
         {
-            dimensionSizes[i] = ReadUtils.ReadUlong(driver, dimensionSizeEncodedLength);
+            dimensionSizes[i] = await ReadUtils.ReadUlong(driver, dimensionSizeEncodedLength).ConfigureAwait(false);
         }
 
         // chunk indexing type
-        var chunkIndexingType = (ChunkIndexingType)driver.ReadByte();
+        var chunkIndexingType = (ChunkIndexingType)await driver.ReadByte().ConfigureAwait(false);
 
         // indexing type information
         IndexingInformation indexingTypeInformation = chunkIndexingType switch
         {
-            ChunkIndexingType.SingleChunk => SingleChunkIndexingInformation.Decode(context, flags),
+            ChunkIndexingType.SingleChunk => await SingleChunkIndexingInformation.Decode(context, flags).ConfigureAwait(false),
             ChunkIndexingType.Implicit => new ImplicitIndexingInformation(),
-            ChunkIndexingType.FixedArray => FixedArrayIndexingInformation.Decode(driver),
-            ChunkIndexingType.ExtensibleArray => ExtensibleArrayIndexingInformation.Decode(driver),
-            ChunkIndexingType.BTree2 => BTree2IndexingInformation.Decode(driver),
+            ChunkIndexingType.FixedArray => await FixedArrayIndexingInformation.Decode(driver).ConfigureAwait(false),
+            ChunkIndexingType.ExtensibleArray => await ExtensibleArrayIndexingInformation.Decode(driver).ConfigureAwait(false),
+            ChunkIndexingType.BTree2 => await BTree2IndexingInformation.Decode(driver).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The chunk indexing type '{chunkIndexingType}' is not supported.")
         };
 
         // address
-        var address = superblock.ReadOffset(driver);
+        var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new ChunkedStoragePropertyDescription4(
             Rank: rank,
@@ -282,15 +282,15 @@ internal record class VirtualStoragePropertyDescription(
     uint Index
 ) : StoragePropertyDescription
 {
-    public static VirtualStoragePropertyDescription Decode(NativeReadContext context)
+    public static async ValueTask<VirtualStoragePropertyDescription> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // address
-        var address = superblock.ReadOffset(driver);
+        var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // index
-        var index = driver.ReadUInt32();
+        var index = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new VirtualStoragePropertyDescription(
             Index: index

@@ -30,34 +30,34 @@ internal partial record class FixedArrayHeader(
         }
     }
 
-    public static FixedArrayHeader Decode(NativeReadContext context)
+    public static async ValueTask<FixedArrayHeader> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // client ID
-        var clientID = (ClientID)driver.ReadByte();
+        var clientID = (ClientID)await driver.ReadByte().ConfigureAwait(false);
 
         // entry size
-        var entrySize = driver.ReadByte();
+        var entrySize = await driver.ReadByte().ConfigureAwait(false);
 
         // page bits
-        var pageBits = driver.ReadByte();
+        var pageBits = await driver.ReadByte().ConfigureAwait(false);
 
         // entries count
-        var entriesCount = superblock.ReadLength(driver);
+        var entriesCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // data block address
-        var dataBlockAddress = superblock.ReadOffset(driver);
+        var dataBlockAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new FixedArrayHeader(
             Superblock: superblock,

@@ -9,10 +9,10 @@ internal record class SymbolicLinkScratchPad(
     uint LinkValueOffset
 ) : ScratchPad
 {
-    public static SymbolicLinkScratchPad Decode(H5DriverBase driver)
+    public static async ValueTask<SymbolicLinkScratchPad> Decode(H5DriverBase driver)
     {
         return new SymbolicLinkScratchPad(
-            LinkValueOffset: driver.ReadUInt32()
+            LinkValueOffset: await driver.ReadUInt32().ConfigureAwait(false)
         );
     }
 }
@@ -26,37 +26,34 @@ internal record class ObjectHeaderScratchPad(
     private LocalHeap _localHeap;
     private BTree1Node<BTree1GroupKey> _btree1Node;
 
-    public static ObjectHeaderScratchPad Decode(NativeReadContext context)
+    public static async ValueTask<ObjectHeaderScratchPad> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         return new ObjectHeaderScratchPad(
             Context: context,
-            BTree1Address: superblock.ReadLength(driver),
-            NameHeapAddress: superblock.ReadLength(driver)
+            BTree1Address: await superblock.ReadLength(driver).ConfigureAwait(false),
+            NameHeapAddress: await superblock.ReadLength(driver).ConfigureAwait(false)
         );
     }
 
-    public LocalHeap LocalHeap
+    public async ValueTask<LocalHeap> GetLocalHeap()
     {
-        get
+        if (_localHeap.Equals(default))
         {
-            if (_localHeap.Equals(default))
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
-                _localHeap = LocalHeap.Decode(Context);
-            }
-
-            return _localHeap;
+            Context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
+            _localHeap = await LocalHeap.Decode(Context).ConfigureAwait(false);
         }
+
+        return _localHeap;
     }
 
-    public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
+    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(Func<ValueTask<BTree1GroupKey>> decodeKey)
     {
         if (_btree1Node.Equals(default))
         {
             Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-            _btree1Node = BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey);
+            _btree1Node = await BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey).ConfigureAwait(false);
         }
 
         return _btree1Node;

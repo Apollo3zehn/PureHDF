@@ -17,7 +17,10 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     private readonly string _key;
     private readonly AmazonS3Client _client;
 
-    private readonly ThreadLocal<long> _position = new();
+    // CONCURRENCY MODEL (async-first): one stream instance per logical reader. The cursor was a
+    // ThreadLocal<long>; async continuations can resume on another thread, where that reads back as
+    // 0 and every subsequent range request is issued against the wrong offset.
+    private long _position;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AmazonS3Stream" /> instance.
@@ -60,8 +63,8 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     /// <inheritdoc />
     public override long Position
     {
-        get => _position.Value;
-        set => _position.Value = value;
+        get => _position;
+        set => _position = value;
     }
 
     /// <inheritdoc />
@@ -71,9 +74,13 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     /// <inheritdoc />
-    public void ReadDataset(Span<byte> buffer)
+    /// <inheritdoc />
+    // NOTE (async-first): dataset reads are now genuinely async — no GetAwaiter().GetResult().
+    // The synchronous Stream.Read override below still blocks, because System.IO.Stream's own
+    // contract is synchronous; only this IDatasetStream path is await-able end to end.
+    public async ValueTask ReadDataset(Memory<byte> buffer)
     {
-        ReadUncached(buffer);
+        await ReadUncachedAsync(buffer).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -83,21 +90,21 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         {
             case SeekOrigin.Begin:
 
-                _position.Value = offset;
+                _position = offset;
 
-                if (!(0 <= _position.Value && _position.Value < Length))
+                if (!(0 <= _position && _position < Length))
                     throw new Exception("The offset exceeds the stream length.");
 
-                return _position.Value;
+                return _position;
 
             case SeekOrigin.Current:
 
-                _position.Value += offset;
+                _position += offset;
 
-                if (!(0 <= _position.Value && _position.Value < Length))
+                if (!(0 <= _position && _position < Length))
                     throw new Exception("The offset exceeds the stream length.");
 
-                return _position.Value;
+                return _position;
         }
 
         throw new Exception($"Seek origin '{origin}' is not supported.");
@@ -124,16 +131,30 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int ReadUncached(Span<byte> buffer)
+    private async ValueTask<int> ReadUncachedAsync(Memory<byte> buffer)
     {
-        var stream = ReadDataFromS3(
+        var stream = await ReadDataFromS3Async(
             start: Position,
-            end: Position + buffer.Length);
+            end: Position + buffer.Length).ConfigureAwait(false);
 
-        ReadExactly(stream, buffer);
+        await ReadExactlyAsync(stream, buffer).ConfigureAwait(false);
 
         return buffer.Length;
+    }
+
+    private static async ValueTask ReadExactlyAsync(Stream stream, Memory<byte> buffer)
+    {
+        var remaining = buffer;
+
+        while (remaining.Length > 0)
+        {
+            var read = await stream.ReadAsync(remaining).ConfigureAwait(false);
+
+            if (read == 0)
+                throw new EndOfStreamException();
+
+            remaining = remaining[read..];
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,7 +162,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     {
         // TODO issue parallel requests
         var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
-        var s3Remaining = Length - _position.Value;
+        var s3Remaining = Length - _position;
         var s3ActualLength = (int)Math.Min(s3UpperLength, s3Remaining);
         var s3Processed = 0;
         var s3StartIndex = -1L;
@@ -151,7 +172,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
 
         while (s3Processed < s3ActualLength)
         {
-            var currentIndex = (_position.Value + s3Processed) / _cacheSlotSize;
+            var currentIndex = (_position + s3Processed) / _cacheSlotSize;
             loadFromS3 = false;
 
             // determine if data is cached
@@ -230,8 +251,8 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     {
         var s3Position = currentIndex * _cacheSlotSize;
 
-        var cacheSlotOffset = _position.Value > s3Position
-            ? (int)(_position.Value - s3Position)
+        var cacheSlotOffset = _position > s3Position
+            ? (int)(_position - s3Position)
             : 0;
 
         var remainingCacheSlotSize = _cacheSlotSize - cacheSlotOffset;
@@ -242,13 +263,20 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         slicedMemory.Span.CopyTo(remainingBuffer);
 
         remainingBuffer = remainingBuffer[slicedMemory.Length..];
-        _position.Value += slicedMemory.Length;
+        _position += slicedMemory.Length;
 
         return remainingBuffer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Stream ReadDataFromS3(long start, long end)
+    {
+        return ReadDataFromS3Async(start, end)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    private async ValueTask<Stream> ReadDataFromS3Async(long start, long end)
     {
         var request = new GetObjectRequest()
         {
@@ -257,8 +285,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
             ByteRange = new ByteRange(start, end)
         };
 
-        var task = _client.GetObjectAsync(request);
-        var response = task.GetAwaiter().GetResult();
+        var response = await _client.GetObjectAsync(request).ConfigureAwait(false);
 
         return response.ResponseStream;
     }

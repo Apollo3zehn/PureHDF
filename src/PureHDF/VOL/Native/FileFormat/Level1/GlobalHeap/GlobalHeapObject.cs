@@ -6,12 +6,12 @@ internal readonly record struct GlobalHeapObject(
     byte[] ObjectData
 )
 {
-    public static GlobalHeapObject Decode(NativeReadContext context)
+    public static async ValueTask<GlobalHeapObject> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // heap object index
-        var heapObjectIndex = driver.ReadUInt16();
+        var heapObjectIndex = await driver.ReadUInt16().ConfigureAwait(false);
 
         if (heapObjectIndex == 0 /* free space object */)
         {
@@ -23,20 +23,20 @@ internal readonly record struct GlobalHeapObject(
         }
 
         // reference count
-        var referenceCount = driver.ReadUInt16();
+        var referenceCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(4);
+        await driver.ReadBytes(4).ConfigureAwait(false);
 
         // object size
-        var objectSize = superblock.ReadLength(driver);
+        var objectSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // object data
-        var objectData = driver.ReadBytes((int)objectSize);
+        var objectData = await driver.ReadBytes((int)objectSize).ConfigureAwait(false);
 
         var paddedSize = (int)(Math.Ceiling(objectSize / 8.0) * 8);
         var remainingSize = paddedSize - (int)objectSize;
-        driver.ReadBytes(remainingSize);
+        await driver.ReadBytes(remainingSize).ConfigureAwait(false);
 
         return new GlobalHeapObject(
             ObjectIndex: heapObjectIndex,
