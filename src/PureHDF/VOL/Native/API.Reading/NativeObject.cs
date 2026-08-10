@@ -231,15 +231,15 @@ public abstract class NativeObject : IH5Object
         NativeReadContext context,
         AttributeInfoMessage attributeInfoMessage)
     {
-        // NOTE (async propagation): AttributeInfoMessage.BTree2NameIndex()/FractalHeap()
-        // are now async methods (were properties) and BTree2Header<T>.EnumerateRecords()
-        // is now IAsyncEnumerable<T> (rule 8). This method must stay a synchronous
-        // iterator (see report), so all of the above are drained/bridged synchronously.
-        var btree2NameIndex = attributeInfoMessage.BTree2NameIndex(context).GetAwaiter().GetResult();
+        // NOTE (async propagation): AttributeInfoMessage.EnumerateNameIndexRecords()/FractalHeap()
+        // are now async (the former IAsyncEnumerable<T>, rule 8). This method must stay a
+        // synchronous iterator (see report), so both are drained/bridged synchronously.
         var records = new List<BTree2Record08>();
 
         {
-            var recordEnumerator = btree2NameIndex.EnumerateRecords().GetAsyncEnumerator();
+            var recordEnumerator = attributeInfoMessage
+                .EnumerateNameIndexRecords(context)
+                .GetAsyncEnumerator();
 
             try
             {
@@ -282,12 +282,11 @@ public abstract class NativeObject : IH5Object
         string name)
     {
         var fractalHeap = await attributeInfoMessage.FractalHeap(context).ConfigureAwait(false);
-        var btree2NameIndex = await attributeInfoMessage.BTree2NameIndex(context).ConfigureAwait(false);
         var nameBytes = Encoding.UTF8.GetBytes(name);
         var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(AttributeMessage);
 
-        var (success, record) = await btree2NameIndex.TryFindRecord(async record =>
+        var (success, record) = await attributeInfoMessage.TryFindNameIndexRecord(context, async record =>
         {
             // H5Abtree2.c (H5A__dense_btree2_name_compare, H5A__dense_fh_name_cmp)
 

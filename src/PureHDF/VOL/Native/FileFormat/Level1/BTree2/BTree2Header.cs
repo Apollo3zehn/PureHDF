@@ -3,10 +3,12 @@ using System.Text;
 
 namespace PureHDF.VOL.Native;
 
-// TODO should this be a class? Benchmark required
-internal record class BTree2Header<T>(
-    NativeReadContext Context,
-    Func<ValueTask<T>> DecodeKey,
+// CONCURRENCY / CACHING: holds no NativeReadContext and no key decoder, so that a decoded header can
+// be cached per file (see NativeCache.GetStructure) and shared by concurrent navigation operations.
+// Both are passed per call instead. That is also what makes the internal-node cache below sound: a
+// cached node is an immutable record holding neither, so handing the same instance to two operations
+// reading through two different drivers is correct.
+internal sealed record class BTree2Header<T>(
     BTree2Type Type,
     ushort Depth,
     BTree2NodePointer RootNodePointer,
@@ -20,7 +22,7 @@ internal record class BTree2Header<T>(
 
     public static async ValueTask<BTree2Header<T>> Decode(
         NativeReadContext context,
-        Func<ValueTask<T>> decodeKey
+        DecodeKeyDelegate<T> decodeKey
     )
     {
         var (driver, superblock) = context;
@@ -106,8 +108,6 @@ internal record class BTree2Header<T>(
         }
 
         return new BTree2Header<T>(
-            context,
-            decodeKey,
             type,
             depth,
             rootNodePointer,
@@ -139,37 +139,40 @@ internal record class BTree2Header<T>(
     // NOTE (async propagation): was a property; C# has no async property getters,
     // so this became a method with the same name. Callers outside this file need
     // updating — see report.
-    public async ValueTask<BTree2Node<T>?> RootNode()
+    public async ValueTask<BTree2Node<T>?> RootNode(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
-        if (Context.Superblock.IsUndefinedAddress(RootNodePointer.Address))
+        if (context.Superblock.IsUndefinedAddress(RootNodePointer.Address))
         {
             return null;
         }
         else
         {
-            Context.Driver.SeekRelativeToBaseAddress((long)RootNodePointer.Address);
+            context.Driver.SeekRelativeToBaseAddress((long)RootNodePointer.Address);
 
             return Depth != 0
 
                 ? await BTree2InternalNode<T>.Decode(
-                    Context,
+                    context,
                     this,
                     RootNodePointer.RecordCount,
                     Depth,
-                    DecodeKey).ConfigureAwait(false)
+                    decodeKey).ConfigureAwait(false)
 
                 : await BTree2LeafNode<T>.Decode(
-                    Context.Driver,
+                    context,
                     this,
                     RootNodePointer.RecordCount,
-                    DecodeKey).ConfigureAwait(false);
+                    decodeKey).ConfigureAwait(false);
         }
     }
 
     // NOTE (async propagation): `out T result` cannot coexist with `async` (CS1988),
     // so the out parameter became a tuple return. Callers outside this file need
     // updating — see report.
-    public async ValueTask<(bool Success, T Result)> TryFindRecord(Func<T, ValueTask<int>> compare)
+    public async ValueTask<(bool Success, T Result)> TryFindRecord(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
+        Func<T, ValueTask<int>> compare)
     {
         /* H5B2.c (H5B2_find) */
         int cmp;
@@ -198,14 +201,14 @@ internal record class BTree2Header<T>(
 
             if (!_addressToNodeMap.TryGetValue(address, out var internalNode))
             {
-                Context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
+                context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
 
                 internalNode = await BTree2InternalNode<T>.Decode(
-                    Context,
+                    context,
                     this,
                     currentNodePointer.RecordCount,
                     depth,
-                    DecodeKey
+                    decodeKey
                 ).ConfigureAwait(false) ?? throw new Exception("Unable to load B-tree internal node.");
 
                 internalNode = _addressToNodeMap.GetOrAdd(address, internalNode);
@@ -259,13 +262,13 @@ internal record class BTree2Header<T>(
         }
 
         {
-            Context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
+            context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
 
             var leafNode = await BTree2LeafNode<T>.Decode(
-                Context.Driver,
+                context,
                 this,
                 currentNodePointer.RecordCount,
-                DecodeKey).ConfigureAwait(false);
+                decodeKey).ConfigureAwait(false);
 
             /* Locate record */
             (index, cmp) = await BTree2Header<T>.LocateRecord(leafNode.Records, compare).ConfigureAwait(false);
@@ -283,20 +286,24 @@ internal record class BTree2Header<T>(
 
     // NOTE (async propagation): iterator that reads becomes IAsyncEnumerable<T> (rule 8).
     // Callers outside this file need updating — see report.
-    public async IAsyncEnumerable<T> EnumerateRecords()
+    public async IAsyncEnumerable<T> EnumerateRecords(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
-        var rootNode = await RootNode().ConfigureAwait(false);
+        var rootNode = await RootNode(context, decodeKey).ConfigureAwait(false);
 
         if (rootNode is not null)
         {
-            await foreach (var record in EnumerateRecords(rootNode, Depth))
+            await foreach (var record in EnumerateRecords(context, decodeKey, rootNode, Depth))
             {
                 yield return record;
             }
         }
     }
 
-    private async IAsyncEnumerable<T> EnumerateRecords(BTree2Node<T> node, ushort nodeLevel)
+    private async IAsyncEnumerable<T> EnumerateRecords(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
+        BTree2Node<T> node,
+        ushort nodeLevel)
     {
         // This method could be rearranged to accept a BTree2NodePointer (instead of the root node).
         // In that case it would be possible to simplify the double check for internal/leaf node.
@@ -319,20 +326,20 @@ internal record class BTree2Header<T>(
                     yield return records[i];
 
                 var nodePointer = nodePointers[i];
-                Context.Driver.SeekRelativeToBaseAddress((long)nodePointer.Address);
+                context.Driver.SeekRelativeToBaseAddress((long)nodePointer.Address);
                 var childNodeLevel = (ushort)(nodeLevel - 1);
 
                 // internal node
                 if (childNodeLevel > 0)
                 {
                     var childNode = await BTree2InternalNode<T>.Decode(
-                        Context,
+                        context,
                         this,
                         nodePointer.RecordCount,
                         childNodeLevel,
-                        DecodeKey).ConfigureAwait(false);
+                        decodeKey).ConfigureAwait(false);
 
-                    await foreach (var record in EnumerateRecords(childNode, childNodeLevel))
+                    await foreach (var record in EnumerateRecords(context, decodeKey, childNode, childNodeLevel))
                     {
                         yield return record;
                     }
@@ -341,10 +348,10 @@ internal record class BTree2Header<T>(
                 else
                 {
                     var childNode = await BTree2LeafNode<T>.Decode(
-                        Context.Driver,
+                        context,
                         this,
                         nodePointer.RecordCount,
-                        DecodeKey).ConfigureAwait(false);
+                        decodeKey).ConfigureAwait(false);
 
                     foreach (var record in childNode.Records)
                     {

@@ -39,13 +39,11 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
             {
                 ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
 
-                ValueTask<BTree2Record10> decodeKey() => DecodeRecord10(ChunkRank);
-
-                _btree2_no_filter = await BTree2Header<BTree2Record10>.Decode(ReadContext, decodeKey).ConfigureAwait(false);
+                _btree2_no_filter = await BTree2Header<BTree2Record10>.Decode(ReadContext, DecodeRecord10).ConfigureAwait(false);
             }
 
             // get record
-            var (success, record) = await _btree2_no_filter.TryFindRecord(record =>
+            var (success, record) = await _btree2_no_filter.TryFindRecord(ReadContext, DecodeRecord10, record =>
             {
                 // H5Dbtree2.c (H5D__bt2_compare)
                 return new ValueTask<int>(MathUtils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets));
@@ -60,15 +58,12 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
             if (_btree2_filter is null)
             {
                 ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-                var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
-                ValueTask<BTree2Record11> decodeKey() => DecodeRecord11(ChunkRank, chunkSizeLength);
-
-                _btree2_filter = await BTree2Header<BTree2Record11>.Decode(ReadContext, decodeKey).ConfigureAwait(false);
+                _btree2_filter = await BTree2Header<BTree2Record11>.Decode(ReadContext, DecodeRecord11).ConfigureAwait(false);
             }
 
             // get record
-            var (success, record) = await _btree2_filter.TryFindRecord(record =>
+            var (success, record) = await _btree2_filter.TryFindRecord(ReadContext, DecodeRecord11, record =>
             {
                 // H5Dbtree2.c (H5D__bt2_compare)
                 return new ValueTask<int>(MathUtils.VectorCompare(ChunkRank, chunkIndices, record.ScaledOffsets));
@@ -89,16 +84,19 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
 
     #region Callbacks
 
+    // Both match DecodeKeyDelegate<T>: the rank and the chunk-size length are per-dataset constants
+    // derived from this instance, so only the context has to be threaded through - and it must be the
+    // CALLER's, not ReadContext, so that a record decode uses the same driver as the traversal.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ValueTask<BTree2Record10> DecodeRecord10(byte rank)
+    private ValueTask<BTree2Record10> DecodeRecord10(NativeReadContext context)
     {
-        return BTree2Record10.Decode(ReadContext, rank);
+        return BTree2Record10.Decode(context, ChunkRank);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ValueTask<BTree2Record11> DecodeRecord11(byte rank, uint chunkSizeLength)
+    private ValueTask<BTree2Record11> DecodeRecord11(NativeReadContext context)
     {
-        return BTree2Record11.Decode(ReadContext, rank, chunkSizeLength);
+        return BTree2Record11.Decode(context, ChunkRank, MathUtils.ComputeChunkSizeLength(ChunkByteSize));
     }
 
     #endregion

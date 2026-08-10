@@ -10,12 +10,14 @@ internal abstract record class BTree2Node<T>(
     // `async` (CS1988), so both out parameters became a tuple return. Callers outside this
     // file (BTree2InternalNode.cs, BTree2LeafNode.cs) need updating — see report.
     public static async ValueTask<(byte Version, T[] Records)> Decode(
-        H5DriverBase driver,
+        NativeReadContext context,
         BTree2Header<T> header,
         ulong recordCount,
         byte[] signature,
-        Func<ValueTask<T>> decodeKey)
+        DecodeKeyDelegate<T> decodeKey)
     {
+        var driver = context.Driver;
+
         // signature
         var actualSignature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(actualSignature, signature);
@@ -34,7 +36,7 @@ internal abstract record class BTree2Node<T>(
 
         for (var i = 0UL; i < recordCount; i++)
         {
-            records[i] = await decodeKey().ConfigureAwait(false);
+            records[i] = await decodeKey(context).ConfigureAwait(false);
         }
 
         return (version, records);

@@ -12,12 +12,12 @@ internal record class BTree2InternalNode<T>(
         BTree2Header<T> header,
         ulong recordCount,
         int nodeLevel,
-        Func<ValueTask<T>> decodeKey)
+        DecodeKeyDelegate<T> decodeKey)
     {
         var (driver, superblock) = context;
 
         var (version, records) = await Decode(
-            driver,
+            context,
             header,
             recordCount,
             Signature,

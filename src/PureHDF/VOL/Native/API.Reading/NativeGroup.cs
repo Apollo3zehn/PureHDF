@@ -579,12 +579,11 @@ public class NativeGroup : NativeObject, IH5Group
         LinkInfoMessage infoMessage)
     {
         var fractalHeap = await infoMessage.FractalHeap(context).ConfigureAwait(false);
-        var btree2NameIndex = await infoMessage.BTree2NameIndex(context).ConfigureAwait(false);
 
         // local cache: indirectly accessed, non-filtered
         List<BTree2Record01>? record01Cache = null;
 
-        await foreach (var record in btree2NameIndex.EnumerateRecords())
+        await foreach (var record in infoMessage.EnumerateNameIndexRecords(context))
         {
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
             var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
@@ -607,7 +606,6 @@ public class NativeGroup : NativeObject, IH5Group
         string name)
     {
         var fractalHeap = await linkInfoMessage.FractalHeap(context).ConfigureAwait(false);
-        var btree2NameIndex = await linkInfoMessage.BTree2NameIndex(context).ConfigureAwait(false);
         var nameBytes = Encoding.UTF8.GetBytes(name);
         var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(LinkMessage);
@@ -623,7 +621,7 @@ public class NativeGroup : NativeObject, IH5Group
         // `ValueTask<LinkMessage>` returned by the delegate, which is then awaited outside
         // the (still synchronous) Read call — the same pattern already used in
         // EnumerateLinkMessagesFromLinkInfoMessage above.
-        var (success, _) = await btree2NameIndex.TryFindRecord(async record =>
+        var (success, _) = await linkInfoMessage.TryFindNameIndexRecord(context, async record =>
         {
             // H5Gbtree2.c (H5G__dense_btree2_name_compare, H5G__dense_fh_name_cmp)
 

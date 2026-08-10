@@ -44,13 +44,36 @@ internal partial record class LinkInfoMessage(
         return await FractalHeapHeader.Decode(context).ConfigureAwait(false);
     }
 
-    public async ValueTask<BTree2Header<BTree2Record05>> BTree2NameIndex(NativeReadContext context)
+    // The b-tree header is an implementation detail: it is useless without the key decoder that
+    // matches its record type, and that decoder is private here. So the message exposes the two
+    // OPERATIONS a caller actually wants instead of handing out a header the caller cannot drive -
+    // which also means the caching below is invisible to every caller.
+    private ValueTask<BTree2Header<BTree2Record05>> BTree2NameIndex(NativeReadContext context)
     {
-        context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
+        return NativeCache.GetStructure(
+            context,
+            BTree2NameIndexAddress,
+            (DecodeKeyDelegate<BTree2Record05>)DecodeRecord05,
+            static (c, dk) => BTree2Header<BTree2Record05>.Decode(c, dk));
+    }
 
-        return await BTree2Header<BTree2Record05>
-            .Decode(context, () => DecodeRecord05(context))
-            .ConfigureAwait(false);
+    public async IAsyncEnumerable<BTree2Record05> EnumerateNameIndexRecords(NativeReadContext context)
+    {
+        var nameIndex = await BTree2NameIndex(context).ConfigureAwait(false);
+
+        await foreach (var record in nameIndex.EnumerateRecords(context, DecodeRecord05))
+        {
+            yield return record;
+        }
+    }
+
+    public async ValueTask<(bool Success, BTree2Record05 Result)> TryFindNameIndexRecord(
+        NativeReadContext context,
+        Func<BTree2Record05, ValueTask<int>> compare)
+    {
+        var nameIndex = await BTree2NameIndex(context).ConfigureAwait(false);
+
+        return await nameIndex.TryFindRecord(context, DecodeRecord05, compare).ConfigureAwait(false);
     }
 
     public async ValueTask<BTree2Header<BTree2Record06>> BTree2CreationOrder(NativeReadContext context)
@@ -58,7 +81,7 @@ internal partial record class LinkInfoMessage(
         context.Driver.SeekRelativeToBaseAddress((long)BTree2CreationOrderIndexAddress);
 
         return await BTree2Header<BTree2Record06>
-            .Decode(context, () => DecodeRecord06(context))
+            .Decode(context, DecodeRecord06)
             .ConfigureAwait(false);
     }
 

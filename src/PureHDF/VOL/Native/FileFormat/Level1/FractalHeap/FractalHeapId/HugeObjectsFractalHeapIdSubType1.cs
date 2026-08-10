@@ -42,7 +42,7 @@ internal record class HugeObjectsFractalHeapIdSubType1(
             var hugeBtree2 = BTree2Header<BTree2Record01>.Decode(Context, DecodeRecord01).GetAwaiter().GetResult();
 
             var records = new List<BTree2Record01>();
-            var recordEnumerator = hugeBtree2.EnumerateRecords().GetAsyncEnumerator();
+            var recordEnumerator = hugeBtree2.EnumerateRecords(Context, DecodeRecord01).GetAsyncEnumerator();
 
             try
             {
@@ -67,5 +67,5 @@ internal record class HugeObjectsFractalHeapIdSubType1(
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<BTree2Record01> DecodeRecord01() => await BTree2Record01.Decode(Context).ConfigureAwait(false);
+    private static async ValueTask<BTree2Record01> DecodeRecord01(NativeReadContext context) => await BTree2Record01.Decode(context).ConfigureAwait(false);
 }
