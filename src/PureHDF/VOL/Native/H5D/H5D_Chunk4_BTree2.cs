@@ -96,7 +96,9 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ValueTask<BTree2Record11> DecodeRecord11(NativeReadContext context)
     {
-        return BTree2Record11.Decode(context, ChunkRank, MathUtils.ComputeChunkSizeLength(ChunkByteSize));
+        // ChunkSizeLength, not a fresh MathUtils.ComputeChunkSizeLength(ChunkByteSize): the base class
+        // already computes exactly that once during initialization, and this runs per record decode.
+        return BTree2Record11.Decode(context, ChunkRank, ChunkSizeLength);
     }
 
     #endregion
