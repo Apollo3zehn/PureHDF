@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
+﻿using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -19,12 +18,16 @@ internal sealed record class BTree2Header<T>(
     private byte _version;
 
     // Decoded nodes by address, populated by the LOOKUP path only - see GetInternalNode/GetLeafNode
-    // for why EnumerateRecords deliberately does not populate them. Concurrent because one cached
+    // for why EnumerateRecords deliberately does not populate them. Thread-safe because one cached
     // header serves concurrent lookups; safe to share because a node is an immutable record holding
     // neither a context nor a key decoder.
-    private ConcurrentDictionary<ulong, BTree2InternalNode<T>> _addressToNodeMap { get; } = new();
+    //
+    // BOUNDED, unlike every other cache in the reader, because these two are the only ones whose size
+    // is proportional to data volume rather than to the shape of the file: a chunk index has a node per
+    // group of chunks. See BoundedAddressCache.
+    private BoundedAddressCache<BTree2InternalNode<T>> _addressToNodeMap { get; } = new();
 
-    private ConcurrentDictionary<ulong, BTree2LeafNode<T>> _addressToLeafMap { get; } = new();
+    private BoundedAddressCache<BTree2LeafNode<T>> _addressToLeafMap { get; } = new();
 
     public static async ValueTask<BTree2Header<T>> Decode(
         NativeReadContext context,

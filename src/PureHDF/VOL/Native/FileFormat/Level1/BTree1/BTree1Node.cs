@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -21,21 +20,40 @@ internal delegate ValueTask<(bool Success, TUserData UserData)> FoundDelegate<T,
 // A class rather than the former `readonly record struct` - it is what the type's own long-standing
 // TODO asked for, and it is required now that instances are cached: a struct would be boxed and
 // copied out on every cache hit.
+//
+// Cache is ONE instance per tree, shared by every node in it, and bounded - see the Decode overloads
+// and BoundedAddressCache for why a per-node cache bounded nothing.
 internal sealed record class BTree1Node<T>(
     byte NodeLevel,
     ushort EntriesUsed,
     ulong LeftSiblingAddress,
     ulong RightSiblingAddress,
     T[] Keys,
-    ulong[] ChildAddresses
+    ulong[] ChildAddresses,
+    BoundedAddressCache<BTree1Node<T>> Cache
 ) where T : struct, IBTree1Key
 {
-    // Child nodes by address. Concurrent because one cached tree serves concurrent lookups.
-    private readonly ConcurrentDictionary<ulong, BTree1Node<T>> _cache = new();
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
-    public static async ValueTask<BTree1Node<T>> Decode(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
+    /// <summary>
+    /// Decodes the ROOT of a tree, giving it a fresh node cache that every node below it shares.
+    /// </summary>
+    /// <remarks>
+    /// The cache used to live on each node and hold only that node's children, which bounded nothing:
+    /// a node has at most as many children as its own capacity anyway, while the quantity that grows
+    /// with the file is the total number of nodes visited across the whole tree. One shared cache is
+    /// what makes a bound on it mean anything.
+    /// </remarks>
+    public static ValueTask<BTree1Node<T>> Decode(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
+    {
+        return Decode(context, decodeKey, new BoundedAddressCache<BTree1Node<T>>());
+    }
+
+    private static async ValueTask<BTree1Node<T>> Decode(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
+        BoundedAddressCache<BTree1Node<T>> cache)
     {
         var (driver, superblock) = context;
 
@@ -66,7 +84,8 @@ internal sealed record class BTree1Node<T>(
             leftSiblingAddress,
             rightSiblingAddress,
             keys,
-            childAddresses
+            childAddresses,
+            cache
         );
     }
 
@@ -75,14 +94,14 @@ internal sealed record class BTree1Node<T>(
     public async ValueTask<BTree1Node<T>> LeftSibling(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         context.Driver.SeekRelativeToBaseAddress((long)LeftSiblingAddress);
-        return await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
+        return await BTree1Node<T>.Decode(context, decodeKey, Cache).ConfigureAwait(false);
     }
 
     // NOTE (async propagation): was a property; see LeftSibling.
     public async ValueTask<BTree1Node<T>> RightSibling(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         context.Driver.SeekRelativeToBaseAddress((long)RightSiblingAddress);
-        return await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
+        return await BTree1Node<T>.Decode(context, decodeKey, Cache).ConfigureAwait(false);
     }
 
     // NOTE (async propagation): `out TUserData userData` cannot coexist with `async`
@@ -116,11 +135,11 @@ internal sealed record class BTree1Node<T>(
 
         if (NodeLevel > 0)
         {
-            if (!_cache.TryGetValue(childAddress, out var subtree))
+            if (!Cache.TryGetValue(childAddress, out var subtree))
             {
                 context.Driver.SeekRelativeToBaseAddress((long)childAddress);
-                subtree = await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
-                subtree = _cache.GetOrAdd(childAddress, subtree);
+                subtree = await BTree1Node<T>.Decode(context, decodeKey, Cache).ConfigureAwait(false);
+                subtree = Cache.GetOrAdd(childAddress, subtree);
             }
 
             var (success, userData) = await subtree.TryFindUserData(context, decodeKey, compare3, found).ConfigureAwait(false);
@@ -159,7 +178,12 @@ internal sealed record class BTree1Node<T>(
             {
                 context.Driver.SeekRelativeToBaseAddress((long)address);
 
-                var childNode = await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
+                // Deliberately NOT cached, and NOT sharing the tree's cache: a full scan visits every
+                // node once, so caching what it reads has no hit to gain and would evict the working
+                // set the lookup path relies on.
+                var childNode = await BTree1Node<T>
+                    .Decode(context, decodeKey, new BoundedAddressCache<BTree1Node<T>>())
+                    .ConfigureAwait(false);
 
                 // internal node
                 if ((node.NodeLevel - 1) > 0)
