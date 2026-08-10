@@ -52,6 +52,14 @@ internal abstract record class FractalHeapId(
     // this method, and therefore every read path below it, permanently unconvertible.
     //
     // The record set is per file and per address like every other structure, so it now lives in
-    // NativeCache (see HugeObjectsFractalHeapIdSubType1) and the parameter is gone.
-    public abstract T Read<T>(Func<H5DriverBase, T> func);
+    // NativeCache (see HugeObjectsFractalHeapIdSubType1) and the parameter is gone. With it gone this
+    // could finally become async, which it now is: locating a heap object is itself a read (a managed
+    // ID walks the heap's indirect blocks, a huge ID consults a b-tree), so a synchronous Read meant
+    // every dense attribute and dense link decode blocked here no matter how carefully the layers
+    // above it awaited.
+    //
+    // `func` is async too, so a caller no longer has to bridge the decode it performs. Note that the
+    // callbacks in the tree ignore the driver handed to them and read from their own context - see the
+    // remark in TinyObjectsFractalHeapIdSubType1.
+    public abstract ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func);
 }

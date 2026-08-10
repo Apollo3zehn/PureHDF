@@ -585,11 +585,9 @@ public class NativeGroup : NativeObject, IH5Group
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
             var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
 
-            yield return await heapId.Read(driver =>
-            {
-                var message = LinkMessage.Decode(context);
-                return message;
-            }).ConfigureAwait(false);
+            yield return await heapId
+                .Read(driver => LinkMessage.Decode(context))
+                .ConfigureAwait(false);
         }
     }
 
@@ -607,17 +605,6 @@ public class NativeGroup : NativeObject, IH5Group
         var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(LinkMessage);
 
-        // ASYNC PROPAGATION (Wave 4 addendum): BTree2Header<T>.TryFindRecord's comparator
-        // (out of scope, BTree2Header.cs) is now `Func<T, ValueTask<int>>`, so this
-        // comparator is an async lambda and the former `.GetAwaiter().GetResult()`
-        // bridges around FractalHeapId.Construct and LinkMessage.Decode are replaced with
-        // await — both are already async (see FractalHeapId.cs / LinkMessage.Reading.cs,
-        // out of scope, unedited). FractalHeapId.Read<T> itself stays synchronous (its
-        // `ref List<BTree2Record01>` cache parameter makes it CS1988-ineligible for async,
-        // per the wave 4 known blocker); T is inferred here as the unawaited
-        // `ValueTask<LinkMessage>` returned by the delegate, which is then awaited outside
-        // the (still synchronous) Read call — the same pattern already used in
-        // EnumerateLinkMessagesFromLinkInfoMessage above.
         var (success, _) = await linkInfoMessage.TryFindNameIndexRecord(context, async record =>
         {
             // H5Gbtree2.c (H5G__dense_btree2_name_compare, H5G__dense_fh_name_cmp)

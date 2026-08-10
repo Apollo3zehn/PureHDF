@@ -19,7 +19,7 @@ internal record class HugeObjectsFractalHeapIdSubType4(
         );
     }
 
-    public override T Read<T>(Func<H5DriverBase, T> func)
+    public override ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func)
     {
         throw new Exception("Filtered data is not yet supported.");
     }

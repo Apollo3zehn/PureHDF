@@ -20,24 +20,18 @@ internal record class HugeObjectsFractalHeapIdSubType1(
         );
     }
 
-    public override T Read<T>(Func<H5DriverBase, T> func)
+    public override async ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func)
     {
         var driver = Context.Driver;
 
-        // NOTE (async propagation): the record set is decoded asynchronously but this override must
-        // match the synchronous FractalHeapId.Read<T>, so the call is bridged here - mirroring the
-        // precedent in NativeObject.EnumerateAttributeMessagesFromAttributeInfoMessage. Unlike before,
-        // nothing in the SIGNATURE prevents the conversion any more: the `ref` parameter that used to
-        // carry this record set across calls is gone, so Read<T> can become async when its callers do.
-        var records = NativeCache
+        var records = await NativeCache
             .GetStructure(Context, HeapHeader.HugeObjectsBTree2Address, DecodeRecords)
-            .GetAwaiter()
-            .GetResult();
+            .ConfigureAwait(false);
 
         var hugeRecord = Array.Find(records, record => record.HugeObjectId == BTree2Key);
         driver.SeekRelativeToBaseAddress((long)hugeRecord.HugeObjectAddress);
 
-        return func(driver);
+        return await func(driver).ConfigureAwait(false);
     }
 
     // An array rather than the List<> this used to build: the result is now shared between concurrent

@@ -25,18 +25,15 @@ internal sealed record class ManagedObjectsFractalHeapId(
         );
     }
 
-    public override T Read<T>(Func<H5DriverBase, T> func)
+    public override async ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func)
     {
-        // NOTE (async propagation): FractalHeapHeader.GetAddress (out of scope,
-        // FractalHeapHeader.cs) is now async, but this override must match the
-        // abstract, synchronous `FractalHeapId.Read<T>` (out of scope), whose
-        // `ref List<BTree2Record01> record01Cache` parameter can never itself become
-        // async (CS1988 — the same constraint noted for BTree1Node.FoundDelegate).
-        // Bridged synchronously here, mirroring the precedent already established in
-        // NativeObject.EnumerateAttributeMessagesFromAttributeInfoMessage (out of scope).
-        var address = Header.GetAddress(Context, this).GetAwaiter().GetResult();
+        // Locating a managed object walks the heap's indirect blocks, so this is a read in its own
+        // right - which is why a synchronous Read<T> blocked every dense attribute and dense link
+        // lookup regardless of how the layers above it awaited.
+        var address = await Header.GetAddress(Context, this).ConfigureAwait(false);
 
         Context.Driver.SeekRelativeToBaseAddress((long)address);
-        return func(Context.Driver);
+
+        return await func(Context.Driver).ConfigureAwait(false);
     }
 }

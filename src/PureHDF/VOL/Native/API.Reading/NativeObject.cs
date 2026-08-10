@@ -261,7 +261,11 @@ public abstract class NativeObject : IH5Object
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
             var heapId = FractalHeapId.Construct(context, localDriver, fractalHeap).GetAwaiter().GetResult();
-            var message = heapId.Read(driver => AttributeMessage.Decode(context, Header.Address).GetAwaiter().GetResult());
+
+            var message = heapId
+                .Read(driver => AttributeMessage.Decode(context, Header.Address))
+                .GetAwaiter()
+                .GetResult();
 
             yield return message;
         }
@@ -301,14 +305,9 @@ public abstract class NativeObject : IH5Object
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
                 var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
 
-                // NOTE (async propagation): FractalHeapId.Read is a genuinely
-                // synchronous abstract method (its subtype overrides take a `ref
-                // List<BTree2Record01>` cache parameter, and `ref` cannot coexist
-                // with `async` — CS1988, wave 4's stated known blocker). FractalHeapId
-                // is owned by another agent's file, so its `Func<H5DriverBase, T>`
-                // callback parameter cannot be changed to an async delegate from
-                // here; this bridge is unavoidable without an out-of-scope edit.
-                candidate = heapId.Read(driver => AttributeMessage.Decode(context, Header.Address).GetAwaiter().GetResult());
+                candidate = await heapId
+                    .Read(driver => AttributeMessage.Decode(context, Header.Address))
+                    .ConfigureAwait(false);
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison

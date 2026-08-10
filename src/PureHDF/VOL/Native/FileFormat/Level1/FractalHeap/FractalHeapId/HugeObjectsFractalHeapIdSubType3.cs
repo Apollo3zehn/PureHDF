@@ -16,7 +16,7 @@ internal record class HugeObjectsFractalHeapIdSubType3(
             Length: await superblock.ReadLength(localDriver).ConfigureAwait(false)
         );
     }
-    public override T Read<T>(Func<H5DriverBase, T> func)
+    public override ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func)
     {
         Driver.SeekRelativeToBaseAddress((long)Address);
         return func(Driver);
