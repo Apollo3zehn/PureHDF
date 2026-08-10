@@ -192,7 +192,7 @@ public class NativeAttribute : IH5Attribute
             resultBuffer = resultMemoryBuffer;
         }
 
-        ReadCoreLevel2(source, memoryDims, fileElementCount, decoder, resultBuffer);
+        ReadCoreLevel2(_context, source, memoryDims, fileElementCount, decoder, resultBuffer);
 
         /* return */
         return resultArray is null
@@ -223,12 +223,13 @@ public class NativeAttribute : IH5Attribute
 
         buffer.CopyTo(resultBuffer.Span);
 
-        ReadCoreLevel2(source, memoryDims, fileElementCount, decoder, resultBuffer);
+        ReadCoreLevel2(_context, source, memoryDims, fileElementCount, decoder, resultBuffer);
 
         resultBuffer.Span.CopyTo(buffer);
     }
 
     private static void ReadCoreLevel2<TElement>(
+        NativeReadContext context,
         IH5ReadStream source,
         ulong[] memoryDims,
         ulong fileElementCount,
@@ -245,7 +246,7 @@ public class NativeAttribute : IH5Attribute
         /* decode */
         // SYNC SURFACE: NativeAttribute.Read<T> is synchronous public API (IH5Attribute.Read);
         // AttributeAsync/ReadAsync is the non-blocking entry point.
-        decoder(source, resultBuffer).GetAwaiter().GetResult();
+        decoder(context, source, resultBuffer).GetAwaiter().GetResult();
     }
 
     private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>()

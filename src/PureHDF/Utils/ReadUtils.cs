@@ -148,14 +148,14 @@ internal static partial class ReadUtils
 
     // NOTE (async-first): the per-element decode is awaited, so the destination is held as
     // Memory<T> and indexed through .Span per iteration (a Span local cannot survive an await).
-    public static async ValueTask<object> DecodeReferenceArray<TElement>(IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
+    public static async ValueTask<object> DecodeReferenceArray<TElement>(NativeReadContext context, IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
     {
         var array = Array.CreateInstance(typeof(TElement), dims);
         var memory = new ArrayMemoryManager<TElement>(array).Memory;
 
         for (int index = 0; index < array.Length; index++)
         {
-            var element = await elementDecode(source).ConfigureAwait(false);
+            var element = await elementDecode(context, source).ConfigureAwait(false);
             memory.Span[index] = (TElement)element!;
         }
 

@@ -532,7 +532,15 @@ public class NativeDataset : NativeObject, IH5Dataset
             // TODO cache this
             var target = new TElement[1];
             var fillValueDecodeStream = new SystemMemoryStream(InternalFillValue.Value);
-            decoder.Invoke(fillValueDecodeStream, target);
+
+            // SYNC SURFACE: ReadCoreLevel3 cannot become async (it and its Span<T>-based callers
+            // are shared with the VirtualStorage path below, which cannot cross an await - see the
+            // H5D_Virtual note further down). The ValueTask returned here was previously discarded
+            // outright - and because the enclosing method is not async there is no CS4014 warning -
+            // so the fill value was silently left uninitialized whenever the decode did not
+            // complete synchronously. It only ever worked because SystemMemoryStream always
+            // completes synchronously. Block on it explicitly instead.
+            decoder.Invoke(Context, fillValueDecodeStream, target).GetAwaiter().GetResult();
             fillValue = target[0];
         }
 
@@ -637,6 +645,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             fileSelection,
             memorySelection,
             GetSourceStream: h5d.GetReadStream,
+            Context: Context,
             Decoder: decoder,
             SourceTypeSize: (int)InternalDataType.Size,
             TargetTypeSizeFactor: (int)rawModeTargetTypeSizeFactor,

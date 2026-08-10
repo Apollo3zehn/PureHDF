@@ -8,6 +8,7 @@ internal record DecodeInfo<T>(
     Selection SourceSelection,
     Selection TargetSelection,
     Func<ulong, IH5ReadStream> GetSourceStream,
+    NativeReadContext Context,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
     int TargetTypeSizeFactor,
@@ -346,6 +347,7 @@ internal static class SelectionHelper
                     sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
                     await decodeInfo.Decoder(
+                        decodeInfo.Context,
                         sourceStream,
                         currentTarget[..targetLength]).ConfigureAwait(false);
                 }

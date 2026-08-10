@@ -144,10 +144,19 @@ internal partial record class DatatypeMessage(
     // dataset reuse one decoder instead of rebuilding the closure tree (and paying
     // its inner MethodInfo.Invoke into GetDecodeInfoForUnmanagedMemory) every time.
     //
-    // The cached closures capture the NativeReadContext seen on first build. That
-    // is safe because each NativeDataset / NativeAttribute owns its own
-    // DatatypeMessage, which is only ever used with the single NativeReadContext
-    // belonging to the file it was decoded from.
+    // The cached delegates do NOT capture a NativeReadContext: DecodeDelegate<T> /
+    // ElementDecodeDelegate take the context as a call-time parameter instead (see
+    // ReadTypes.cs). That is required because a planned follow-up allocates one
+    // H5DriverBase (and therefore one NativeReadContext) per read operation, while
+    // this cache - keyed on (Type, isRawMode) only, with no context in the key - is
+    // shared across every operation on the dataset/attribute that owns this
+    // DatatypeMessage. A closure that captured the context from the first build
+    // would silently keep reading through the first operation's driver on every
+    // later call. Build-time-only use of a context parameter below (e.g. to decide
+    // which struct fields/properties to map, from context.ReadOptions) is fine -
+    // that produces plain data baked into the decodeSteps once, not a captured
+    // context reference - and mirrors the original invariant that ReadOptions is
+    // stable for the lifetime of the file, unlike the driver.
     private readonly ConcurrentDictionary<(Type, bool), Delegate> _decodeInfoCache = new();
 
     public DecodeDelegate<TElement> GetDecodeInfo<TElement>(
@@ -211,7 +220,7 @@ internal partial record class DatatypeMessage(
 
             DatatypeMessageClass.VariableLength when ((VariableLengthBitFieldDescription)BitField).Type == InternalVariableLengthType.String =>
                 memoryType is null || memoryType == typeof(string)
-                    ? (typeof(string), GetDecodeInfoForVariableLengthString(context))
+                    ? (typeof(string), GetDecodeInfoForVariableLengthString())
                     : throw new Exception($"Variable-length string data can only be decoded as string (incompatible type: {memoryType})."),
 
             /* array / nullable value type / variable-length sequence */
@@ -320,8 +329,11 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>() where T : struct
     {
+        // FAST PATH (#162-ish): plain unmanaged element decode. Captures no context, same as
+        // GetDecodeInfoForUnmanagedMemory<T> below - the context parameter is unused here, it
+        // only exists to match ElementDecodeDelegate's shape.
         // Without the await this returns a boxed ValueTask<T> as the element value.
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
             => await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
 
         return decode;
@@ -379,7 +391,7 @@ internal partial record class DatatypeMessage(
                 .OrderBy(tuple => tuple.Item1.MemberByteOffset)
                 .ToArray();
 
-            async ValueTask<object?> decode(IH5ReadStream source)
+            async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
             {
                 var result = new Dictionary<string, object?>();
                 var basePosition = source.Position;
@@ -399,7 +411,7 @@ internal partial record class DatatypeMessage(
                         source.Seek(padding, SeekOrigin.Current);
 
                     // decode
-                    result[property.Name] = await decoder(source).ConfigureAwait(false);
+                    result[property.Name] = await decoder(context, source).ConfigureAwait(false);
                 }
 
                 // skip padding
@@ -562,7 +574,7 @@ internal partial record class DatatypeMessage(
 
             ElementDecodeDelegate elementDecode;
 
-            elementDecode = (IH5ReadStream source) =>
+            elementDecode = (NativeReadContext context, IH5ReadStream source) =>
             {
                 var nextOffset = i == compoundProperties.Length - 1
                     ? Size
@@ -584,7 +596,7 @@ internal partial record class DatatypeMessage(
         }
 
         // decode
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             var result = Activator.CreateInstance(type)!;
             var basePosition = source.Position;
@@ -606,7 +618,7 @@ internal partial record class DatatypeMessage(
                 // decode
                 // The decode must run even when there is no setter, so that the source advances
                 // past this member; only the assignment is conditional.
-                var value = await decoder(source).ConfigureAwait(false);
+                var value = await decoder(context, source).ConfigureAwait(false);
 
                 setValue?.Invoke(result, value);
             }
@@ -675,13 +687,14 @@ internal partial record class DatatypeMessage(
 
         // TODO: cache
         var invokeDecodeArray = ReadUtils.MethodInfoDecodeReferenceArray.MakeGenericMethod(elementType);
-        var parameters = new object[3];
+        var parameters = new object[4];
 
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
-            parameters[0] = source;
-            parameters[1] = dims;
-            parameters[2] = elementDecode;
+            parameters[0] = context;
+            parameters[1] = source;
+            parameters[2] = dims;
+            parameters[3] = elementDecode;
 
             // DecodeReferenceArray is async now, so Invoke hands back a boxed ValueTask<object>.
             // Without unwrapping it here the ValueTask itself becomes the decoded element value.
@@ -706,7 +719,9 @@ internal partial record class DatatypeMessage(
         var invokeDecodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(elementType);
         var parameters = new object[2];
 
-        async ValueTask<object?> decode(IH5ReadStream source)
+        // DecodeUnmanagedArray needs no context (pure unmanaged bulk read); the context
+        // parameter here only exists to match ElementDecodeDelegate's shape.
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             parameters[0] = source;
             parameters[1] = dims;
@@ -724,7 +739,7 @@ internal partial record class DatatypeMessage(
     {
         var dims = new int[] { (int)Size };
 
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             return await ReadUtils.DecodeUnmanagedArray<byte>(source, dims).ConfigureAwait(false);
         }
@@ -742,7 +757,7 @@ internal partial record class DatatypeMessage(
         var elementType = Nullable.GetUnderlyingType(memoryType);
         (elementType, var elementDecode) = property.BaseType.GetDecodeInfoForScalar(context, elementType);
 
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
             // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
@@ -790,7 +805,7 @@ internal partial record class DatatypeMessage(
             {
                 // TODO: cache short-lived stream?
                 var localSource = new SystemMemoryStream(globalHeapObject.ObjectData);
-                var value = (await elementDecode(localSource).ConfigureAwait(false))!;
+                var value = (await elementDecode(context, localSource).ConfigureAwait(false))!;
 
                 return value;
             }
@@ -830,7 +845,7 @@ internal partial record class DatatypeMessage(
         {
             var fastDecode = (ElementDecodeDelegate)_methodInfoBuildVariableLengthSequenceUnmanagedDecoder
                 .MakeGenericMethod(elementType)
-                .Invoke(default, [context, (int)property.BaseType.Size])!;
+                .Invoke(default, [(int)property.BaseType.Size])!;
 
             memoryType ??= Type.GetType($"{elementType}[]")
                 ?? throw new Exception($"Unable to find array type for element type {elementType}.");
@@ -838,7 +853,7 @@ internal partial record class DatatypeMessage(
             return (memoryType, fastDecode);
         }
 
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             // https://github.com/HDFGroup/hdf5/blob/1d90890a7b38834074169ce56720b7ea7f4b01ae/src/H5Tpublic.h#L1621-L1642
             // https://portal.hdfgroup.org/display/HDF5/Datatype+Basics#DatatypeBasics-variable
@@ -861,7 +876,7 @@ internal partial record class DatatypeMessage(
 
             for (int i = 0; i < sequenceLength; i++)
             {
-                array.SetValue(await elementDecode(localSource).ConfigureAwait(false), i);
+                array.SetValue(await elementDecode(context, localSource).ConfigureAwait(false), i);
             }
 
             return array;
@@ -873,10 +888,9 @@ internal partial record class DatatypeMessage(
         return (memoryType, decode);
     }
 
-    private ElementDecodeDelegate GetDecodeInfoForVariableLengthString(
-        NativeReadContext context)
+    private ElementDecodeDelegate GetDecodeInfoForVariableLengthString()
     {
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -946,7 +960,7 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForFixedLengthString()
     {
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             /* Padding
              * https://support.hdfgroup.org/HDF5/doc/H5.format.html#DatatypeMessage
@@ -1037,7 +1051,7 @@ internal partial record class DatatypeMessage(
             // FAST PATH (#163): one bulk ReadDataset for all N cell headers, ArrayPool-rented,
             // then per-cell decode from an in-memory wrapper. Preserved exactly; the only change
             // is that the bulk read is awaited instead of blocking.
-            async ValueTask decodeBatched(IH5ReadStream source, Memory<T> target)
+            async ValueTask decodeBatched(NativeReadContext context, IH5ReadStream source, Memory<T> target)
             {
                 if (target.Length == 0)
                     return;
@@ -1053,7 +1067,7 @@ internal partial record class DatatypeMessage(
 
                 for (int i = 0; i < target.Length; i++)
                 {
-                    var element = await elementDecode(localSource).ConfigureAwait(false);
+                    var element = await elementDecode(context, localSource).ConfigureAwait(false);
                     target.Span[i] = (T)element!;
                 }
             }
@@ -1063,11 +1077,11 @@ internal partial record class DatatypeMessage(
 
         else
         {
-            async ValueTask decode(IH5ReadStream source, Memory<T> target)
+            async ValueTask decode(NativeReadContext context, IH5ReadStream source, Memory<T> target)
             {
                 for (int i = 0; i < target.Length; i++)
                 {
-                    var element = await elementDecode(source).ConfigureAwait(false);
+                    var element = await elementDecode(context, source).ConfigureAwait(false);
                     target.Span[i] = (T)element!;
                 }
             };
@@ -1089,7 +1103,11 @@ internal partial record class DatatypeMessage(
         // nothing. The Memory overload needs `Cast`, which heap-allocates a CastMemoryManager per
         // call (~32 bytes) - measurable on scalar-dense reads - so it is reserved for sources that
         // genuinely suspend.
-        static ValueTask decode(IH5ReadStream source, Memory<T> target)
+        //
+        // The context parameter below is unused - this decoder captures no context at all, same
+        // as before - it only exists to match DecodeDelegate<T>'s shape. `static` is preserved so
+        // the local function captures nothing.
+        static ValueTask decode(NativeReadContext context, IH5ReadStream source, Memory<T> target)
         {
             if (source.TryReadDatasetSync(MemoryMarshal.AsBytes(target.Span)))
                 return default;
@@ -1140,11 +1158,10 @@ internal partial record class DatatypeMessage(
     }
 
     private static ElementDecodeDelegate BuildVariableLengthSequenceUnmanagedDecoder<TElement>(
-        NativeReadContext context,
         int fileTypeSize)
         where TElement : unmanaged
     {
-        async ValueTask<object?> decode(IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             if (!TryReadVariableLengthHeader(context, source, out var sequenceLength, out var objectData))
                 return default;
