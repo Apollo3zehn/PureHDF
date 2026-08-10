@@ -8,21 +8,21 @@ internal static class NativeCache
 
     static NativeCache()
     {
-        _globalHeapMap = new ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<ulong, GlobalHeapCollection>>();
-        _fileMap = new ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<string, NativeFile>>();
+        _globalHeapMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<ulong, GlobalHeapCollection>>();
+        _fileMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<string, NativeFile>>();
     }
 
     #endregion
 
     #region Shared
 
-    public static void Clear(H5DriverBase driver)
+    public static void Clear(NativeReadContext context)
     {
         // global heap
-        _globalHeapMap.TryRemove(driver, out var _);
+        _globalHeapMap.TryRemove(context.CacheToken, out var _);
 
         // file map
-        if (_fileMap.TryRemove(driver, out var pathToNativeFileMap))
+        if (_fileMap.TryRemove(context.CacheToken, out var pathToNativeFileMap))
         {
             foreach (var nativeFile in pathToNativeFileMap.Values)
             {
@@ -35,18 +35,19 @@ internal static class NativeCache
 
     #region Global Heap
 
-    private static readonly ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+    private static readonly ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
     public static GlobalHeapCollection GetGlobalHeapObject(
         NativeReadContext context,
         ulong address,
         bool restoreAddress = false)
     {
-        // GetOrAdd rather than AddOrUpdate with a constant new value: the update lambda returned the
-        // freshly created map unconditionally, so when two readers both missed, one reader's map -
-        // and everything already decoded into it - was silently dropped.
+        // NOTE (race fix): GetOrAdd (not AddOrUpdate-with-a-constant-new-value) so that
+        // when two threads both miss on the same token, the first-installed map wins and
+        // is shared by both, instead of one thread's map (and anything decoded into it)
+        // being silently discarded.
         var addressToCollectionMap = _globalHeapMap.GetOrAdd(
-            context.Driver,
+            context.CacheToken,
             static _ => new ConcurrentDictionary<ulong, GlobalHeapCollection>());
 
         if (!addressToCollectionMap.TryGetValue(address, out var collection))
@@ -61,9 +62,7 @@ internal static class NativeCache
             // itself become async, so the call is bridged here — see report.
             collection = GlobalHeapCollection.Decode(context).GetAwaiter().GetResult();
 
-            // Prefer whatever is already installed, so two readers that miss on the same collection
-            // converge on one instance instead of one of them discarding its work.
-            collection = addressToCollectionMap.GetOrAdd(address, collection);
+            addressToCollectionMap[address] = collection;
 
             if (restoreAddress)
                 context.Driver.Seek(position, SeekOrigin.Begin);
@@ -76,9 +75,12 @@ internal static class NativeCache
 
     #region File Handles
 
-    private static readonly ConcurrentDictionary<H5DriverBase, ConcurrentDictionary<string, NativeFile>> _fileMap;
+    // Keyed by NativeReadContext.CacheToken, like the global heap cache above, so entries are per
+    // FILE rather than per driver instance - a driver is a per-read-operation allocation now, and
+    // keying on it would leak an entry per read.
+    private static readonly ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<string, NativeFile>> _fileMap;
 
-    public static NativeFile GetNativeFile(H5DriverBase driver, string absoluteFilePath)
+    public static NativeFile GetNativeFile(NativeReadContext context, string absoluteFilePath)
     {
         if (!Uri.TryCreate(absoluteFilePath, UriKind.Absolute, out var uri))
             throw new Exception("The provided path is not absolute.");
@@ -87,7 +89,7 @@ internal static class NativeCache
             throw new Exception("The provided path is not a file path or a UNC path.");
 
         var pathToNativeFileMap = _fileMap.GetOrAdd(
-            driver,
+            context.CacheToken,
             static _ => new ConcurrentDictionary<string, NativeFile>());
 
         if (!pathToNativeFileMap.TryGetValue(uri.AbsoluteUri, out var nativeFile))

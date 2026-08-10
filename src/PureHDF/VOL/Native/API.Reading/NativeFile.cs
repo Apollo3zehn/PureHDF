@@ -256,7 +256,7 @@ public class NativeFile : NativeGroup, IDisposable
         {
             if (disposing)
             {
-                NativeCache.Clear(Context.Driver);
+                NativeCache.Clear(Context);
                 Context.Driver.Dispose();
 
                 if (_deleteOnClose && File.Exists(Path))

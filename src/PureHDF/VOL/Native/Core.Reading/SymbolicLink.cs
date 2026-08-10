@@ -70,7 +70,7 @@ internal class SymbolicLink
                     ?? throw new Exception($"Could not find file {_value}.");
 
                 var externalFile = NativeCache
-                    .GetNativeFile(_parent.Context.Driver, absoluteFilePath);
+                    .GetNativeFile(_parent.Context, absoluteFilePath);
 
                 return externalFile.InternalGet(_objectPath, linkAccess);
             }
