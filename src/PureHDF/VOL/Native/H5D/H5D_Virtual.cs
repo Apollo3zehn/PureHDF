@@ -89,7 +89,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
         return Dataset.Space.Dimensions;
     }
 
-    public override IH5ReadStream GetReadStream(ulong chunkIndex)
+    public override ValueTask<IH5ReadStream> GetReadStream(ulong chunkIndex)
     {
         _stream ??= new VirtualDatasetStream<TResult>(
             ReadContext.File,
@@ -100,7 +100,8 @@ internal class H5D_Virtual<TResult> : H5D_Base
             _readVirtualDelegate
         );
 
-        return _stream;
+        // The VDS mapping block was decoded during construction; building the stream reads nothing.
+        return new ValueTask<IH5ReadStream>(_stream);
     }
 
     public override IH5WriteStream GetWriteStream(ulong chunkIndex)

@@ -29,7 +29,10 @@ internal abstract class H5D_Base : IDisposable
 
     public abstract ulong[] GetChunkDims();
 
-    public abstract IH5ReadStream GetReadStream(ulong chunkIndex);
+    // Async because the chunked implementation reads the chunk here on a cache miss, which is where a
+    // chunked dataset does its actual I/O. Every other layout resolves its stream without reading and
+    // returns an already-completed ValueTask.
+    public abstract ValueTask<IH5ReadStream> GetReadStream(ulong chunkIndex);
 
     public abstract IH5WriteStream GetWriteStream(ulong chunkIndex);
 

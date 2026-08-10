@@ -7,7 +7,7 @@ internal record DecodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong, IH5ReadStream> GetSourceStream,
+    Func<ulong, ValueTask<IH5ReadStream>> GetSourceStream,
     NativeReadContext Context,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
@@ -314,7 +314,7 @@ internal static class SelectionHelper
             if (sourceStream is null /* if stream not assigned yet */ ||
                 sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
             {
-                sourceStream = decodeInfo.GetSourceStream(sourceStep.ChunkIndex);
+                sourceStream = await decodeInfo.GetSourceStream(sourceStep.ChunkIndex).ConfigureAwait(false);
                 lastSourceChunkIndex = sourceStep.ChunkIndex;
             }
 

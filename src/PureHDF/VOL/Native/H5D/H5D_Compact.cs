@@ -23,7 +23,7 @@ internal class H5D_Compact : H5D_Base
         return Dataset.Space.GetDims();
     }
 
-    public override IH5ReadStream GetReadStream(ulong chunkIndex)
+    public override ValueTask<IH5ReadStream> GetReadStream(ulong chunkIndex)
     {
         byte[] buffer;
 
@@ -46,7 +46,8 @@ internal class H5D_Compact : H5D_Base
 
         IH5ReadStream stream = new SystemMemoryStream(buffer);
 
-        return stream;
+        // Compact data lives in the object header, which is already decoded - nothing to read here.
+        return new ValueTask<IH5ReadStream>(stream);
     }
 
     public override IH5WriteStream GetWriteStream(ulong chunkIndex)

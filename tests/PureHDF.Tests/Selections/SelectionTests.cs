@@ -808,7 +808,7 @@ public class SelectionTests
             memoryDims,
             datasetSelection,
             memorySelection,
-            index => new SystemMemoryStream(chunksBuffers[(int)index]),
+            index => new(new SystemMemoryStream(chunksBuffers[(int)index])),
             default!,
             (_, source, target) => source.ReadDataset(target.Cast<int, byte>()),
             SourceTypeSize: 4,
@@ -918,8 +918,8 @@ public class SelectionTests
 
         var actual = new int[5 * 6 * 11];
 
-        IH5ReadStream getSourceStream(ulong index)
-            => new SystemMemoryStream(chunksBuffers[index]);
+        ValueTask<IH5ReadStream> getSourceStream(ulong index)
+            => new(new SystemMemoryStream(chunksBuffers[index]));
 
         var decodeInfo = new DecodeInfo<int>(
             datasetDims,
@@ -1050,8 +1050,8 @@ public class SelectionTests
 
         var actual = new int[11 * 11 * 12];
 
-        IH5ReadStream getSourceStream(ulong index)
-            => new SystemMemoryStream(chunksBuffers[index]);
+        ValueTask<IH5ReadStream> getSourceStream(ulong index)
+            => new(new SystemMemoryStream(chunksBuffers[index]));
 
         var decodeInfo = new DecodeInfo<int>(
             datasetDims,
