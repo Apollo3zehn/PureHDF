@@ -126,14 +126,14 @@ public class NavigationCostTests
         string[] expected =
         [
             "link by name, symbol table: 32",
-            "link by name, dense: 183",
+            "link by name, dense: 157",
             "link by path, symbol table: 56",
-            "link by path, dense: 219",
+            "link by path, dense: 193",
             "children, symbol table: 8557",
-            "children, dense: 76194",
-            "attribute by name, dense: 544",
-            "attribute by name, dense, V110: 544",
-            "attributes, dense: 450848"
+            "children, dense: 76168",
+            "attribute by name, dense: 518",
+            "attribute by name, dense, V110: 518",
+            "attributes, dense: 450822"
         ];
 
         Assert.Equal(expected, actual);

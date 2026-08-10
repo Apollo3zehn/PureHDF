@@ -2,22 +2,25 @@
 
 namespace PureHDF.VOL.Native;
 
-internal record class ManagedObjectsFractalHeapId(
-    H5DriverBase Driver,
+// Holds the context rather than a bare driver, now that FractalHeapHeader.GetAddress needs one. Safe
+// to capture: this is constructed per heap-ID read inside a single operation (FractalHeapId.Construct)
+// and discarded, so it never outlives the driver it holds.
+internal sealed record class ManagedObjectsFractalHeapId(
+    NativeReadContext Context,
     FractalHeapHeader Header,
     ulong Offset,
     ulong Length
 ) : FractalHeapId
 {
     public static async ValueTask<ManagedObjectsFractalHeapId> Decode(
-        H5DriverBase driver,
+        NativeReadContext context,
         H5DriverBase localDriver,
         FractalHeapHeader header,
         ulong offsetByteCount,
         ulong lengthByteCount)
     {
         return new ManagedObjectsFractalHeapId(
-            Driver: driver,
+            Context: context,
             Header: header,
             Offset: await ReadUtils.ReadUlong(localDriver, offsetByteCount).ConfigureAwait(false),
             Length: await ReadUtils.ReadUlong(localDriver, lengthByteCount).ConfigureAwait(false)
@@ -35,9 +38,9 @@ internal record class ManagedObjectsFractalHeapId(
         // async (CS1988 — the same constraint noted for BTree1Node.FoundDelegate).
         // Bridged synchronously here, mirroring the precedent already established in
         // NativeObject.EnumerateAttributeMessagesFromAttributeInfoMessage (out of scope).
-        var address = Header.GetAddress(this).GetAwaiter().GetResult();
+        var address = Header.GetAddress(Context, this).GetAwaiter().GetResult();
 
-        Driver.SeekRelativeToBaseAddress((long)address);
-        return func(Driver);
+        Context.Driver.SeekRelativeToBaseAddress((long)address);
+        return func(Context.Driver);
     }
 }

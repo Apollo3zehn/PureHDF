@@ -2,10 +2,12 @@
 
 namespace PureHDF.VOL.Native;
 
+// CONCURRENCY / CACHING: holds no NativeReadContext, so that a decoded heap header can be cached per
+// file (see NativeCache.GetStructure) and shared by concurrent navigation operations. The context is
+// passed per call to the two methods that read - everything else here is decoded format data.
+//
 // this should be a class because it has so many fields
-internal record class FractalHeapHeader(
-    NativeReadContext Context,
-
+internal sealed record class FractalHeapHeader(
     ushort HeapIdLength,
     ushort IOFilterEncodedLength,
     FractalHeapHeaderFlags Flags,
@@ -301,7 +303,6 @@ internal record class FractalHeapHeader(
         }
 
         return new FractalHeapHeader(
-            Context: context,
 
             HeapIdLength: heapIdLength,
             IOFilterEncodedLength: ioFilterEncodedLength,
@@ -354,7 +355,7 @@ internal record class FractalHeapHeader(
     }
 
     // from H5HF__man_op_real
-    public async ValueTask<ulong> GetAddress(ManagedObjectsFractalHeapId heapId)
+    public async ValueTask<ulong> GetAddress(NativeReadContext context, ManagedObjectsFractalHeapId heapId)
     {
         FractalHeapDirectBlock directBlock;
         ulong directBlockSize;
@@ -372,15 +373,15 @@ internal record class FractalHeapHeader(
         else
         {
             /* Look up indirect block containing direct block */
-            var (indirectBlock, entry) = await Locate(heapId.Offset).ConfigureAwait(false);
+            var (indirectBlock, entry) = await Locate(context, heapId.Offset).ConfigureAwait(false);
 
             /* Set direct block info */
             directBlockSize = RowBlockSizes[entry / TableWidth];
             directBlockAddress = indirectBlock.Entries[entry].Address;
         }
 
-        Context.Driver.SeekRelativeToBaseAddress((long)directBlockAddress);
-        directBlock = await FractalHeapDirectBlock.Decode(Context, this).ConfigureAwait(false);
+        context.Driver.SeekRelativeToBaseAddress((long)directBlockAddress);
+        directBlock = await FractalHeapDirectBlock.Decode(context, this).ConfigureAwait(false);
 
         /* Compute offset of object within block */
         if (heapId.Offset >= directBlock.BlockOffset + directBlockSize)
@@ -400,12 +401,12 @@ internal record class FractalHeapHeader(
     }
 
     // from H5HF__man_dblock_locate
-    private async ValueTask<(FractalHeapIndirectBlock IndirectBlock, ulong entry)> Locate(ulong offset)
+    private async ValueTask<(FractalHeapIndirectBlock IndirectBlock, ulong entry)> Locate(NativeReadContext context, ulong offset)
     {
         var (row, column) = Lookup(offset);
 
-        Context.Driver.SeekRelativeToBaseAddress((long)RootBlockAddress);
-        var indirectBlock = await FractalHeapIndirectBlock.Decode(Context, this, RootIndirectBlockRowsCount).ConfigureAwait(false);
+        context.Driver.SeekRelativeToBaseAddress((long)RootBlockAddress);
+        var indirectBlock = await FractalHeapIndirectBlock.Decode(context, this, RootIndirectBlockRowsCount).ConfigureAwait(false);
 
         uint entry;
 
@@ -424,8 +425,8 @@ internal record class FractalHeapHeader(
             var indirectBlockEntry = indirectBlock.Entries[entry];
 
             /* Use new indirect block */
-            Context.Driver.SeekRelativeToBaseAddress((long)indirectBlockEntry.Address);
-            indirectBlock = await FractalHeapIndirectBlock.Decode(Context, this, nrows).ConfigureAwait(false);
+            context.Driver.SeekRelativeToBaseAddress((long)indirectBlockEntry.Address);
+            indirectBlock = await FractalHeapIndirectBlock.Decode(context, this, nrows).ConfigureAwait(false);
 
             /* Look up row & column in new indirect block for object */
             (row, column) = Lookup(offset - indirectBlock.BlockOffset);

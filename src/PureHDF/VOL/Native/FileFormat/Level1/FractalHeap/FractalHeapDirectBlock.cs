@@ -5,15 +5,16 @@ namespace PureHDF.VOL.Native;
 // TODO: Implement this.
 // public byte[] ObjectData { get; set; }
 
-internal record class FractalHeapDirectBlock(
-    NativeReadContext Context,
+// CONCURRENCY: holds no NativeReadContext. It is transient - decoded inside FractalHeapHeader's
+// GetAddress/Locate and discarded - so a capture would have been survivable, but the ONLY thing that
+// needed one was a lazy GetHeapHeader() with no callers anywhere in the tree, so both are gone.
+internal sealed record class FractalHeapDirectBlock(
     ulong HeapHeaderAddress,
     ulong BlockOffset,
     ulong HeaderSize
 )
 {
     private byte _version;
-    private FractalHeapHeader? _header;
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("FHDB");
 
@@ -30,17 +31,6 @@ internal record class FractalHeapDirectBlock(
 
             _version = value;
         }
-    }
-
-    public async ValueTask<FractalHeapHeader> GetHeapHeader()
-    {
-        if (_header is null)
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)HeapHeaderAddress);
-            _header = await FractalHeapHeader.Decode(Context).ConfigureAwait(false);
-        }
-
-        return _header;
     }
 
     public static async ValueTask<FractalHeapDirectBlock> Decode(NativeReadContext context, FractalHeapHeader header)
@@ -75,7 +65,6 @@ internal record class FractalHeapDirectBlock(
         }
 
         return new FractalHeapDirectBlock(
-            Context: context,
             HeapHeaderAddress: heapHeaderAddress,
             BlockOffset: blockOffset,
             HeaderSize: headerSize

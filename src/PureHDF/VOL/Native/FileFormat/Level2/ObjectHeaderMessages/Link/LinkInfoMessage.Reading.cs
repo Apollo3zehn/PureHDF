@@ -37,11 +37,9 @@ internal partial record class LinkInfoMessage(
         }
     }
 
-    public async ValueTask<FractalHeapHeader> FractalHeap(NativeReadContext context)
+    public ValueTask<FractalHeapHeader> FractalHeap(NativeReadContext context)
     {
-        context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
-
-        return await FractalHeapHeader.Decode(context).ConfigureAwait(false);
+        return NativeCache.GetStructure(context, FractalHeapAddress, FractalHeapHeader.Decode);
     }
 
     // The b-tree header is an implementation detail: it is useless without the key decoder that
