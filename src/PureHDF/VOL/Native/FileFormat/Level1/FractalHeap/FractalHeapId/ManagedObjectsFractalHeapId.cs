@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 // Holds the context rather than a bare driver, now that FractalHeapHeader.GetAddress needs one. Safe
 // to capture: this is constructed per heap-ID read inside a single operation (FractalHeapId.Construct)
@@ -27,9 +25,7 @@ internal sealed record class ManagedObjectsFractalHeapId(
         );
     }
 
-    public override T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+    public override T Read<T>(Func<H5DriverBase, T> func)
     {
         // NOTE (async propagation): FractalHeapHeader.GetAddress (out of scope,
         // FractalHeapHeader.cs) is now async, but this override must match the

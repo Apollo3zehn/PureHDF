@@ -380,8 +380,11 @@ internal sealed record class FractalHeapHeader(
             directBlockAddress = indirectBlock.Entries[entry].Address;
         }
 
-        context.Driver.SeekRelativeToBaseAddress((long)directBlockAddress);
-        directBlock = await FractalHeapDirectBlock.Decode(context, this).ConfigureAwait(false);
+        // Cached by address: a dense by-name lookup resolves a heap ID per name comparison, and every
+        // one of those walked back to the same handful of blocks.
+        directBlock = await NativeCache
+            .GetStructure(context, directBlockAddress, this, static (c, header) => FractalHeapDirectBlock.Decode(c, header))
+            .ConfigureAwait(false);
 
         /* Compute offset of object within block */
         if (heapId.Offset >= directBlock.BlockOffset + directBlockSize)
@@ -405,8 +408,7 @@ internal sealed record class FractalHeapHeader(
     {
         var (row, column) = Lookup(offset);
 
-        context.Driver.SeekRelativeToBaseAddress((long)RootBlockAddress);
-        var indirectBlock = await FractalHeapIndirectBlock.Decode(context, this, RootIndirectBlockRowsCount).ConfigureAwait(false);
+        var indirectBlock = await GetIndirectBlock(context, RootBlockAddress, RootIndirectBlockRowsCount).ConfigureAwait(false);
 
         uint entry;
 
@@ -425,8 +427,7 @@ internal sealed record class FractalHeapHeader(
             var indirectBlockEntry = indirectBlock.Entries[entry];
 
             /* Use new indirect block */
-            context.Driver.SeekRelativeToBaseAddress((long)indirectBlockEntry.Address);
-            indirectBlock = await FractalHeapIndirectBlock.Decode(context, this, nrows).ConfigureAwait(false);
+            indirectBlock = await GetIndirectBlock(context, indirectBlockEntry.Address, nrows).ConfigureAwait(false);
 
             /* Look up row & column in new indirect block for object */
             (row, column) = Lookup(offset - indirectBlock.BlockOffset);
@@ -438,6 +439,17 @@ internal sealed record class FractalHeapHeader(
         entry = row * TableWidth + column;
 
         return (indirectBlock, entry);
+    }
+
+    // Cached by address, for the same reason as the direct block in GetAddress. The row count is
+    // determined by the address in a well-formed heap, so it is not part of the key.
+    private ValueTask<FractalHeapIndirectBlock> GetIndirectBlock(NativeReadContext context, ulong address, uint rowCount)
+    {
+        return NativeCache.GetStructure(
+            context,
+            address,
+            (Header: this, RowCount: rowCount),
+            static (c, state) => FractalHeapIndirectBlock.Decode(c, state.Header, state.RowCount));
     }
 
     // from H5HF_dtable_lookup

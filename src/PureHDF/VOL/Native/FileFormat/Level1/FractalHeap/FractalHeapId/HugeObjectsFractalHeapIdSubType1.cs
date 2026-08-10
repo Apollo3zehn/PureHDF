@@ -1,4 +1,3 @@
-﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace PureHDF.VOL.Native;
@@ -21,50 +20,45 @@ internal record class HugeObjectsFractalHeapIdSubType1(
         );
     }
 
-    public override T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+    public override T Read<T>(Func<H5DriverBase, T> func)
     {
         var driver = Context.Driver;
 
-        // huge objects b-tree v2
-        if (record01Cache is null)
-        {
-            driver.SeekRelativeToBaseAddress((long)HeapHeader.HugeObjectsBTree2Address);
+        // NOTE (async propagation): the record set is decoded asynchronously but this override must
+        // match the synchronous FractalHeapId.Read<T>, so the call is bridged here - mirroring the
+        // precedent in NativeObject.EnumerateAttributeMessagesFromAttributeInfoMessage. Unlike before,
+        // nothing in the SIGNATURE prevents the conversion any more: the `ref` parameter that used to
+        // carry this record set across calls is gone, so Read<T> can become async when its callers do.
+        var records = NativeCache
+            .GetStructure(Context, HeapHeader.HugeObjectsBTree2Address, DecodeRecords)
+            .GetAwaiter()
+            .GetResult();
 
-            // NOTE (async propagation): BTree2Header<T>.Decode/EnumerateRecords (out of
-            // scope, BTree2Header.cs) are now async/IAsyncEnumerable, but this override
-            // must match the abstract, synchronous `FractalHeapId.Read<T>` (out of scope),
-            // whose `ref List<BTree2Record01> record01Cache` parameter can never itself
-            // become async (CS1988 — the same constraint noted for BTree1Node.FoundDelegate).
-            // Bridged synchronously here, mirroring the precedent already established in
-            // NativeObject.EnumerateAttributeMessagesFromAttributeInfoMessage (out of scope).
-            var hugeBtree2 = BTree2Header<BTree2Record01>.Decode(Context, DecodeRecord01).GetAwaiter().GetResult();
-
-            var records = new List<BTree2Record01>();
-            var recordEnumerator = hugeBtree2.EnumerateRecords(Context, DecodeRecord01).GetAsyncEnumerator();
-
-            try
-            {
-                while (recordEnumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
-                {
-                    records.Add(recordEnumerator.Current);
-                }
-            }
-            finally
-            {
-                recordEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
-            }
-
-            record01Cache = records;
-        }
-
-        var hugeRecord = record01Cache.FirstOrDefault(record => record.HugeObjectId == BTree2Key);
+        var hugeRecord = Array.Find(records, record => record.HugeObjectId == BTree2Key);
         driver.SeekRelativeToBaseAddress((long)hugeRecord.HugeObjectAddress);
 
         return func(driver);
     }
 
+    // An array rather than the List<> this used to build: the result is now shared between concurrent
+    // readers of the file, so "read-only from here on" should be the type's problem and not a
+    // convention. NativeCache.GetStructure seeks to the address first, so the header decode below
+    // starts where it expects to.
+    private static async ValueTask<BTree2Record01[]> DecodeRecords(NativeReadContext context)
+    {
+        var hugeBTree2 = await BTree2Header<BTree2Record01>
+            .Decode(context, DecodeRecord01)
+            .ConfigureAwait(false);
+
+        var records = new List<BTree2Record01>();
+
+        await foreach (var record in hugeBTree2.EnumerateRecords(context, DecodeRecord01))
+        {
+            records.Add(record);
+        }
+
+        return [.. records];
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static async ValueTask<BTree2Record01> DecodeRecord01(NativeReadContext context) => await BTree2Record01.Decode(context).ConfigureAwait(false);

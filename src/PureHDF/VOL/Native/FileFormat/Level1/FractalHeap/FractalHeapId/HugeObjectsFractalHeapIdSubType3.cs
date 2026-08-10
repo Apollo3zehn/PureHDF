@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal record class HugeObjectsFractalHeapIdSubType3(
     H5DriverBase Driver,
@@ -18,9 +16,7 @@ internal record class HugeObjectsFractalHeapIdSubType3(
             Length: await superblock.ReadLength(localDriver).ConfigureAwait(false)
         );
     }
-    public override T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+    public override T Read<T>(Func<H5DriverBase, T> func)
     {
         Driver.SeekRelativeToBaseAddress((long)Address);
         return func(Driver);

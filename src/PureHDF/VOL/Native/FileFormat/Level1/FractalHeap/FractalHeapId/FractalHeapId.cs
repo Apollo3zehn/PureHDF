@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal abstract record class FractalHeapId(
 //
@@ -47,14 +45,13 @@ internal abstract record class FractalHeapId(
         });
     }
 
-    public T Read<T>(Func<H5DriverBase, T> func)
-    {
-        // TODO: Is there a better way?
-        List<BTree2Record01>? cache = null;
-        return Read(func, ref cache);
-    }
-
-    public abstract T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache);
+    // NOTE (was `Read<T>(func, ref List<BTree2Record01> record01Cache)`): the ref parameter existed
+    // so that one enumeration could reuse the huge-objects b-tree record set across the heap IDs it
+    // resolved. Exactly one of the six implementations ever read it, every caller had to thread a
+    // mutable local through, and a ref parameter cannot coexist with `async` (CS1988) - which made
+    // this method, and therefore every read path below it, permanently unconvertible.
+    //
+    // The record set is per file and per address like every other structure, so it now lives in
+    // NativeCache (see HugeObjectsFractalHeapIdSubType1) and the parameter is gone.
+    public abstract T Read<T>(Func<H5DriverBase, T> func);
 }

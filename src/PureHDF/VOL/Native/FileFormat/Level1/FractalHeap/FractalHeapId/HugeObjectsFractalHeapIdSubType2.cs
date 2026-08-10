@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal record class HugeObjectsFractalHeapIdSubType2(
     NativeReadContext Context,
@@ -20,9 +18,7 @@ internal record class HugeObjectsFractalHeapIdSubType2(
         );
     }
 
-    public override T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+    public override T Read<T>(Func<H5DriverBase, T> func)
     {
         throw new Exception("Filtered data is not yet supported.");
     }

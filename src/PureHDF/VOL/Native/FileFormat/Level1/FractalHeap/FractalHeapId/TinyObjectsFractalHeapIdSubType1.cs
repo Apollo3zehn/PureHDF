@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal record class TinyObjectsFractalHeapIdSubType1(
     byte[] Data
@@ -17,9 +15,7 @@ internal record class TinyObjectsFractalHeapIdSubType1(
         );
     }
 
-    public override T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+    public override T Read<T>(Func<H5DriverBase, T> func)
     {
         using var driver = new H5StreamDriver(new MemoryStream(Data), leaveOpen: false);
         return func.Invoke(driver);

@@ -256,15 +256,12 @@ public abstract class NativeObject : IH5Object
 
         var fractalHeap = attributeInfoMessage.FractalHeap(context).GetAwaiter().GetResult();
 
-        // local cache: indirectly accessed, non-filtered
-        List<BTree2Record01>? record01Cache = null;
-
         foreach (var record in records)
         {
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
             var heapId = FractalHeapId.Construct(context, localDriver, fractalHeap).GetAwaiter().GetResult();
-            var message = heapId.Read(driver => AttributeMessage.Decode(context, Header.Address).GetAwaiter().GetResult(), ref record01Cache);
+            var message = heapId.Read(driver => AttributeMessage.Decode(context, Header.Address).GetAwaiter().GetResult());
 
             yield return message;
         }

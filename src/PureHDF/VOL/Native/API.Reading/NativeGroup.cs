@@ -580,9 +580,6 @@ public class NativeGroup : NativeObject, IH5Group
     {
         var fractalHeap = await infoMessage.FractalHeap(context).ConfigureAwait(false);
 
-        // local cache: indirectly accessed, non-filtered
-        List<BTree2Record01>? record01Cache = null;
-
         await foreach (var record in infoMessage.EnumerateNameIndexRecords(context))
         {
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
@@ -592,7 +589,7 @@ public class NativeGroup : NativeObject, IH5Group
             {
                 var message = LinkMessage.Decode(context);
                 return message;
-            }, ref record01Cache).ConfigureAwait(false);
+            }).ConfigureAwait(false);
         }
     }
 

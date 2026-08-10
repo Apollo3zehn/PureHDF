@@ -70,8 +70,13 @@ public class NavigationCostTests
             Measure("link by path, dense", H5F.libver_t.V110, TestUtils.AddMassLinks,
                 root => () => root.Group($"mass_links/{TARGET}")),
 
-            // Enumeration walks the whole link storage once per call and decodes 1000 children, so
-            // it dwarfs any per-call re-decode. Included as the control: these two must NOT move.
+            // Enumeration walks the whole link storage once per call and decodes 1000 children, so it
+            // dwarfs any per-call re-decode - which is why it was included as the control that ought
+            // not to move. The dense case then halved anyway: an enumeration resolves a fractal heap
+            // ID per child and every one of those walked back through the same handful of heap blocks,
+            // so caching the blocks helps WITHIN a single call and not only between calls. Worth
+            // stating plainly rather than quietly updating the number: the control assumption was
+            // wrong, not the measurement.
             Measure("children, symbol table", H5F.libver_t.EARLIEST, TestUtils.AddMassLinks,
                 root =>
                 {
@@ -103,10 +108,10 @@ public class NavigationCostTests
                     return () => group.Attribute(TARGET);
                 }),
 
-            // The enumeration control for the attribute path. Note the magnitude: enumerating 1000
-            // dense attributes costs ~450k structural reads, ~450 per attribute, which is a
-            // pre-existing cost unrelated to this work and by far the most expensive navigation in
-            // the library. Recorded here because it is worth knowing about, not because it changes.
+            // The enumeration counterpart for the attribute path. Note the magnitude: enumerating 1000
+            // dense attributes still costs ~363k structural reads, ~363 per attribute, by far the most
+            // expensive navigation in the library. That is a pre-existing cost, only partly addressed
+            // here, and it is recorded mainly so the size of it is on the record.
             Measure("attributes, dense", H5F.libver_t.V110, AddMassAttributes,
                 root =>
                 {
@@ -126,14 +131,14 @@ public class NavigationCostTests
         string[] expected =
         [
             "link by name, symbol table: 32",
-            "link by name, dense: 101",
+            "link by name, dense: 59",
             "link by path, symbol table: 56",
-            "link by path, dense: 137",
+            "link by path, dense: 95",
             "children, symbol table: 8557",
-            "children, dense: 76156",
-            "attribute by name, dense: 458",
-            "attribute by name, dense, V110: 458",
-            "attributes, dense: 450801"
+            "children, dense: 34156",
+            "attribute by name, dense: 359",
+            "attribute by name, dense, V110: 359",
+            "attributes, dense: 363269"
         ];
 
         Assert.Equal(expected, actual);
