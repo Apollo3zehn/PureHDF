@@ -51,6 +51,14 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         return default;
     }
 
+    // A memory-mapped view is a synchronous source by construction.
+    public override bool TryReadDatasetSync(Span<byte> buffer)
+    {
+        ReadCore(buffer);
+
+        return true;
+    }
+
     public override ValueTask Read(Memory<byte> buffer)
     {
         throw new NotImplementedException();

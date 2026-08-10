@@ -218,7 +218,7 @@ public class NativeAttribute : IH5Attribute
         // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
         // so a decode that only partially fills it must not write garbage back over the caller's
         // remaining elements.
-        using var owner = MemoryPool<TElement>.Shared.Rent(buffer.Length);
+        using var owner = new ScratchBuffer<TElement>(buffer.Length);
         var resultBuffer = owner.Memory[..buffer.Length];
 
         buffer.CopyTo(resultBuffer.Span);

@@ -138,7 +138,7 @@ internal static partial class ReadUtils
     public static async ValueTask<T> DecodeUnmanagedElement<T>(IH5ReadStream source) where T : struct
     {
         var bytesOfType = Unsafe.SizeOf<T>();
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(bytesOfType);
+        using var memoryOwner = new ScratchBuffer<byte>(bytesOfType);
         var buffer = memoryOwner.Memory[..bytesOfType];
 
         await source.ReadDataset(buffer).ConfigureAwait(false);
@@ -169,7 +169,7 @@ internal static partial class ReadUtils
         var memory = new ArrayMemoryManager<TElement>(array).Memory;
         var byteLength = memory.Length * Unsafe.SizeOf<TElement>();
 
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(byteLength);
+        using var memoryOwner = new ScratchBuffer<byte>(byteLength);
         var buffer = memoryOwner.Memory[..byteLength];
 
         await source.ReadDataset(buffer).ConfigureAwait(false);

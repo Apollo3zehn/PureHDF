@@ -456,7 +456,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
         // and a decode that only partially fills it must leave the caller's remaining elements
         // untouched - which is what happened when the caller's own span was decoded into directly.
-        using var spanOwner = MemoryPool<TElement>.Shared.Rent(buffer.Length);
+        using var spanOwner = new ScratchBuffer<TElement>(buffer.Length);
         var resultBuffer = spanOwner.Memory[..buffer.Length];
 
         buffer.CopyTo(resultBuffer.Span);
@@ -547,7 +547,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         // Bridge with a pooled buffer and copy out; virtual datasets are the uncommon path.
         void readVirtualDelegate(NativeDataset dataset, Span<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
         {
-            using var owner = MemoryPool<TElement>.Shared.Rent(destination.Length);
+            using var owner = new ScratchBuffer<TElement>(destination.Length);
             var target = owner.Memory[..destination.Length];
 
             dataset.ReadCoreLevel3(

@@ -167,7 +167,7 @@ internal record class CompoundPropertyDescription(
                 if (!(1 <= byteCount && byteCount <= 8))
                     throw new NotSupportedException("A compound property description member byte offset byte count must be within the range of 1..8.");
 
-                using (var byteOffsetOwner = MemoryPool<byte>.Shared.Rent(8))
+                using (var byteOffsetOwner = new ScratchBuffer<byte>(8))
                 {
                     var buffer = byteOffsetOwner.Memory[..8];
 

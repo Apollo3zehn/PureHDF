@@ -18,14 +18,27 @@ internal partial class SystemMemoryStream : IH5ReadStream
     // In-memory source: already-completed ValueTask, no allocation.
     public ValueTask ReadDataset(Memory<byte> buffer)
     {
+        ReadCore(buffer.Span);
+
+        return default;
+    }
+
+    // Always synchronous - this is a memory copy.
+    public bool TryReadDatasetSync(Span<byte> buffer)
+    {
+        ReadCore(buffer);
+
+        return true;
+    }
+
+    private void ReadCore(Span<byte> buffer)
+    {
         var length = Math.Min(SlicedMemory.Length, buffer.Length);
 
         SlicedMemory.Span[..length]
-            .CopyTo(buffer.Span);
+            .CopyTo(buffer);
 
         Seek(length, SeekOrigin.Current);
-
-        return default;
     }
 
     public void Seek(long offset, SeekOrigin origin)

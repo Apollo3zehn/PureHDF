@@ -279,7 +279,7 @@ internal abstract class H5D_Chunk : H5D_Base
                 else
                 {
                     var rawChunkSize = (int)chunkInfo.Size;
-                    using var filterBufferOwner = MemoryPool<byte>.Shared.Rent(rawChunkSize);
+                    using var filterBufferOwner = new ScratchBuffer<byte>(rawChunkSize);
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);

@@ -1,4 +1,4 @@
-using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace PureHDF.VFD;
@@ -41,16 +41,17 @@ internal partial class H5StreamDriver : H5DriverBase
         };
     }
 
-    public override async ValueTask ReadDataset(Memory<byte> buffer)
+    public override ValueTask ReadDataset(Memory<byte> buffer)
     {
-        if (_stream is IDatasetStream datasetStream)
-            await datasetStream.ReadDataset(buffer).ConfigureAwait(false);
-
+        // Returning the callee's ValueTask directly, rather than `async`/`await`-ing it, avoids
+        // building a state machine here just to forward a result.
+        //
         // ReadExactlyAsyncCompat, never a hand-rolled loop: it advances the buffer it reads into and
         // treats a zero-byte read as end of stream. Getting either wrong is silent data corruption on
         // any stream that returns partial reads.
-        else
-            await _stream.ReadExactlyAsyncCompat(buffer).ConfigureAwait(false);
+        return _stream is IDatasetStream datasetStream
+            ? datasetStream.ReadDataset(buffer)
+            : _stream.ReadExactlyAsyncCompat(buffer);
     }
 
     public override ValueTask Read(Memory<byte> buffer)
@@ -58,48 +59,75 @@ internal partial class H5StreamDriver : H5DriverBase
         return _stream.ReadExactlyAsyncCompat(buffer);
     }
 
-    public override async ValueTask<byte> ReadByte()
+    public override ValueTask<byte> ReadByte()
     {
-        return await ReadScalar<byte>().ConfigureAwait(false);
+        return ReadScalar<byte>();
     }
 
-    public override async ValueTask<byte[]> ReadBytes(int count)
+    public override ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
-        await _stream.ReadExactlyAsyncCompat(buffer).ConfigureAwait(false);
+        var pending = _stream.ReadExactlyAsyncCompat(buffer);
 
-        return buffer;
+        if (pending.IsCompletedSuccessfully)
+            return new ValueTask<byte[]>(buffer);
+
+        return AwaitBytes(pending, buffer);
+
+        static async ValueTask<byte[]> AwaitBytes(ValueTask pending, byte[] buffer)
+        {
+            await pending.ConfigureAwait(false);
+
+            return buffer;
+        }
     }
 
-    public override async ValueTask<ushort> ReadUInt16()
+    public override ValueTask<ushort> ReadUInt16()
     {
-        return await ReadScalar<ushort>().ConfigureAwait(false);
+        return ReadScalar<ushort>();
     }
 
-    public override async ValueTask<short> ReadInt16()
+    public override ValueTask<short> ReadInt16()
     {
-        return await ReadScalar<short>().ConfigureAwait(false);
+        return ReadScalar<short>();
     }
 
-    public override async ValueTask<uint> ReadUInt32()
+    public override ValueTask<uint> ReadUInt32()
     {
-        return await ReadScalar<uint>().ConfigureAwait(false);
+        return ReadScalar<uint>();
     }
 
-    public override async ValueTask<ulong> ReadUInt64()
+    public override ValueTask<ulong> ReadUInt64()
     {
-        return await ReadScalar<ulong>().ConfigureAwait(false);
+        return ReadScalar<ulong>();
     }
 
-    // Was: stackalloc + MemoryMarshal.Cast. A Span cannot cross an await, so the scratch
-    // buffer now comes from the shared pool. This is the per-scalar-read cost of async-first.
-    private async ValueTask<T> ReadScalar<T>() where T : unmanaged
-    {
-        var size = Marshal.SizeOf<T>();
-        using var owner = MemoryPool<byte>.Shared.Rent(size);
-        var buffer = owner.Memory[..size];
+    // A Span cannot cross an await, so a scalar read can no longer use `stackalloc`. It does not
+    // need a pooled buffer either: the concurrency model gives each driver instance a single logical
+    // reader (see H5FileHandleDriver), so one 8-byte field serves every scalar read on this driver.
+    //
+    // The method is not `async`. When the underlying stream satisfies the read without suspending -
+    // always, for a MemoryStream - no state machine is built and nothing is allocated. Only a stream
+    // that genuinely suspends (an HTTP range-request stream) pays for one, via ReadScalarSlow.
+    private readonly byte[] _scalarBuffer = new byte[8];
 
-        await _stream.ReadExactlyAsyncCompat(buffer).ConfigureAwait(false);
+    private ValueTask<T> ReadScalar<T>() where T : unmanaged
+    {
+        var size = Unsafe.SizeOf<T>();
+        var buffer = new Memory<byte>(_scalarBuffer, 0, size);
+        var pending = _stream.ReadExactlyAsyncCompat(buffer);
+
+        if (pending.IsCompletedSuccessfully)
+            return new ValueTask<T>(MemoryMarshal.Cast<byte, T>(buffer.Span)[0]);
+
+        return ReadScalarSlow<T>(pending, buffer);
+    }
+
+    private static async ValueTask<T> ReadScalarSlow<T>(
+        ValueTask pending,
+        Memory<byte> buffer) where T : unmanaged
+    {
+        await pending.ConfigureAwait(false);
 
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }

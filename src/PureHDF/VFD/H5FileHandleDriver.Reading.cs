@@ -1,4 +1,4 @@
-using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 
@@ -12,9 +12,15 @@ namespace PureHDF.VFD;
 // thread, where the ThreadLocal cursor reads back as 0. The result was silent corruption - the
 // superblock scan desynced and every file reported "not a valid HDF 5 file".
 //
-// Isolating per reader instead of per thread costs almost nothing here, because the actual reads go
-// through RandomAccess.ReadAsync(handle, buffer, offset), which is stateless - the cursor below is
-// just bookkeeping. Callers that want parallel reads open one reader per thread.
+// SYNCHRONOUS COMPLETION: a local file is not an asynchronous source. .NET on Unix has no true
+// async file I/O, and the FileStream behind this handle is opened without FileOptions.Asynchronous,
+// so RandomAccess.ReadAsync would queue every read - including a 2-byte metadata read - onto the
+// thread pool and genuinely suspend. That cost is what made metadata-heavy reads 40-60% slower.
+//
+// So the reads below stay synchronous and hand back an already-completed ValueTask. That is exactly
+// what ValueTask is for: the async signature is honored, no state machine is ever created, no
+// continuation is ever boxed, and the methods stay inlineable. Drivers over genuinely remote
+// sources (H5StreamDriver over an HTTP range-request stream) are the ones that actually suspend.
 internal partial class H5FileHandleDriver : H5DriverBase
 {
     private long _position;
@@ -50,7 +56,18 @@ internal partial class H5FileHandleDriver : H5DriverBase
 
     public override ValueTask ReadDataset(Memory<byte> buffer)
     {
-        return ReadCore(buffer);
+        ReadCore(buffer.Span);
+
+        return default;
+    }
+
+    // A local file handle always reads synchronously (see the note above), so the decode path can
+    // take the Span overload and skip the CastMemoryManager allocation entirely.
+    public override bool TryReadDatasetSync(Span<byte> buffer)
+    {
+        ReadCore(buffer);
+
+        return true;
     }
 
     public override ValueTask Read(Memory<byte> buffer)
@@ -58,42 +75,43 @@ internal partial class H5FileHandleDriver : H5DriverBase
         throw new NotImplementedException();
     }
 
-    public override async ValueTask<byte> ReadByte()
+    public override ValueTask<byte> ReadByte()
     {
-        return await ReadScalar<byte>().ConfigureAwait(false);
+        return new ValueTask<byte>(ReadScalar<byte>());
     }
 
-    public override async ValueTask<byte[]> ReadBytes(int count)
+    public override ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
-        await ReadCore(buffer).ConfigureAwait(false);
+        ReadCore(buffer);
 
-        return buffer;
+        return new ValueTask<byte[]>(buffer);
     }
 
-    public override async ValueTask<ushort> ReadUInt16()
+    public override ValueTask<ushort> ReadUInt16()
     {
-        return await ReadScalar<ushort>().ConfigureAwait(false);
+        return new ValueTask<ushort>(ReadScalar<ushort>());
     }
 
-    public override async ValueTask<short> ReadInt16()
+    public override ValueTask<short> ReadInt16()
     {
-        return await ReadScalar<short>().ConfigureAwait(false);
+        return new ValueTask<short>(ReadScalar<short>());
     }
 
-    public override async ValueTask<uint> ReadUInt32()
+    public override ValueTask<uint> ReadUInt32()
     {
-        return await ReadScalar<uint>().ConfigureAwait(false);
+        return new ValueTask<uint>(ReadScalar<uint>());
     }
 
-    public override async ValueTask<ulong> ReadUInt64()
+    public override ValueTask<ulong> ReadUInt64()
     {
-        return await ReadScalar<ulong>().ConfigureAwait(false);
+        return new ValueTask<ulong>(ReadScalar<ulong>());
     }
 
-    private async ValueTask ReadCore(Memory<byte> buffer)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ReadCore(Span<byte> buffer)
     {
-        var count = await RandomAccess.ReadAsync(_handle, buffer, Position).ConfigureAwait(false);
+        var count = RandomAccess.Read(_handle, buffer, _position);
 
         if (count != buffer.Length)
             throw new Exception("The file is too small");
@@ -101,17 +119,17 @@ internal partial class H5FileHandleDriver : H5DriverBase
         _position += count;
     }
 
-    // Was: stackalloc + MemoryMarshal.Cast — a Span cannot cross an await.
-    private async ValueTask<T> ReadScalar<T>() where T : unmanaged
+    // No `await` in this method, so `stackalloc` and `Unsafe.SizeOf<T>` (a JIT constant) are both
+    // available again - this is the baseline implementation, unchanged.
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private T ReadScalar<T>() where T : unmanaged
     {
-        var size = Marshal.SizeOf<T>();
-        using var owner = MemoryPool<byte>.Shared.Rent(size);
-        var buffer = owner.Memory[..size];
-
-        await RandomAccess.ReadAsync(_handle, buffer, Position).ConfigureAwait(false);
+        var size = Unsafe.SizeOf<T>();
+        Span<byte> buffer = stackalloc byte[size];
+        RandomAccess.Read(_handle, buffer, _position);
         _position += size;
 
-        return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
+        return MemoryMarshal.Cast<byte, T>(buffer)[0];
     }
 
     private bool _disposedValue;

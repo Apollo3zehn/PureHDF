@@ -19,6 +19,12 @@ internal partial class OffsetStream : IH5ReadStream
         return _driver.ReadDataset(buffer);
     }
 
+    // Sync-capable exactly when the underlying driver is.
+    public bool TryReadDatasetSync(Span<byte> buffer)
+    {
+        return _driver.TryReadDatasetSync(buffer);
+    }
+
     public void Seek(long offset, SeekOrigin origin)
     {
         switch (origin)

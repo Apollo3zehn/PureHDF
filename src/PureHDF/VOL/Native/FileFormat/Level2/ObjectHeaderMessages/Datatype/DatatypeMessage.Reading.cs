@@ -760,7 +760,7 @@ internal partial record class DatatypeMessage(
             var globalHeapIdSize = context.Superblock.OffsetsSize + sizeof(uint);
             var totalSize = lengthSize + globalHeapIdSize;
 
-            using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
+            using var memoryOwner = new ScratchBuffer<byte>(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
             await source.ReadDataset(buffer).ConfigureAwait(false);
@@ -902,7 +902,7 @@ internal partial record class DatatypeMessage(
 
             /* read data into rented buffer */
             var totalSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
-            using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalSize);
+            using var memoryOwner = new ScratchBuffer<byte>(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
             await source.ReadDataset(buffer).ConfigureAwait(false);
@@ -965,7 +965,7 @@ internal partial record class DatatypeMessage(
                 _ => throw new Exception("Unsupported padding type.")
             };
 
-            using var memoryOwner = MemoryPool<byte>.Shared.Rent((int)Size);
+            using var memoryOwner = new ScratchBuffer<byte>((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
             await source.ReadDataset(memory).ConfigureAwait(false);
@@ -1044,7 +1044,7 @@ internal partial record class DatatypeMessage(
 
                 var totalBytes = target.Length * cellHeaderSize;
 
-                using var memoryOwner = MemoryPool<byte>.Shared.Rent(totalBytes);
+                using var memoryOwner = new ScratchBuffer<byte>(totalBytes);
                 var bulk = memoryOwner.Memory[..totalBytes];
 
                 await source.ReadDataset(bulk).ConfigureAwait(false);
@@ -1083,10 +1083,19 @@ internal partial record class DatatypeMessage(
         //     source.ReadDataset(MemoryMarshal.AsBytes(target))
         // i.e. a single zero-copy read straight into the caller's buffer. An intermediate version
         // of this conversion regressed it to a pooled rent plus a full copy because Span<T> cannot
-        // be reinterpreted as Memory<byte>. Now that DecodeDelegate<T> carries Memory<T>, the
-        // zero-copy read is restored via CastMemoryManager - no rent, no copy, one read.
+        // be reinterpreted as Memory<byte>. The zero-copy read is restored either way below.
+        //
+        // The Span overload is tried first because it matches the baseline exactly and allocates
+        // nothing. The Memory overload needs `Cast`, which heap-allocates a CastMemoryManager per
+        // call (~32 bytes) - measurable on scalar-dense reads - so it is reserved for sources that
+        // genuinely suspend.
         static ValueTask decode(IH5ReadStream source, Memory<T> target)
-            => source.ReadDataset(target.Cast<T, byte>());
+        {
+            if (source.TryReadDatasetSync(MemoryMarshal.AsBytes(target.Span)))
+                return default;
+
+            return source.ReadDataset(target.Cast<T, byte>());
+        }
 
         return decode;
     }
@@ -1101,7 +1110,7 @@ internal partial record class DatatypeMessage(
         var globalHeapIdSize = (int)context.Superblock.OffsetsSize + sizeof(uint);
         var headerSize = lengthSize + globalHeapIdSize;
 
-        using var memoryOwner = MemoryPool<byte>.Shared.Rent(headerSize);
+        using var memoryOwner = new ScratchBuffer<byte>(headerSize);
         var headerBuffer = memoryOwner.Memory[..headerSize];
 
         source.ReadDataset(headerBuffer).GetAwaiter().GetResult();
