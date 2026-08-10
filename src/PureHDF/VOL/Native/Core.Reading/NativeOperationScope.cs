@@ -18,21 +18,50 @@ namespace PureHDF.VOL.Native;
 /// </para>
 /// <para>
 /// A struct, and <c>Context</c> falls back to the file-level context when the source cannot be
-/// read concurrently, so the whole thing costs one context record plus one driver per read, and
-/// nothing at all for a <c>Stream</c>-backed file.
+/// read concurrently, so a <c>Stream</c>-backed file pays nothing at all. Otherwise the driver and
+/// context pair is taken from - and handed back to - <see cref="NativeOperationSlot" />, so a reader
+/// whose reads never overlap allocates them once per file rather than once per <c>Read</c>.
 /// </para>
 /// </remarks>
 internal readonly struct NativeOperationScope : IDisposable
 {
     private readonly H5DriverBase? _operationDriver;
+    private readonly NativeOperationSlot? _slot;
 
     public NativeOperationScope(NativeReadContext fileContext)
     {
-        _operationDriver = fileContext.Driver.TryCreateOperationDriver();
+        var slot = fileContext.OperationSlot;
+        var idle = slot.TryTake();
 
-        Context = _operationDriver is null
-            ? fileContext
-            : fileContext with { Driver = _operationDriver };
+        // Reuse. The cursor is wherever the previous operation left it, which does not matter: every
+        // read path seeks before its first read. BaseAddress was copied when the driver was made and
+        // never changes afterwards.
+        if (idle is not null)
+        {
+            Context = idle;
+            _operationDriver = idle.Driver;
+            _slot = slot;
+
+            return;
+        }
+
+        var operationDriver = fileContext.Driver.TryCreateOperationDriver();
+
+        // The source cannot isolate a cursor (a Stream has exactly one). Reads through it are
+        // documented as non-concurrent, so the file-level context is used as-is and there is nothing
+        // to dispose or hand back.
+        if (operationDriver is null)
+        {
+            Context = fileContext;
+            _operationDriver = null;
+            _slot = null;
+
+            return;
+        }
+
+        _operationDriver = operationDriver;
+        _slot = slot;
+        Context = fileContext with { Driver = operationDriver };
     }
 
     /// <summary>
@@ -43,6 +72,11 @@ internal readonly struct NativeOperationScope : IDisposable
 
     public void Dispose()
     {
-        _operationDriver?.Dispose();
+        if (_operationDriver is null)
+            return;
+
+        // Offer the pair to the next operation on this file rather than disposing it - see
+        // NativeOperationSlot.Return for why losing this race is harmless.
+        _slot?.Return(Context);
     }
 }
