@@ -9,25 +9,18 @@ internal class SlotStream : IH5ReadStream
     private readonly ExternalFileListSlot _slot;
     private readonly H5DatasetAccess _datasetAccess;
 
-    private SlotStream(NativeFile file, string name, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
+    // This briefly needed a static async factory instead, because resolving the name through the
+    // local heap performed a driver read and a constructor cannot be async. LocalHeap now holds its
+    // data segment outright, so the lookup is a synchronous array scan and a constructor does again.
+    public SlotStream(NativeFile file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
     {
         _file = file;
-        _name = name;
+        _name = heap.GetObjectName(slot.NameHeapOffset);
         _slot = slot;
         Offset = offset;
         _datasetAccess = datasetAccess;
 
         Length = (long)_slot.Size;
-    }
-
-    // RULE 4 CONVERSION: the constructor resolved the external-file name via
-    // LocalHeap.GetObjectName, which performs a driver read; constructors cannot be
-    // async, so construction is now via this static factory.
-    public static async ValueTask<SlotStream> Create(NativeFile file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
-    {
-        var name = await heap.GetObjectName(slot.NameHeapOffset).ConfigureAwait(false);
-
-        return new SlotStream(file, name, slot, offset, datasetAccess);
     }
 
     public long Offset { get; private set; }

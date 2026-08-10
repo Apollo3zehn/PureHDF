@@ -125,11 +125,11 @@ public class NavigationCostTests
         // Assert
         string[] expected =
         [
-            "link by name, symbol table: 139",
+            "link by name, symbol table: 120",
             "link by name, dense: 261",
-            "link by path, symbol table: 182",
+            "link by path, symbol table: 153",
             "link by path, dense: 297",
-            "children, symbol table: 9588",
+            "children, symbol table: 8582",
             "children, dense: 76206",
             "attribute by name, dense: 667",
             "attribute by name, dense, V110: 667",

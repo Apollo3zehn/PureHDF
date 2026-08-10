@@ -681,7 +681,7 @@ public class NativeGroup : NativeObject, IH5Group
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<NativeNamedReference> GetObjectReferencesForSymbolTableEntry(NativeReadContext context, LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
     {
-        var name = await heap.GetObjectName(entry.LinkNameOffset).ConfigureAwait(false);
+        var name = heap.GetObjectName(entry.LinkNameOffset);
         var reference = new NativeNamedReference(name, entry.HeaderAddress, Context.File);
 
         return entry.ScratchPad switch
@@ -690,7 +690,7 @@ public class NativeGroup : NativeObject, IH5Group
 
             SymbolicLinkScratchPad linkScratch => new SymbolicLink(
                 name,
-                await heap.GetObjectName(linkScratch.LinkValueOffset).ConfigureAwait(false),
+                heap.GetObjectName(linkScratch.LinkValueOffset),
                 this,
                 Context.File).GetTarget(context, linkAccess),
 
@@ -729,30 +729,35 @@ public class NativeGroup : NativeObject, IH5Group
     // `Func<T, T, ValueTask<int>>` (BTree1Node.cs, out of scope but already converted),
     // so the former `.GetAwaiter().GetResult()` bridge is no longer needed here — this
     // callback is awaited by BTree1Node<T>.LocateRecord itself.
+    //
+    // Deliberately not `async`, even though it returns a ValueTask to satisfy that delegate: now that
+    // LocalHeap holds its data segment outright, comparing two names reads nothing and there is
+    // nothing to suspend on. This runs once per b-tree comparison, so a state machine here would sit
+    // on the inner loop of every by-name lookup.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static async ValueTask<int> NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
+    private static ValueTask<int> NodeCompare3(LocalHeap localHeap, string name, BTree1GroupKey leftKey, BTree1GroupKey rightKey)
     {
         // H5Gnode.c (H5G_node_cmp3)
 
         /* left side */
-        var leftName = await localHeap.GetObjectName(leftKey.LocalHeapByteOffset).ConfigureAwait(false);
+        var leftName = localHeap.GetObjectName(leftKey.LocalHeapByteOffset);
 
         if (string.CompareOrdinal(name, leftName) <= 0)
         {
-            return -1;
+            return new ValueTask<int>(-1);
         }
         else
         {
             /* right side */
-            var rightName = await localHeap.GetObjectName(rightKey.LocalHeapByteOffset).ConfigureAwait(false);
+            var rightName = localHeap.GetObjectName(rightKey.LocalHeapByteOffset);
 
             if (string.CompareOrdinal(name, rightName) > 0)
             {
-                return 1;
+                return new ValueTask<int>(1);
             }
         }
 
-        return 0;
+        return new ValueTask<int>(0);
     }
 
     // ASYNC PROPAGATION: `FoundDelegate<T, TUserData>` (BTree1Node.cs, out of scope but
@@ -783,7 +788,7 @@ public class NativeGroup : NativeObject, IH5Group
             index = (low + high) / 2;
 
             var linkNameOffset = symbolTableNode.GroupEntries[(int)index].LinkNameOffset;
-            var currentName = await localHeap.GetObjectName(linkNameOffset).ConfigureAwait(false);
+            var currentName = localHeap.GetObjectName(linkNameOffset);
             cmp = string.CompareOrdinal(name, currentName);
 
             if (cmp < 0)

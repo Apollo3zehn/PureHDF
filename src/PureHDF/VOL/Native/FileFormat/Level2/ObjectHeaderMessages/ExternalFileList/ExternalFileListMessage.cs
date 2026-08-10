@@ -2,9 +2,10 @@
 
 // CONCURRENCY (retained message): see the note on LinkInfoMessage - this message is retained in
 // ObjectHeader.HeaderMessages (and reached through NativeDataset.InternalExternalFileList) for the
-// lifetime of the dataset, so it holds no NativeReadContext and caches nothing.
+// lifetime of the dataset, so it holds no NativeReadContext and caches nothing itself; the heap is
+// cached in NativeCache, per file and per address.
 //
-// Dropping the cached local heap also closes the last read path that still went through the
+// Not caching the heap ON THIS MESSAGE also closed the last read path that still went through the
 // FILE-LEVEL driver: Heap() used to be decoded with the context captured at navigation time, so the
 // first read of an external-file-list dataset was not concurrency-safe. It now decodes through the
 // context of the read operation asking for it (H5D_Contiguous -> ExternalFileListStream).
@@ -32,11 +33,9 @@ internal record class ExternalFileListMessage(
         }
     }
 
-    public async ValueTask<LocalHeap> Heap(NativeReadContext context)
+    public ValueTask<LocalHeap> Heap(NativeReadContext context)
     {
-        context.Driver.SeekRelativeToBaseAddress((long)HeapAddress);
-
-        return await LocalHeap.Decode(context).ConfigureAwait(false);
+        return NativeCache.GetStructure(context, HeapAddress, LocalHeap.Decode);
     }
 
     public static async ValueTask<ExternalFileListMessage> Decode(NativeReadContext context)

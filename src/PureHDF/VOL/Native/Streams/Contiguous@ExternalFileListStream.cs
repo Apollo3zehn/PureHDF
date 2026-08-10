@@ -62,9 +62,9 @@ internal class ExternalFileListStream : IH5ReadStream
 
         var heap = await _externalFileList.Heap(_context).ConfigureAwait(false);
 
-        var created = await SlotStream.Create(
+        var created = new SlotStream(
             _file, heap, _slots[index], _offsets[index], _datasetAccess
-        ).ConfigureAwait(false);
+        );
 
         _slotStreamCache[index] = created;
 

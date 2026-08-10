@@ -10,6 +10,7 @@ internal static class NativeCache
     {
         _globalHeapMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<ulong, GlobalHeapCollection>>();
         _fileMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<string, NativeFile>>();
+        _structureMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<(Type, ulong), object>>();
     }
 
     #endregion
@@ -21,6 +22,9 @@ internal static class NativeCache
         // global heap
         _globalHeapMap.TryRemove(context.CacheToken, out var _);
 
+        // structures
+        _structureMap.TryRemove(context.CacheToken, out var _);
+
         // file map
         if (_fileMap.TryRemove(context.CacheToken, out var pathToNativeFileMap))
         {
@@ -29,6 +33,81 @@ internal static class NativeCache
                 nativeFile.Dispose();
             }
         }
+    }
+
+    #endregion
+
+    #region Structures
+
+    // Decoded structural objects - local heaps, b-tree headers, fractal heap headers - keyed per file
+    // by the address they were decoded from.
+    //
+    // This exists because the retained object-header messages (SymbolTableMessage, LinkInfoMessage,
+    // AttributeInfoMessage, ...) may not cache these themselves. They outlive the read operation that
+    // decoded them, so anything they hold must be free of a per-operation driver; upstream cached
+    // them in unsynchronised lazy fields holding a captured context, which is exactly the
+    // cursor-corruption class the per-operation driver exists to prevent, so those caches were
+    // removed and every by-name lookup re-decoded the storage it had already walked.
+    //
+    // Keying here rather than on the message restores the caching without touching the messages:
+    // entries are per FILE and per ADDRESS, so two messages pointing at the same heap share one
+    // decode, the cache dies with the file, and record equality of the messages stays a function of
+    // the file bytes rather than of which lookups happened to run first.
+    //
+    // The cached values must be immutable or internally thread-safe, since concurrent operations on
+    // one file share them. That is a real obligation on the value types, not an assumption: LocalHeap
+    // is immutable, and the b-tree/fractal-heap headers hold their own ConcurrentDictionary node
+    // caches whose contents are immutable records.
+    private static readonly ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<(Type, ulong), object>> _structureMap;
+
+    /// <summary>
+    /// Returns the structure of type <typeparamref name="T" /> at <paramref name="address" />,
+    /// decoding it through <paramref name="context" /> on a miss.
+    /// </summary>
+    /// <remarks>
+    /// Not <c>async</c>: a hit is the common case and must not pay for a state machine. The decode
+    /// path seeks first, so a caller does NOT need to position the driver - and must not rely on
+    /// where the driver ends up, because on a hit it is not moved at all.
+    /// <para>
+    /// Two operations missing on the same structure both decode it and one result is discarded -
+    /// wasted work, never incorrect, and the installed instance is preferred so that everyone shares
+    /// one set of node caches.
+    /// </para>
+    /// </remarks>
+    public static ValueTask<T> GetStructure<T>(
+        NativeReadContext context,
+        ulong address,
+        Func<NativeReadContext, ValueTask<T>> decode)
+        where T : class
+    {
+        var addressToStructureMap = _structureMap.GetOrAdd(
+            context.CacheToken,
+            static _ => new ConcurrentDictionary<(Type, ulong), object>());
+
+        // The type is part of the key because a generic structure has one entry per instantiation
+        // (BTree2Header<BTree2Record05> and BTree2Header<BTree2Record08> are different types), and
+        // because nothing otherwise stops two different structure kinds from sharing an address.
+        var key = (typeof(T), address);
+
+        if (addressToStructureMap.TryGetValue(key, out var cached))
+            return new ValueTask<T>((T)cached);
+
+        return DecodeStructure(context, address, decode, addressToStructureMap, key);
+    }
+
+    private static async ValueTask<T> DecodeStructure<T>(
+        NativeReadContext context,
+        ulong address,
+        Func<NativeReadContext, ValueTask<T>> decode,
+        ConcurrentDictionary<(Type, ulong), object> addressToStructureMap,
+        (Type, ulong) key)
+        where T : class
+    {
+        context.Driver.SeekRelativeToBaseAddress((long)address);
+
+        var structure = await decode(context).ConfigureAwait(false);
+
+        return (T)addressToStructureMap.GetOrAdd(key, structure);
     }
 
     #endregion

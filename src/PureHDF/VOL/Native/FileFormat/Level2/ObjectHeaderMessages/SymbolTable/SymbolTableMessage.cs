@@ -2,9 +2,9 @@
 
 // CONCURRENCY (retained message): see the note on LinkInfoMessage - this message is retained in
 // ObjectHeader.HeaderMessages for the lifetime of the NativeObject, so it holds no
-// NativeReadContext and caches nothing. Both accessors take the calling operation's context and
-// decode a fresh LocalHeap / BTree1Node; those are transient and may capture the driver they were
-// decoded through.
+// NativeReadContext and caches nothing itself. Both accessors take the calling operation's context.
+// Caching lives in NativeCache instead, keyed per file and per address, which is what keeps a
+// repeated by-name lookup from re-decoding storage it has already walked.
 internal record class SymbolTableMessage(
     ulong BTree1Address,
     ulong LocalHeapAddress
@@ -23,11 +23,9 @@ internal record class SymbolTableMessage(
         );
     }
 
-    public async ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
+    public ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
     {
-        context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
-
-        return await LocalHeap.Decode(context).ConfigureAwait(false);
+        return NativeCache.GetStructure(context, LocalHeapAddress, LocalHeap.Decode);
     }
 
     public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(

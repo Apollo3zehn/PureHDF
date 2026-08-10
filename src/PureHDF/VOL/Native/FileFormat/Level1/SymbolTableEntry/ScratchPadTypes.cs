@@ -37,11 +37,9 @@ internal record class ObjectHeaderScratchPad(
         );
     }
 
-    public async ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
+    public ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
     {
-        context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
-
-        return await LocalHeap.Decode(context).ConfigureAwait(false);
+        return NativeCache.GetStructure(context, NameHeapAddress, LocalHeap.Decode);
     }
 
     public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
