@@ -74,9 +74,14 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
                 ? ((ChunkedStoragePropertyDescription3)_layout3!.Properties).Address
                 : _layout12.Address;
 
-            ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
-
-            _btree1 = await BTree1Node<BTree1RawDataChunksKey>.Decode(ReadContext, DecodeRawDataChunksKey).ConfigureAwait(false);
+            // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
+            // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call and
+            // every read of a chunked dataset re-decoded the whole chunk index from scratch.
+            _btree1 = await NativeCache.GetStructure(
+                ReadContext,
+                address,
+                (DecodeKeyDelegate<BTree1RawDataChunksKey>)DecodeRawDataChunksKey,
+                static (c, dk) => BTree1Node<BTree1RawDataChunksKey>.Decode(c, dk)).ConfigureAwait(false);
         }
 
         // get key and child address

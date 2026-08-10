@@ -145,6 +145,65 @@ public class NavigationCostTests
     }
 
     /// <summary>
+    /// The same measurement for a repeated <c>Read</c> of a chunked dataset, across all four chunk
+    /// index forms.
+    /// </summary>
+    /// <remarks>
+    /// Not navigation, but the same shape of cost and the same instrument. It lives here rather than in
+    /// a benchmark because the benchmark project writes its datasets with PureHDF's own writer, which
+    /// produces a CONTIGUOUS layout - so no benchmark in the repo reads a chunked dataset at all, and
+    /// this cost was invisible.
+    /// <para>
+    /// What makes it repeat: <c>NativeDataset.Read</c> builds a fresh <c>H5D_Base</c> per call, so the
+    /// chunk index it decodes into that object's field was thrown away after every read.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void RepeatedChunkedReadHasAKnownCost()
+    {
+        // Act
+        var actual = new[]
+        {
+            MeasureRead("chunk index, b-tree v1", H5F.libver_t.V18,
+                fileId => TestUtils.AddChunkedDataset_Legacy(fileId, withShuffle: false),
+                "chunked/chunked"),
+
+            MeasureRead("chunk index, b-tree v2", H5F.libver_t.LATEST,
+                fileId => TestUtils.AddChunkedDataset_BTree2(fileId, withShuffle: false),
+                "chunked/chunked_btree2"),
+
+            MeasureRead("chunk index, fixed array", H5F.libver_t.LATEST,
+                fileId => TestUtils.AddChunkedDataset_Fixed_Array(fileId, withShuffle: false),
+                "chunked/chunked_fixed_array"),
+
+            MeasureRead("chunk index, extensible array", H5F.libver_t.LATEST,
+                fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId, withShuffle: false),
+                "chunked/chunked_extensible_array_elements")
+        };
+
+        foreach (var measurement in actual)
+        {
+            _output.WriteLine(measurement);
+        }
+
+        // Assert
+        //
+        // Both b-tree forms reach zero: a repeated read of a chunked dataset now decodes no structural
+        // bytes at all. The two array forms only got partway, because only their HEADER is cached -
+        // their index and data blocks are still decoded per chunk lookup, which is the same kind of
+        // gap the b-tree leaf node was.
+        string[] expected =
+        [
+            "chunk index, b-tree v1: 0",
+            "chunk index, b-tree v2: 0",
+            "chunk index, fixed array: 11",
+            "chunk index, extensible array: 62"
+        ];
+
+        Assert.Equal(expected, actual);
+    }
+
+    /// <summary>
     /// Builds a file, resolves whatever <paramref name="arrange" /> retains, then reports how many
     /// structural reads ONE further identical navigation call costs.
     /// </summary>
@@ -174,6 +233,42 @@ public class NavigationCostTests
             // the two IDatasetStream methods has stopped meaning what it says and the metadata count
             // has quietly become an undercount.
             Assert.Equal(0, stream.DatasetReadCount);
+
+            return $"{label}: {stream.MetadataReadCount}";
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    /// <summary>
+    /// Builds a file, reads <paramref name="datasetPath" /> once, then reports how many structural
+    /// reads ONE further identical read costs. Dataset-payload reads are excluded by construction -
+    /// they are the same on both reads and are counted separately by the stream.
+    /// </summary>
+    private static string MeasureRead(
+        string label,
+        H5F.libver_t version,
+        Action<long> build,
+        string datasetPath)
+    {
+        var filePath = TestUtils.PrepareTestFile(version, build);
+
+        try
+        {
+            using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: false);
+            using var root = H5File.Open(stream);
+
+            var dataset = root.Dataset(datasetPath);
+
+            // Warm-up: resolves the dataset and pays every one-time decode.
+            dataset.Read<int[]>();
+
+            stream.ResetCounts();
+            dataset.Read<int[]>();
 
             return $"{label}: {stream.MetadataReadCount}";
         }

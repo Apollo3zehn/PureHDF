@@ -37,9 +37,14 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
         {
             if (_btree2_no_filter is null)
             {
-                ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-
-                _btree2_no_filter = await BTree2Header<BTree2Record10>.Decode(ReadContext, DecodeRecord10).ConfigureAwait(false);
+                // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
+                // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call
+                // and every read of a chunked dataset re-decoded the whole chunk index from scratch.
+                _btree2_no_filter = await NativeCache.GetStructure(
+                    ReadContext,
+                    Chunked4.Address,
+                    (DecodeKeyDelegate<BTree2Record10>)DecodeRecord10,
+                    static (c, dk) => BTree2Header<BTree2Record10>.Decode(c, dk)).ConfigureAwait(false);
             }
 
             // get record
@@ -57,9 +62,14 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
         {
             if (_btree2_filter is null)
             {
-                ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-
-                _btree2_filter = await BTree2Header<BTree2Record11>.Decode(ReadContext, DecodeRecord11).ConfigureAwait(false);
+                // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
+                // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call
+                // and every read of a chunked dataset re-decoded the whole chunk index from scratch.
+                _btree2_filter = await NativeCache.GetStructure(
+                    ReadContext,
+                    Chunked4.Address,
+                    (DecodeKeyDelegate<BTree2Record11>)DecodeRecord11,
+                    static (c, dk) => BTree2Header<BTree2Record11>.Decode(c, dk)).ConfigureAwait(false);
             }
 
             // get record

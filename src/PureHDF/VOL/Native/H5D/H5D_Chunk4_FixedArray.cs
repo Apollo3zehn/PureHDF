@@ -194,8 +194,12 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
     {
         if (_header is null)
         {
-            ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-            _header = await FixedArrayHeader.Decode(ReadContext).ConfigureAwait(false);
+            // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
+            // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call and
+            // every read of a chunked dataset re-decoded the whole chunk index from scratch.
+            _header = await NativeCache
+                .GetStructure(ReadContext, Chunked4.Address, FixedArrayHeader.Decode)
+                .ConfigureAwait(false);
         }
 
         // H5FA.c (H5FA_get)
