@@ -18,7 +18,13 @@ internal sealed record class BTree2Header<T>(
 {
     private byte _version;
 
+    // Decoded nodes by address, populated by the LOOKUP path only - see GetInternalNode/GetLeafNode
+    // for why EnumerateRecords deliberately does not populate them. Concurrent because one cached
+    // header serves concurrent lookups; safe to share because a node is an immutable record holding
+    // neither a context nor a key decoder.
     private ConcurrentDictionary<ulong, BTree2InternalNode<T>> _addressToNodeMap { get; } = new();
+
+    private ConcurrentDictionary<ulong, BTree2LeafNode<T>> _addressToLeafMap { get; } = new();
 
     public static async ValueTask<BTree2Header<T>> Decode(
         NativeReadContext context,
@@ -147,22 +153,11 @@ internal sealed record class BTree2Header<T>(
         }
         else
         {
-            context.Driver.SeekRelativeToBaseAddress((long)RootNodePointer.Address);
-
             return Depth != 0
 
-                ? await BTree2InternalNode<T>.Decode(
-                    context,
-                    this,
-                    RootNodePointer.RecordCount,
-                    Depth,
-                    decodeKey).ConfigureAwait(false)
+                ? await GetInternalNode(context, decodeKey, RootNodePointer, Depth).ConfigureAwait(false)
 
-                : await BTree2LeafNode<T>.Decode(
-                    context,
-                    this,
-                    RootNodePointer.RecordCount,
-                    decodeKey).ConfigureAwait(false);
+                : await GetLeafNode(context, decodeKey, RootNodePointer).ConfigureAwait(false);
         }
     }
 
@@ -197,22 +192,8 @@ internal sealed record class BTree2Header<T>(
 
         while (depth > 0)
         {
-            var address = currentNodePointer.Address;
-
-            if (!_addressToNodeMap.TryGetValue(address, out var internalNode))
-            {
-                context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
-
-                internalNode = await BTree2InternalNode<T>.Decode(
-                    context,
-                    this,
-                    currentNodePointer.RecordCount,
-                    depth,
-                    decodeKey
-                ).ConfigureAwait(false) ?? throw new Exception("Unable to load B-tree internal node.");
-
-                internalNode = _addressToNodeMap.GetOrAdd(address, internalNode);
-            }
+            var internalNode = await GetInternalNode(context, decodeKey, currentNodePointer, depth).ConfigureAwait(false)
+                ?? throw new Exception("Unable to load B-tree internal node.");
 
             /* Locate node pointer for child */
             (index, cmp) = await LocateRecord(internalNode.Records, compare).ConfigureAwait(false);
@@ -262,13 +243,7 @@ internal sealed record class BTree2Header<T>(
         }
 
         {
-            context.Driver.SeekRelativeToBaseAddress((long)currentNodePointer.Address);
-
-            var leafNode = await BTree2LeafNode<T>.Decode(
-                context,
-                this,
-                currentNodePointer.RecordCount,
-                decodeKey).ConfigureAwait(false);
+            var leafNode = await GetLeafNode(context, decodeKey, currentNodePointer).ConfigureAwait(false);
 
             /* Locate record */
             (index, cmp) = await BTree2Header<T>.LocateRecord(leafNode.Records, compare).ConfigureAwait(false);
@@ -368,6 +343,65 @@ internal sealed record class BTree2Header<T>(
                 yield return record;
             }
         }
+    }
+
+    /// <summary>
+    /// Returns the internal node at <paramref name="nodePointer" />, decoding it on a miss.
+    /// </summary>
+    /// <remarks>
+    /// Only the LOOKUP path caches. A repeated by-name lookup walks the same root-to-leaf spine every
+    /// time, so caching it turns the second lookup into pure comparison work - that is the whole point.
+    /// <see cref="EnumerateRecords(NativeReadContext, DecodeKeyDelegate{T})" /> deliberately decodes
+    /// directly instead: a full scan visits every node exactly once, so caching what it reads has no
+    /// hit to gain and would pull an entire b-tree - a chunk index of a large dataset, for instance -
+    /// into memory for the lifetime of the file.
+    /// </remarks>
+    private async ValueTask<BTree2InternalNode<T>> GetInternalNode(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
+        BTree2NodePointer nodePointer,
+        int nodeLevel)
+    {
+        if (_addressToNodeMap.TryGetValue(nodePointer.Address, out var cached))
+            return cached;
+
+        context.Driver.SeekRelativeToBaseAddress((long)nodePointer.Address);
+
+        var internalNode = await BTree2InternalNode<T>.Decode(
+            context,
+            this,
+            nodePointer.RecordCount,
+            nodeLevel,
+            decodeKey).ConfigureAwait(false);
+
+        return _addressToNodeMap.GetOrAdd(nodePointer.Address, internalNode);
+    }
+
+    /// <summary>
+    /// Returns the leaf node at <paramref name="nodePointer" />, decoding it on a miss.
+    /// </summary>
+    /// <remarks>
+    /// The leaf was the one node on the lookup spine that was never cached, so every repeated lookup
+    /// re-decoded up to a full node of records to compare against. See
+    /// <see cref="GetInternalNode" /> for why enumeration does not use this.
+    /// </remarks>
+    private async ValueTask<BTree2LeafNode<T>> GetLeafNode(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
+        BTree2NodePointer nodePointer)
+    {
+        if (_addressToLeafMap.TryGetValue(nodePointer.Address, out var cached))
+            return cached;
+
+        context.Driver.SeekRelativeToBaseAddress((long)nodePointer.Address);
+
+        var leafNode = await BTree2LeafNode<T>.Decode(
+            context,
+            this,
+            nodePointer.RecordCount,
+            decodeKey).ConfigureAwait(false);
+
+        return _addressToLeafMap.GetOrAdd(nodePointer.Address, leafNode);
     }
 
     private static async ValueTask<(uint index, int cmp)> LocateRecord(
