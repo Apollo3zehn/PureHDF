@@ -142,7 +142,6 @@ partial class H5NativeWriter
 
         // link info message
         var linkInfoMessage = new LinkInfoMessage(
-            Context: default!,
             Flags: CreationOrderFlags.None,
             MaximumCreationIndex: default,
             FractalHeapAddress: Superblock.UndefinedAddress,
@@ -583,7 +582,6 @@ partial class H5NativeWriter
         if (attributes.Any())
         {
             var attributeInfoMessage = new AttributeInfoMessage(
-                default!,
                 Flags: CreationOrderFlags.None,
                 MaximumCreationIndex: default,
                 FractalHeapAddress: Superblock.UndefinedAddress,

@@ -1,14 +1,15 @@
 ﻿namespace PureHDF.VOL.Native;
 
+// CONCURRENCY (retained message): see the note on LinkInfoMessage - this message is retained in
+// ObjectHeader.HeaderMessages for the lifetime of the NativeObject, so it holds no
+// NativeReadContext and caches nothing. Both accessors take the calling operation's context and
+// decode a fresh LocalHeap / BTree1Node; those are transient and may capture the driver they were
+// decoded through.
 internal record class SymbolTableMessage(
-    NativeReadContext Context,
     ulong BTree1Address,
     ulong LocalHeapAddress
 ) : Message
 {
-    private LocalHeap _localHeap;
-    private BTree1Node<BTree1GroupKey> _bTree1;
-
     public static async ValueTask<SymbolTableMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
@@ -17,37 +18,24 @@ internal record class SymbolTableMessage(
         var localHeapAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new SymbolTableMessage(
-            Context: context,
             BTree1Address: btree1Address,
             LocalHeapAddress: localHeapAddress
         );
     }
 
-    // NOTE (async propagation): was a property; C# has no async property getters,
-    // so this became a method with the same name pattern used elsewhere in this
-    // wave (see ScratchPadTypes.cs). Callers outside this file (NativeGroup.cs)
-    // need updating — see report.
-    public async ValueTask<LocalHeap> GetLocalHeap()
+    public async ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
     {
-        if (_localHeap.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
-            _localHeap = await LocalHeap.Decode(Context).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
 
-        return _localHeap;
+        return await LocalHeap.Decode(context).ConfigureAwait(false);
     }
 
-    // NOTE (async propagation): kept the existing method name; body now awaits.
-    // Callers outside this file (NativeGroup.cs) need updating — see report.
-    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(Func<ValueTask<BTree1GroupKey>> decodeKey)
+    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
+        NativeReadContext context,
+        Func<ValueTask<BTree1GroupKey>> decodeKey)
     {
-        if (_bTree1.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-            _bTree1 = await BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
 
-        return _bTree1;
+        return await BTree1Node<BTree1GroupKey>.Decode(context, decodeKey).ConfigureAwait(false);
     }
 }

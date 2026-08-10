@@ -213,17 +213,23 @@ public class NativeFile : NativeGroup, IDisposable
         if (reference.Equals(default))
             throw new Exception("The reference is invalid");
 
-        Context.Driver.SeekRelativeToBaseAddress((long)reference.CollectionAddress);
+        // CONCURRENCY: resolving a region reference seeks and reads the driver (GetGlobalHeapObject
+        // does so as a side effect), so it takes a scope of its own rather than moving the shared
+        // file-level cursor.
+        using var scope = new NativeOperationScope(Context);
+        var context = scope.Context;
+
+        context.Driver.SeekRelativeToBaseAddress((long)reference.CollectionAddress);
 
         var globalHeapId = new ReadingGlobalHeapId(
             CollectionAddress: reference.CollectionAddress,
             ObjectIndex: reference.ObjectIndex);
 
-        var globalHeapCollection = NativeCache.GetGlobalHeapObject(Context, globalHeapId.CollectionAddress);
+        var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
 
         using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-        var address = Context.Superblock.ReadOffset(localDriver).GetAwaiter().GetResult();
+        var address = context.Superblock.ReadOffset(localDriver).GetAwaiter().GetResult();
         var dataspaceSelection = DataspaceSelection.Decode(localDriver).GetAwaiter().GetResult();
 
         Selection selection = dataspaceSelection.Info switch

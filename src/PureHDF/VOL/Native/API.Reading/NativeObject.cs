@@ -52,17 +52,32 @@ public abstract class NativeObject : IH5Object
         }
     }
 
+    // CONCURRENCY: materializing the header is a driver read, so it takes a scope of its own rather
+    // than moving the shared file-level cursor. Nesting inside an enclosing navigation scope is fine
+    // - the outer operation holds the reuse slot, so this one allocates its own driver and hands it
+    // back on dispose - and it happens at most once per object, because the result is cached.
+    //
+    // Two threads racing here both decode a valid header through their own driver and one instance
+    // wins; the loser's copy is equivalent and still usable by whoever holds it. Volatile is used so
+    // a reader can never observe a published-but-not-yet-initialized ObjectHeader. Before the scope
+    // existed this race corrupted the cursor instead of merely duplicating work.
     private protected ObjectHeader Header
     {
         get
         {
-            if (_header is null)
+            var header = Volatile.Read(ref _header);
+
+            if (header is null)
             {
-                Context.Driver.SeekRelativeToBaseAddress((long)Reference.Value);
-                _header = ObjectHeader.Construct(Context).GetAwaiter().GetResult();
+                using var scope = new NativeOperationScope(Context);
+
+                scope.Context.Driver.SeekRelativeToBaseAddress((long)Reference.Value);
+                header = ObjectHeader.Construct(scope.Context).GetAwaiter().GetResult();
+
+                Volatile.Write(ref _header, header);
             }
 
-            return _header;
+            return header;
         }
     }
 
@@ -85,9 +100,14 @@ public abstract class NativeObject : IH5Object
     /// <inheritdoc />
     public IH5Attribute Attribute(string name)
     {
+        // CONCURRENCY: one scope for the whole lookup - see the note on Header above. The returned
+        // NativeAttribute outlives this operation and so keeps the FILE-LEVEL context; it opens a
+        // scope of its own on every Read.
+        using var scope = new NativeOperationScope(Context);
+
         // NOTE (async propagation): Attribute() is part of the synchronous public API
         // surface and must block on the async internals by design.
-        var (success, attributeMessage) = TryGetAttributeMessage(name).GetAwaiter().GetResult();
+        var (success, attributeMessage) = TryGetAttributeMessage(scope.Context, name).GetAwaiter().GetResult();
 
         if (!success || attributeMessage is null)
             throw new Exception($"Could not find attribute '{name}'.");
@@ -104,9 +124,12 @@ public abstract class NativeObject : IH5Object
     /// <inheritdoc />
     public bool AttributeExists(string name)
     {
+        // CONCURRENCY: one scope for the whole lookup - see the note on Header above.
+        using var scope = new NativeOperationScope(Context);
+
         // NOTE (async propagation): AttributeExists() is part of the synchronous
         // public API surface and must block on the async internals by design.
-        var (success, _) = TryGetAttributeMessage(name).GetAwaiter().GetResult();
+        var (success, _) = TryGetAttributeMessage(scope.Context, name).GetAwaiter().GetResult();
         return success;
     }
 
@@ -121,7 +144,9 @@ public abstract class NativeObject : IH5Object
     // async because it awaits TryGetAttributeMessageFromAttributeInfoMessage below
     // (an `out` parameter cannot coexist with `async`, CS1988), so it now returns a
     // tuple instead; the two public callers bridge once via GetAwaiter().GetResult().
-    private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessage(string name)
+    private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessage(
+        NativeReadContext context,
+        string name)
     {
         // get attribute from attribute message
         var attributeMessage = Header
@@ -145,9 +170,9 @@ public abstract class NativeObject : IH5Object
 
                 var attributeInfoMessage = attributeInfoMessages.First();
 
-                if (!Context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
+                if (!context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
                 {
-                    var (success, foundAttributeMessage) = await TryGetAttributeMessageFromAttributeInfoMessage(attributeInfoMessage, name).ConfigureAwait(false);
+                    var (success, foundAttributeMessage) = await TryGetAttributeMessageFromAttributeInfoMessage(context, attributeInfoMessage, name).ConfigureAwait(false);
 
                     if (success)
                         return (true, foundAttributeMessage);
@@ -160,6 +185,13 @@ public abstract class NativeObject : IH5Object
 
     private IEnumerable<IH5Attribute> EnumerateAttributes()
     {
+        // CONCURRENCY: this is an iterator, so the scope is created on the first MoveNext and
+        // disposed when the enumerator is disposed - one scope per enumeration, not one per
+        // attribute. Each returned NativeAttribute keeps the FILE-LEVEL context, because it outlives
+        // this enumeration and scopes its own reads.
+        using var scope = new NativeOperationScope(Context);
+        var context = scope.Context;
+
         // AttributeInfoMessage is optional
         // AttributeMessage is optional
         // both may appear at the same time, or only of of them, or none of them
@@ -183,9 +215,9 @@ public abstract class NativeObject : IH5Object
 
             var attributeInfoMessage = attributeInfoMessages.First();
 
-            if (!Context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
+            if (!context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
             {
-                var attributeMessages2 = EnumerateAttributeMessagesFromAttributeInfoMessage(attributeInfoMessage);
+                var attributeMessages2 = EnumerateAttributeMessagesFromAttributeInfoMessage(context, attributeInfoMessage);
 
                 foreach (var attributeMessage in attributeMessages2)
                 {
@@ -196,13 +228,14 @@ public abstract class NativeObject : IH5Object
     }
 
     private IEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfoMessage(
+        NativeReadContext context,
         AttributeInfoMessage attributeInfoMessage)
     {
         // NOTE (async propagation): AttributeInfoMessage.BTree2NameIndex()/FractalHeap()
         // are now async methods (were properties) and BTree2Header<T>.EnumerateRecords()
         // is now IAsyncEnumerable<T> (rule 8). This method must stay a synchronous
         // iterator (see report), so all of the above are drained/bridged synchronously.
-        var btree2NameIndex = attributeInfoMessage.BTree2NameIndex().GetAwaiter().GetResult();
+        var btree2NameIndex = attributeInfoMessage.BTree2NameIndex(context).GetAwaiter().GetResult();
         var records = new List<BTree2Record08>();
 
         {
@@ -221,7 +254,7 @@ public abstract class NativeObject : IH5Object
             }
         }
 
-        var fractalHeap = attributeInfoMessage.FractalHeap().GetAwaiter().GetResult();
+        var fractalHeap = attributeInfoMessage.FractalHeap(context).GetAwaiter().GetResult();
 
         // local cache: indirectly accessed, non-filtered
         List<BTree2Record01>? record01Cache = null;
@@ -230,8 +263,8 @@ public abstract class NativeObject : IH5Object
         {
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-            var heapId = FractalHeapId.Construct(Context, localDriver, fractalHeap).GetAwaiter().GetResult();
-            var message = heapId.Read(driver => AttributeMessage.Decode(Context, Header.Address).GetAwaiter().GetResult(), ref record01Cache);
+            var heapId = FractalHeapId.Construct(context, localDriver, fractalHeap).GetAwaiter().GetResult();
+            var message = heapId.Read(driver => AttributeMessage.Decode(context, Header.Address).GetAwaiter().GetResult(), ref record01Cache);
 
             yield return message;
         }
@@ -244,11 +277,12 @@ public abstract class NativeObject : IH5Object
     // The comparator lambda below must also become async: BTree2Header<T>.
     // TryFindRecord now takes Func<T, ValueTask<int>> (wave 4 addendum).
     private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessageFromAttributeInfoMessage(
+        NativeReadContext context,
         AttributeInfoMessage attributeInfoMessage,
         string name)
     {
-        var fractalHeap = await attributeInfoMessage.FractalHeap().ConfigureAwait(false);
-        var btree2NameIndex = await attributeInfoMessage.BTree2NameIndex().ConfigureAwait(false);
+        var fractalHeap = await attributeInfoMessage.FractalHeap(context).ConfigureAwait(false);
+        var btree2NameIndex = await attributeInfoMessage.BTree2NameIndex(context).ConfigureAwait(false);
         var nameBytes = Encoding.UTF8.GetBytes(name);
         var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(AttributeMessage);
@@ -269,7 +303,7 @@ public abstract class NativeObject : IH5Object
             {
                 // TODO: duplicate2_of_3
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-                var heapId = await FractalHeapId.Construct(Context, localDriver, fractalHeap).ConfigureAwait(false);
+                var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
 
                 // NOTE (async propagation): FractalHeapId.Read is a genuinely
                 // synchronous abstract method (its subtype overrides take a `ref
@@ -278,7 +312,7 @@ public abstract class NativeObject : IH5Object
                 // is owned by another agent's file, so its `Func<H5DriverBase, T>`
                 // callback parameter cannot be changed to an async delegate from
                 // here; this bridge is unavoidable without an out-of-scope edit.
-                candidate = heapId.Read(driver => AttributeMessage.Decode(Context, Header.Address).GetAwaiter().GetResult());
+                candidate = heapId.Read(driver => AttributeMessage.Decode(context, Header.Address).GetAwaiter().GetResult());
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison

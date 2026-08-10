@@ -17,45 +17,39 @@ internal record class SymbolicLinkScratchPad(
     }
 }
 
+// CONCURRENCY (retained): this scratch pad is attached to a NativeNamedReference
+// (NativeNamedReference.ScratchPad) and handed to the caller, and a NativeGroup built from that
+// reference keeps it for its whole lifetime - so it OUTLIVES the navigation operation that decoded
+// it. It therefore holds no NativeReadContext and caches nothing; see the note on LinkInfoMessage
+// for why a captured per-operation driver would be a correctness bug rather than merely stale.
 internal record class ObjectHeaderScratchPad(
-    NativeReadContext Context,
     ulong BTree1Address,
     ulong NameHeapAddress
 ) : ScratchPad
 {
-    private LocalHeap _localHeap;
-    private BTree1Node<BTree1GroupKey> _btree1Node;
-
     public static async ValueTask<ObjectHeaderScratchPad> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         return new ObjectHeaderScratchPad(
-            Context: context,
             BTree1Address: await superblock.ReadLength(driver).ConfigureAwait(false),
             NameHeapAddress: await superblock.ReadLength(driver).ConfigureAwait(false)
         );
     }
 
-    public async ValueTask<LocalHeap> GetLocalHeap()
+    public async ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
     {
-        if (_localHeap.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
-            _localHeap = await LocalHeap.Decode(Context).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
 
-        return _localHeap;
+        return await LocalHeap.Decode(context).ConfigureAwait(false);
     }
 
-    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(Func<ValueTask<BTree1GroupKey>> decodeKey)
+    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
+        NativeReadContext context,
+        Func<ValueTask<BTree1GroupKey>> decodeKey)
     {
-        if (_btree1Node.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-            _btree1Node = await BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
 
-        return _btree1Node;
+        return await BTree1Node<BTree1GroupKey>.Decode(context, decodeKey).ConfigureAwait(false);
     }
 }

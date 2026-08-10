@@ -7,18 +7,23 @@ internal class ExternalFileListStream : IH5ReadStream
     private bool _loadSlot;
     private SlotStream? _slotStream;
     private readonly NativeFile _file;
+    private readonly NativeReadContext _context;
     private readonly ExternalFileListMessage _externalFileList;
     private readonly H5DatasetAccess _datasetAccess;
     private readonly ExternalFileListSlot[] _slots;
     private readonly long[] _offsets;
     private readonly SlotStream?[] _slotStreamCache;
 
+    // CONCURRENCY: `context` must be the context of the read operation that created this stream, not
+    // the file-level one. The local heap holding the external file names is decoded through it, and
+    // this stream lives exactly as long as the H5D_Contiguous that owns it - i.e. one operation.
     public ExternalFileListStream(
-        NativeFile file,
+        NativeReadContext context,
         ExternalFileListMessage externalFileList,
         H5DatasetAccess datasetAccess)
     {
-        _file = file;
+        _context = context;
+        _file = context.File;
         _externalFileList = externalFileList;
         _datasetAccess = datasetAccess;
 
@@ -55,7 +60,7 @@ internal class ExternalFileListStream : IH5ReadStream
         if (cached is not null)
             return cached;
 
-        var heap = await _externalFileList.Heap().ConfigureAwait(false);
+        var heap = await _externalFileList.Heap(_context).ConfigureAwait(false);
 
         var created = await SlotStream.Create(
             _file, heap, _slots[index], _offsets[index], _datasetAccess

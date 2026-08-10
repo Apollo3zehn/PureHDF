@@ -605,8 +605,9 @@ public class NativeDataset : NativeObject, IH5Dataset
             * beginning of the storage area is computed as in a C array.
             */
             // NOTE: for a dataset with an external file list, H5D_Contiguous builds an
-            // ExternalFileListStream whose local heap is still decoded through the file-level
-            // driver captured by ExternalFileListMessage at navigation time - see the note there.
+            // ExternalFileListStream. Its local heap used to be decoded through the file-level driver
+            // captured by ExternalFileListMessage at navigation time; the message no longer holds a
+            // context, so the heap is now decoded through `operationContext` like everything else.
             LayoutClass.Contiguous => new H5D_Contiguous(operationContext, default!, datasetInfo, datasetAccess),
 
             /* Chunked: The array domain is regularly decomposed into chunks,
@@ -633,10 +634,10 @@ public class NativeDataset : NativeObject, IH5Dataset
             // be used inside an `async` method (CS4012) — so this whole call chain cannot be
             // converted to propagate the awaitable itself. Blocking here is therefore unavoidable
             // given the current method shape; see wave-3 report for the out-of-scope note.
-            // The VDS block itself is decoded through the operation driver, but resolving the
-            // source datasets goes through NativeReadContext.File - i.e. object navigation on the
-            // file-level driver, which stays single-threaded. Each source read then opens its own
-            // operation driver.
+            // The VDS block itself is decoded through the operation driver. Resolving the source
+            // datasets goes through NativeReadContext.File - i.e. object navigation - which now takes
+            // a scope of its own per call (NativeGroup.Get), so it no longer moves the shared
+            // file-level cursor. Each source read then opens its own operation driver on top.
             LayoutClass.VirtualStorage => H5D_Virtual<TElement>.Create(operationContext, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate).GetAwaiter().GetResult(),
 
             /* default */

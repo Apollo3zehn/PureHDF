@@ -1,7 +1,14 @@
 ﻿namespace PureHDF.VOL.Native;
 
+// CONCURRENCY (retained message): see the note on LinkInfoMessage - this message is retained in
+// ObjectHeader.HeaderMessages (and reached through NativeDataset.InternalExternalFileList) for the
+// lifetime of the dataset, so it holds no NativeReadContext and caches nothing.
+//
+// Dropping the cached local heap also closes the last read path that still went through the
+// FILE-LEVEL driver: Heap() used to be decoded with the context captured at navigation time, so the
+// first read of an external-file-list dataset was not concurrency-safe. It now decodes through the
+// context of the read operation asking for it (H5D_Contiguous -> ExternalFileListStream).
 internal record class ExternalFileListMessage(
-    NativeReadContext Context,
     ushort AllocatedSlotCount,
     ushort UsedSlotCount,
     ulong HeapAddress,
@@ -9,7 +16,6 @@ internal record class ExternalFileListMessage(
 ) : Message
 {
     private byte _version;
-    private LocalHeap _heap;
 
     public required byte Version
     {
@@ -26,24 +32,11 @@ internal record class ExternalFileListMessage(
         }
     }
 
-    // NOTE (async propagation): a lazily-cached property getter cannot await, so
-    // this became a method with the same name. Callers outside this file need
-    // updating — see report.
-    //
-    // NOTE (per-operation drivers): `Context` here is the FILE-LEVEL context, captured when this
-    // message was decoded during navigation - a read operation cannot substitute its own. So the
-    // first read of an external-file-list dataset decodes this local heap through the file-level
-    // driver and is not concurrency-safe. Pre-existing and out of scope; it is the only remaining
-    // read path with that property, and only until `_heap` is populated.
-    public async ValueTask<LocalHeap> Heap()
+    public async ValueTask<LocalHeap> Heap(NativeReadContext context)
     {
-        if (_heap.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)HeapAddress);
-            _heap = await LocalHeap.Decode(Context).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)HeapAddress);
 
-        return _heap;
+        return await LocalHeap.Decode(context).ConfigureAwait(false);
     }
 
     public static async ValueTask<ExternalFileListMessage> Decode(NativeReadContext context)
@@ -75,7 +68,6 @@ internal record class ExternalFileListMessage(
         }
 
         return new ExternalFileListMessage(
-            Context: context,
             AllocatedSlotCount: allocatedSlotCount,
             UsedSlotCount: usedSlotCount,
             HeapAddress: heapAddress,

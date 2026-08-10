@@ -75,8 +75,13 @@ public class NativeGroup : NativeObject, IH5Group
     /// <returns>The requested object.</returns>
     public IH5Object Get(string path, H5LinkAccess linkAccess)
     {
-        return InternalGet(path, linkAccess)
-            .Dereference();
+        // CONCURRENCY: ONE scope for the entire call - the path walk below visits a group per
+        // segment and dereferences each, and all of it must run on the same isolated driver. See the
+        // note on InternalGet for why the recursion does not create a scope per step.
+        using var scope = new NativeOperationScope(Context);
+
+        return InternalGet(scope.Context, path, linkAccess)
+            .Dereference(scope.Context);
     }
 
     /// <summary>
@@ -103,8 +108,11 @@ public class NativeGroup : NativeObject, IH5Group
         if (Reference.Value == reference.Value)
             return this;
 
-        return InternalGet(reference, linkAccess)
-            .Dereference();
+        // CONCURRENCY: one scope for the whole (recursive) search - see Get(string, ...) above.
+        using var scope = new NativeOperationScope(Context);
+
+        return InternalGet(scope.Context, reference, linkAccess)
+            .Dereference(scope.Context);
     }
 
     /// <inheritdoc />
@@ -126,14 +134,41 @@ public class NativeGroup : NativeObject, IH5Group
     /// <returns>An enumerable of the available children.</returns>
     public IEnumerable<IH5Object> Children(H5LinkAccess linkAccess = default)
     {
+        return EnumerateChildren(linkAccess);
+    }
+
+    // CONCURRENCY: an iterator, so the scope is created on the first MoveNext and disposed when the
+    // enumerator is disposed - ONE scope for the whole enumeration, not one per link visited. Each
+    // GetEnumerator() call builds its own state machine and therefore its own scope, so two threads
+    // enumerating the same returned IEnumerable do not share a driver.
+    //
+    // Side effect worth naming: the link drain used to run eagerly, inside the Children() call itself.
+    // It now runs on the first MoveNext, together with everything else in the scope, so a malformed
+    // group throws when the result is enumerated rather than when it is requested. Children() returns
+    // IEnumerable and nothing in the tree depends on the earlier timing.
+    private IEnumerable<IH5Object> EnumerateChildren(H5LinkAccess linkAccess)
+    {
+        using var scope = new NativeOperationScope(Context);
+        var context = scope.Context;
+
         // NON-MECHANICAL (flagged, not guessed): EnumerateReferences is now
         // IAsyncEnumerable<NativeNamedReference> (rule 8), but Children() is public,
         // synchronous IH5Group API. Bridged with a manual blocking drain, mirroring the
         // precedent already established in NativeNamedReference.Dereference (out of
         // scope, unedited: ObjectHeader.Construct(context).GetAwaiter().GetResult()) to
         // avoid a breaking change to the public read surface.
+        var references = DrainReferences(context, linkAccess);
+
+        foreach (var reference in references)
+        {
+            yield return reference.Dereference(context);
+        }
+    }
+
+    private List<NativeNamedReference> DrainReferences(NativeReadContext context, H5LinkAccess linkAccess)
+    {
         var references = new List<NativeNamedReference>();
-        var enumerator = EnumerateReferences(linkAccess).GetAsyncEnumerator();
+        var enumerator = EnumerateReferences(context, linkAccess).GetAsyncEnumerator();
 
         try
         {
@@ -147,14 +182,17 @@ public class NativeGroup : NativeObject, IH5Group
             enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
 
-        return references
-            .Select(reference => reference.Dereference());
+        return references;
     }
 
     private bool InternalLinkExists(string path, H5LinkAccess linkAccess)
     {
         if (path == "/")
             return true;
+
+        // CONCURRENCY: one scope for the whole path walk - see Get(string, ...) above.
+        using var scope = new NativeOperationScope(Context);
+        var context = scope.Context;
 
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
@@ -168,13 +206,17 @@ public class NativeGroup : NativeObject, IH5Group
         {
             if (group is null)
             {
-                if (current.Dereference() is not NativeGroup dereferenced)
+                if (current.Dereference(context) is not NativeGroup dereferenced)
                     return false;
 
                 group = dereferenced;
             }
 
-            var (success, reference) = group.TryGetReference(segments[i], linkAccess).GetAwaiter().GetResult();
+            // CONCURRENCY: an external link makes the walk cross into another file - continue on that
+            // file's driver, and on this operation's driver while it stays in this file.
+            using var step = NativeOperationScope.ForFile(group.Context.File, context);
+
+            var (success, reference) = group.TryGetReference(step.Context, segments[i], linkAccess).GetAwaiter().GetResult();
 
             if (!success)
                 return false;
@@ -186,7 +228,21 @@ public class NativeGroup : NativeObject, IH5Group
         return true;
     }
 
+    // CONCURRENCY: the scope-creating overload, for callers that are NOT already inside an operation
+    // on this file. SymbolicLink.GetTarget uses it for the external-file branch, where the target
+    // group belongs to a DIFFERENT NativeFile and must be walked on that file's own driver - the
+    // current operation's driver reads the wrong file entirely.
     internal NativeNamedReference InternalGet(string path, H5LinkAccess linkAccess)
+    {
+        using var scope = new NativeOperationScope(Context);
+
+        return InternalGet(scope.Context, path, linkAccess);
+    }
+
+    // CONCURRENCY: takes the enclosing operation's context instead of creating a scope, which is what
+    // keeps the path walk (and the soft-link resolution it can re-enter through
+    // SymbolicLink.GetTarget) on a single driver rather than one per segment.
+    internal NativeNamedReference InternalGet(NativeReadContext context, string path, H5LinkAccess linkAccess)
     {
         if (path == "/")
             return Context.File.Reference;
@@ -206,13 +262,17 @@ public class NativeGroup : NativeObject, IH5Group
                 // TODO: Use cache to store dereferenced objects (as it is done in HsdsGroup.cs). That
                 // would cover the remaining case - the intermediate segments of a deep path, and the
                 // root of a rooted one - which still re-decode a header per lookup.
-                if (current.Dereference() is not NativeGroup dereferenced)
+                if (current.Dereference(context) is not NativeGroup dereferenced)
                     throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
 
                 group = dereferenced;
             }
 
-            var (success, reference) = group.TryGetReference(segments[i], linkAccess).GetAwaiter().GetResult();
+            // CONCURRENCY: an external link makes the walk cross into another file - continue on that
+            // file's driver, and on this operation's driver while it stays in this file.
+            using var step = NativeOperationScope.ForFile(group.Context.File, context);
+
+            var (success, reference) = group.TryGetReference(step.Context, segments[i], linkAccess).GetAwaiter().GetResult();
 
             if (!success)
                 throw new Exception($"Could not find part of the path '{path}'.");
@@ -224,18 +284,21 @@ public class NativeGroup : NativeObject, IH5Group
         return current;
     }
 
-    internal NativeNamedReference InternalGet(NativeObjectReference1 reference, H5LinkAccess linkAccess)
+    internal NativeNamedReference InternalGet(NativeReadContext context, NativeObjectReference1 reference, H5LinkAccess linkAccess)
     {
         var alreadyVisted = new HashSet<ulong>();
 
-        if (TryGetReference(reference, alreadyVisted, linkAccess, recursionLevel: 0, out var namedReference))
+        if (TryGetReference(context, reference, alreadyVisted, linkAccess, recursionLevel: 0, out var namedReference))
             return namedReference;
 
         else
             throw new Exception($"Could not find object for reference with value '{reference.Value:X}'.");
     }
 
-    private async ValueTask<(bool Success, NativeNamedReference Reference)> TryGetReference(string name, H5LinkAccess linkAccess)
+    private async ValueTask<(bool Success, NativeNamedReference Reference)> TryGetReference(
+        NativeReadContext context,
+        string name,
+        H5LinkAccess linkAccess)
     {
         /* cached data */
         if (_scratchPad is not null)
@@ -250,17 +313,17 @@ public class NativeGroup : NativeObject, IH5Group
              * This suggests that the image in PureHDF/issues/25 is missing due to
              * an invalid file.
              */
-            var localHeap = await _scratchPad.GetLocalHeap().ConfigureAwait(false);
+            var localHeap = await _scratchPad.GetLocalHeap(context).ConfigureAwait(false);
 
-            var (success, userData) = await (await _scratchPad.GetBTree1(DecodeGroupKey).ConfigureAwait(false))
+            var (success, userData) = await (await _scratchPad.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false))
                 .TryFindUserData<BTree1SymbolTableUserData>(
                     (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
-                    (address, _) => NodeFound(localHeap, name, address))
+                    (address, _) => NodeFound(context, localHeap, name, address))
                 .ConfigureAwait(false);
 
             if (success)
             {
-                var namedReference = await GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess).ConfigureAwait(false);
+                var namedReference = await GetObjectReferencesForSymbolTableEntry(context, localHeap, userData.SymbolTableEntry, linkAccess).ConfigureAwait(false);
                 return (true, namedReference);
             }
         }
@@ -278,17 +341,17 @@ public class NativeGroup : NativeObject, IH5Group
                     throw new Exception("There may be only a single symbol table header message.");
 
                 var smessage = symbolTableHeaderMessages.First();
-                var localHeap = await smessage.GetLocalHeap().ConfigureAwait(false);
+                var localHeap = await smessage.GetLocalHeap(context).ConfigureAwait(false);
 
-                var (success, userData) = await (await smessage.GetBTree1(DecodeGroupKey).ConfigureAwait(false))
+                var (success, userData) = await (await smessage.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false))
                     .TryFindUserData<BTree1SymbolTableUserData>(
                         (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
-                        (address, _) => NodeFound(localHeap, name, address))
+                        (address, _) => NodeFound(context, localHeap, name, address))
                     .ConfigureAwait(false);
 
                 if (success)
                 {
-                    var namedReference = await GetObjectReferencesForSymbolTableEntry(localHeap, userData.SymbolTableEntry, linkAccess).ConfigureAwait(false);
+                    var namedReference = await GetObjectReferencesForSymbolTableEntry(context, localHeap, userData.SymbolTableEntry, linkAccess).ConfigureAwait(false);
                     return (true, namedReference);
                 }
             }
@@ -306,13 +369,13 @@ public class NativeGroup : NativeObject, IH5Group
                     /* New (1.8) indexed format (in combination with Group Info Message)
                      * IV.A.2.c. The Link Info Message
                      * Optional; may not be repeated. */
-                    if (!Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                    if (!context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
                     {
-                        var (found, linkMessage) = await TryGetLinkMessageFromLinkInfoMessage(lmessage, name).ConfigureAwait(false);
+                        var (found, linkMessage) = await TryGetLinkMessageFromLinkInfoMessage(context, lmessage, name).ConfigureAwait(false);
 
                         if (found)
                         {
-                            return (true, GetObjectReference(linkMessage!, linkAccess));
+                            return (true, GetObjectReference(context, linkMessage!, linkAccess));
                         }
                     }
                     /* New (1.8) compact format
@@ -327,7 +390,7 @@ public class NativeGroup : NativeObject, IH5Group
 
                         if (linkMessage is not null)
                         {
-                            return (true, GetObjectReference(linkMessage, linkAccess));
+                            return (true, GetObjectReference(context, linkMessage, linkAccess));
                         }
                     }
                 }
@@ -342,7 +405,10 @@ public class NativeGroup : NativeObject, IH5Group
     }
 
     // TODO this should make use of the cache to avoid recursively visiting all node (as soon as the cache is implemented)
-    internal bool TryGetReference(NativeObjectReference1 reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NativeNamedReference namedReference)
+    // CONCURRENCY: `context` is threaded through the recursion rather than scoped here, so a deep
+    // search runs on ONE driver instead of allocating one per level. The caller
+    // (Get(NativeObjectReference1, ...) / InternalGet) owns the scope.
+    internal bool TryGetReference(NativeReadContext context, NativeObjectReference1 reference, HashSet<ulong> alreadyVisited, H5LinkAccess linkAccess, int recursionLevel, out NativeNamedReference namedReference)
     {
         // similar to H5Gint.c (H5G_visit)
         if (recursionLevel >= 100)
@@ -368,20 +434,7 @@ public class NativeGroup : NativeObject, IH5Group
             // synchronous (bool + out param, matching its own recursive contract and
             // the public sync boundary above it), so the enumeration is drained with a
             // blocking loop instead — same pattern as Children() above.
-            var references = new List<NativeNamedReference>();
-            var enumerator = EnumerateReferences(linkAccess).GetAsyncEnumerator();
-
-            try
-            {
-                while (enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
-                {
-                    references.Add(enumerator.Current);
-                }
-            }
-            finally
-            {
-                enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
-            }
+            var references = DrainReferences(context, linkAccess);
 
             namedReference = references
                 .FirstOrDefault(current => current.Value == reference.Value);
@@ -396,11 +449,15 @@ public class NativeGroup : NativeObject, IH5Group
                 // search childs for reference
                 foreach (var childReference in references)
                 {
-                    var group = childReference.Dereference() as NativeGroup;
+                    var group = childReference.Dereference(context) as NativeGroup;
 
                     if (group is not null)
                     {
-                        if (group.TryGetReference(reference, alreadyVisited, linkAccess, recursionLevel + 1, out namedReference))
+                        // CONCURRENCY: a child reached through an external link lives in another file
+                        // - recurse on that file's driver, and on this operation's driver otherwise.
+                        using var step = NativeOperationScope.ForFile(group.Context.File, context);
+
+                        if (group.TryGetReference(step.Context, reference, alreadyVisited, linkAccess, recursionLevel + 1, out namedReference))
                             return true;
                     }
                 }
@@ -410,7 +467,7 @@ public class NativeGroup : NativeObject, IH5Group
         return false;
     }
 
-    private async IAsyncEnumerable<NativeNamedReference> EnumerateReferences(H5LinkAccess linkAccess)
+    private async IAsyncEnumerable<NativeNamedReference> EnumerateReferences(NativeReadContext context, H5LinkAccess linkAccess)
     {
         // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html
         // section "Group implementations in HDF5"
@@ -428,14 +485,14 @@ public class NativeGroup : NativeObject, IH5Group
              * This suggests that the image in PureHDF/issues/25 is missing due to
              * an invalid file.
              */
-            var localHeap = await _scratchPad.GetLocalHeap().ConfigureAwait(false);
-            var btree1 = await _scratchPad.GetBTree1(DecodeGroupKey).ConfigureAwait(false);
+            var localHeap = await _scratchPad.GetLocalHeap(context).ConfigureAwait(false);
+            var btree1 = await _scratchPad.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false);
 
-            await foreach (var node in EnumerateSymbolTableNodes(btree1))
+            await foreach (var node in EnumerateSymbolTableNodes(context, btree1))
             {
                 foreach (var entry in node.GroupEntries)
                 {
-                    yield return await GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess).ConfigureAwait(false);
+                    yield return await GetObjectReferencesForSymbolTableEntry(context, localHeap, entry, linkAccess).ConfigureAwait(false);
                 }
             }
         }
@@ -453,14 +510,14 @@ public class NativeGroup : NativeObject, IH5Group
                     throw new Exception("There may be only a single symbol table header message.");
 
                 var smessage = symbolTableHeaderMessages.First();
-                var localHeap = await smessage.GetLocalHeap().ConfigureAwait(false);
-                var btree1 = await smessage.GetBTree1(DecodeGroupKey).ConfigureAwait(false);
+                var localHeap = await smessage.GetLocalHeap(context).ConfigureAwait(false);
+                var btree1 = await smessage.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false);
 
-                await foreach (var node in EnumerateSymbolTableNodes(btree1))
+                await foreach (var node in EnumerateSymbolTableNodes(context, btree1))
                 {
                     foreach (var entry in node.GroupEntries)
                     {
-                        yield return await GetObjectReferencesForSymbolTableEntry(localHeap, entry, linkAccess).ConfigureAwait(false);
+                        yield return await GetObjectReferencesForSymbolTableEntry(context, localHeap, entry, linkAccess).ConfigureAwait(false);
                     }
                 }
             }
@@ -479,12 +536,12 @@ public class NativeGroup : NativeObject, IH5Group
                     /* New (1.8) indexed format (in combination with Group Info Message)
                      * IV.A.2.c. The Link Info Message
                      * Optional; may not be repeated. */
-                    if (!Context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
+                    if (!context.Superblock.IsUndefinedAddress(lmessage.BTree2NameIndexAddress))
                     {
                         // build links
-                        await foreach (var linkMessage in EnumerateLinkMessagesFromLinkInfoMessage(lmessage))
+                        await foreach (var linkMessage in EnumerateLinkMessagesFromLinkInfoMessage(context, lmessage))
                         {
-                            yield return GetObjectReference(linkMessage, linkAccess);
+                            yield return GetObjectReference(context, linkMessage, linkAccess);
                         }
                     }
 
@@ -497,7 +554,7 @@ public class NativeGroup : NativeObject, IH5Group
                         // build links
                         foreach (var linkMessage in Header.GetMessages<LinkMessage>())
                         {
-                            yield return GetObjectReference(linkMessage, linkAccess);
+                            yield return GetObjectReference(context, linkMessage, linkAccess);
                         }
                     }
                 }
@@ -513,10 +570,12 @@ public class NativeGroup : NativeObject, IH5Group
 
     #region Link Message
 
-    private async IAsyncEnumerable<LinkMessage> EnumerateLinkMessagesFromLinkInfoMessage(LinkInfoMessage infoMessage)
+    private async IAsyncEnumerable<LinkMessage> EnumerateLinkMessagesFromLinkInfoMessage(
+        NativeReadContext context,
+        LinkInfoMessage infoMessage)
     {
-        var fractalHeap = await infoMessage.FractalHeap().ConfigureAwait(false);
-        var btree2NameIndex = await infoMessage.BTree2NameIndex().ConfigureAwait(false);
+        var fractalHeap = await infoMessage.FractalHeap(context).ConfigureAwait(false);
+        var btree2NameIndex = await infoMessage.BTree2NameIndex(context).ConfigureAwait(false);
 
         // local cache: indirectly accessed, non-filtered
         List<BTree2Record01>? record01Cache = null;
@@ -524,11 +583,11 @@ public class NativeGroup : NativeObject, IH5Group
         await foreach (var record in btree2NameIndex.EnumerateRecords())
         {
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-            var heapId = await FractalHeapId.Construct(Context, localDriver, fractalHeap).ConfigureAwait(false);
+            var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
 
             yield return await heapId.Read(driver =>
             {
-                var message = LinkMessage.Decode(Context);
+                var message = LinkMessage.Decode(context);
                 return message;
             }, ref record01Cache).ConfigureAwait(false);
         }
@@ -539,11 +598,12 @@ public class NativeGroup : NativeObject, IH5Group
     // matching the pattern used elsewhere in this wave (see BTree1Node.TryFindUserData,
     // BTree2Header.TryFindRecord). Flagging as a shape change.
     private async ValueTask<(bool Success, LinkMessage? LinkMessage)> TryGetLinkMessageFromLinkInfoMessage(
+        NativeReadContext context,
         LinkInfoMessage linkInfoMessage,
         string name)
     {
-        var fractalHeap = await linkInfoMessage.FractalHeap().ConfigureAwait(false);
-        var btree2NameIndex = await linkInfoMessage.BTree2NameIndex().ConfigureAwait(false);
+        var fractalHeap = await linkInfoMessage.FractalHeap(context).ConfigureAwait(false);
+        var btree2NameIndex = await linkInfoMessage.BTree2NameIndex(context).ConfigureAwait(false);
         var nameBytes = Encoding.UTF8.GetBytes(name);
         var nameHash = ChecksumUtils.JenkinsLookup3(nameBytes);
         var candidate = default(LinkMessage);
@@ -577,8 +637,8 @@ public class NativeGroup : NativeObject, IH5Group
             {
                 // TODO: duplicate3_of_3
                 using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-                var heapId = await FractalHeapId.Construct(Context, localDriver, fractalHeap).ConfigureAwait(false);
-                candidate = await heapId.Read(driver => LinkMessage.Decode(Context)).ConfigureAwait(false);
+                var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
+                candidate = await heapId.Read(driver => LinkMessage.Decode(context)).ConfigureAwait(false);
 
                 // https://stackoverflow.com/questions/35257814/consistent-string-sorting-between-c-sharp-and-c
                 // https://stackoverflow.com/questions/492799/difference-between-invariantculture-and-ordinal-string-comparison
@@ -598,17 +658,17 @@ public class NativeGroup : NativeObject, IH5Group
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NativeNamedReference GetObjectReference(LinkMessage linkMessage, H5LinkAccess linkAccess)
+    private NativeNamedReference GetObjectReference(NativeReadContext context, LinkMessage linkMessage, H5LinkAccess linkAccess)
     {
         return linkMessage.LinkInfo switch
         {
             HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, Context.File),
 
             SoftLinkInfo _ => new SymbolicLink(linkMessage, this, Context.File)
-                .GetTarget(linkAccess),
+                .GetTarget(context, linkAccess),
 
             ExternalLinkInfo _ => new SymbolicLink(linkMessage, this, Context.File)
-                .GetTarget(linkAccess),
+                .GetTarget(context, linkAccess),
 
             _ => throw new Exception($"Unknown link type '{linkMessage.LinkType}'.")
         };
@@ -619,7 +679,7 @@ public class NativeGroup : NativeObject, IH5Group
     #region Symbol Table
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<NativeNamedReference> GetObjectReferencesForSymbolTableEntry(LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
+    private async ValueTask<NativeNamedReference> GetObjectReferencesForSymbolTableEntry(NativeReadContext context, LocalHeap heap, SymbolTableEntry entry, H5LinkAccess linkAccess)
     {
         var name = await heap.GetObjectName(entry.LinkNameOffset).ConfigureAwait(false);
         var reference = new NativeNamedReference(name, entry.HeaderAddress, Context.File);
@@ -632,9 +692,9 @@ public class NativeGroup : NativeObject, IH5Group
                 name,
                 await heap.GetObjectName(linkScratch.LinkValueOffset).ConfigureAwait(false),
                 this,
-                Context.File).GetTarget(linkAccess),
+                Context.File).GetTarget(context, linkAccess),
 
-            _ when !Context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
+            _ when !context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
 
             _ => throw new Exception("Unknown object type.")
         };
@@ -647,14 +707,16 @@ public class NativeGroup : NativeObject, IH5Group
         return reference;
     }
 
-    private async IAsyncEnumerable<SymbolTableNode> EnumerateSymbolTableNodes(BTree1Node<BTree1GroupKey> btree1)
+    private static async IAsyncEnumerable<SymbolTableNode> EnumerateSymbolTableNodes(
+        NativeReadContext context,
+        BTree1Node<BTree1GroupKey> btree1)
     {
         await foreach (var node in btree1.EnumerateNodes())
         {
             foreach (var address in node.ChildAddresses)
             {
-                Context.Driver.SeekRelativeToBaseAddress((long)address);
-                yield return await SymbolTableNode.Decode(Context).ConfigureAwait(false);
+                context.Driver.SeekRelativeToBaseAddress((long)address);
+                yield return await SymbolTableNode.Decode(context).ConfigureAwait(false);
             }
         }
     }
@@ -699,7 +761,7 @@ public class NativeGroup : NativeObject, IH5Group
     // cannot coexist with `async` (CS1988). Callers curry `localHeap`/`name` via a
     // lambda (see TryGetReference) matching this method's remaining parameters.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool Success, BTree1SymbolTableUserData UserData)> NodeFound(LocalHeap localHeap, string name, ulong address)
+    private static async ValueTask<(bool Success, BTree1SymbolTableUserData UserData)> NodeFound(NativeReadContext context, LocalHeap localHeap, string name, ulong address)
     {
         // H5Gnode.c (H5G__node_found)
         uint low = 0, index = 0, high;
@@ -708,8 +770,8 @@ public class NativeGroup : NativeObject, IH5Group
         /*
          * Load the symbol table node for exclusive access.
          */
-        Context.Driver.SeekRelativeToBaseAddress((long)address);
-        var symbolTableNode = await SymbolTableNode.Decode(Context).ConfigureAwait(false);
+        context.Driver.SeekRelativeToBaseAddress((long)address);
+        var symbolTableNode = await SymbolTableNode.Decode(context).ConfigureAwait(false);
 
         /*
          * Binary search.
@@ -746,16 +808,13 @@ public class NativeGroup : NativeObject, IH5Group
     // `BTree1GroupKey.Decode` (BTree1Types.cs, out of scope, already async) is simply
     // awaited instead of bridged.
     //
-    // OUT-OF-SCOPE GAP: `ObjectHeaderScratchPad.GetBTree1` (ScratchPadTypes.cs) has not
-    // been updated yet and still declares a synchronous `Func<BTree1GroupKey> decodeKey`
-    // parameter, unlike its sibling `SymbolTableMessage.GetBTree1`. Passing this now-async
-    // `DecodeGroupKey` to `_scratchPad.GetBTree1(DecodeGroupKey)` (see TryGetReference /
-    // EnumerateReferences above) requires that file to be updated the same way; flagged
-    // in the report rather than edited here.
+    // CONCURRENCY: takes the operation's context instead of reading the group's file-level one, so
+    // the key decode happens on the same driver as the b-tree traversal that asks for it. Callers
+    // curry it as `() => DecodeGroupKey(context)`.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<BTree1GroupKey> DecodeGroupKey()
+    private static async ValueTask<BTree1GroupKey> DecodeGroupKey(NativeReadContext context)
     {
-        return await BTree1GroupKey.Decode(Context).ConfigureAwait(false);
+        return await BTree1GroupKey.Decode(context).ConfigureAwait(false);
     }
 
     #endregion

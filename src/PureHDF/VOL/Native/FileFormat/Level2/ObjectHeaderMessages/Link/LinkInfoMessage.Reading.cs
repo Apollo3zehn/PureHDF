@@ -2,8 +2,17 @@
 
 namespace PureHDF.VOL.Native;
 
+// CONCURRENCY (retained message): this message ends up in ObjectHeader.HeaderMessages, which
+// NativeObject.Header keeps for the whole lifetime of the object - so it OUTLIVES the navigation
+// operation that decoded it. It therefore holds no NativeReadContext and caches nothing: a captured
+// context would keep pointing at a per-operation driver that has since been handed back to
+// NativeOperationSlot and reused by an unrelated read, which is exactly the cursor-corruption class
+// the per-operation driver exists to prevent. Every accessor below takes the context of the
+// operation calling it and decodes fresh.
+//
+// The objects the accessors return (FractalHeapHeader, BTree2Header<T>) are transient - created and
+// discarded inside one operation - so they may keep capturing a context, and do.
 internal partial record class LinkInfoMessage(
-    NativeReadContext Context,
     CreationOrderFlags Flags,
     ulong MaximumCreationIndex,
     ulong FractalHeapAddress,
@@ -12,9 +21,6 @@ internal partial record class LinkInfoMessage(
 ) : Message
 {
     private byte _version;
-    private FractalHeapHeader? _fractalHeap;
-    private BTree2Header<BTree2Record05>? _bTree2NameIndex;
-    private BTree2Header<BTree2Record06>? _bTree2CreationOrder;
 
     public required byte Version
     {
@@ -31,42 +37,29 @@ internal partial record class LinkInfoMessage(
         }
     }
 
-    // NOTE (async propagation): a lazily-cached property getter cannot await, so
-    // this became a method with the same name. Callers outside this file need
-    // updating — see report.
-    public async ValueTask<FractalHeapHeader> FractalHeap()
+    public async ValueTask<FractalHeapHeader> FractalHeap(NativeReadContext context)
     {
-        if (_fractalHeap is null)
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
-            _fractalHeap = await FractalHeapHeader.Decode(Context).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
 
-        return _fractalHeap;
+        return await FractalHeapHeader.Decode(context).ConfigureAwait(false);
     }
 
-    // NOTE (async propagation): see FractalHeap() above.
-    public async ValueTask<BTree2Header<BTree2Record05>> BTree2NameIndex()
+    public async ValueTask<BTree2Header<BTree2Record05>> BTree2NameIndex(NativeReadContext context)
     {
-        if (_bTree2NameIndex is null)
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
-            _bTree2NameIndex = await BTree2Header<BTree2Record05>.Decode(Context, DecodeRecord05).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
 
-        return _bTree2NameIndex;
+        return await BTree2Header<BTree2Record05>
+            .Decode(context, () => DecodeRecord05(context))
+            .ConfigureAwait(false);
     }
 
-    // NOTE (async propagation): see FractalHeap() above.
-    public async ValueTask<BTree2Header<BTree2Record06>> BTree2CreationOrder()
+    public async ValueTask<BTree2Header<BTree2Record06>> BTree2CreationOrder(NativeReadContext context)
     {
-        if (_bTree2CreationOrder is null)
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)BTree2CreationOrderIndexAddress);
-            _bTree2CreationOrder = await BTree2Header<BTree2Record06>.Decode(Context, DecodeRecord06).ConfigureAwait(false);
-        }
+        context.Driver.SeekRelativeToBaseAddress((long)BTree2CreationOrderIndexAddress);
 
-        return _bTree2CreationOrder;
+        return await BTree2Header<BTree2Record06>
+            .Decode(context, () => DecodeRecord06(context))
+            .ConfigureAwait(false);
     }
 
     public static async ValueTask<LinkInfoMessage> Decode(NativeReadContext context)
@@ -99,7 +92,6 @@ internal partial record class LinkInfoMessage(
             bTree2CreationOrderIndexAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new LinkInfoMessage(
-            context,
             flags,
             maximumCreationIndex,
             fractalHeapAddress,
@@ -112,8 +104,8 @@ internal partial record class LinkInfoMessage(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<BTree2Record05> DecodeRecord05() => await BTree2Record05.Decode(Context.Driver).ConfigureAwait(false);
+    private static async ValueTask<BTree2Record05> DecodeRecord05(NativeReadContext context) => await BTree2Record05.Decode(context.Driver).ConfigureAwait(false);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<BTree2Record06> DecodeRecord06() => await BTree2Record06.Decode(Context.Driver).ConfigureAwait(false);
+    private static async ValueTask<BTree2Record06> DecodeRecord06(NativeReadContext context) => await BTree2Record06.Decode(context.Driver).ConfigureAwait(false);
 }

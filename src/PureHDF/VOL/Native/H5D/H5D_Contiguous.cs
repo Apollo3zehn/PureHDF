@@ -35,7 +35,7 @@ internal class H5D_Contiguous : H5D_Base
             if (ReadContext.Superblock.IsUndefinedAddress(address))
             {
                 if (Dataset.ExternalFileList is not null)
-                    _readStream = new ExternalFileListStream(ReadContext.File, Dataset.ExternalFileList, DatasetAccess);
+                    _readStream = new ExternalFileListStream(ReadContext, Dataset.ExternalFileList, DatasetAccess);
 
                 else
                     _readStream = new UnsafeFillValueStream(Dataset.FillValue.Value ?? [0]);
