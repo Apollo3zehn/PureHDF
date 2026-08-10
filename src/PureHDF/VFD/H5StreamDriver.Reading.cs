@@ -3,16 +3,46 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.VFD;
 
-// CONCURRENCY: this driver deliberately does NOT override CreateOperationDriverCore. A Stream has
-// exactly one cursor and no positionless read API, so a second driver over the same Stream would
-// share that cursor rather than isolate from it. TryCreateOperationDriver therefore keeps returning
-// null here and reads through a Stream stay non-concurrent.
+// CONCURRENCY: this driver has two modes, chosen once in the constructor.
+//
+// POSITIONLESS MODE - the wrapped stream implements IDatasetStream. Every read on that interface
+// carries its own absolute offset, so the stream has no cursor for two readers to fight over. The
+// cursor therefore lives in THIS driver (_position), the wrapped stream is never seeked, and
+// CreateOperationDriverCore hands out a second driver over the same stream with its own cursor - so
+// a dataset resolved once can be read concurrently through one shared H5File, exactly as for a file
+// handle or a memory-mapped accessor.
+//
+// CURSOR MODE - anything else. Reads go through Stream.Seek plus Stream.ReadAsync, which is the only
+// thing a plain Stream offers. A second driver would share that one cursor rather than isolate from
+// it, so CreateOperationDriverCore returns null and reads stay non-concurrent. This is the mode every
+// in-tree use takes (the local MemoryStream drivers for heap IDs and virtual-dataset payload), and it
+// is unchanged.
+//
+// Note that positionless mode does NOT make reads synchronous: TryReadDatasetSync stays false in both
+// modes (inherited from H5DriverBase), because a stream may genuinely suspend and blocking on it is
+// what the async read path exists to avoid.
 internal partial class H5StreamDriver : H5DriverBase
 {
     private readonly bool _leaveOpen;
     private readonly Stream _stream;
 
-    public H5StreamDriver(Stream stream, bool leaveOpen)
+    // Non-null exactly in positionless mode. Holding the interface rather than re-testing the stream
+    // on every read also makes the mode a single, obvious branch at each call site.
+    private readonly IDatasetStream? _datasetStream;
+
+    // Positionless mode only. In cursor mode the wrapped stream's own cursor is the position and this
+    // field is unused.
+    private long _position;
+
+    /// <param name="stream">The stream to read from.</param>
+    /// <param name="leaveOpen">Whether <see cref="Dispose(bool)" /> leaves the stream open.</param>
+    /// <param name="allowPositionless">
+    /// Whether an <see cref="IDatasetStream" /> may be driven positionlessly. The writer passes
+    /// <see langword="false" />: positionless mode does not seek the wrapped stream, which the write
+    /// path (H5StreamDriver.Writing) relies on, and a caching range-request stream could not serve
+    /// the writer's read-backs from its cache anyway.
+    /// </param>
+    public H5StreamDriver(Stream stream, bool leaveOpen, bool allowPositionless = true)
     {
         if (!stream.CanRead)
             throw new Exception("The stream must be readable.");
@@ -22,9 +52,27 @@ internal partial class H5StreamDriver : H5DriverBase
 
         _stream = stream;
         _leaveOpen = leaveOpen;
+
+        if (allowPositionless)
+            _datasetStream = stream as IDatasetStream;
     }
 
-    public override long Position { get => _stream.Position; }
+    // CONCURRENCY: see the mode note above. leaveOpen: true, because the stream belongs to the
+    // H5File and outlives the operation. allowPositionless is not passed on explicitly - it is
+    // implied, since this is only reached when the driver is already in positionless mode.
+    protected override H5DriverBase? CreateOperationDriverCore()
+    {
+        return _datasetStream is null
+            ? null
+            : new H5StreamDriver(_stream, leaveOpen: true);
+    }
+
+    public override long Position
+    {
+        get => _datasetStream is null
+            ? _stream.Position
+            : _position;
+    }
 
     public override long Length => _stream.Length;
 
@@ -33,11 +81,25 @@ internal partial class H5StreamDriver : H5DriverBase
         switch (seekOrigin)
         {
             case SeekOrigin.Begin:
-                _stream.Seek(offset, SeekOrigin.Begin);
+
+                // In positionless mode the wrapped stream is deliberately NOT touched: its cursor is
+                // shared with every other driver over it, and moving it would defeat the isolation.
+                if (_datasetStream is null)
+                    _stream.Seek(offset, SeekOrigin.Begin);
+
+                else
+                    _position = offset;
+
                 break;
 
             case SeekOrigin.Current:
-                _stream.Seek(offset, SeekOrigin.Current);
+
+                if (_datasetStream is null)
+                    _stream.Seek(offset, SeekOrigin.Current);
+
+                else
+                    _position += offset;
+
                 break;
 
             default:
@@ -49,18 +111,22 @@ internal partial class H5StreamDriver : H5DriverBase
     {
         // Returning the callee's ValueTask directly, rather than `async`/`await`-ing it, avoids
         // building a state machine here just to forward a result.
-        //
-        // ReadExactlyAsyncCompat, never a hand-rolled loop: it advances the buffer it reads into and
-        // treats a zero-byte read as end of stream. Getting either wrong is silent data corruption on
-        // any stream that returns partial reads.
-        return _stream is IDatasetStream datasetStream
-            ? datasetStream.ReadDataset(buffer)
-            : _stream.ReadExactlyAsyncCompat(buffer);
+        if (_datasetStream is null)
+            return _stream.ReadExactlyAsyncCompat(buffer);
+
+        // The cursor is advanced before the read is issued, not after it completes: the returned
+        // ValueTask is handed straight to the caller, so there is no continuation here in which to do
+        // it - and a caller that issues the next read after awaiting this one must still see the
+        // advanced position.
+        var offset = _position;
+        _position += buffer.Length;
+
+        return _datasetStream.ReadDataset(offset, buffer);
     }
 
     public override ValueTask Read(Memory<byte> buffer)
     {
-        return _stream.ReadExactlyAsyncCompat(buffer);
+        return ReadMetadataCore(buffer);
     }
 
     public override ValueTask<byte> ReadByte()
@@ -71,7 +137,7 @@ internal partial class H5StreamDriver : H5DriverBase
     public override ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
-        var pending = _stream.ReadExactlyAsyncCompat(buffer);
+        var pending = ReadMetadataCore(buffer);
 
         if (pending.IsCompletedSuccessfully)
             return new ValueTask<byte[]>(buffer);
@@ -106,9 +172,27 @@ internal partial class H5StreamDriver : H5DriverBase
         return ReadScalar<ulong>();
     }
 
+    // Every structural read funnels through here, and NOT through ReadDataset: the distinction is
+    // load-bearing. ReadDataset means "this is actual data", which is what lets an implementation
+    // cache these small, endlessly repeated reads while streaming bulk payload uncached. Routing
+    // metadata through ReadDataset would compile and read correct bytes, and destroy that signal.
+    private ValueTask ReadMetadataCore(Memory<byte> buffer)
+    {
+        if (_datasetStream is null)
+            return _stream.ReadExactlyAsyncCompat(buffer);
+
+        // Advanced before issuing the read, for the reason given in ReadDataset.
+        var offset = _position;
+        _position += buffer.Length;
+
+        return _datasetStream.ReadMetadata(offset, buffer);
+    }
+
     // A Span cannot cross an await, so a scalar read can no longer use `stackalloc`. It does not
     // need a pooled buffer either: the concurrency model gives each driver instance a single logical
-    // reader (see H5FileHandleDriver), so one 8-byte field serves every scalar read on this driver.
+    // reader (see H5FileHandleDriver), and in positionless mode a concurrent reader gets a driver of
+    // its own from CreateOperationDriverCore - so one 8-byte field serves every scalar read on this
+    // driver.
     //
     // The method is not `async`. When the underlying stream satisfies the read without suspending -
     // always, for a MemoryStream - no state machine is built and nothing is allocated. Only a stream
@@ -119,7 +203,7 @@ internal partial class H5StreamDriver : H5DriverBase
     {
         var size = Unsafe.SizeOf<T>();
         var buffer = new Memory<byte>(_scalarBuffer, 0, size);
-        var pending = _stream.ReadExactlyAsyncCompat(buffer);
+        var pending = ReadMetadataCore(buffer);
 
         if (pending.IsCompletedSuccessfully)
             return new ValueTask<T>(MemoryMarshal.Cast<byte, T>(buffer.Span)[0]);

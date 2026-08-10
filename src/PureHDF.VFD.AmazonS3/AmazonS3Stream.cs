@@ -1,6 +1,5 @@
 ﻿using System.Buffers;
 using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using Amazon.S3;
 using Amazon.S3.Model;
 
@@ -17,9 +16,30 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     private readonly string _key;
     private readonly AmazonS3Client _client;
 
-    // CONCURRENCY MODEL (async-first): one stream instance per logical reader. The cursor was a
-    // ThreadLocal<long>; async continuations can resume on another thread, where that reads back as
-    // 0 and every subsequent range request is issued against the wrong offset.
+    // THREAD SAFETY: IDatasetStream requires both of its methods to be safe to call concurrently, and
+    // PureHDF does call them concurrently - a positionless stream gets one driver per read operation.
+    //
+    // ReadDataset needs no protection: it issues a range request for exactly the caller's buffer and
+    // touches no shared state.
+    //
+    // The cache behind ReadMetadata does. It is not enough that _cache is a ConcurrentDictionary: a
+    // slot is inserted EMPTY and filled afterwards, so a second thread finding it present would copy
+    // uninitialized memory, and GetOrAdd's factory has side effects (it flags "load this range" and
+    // rents a buffer) which are silently discarded when another thread wins the insert - leaking the
+    // rented buffer and mis-flagging the range. Both are data races producing wrong bytes, not just
+    // wasted work, so the whole cached path runs under a mutex.
+    //
+    // A SemaphoreSlim rather than a lock, because the path awaits its range requests. The mutex is
+    // held across those awaits: metadata reads are small and, after warm-up, served from the cache
+    // without any request at all, so serializing them costs little - and the alternative (a per-slot
+    // async gate) would mean giving up the batching of adjacent missing slots into one request.
+    private readonly SemaphoreSlim _cacheLock = new(initialCount: 1, maxCount: 1);
+
+    // CONCURRENCY MODEL: this cursor belongs to the base Stream contract (Position / Seek / Read)
+    // only. PureHDF does not use it - it reads through IDatasetStream, which carries an absolute
+    // offset per call - so concurrent PureHDF reads never touch it. A caller mixing the synchronous
+    // Stream API with concurrent reads from several threads is on their own, exactly as for any
+    // other Stream.
     private long _position;
 
     /// <summary>
@@ -68,19 +88,38 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     /// <inheritdoc />
+    // NOTE: System.IO.Stream's own contract is synchronous and cursor-based, so this override still
+    // blocks and still moves _position. It is a separate contract from IDatasetStream below, kept
+    // working unchanged; PureHDF itself never comes through here.
     public override int Read(byte[] buffer, int offset, int count)
     {
-        return ReadCached(buffer.AsSpan(offset, count));
+        var slice = buffer.AsMemory(offset, count);
+
+        ReadCachedAsync(_position, slice)
+            .AsTask()
+            .GetAwaiter()
+            .GetResult();
+
+        _position += count;
+
+        return count;
     }
 
     /// <inheritdoc />
-    /// <inheritdoc />
-    // NOTE (async-first): dataset reads are now genuinely async — no GetAwaiter().GetResult().
-    // The synchronous Stream.Read override below still blocks, because System.IO.Stream's own
-    // contract is synchronous; only this IDatasetStream path is await-able end to end.
-    public async ValueTask ReadDataset(Memory<byte> buffer)
+    // Bulk payload: requested as its own byte range and never cached. A dataset chunk is typically
+    // large and decoded once, so caching it would only displace the metadata that is re-read
+    // constantly.
+    public ValueTask ReadDataset(long offset, Memory<byte> buffer)
     {
-        await ReadUncachedAsync(buffer).ConfigureAwait(false);
+        return ReadUncachedAsync(offset, buffer);
+    }
+
+    /// <inheritdoc />
+    // Structure: small, numerous and highly repetitive reads, served from fixed-size cache slots so
+    // that one range request covers many of them.
+    public ValueTask ReadMetadata(long offset, Memory<byte> buffer)
+    {
+        return ReadCachedAsync(offset, buffer);
     }
 
     /// <inheritdoc />
@@ -128,18 +167,18 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
             {
                 entry.Value.Dispose();
             }
+
+            _cacheLock.Dispose();
         }
     }
 
-    private async ValueTask<int> ReadUncachedAsync(Memory<byte> buffer)
+    private async ValueTask ReadUncachedAsync(long offset, Memory<byte> buffer)
     {
         var stream = await ReadDataFromS3Async(
-            start: Position,
-            end: Position + buffer.Length).ConfigureAwait(false);
+            start: offset,
+            end: offset + buffer.Length).ConfigureAwait(false);
 
         await ReadExactlyAsync(stream, buffer).ConfigureAwait(false);
-
-        return buffer.Length;
     }
 
     private static async ValueTask ReadExactlyAsync(Stream stream, Memory<byte> buffer)
@@ -157,79 +196,97 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int ReadCached(Span<byte> buffer)
+    private async ValueTask ReadCachedAsync(long offset, Memory<byte> buffer)
     {
-        // TODO issue parallel requests
-        var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
-        var s3Remaining = Length - _position;
-        var s3ActualLength = (int)Math.Min(s3UpperLength, s3Remaining);
-        var s3Processed = 0;
-        var s3StartIndex = -1L;
-        var remainingBuffer = buffer;
+        // See the _cacheLock note above: everything below mutates the cache, and a half-filled slot
+        // published to another thread would be read as data.
+        await _cacheLock.WaitAsync().ConfigureAwait(false);
 
-        bool loadFromS3;
-
-        while (s3Processed < s3ActualLength)
+        try
         {
-            var currentIndex = (_position + s3Processed) / _cacheSlotSize;
-            loadFromS3 = false;
+            // The cursor is a local, threaded through the helpers: this path is positionless and must
+            // not observe or move _position.
+            var position = offset;
 
-            // determine if data is cached
-            var owner = _cache.GetOrAdd(currentIndex, currentIndex =>
+            // TODO issue parallel requests
+            var s3UpperLength = Math.Max(_cacheSlotSize, buffer.Length);
+            var s3Remaining = Length - position;
+            var s3ActualLength = (int)Math.Min(s3UpperLength, s3Remaining);
+            var s3Processed = 0;
+            var s3StartIndex = -1L;
+            var remainingBuffer = buffer;
+
+            bool loadFromS3;
+
+            while (s3Processed < s3ActualLength)
             {
-                var owner = MemoryPool<byte>.Shared.Rent(_cacheSlotSize);
+                var currentIndex = (position + s3Processed) / _cacheSlotSize;
+                loadFromS3 = false;
 
-                // first index for which data will be requested
-                if (s3StartIndex == -1)
-                    s3StartIndex = currentIndex;
-
-                loadFromS3 = true;
-
-                return owner;
-            });
-
-            if (!loadFromS3 /* i.e. data is in cache */)
-            {
-                // is there a not yet loaded range of data?
-                if (s3StartIndex != -1)
+                // determine if data is cached
+                var owner = _cache.GetOrAdd(currentIndex, currentIndex =>
                 {
-                    var s3EndIndex = currentIndex + 1;
-                    remainingBuffer = LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex, remainingBuffer);
-                    s3StartIndex = -1;
+                    var owner = MemoryPool<byte>.Shared.Rent(_cacheSlotSize);
+
+                    // first index for which data will be requested
+                    if (s3StartIndex == -1)
+                        s3StartIndex = currentIndex;
+
+                    loadFromS3 = true;
+
+                    return owner;
+                });
+
+                if (!loadFromS3 /* i.e. data is in cache */)
+                {
+                    // is there a not yet loaded range of data?
+                    if (s3StartIndex != -1)
+                    {
+                        var s3EndIndex = currentIndex + 1;
+
+                        (position, remainingBuffer) = await LoadFromS3ToCacheAndBufferAsync(
+                            s3StartIndex, s3EndIndex, position, remainingBuffer).ConfigureAwait(false);
+
+                        s3StartIndex = -1;
+                    }
+
+                    // copy from cache
+                    (position, remainingBuffer) = CopyFromCacheToBuffer(currentIndex, owner, position, remainingBuffer);
                 }
 
-                // copy from cache
-                remainingBuffer = CopyFromCacheToBuffer(currentIndex, owner, remainingBuffer);
+                s3Processed += _cacheSlotSize;
             }
 
-            s3Processed += _cacheSlotSize;
+            // TODO code duplication
+            // is there a not yet loaded range of data?
+            if (s3StartIndex != -1)
+            {
+                var s3EndIndex = s3StartIndex + s3ActualLength / _cacheSlotSize;
+
+                (position, remainingBuffer) = await LoadFromS3ToCacheAndBufferAsync(
+                    s3StartIndex, s3EndIndex, position, remainingBuffer).ConfigureAwait(false);
+            }
         }
 
-        // TODO code duplication
-        // is there a not yet loaded range of data?
-        if (s3StartIndex != -1)
+        finally
         {
-            var s3EndIndex = s3StartIndex + s3ActualLength / _cacheSlotSize;
-            remainingBuffer = LoadFromS3ToCacheAndBuffer(s3StartIndex, s3EndIndex, remainingBuffer);
-            s3StartIndex = -1;
+            _cacheLock.Release();
         }
-
-        return buffer.Length;
     }
 
-    private Span<byte> LoadFromS3ToCacheAndBuffer(
+    private async ValueTask<(long Position, Memory<byte> RemainingBuffer)> LoadFromS3ToCacheAndBufferAsync(
         long s3StartIndex,
         long s3EndIndex,
-        Span<byte> remainingBuffer)
+        long position,
+        Memory<byte> remainingBuffer)
     {
         // get S3 stream
         var s3Start = s3StartIndex * _cacheSlotSize;
         var s3End = Math.Min(s3EndIndex * _cacheSlotSize, Length);
 
-        var stream = ReadDataFromS3(
+        var stream = await ReadDataFromS3Async(
             start: s3Start,
-            end: s3End);
+            end: s3End).ConfigureAwait(false);
 
         // copy
         for (long currentIndex = s3StartIndex; currentIndex < s3EndIndex; currentIndex++)
@@ -237,22 +294,26 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
             var owner = _cache.GetOrAdd(currentIndex, _ => throw new Exception("This should never happen."));
 
             // copy to cache
-            var buffer = owner.Memory[..(int)Math.Min(_cacheSlotSize, Length - Position)];
-            ReadExactly(stream, buffer.Span);
+            var buffer = owner.Memory[..(int)Math.Min(_cacheSlotSize, Length - position)];
+            await ReadExactlyAsync(stream, buffer).ConfigureAwait(false);
 
             // copy to request buffer
-            remainingBuffer = CopyFromCacheToBuffer(currentIndex, owner, remainingBuffer);
+            (position, remainingBuffer) = CopyFromCacheToBuffer(currentIndex, owner, position, remainingBuffer);
         }
 
-        return remainingBuffer;
+        return (position, remainingBuffer);
     }
 
-    private Span<byte> CopyFromCacheToBuffer(long currentIndex, IMemoryOwner<byte> owner, Span<byte> remainingBuffer)
+    private (long Position, Memory<byte> RemainingBuffer) CopyFromCacheToBuffer(
+        long currentIndex,
+        IMemoryOwner<byte> owner,
+        long position,
+        Memory<byte> remainingBuffer)
     {
         var s3Position = currentIndex * _cacheSlotSize;
 
-        var cacheSlotOffset = _position > s3Position
-            ? (int)(_position - s3Position)
+        var cacheSlotOffset = position > s3Position
+            ? (int)(position - s3Position)
             : 0;
 
         var remainingCacheSlotSize = _cacheSlotSize - cacheSlotOffset;
@@ -260,20 +321,9 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         var slicedMemory = owner.Memory
             .Slice(cacheSlotOffset, Math.Min(remainingCacheSlotSize, remainingBuffer.Length));
 
-        slicedMemory.Span.CopyTo(remainingBuffer);
+        slicedMemory.CopyTo(remainingBuffer);
 
-        remainingBuffer = remainingBuffer[slicedMemory.Length..];
-        _position += slicedMemory.Length;
-
-        return remainingBuffer;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Stream ReadDataFromS3(long start, long end)
-    {
-        return ReadDataFromS3Async(start, end)
-            .GetAwaiter()
-            .GetResult();
+        return (position + slicedMemory.Length, remainingBuffer[slicedMemory.Length..]);
     }
 
     private async ValueTask<Stream> ReadDataFromS3Async(long start, long end)
@@ -288,17 +338,5 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         var response = await _client.GetObjectAsync(request).ConfigureAwait(false);
 
         return response.ResponseStream;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ReadExactly(Stream stream, Span<byte> buffer)
-    {
-        var slicedBuffer = buffer;
-
-        while (slicedBuffer.Length > 0)
-        {
-            var readBytes = stream.Read(slicedBuffer);
-            slicedBuffer = slicedBuffer[readBytes..];
-        };
     }
 }

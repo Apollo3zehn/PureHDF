@@ -18,7 +18,9 @@ namespace PureHDF.VOL.Native;
 /// </para>
 /// <para>
 /// A struct, and <c>Context</c> falls back to the file-level context when the source cannot be
-/// read concurrently, so a <c>Stream</c>-backed file pays nothing at all. Otherwise the driver and
+/// read concurrently, so a file behind a plain cursor-based <c>Stream</c> pays nothing at all. (A
+/// <c>Stream</c> implementing <see cref="IDatasetStream" /> reads by absolute offset and does
+/// isolate, so it takes the path below like any file handle.) Otherwise the driver and
 /// context pair is taken from - and handed back to - <see cref="NativeOperationSlot" />, so a reader
 /// whose reads never overlap allocates them once per file rather than once per <c>Read</c>.
 /// </para>
@@ -47,7 +49,7 @@ internal readonly struct NativeOperationScope : IDisposable
 
         var operationDriver = fileContext.Driver.TryCreateOperationDriver();
 
-        // The source cannot isolate a cursor (a Stream has exactly one). Reads through it are
+        // The source cannot isolate a cursor (a plain Stream has exactly one). Reads through it are
         // documented as non-concurrent, so the file-level context is used as-is and there is nothing
         // to dispose or hand back.
         if (operationDriver is null)
