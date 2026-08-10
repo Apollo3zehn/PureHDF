@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -12,22 +12,30 @@ internal delegate ValueTask<(bool Success, TUserData UserData)> FoundDelegate<T,
     ulong address,
     T leftNode);
 
-// TODO: better use class here? Benchmark required
-internal readonly record struct BTree1Node<T>(
-    NativeReadContext Context,
-    Func<ValueTask<T>> DecodeKey,
+// CONCURRENCY / CACHING: holds no NativeReadContext, so that a decoded tree can be cached per file
+// (see NativeCache.GetStructure) and shared by concurrent navigation operations. The context and the
+// key decoder are passed per call instead, which is also what makes the child-node cache below sound:
+// a cached node is immutable and context-free, so handing the same instance to two operations reading
+// through two different drivers is correct.
+//
+// A class rather than the former `readonly record struct` - it is what the type's own long-standing
+// TODO asked for, and it is required now that instances are cached: a struct would be boxed and
+// copied out on every cache hit.
+internal sealed record class BTree1Node<T>(
     byte NodeLevel,
     ushort EntriesUsed,
     ulong LeftSiblingAddress,
     ulong RightSiblingAddress,
     T[] Keys,
-    ulong[] ChildAddresses,
-    ConcurrentDictionary<ulong, BTree1Node<T>> Cache
+    ulong[] ChildAddresses
 ) where T : struct, IBTree1Key
 {
+    // Child nodes by address. Concurrent because one cached tree serves concurrent lookups.
+    private readonly ConcurrentDictionary<ulong, BTree1Node<T>> _cache = new();
+
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("TREE");
 
-    public static async ValueTask<BTree1Node<T>> Decode(NativeReadContext context, Func<ValueTask<T>> decodeKey)
+    public static async ValueTask<BTree1Node<T>> Decode(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         var (driver, superblock) = context;
 
@@ -46,44 +54,43 @@ internal readonly record struct BTree1Node<T>(
 
         for (int i = 0; i < entriesUsed; i++)
         {
-            keys[i] = await decodeKey().ConfigureAwait(false);
+            keys[i] = await decodeKey(context).ConfigureAwait(false);
             childAddresses[i] = await superblock.ReadOffset(driver).ConfigureAwait(false);
         }
 
-        keys[entriesUsed] = await decodeKey().ConfigureAwait(false);
+        keys[entriesUsed] = await decodeKey(context).ConfigureAwait(false);
 
         return new BTree1Node<T>(
-            context,
-            decodeKey,
             nodeLevel,
             entriesUsed,
             leftSiblingAddress,
             rightSiblingAddress,
             keys,
-            childAddresses,
-            Cache: new()
+            childAddresses
         );
     }
 
     // NOTE (async propagation): was a property; C# has no async property getters,
     // so this became a method with the same name. No callers exist in the repo today.
-    public readonly async ValueTask<BTree1Node<T>> LeftSibling()
+    public async ValueTask<BTree1Node<T>> LeftSibling(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
-        Context.Driver.SeekRelativeToBaseAddress((long)LeftSiblingAddress);
-        return await BTree1Node<T>.Decode(Context, DecodeKey).ConfigureAwait(false);
+        context.Driver.SeekRelativeToBaseAddress((long)LeftSiblingAddress);
+        return await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
     }
 
     // NOTE (async propagation): was a property; see LeftSibling.
-    public readonly async ValueTask<BTree1Node<T>> RightSibling()
+    public async ValueTask<BTree1Node<T>> RightSibling(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
-        Context.Driver.SeekRelativeToBaseAddress((long)RightSiblingAddress);
-        return await BTree1Node<T>.Decode(Context, DecodeKey).ConfigureAwait(false);
+        context.Driver.SeekRelativeToBaseAddress((long)RightSiblingAddress);
+        return await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
     }
 
     // NOTE (async propagation): `out TUserData userData` cannot coexist with `async`
     // (CS1988), so the out parameter became a tuple return. Callers outside this file
     // (H5D_Chunk123_BTree1.cs, NativeGroup.cs) need updating — see report.
-    public readonly async ValueTask<(bool Success, TUserData UserData)> TryFindUserData<TUserData>(
+    public async ValueTask<(bool Success, TUserData UserData)> TryFindUserData<TUserData>(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
         Func<T, T, ValueTask<int>> compare3,
         FoundDelegate<T, TUserData> found
     )
@@ -109,14 +116,14 @@ internal readonly record struct BTree1Node<T>(
 
         if (NodeLevel > 0)
         {
-            if (!Cache.TryGetValue(childAddress, out var subtree))
+            if (!_cache.TryGetValue(childAddress, out var subtree))
             {
-                Context.Driver.SeekRelativeToBaseAddress((long)childAddress);
-                subtree = await BTree1Node<T>.Decode(Context, DecodeKey).ConfigureAwait(false);
-                subtree = Cache.GetOrAdd(childAddress, subtree);
+                context.Driver.SeekRelativeToBaseAddress((long)childAddress);
+                subtree = await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
+                subtree = _cache.GetOrAdd(childAddress, subtree);
             }
 
-            var (success, userData) = await subtree.TryFindUserData(compare3, found).ConfigureAwait(false);
+            var (success, userData) = await subtree.TryFindUserData(context, decodeKey, compare3, found).ConfigureAwait(false);
 
             if (success)
                 return (true, userData);
@@ -135,26 +142,29 @@ internal readonly record struct BTree1Node<T>(
     // NOTE (async propagation): iterator that reads becomes IAsyncEnumerable<T> (rule 8).
     // Caller outside this file (NativeGroup.cs:EnumerateSymbolTableNodes) needs updating —
     // see report.
-    public readonly IAsyncEnumerable<BTree1Node<T>> EnumerateNodes()
+    public IAsyncEnumerable<BTree1Node<T>> EnumerateNodes(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
-        return EnumerateNodes(this);
+        return EnumerateNodes(context, decodeKey, this);
     }
 
-    private readonly async IAsyncEnumerable<BTree1Node<T>> EnumerateNodes(BTree1Node<T> node)
+    private static async IAsyncEnumerable<BTree1Node<T>> EnumerateNodes(
+        NativeReadContext context,
+        DecodeKeyDelegate<T> decodeKey,
+        BTree1Node<T> node)
     {
         // internal node
         if (node.NodeLevel > 0)
         {
             foreach (var address in node.ChildAddresses)
             {
-                Context.Driver.SeekRelativeToBaseAddress((long)address);
+                context.Driver.SeekRelativeToBaseAddress((long)address);
 
-                var childNode = await BTree1Node<T>.Decode(Context, DecodeKey).ConfigureAwait(false);
+                var childNode = await BTree1Node<T>.Decode(context, decodeKey).ConfigureAwait(false);
 
                 // internal node
                 if ((node.NodeLevel - 1) > 0)
                 {
-                    var internalNodes = EnumerateNodes(childNode);
+                    var internalNodes = EnumerateNodes(context, decodeKey, childNode);
 
                     await foreach (var internalNode in internalNodes)
                     {
@@ -175,7 +185,7 @@ internal readonly record struct BTree1Node<T>(
         }
     }
 
-    private readonly async ValueTask<(uint index, int cmp)> LocateRecord(Func<T, T, ValueTask<int>> compare3)
+    private async ValueTask<(uint index, int cmp)> LocateRecord(Func<T, T, ValueTask<int>> compare3)
     {
         uint index = 0, low = 0, high;  /* Final, left & right key indices */
         int cmp = 1;                    /* Key comparison value */

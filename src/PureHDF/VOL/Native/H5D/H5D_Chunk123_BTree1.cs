@@ -68,7 +68,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
         var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
 
         // load B-Tree 1
-        if (!_btree1.HasValue)
+        if (_btree1 is null)
         {
             var address = _layout12 is null
                 ? ((ChunkedStoragePropertyDescription3)_layout3!.Properties).Address
@@ -76,9 +76,7 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
 
             ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
-            ValueTask<BTree1RawDataChunksKey> decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
-
-            _btree1 = await BTree1Node<BTree1RawDataChunksKey>.Decode(ReadContext, decodeKey).ConfigureAwait(false);
+            _btree1 = await BTree1Node<BTree1RawDataChunksKey>.Decode(ReadContext, DecodeRawDataChunksKey).ConfigureAwait(false);
         }
 
         // get key and child address
@@ -86,7 +84,9 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             .Append(0UL)
             .ToArray();
 
-        var (success, userData) = await _btree1.Value.TryFindUserData<BTree1RawDataChunkUserData>(
+        var (success, userData) = await _btree1.TryFindUserData<BTree1RawDataChunkUserData>(
+            ReadContext,
+            DecodeRawDataChunksKey,
             (leftKey, rightKey)
                 => new ValueTask<int>(NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey)),
             (ulong address, BTree1RawDataChunksKey leftKey) =>
@@ -109,10 +109,13 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
 
     #region Callbacks
 
+    // Matches DecodeKeyDelegate<BTree1RawDataChunksKey>: the rank and chunk dimensions are per-dataset
+    // constants read off this instance, so only the context has to be threaded through - and it must
+    // be the CALLER's, not ReadContext, so that the key decode uses the same driver as the traversal.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private ValueTask<BTree1RawDataChunksKey> DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
+    private ValueTask<BTree1RawDataChunksKey> DecodeRawDataChunksKey(NativeReadContext context)
     {
-        return BTree1RawDataChunksKey.Decode(ReadContext.Driver, rank, rawChunkDims);
+        return BTree1RawDataChunksKey.Decode(context.Driver, ChunkRank, RawChunkDims);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

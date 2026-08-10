@@ -315,8 +315,10 @@ public class NativeGroup : NativeObject, IH5Group
              */
             var localHeap = await _scratchPad.GetLocalHeap(context).ConfigureAwait(false);
 
-            var (success, userData) = await (await _scratchPad.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false))
+            var (success, userData) = await (await _scratchPad.GetBTree1(context, DecodeGroupKey).ConfigureAwait(false))
                 .TryFindUserData<BTree1SymbolTableUserData>(
+                    context,
+                    DecodeGroupKey,
                     (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
                     (address, _) => NodeFound(context, localHeap, name, address))
                 .ConfigureAwait(false);
@@ -343,8 +345,10 @@ public class NativeGroup : NativeObject, IH5Group
                 var smessage = symbolTableHeaderMessages.First();
                 var localHeap = await smessage.GetLocalHeap(context).ConfigureAwait(false);
 
-                var (success, userData) = await (await smessage.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false))
+                var (success, userData) = await (await smessage.GetBTree1(context, DecodeGroupKey).ConfigureAwait(false))
                     .TryFindUserData<BTree1SymbolTableUserData>(
+                        context,
+                        DecodeGroupKey,
                         (leftKey, rightKey) => NodeCompare3(localHeap, name, leftKey, rightKey),
                         (address, _) => NodeFound(context, localHeap, name, address))
                     .ConfigureAwait(false);
@@ -486,7 +490,7 @@ public class NativeGroup : NativeObject, IH5Group
              * an invalid file.
              */
             var localHeap = await _scratchPad.GetLocalHeap(context).ConfigureAwait(false);
-            var btree1 = await _scratchPad.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false);
+            var btree1 = await _scratchPad.GetBTree1(context, DecodeGroupKey).ConfigureAwait(false);
 
             await foreach (var node in EnumerateSymbolTableNodes(context, btree1))
             {
@@ -511,7 +515,7 @@ public class NativeGroup : NativeObject, IH5Group
 
                 var smessage = symbolTableHeaderMessages.First();
                 var localHeap = await smessage.GetLocalHeap(context).ConfigureAwait(false);
-                var btree1 = await smessage.GetBTree1(context, () => DecodeGroupKey(context)).ConfigureAwait(false);
+                var btree1 = await smessage.GetBTree1(context, DecodeGroupKey).ConfigureAwait(false);
 
                 await foreach (var node in EnumerateSymbolTableNodes(context, btree1))
                 {
@@ -711,7 +715,7 @@ public class NativeGroup : NativeObject, IH5Group
         NativeReadContext context,
         BTree1Node<BTree1GroupKey> btree1)
     {
-        await foreach (var node in btree1.EnumerateNodes())
+        await foreach (var node in btree1.EnumerateNodes(context, DecodeGroupKey))
         {
             foreach (var address in node.ChildAddresses)
             {
@@ -807,15 +811,15 @@ public class NativeGroup : NativeObject, IH5Group
         return (true, userData);
     }
 
-    // ASYNC PROPAGATION: `BTree1Node<T>.DecodeKey`/`Decode(...)` (BTree1Node.cs, out of
-    // scope but already converted) now take `Func<ValueTask<T>>`, and
-    // `SymbolTableMessage.GetBTree1` (out of scope but already converted) matches suit.
-    // `BTree1GroupKey.Decode` (BTree1Types.cs, out of scope, already async) is simply
-    // awaited instead of bridged.
+    // ASYNC PROPAGATION: `BTree1Node<T>.Decode(...)` and `SymbolTableMessage.GetBTree1` take a
+    // `DecodeKeyDelegate<T>`, which `BTree1GroupKey.Decode` (BTree1Types.cs, already async) is simply
+    // awaited through instead of bridged.
     //
     // CONCURRENCY: takes the operation's context instead of reading the group's file-level one, so
     // the key decode happens on the same driver as the b-tree traversal that asks for it. Callers
-    // curry it as `() => DecodeGroupKey(context)`.
+    // pass this method group directly - it used to be curried as `() => DecodeGroupKey(context)`,
+    // which allocated a closure per navigation call and, worse, made the decoded b-tree
+    // uncacheable, because the tree held the delegate and the delegate held a per-operation context.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static async ValueTask<BTree1GroupKey> DecodeGroupKey(NativeReadContext context)
     {

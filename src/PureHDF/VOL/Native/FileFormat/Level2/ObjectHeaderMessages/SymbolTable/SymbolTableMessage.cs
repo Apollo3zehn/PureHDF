@@ -28,12 +28,14 @@ internal record class SymbolTableMessage(
         return NativeCache.GetStructure(context, LocalHeapAddress, LocalHeap.Decode);
     }
 
-    public async ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
+    public ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
         NativeReadContext context,
-        Func<ValueTask<BTree1GroupKey>> decodeKey)
+        DecodeKeyDelegate<BTree1GroupKey> decodeKey)
     {
-        context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-
-        return await BTree1Node<BTree1GroupKey>.Decode(context, decodeKey).ConfigureAwait(false);
+        return NativeCache.GetStructure(
+            context,
+            BTree1Address,
+            decodeKey,
+            static (c, dk) => BTree1Node<BTree1GroupKey>.Decode(c, dk));
     }
 }

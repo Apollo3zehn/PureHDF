@@ -95,7 +95,31 @@ internal static class NativeCache
         return DecodeStructure(context, address, decode, addressToStructureMap, key);
     }
 
-    private static async ValueTask<T> DecodeStructure<T>(
+    /// <summary>
+    /// As <see cref="GetStructure{T}" />, but threads <paramref name="state" /> through to
+    /// <paramref name="decode" /> so that the decoder can stay a static, allocation-free lambda even
+    /// when it needs an extra argument - a key decoder, for instance.
+    /// </summary>
+    public static ValueTask<T> GetStructure<T, TState>(
+        NativeReadContext context,
+        ulong address,
+        TState state,
+        Func<NativeReadContext, TState, ValueTask<T>> decode)
+        where T : class
+    {
+        var addressToStructureMap = _structureMap.GetOrAdd(
+            context.CacheToken,
+            static _ => new ConcurrentDictionary<(Type, ulong), object>());
+
+        var key = (typeof(T), address);
+
+        if (addressToStructureMap.TryGetValue(key, out var cached))
+            return new ValueTask<T>((T)cached);
+
+        return DecodeStructure(context, address, state, decode, addressToStructureMap, key);
+    }
+
+    private static ValueTask<T> DecodeStructure<T>(
         NativeReadContext context,
         ulong address,
         Func<NativeReadContext, ValueTask<T>> decode,
@@ -103,9 +127,27 @@ internal static class NativeCache
         (Type, ulong) key)
         where T : class
     {
+        return DecodeStructure(
+            context,
+            address,
+            decode,
+            static (c, d) => d(c),
+            addressToStructureMap,
+            key);
+    }
+
+    private static async ValueTask<T> DecodeStructure<T, TState>(
+        NativeReadContext context,
+        ulong address,
+        TState state,
+        Func<NativeReadContext, TState, ValueTask<T>> decode,
+        ConcurrentDictionary<(Type, ulong), object> addressToStructureMap,
+        (Type, ulong) key)
+        where T : class
+    {
         context.Driver.SeekRelativeToBaseAddress((long)address);
 
-        var structure = await decode(context).ConfigureAwait(false);
+        var structure = await decode(context, state).ConfigureAwait(false);
 
         return (T)addressToStructureMap.GetOrAdd(key, structure);
     }

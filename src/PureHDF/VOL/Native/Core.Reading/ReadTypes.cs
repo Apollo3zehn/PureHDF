@@ -16,6 +16,16 @@ namespace PureHDF.VOL.Native;
 internal delegate ValueTask DecodeDelegate<T>(NativeReadContext context, IH5ReadStream source, Memory<T> target);
 internal delegate ValueTask<object?> ElementDecodeDelegate(NativeReadContext context, IH5ReadStream source);
 
+// NOTE (context per call): decodes one b-tree key or record through the CALLER's context, for the
+// same reason as the two delegates above. This replaced `Func<ValueTask<T>>`, which every call site
+// built by currying a context into a closure - `() => DecodeGroupKey(context)`. That closure is
+// precisely what stopped a decoded b-tree from being cacheable: the tree held the delegate, the
+// delegate held a context, and the context holds a per-operation driver that is handed back to
+// NativeOperationSlot and reused. With the context as a parameter, every call site can instead pass a
+// static method group, which the compiler caches - so this also removes a closure allocation per
+// navigation call.
+internal delegate ValueTask<T> DecodeKeyDelegate<T>(NativeReadContext context);
+
 internal readonly record struct DecodeStep(
     Action<object, object?>? SetValue,
     ulong CompoundMemberOffset,
