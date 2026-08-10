@@ -12,17 +12,40 @@ namespace PureHDF.VFD;
 // NOTE (async-first spike): a memory-mapped view is a genuinely synchronous source, so every
 // member here returns an already-completed ValueTask. Sync-completing ValueTasks do not allocate,
 // which is the whole point of async-first: remote sources get real async, local ones pay nothing.
-// CONCURRENCY MODEL (async-first): as with H5FileHandleDriver, a driver instance belongs to one
-// logical reader. The cursor was a ThreadLocal<long>, which async breaks (a continuation may resume
-// on another thread, where it reads back as 0). Callers wanting parallelism open one reader each.
+// CONCURRENCY MODEL: a driver instance is owned by one logical reader - the cursor is a plain
+// field, because a ThreadLocal<long> reads back as 0 once an async continuation resumes on another
+// thread. Parallelism does not require one reader per thread though: the read path allocates a
+// per-operation driver over this same accessor (see CreateOperationDriverCore below), so a dataset
+// resolved once can be read concurrently through a single shared H5File.
 internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
 {
     private long _position;
     private readonly MemoryMappedViewAccessor _accessor;
+    private readonly bool _leaveOpen;
 
     public H5MemoryMappedFileDriver(MemoryMappedViewAccessor accessor)
+        : this(accessor, leaveOpen: false)
+    {
+        //
+    }
+
+    private H5MemoryMappedFileDriver(MemoryMappedViewAccessor accessor, bool leaveOpen)
     {
         _accessor = accessor;
+        _leaveOpen = leaveOpen;
+    }
+
+    // CONCURRENCY: every read here is absolute - the accessor is addressed by _position, never by
+    // a cursor of its own - and the accessor's own reads may be issued concurrently
+    // (SafeBuffer.AcquirePointer/ReleasePointer refcount with interlocked operations). So a second
+    // driver over the same accessor, carrying its own _position, is correct.
+    //
+    // leaveOpen: true is what makes disposal safe. The accessor previously had no such flag and
+    // Dispose always disposed it; an operation driver doing that would kill the shared accessor
+    // and every other reader, the file-level driver included.
+    protected override H5DriverBase CreateOperationDriverCore()
+    {
+        return new H5MemoryMappedFileDriver(_accessor, leaveOpen: true);
     }
 
     public override long Position { get => _position; }
@@ -147,7 +170,8 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         {
             if (disposing)
             {
-                _accessor.Dispose();
+                if (!_leaveOpen)
+                    _accessor.Dispose();
             }
 
             _disposedValue = true;

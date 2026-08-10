@@ -34,6 +34,37 @@ internal abstract partial class H5DriverBase : IH5ReadStream
         BaseAddress = baseAddress;
     }
 
+    // CONCURRENCY: returns a driver over the SAME underlying source but with its own independent
+    // cursor, so one resolved dataset/attribute can be read from several threads at once. `null`
+    // means "this source cannot be read concurrently; reuse me" - a Stream, for instance, has
+    // exactly one cursor and no positionless read API.
+    //
+    // Deliberately NOT virtual. BaseAddress is mutable driver state, set once by NativeFile after
+    // the superblock is decoded, and every SeekRelativeToBaseAddress depends on it; a
+    // per-operation driver that forgot to inherit it would read at wrong offsets throughout.
+    // Copying it here rather than in each override means an implementer cannot forget it.
+    // Override CreateOperationDriverCore instead.
+    public H5DriverBase? TryCreateOperationDriver()
+    {
+        var operationDriver = CreateOperationDriverCore();
+
+        if (operationDriver is null)
+            return null;
+
+        operationDriver.SetBaseAddress(BaseAddress);
+
+        return operationDriver;
+    }
+
+    // Implementations must return a driver that shares this driver's source and does NOT own it:
+    // disposing the returned driver has to leave the shared handle / accessor open.
+    //
+    // The returned driver's cursor deliberately starts at 0 instead of inheriting Position. Every
+    // read path seeks before its first read (H5D_Contiguous, every chunk index, and
+    // NativeCache.GetGlobalHeapObject all call SeekRelativeToBaseAddress first), so inheriting
+    // buys nothing - and it would mean reading a field that concurrent operations mutate.
+    protected virtual H5DriverBase? CreateOperationDriverCore() => null;
+
     #region IDisposable
 
     private bool _disposedValue;

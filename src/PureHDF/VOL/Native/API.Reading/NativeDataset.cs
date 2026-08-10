@@ -521,8 +521,17 @@ public class NativeDataset : NativeObject, IH5Dataset
         bool isRawMode,
         H5DatasetAccess datasetAccess = default)
     {
+        // CONCURRENCY: a read operation begins in earnest here, so it gets its own driver and its
+        // own context. Everything below must use `operationContext`; the file-level `Context` is
+        // shared with concurrent operations and with object navigation, and its driver cursor is a
+        // plain field. Two exceptions remain, both pre-existing and both flagged where they occur:
+        // the external-file-list local heap and the virtual-dataset source lookup still resolve
+        // through the file-level driver.
+        using var operationScope = new NativeOperationScope(Context);
+        var operationContext = operationScope.Context;
+
         /* get decoder (succeeds only if decoding is possible) */
-        var decoder = InternalDataType.GetDecodeInfo<TElement>(Context, isRawMode);
+        var decoder = InternalDataType.GetDecodeInfo<TElement>(operationContext, isRawMode);
 
         /* fill value */
         TElement? fillValue;
@@ -540,7 +549,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             // so the fill value was silently left uninitialized whenever the decode did not
             // complete synchronously. It only ever worked because SystemMemoryStream always
             // completes synchronously. Block on it explicitly instead.
-            decoder.Invoke(Context, fillValueDecodeStream, target).GetAwaiter().GetResult();
+            decoder.Invoke(operationContext, fillValueDecodeStream, target).GetAwaiter().GetResult();
             fillValue = target[0];
         }
 
@@ -586,7 +595,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             /* Compact: The array is stored in one contiguous block as part of
              * this object header message. 
              */
-            LayoutClass.Compact => new H5D_Compact(Context, default!, datasetInfo, datasetAccess),
+            LayoutClass.Compact => new H5D_Compact(operationContext, default!, datasetInfo, datasetAccess),
 
             /* Contiguous: The array is stored in one contiguous area of the file. 
             * This layout requires that the size of the array be constant: 
@@ -595,7 +604,10 @@ public class NativeDataset : NativeObject, IH5Dataset
             * storage size of the array. The offset of an element from the 
             * beginning of the storage area is computed as in a C array.
             */
-            LayoutClass.Contiguous => new H5D_Contiguous(Context, default!, datasetInfo, datasetAccess),
+            // NOTE: for a dataset with an external file list, H5D_Contiguous builds an
+            // ExternalFileListStream whose local heap is still decoded through the file-level
+            // driver captured by ExternalFileListMessage at navigation time - see the note there.
+            LayoutClass.Contiguous => new H5D_Contiguous(operationContext, default!, datasetInfo, datasetAccess),
 
             /* Chunked: The array domain is regularly decomposed into chunks,
              * and each chunk is allocated and stored separately. This layout 
@@ -606,7 +618,7 @@ public class NativeDataset : NativeObject, IH5Dataset
              * calculated by traversing the chunk index that stores the chunk 
              * addresses. 
              */
-            LayoutClass.Chunked => H5D_Chunk.Create(Context, default!, datasetInfo, datasetAccess, default),
+            LayoutClass.Chunked => H5D_Chunk.Create(operationContext, default!, datasetInfo, datasetAccess, default),
 
             /* Virtual: This is only supported for version 4 of the Data Layout 
              * message. The message stores information that is used to locate 
@@ -621,7 +633,11 @@ public class NativeDataset : NativeObject, IH5Dataset
             // be used inside an `async` method (CS4012) — so this whole call chain cannot be
             // converted to propagate the awaitable itself. Blocking here is therefore unavoidable
             // given the current method shape; see wave-3 report for the out-of-scope note.
-            LayoutClass.VirtualStorage => H5D_Virtual<TElement>.Create(Context, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate).GetAwaiter().GetResult(),
+            // The VDS block itself is decoded through the operation driver, but resolving the
+            // source datasets goes through NativeReadContext.File - i.e. object navigation on the
+            // file-level driver, which stays single-threaded. Each source read then opens its own
+            // operation driver.
+            LayoutClass.VirtualStorage => H5D_Virtual<TElement>.Create(operationContext, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate).GetAwaiter().GetResult(),
 
             /* default */
             _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
@@ -645,7 +661,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             fileSelection,
             memorySelection,
             GetSourceStream: h5d.GetReadStream,
-            Context: Context,
+            Context: operationContext,
             Decoder: decoder,
             SourceTypeSize: (int)InternalDataType.Size,
             TargetTypeSizeFactor: (int)rawModeTargetTypeSizeFactor,

@@ -52,6 +52,10 @@ internal static class NativeCache
 
         if (!addressToCollectionMap.TryGetValue(address, out var collection))
         {
+            // NOTE (per-operation drivers): this seek-decode-restore is why concurrent reads of
+            // variable-length data need a driver per read operation and not merely a thread-safe
+            // cache - it moves the cursor in the middle of a dataset/attribute decode. `context`
+            // is the caller's context, so on a read path that is the operation driver.
             var position = context.Driver.Position;
 
             context.Driver.SeekRelativeToBaseAddress((long)address);

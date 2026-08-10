@@ -29,6 +29,12 @@ internal record class ExternalFileListMessage(
     // NOTE (async propagation): a lazily-cached property getter cannot await, so
     // this became a method with the same name. Callers outside this file need
     // updating — see report.
+    //
+    // NOTE (per-operation drivers): `Context` here is the FILE-LEVEL context, captured when this
+    // message was decoded during navigation - a read operation cannot substitute its own. So the
+    // first read of an external-file-list dataset decodes this local heap through the file-level
+    // driver and is not concurrency-safe. Pre-existing and out of scope; it is the only remaining
+    // read path with that property, and only until `_heap` is populated.
     public async ValueTask<LocalHeap> Heap()
     {
         if (_heap.Equals(default))

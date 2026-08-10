@@ -147,7 +147,11 @@ public class NativeAttribute : IH5Attribute
         IH5ReadStream source,
         ulong[]? memoryDims = null)
     {
-        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>();
+        // CONCURRENCY: see the note on the other ReadCoreLevel1 overload below.
+        using var operationScope = new NativeOperationScope(_context);
+        var operationContext = operationScope.Context;
+
+        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>(operationContext);
 
         /* result buffer / result array */
         Memory<TElement> resultBuffer;
@@ -192,7 +196,7 @@ public class NativeAttribute : IH5Attribute
             resultBuffer = resultMemoryBuffer;
         }
 
-        ReadCoreLevel2(_context, source, memoryDims, fileElementCount, decoder, resultBuffer);
+        ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer);
 
         /* return */
         return resultArray is null
@@ -205,7 +209,17 @@ public class NativeAttribute : IH5Attribute
         IH5ReadStream source,
         ulong[]? memoryDims = null)
     {
-        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>();
+        // CONCURRENCY: an attribute's own bytes live in the object header (Message.InputData) and
+        // are decoded from a SystemMemoryStream, not from the driver - so at first glance no
+        // per-operation driver is needed here. It is: variable-length and reference data store
+        // global-heap IDs inline, and the decoder resolves them through
+        // NativeCache.GetGlobalHeapObject, which SEEKS AND READS the driver. Two threads reading a
+        // string attribute concurrently would race on the shared cursor exactly like a dataset read
+        // does. Fixed-size attributes pay one driver allocation and never use it.
+        using var operationScope = new NativeOperationScope(_context);
+        var operationContext = operationScope.Context;
+
+        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>(operationContext);
 
         /* result buffer */
         if (memoryDims is null)
@@ -223,7 +237,7 @@ public class NativeAttribute : IH5Attribute
 
         buffer.CopyTo(resultBuffer.Span);
 
-        ReadCoreLevel2(_context, source, memoryDims, fileElementCount, decoder, resultBuffer);
+        ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer);
 
         resultBuffer.Span.CopyTo(buffer);
     }
@@ -249,7 +263,8 @@ public class NativeAttribute : IH5Attribute
         decoder(context, source, resultBuffer).GetAwaiter().GetResult();
     }
 
-    private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>()
+    private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>(
+        NativeReadContext context)
     {
         /* check endianness */
         var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
@@ -263,7 +278,7 @@ public class NativeAttribute : IH5Attribute
 
         /* get decoder (succeeds only if decoding is possible) */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(
-            _context, 
+            context,
             /* isRawMode: not useful for attributes, but could be implemented later; 
              * note: compare to NativeDataset (look for endianness related code and #101) 
              */

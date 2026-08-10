@@ -3,6 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF.VFD;
 
+// CONCURRENCY: this driver deliberately does NOT override CreateOperationDriverCore. A Stream has
+// exactly one cursor and no positionless read API, so a second driver over the same Stream would
+// share that cursor rather than isolate from it. TryCreateOperationDriver therefore keeps returning
+// null here and reads through a Stream stay non-concurrent.
 internal partial class H5StreamDriver : H5DriverBase
 {
     private readonly bool _leaveOpen;

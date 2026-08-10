@@ -12,6 +12,12 @@ namespace PureHDF.VFD;
 // thread, where the ThreadLocal cursor reads back as 0. The result was silent corruption - the
 // superblock scan desynced and every file reported "not a valid HDF 5 file".
 //
+// Isolation is per *operation*, not per reader: the read path allocates a driver per read operation
+// over this same file handle (CreateOperationDriverCore below), so a dataset or attribute resolved
+// once can be read concurrently through a single shared H5File. Object navigation
+// (file.Dataset("x"), attribute enumeration) still moves the file-level cursor and remains
+// single-threaded - resolve first, then read in parallel.
+//
 // SYNCHRONOUS COMPLETION: a local file is not an asynchronous source. .NET on Unix has no true
 // async file I/O, and the FileStream behind this handle is opened without FileOptions.Asynchronous,
 // so RandomAccess.ReadAsync would queue every read - including a 2-byte metadata read - onto the
@@ -33,6 +39,27 @@ internal partial class H5FileHandleDriver : H5DriverBase
         _stream = stream;
         _handle = _stream.SafeFileHandle;
         _leaveOpen = leaveOpen;
+    }
+
+    private H5FileHandleDriver(FileStream stream, SafeFileHandle handle, bool leaveOpen)
+    {
+        _stream = stream;
+        _handle = handle;
+        _leaveOpen = leaveOpen;
+    }
+
+    // CONCURRENCY: reads go through RandomAccess.Read(_handle, buffer, _position), which is
+    // positionless - it never touches the FileStream's own cursor. So a second driver over the
+    // very same SafeFileHandle, carrying its own _position, reads correctly and needs no extra
+    // file descriptor.
+    //
+    // leaveOpen: true, because the FileStream belongs to the H5File and outlives the operation.
+    // The already-captured _handle is passed straight through rather than re-read from
+    // stream.SafeFileHandle: that getter flushes the FileStream, and two threads starting an
+    // operation at the same time would then be doing that concurrently on shared buffer state.
+    protected override H5DriverBase CreateOperationDriverCore()
+    {
+        return new H5FileHandleDriver(_stream, _handle, leaveOpen: true);
     }
 
     public override long Position { get => _position; }
