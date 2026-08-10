@@ -41,7 +41,26 @@ public class NativeGroup : NativeObject, IH5Group
     /// <inheritdoc />
     public Task<bool> LinkExistsAsync(string path, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        return LinkExistsAsync(path, default, cancellationToken);
+    }
+
+    /// <summary>
+    /// Checks if the link with the specified <paramref name="path"/> exist.
+    /// </summary>
+    /// <param name="path">The path of the link.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A boolean which indicates if the link exists.</returns>
+    public async Task<bool> LinkExistsAsync(string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    {
+        if (path == "/")
+            return true;
+
+        using var scope = new NativeOperationScope(Context);
+
+        var (success, _, _) = await TryWalkPath(scope.Context, path, linkAccess, cancellationToken).ConfigureAwait(false);
+
+        return success;
     }
 
     /// <summary>
@@ -64,7 +83,24 @@ public class NativeGroup : NativeObject, IH5Group
     /// <inheritdoc />
     public Task<IH5Object> GetAsync(string path, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        return GetAsync(path, default, cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the object that is at the given <paramref name="path"/>.
+    /// </summary>
+    /// <param name="path">The path of the object.</param>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The requested object.</returns>
+    public async Task<IH5Object> GetAsync(string path, H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    {
+        // CONCURRENCY: ONE scope for the entire call, exactly as the synchronous Get does.
+        using var scope = new NativeOperationScope(Context);
+
+        var reference = await InternalGet(scope.Context, path, linkAccess, cancellationToken).ConfigureAwait(false);
+
+        return await reference.DereferenceAsync(scope.Context).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -80,7 +116,11 @@ public class NativeGroup : NativeObject, IH5Group
         // note on InternalGet for why the recursion does not create a scope per step.
         using var scope = new NativeOperationScope(Context);
 
+        // Blocks once, at the public boundary, rather than at every step of the walk. GetAsync above
+        // runs the same code path without blocking at all.
         return InternalGet(scope.Context, path, linkAccess)
+            .GetAwaiter()
+            .GetResult()
             .Dereference(scope.Context);
     }
 
@@ -124,7 +164,29 @@ public class NativeGroup : NativeObject, IH5Group
     /// <inheritdoc />
     public Task<IEnumerable<IH5Object>> ChildrenAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        return ChildrenAsync(default, cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets an enumerable of the available children using the optionally specified <paramref name="linkAccess"/>.
+    /// </summary>
+    /// <param name="linkAccess">The link access properties.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>An enumerable of the available children.</returns>
+    public async Task<IEnumerable<IH5Object>> ChildrenAsync(H5LinkAccess linkAccess, CancellationToken cancellationToken = default)
+    {
+        // Materializes rather than streaming, because IH5Group promises Task<IEnumerable<...>> and not
+        // IAsyncEnumerable<...>. The synchronous Children() below stays lazy.
+        using var scope = new NativeOperationScope(Context);
+
+        var children = new List<IH5Object>();
+
+        await foreach (var reference in EnumerateReferences(scope.Context, linkAccess, cancellationToken))
+        {
+            children.Add(await reference.DereferenceAsync(scope.Context).ConfigureAwait(false));
+        }
+
+        return children;
     }
 
     /// <summary>
@@ -146,29 +208,36 @@ public class NativeGroup : NativeObject, IH5Group
     // It now runs on the first MoveNext, together with everything else in the scope, so a malformed
     // group throws when the result is enumerated rather than when it is requested. Children() returns
     // IEnumerable and nothing in the tree depends on the earlier timing.
+    // Drains the async enumeration one item at a time rather than buffering it, so the synchronous
+    // Children() stays as lazy as it has always been while both surfaces share one implementation.
     private IEnumerable<IH5Object> EnumerateChildren(H5LinkAccess linkAccess)
     {
         using var scope = new NativeOperationScope(Context);
         var context = scope.Context;
 
-        // NON-MECHANICAL (flagged, not guessed): EnumerateReferences is now
-        // IAsyncEnumerable<NativeNamedReference> (rule 8), but Children() is public,
-        // synchronous IH5Group API. Bridged with a manual blocking drain, mirroring the
-        // precedent already established in NativeNamedReference.Dereference (out of
-        // scope, unedited: ObjectHeader.Construct(context).GetAwaiter().GetResult()) to
-        // avoid a breaking change to the public read surface.
-        var references = DrainReferences(context, linkAccess);
+        var enumerator = EnumerateReferences(context, linkAccess, CancellationToken.None)
+            .GetAsyncEnumerator();
 
-        foreach (var reference in references)
+        try
         {
-            yield return reference.Dereference(context);
+            while (enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+            {
+                yield return enumerator.Current.Dereference(context);
+            }
+        }
+        finally
+        {
+            enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
         }
     }
 
+    // Still buffers, unlike EnumerateChildren above, because its caller
+    // (TryGetReference(..., out ...)) needs the full list twice: once to look for a match and once to
+    // recurse into every child.
     private List<NativeNamedReference> DrainReferences(NativeReadContext context, H5LinkAccess linkAccess)
     {
         var references = new List<NativeNamedReference>();
-        var enumerator = EnumerateReferences(context, linkAccess).GetAsyncEnumerator();
+        var enumerator = EnumerateReferences(context, linkAccess, CancellationToken.None).GetAsyncEnumerator();
 
         try
         {
@@ -192,61 +261,69 @@ public class NativeGroup : NativeObject, IH5Group
 
         // CONCURRENCY: one scope for the whole path walk - see Get(string, ...) above.
         using var scope = new NativeOperationScope(Context);
-        var context = scope.Context;
 
-        var isRooted = path.StartsWith("/");
-        var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
-        var current = isRooted ? Context.File.Reference : Reference;
+        // Blocks once, at the public boundary. LinkExistsAsync runs the same walk without blocking.
+        var (success, _, _) = TryWalkPath(scope.Context, path, linkAccess, CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
 
-        // Only the first iteration can reuse a group we already hold; every later segment names an
-        // object not yet resolved, so this is cleared at the end of each pass.
-        var group = isRooted ? null : this;
-
-        for (int i = 0; i < segments.Length; i++)
-        {
-            if (group is null)
-            {
-                if (current.Dereference(context) is not NativeGroup dereferenced)
-                    return false;
-
-                group = dereferenced;
-            }
-
-            // CONCURRENCY: an external link makes the walk cross into another file - continue on that
-            // file's driver, and on this operation's driver while it stays in this file.
-            using var step = NativeOperationScope.ForFile(group.Context.File, context);
-
-            var (success, reference) = group.TryGetReference(step.Context, segments[i], linkAccess).GetAwaiter().GetResult();
-
-            if (!success)
-                return false;
-
-            current = reference;
-            group = null;
-        }
-
-        return true;
+        return success;
     }
 
     // CONCURRENCY: the scope-creating overload, for callers that are NOT already inside an operation
     // on this file. SymbolicLink.GetTarget uses it for the external-file branch, where the target
     // group belongs to a DIFFERENT NativeFile and must be walked on that file's own driver - the
     // current operation's driver reads the wrong file entirely.
-    internal NativeNamedReference InternalGet(string path, H5LinkAccess linkAccess)
+    internal async ValueTask<NativeNamedReference> InternalGet(string path, H5LinkAccess linkAccess)
     {
         using var scope = new NativeOperationScope(Context);
 
-        return InternalGet(scope.Context, path, linkAccess);
+        return await InternalGet(scope.Context, path, linkAccess, CancellationToken.None).ConfigureAwait(false);
     }
 
     // CONCURRENCY: takes the enclosing operation's context instead of creating a scope, which is what
     // keeps the path walk (and the soft-link resolution it can re-enter through
     // SymbolicLink.GetTarget) on a single driver rather than one per segment.
-    internal NativeNamedReference InternalGet(NativeReadContext context, string path, H5LinkAccess linkAccess)
+    internal async ValueTask<NativeNamedReference> InternalGet(
+        NativeReadContext context,
+        string path,
+        H5LinkAccess linkAccess,
+        CancellationToken cancellationToken = default)
     {
         if (path == "/")
             return Context.File.Reference;
 
+        var (success, reference, failedSegment) = await TryWalkPath(context, path, linkAccess, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!success)
+        {
+            // Distinguishes the two ways a walk fails, which the caller cannot tell apart from a
+            // false: a segment that resolved but is not a group, versus a segment that is simply
+            // absent.
+            if (failedSegment is not null)
+                throw new Exception($"Path segment '{failedSegment}' is not a group.");
+
+            throw new Exception($"Could not find part of the path '{path}'.");
+        }
+
+        return reference;
+    }
+
+    /// <summary>
+    /// Walks <paramref name="path" /> segment by segment, reporting whether it resolved rather than
+    /// throwing, so that LinkExists and Get can share one implementation.
+    /// </summary>
+    /// <remarks>
+    /// <c>FailedSegment</c> is set only for the "resolved but is not a group" failure; a missing
+    /// segment leaves it null. Get turns the two into different exceptions, LinkExists ignores both.
+    /// </remarks>
+    private async ValueTask<(bool Success, NativeNamedReference Reference, string? FailedSegment)> TryWalkPath(
+        NativeReadContext context,
+        string path,
+        H5LinkAccess linkAccess,
+        CancellationToken cancellationToken)
+    {
         var isRooted = path.StartsWith("/");
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
         var current = isRooted ? Context.File.Reference : Reference;
@@ -257,13 +334,15 @@ public class NativeGroup : NativeObject, IH5Group
 
         for (int i = 0; i < segments.Length; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (group is null)
             {
                 // TODO: Use cache to store dereferenced objects (as it is done in HsdsGroup.cs). That
                 // would cover the remaining case - the intermediate segments of a deep path, and the
                 // root of a rooted one - which still re-decode a header per lookup.
-                if (current.Dereference(context) is not NativeGroup dereferenced)
-                    throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
+                if (await current.DereferenceAsync(context).ConfigureAwait(false) is not NativeGroup dereferenced)
+                    return (false, default, i == 0 ? path : segments[i - 1]);
 
                 group = dereferenced;
             }
@@ -272,16 +351,18 @@ public class NativeGroup : NativeObject, IH5Group
             // file's driver, and on this operation's driver while it stays in this file.
             using var step = NativeOperationScope.ForFile(group.Context.File, context);
 
-            var (success, reference) = group.TryGetReference(step.Context, segments[i], linkAccess).GetAwaiter().GetResult();
+            var (found, reference) = await group
+                .TryGetReference(step.Context, segments[i], linkAccess)
+                .ConfigureAwait(false);
 
-            if (!success)
-                throw new Exception($"Could not find part of the path '{path}'.");
+            if (!found)
+                return (false, default, null);
 
             current = reference;
             group = null;
         }
 
-        return current;
+        return (true, current, null);
     }
 
     internal NativeNamedReference InternalGet(NativeReadContext context, NativeObjectReference1 reference, H5LinkAccess linkAccess)
@@ -331,7 +412,10 @@ public class NativeGroup : NativeObject, IH5Group
         }
         else
         {
-            var symbolTableHeaderMessages = Header.GetMessages<SymbolTableMessage>();
+            // Awaited once so that every `Header` read below is a cached field read - see
+            // NativeObject.GetHeader.
+            var header = await GetHeader().ConfigureAwait(false);
+            var symbolTableHeaderMessages = header.GetMessages<SymbolTableMessage>();
 
             if (symbolTableHeaderMessages.Any())
             {
@@ -361,7 +445,7 @@ public class NativeGroup : NativeObject, IH5Group
             }
             else
             {
-                var linkInfoMessages = Header.GetMessages<LinkInfoMessage>();
+                var linkInfoMessages = header.GetMessages<LinkInfoMessage>();
 
                 if (linkInfoMessages.Any())
                 {
@@ -379,7 +463,8 @@ public class NativeGroup : NativeObject, IH5Group
 
                         if (found)
                         {
-                            return (true, GetObjectReference(context, linkMessage!, linkAccess));
+                            var namedReference = await GetObjectReference(context, linkMessage!, linkAccess).ConfigureAwait(false);
+                            return (true, namedReference);
                         }
                     }
                     /* New (1.8) compact format
@@ -388,13 +473,14 @@ public class NativeGroup : NativeObject, IH5Group
                      * in the Link Info Message is set to the "undefined address" value. */
                     else
                     {
-                        var linkMessage = Header
+                        var linkMessage = header
                             .GetMessages<LinkMessage>()
                             .FirstOrDefault(message => message.LinkName == name);
 
                         if (linkMessage is not null)
                         {
-                            return (true, GetObjectReference(context, linkMessage, linkAccess));
+                            var namedReference = await GetObjectReference(context, linkMessage, linkAccess).ConfigureAwait(false);
+                            return (true, namedReference);
                         }
                     }
                 }
@@ -471,7 +557,20 @@ public class NativeGroup : NativeObject, IH5Group
         return false;
     }
 
-    private async IAsyncEnumerable<NativeNamedReference> EnumerateReferences(NativeReadContext context, H5LinkAccess linkAccess)
+    /// <summary>
+    /// Enumerates this group's links, whichever of the four storage forms it uses.
+    /// </summary>
+    /// <remarks>
+    /// The single implementation behind both <c>Children()</c> and <c>ChildrenAsync()</c>.
+    /// <para>
+    /// <paramref name="cancellationToken" /> is observed once per link. The driver reads underneath do
+    /// not take a token, so cancellation is granular to a link rather than to an individual read.
+    /// </para>
+    /// </remarks>
+    private async IAsyncEnumerable<NativeNamedReference> EnumerateReferences(
+        NativeReadContext context,
+        H5LinkAccess linkAccess,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         // https://support.hdfgroup.org/HDF5/doc/RM/RM_H5G.html
         // section "Group implementations in HDF5"
@@ -496,13 +595,19 @@ public class NativeGroup : NativeObject, IH5Group
             {
                 foreach (var entry in node.GroupEntries)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     yield return await GetObjectReferencesForSymbolTableEntry(context, localHeap, entry, linkAccess).ConfigureAwait(false);
                 }
             }
         }
         else
         {
-            var symbolTableHeaderMessages = Header.GetMessages<SymbolTableMessage>();
+            // Awaited here rather than at the top of the method, because the scratch-pad branch above
+            // resolves its links without ever touching the object header and must not be made to
+            // decode one.
+            var header = await GetHeader().ConfigureAwait(false);
+            var symbolTableHeaderMessages = header.GetMessages<SymbolTableMessage>();
 
             if (symbolTableHeaderMessages.Any())
             {
@@ -521,6 +626,8 @@ public class NativeGroup : NativeObject, IH5Group
                 {
                     foreach (var entry in node.GroupEntries)
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         yield return await GetObjectReferencesForSymbolTableEntry(context, localHeap, entry, linkAccess).ConfigureAwait(false);
                     }
                 }
@@ -528,7 +635,7 @@ public class NativeGroup : NativeObject, IH5Group
 
             else
             {
-                var linkInfoMessages = Header.GetMessages<LinkInfoMessage>();
+                var linkInfoMessages = header.GetMessages<LinkInfoMessage>();
 
                 if (linkInfoMessages.Any())
                 {
@@ -545,7 +652,9 @@ public class NativeGroup : NativeObject, IH5Group
                         // build links
                         await foreach (var linkMessage in EnumerateLinkMessagesFromLinkInfoMessage(context, lmessage))
                         {
-                            yield return GetObjectReference(context, linkMessage, linkAccess);
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            yield return await GetObjectReference(context, linkMessage, linkAccess).ConfigureAwait(false);
                         }
                     }
 
@@ -556,9 +665,11 @@ public class NativeGroup : NativeObject, IH5Group
                     else
                     {
                         // build links
-                        foreach (var linkMessage in Header.GetMessages<LinkMessage>())
+                        foreach (var linkMessage in header.GetMessages<LinkMessage>())
                         {
-                            yield return GetObjectReference(context, linkMessage, linkAccess);
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            yield return await GetObjectReference(context, linkMessage, linkAccess).ConfigureAwait(false);
                         }
                     }
                 }
@@ -643,12 +754,16 @@ public class NativeGroup : NativeObject, IH5Group
         return (false, null);
     }
 
+    // Async only because of the two symbolic-link cases, which resolve by walking a path. A hard link
+    // - the common case by far - completes synchronously and allocates no state machine, which is why
+    // this stays non-async with an explicit ValueTask.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private NativeNamedReference GetObjectReference(NativeReadContext context, LinkMessage linkMessage, H5LinkAccess linkAccess)
+    private ValueTask<NativeNamedReference> GetObjectReference(NativeReadContext context, LinkMessage linkMessage, H5LinkAccess linkAccess)
     {
         return linkMessage.LinkInfo switch
         {
-            HardLinkInfo hard => new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, Context.File),
+            HardLinkInfo hard => new ValueTask<NativeNamedReference>(
+                new NativeNamedReference(linkMessage.LinkName, hard.HeaderAddress, Context.File)),
 
             SoftLinkInfo _ => new SymbolicLink(linkMessage, this, Context.File)
                 .GetTarget(context, linkAccess),
@@ -674,11 +789,11 @@ public class NativeGroup : NativeObject, IH5Group
         {
             ObjectHeaderScratchPad objectScratch => AddScratchPad(reference, objectScratch),
 
-            SymbolicLinkScratchPad linkScratch => new SymbolicLink(
+            SymbolicLinkScratchPad linkScratch => await new SymbolicLink(
                 name,
                 heap.GetObjectName(linkScratch.LinkValueOffset),
                 this,
-                Context.File).GetTarget(context, linkAccess),
+                Context.File).GetTarget(context, linkAccess).ConfigureAwait(false),
 
             _ when !context.Superblock.IsUndefinedAddress(entry.HeaderAddress) => reference,
 

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
@@ -61,24 +62,53 @@ public abstract class NativeObject : IH5Object
     // wins; the loser's copy is equivalent and still usable by whoever holds it. Volatile is used so
     // a reader can never observe a published-but-not-yet-initialized ObjectHeader. Before the scope
     // existed this race corrupted the cursor instead of merely duplicating work.
+    //
+    // Blocks on the async materialization when the header is not cached yet. An async caller must
+    // therefore await GetHeader() FIRST and only then touch this property: after that it is a cached
+    // field read that cannot block, which is what lets GetMessages<T>() stay synchronous all the way
+    // down instead of every message query becoming a ValueTask.
     private protected ObjectHeader Header
     {
         get
         {
             var header = Volatile.Read(ref _header);
 
-            if (header is null)
-            {
-                using var scope = new NativeOperationScope(Context);
-
-                scope.Context.Driver.SeekRelativeToBaseAddress((long)Reference.Value);
-                header = ObjectHeader.Construct(scope.Context).GetAwaiter().GetResult();
-
-                Volatile.Write(ref _header, header);
-            }
-
-            return header;
+            return header ?? MaterializeHeader().GetAwaiter().GetResult();
         }
+    }
+
+    /// <summary>
+    /// Returns this object's header, decoding it on first use.
+    /// </summary>
+    /// <remarks>
+    /// The async counterpart of <see cref="Header" />, and the reason the property above can stay
+    /// synchronous: an async operation awaits this once at its start, which populates the cache, and
+    /// every later <c>Header</c> read inside that operation is then free.
+    /// <para>
+    /// Not <c>async</c> itself, because the cached case is by far the common one - an object is
+    /// navigated more often than it is constructed - and it must not pay for a state machine.
+    /// </para>
+    /// </remarks>
+    private protected ValueTask<ObjectHeader> GetHeader()
+    {
+        var header = Volatile.Read(ref _header);
+
+        return header is null
+            ? MaterializeHeader()
+            : new ValueTask<ObjectHeader>(header);
+    }
+
+    private async ValueTask<ObjectHeader> MaterializeHeader()
+    {
+        using var scope = new NativeOperationScope(Context);
+
+        scope.Context.Driver.SeekRelativeToBaseAddress((long)Reference.Value);
+
+        var header = await ObjectHeader.Construct(scope.Context).ConfigureAwait(false);
+
+        Volatile.Write(ref _header, header);
+
+        return header;
     }
 
     #endregion
@@ -92,9 +122,20 @@ public abstract class NativeObject : IH5Object
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<IH5Attribute>> AttributesAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<IH5Attribute>> AttributesAsync(CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        // Materializes rather than streaming, because IH5Object promises Task<IEnumerable<...>> and
+        // not IAsyncEnumerable<...>. The synchronous Attributes() below stays lazy.
+        using var scope = new NativeOperationScope(Context);
+
+        var attributes = new List<IH5Attribute>();
+
+        await foreach (var attributeMessage in EnumerateAttributeMessages(scope.Context, cancellationToken))
+        {
+            attributes.Add(new NativeAttribute(Context, attributeMessage));
+        }
+
+        return attributes;
     }
 
     /// <inheritdoc />
@@ -116,9 +157,16 @@ public abstract class NativeObject : IH5Object
     }
 
     /// <inheritdoc />
-    public Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<IH5Attribute> AttributeAsync(string name, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        using var scope = new NativeOperationScope(Context);
+
+        var (success, attributeMessage) = await TryGetAttributeMessage(scope.Context, name).ConfigureAwait(false);
+
+        if (!success || attributeMessage is null)
+            throw new Exception($"Could not find attribute '{name}'.");
+
+        return new NativeAttribute(Context, attributeMessage);
     }
 
     /// <inheritdoc />
@@ -134,22 +182,27 @@ public abstract class NativeObject : IH5Object
     }
 
     /// <inheritdoc />
-    public Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default)
+    public async Task<bool> AttributeExistsAsync(string name, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        using var scope = new NativeOperationScope(Context);
+
+        var (success, _) = await TryGetAttributeMessage(scope.Context, name).ConfigureAwait(false);
+
+        return success;
     }
 
-    // NOTE (async propagation): this helper exclusively serves the synchronous
-    // public API surface (Attribute()/AttributeExists()). It must itself become
-    // async because it awaits TryGetAttributeMessageFromAttributeInfoMessage below
-    // (an `out` parameter cannot coexist with `async`, CS1988), so it now returns a
-    // tuple instead; the two public callers bridge once via GetAwaiter().GetResult().
+    // Serves BOTH public surfaces: Attribute()/AttributeExists() bridge over it, while
+    // AttributeAsync()/AttributeExistsAsync() await it. An `out` parameter cannot coexist with
+    // `async` (CS1988), hence the tuple return.
     private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessage(
         NativeReadContext context,
         string name)
     {
+        // Awaited once here so that every `Header` read below is a cached field read - see GetHeader.
+        var header = await GetHeader().ConfigureAwait(false);
+
         // get attribute from attribute message
-        var attributeMessage = Header
+        var attributeMessage = header
             .GetMessages<AttributeMessage>()
             .FirstOrDefault(message => message.Name == name);
 
@@ -161,7 +214,7 @@ public abstract class NativeObject : IH5Object
         // get attribute from attribute info
         else
         {
-            var attributeInfoMessages = Header.GetMessages<AttributeInfoMessage>();
+            var attributeInfoMessages = header.GetMessages<AttributeInfoMessage>();
 
             if (attributeInfoMessages.Any())
             {
@@ -183,14 +236,49 @@ public abstract class NativeObject : IH5Object
         return (false, null);
     }
 
+    // CONCURRENCY: an iterator, so the scope is created on the first MoveNext and disposed when the
+    // enumerator is disposed - one scope per enumeration, not one per attribute. Each returned
+    // NativeAttribute keeps the FILE-LEVEL context, because it outlives this enumeration and scopes
+    // its own reads.
+    //
+    // Drains the async core one item at a time rather than buffering it, so that the synchronous
+    // Attributes() stays as lazy as it has always been while both surfaces share one implementation.
     private IEnumerable<IH5Attribute> EnumerateAttributes()
     {
-        // CONCURRENCY: this is an iterator, so the scope is created on the first MoveNext and
-        // disposed when the enumerator is disposed - one scope per enumeration, not one per
-        // attribute. Each returned NativeAttribute keeps the FILE-LEVEL context, because it outlives
-        // this enumeration and scopes its own reads.
         using var scope = new NativeOperationScope(Context);
-        var context = scope.Context;
+
+        var enumerator = EnumerateAttributeMessages(scope.Context, CancellationToken.None)
+            .GetAsyncEnumerator();
+
+        try
+        {
+            while (enumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
+            {
+                yield return new NativeAttribute(Context, enumerator.Current);
+            }
+        }
+        finally
+        {
+            enumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+    }
+
+    /// <summary>
+    /// Enumerates this object's attribute messages, compact ones first and then dense ones.
+    /// </summary>
+    /// <remarks>
+    /// The single implementation behind both <c>Attributes()</c> and <c>AttributesAsync()</c>.
+    /// <para>
+    /// <paramref name="cancellationToken" /> is observed once per attribute. The driver reads
+    /// underneath do not take a token, so cancellation is granular to an attribute rather than to an
+    /// individual read - honest, and better than ignoring the token the public signature accepts.
+    /// </para>
+    /// </remarks>
+    private async IAsyncEnumerable<AttributeMessage> EnumerateAttributeMessages(
+        NativeReadContext context,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        var header = await GetHeader().ConfigureAwait(false);
 
         // AttributeInfoMessage is optional
         // AttributeMessage is optional
@@ -198,15 +286,15 @@ public abstract class NativeObject : IH5Object
         // => do not use "if/else"
 
         // attributes are stored compactly
-        var attributeMessages1 = Header.GetMessages<AttributeMessage>();
-
-        foreach (var attributeMessage in attributeMessages1)
+        foreach (var attributeMessage in header.GetMessages<AttributeMessage>())
         {
-            yield return new NativeAttribute(Context, attributeMessage);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            yield return attributeMessage;
         }
 
         // attributes are stored densely
-        var attributeInfoMessages = Header.GetMessages<AttributeInfoMessage>();
+        var attributeInfoMessages = header.GetMessages<AttributeInfoMessage>();
 
         if (attributeInfoMessages.Any())
         {
@@ -217,66 +305,46 @@ public abstract class NativeObject : IH5Object
 
             if (!context.Superblock.IsUndefinedAddress(attributeInfoMessage.BTree2NameIndexAddress))
             {
-                var attributeMessages2 = EnumerateAttributeMessagesFromAttributeInfoMessage(context, attributeInfoMessage);
+                var denseMessages = EnumerateAttributeMessagesFromAttributeInfoMessage(
+                    context,
+                    attributeInfoMessage,
+                    header.Address);
 
-                foreach (var attributeMessage in attributeMessages2)
+                await foreach (var attributeMessage in denseMessages)
                 {
-                    yield return new NativeAttribute(Context, attributeMessage);
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    yield return attributeMessage;
                 }
             }
         }
     }
 
-    private IEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfoMessage(
+    // Streams the b-tree records instead of draining them into a list first, which the synchronous
+    // bridge here used to require. Safe because the record walk re-seeks before decoding each node
+    // (BTree2Header.EnumerateRecords), so resolving a heap ID between two records - which does move
+    // the cursor - cannot derail it. Same shape as the link-message enumeration in NativeGroup.
+    private static async IAsyncEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfoMessage(
         NativeReadContext context,
-        AttributeInfoMessage attributeInfoMessage)
+        AttributeInfoMessage attributeInfoMessage,
+        ulong headerAddress)
     {
-        // NOTE (async propagation): AttributeInfoMessage.EnumerateNameIndexRecords()/FractalHeap()
-        // are now async (the former IAsyncEnumerable<T>, rule 8). This method must stay a
-        // synchronous iterator (see report), so both are drained/bridged synchronously.
-        var records = new List<BTree2Record08>();
+        var fractalHeap = await attributeInfoMessage.FractalHeap(context).ConfigureAwait(false);
 
-        {
-            var recordEnumerator = attributeInfoMessage
-                .EnumerateNameIndexRecords(context)
-                .GetAsyncEnumerator();
-
-            try
-            {
-                while (recordEnumerator.MoveNextAsync().AsTask().GetAwaiter().GetResult())
-                {
-                    records.Add(recordEnumerator.Current);
-                }
-            }
-            finally
-            {
-                recordEnumerator.DisposeAsync().AsTask().GetAwaiter().GetResult();
-            }
-        }
-
-        var fractalHeap = attributeInfoMessage.FractalHeap(context).GetAwaiter().GetResult();
-
-        foreach (var record in records)
+        await foreach (var record in attributeInfoMessage.EnumerateNameIndexRecords(context))
         {
             // TODO: duplicate1_of_3
             using var localDriver = new H5StreamDriver(new MemoryStream(record.HeapId), leaveOpen: false);
-            var heapId = FractalHeapId.Construct(context, localDriver, fractalHeap).GetAwaiter().GetResult();
+            var heapId = await FractalHeapId.Construct(context, localDriver, fractalHeap).ConfigureAwait(false);
 
-            var message = heapId
-                .Read(driver => AttributeMessage.Decode(context, Header.Address))
-                .GetAwaiter()
-                .GetResult();
-
-            yield return message;
+            yield return await heapId
+                .Read(driver => AttributeMessage.Decode(context, headerAddress))
+                .ConfigureAwait(false);
         }
     }
 
-    // NOTE (async propagation): this is a private helper of TryGetAttributeMessage
-    // above, not itself on the sync public API surface, so it is converted fully to
-    // async (an `out` parameter cannot coexist with `async`, CS1988 — replaced with a
-    // tuple return, matching FoundDelegate/TryFindRecord's own tuple-return shape).
-    // The comparator lambda below must also become async: BTree2Header<T>.
-    // TryFindRecord now takes Func<T, ValueTask<int>> (wave 4 addendum).
+    // `Header` is read below as a cached field: the only caller (TryGetAttributeMessage) has already
+    // awaited GetHeader(), so it cannot block here.
     private async ValueTask<(bool Success, AttributeMessage? AttributeMessage)> TryGetAttributeMessageFromAttributeInfoMessage(
         NativeReadContext context,
         AttributeInfoMessage attributeInfoMessage,

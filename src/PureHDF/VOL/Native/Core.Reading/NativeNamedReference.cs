@@ -59,37 +59,68 @@ internal struct NativeNamedReference
     /// </param>
     public readonly NativeObject Dereference(NativeReadContext operationContext)
     {
+        if (TryDereferenceWithoutReading(out var resolved))
+            return resolved;
+
+        using var scope = NativeOperationScope.ForFile(File, operationContext);
+
+        scope.Context.Driver.SeekRelativeToBaseAddress((long)Value);
+
+        // Blocks, because this serves the synchronous public surface. DereferenceAsync below is the
+        // counterpart for the async one; both share everything except this line.
+        var objectHeader = ObjectHeader.Construct(scope.Context).GetAwaiter().GetResult();
+
+        return Materialize(objectHeader);
+    }
+
+    /// <inheritdoc cref="Dereference" />
+    public readonly async ValueTask<NativeObject> DereferenceAsync(NativeReadContext operationContext)
+    {
+        if (TryDereferenceWithoutReading(out var resolved))
+            return resolved;
+
+        using var scope = NativeOperationScope.ForFile(File, operationContext);
+
+        scope.Context.Driver.SeekRelativeToBaseAddress((long)Value);
+
+        var objectHeader = await ObjectHeader.Construct(scope.Context).ConfigureAwait(false);
+
+        return Materialize(objectHeader);
+    }
+
+    // The two cases that resolve without touching the driver at all: an unresolved link, and a group
+    // whose scratch pad already carries what a NativeGroup needs.
+    private readonly bool TryDereferenceWithoutReading(out NativeObject resolved)
+    {
         if (File is null)
         {
-            return new NativeUnresolvedLink(this);
+            resolved = new NativeUnresolvedLink(this);
+            return true;
         }
 
-        else if (ScratchPad is not null)
+        if (ScratchPad is not null)
         {
-            return new NativeGroup(File.Context, this);
+            resolved = new NativeGroup(File.Context, this);
+            return true;
         }
 
-        else
+        resolved = default!;
+        return false;
+    }
+
+    // File.Context, never the operation context: the returned object outlives this operation, whose
+    // driver goes back to the slot - see the parameter documentation above.
+    private readonly NativeObject Materialize(ObjectHeader objectHeader)
+    {
+        var fileContext = File!.Context;
+
+        return objectHeader.ObjectType switch
         {
-            using var scope = NativeOperationScope.ForFile(File, operationContext);
-
-            scope.Context.Driver.SeekRelativeToBaseAddress((long)Value);
-
-            // NOTE (async propagation): ObjectHeader.Construct is now async. This
-            // method has many synchronous, non-async-aware callers (NativeGroup.cs
-            // iterates/LINQ-projects over it) and cannot itself become async, so
-            // the call is bridged here — see report.
-            var objectHeader = ObjectHeader.Construct(scope.Context).GetAwaiter().GetResult();
-            var fileContext = File.Context;
-
-            return objectHeader.ObjectType switch
-            {
-                ObjectType.Group => new NativeGroup(fileContext, this, objectHeader),
-                ObjectType.Dataset => new NativeDataset(fileContext, this, objectHeader),
-                ObjectType.CommitedDatatype => new NativeCommitedDatatype(fileContext, this, objectHeader),
-                _ => throw new Exception("Unknown object type.")
-            };
-        }
+            ObjectType.Group => new NativeGroup(fileContext, this, objectHeader),
+            ObjectType.Dataset => new NativeDataset(fileContext, this, objectHeader),
+            ObjectType.CommitedDatatype => new NativeCommitedDatatype(fileContext, this, objectHeader),
+            _ => throw new Exception("Unknown object type.")
+        };
     }
 
     #endregion
