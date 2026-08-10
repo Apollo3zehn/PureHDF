@@ -796,10 +796,10 @@ internal partial record class DatatypeMessage(
 
             buffer = buffer.Slice(globalHeapIdSize);
 
-            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+            var globalHeapCollection = await NativeCache.GetGlobalHeapObject(
                 context,
                 globalHeapId.CollectionAddress,
-                restoreAddress: true);
+                restoreAddress: true).ConfigureAwait(false);
 
             if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
             {
@@ -866,8 +866,13 @@ internal partial record class DatatypeMessage(
             //     void  *p;   /**< Pointer to VL data */
             // } hvl_t;
 
-            if (!TryReadVariableLengthHeader(context, source, out var sequenceLength, out var objectData))
+            var header = await TryReadVariableLengthHeader(context, source).ConfigureAwait(false);
+
+            if (!header.Success)
                 return default;
+
+            var sequenceLength = header.SequenceLength;
+            var objectData = header.ObjectData;
 
             var array = Array.CreateInstance(elementType, sequenceLength);
 
@@ -930,10 +935,10 @@ internal partial record class DatatypeMessage(
             if (globalHeapId.Equals(default))
                 return default;
 
-            var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+            var globalHeapCollection = await NativeCache.GetGlobalHeapObject(
                 context,
                 globalHeapId.CollectionAddress,
-                restoreAddress: true);
+                restoreAddress: true).ConfigureAwait(false);
 
             if (globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
             {
@@ -1118,43 +1123,121 @@ internal partial record class DatatypeMessage(
         return decode;
     }
 
-    private static bool TryReadVariableLengthHeader(
+    /// <summary>
+    /// The result of <see cref="TryReadVariableLengthHeader" />. <c>default</c> means "not present",
+    /// which is the two failure cases the caller treats identically.
+    /// </summary>
+    private readonly record struct VariableLengthHeader(
+        bool Success,
+        uint SequenceLength,
+        byte[] ObjectData);
+
+    // The header is a 4-byte length plus a global-heap id, and an id is an offset (at most 8 bytes)
+    // plus a 4-byte index. Anything larger than this falls to the pooled slow path rather than
+    // silently overflowing.
+    private const int MaxVariableLengthHeaderSize = sizeof(uint) + 8 + sizeof(uint);
+
+    /// <summary>
+    /// Reads the length + global-heap-id header that precedes every variable-length element and
+    /// resolves the heap object it points at.
+    /// </summary>
+    /// <remarks>
+    /// THE async blocker, now removed. This used to be synchronous with two <c>out</c> parameters,
+    /// which cannot coexist with <c>async</c> (CS1988), and it bridged both of its reads with
+    /// <c>GetAwaiter().GetResult()</c>. Since every variable-length decode goes through here, that made
+    /// the public async surface unhonourable no matter how correct the layers above it were: a
+    /// variable-length read would block on I/O regardless. The <c>out</c> parameters become a result
+    /// struct, matching the tuple-return pattern used for the same reason elsewhere in this branch.
+    /// <para>
+    /// Not <c>async</c> itself. This sits in the innermost decode loop - once per element - so the
+    /// common case must not pay for a state machine: a local source reads the header without
+    /// suspending and the heap collection is almost always already cached, in which case the whole
+    /// method completes synchronously and allocates nothing. The header also moves from a pooled buffer
+    /// to <c>stackalloc</c>, since it is at most 16 bytes.
+    /// </para>
+    /// </remarks>
+    private static ValueTask<VariableLengthHeader> TryReadVariableLengthHeader(
         NativeReadContext context,
-        IH5ReadStream source,
-        out uint sequenceLength,
-        out byte[] objectData)
+        IH5ReadStream source)
     {
         var lengthSize = sizeof(uint);
         var globalHeapIdSize = (int)context.Superblock.OffsetsSize + sizeof(uint);
         var headerSize = lengthSize + globalHeapIdSize;
 
+        if (headerSize <= MaxVariableLengthHeaderSize)
+        {
+            Span<byte> headerBuffer = stackalloc byte[MaxVariableLengthHeaderSize];
+            var header = headerBuffer[..headerSize];
+
+            if (source.TryReadDatasetSync(header))
+            {
+                var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(header);
+                var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, header[lengthSize..]);
+
+                if (globalHeapId.Equals(default))
+                    return new ValueTask<VariableLengthHeader>(default(VariableLengthHeader));
+
+                var pending = NativeCache.GetGlobalHeapObject(
+                    context,
+                    globalHeapId.CollectionAddress,
+                    restoreAddress: true);
+
+                if (pending.IsCompletedSuccessfully)
+                    return new ValueTask<VariableLengthHeader>(Resolve(pending.Result, globalHeapId, sequenceLength));
+
+                return AwaitCollection(pending, globalHeapId, sequenceLength);
+            }
+        }
+
+        return ReadSlow(context, source, headerSize, lengthSize);
+    }
+
+    private static async ValueTask<VariableLengthHeader> AwaitCollection(
+        ValueTask<GlobalHeapCollection> pending,
+        ReadingGlobalHeapId globalHeapId,
+        uint sequenceLength)
+    {
+        var collection = await pending.ConfigureAwait(false);
+
+        return Resolve(collection, globalHeapId, sequenceLength);
+    }
+
+    // The source cannot be read without suspending, so the buffer has to survive an await and cannot
+    // be a stackalloc'd Span.
+    private static async ValueTask<VariableLengthHeader> ReadSlow(
+        NativeReadContext context,
+        IH5ReadStream source,
+        int headerSize,
+        int lengthSize)
+    {
         using var memoryOwner = new ScratchBuffer<byte>(headerSize);
         var headerBuffer = memoryOwner.Memory[..headerSize];
 
-        source.ReadDataset(headerBuffer).GetAwaiter().GetResult();
+        await source.ReadDataset(headerBuffer).ConfigureAwait(false);
 
-        sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(headerBuffer.Span);
+        var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(headerBuffer.Span);
         var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, headerBuffer.Span[lengthSize..]);
 
         if (globalHeapId.Equals(default))
-        {
-            objectData = null!;
-            return false;
-        }
+            return default;
 
-        var globalHeapCollection = NativeCache.GetGlobalHeapObject(
+        var collection = await NativeCache.GetGlobalHeapObject(
             context,
             globalHeapId.CollectionAddress,
-            restoreAddress: true);
+            restoreAddress: true).ConfigureAwait(false);
 
-        if (!globalHeapCollection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
-        {
-            objectData = null!;
-            return false;
-        }
+        return Resolve(collection, globalHeapId, sequenceLength);
+    }
 
-        objectData = globalHeapObject.ObjectData;
-        return true;
+    private static VariableLengthHeader Resolve(
+        GlobalHeapCollection collection,
+        ReadingGlobalHeapId globalHeapId,
+        uint sequenceLength)
+    {
+        if (!collection.GlobalHeapObjects.TryGetValue((int)globalHeapId.ObjectIndex, out var globalHeapObject))
+            return default;
+
+        return new VariableLengthHeader(true, sequenceLength, globalHeapObject.ObjectData);
     }
 
     private static ElementDecodeDelegate BuildVariableLengthSequenceUnmanagedDecoder<TElement>(
@@ -1163,8 +1246,13 @@ internal partial record class DatatypeMessage(
     {
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
-            if (!TryReadVariableLengthHeader(context, source, out var sequenceLength, out var objectData))
+            var header = await TryReadVariableLengthHeader(context, source).ConfigureAwait(false);
+
+            if (!header.Success)
                 return default;
+
+            var sequenceLength = header.SequenceLength;
+            var objectData = header.ObjectData;
 
             var count = (int)sequenceLength;
             var result = GC.AllocateUninitializedArray<TElement>(count);

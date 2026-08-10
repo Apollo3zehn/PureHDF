@@ -158,7 +158,17 @@ internal static class NativeCache
 
     private static readonly ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
 
-    public static GlobalHeapCollection GetGlobalHeapObject(
+    /// <summary>
+    /// Returns the global heap collection at <paramref name="address" />, decoding it on a miss.
+    /// </summary>
+    /// <remarks>
+    /// Not <c>async</c>, so that a hit - the common case, since a variable-length decode resolves many
+    /// elements out of the same collection - costs a dictionary lookup and no state machine. This used
+    /// to bridge <c>GlobalHeapCollection.Decode</c> with <c>GetAwaiter().GetResult()</c>, which is one
+    /// of the reads that made the public async surface impossible to honour: a variable-length read
+    /// would block here even when every layer above it was awaiting properly.
+    /// </remarks>
+    public static ValueTask<GlobalHeapCollection> GetGlobalHeapObject(
         NativeReadContext context,
         ulong address,
         bool restoreAddress = false)
@@ -171,27 +181,34 @@ internal static class NativeCache
             context.CacheToken,
             static _ => new ConcurrentDictionary<ulong, GlobalHeapCollection>());
 
-        if (!addressToCollectionMap.TryGetValue(address, out var collection))
-        {
-            // NOTE (per-operation drivers): this seek-decode-restore is why concurrent reads of
-            // variable-length data need a driver per read operation and not merely a thread-safe
-            // cache - it moves the cursor in the middle of a dataset/attribute decode. `context`
-            // is the caller's context, so on a read path that is the operation driver.
-            var position = context.Driver.Position;
+        if (addressToCollectionMap.TryGetValue(address, out var collection))
+            return new ValueTask<GlobalHeapCollection>(collection);
 
-            context.Driver.SeekRelativeToBaseAddress((long)address);
+        return DecodeGlobalHeapObject(context, address, restoreAddress, addressToCollectionMap);
+    }
 
-            // NOTE (async propagation): GlobalHeapCollection.Decode is now async.
-            // This method is called from a constructor (H5D_Virtual) and other
-            // fully synchronous call sites with no async counterpart, and cannot
-            // itself become async, so the call is bridged here — see report.
-            collection = GlobalHeapCollection.Decode(context).GetAwaiter().GetResult();
+    private static async ValueTask<GlobalHeapCollection> DecodeGlobalHeapObject(
+        NativeReadContext context,
+        ulong address,
+        bool restoreAddress,
+        ConcurrentDictionary<ulong, GlobalHeapCollection> addressToCollectionMap)
+    {
+        // NOTE (per-operation drivers): this seek-decode-restore is why concurrent reads of
+        // variable-length data need a driver per read operation and not merely a thread-safe
+        // cache - it moves the cursor in the middle of a dataset/attribute decode. `context`
+        // is the caller's context, so on a read path that is the operation driver.
+        var position = context.Driver.Position;
 
-            addressToCollectionMap[address] = collection;
+        context.Driver.SeekRelativeToBaseAddress((long)address);
 
-            if (restoreAddress)
-                context.Driver.Seek(position, SeekOrigin.Begin);
-        }
+        var collection = await GlobalHeapCollection.Decode(context).ConfigureAwait(false);
+
+        // Prefer the installed instance, like the other caches here, so two threads missing on the
+        // same collection converge on one rather than one silently discarding its decode.
+        collection = addressToCollectionMap.GetOrAdd(address, collection);
+
+        if (restoreAddress)
+            context.Driver.Seek(position, SeekOrigin.Begin);
 
         return collection;
     }

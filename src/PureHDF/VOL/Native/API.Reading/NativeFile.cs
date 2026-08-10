@@ -225,7 +225,13 @@ public class NativeFile : NativeGroup, IDisposable
             CollectionAddress: reference.CollectionAddress,
             ObjectIndex: reference.ObjectIndex);
 
-        var globalHeapCollection = NativeCache.GetGlobalHeapObject(context, globalHeapId.CollectionAddress);
+        // NOTE (async propagation): Get(NativeRegionReference1) is synchronous public API with no
+        // async counterpart on IH5File, so it blocks here by design - the one remaining bridge on this
+        // path rather than an oversight.
+        var globalHeapCollection = NativeCache
+            .GetGlobalHeapObject(context, globalHeapId.CollectionAddress)
+            .GetAwaiter()
+            .GetResult();
         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
 
         using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
