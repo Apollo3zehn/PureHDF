@@ -34,6 +34,18 @@ internal partial class H5StreamDriver : H5DriverBase
     // field is unused.
     private long _position;
 
+    // COALESCING, in positionless mode only - see ReadAheadWindow. Non-null exactly when
+    // _datasetStream is, and for the same reason the two modes exist at all: positionless mode means
+    // a source that carries its own offsets, which in practice means a remote one where every read is
+    // a round trip. Cursor mode is taken by the in-tree MemoryStream drivers (fractal heap IDs,
+    // virtual dataset payload) and by a plain FileStream handed to H5File.Open, all of which already
+    // serve a small read out of memory - a window there would add a copy and save nothing.
+    //
+    // It also means the window is never live while WRITING, since the writer forces cursor mode. That
+    // is what excuses the absence of write invalidation here; H5StreamDriver.Writing keeps the
+    // invariant explicit.
+    private readonly ReadAheadWindow? _readAhead;
+
     /// <param name="stream">The stream to read from.</param>
     /// <param name="leaveOpen">Whether <see cref="Dispose(bool)" /> leaves the stream open.</param>
     /// <param name="allowPositionless">
@@ -55,6 +67,9 @@ internal partial class H5StreamDriver : H5DriverBase
 
         if (allowPositionless)
             _datasetStream = stream as IDatasetStream;
+
+        if (_datasetStream is not null)
+            _readAhead = new ReadAheadWindow();
     }
 
     // CONCURRENCY: see the mode note above. leaveOpen: true, because the stream belongs to the
@@ -176,16 +191,58 @@ internal partial class H5StreamDriver : H5DriverBase
     // load-bearing. ReadDataset means "this is actual data", which is what lets an implementation
     // cache these small, endlessly repeated reads while streaming bulk payload uncached. Routing
     // metadata through ReadDataset would compile and read correct bytes, and destroy that signal.
+    //
+    // Being the single funnel is also what makes one read-ahead window enough to cover the whole
+    // decode of an object header, a b-tree node or an attribute message.
     private ValueTask ReadMetadataCore(Memory<byte> buffer)
     {
         if (_datasetStream is null)
             return _stream.ReadExactlyAsyncCompat(buffer);
 
-        // Advanced before issuing the read, for the reason given in ReadDataset.
-        var offset = _position;
-        _position += buffer.Length;
+        // A hit completes synchronously and allocates nothing, which matters beyond saving the round
+        // trip: it means ReadScalar's IsCompletedSuccessfully fast path is taken, so the hundreds of
+        // per-field reads in a decode stop building state machines as well.
+        if (_readAhead!.TryServe(_position, buffer.Span))
+        {
+            _position += buffer.Length;
 
-        return _datasetStream.ReadMetadata(offset, buffer);
+            return default;
+        }
+
+        var refillLength = _readAhead.GetRefillLength(buffer.Length, _position, Length);
+
+        if (refillLength == 0)
+        {
+            // Advanced before issuing the read, for the reason given in ReadDataset.
+            var bypassOffset = _position;
+            _position += buffer.Length;
+
+            return _datasetStream.ReadMetadata(bypassOffset, buffer);
+        }
+
+        return RefillThenServe(buffer, refillLength);
+    }
+
+    // The cursor is advanced only once the refill has landed - unlike the paths above, which have no
+    // continuation in which to do it. A caller awaiting this still observes the advanced position
+    // before it can issue its next read, and a refill that throws leaves the cursor where it was.
+    private async ValueTask RefillThenServe(Memory<byte> buffer, int refillLength)
+    {
+        var offset = _position;
+        var window = _readAhead!.BeginRefill(refillLength);
+
+        await _datasetStream!.ReadMetadata(offset, window).ConfigureAwait(false);
+
+        // ReadMetadata fills its buffer completely or throws, so the window holds exactly
+        // refillLength bytes - and GetRefillLength only returns a length that covers the caller. So
+        // this cannot legitimately fail; it is checked because the failure mode of ignoring it is a
+        // silently UNFILLED buffer, which the caller would decode as uninitialized memory.
+        _readAhead.CompleteRefill(offset, window.Length);
+
+        if (!_readAhead.TryServe(offset, buffer.Span))
+            throw new Exception("The read-ahead window failed to serve a read it had just been filled for.");
+
+        _position = offset + buffer.Length;
     }
 
     // A Span cannot cross an await, so a scalar read can no longer use `stackalloc`. It does not

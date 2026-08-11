@@ -16,8 +16,9 @@ namespace PureHDF.Tests.Reading;
 /// A read COUNT alone cannot say whether it is high because a lot of structure was read or because a
 /// little structure was read a few bytes at a time, so
 /// <c>PositionlessDatasetStream.MetadataBytesRead</c> exists to tell those apart. Dividing the two is
-/// what established that the remaining cost of dense attributes is granularity rather than redundancy
-/// - see the note on that case below.
+/// what established that what remained here after the structure caches was granularity rather than
+/// redundancy, and therefore that the fix was coalescing rather than another cache - see the note on
+/// dense attributes below.
 /// <para>
 /// Every case warms up first and then measures ONE more identical call, because the interesting
 /// quantity is the marginal cost of navigating again - the first call has to decode the object
@@ -26,8 +27,16 @@ namespace PureHDF.Tests.Reading;
 /// </para>
 /// <para>
 /// The numbers below are descriptive, not normative: they document what the current implementation
-/// does so that a change which alters them has to say so out loud. The direction that matters is
-/// down for the by-name cases and unchanged for the enumeration cases.
+/// does so that a change which alters them has to say so out loud. Every case should stay flat or go
+/// down.
+/// </para>
+/// <para>
+/// WHAT THIS TEST NO LONGER PROVES. Several cases now read 0, and that costs the test some of its
+/// diagnostic power: the driver's read-ahead window holds 4 KiB, so it can cover for a structure cache
+/// that has stopped working, as long as the structure is small enough to fit. A regression in
+/// <c>NativeCache</c> would still show up on the cases that walk more than one window (children and
+/// attributes), but not necessarily on the by-name ones. Sabotaging a cache and watching a number here
+/// move is therefore no longer sufficient evidence on its own.
 /// </para>
 /// </remarks>
 [Collection(SharedHdf5StateCollection.Name)]
@@ -114,24 +123,28 @@ public class NavigationCostTests
                     return () => group.Attribute(TARGET);
                 }),
 
-            // The enumeration counterpart for the attribute path, and the most expensive navigation in
-            // the library: ~363 structural reads per attribute.
+            // The enumeration counterpart for the attribute path, and formerly the most expensive
+            // navigation in the library by a wide margin: 363,269 reads, ~363 per attribute.
             //
-            // MEASURED, so that nobody spends time looking for a missing cache here. Those reads move
-            // 1,337,781 bytes, i.e. ~3.7 bytes each - and every other case below sits at 4-5 bytes per
-            // read too. So this is not the same redundant re-decoding that the b-tree, heap and chunk
-            // index caches removed; it is READ GRANULARITY. Each primitive field of an attribute
-            // message - and each byte of its null-terminated name - is a separate call, and ~1.3 KB of
-            // genuinely distinct bytes gets fetched per attribute.
+            // WHY IT WAS THAT HIGH, and why the answer was not another cache. Those reads moved
+            // 1,337,781 bytes - ~3.7 bytes each, and every other case here sat at 4-5 bytes per read
+            // too. So it was never the redundant re-decoding that the b-tree, heap and chunk index
+            // caches removed; it was READ GRANULARITY. Each primitive field of an attribute message is
+            // a separate call, and 272 of the 484 reads in one lookup were byte-at-a-time scans of
+            // null-terminated strings (the attribute name plus the member names of its compound
+            // datatype). The bytes are genuinely distinct - every attribute carries its own inline
+            // copy of the datatype message - so no address-keyed cache could have deduplicated them.
             //
-            // No cache in the reader can improve it, and the obvious shortcut does not work: handing
-            // the decode a driver over the heap object's own bytes breaks as soon as a datatype is
-            // shared (Message.DecodeSharedMessage seeks to a different object header) or the data is
-            // variable-length (the global heap is read at an absolute address). Coalescing therefore
-            // needs a reader that serves a cached byte RANGE and falls back to the file outside it -
-            // which is what IDatasetStream's own documentation asks a remote implementation to do:
-            // "an implementation over a remote source will usually want to serve them from a cache of
-            // larger blocks". The mitigation belongs in the stream, not here.
+            // What fixed it is that those reads are CONTIGUOUS: the 484 formed just two forward runs,
+            // of 486 and 1,342 bytes. A 4 KiB read-ahead window in the driver therefore collapses the
+            // whole lookup into a couple of fetches, which is what took this to 1,042 - roughly one
+            // read per attribute, a 349x reduction. See ReadAheadWindow.
+            //
+            // One shortcut was rejected on the way: handing the decode a driver over the heap object's
+            // own bytes would collapse a lookup to ~2 reads, but it breaks as soon as a datatype is
+            // shared (Message.DecodeSharedMessage seeks to a DIFFERENT object header) or the data is
+            // variable-length (the global heap is read at an absolute address). The window has neither
+            // problem because it never redirects an address - it only remembers bytes.
             Measure("attributes, dense", H5F.libver_t.V110, AddMassAttributes,
                 root =>
                 {
@@ -148,17 +161,20 @@ public class NavigationCostTests
         }
 
         // Assert
+        //
+        // The commented figure after each case is what it cost BEFORE the driver-level read-ahead
+        // window, so that the guard also records the size of the win rather than only the new number.
         string[] expected =
         [
-            "link by name, symbol table: 32",
-            "link by name, dense: 59",
-            "link by path, symbol table: 56",
-            "link by path, dense: 95",
-            "children, symbol table: 8557",
-            "children, dense: 34156",
-            "attribute by name, dense: 359",
-            "attribute by name, dense, V110: 359",
-            "attributes, dense: 363269"
+            "link by name, symbol table: 0",        // was 32
+            "link by name, dense: 3",               // was 59
+            "link by path, symbol table: 2",        // was 56
+            "link by path, dense: 3",               // was 95
+            "children, symbol table: 139",          // was 8557
+            "children, dense: 2026",                // was 34156
+            "attribute by name, dense: 0",          // was 359
+            "attribute by name, dense, V110: 0",    // was 359
+            "attributes, dense: 1042"               // was 363269
         ];
 
         Assert.Equal(expected, actual);

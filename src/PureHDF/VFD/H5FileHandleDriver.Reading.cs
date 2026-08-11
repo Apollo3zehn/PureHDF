@@ -34,6 +34,12 @@ internal partial class H5FileHandleDriver : H5DriverBase
     private readonly SafeFileHandle _handle;
     private readonly bool _leaveOpen;
 
+    // COALESCING: RandomAccess.Read below is POSITIONAL, so it bypasses the FileStream's buffer
+    // entirely and a one-byte metadata field was a genuine pread. Reading a thousand dense
+    // attributes cost ~363,000 syscalls before this. One window per driver and a driver has one
+    // logical reader, so it needs no synchronization - see ReadAheadWindow.
+    private readonly ReadAheadWindow _readAhead = new();
+
     public H5FileHandleDriver(FileStream stream, bool leaveOpen)
     {
         _stream = stream;
@@ -110,7 +116,7 @@ internal partial class H5FileHandleDriver : H5DriverBase
     public override ValueTask<byte[]> ReadBytes(int count)
     {
         var buffer = new byte[count];
-        ReadCore(buffer);
+        ReadMetadataCore(buffer);
 
         return new ValueTask<byte[]>(buffer);
     }
@@ -135,6 +141,8 @@ internal partial class H5FileHandleDriver : H5DriverBase
         return new ValueTask<ulong>(ReadScalar<ulong>());
     }
 
+    // Bulk payload: straight into the caller's buffer, never through the read-ahead window. A chunk
+    // is large and decoded once, so buffering it would only displace the structure the window holds.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReadCore(Span<byte> buffer)
     {
@@ -146,15 +154,55 @@ internal partial class H5FileHandleDriver : H5DriverBase
         _position += count;
     }
 
+    // Every STRUCTURAL read funnels through here, which is what makes one window enough to cover the
+    // whole decode of an object header, a b-tree node or an attribute message.
+    private void ReadMetadataCore(Span<byte> buffer)
+    {
+        if (_readAhead.TryServe(_position, buffer))
+        {
+            _position += buffer.Length;
+
+            return;
+        }
+
+        var refillLength = _readAhead.GetRefillLength(buffer.Length, _position, Length);
+
+        if (refillLength == 0)
+        {
+            ReadCore(buffer);
+
+            return;
+        }
+
+        var window = _readAhead.BeginRefill(refillLength);
+        var read = RandomAccess.Read(_handle, window.Span, _position);
+
+        // A short pread is legal even away from the end of the file, so what was actually delivered
+        // becomes the window rather than what was asked for. Only a read too short to satisfy the
+        // CALLER is an error, and it is the same error ReadCore reports.
+        if (read < buffer.Length)
+            throw new Exception("The file is too small");
+
+        _readAhead.CompleteRefill(_position, read);
+
+        // The refill covers the caller by construction (GetRefillLength never returns less than
+        // `count`, and the short-read check above enforces it), so this cannot legitimately fail. It
+        // is still checked, because the failure mode of ignoring it is a silently UNFILLED buffer -
+        // the caller would decode uninitialized memory rather than see an error.
+        if (!_readAhead.TryServe(_position, buffer))
+            throw new Exception("The read-ahead window failed to serve a read it had just been filled for.");
+
+        _position += buffer.Length;
+    }
+
     // No `await` in this method, so `stackalloc` and `Unsafe.SizeOf<T>` (a JIT constant) are both
-    // available again - this is the baseline implementation, unchanged.
+    // available.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private T ReadScalar<T>() where T : unmanaged
     {
         var size = Unsafe.SizeOf<T>();
         Span<byte> buffer = stackalloc byte[size];
-        RandomAccess.Read(_handle, buffer, _position);
-        _position += size;
+        ReadMetadataCore(buffer);
 
         return MemoryMarshal.Cast<byte, T>(buffer)[0];
     }
