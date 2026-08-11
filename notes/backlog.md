@@ -53,6 +53,52 @@ by-name lookup. Most of that turned out to be a separate defect - `TryWalkPath` 
 group's own object header on every lookup, since fixed and guarded by `LinkLookupCostTests`. This
 entry is what is left after that.
 
+## A virtual dataset can only reach external sources on the local filesystem, and fails silently
+
+**Impact:** a virtual dataset read through a stream - an HTTP range-request stream, or any
+non-filesystem source - silently returns FILL VALUES for every region backed by an external source,
+instead of the data or an error. Sources inside the same file work correctly.
+
+**What happens.** `VirtualDatasetStream.GetDatasetInfoAsync` resolves each source entry like this:
+
+```csharp
+var filePath = FilePathUtils.FindExternalFileForVirtualDataset(_file.FolderPath, entry.SourceFileName, _datasetAccess);
+
+if (filePath is not null)
+{
+    var file = filePath == "."
+        ? _file                                   // same file - fine, reuses the open file
+        : await H5File.OpenReadAsync(filePath);    // external - local path only
+    ...
+}
+```
+
+`FindExternalFileForVirtualDataset` probes candidate paths with `File.Exists` and the result is opened
+by path. There is no hook to supply a stream, no URI support and nothing pluggable, so an external
+source is reachable only if it is a real file on a real filesystem.
+
+Two consequences, and the second is the dangerous one:
+
+1. `_file.FolderPath` comes from `Path.GetDirectoryName(absoluteFilePath)`, and a stream-opened file
+   passes `absoluteFilePath: string.Empty`. So for a stream-backed file, resolution has no folder to
+   search relative to and finds nothing.
+2. Not finding a source returns `null`, and the caller treats `null` exactly like "no source covers
+   this region" - it fills with the fill value. **An unreachable source is indistinguishable from a
+   legitimately empty one.** Nothing is logged and nothing throws.
+
+**What a fix looks like.** A resolution hook on `H5DatasetAccess` - something shaped like
+`Func<string, ValueTask<Stream>>?` - so a caller can serve source files from wherever they live, with
+the current `File.Exists` probing as the default. Separately, and independently useful: distinguish
+"no source mapped here" from "source mapped but unreachable", and make the latter throw or at least be
+observable rather than silently producing plausible data.
+
+**Not a blocker for the async work.** The gather itself is fully asynchronous - `ReadVirtualAsync`
+takes `Memory<T>` and awaits both source resolution and the source reads - so a virtual dataset whose
+sources live in its own file reads correctly through a suspending stream today, and that path is
+covered by `AsyncDatasetReadTests.ReadAsyncOfAVirtualDatasetWorksWhenEveryReadSuspends`. It is only
+the cross-file case that cannot work, and it cannot work for reasons that have nothing to do with
+async.
+
 ## Known defects left as found
 
 Neither is introduced by this fork; both are present in upstream v2.1.4.

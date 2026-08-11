@@ -642,31 +642,21 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         /* read virtual delegate */
-        // ReadVirtualDelegate<T> is Span-based (it is invoked from VirtualDatasetStream, itself
-        // driven by a synchronous Stream contract), while ReadCoreLevel3 takes Memory<T>. Bridge with
-        // a pooled buffer and copy out; virtual datasets are the uncommon path.
-        //
-        // KNOWN LIMITATION: this is the one bridge left on the read path, so ReadAsync of a VIRTUAL
-        // dataset still blocks on its source reads. Removing it means making the whole
-        // VirtualDatasetStream contract async, which is a Stream and therefore Span-based to its
-        // core - a separate piece of work, not a line to change here.
-        static void readVirtualDelegate(NativeDataset dataset, Span<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+        // Reads one source dataset straight into the gather buffer. This used to take a Span, which
+        // forced two things it no longer needs: a pooled scratch buffer plus a copy to bridge Span to
+        // the Memory<T> that ReadCoreLevel3 wants, and a GetAwaiter().GetResult() - so ReadAsync of a
+        // VIRTUAL dataset blocked on every source read. Both are gone now that the gather is awaitable;
+        // the destination is the caller's Memory and is written in place.
+        static ValueTask readVirtualDelegate(NativeDataset dataset, Memory<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
         {
-            using var owner = new ScratchBuffer<TElement>(destination.Length);
-            var target = owner.Memory[..destination.Length];
-
-            dataset.ReadCoreLevel3(
-                resultBuffer: target,
+            return dataset.ReadCoreLevel3(
+                resultBuffer: destination,
                 fileSelection: fileSelection,
                 memorySelection: new HyperslabSelection(0, (ulong)destination.Length),
                 fileDims: dataset.InternalDataspace.GetDims(),
                 memoryDims: [(ulong)destination.Length],
                 isRawMode: false,
-                datasetAccess: datasetAccess)
-                .GetAwaiter()
-                .GetResult();
-
-            target.Span.CopyTo(destination);
+                datasetAccess: datasetAccess);
         }
 
         /* dataset info */

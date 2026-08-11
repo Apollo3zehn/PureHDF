@@ -17,8 +17,9 @@ namespace PureHDF.Tests.Reading;
 /// different ways, and only one of them reads while doing so: compact data is already in the object
 /// header, contiguous data only needs the driver positioned, a chunk index has to be consulted and the
 /// chunk itself fetched (and possibly decompressed), and a virtual dataset delegates to other
-/// datasets. That last one is the documented exception - see
-/// <see cref="ReadAsyncOfAVirtualDatasetStillMatches" />.
+/// datasets. That last one used to be the documented exception, because its gather was
+/// <c>Span</c>-based and therefore blocked; it no longer is - see
+/// <see cref="ReadAsyncOfAVirtualDatasetWorksWhenEveryReadSuspends" />.
 /// </para>
 /// <para>
 /// WHAT THESE TESTS DO NOT PROVE: that the async path never blocks - see the same note on
@@ -120,13 +121,16 @@ public class AsyncDatasetReadTests
     }
 
     /// <summary>
-    /// A virtual dataset still produces the right answer, but its source reads block: the delegate it
-    /// drives comes from a <see cref="Stream" /> contract and is <c>Span</c>-based, which cannot cross
-    /// an await. That is the one bridge left on the read path and it is asserted here only for
-    /// correctness, not for non-blocking behavior.
+    /// A virtual dataset gathers from other datasets, and the gather is awaited rather than blocked on.
     /// </summary>
+    /// <remarks>
+    /// The expected values are worth reading: the trailing <c>-1</c> pair is the FILL VALUE, for a
+    /// virtual region no source covers. That is also what an unresolvable source produces, which is the
+    /// silent-failure mode recorded in notes/backlog.md - so this asserts the gather and the fill
+    /// fallback in one.
+    /// </remarks>
     [Fact]
-    public async Task ReadAsyncOfAVirtualDatasetStillMatches()
+    public async Task ReadAsyncOfAVirtualDatasetGathersFromItsSources()
     {
         // Arrange
         var filePath = TestUtils.PrepareTestFile(
@@ -135,6 +139,36 @@ public class AsyncDatasetReadTests
 
         using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: false);
         var dataset = root.Dataset("vds");
+        var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
+
+        // Act
+        var actual = await dataset.ReadAsync<int[]>(selection);
+
+        // Assert
+        Assert.Equal<int[]>([2, 3, 17, 8, 21, 25, -1, -1], actual);
+    }
+
+    /// <summary>
+    /// The same gather with every read of the file suspended.
+    /// </summary>
+    /// <remarks>
+    /// This is the test the previous shape of the code could not have passed for the right reason: the
+    /// gather used to block on each source read, so a source in the same file would have been read
+    /// synchronously from a stream that only completes on the thread pool. Note the sources here live in
+    /// the SAME file - an external source is resolved by local filesystem path and cannot be reached
+    /// through a stream at all, which is the limitation in notes/backlog.md.
+    /// </remarks>
+    [Fact]
+    public async Task ReadAsyncOfAVirtualDatasetWorksWhenEveryReadSuspends()
+    {
+        // Arrange
+        var filePath = TestUtils.PrepareTestFile(
+            H5F.libver_t.V110,
+            fileId => TestUtils.AddVirtualDataset(fileId, "virtual"));
+
+        using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: true);
+        using var root = await H5File.OpenAsync(stream, leaveOpen: true);
+        var dataset = await root.DatasetAsync("vds");
         var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
 
         // Act

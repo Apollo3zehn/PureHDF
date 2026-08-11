@@ -356,8 +356,8 @@ internal static class SelectionHelper
                 {
                     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
 
-                    virtualDatasetStream.ReadVirtual(
-                        currentTarget[..targetLength].Span);
+                    await virtualDatasetStream.ReadVirtualAsync(
+                        currentTarget[..targetLength]).ConfigureAwait(false);
                 }
 
                 currentOffset += length;
