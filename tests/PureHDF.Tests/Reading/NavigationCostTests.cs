@@ -13,6 +13,12 @@ namespace PureHDF.Tests.Reading;
 /// this work a benchmark difference that looked real turned out to be governor drift. So the guard
 /// that protects this behavior counts reads.
 /// <para>
+/// A read COUNT alone cannot say whether it is high because a lot of structure was read or because a
+/// little structure was read a few bytes at a time, so
+/// <c>PositionlessDatasetStream.MetadataBytesRead</c> exists to tell those apart. Dividing the two is
+/// what established that the remaining cost of dense attributes is granularity rather than redundancy
+/// - see the note on that case below.
+/// <para>
 /// Every case warms up first and then measures ONE more identical call, because the interesting
 /// quantity is the marginal cost of navigating again - the first call has to decode the object
 /// header regardless, and no caching can remove that. What a cache removes is the second call's
@@ -108,10 +114,24 @@ public class NavigationCostTests
                     return () => group.Attribute(TARGET);
                 }),
 
-            // The enumeration counterpart for the attribute path. Note the magnitude: enumerating 1000
-            // dense attributes still costs ~363k structural reads, ~363 per attribute, by far the most
-            // expensive navigation in the library. That is a pre-existing cost, only partly addressed
-            // here, and it is recorded mainly so the size of it is on the record.
+            // The enumeration counterpart for the attribute path, and the most expensive navigation in
+            // the library: ~363 structural reads per attribute.
+            //
+            // MEASURED, so that nobody spends time looking for a missing cache here. Those reads move
+            // 1,337,781 bytes, i.e. ~3.7 bytes each - and every other case below sits at 4-5 bytes per
+            // read too. So this is not the same redundant re-decoding that the b-tree, heap and chunk
+            // index caches removed; it is READ GRANULARITY. Each primitive field of an attribute
+            // message - and each byte of its null-terminated name - is a separate call, and ~1.3 KB of
+            // genuinely distinct bytes gets fetched per attribute.
+            //
+            // No cache in the reader can improve it, and the obvious shortcut does not work: handing
+            // the decode a driver over the heap object's own bytes breaks as soon as a datatype is
+            // shared (Message.DecodeSharedMessage seeks to a different object header) or the data is
+            // variable-length (the global heap is read at an absolute address). Coalescing therefore
+            // needs a reader that serves a cached byte RANGE and falls back to the file outside it -
+            // which is what IDatasetStream's own documentation asks a remote implementation to do:
+            // "an implementation over a remote source will usually want to serve them from a cache of
+            // larger blocks". The mitigation belongs in the stream, not here.
             Measure("attributes, dense", H5F.libver_t.V110, AddMassAttributes,
                 root =>
                 {

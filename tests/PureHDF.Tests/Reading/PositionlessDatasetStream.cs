@@ -26,6 +26,7 @@ internal sealed class PositionlessDatasetStream : Stream, IDatasetStream
     private readonly bool _suspend;
     private int _datasetReadCount;
     private int _metadataReadCount;
+    private long _metadataBytesRead;
 
     public PositionlessDatasetStream(byte[] data, bool suspend)
     {
@@ -38,6 +39,13 @@ internal sealed class PositionlessDatasetStream : Stream, IDatasetStream
     public int MetadataReadCount => Volatile.Read(ref _metadataReadCount);
 
     /// <summary>
+    /// Total bytes served through <see cref="ReadMetadata" />, so that a caller can tell a read count
+    /// that is high because a lot of structure was read from one that is high because the same
+    /// structure was read a few bytes at a time.
+    /// </summary>
+    public long MetadataBytesRead => Volatile.Read(ref _metadataBytesRead);
+
+    /// <summary>
     /// Zeroes both counters, so that a caller can measure one isolated operation after warming up
     /// whatever it does not want to measure.
     /// </summary>
@@ -45,6 +53,7 @@ internal sealed class PositionlessDatasetStream : Stream, IDatasetStream
     {
         Volatile.Write(ref _datasetReadCount, 0);
         Volatile.Write(ref _metadataReadCount, 0);
+        Volatile.Write(ref _metadataBytesRead, 0);
     }
 
     public ValueTask ReadDataset(long offset, Memory<byte> buffer)
@@ -57,6 +66,7 @@ internal sealed class PositionlessDatasetStream : Stream, IDatasetStream
     public ValueTask ReadMetadata(long offset, Memory<byte> buffer)
     {
         Interlocked.Increment(ref _metadataReadCount);
+        Interlocked.Add(ref _metadataBytesRead, buffer.Length);
 
         return ReadCore(offset, buffer);
     }
