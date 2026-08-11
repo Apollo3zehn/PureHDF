@@ -8,7 +8,7 @@ internal static class NativeCache
 
     static NativeCache()
     {
-        _globalHeapMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<ulong, GlobalHeapCollection>>();
+        _globalHeapMap = new ConcurrentDictionary<NativeCacheToken, BoundedAddressCache<GlobalHeapCollection>>();
         _fileMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<string, NativeFile>>();
         _structureMap = new ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<(Type, ulong), object>>();
     }
@@ -156,7 +156,12 @@ internal static class NativeCache
 
     #region Global Heap
 
-    private static readonly ConcurrentDictionary<NativeCacheToken, ConcurrentDictionary<ulong, GlobalHeapCollection>> _globalHeapMap;
+    // BOUNDED, and by BYTES rather than by entry count: a collection holds decoded variable-length
+    // payload, so this was the one cache in the reader whose footprint grew with how much data had been
+    // read and was released only when the file closed. A collection is at least 4 KiB with no upper
+    // bound - a single large value gets one to itself - so counting them would have bounded nothing.
+    // See BoundedAddressCache.
+    private static readonly ConcurrentDictionary<NativeCacheToken, BoundedAddressCache<GlobalHeapCollection>> _globalHeapMap;
 
     /// <summary>
     /// Returns the global heap collection at <paramref name="address" />, decoding it on a miss.
@@ -177,9 +182,12 @@ internal static class NativeCache
         // when two threads both miss on the same token, the first-installed map wins and
         // is shared by both, instead of one thread's map (and anything decoded into it)
         // being silently discarded.
+        // The budget comes from the caller's read options, so a process holding many files open can
+        // cap what all of them together retain - the cache is per file.
         var addressToCollectionMap = _globalHeapMap.GetOrAdd(
             context.CacheToken,
-            static _ => new ConcurrentDictionary<ulong, GlobalHeapCollection>());
+            static (_, budget) => new BoundedAddressCache<GlobalHeapCollection>(budget),
+            context.ReadOptions.GlobalHeapCacheByteBudget);
 
         if (addressToCollectionMap.TryGetValue(address, out var collection))
             return new ValueTask<GlobalHeapCollection>(collection);
@@ -191,7 +199,7 @@ internal static class NativeCache
         NativeReadContext context,
         ulong address,
         bool restoreAddress,
-        ConcurrentDictionary<ulong, GlobalHeapCollection> addressToCollectionMap)
+        BoundedAddressCache<GlobalHeapCollection> addressToCollectionMap)
     {
         // NOTE (per-operation drivers): this seek-decode-restore is why concurrent reads of
         // variable-length data need a driver per read operation and not merely a thread-safe
@@ -205,7 +213,10 @@ internal static class NativeCache
 
         // Prefer the installed instance, like the other caches here, so two threads missing on the
         // same collection converge on one rather than one silently discarding its decode.
-        collection = addressToCollectionMap.GetOrAdd(address, collection);
+        //
+        // CollectionSize is the on-disk size of the collection, which is what its decoded objects add
+        // up to bar per-object overhead - the right cost to charge the byte budget.
+        collection = addressToCollectionMap.GetOrAdd(address, collection, (long)collection.CollectionSize);
 
         if (restoreAddress)
             context.Driver.Seek(position, SeekOrigin.Begin);
