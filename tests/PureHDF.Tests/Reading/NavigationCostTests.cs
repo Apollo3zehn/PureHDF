@@ -167,7 +167,13 @@ public class NavigationCostTests
         string[] expected =
         [
             "link by name, symbol table: 0",        // was 32
-            "link by name, dense: 3",               // was 59
+            // 3 until TryWalkPath stopped dereferencing the group it was called on. Only one read,
+            // because every file here is written by the HDF5 C library, which stores 1000 links
+            // DENSELY - so the group's own object header is small and re-decoding it was cheap. The
+            // same defect costs 30 KB per lookup on a group that stores its links compactly, which is
+            // what PureHDF's own writer always produces; that case is guarded by LinkLookupCostTests
+            // instead, because no file here has that shape.
+            "link by name, dense: 2",               // was 59
             "link by path, symbol table: 2",        // was 56
             "link by path, dense: 3",               // was 95
             "children, symbol table: 139",          // was 8557
