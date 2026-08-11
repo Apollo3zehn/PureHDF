@@ -16,7 +16,12 @@ public class NativeAttribute : IH5Attribute
 
 	// Delegate type for reads, including an instance parameter.
     // Statically cached keyed by (TResult, TElement).
-    private delegate TResult? ReaderDelegate<TResult>(
+    //
+    // Returns an awaitable, so that ONE reader serves both Read and ReadAsync: the synchronous
+    // overloads block on it at the public boundary, the asynchronous ones await it. Same shape as
+    // NativeDataset.ReaderDelegate and for the same reason - the alternative is a second copy of the
+    // decode pipeline.
+    private delegate ValueTask<TResult?> ReaderDelegate<TResult>(
         NativeAttribute @this,
         TResult? buffer,
         IH5ReadStream source,
@@ -102,7 +107,12 @@ public class NativeAttribute : IH5Attribute
         var reader = GetReader<T>(elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        return reader(this, buffer: default, source, memoryDims)!;
+        // Blocks once, at the public boundary. ReadAsync below runs the same reader and awaits it.
+        // For a fixed-size attribute there is nothing to block ON - the bytes are already in
+        // Message.InputData - so this returns without ever suspending.
+        return reader(this, buffer: default, source, memoryDims)
+            .GetAwaiter()
+            .GetResult()!;
     }
 
     /// <inheritdoc />
@@ -114,7 +124,44 @@ public class NativeAttribute : IH5Attribute
         var reader = GetReader<T>(elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        reader(this, buffer, source, memoryDims);
+        reader(this, buffer, source, memoryDims)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <inheritdoc />
+    public async Task<T> ReadAsync<T>(
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only: the decode pipeline does not thread a token through, so this
+        // cancels before work starts rather than interrupting a read in flight. A caller passing an
+        // already-cancelled token must not get a completed read back regardless.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
+        var source = new SystemMemoryStream(Message.InputData);
+
+        return (await reader(this, buffer: default, source, memoryDims).ConfigureAwait(false))!;
+    }
+
+    /// <inheritdoc />
+    public async Task ReadAsync<T>(
+        T buffer,
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only: the decode pipeline does not thread a token through, so this
+        // cancels before work starts rather than interrupting a read in flight. A caller passing an
+        // already-cancelled token must not get a completed read back regardless.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
+        var source = new SystemMemoryStream(Message.InputData);
+
+        await reader(this, buffer, source, memoryDims).ConfigureAwait(false);
     }
 
     /* This overload is required because Span<T> is not allowed as generic argument and
@@ -142,7 +189,7 @@ public class NativeAttribute : IH5Attribute
         );
     }
 
-    private TResult? ReadCoreLevel1_generic<TResult, TElement>(
+    private async ValueTask<TResult?> ReadCoreLevel1_generic<TResult, TElement>(
         TResult? buffer,
         IH5ReadStream source,
         ulong[]? memoryDims = null)
@@ -196,7 +243,11 @@ public class NativeAttribute : IH5Attribute
             resultBuffer = resultMemoryBuffer;
         }
 
-        ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer);
+        // The operation scope above is held across this await, which is safe because it is
+        // per-OPERATION and not per-thread: the driver it owns belongs to this read alone, so a
+        // continuation resuming on another thread still has exclusive use of it.
+        await ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer)
+            .ConfigureAwait(false);
 
         /* return */
         return resultArray is null
@@ -237,12 +288,19 @@ public class NativeAttribute : IH5Attribute
 
         buffer.CopyTo(resultBuffer.Span);
 
-        ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer);
+        // BLOCKS, and cannot do otherwise: this overload takes a Span, which is a ref struct and so
+        // cannot live across an await (CS4012), which rules out an async counterpart for it. There is
+        // therefore no async form of Read<T>(Span<T>) on the public surface, and a caller on a host that
+        // cannot block must use one of the array/Memory overloads via ReadAsync instead. Harmless for a
+        // fixed-size attribute, which never suspends; a variable-length one really would block here.
+        ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer)
+            .GetAwaiter()
+            .GetResult();
 
         resultBuffer.Span.CopyTo(buffer);
     }
 
-    private static void ReadCoreLevel2<TElement>(
+    private static ValueTask ReadCoreLevel2<TElement>(
         NativeReadContext context,
         IH5ReadStream source,
         ulong[] memoryDims,
@@ -258,9 +316,11 @@ public class NativeAttribute : IH5Attribute
             throw new Exception("The total file element count does not match the total memory element count.");
 
         /* decode */
-        // SYNC SURFACE: NativeAttribute.Read<T> is synchronous public API (IH5Attribute.Read);
-        // AttributeAsync/ReadAsync is the non-blocking entry point.
-        decoder(context, source, resultBuffer).GetAwaiter().GetResult();
+        // Not `async`: for a fixed-size attribute the decoder reads only from `source`, a memory stream
+        // over bytes already held in the object header, so it completes synchronously and no state
+        // machine is built. A variable-length or reference datatype is the case that genuinely
+        // suspends - it resolves global heap IDs through the driver.
+        return decoder(context, source, resultBuffer);
     }
 
     private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>(

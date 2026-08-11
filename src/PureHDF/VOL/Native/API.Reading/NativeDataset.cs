@@ -361,6 +361,11 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = default,
         CancellationToken cancellationToken = default)
     {
+        // Honored at the boundary only. The decode pipeline below does not thread a token through, so
+        // this cancels before work starts rather than interrupting a read in flight - but a caller
+        // passing an already-cancelled token must not get a completed read back.
+        cancellationToken.ThrowIfCancellationRequested();
+
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
         var reader = GetReader<T>(elementType);
 
@@ -409,6 +414,11 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = default,
         CancellationToken cancellationToken = default)
     {
+        // Honored at the boundary only. The decode pipeline below does not thread a token through, so
+        // this cancels before work starts rather than interrupting a read in flight - but a caller
+        // passing an already-cancelled token must not get a completed read back.
+        cancellationToken.ThrowIfCancellationRequested();
+
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
         var reader = GetReader<T>(elementType);
 
