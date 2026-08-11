@@ -210,12 +210,41 @@ public class NativeFile : NativeGroup, IDisposable
     /// <returns>The requested selection.</returns>
     public Selection Get(NativeRegionReference1 reference)
     {
+        // Blocks once, at the public boundary. GetAsync below runs the same core and awaits it.
+        return GetRegionSelection(reference)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <summary>
+    /// Gets the file selection that is referenced by the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the region.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the requested selection.</returns>
+    /// <remarks>
+    /// Resolving a region reference reads the global heap collection the reference points into, so this
+    /// genuinely suspends on a source that cannot be read synchronously - which is why the synchronous
+    /// <see cref="Get(NativeRegionReference1)"/> cannot serve one there.
+    /// </remarks>
+    public Task<Selection> GetAsync(NativeRegionReference1 reference, CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only, as elsewhere on this surface: the decode below does not thread
+        // a token through.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return GetRegionSelection(reference).AsTask();
+    }
+
+    private async ValueTask<Selection> GetRegionSelection(NativeRegionReference1 reference)
+    {
         if (reference.Equals(default))
             throw new Exception("The reference is invalid");
 
         // CONCURRENCY: resolving a region reference seeks and reads the driver (GetGlobalHeapObject
         // does so as a side effect), so it takes a scope of its own rather than moving the shared
-        // file-level cursor.
+        // file-level cursor. The scope is held across the awaits below, which is safe because it is
+        // per-OPERATION rather than per-thread.
         using var scope = new NativeOperationScope(Context);
         var context = scope.Context;
 
@@ -225,20 +254,24 @@ public class NativeFile : NativeGroup, IDisposable
             CollectionAddress: reference.CollectionAddress,
             ObjectIndex: reference.ObjectIndex);
 
-        // NOTE (async propagation): Get(NativeRegionReference1) is synchronous public API with no
-        // async counterpart on IH5File, so it blocks here by design - the one remaining bridge on this
-        // path rather than an oversight.
-        var globalHeapCollection = NativeCache
+        // The only read here that can actually suspend: it fetches the collection from the file. The two
+        // decodes below run against a MemoryStream over bytes this already produced.
+        var globalHeapCollection = await NativeCache
             .GetGlobalHeapObject(context, globalHeapId.CollectionAddress)
-            .GetAwaiter()
-            .GetResult();
+            .ConfigureAwait(false);
+
         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
 
         using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-        var address = context.Superblock.ReadOffset(localDriver).GetAwaiter().GetResult();
-        var dataspaceSelection = DataspaceSelection.Decode(localDriver).GetAwaiter().GetResult();
 
-        Selection selection = dataspaceSelection.Info switch
+        // Discarded on purpose: the region reference's object data begins with the address of the
+        // dataset the selection applies to, and this read is here to step the cursor past it. The
+        // caller gets the selection alone, so the address itself is not needed.
+        _ = await context.Superblock.ReadOffset(localDriver).ConfigureAwait(false);
+
+        var dataspaceSelection = await DataspaceSelection.Decode(localDriver).ConfigureAwait(false);
+
+        return dataspaceSelection.Info switch
         {
             H5S_SEL_NONE none => new NoneSelection(),
             H5S_SEL_POINTS points => new PointSelection(points.PointData),
@@ -251,8 +284,6 @@ public class NativeFile : NativeGroup, IDisposable
             H5S_SEL_ALL all => new AllSelection(),
             _ => throw new NotSupportedException($"The dataspace selection type '{dataspaceSelection.Info.GetType().FullName}' is not supported.")
         };
-
-        return selection;
     }
 
     #endregion
