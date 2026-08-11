@@ -178,7 +178,22 @@ public class NavigationCostTests
 
             MeasureRead("chunk index, extensible array", H5F.libver_t.LATEST,
                 fileId => TestUtils.AddChunkedDataset_Extensible_Array_Elements(fileId, withShuffle: false),
-                "chunked/chunked_extensible_array_elements")
+                "chunked/chunked_extensible_array_elements"),
+
+            // The PAGED forms, which reach the layers below the index block - data block pages,
+            // secondary blocks - and so are the cases that exercise the bounded caches those layers
+            // now live in rather than only the cached index block itself.
+            MeasureRead("chunk index, fixed array, paged", H5F.libver_t.LATEST,
+                fileId => TestUtils.AddChunkedDataset_Fixed_Array_Paged(fileId, withShuffle: false),
+                "chunked/chunked_fixed_array_paged"),
+
+            MeasureRead("chunk index, extensible array, data blocks", H5F.libver_t.LATEST,
+                fileId => TestUtils.AddChunkedDataset_Extensible_Array_Data_Blocks(fileId, withShuffle: false),
+                "chunked/chunked_extensible_array_data_blocks"),
+
+            MeasureRead("chunk index, extensible array, secondary blocks", H5F.libver_t.LATEST,
+                fileId => TestUtils.AddChunkedDataset_Extensible_Array_Secondary_Blocks(fileId, withShuffle: false),
+                "chunked/chunked_extensible_array_secondary_blocks")
         };
 
         foreach (var measurement in actual)
@@ -188,16 +203,19 @@ public class NavigationCostTests
 
         // Assert
         //
-        // Both b-tree forms reach zero: a repeated read of a chunked dataset now decodes no structural
-        // bytes at all. The two array forms only got partway, because only their HEADER is cached -
-        // their index and data blocks are still decoded per chunk lookup, which is the same kind of
-        // gap the b-tree leaf node was.
+        // Every chunk index form reaches zero: a repeated read of a chunked dataset decodes no
+        // structural bytes at all. The two array forms used to cost 11 and 62 because only their HEADER
+        // was cached and everything below it - index block, data block, pages, secondary blocks - was
+        // re-decoded per read, which was the same kind of gap the b-tree leaf node had been.
         string[] expected =
         [
             "chunk index, b-tree v1: 0",
             "chunk index, b-tree v2: 0",
-            "chunk index, fixed array: 11",
-            "chunk index, extensible array: 62"
+            "chunk index, fixed array: 0",
+            "chunk index, extensible array: 0",
+            "chunk index, fixed array, paged: 0",
+            "chunk index, extensible array, data blocks: 0",
+            "chunk index, extensible array, secondary blocks: 0"
         ];
 
         Assert.Equal(expected, actual);
