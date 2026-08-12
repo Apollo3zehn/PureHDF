@@ -4,6 +4,47 @@ namespace PureHDF.Tests;
 
 public partial class TestUtils
 {
+    /// <summary>
+    /// A virtual dataset whose source lives in the SAME file, i.e. a source file name of ".".
+    /// </summary>
+    /// <remarks>
+    /// Distinct from <see cref="AddVirtualDataset" />, whose sources are separate .h5 files written as
+    /// bare relative paths into the process working directory - those are resolved by probing the local
+    /// filesystem, so that fixture cannot say anything about reading a virtual dataset through a stream.
+    /// "." is short-circuited before any filesystem probing, which is the only virtual-source form that
+    /// can work over a remote or in-memory source.
+    /// </remarks>
+    public static unsafe void AddVirtualDatasetSameFile(long fileId, string datasetName)
+    {
+        // The source, in this same file.
+        var sourceData = Enumerable.Range(0, 10).ToArray();
+        Add(ContainerType.Dataset, fileId, "vds_same", "source", H5T.NATIVE_INT32, sourceData.AsSpan());
+
+        // 20 virtual elements, of which only the first 10 are mapped - the rest must come out as the
+        // fill value, so this covers the mapped and unmapped paths in one read.
+        var vspaceId = H5S.create_simple(1, [20], [20]);
+        var dcpl_id = H5P.create(H5P.DATASET_CREATE);
+
+        unsafe
+        {
+            var value = -1;
+            _ = H5P.set_fill_value(dcpl_id, H5T.NATIVE_INT32, new IntPtr(&value));
+        }
+
+        var sourceSpaceId = H5S.create_simple(1, [10], [10]);
+
+        _ = H5S.select_hyperslab(vspaceId, H5S.seloper_t.SET, [0], [1], [10], [1]);
+        _ = H5S.select_hyperslab(sourceSpaceId, H5S.seloper_t.SET, [0], [1], [10], [1]);
+        _ = H5P.set_virtual(dcpl_id, vspaceId, ".", "/vds_same/source", sourceSpaceId);
+
+        var datasetId = H5D.create(fileId, datasetName, H5T.NATIVE_INT32, vspaceId, dcpl_id: dcpl_id);
+
+        _ = H5S.close(sourceSpaceId);
+        _ = H5S.close(vspaceId);
+        _ = H5D.close(datasetId);
+        _ = H5P.close(dcpl_id);
+    }
+
     public static unsafe void AddVirtualDataset(long fileId, string datasetName)
     {
         // see VirtualMapping.ods for a visualization

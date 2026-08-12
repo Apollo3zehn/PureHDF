@@ -124,10 +124,16 @@ public class AsyncDatasetReadTests
     /// A virtual dataset gathers from other datasets, and the gather is awaited rather than blocked on.
     /// </summary>
     /// <remarks>
-    /// The expected values are worth reading: the trailing <c>-1</c> pair is the FILL VALUE, for a
-    /// virtual region no source covers. That is also what an unresolvable source produces, which is the
-    /// silent-failure mode recorded in notes/backlog.md - so this asserts the gather and the fill
-    /// fallback in one.
+    /// The trailing <c>-1</c> pair is the fill value. Note WHY: the fixture maps a third source file
+    /// and deliberately never creates it, so that pair is an UNRESOLVABLE source rather than an
+    /// unmapped region. The two are indistinguishable here, which is the point - an unreachable source
+    /// silently produces plausible data.
+    /// <para>
+    /// The other two sources are separate .h5 files written as bare relative paths into the process
+    /// working directory, so they resolve by probing the local filesystem. That makes this test
+    /// filesystem-dependent, and it says nothing about reading a virtual dataset from a non-filesystem
+    /// source - see <see cref="VirtualDatasetSameFileTests" /> for the case that does.
+    /// </para>
     /// </remarks>
     [Fact]
     public async Task ReadAsyncOfAVirtualDatasetGathersFromItsSources()
@@ -153,10 +159,13 @@ public class AsyncDatasetReadTests
     /// </summary>
     /// <remarks>
     /// This is the test the previous shape of the code could not have passed for the right reason: the
-    /// gather used to block on each source read, so a source in the same file would have been read
-    /// synchronously from a stream that only completes on the thread pool. Note the sources here live in
-    /// the SAME file - an external source is resolved by local filesystem path and cannot be reached
-    /// through a stream at all, which is the limitation in notes/backlog.md.
+    /// gather used to block on each source read.
+    /// <para>
+    /// What it does NOT show is a virtual dataset read entirely through the stream. The sources here are
+    /// external files, resolved off the local filesystem and opened by path, so only the virtual
+    /// dataset's own metadata comes through the suspending stream. <see cref="VirtualDatasetSameFileTests" />
+    /// covers the same-file case, which is the one that works without a filesystem.
+    /// </para>
     /// </remarks>
     [Fact]
     public async Task ReadAsyncOfAVirtualDatasetWorksWhenEveryReadSuspends()
