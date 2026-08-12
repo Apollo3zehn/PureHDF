@@ -16,6 +16,16 @@ public class SimpleReadingChunkCache : IReadingChunkCache
 
     private readonly Dictionary<ulong, ReadingChunkInfo> _chunkInfoMap = new();
 
+    // A caller may share one cache across concurrent reads by passing it via
+    // H5DatasetAccess.ChunkCache, and _chunkInfoMap plus the ConsumedBytes accounting were otherwise
+    // mutated with no synchronization. The default path never shares a cache - the default factory
+    // builds one per read - so this only ever bit callers who opted in, and it bit them silently.
+    //
+    // A lock is affordable here because of what it guards: a miss costs a chunk read and usually
+    // decompression, orders of magnitude more than the lock itself. It is deliberately NOT held
+    // across chunkReader() - see GetChunk.
+    private readonly object _lock = new();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SimpleReadingChunkCache"/> class.
     /// </summary>
@@ -41,7 +51,18 @@ public class SimpleReadingChunkCache : IReadingChunkCache
     /// <summary>
     /// Gets the number of chunk slots that have already been consumed.
     /// </summary>
-    public int ConsumedSlots => _chunkInfoMap.Count;
+    public int ConsumedSlots
+    {
+        get
+        {
+            // Reading Dictionary.Count while another reader mutates the dictionary is not safe, so
+            // this observation is synchronized too - it is a diagnostic, never on the read path.
+            lock (_lock)
+            {
+                return _chunkInfoMap.Count;
+            }
+        }
+    }
 
     /// <summary>
     /// Gets the maximum size of the chunk cache in bytes.
@@ -54,19 +75,46 @@ public class SimpleReadingChunkCache : IReadingChunkCache
     public ulong ConsumedBytes { get; private set; }
 
     /// <inheritdoc />
+    /// <remarks>
+    ///     Safe to call concurrently. The lock is released around <paramref name="chunkReader" />:
+    ///     holding it across a chunk read (I/O plus decompression) would serialize every reader
+    ///     sharing this cache and so defeat the point of reading in parallel. The cost is that two
+    ///     readers missing on the same chunk at the same time both decode it and one result is
+    ///     discarded - wasted work, never incorrect.
+    ///     <para>
+    ///         Evicting a chunk another reader is still decoding from is likewise safe, but only
+    ///         because cached chunks are plain GC-allocated arrays (see H5D_Chunk.ReadChunk and
+    ///         H5Filter.ExecutePipeline): eviction drops a reference, and the holder's Memory keeps
+    ///         the array alive. Pooling cached chunks would break that, and a lock would then no
+    ///         longer be sufficient.
+    ///     </para>
+    /// </remarks>
     public Memory<byte> GetChunk(ulong chunkIndex, Func<Memory<byte>> chunkReader)
     {
-        if (_chunkInfoMap.TryGetValue(chunkIndex, out var chunkInfo))
+        lock (_lock)
         {
-            chunkInfo.LastAccess = Environment.TickCount64;
+            if (_chunkInfoMap.TryGetValue(chunkIndex, out var cached))
+            {
+                cached.LastAccess = Environment.TickCount64;
+
+                return cached.Chunk;
+            }
         }
 
-        else
+        var buffer = chunkReader();
+
+        lock (_lock)
         {
-            var buffer = chunkReader();
+            // Another reader may have installed this chunk while we were decoding it. Prefer the
+            // installed one, so every reader observes the same buffer for a given index.
+            if (_chunkInfoMap.TryGetValue(chunkIndex, out var installed))
+            {
+                installed.LastAccess = Environment.TickCount64;
 
-            chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = Environment.TickCount64 };
+                return installed.Chunk;
+            }
 
+            var chunkInfo = new ReadingChunkInfo(buffer) { LastAccess = Environment.TickCount64 };
             var chunk = chunkInfo.Chunk;
 
             if ((ulong)chunk.Length <= ByteCount)
@@ -79,9 +127,9 @@ public class SimpleReadingChunkCache : IReadingChunkCache
                 ConsumedBytes += (ulong)chunk.Length;
                 _chunkInfoMap[chunkIndex] = chunkInfo;
             }
-        }
 
-        return chunkInfo.Chunk;
+            return chunk;
+        }
     }
 
     private void Preempt()
