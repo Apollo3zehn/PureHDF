@@ -28,6 +28,24 @@ public class ChunkCacheTests
         Assert.Equal(0UL, cache.ConsumedBytes);
     }
 
+    /// <summary>
+    /// Both entry points share the same installation bookkeeping, so both reach the same loop.
+    /// </summary>
+    [Fact]
+    public async Task ZeroChunkSlotsDisablesTheCacheInsteadOfCrashing_Async()
+    {
+        // Arrange
+        var cache = new SimpleReadingChunkCache(chunkSlotCount: 0);
+        var expected = new byte[] { 1, 2, 3 };
+
+        // Act
+        var chunk = await cache.GetChunkAsync(0, () => new ValueTask<Memory<byte>>(expected.AsMemory()));
+
+        // Assert
+        Assert.Equal(expected, chunk.ToArray());
+        Assert.Equal(0, cache.ConsumedSlots);
+    }
+
     [Fact]
     public void CanCacheChunk()
     {
