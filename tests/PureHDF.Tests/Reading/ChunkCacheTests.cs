@@ -4,6 +4,30 @@ namespace PureHDF.Tests.Reading;
 
 public class ChunkCacheTests
 {
+    /// <summary>
+    /// A slot count of zero means "do not cache", and the constructor accepts it - it only rejects a
+    /// negative count. It used to crash on the first chunk instead: with no slots the preemption loop
+    /// ran on an empty map, and FirstOrDefault over an empty sequence yields a default KeyValuePair
+    /// whose Value is null.
+    /// </summary>
+    [Fact]
+    public void ZeroChunkSlotsDisablesTheCacheInsteadOfCrashing()
+    {
+        // Arrange
+        var cache = new SimpleReadingChunkCache(chunkSlotCount: 0);
+        var expected = new byte[] { 1, 2, 3 };
+
+        // Act
+        var first = cache.GetChunk(0, () => expected.AsMemory());
+        var second = cache.GetChunk(0, () => expected.AsMemory());
+
+        // Assert - the chunk is returned, and nothing is retained.
+        Assert.Equal(expected, first.ToArray());
+        Assert.Equal(expected, second.ToArray());
+        Assert.Equal(0, cache.ConsumedSlots);
+        Assert.Equal(0UL, cache.ConsumedBytes);
+    }
+
     [Fact]
     public void CanCacheChunk()
     {

@@ -119,13 +119,22 @@ public class SimpleReadingChunkCache : IReadingChunkCache
 
             if ((ulong)chunk.Length <= ByteCount)
             {
-                while (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length)
+                // Nothing to preempt once the map is empty. Without that guard a cache constructed
+                // with zero slots - which the constructor allows, and which reads as "do not cache" -
+                // preempted an empty map and dereferenced the default KeyValuePair.
+                while (_chunkInfoMap.Count > 0 &&
+                      (_chunkInfoMap.Count >= ChunkSlotCount || ByteCount - ConsumedBytes < (ulong)chunk.Length))
                 {
                     Preempt();
                 }
 
-                ConsumedBytes += (ulong)chunk.Length;
-                _chunkInfoMap[chunkIndex] = chunkInfo;
+                // Re-checked rather than assumed: with slots available the loop above has already made
+                // room, but with none it exits on the emptiness guard and this chunk is not cacheable.
+                if (_chunkInfoMap.Count < ChunkSlotCount)
+                {
+                    ConsumedBytes += (ulong)chunk.Length;
+                    _chunkInfoMap[chunkIndex] = chunkInfo;
+                }
             }
 
             return chunk;
