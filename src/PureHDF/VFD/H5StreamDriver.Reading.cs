@@ -50,13 +50,11 @@ internal partial class H5StreamDriver : H5DriverBase
 
         else
         {
-            var remainingBuffer = buffer;
-
-            while (remainingBuffer.Length > 0)
-            {
-                var count = _stream.Read(buffer);
-                remainingBuffer = remainingBuffer[count..];
-            }
+            // This used to loop itself, advancing a `remainingBuffer` while still passing the
+            // ORIGINAL buffer to Read - so a stream that returned a partial read restarted at offset
+            // zero, overwriting bytes it had already delivered while the loop counted them as
+            // progress. Silently wrong data, no exception. ReadExactly does the same loop correctly.
+            _stream.ReadExactly(buffer);
         }
     }
 
@@ -103,7 +101,11 @@ internal partial class H5StreamDriver : H5DriverBase
     {
         var size = Unsafe.SizeOf<T>();
         Span<byte> buffer = stackalloc byte[size];
-        _stream.Read(buffer);
+
+        // ReadExactly, not Read: Read's return value was discarded, so a stream that delivered fewer
+        // bytes than asked left the rest of the value as whatever the stack slot held. Every length,
+        // address and checksum in the file goes through here.
+        _stream.ReadExactly(buffer);
 
         return MemoryMarshal.Cast<byte, T>(buffer)[0];
     }
