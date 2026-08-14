@@ -44,18 +44,10 @@ internal partial class H5StreamDriver : H5DriverBase
     public override void ReadDataset(Span<byte> buffer)
     {
         if (_stream is IDatasetStream datasetStream)
-        {
             datasetStream.ReadDataset(buffer);
-        }
 
         else
-        {
-            // This used to loop itself, advancing a `remainingBuffer` while still passing the
-            // ORIGINAL buffer to Read - so a stream that returned a partial read restarted at offset
-            // zero, overwriting bytes it had already delivered while the loop counted them as
-            // progress. Silently wrong data, no exception. ReadExactly does the same loop correctly.
             _stream.ReadExactly(buffer);
-        }
     }
 
     public override void Read(Span<byte> buffer)
