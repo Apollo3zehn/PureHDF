@@ -44,20 +44,10 @@ internal partial class H5StreamDriver : H5DriverBase
     public override void ReadDataset(Span<byte> buffer)
     {
         if (_stream is IDatasetStream datasetStream)
-        {
             datasetStream.ReadDataset(buffer);
-        }
 
         else
-        {
-            var remainingBuffer = buffer;
-
-            while (remainingBuffer.Length > 0)
-            {
-                var count = _stream.Read(buffer);
-                remainingBuffer = remainingBuffer[count..];
-            }
-        }
+            _stream.ReadExactly(buffer);
     }
 
     public override void Read(Span<byte> buffer)
@@ -103,7 +93,11 @@ internal partial class H5StreamDriver : H5DriverBase
     {
         var size = Unsafe.SizeOf<T>();
         Span<byte> buffer = stackalloc byte[size];
-        _stream.Read(buffer);
+
+        // ReadExactly, not Read: Read's return value was discarded, so a stream that delivered fewer
+        // bytes than asked left the rest of the value as whatever the stack slot held. Every length,
+        // address and checksum in the file goes through here.
+        _stream.ReadExactly(buffer);
 
         return MemoryMarshal.Cast<byte, T>(buffer)[0];
     }
