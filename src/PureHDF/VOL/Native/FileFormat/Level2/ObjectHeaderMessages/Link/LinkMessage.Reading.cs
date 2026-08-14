@@ -48,17 +48,17 @@ internal partial record class LinkMessage(
             creationOrder = driver.ReadUInt64();
 
         // link name encoding
-        var linkNameEncoding = default(CharacterSetEncoding);
-
+        // The field is consumed to keep the driver aligned but not acted upon: names are
+        // decoded as UTF-8 either way, which is correct for ASCII too. See ReadUtils.
         if (flags.HasFlag(LinkInfoFlags.LinkNameEncodingFieldIsPresent))
-            linkNameEncoding = (CharacterSetEncoding)driver.ReadByte();
+            _ = driver.ReadByte();
 
         // link length
         var linkLengthFieldLength = (ulong)(1 << ((byte)flags & 0x03));
         var linkNameLength = ReadUtils.ReadUlong(driver, linkLengthFieldLength);
 
         // link name
-        var linkName = ReadUtils.ReadFixedLengthString(driver, (int)linkNameLength, linkNameEncoding);
+        var linkName = ReadUtils.ReadFixedLengthString(driver, (int)linkNameLength);
 
         // link info
         LinkInfo linkInfo = linkType switch
