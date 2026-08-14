@@ -245,7 +245,7 @@ internal partial class H5StreamDriver : H5DriverBase
         _position = offset + buffer.Length;
     }
 
-    // A Span cannot cross an await, so a scalar read can no longer use `stackalloc`. It does not
+    // A Span cannot cross an await, so a scalar read cannot use `stackalloc`. It does not
     // need a pooled buffer either: the concurrency model gives each driver instance a single logical
     // reader (see H5FileHandleDriver), and in positionless mode a concurrent reader gets a driver of
     // its own from CreateOperationDriverCore - so one 8-byte field serves every scalar read on this

@@ -31,12 +31,12 @@ namespace PureHDF.Tests.Reading;
 /// down.
 /// </para>
 /// <para>
-/// WHAT THIS TEST NO LONGER PROVES. Several cases now read 0, and that costs the test some of its
-/// diagnostic power: the driver's read-ahead window holds 4 KiB, so it can cover for a structure cache
-/// that has stopped working, as long as the structure is small enough to fit. A regression in
-/// <c>NativeCache</c> would still show up on the cases that walk more than one window (children and
+/// WHAT THIS TEST DOES NOT PROVE. Several cases read 0, which costs the test some of its diagnostic
+/// power: the driver's read-ahead window holds 4 KiB, so it can cover for a structure cache that has
+/// stopped working, as long as the structure is small enough to fit. A regression in
+/// <c>NativeCache</c> still shows up on the cases that walk more than one window (children and
 /// attributes), but not necessarily on the by-name ones. Sabotaging a cache and watching a number here
-/// move is therefore no longer sufficient evidence on its own.
+/// move is therefore not sufficient evidence on its own.
 /// </para>
 /// </remarks>
 [Collection(SharedHdf5StateCollection.Name)]
@@ -123,22 +123,22 @@ public class NavigationCostTests
                     return () => group.Attribute(TARGET);
                 }),
 
-            // The enumeration counterpart for the attribute path, and formerly the most expensive
-            // navigation in the library by a wide margin: 363,269 reads, ~363 per attribute.
+            // The enumeration counterpart for the attribute path, and without coalescing the most
+            // expensive navigation in the library by a wide margin: 363,269 reads, ~363 per attribute.
             //
-            // WHY IT WAS THAT HIGH, and why the answer was not another cache. Those reads moved
-            // 1,337,781 bytes - ~3.7 bytes each, and every other case here sat at 4-5 bytes per read
-            // too. So it was never the redundant re-decoding that the b-tree, heap and chunk index
-            // caches removed; it was READ GRANULARITY. Each primitive field of an attribute message is
-            // a separate call, and 272 of the 484 reads in one lookup were byte-at-a-time scans of
+            // WHY IT IS THAT HIGH, and why the answer is not another cache. Those reads move
+            // 1,337,781 bytes - ~3.7 bytes each, and every other case here sits at 4-5 bytes per read
+            // too. So it is not the redundant re-decoding that the b-tree, heap and chunk index caches
+            // address; it is READ GRANULARITY. Each primitive field of an attribute message is a
+            // separate call, and 272 of the 484 reads in one lookup are byte-at-a-time scans of
             // null-terminated strings (the attribute name plus the member names of its compound
             // datatype). The bytes are genuinely distinct - every attribute carries its own inline
-            // copy of the datatype message - so no address-keyed cache could have deduplicated them.
+            // copy of the datatype message - so no address-keyed cache can deduplicate them.
             //
-            // What fixed it is that those reads are CONTIGUOUS: the 484 formed just two forward runs,
+            // What answers it is that those reads are CONTIGUOUS: the 484 form just two forward runs,
             // of 486 and 1,342 bytes. A 4 KiB read-ahead window in the driver therefore collapses the
-            // whole lookup into a couple of fetches, which is what took this to 1,042 - roughly one
-            // read per attribute, a 349x reduction. See ReadAheadWindow.
+            // whole lookup into a couple of fetches, taking this to 1,042 - roughly one read per
+            // attribute, a 349x reduction. See ReadAheadWindow.
             //
             // One shortcut was rejected on the way: handing the decode a driver over the heap object's
             // own bytes would collapse a lookup to ~2 reads, but it breaks as soon as a datatype is
@@ -246,9 +246,9 @@ public class NavigationCostTests
         // Assert
         //
         // Every chunk index form reaches zero: a repeated read of a chunked dataset decodes no
-        // structural bytes at all. The two array forms used to cost 11 and 62 because only their HEADER
-        // was cached and everything below it - index block, data block, pages, secondary blocks - was
-        // re-decoded per read, which was the same kind of gap the b-tree leaf node had been.
+        // structural bytes at all. Caching only the HEADER of the two array forms costs 11 and 62
+        // instead, because everything below it - index block, data block, pages, secondary blocks -
+        // is then re-decoded per read; the same kind of gap the b-tree leaf node presents.
         string[] expected =
         [
             "chunk index, b-tree v1: 0",

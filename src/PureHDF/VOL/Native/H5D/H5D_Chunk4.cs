@@ -67,9 +67,9 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
 
             // SYNC SURFACE: this runs from Dispose on the synchronous writer, while driver.Read is
-            // async now. The ValueTask was previously discarded outright - and because the enclosing
-            // method is not async there is no CS4014 warning - so the checksum was computed over
-            // uninitialized pooled memory, producing a file h5dump rejects. AsTask() is required:
+            // async. The ValueTask must be waited on rather than discarded - discarding it draws no
+            // CS4014 warning, because the enclosing method is not async, and computes the checksum
+            // over uninitialized pooled memory, producing a file h5dump rejects. AsTask() is required:
             // blocking directly on an IValueTaskSource-backed ValueTask is unsupported.
             WriteContext.Driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
 

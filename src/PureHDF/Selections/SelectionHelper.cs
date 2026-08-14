@@ -252,8 +252,8 @@ internal static class SelectionHelper
         }
     }
 
-    // NOTE (async-first): Span<TResult> became Memory<TResult> throughout the walk because a Span
-    // cannot cross an await, and the per-step decode is now awaited.
+    // The walk carries Memory<TResult> rather than Span<TResult>: the per-step decode is awaited,
+    // and a Span cannot cross an await.
     public static async ValueTask Decode<TResult>(
         int sourceRank,
         int targetRank,

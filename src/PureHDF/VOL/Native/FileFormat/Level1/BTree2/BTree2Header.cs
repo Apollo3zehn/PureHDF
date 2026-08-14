@@ -145,9 +145,7 @@ internal sealed record class BTree2Header<T>(
         }
     }
 
-    // NOTE (async propagation): was a property; C# has no async property getters,
-    // so this became a method with the same name. Callers outside this file need
-    // updating — see report.
+    // A method rather than a property: C# has no async property getters.
     public async ValueTask<BTree2Node<T>?> RootNode(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         if (context.Superblock.IsUndefinedAddress(RootNodePointer.Address))
@@ -164,9 +162,8 @@ internal sealed record class BTree2Header<T>(
         }
     }
 
-    // NOTE (async propagation): `out T result` cannot coexist with `async` (CS1988),
-    // so the out parameter became a tuple return. Callers outside this file need
-    // updating — see report.
+    // The record comes back in a tuple rather than through an `out` parameter, which cannot
+    // coexist with `async` (CS1988).
     public async ValueTask<(bool Success, T Result)> TryFindRecord(
         NativeReadContext context,
         DecodeKeyDelegate<T> decodeKey,
@@ -262,8 +259,7 @@ internal sealed record class BTree2Header<T>(
         return (false, default);
     }
 
-    // NOTE (async propagation): iterator that reads becomes IAsyncEnumerable<T> (rule 8).
-    // Callers outside this file need updating — see report.
+    // An IAsyncEnumerable<T>, because the iterator reads from the file as it walks.
     public async IAsyncEnumerable<T> EnumerateRecords(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         var rootNode = await RootNode(context, decodeKey).ConfigureAwait(false);

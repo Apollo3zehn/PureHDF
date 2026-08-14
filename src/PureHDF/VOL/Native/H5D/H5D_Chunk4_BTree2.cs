@@ -38,8 +38,8 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
             if (_btree2_no_filter is null)
             {
                 // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
-                // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call
-                // and every read of a chunked dataset re-decoded the whole chunk index from scratch.
+                // H5D_Base for every Read (NativeDataset.cs), so a field alone would die with the call
+                // and every read of a chunked dataset would re-decode the chunk index from scratch.
                 _btree2_no_filter = await NativeCache.GetStructure(
                     ReadContext,
                     Chunked4.Address,
@@ -63,8 +63,8 @@ internal class H5D_Chunk4_BTree2 : H5D_Chunk4
             if (_btree2_filter is null)
             {
                 // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
-                // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call
-                // and every read of a chunked dataset re-decoded the whole chunk index from scratch.
+                // H5D_Base for every Read (NativeDataset.cs), so a field alone would die with the call
+                // and every read of a chunked dataset would re-decode the chunk index from scratch.
                 _btree2_filter = await NativeCache.GetStructure(
                     ReadContext,
                     Chunked4.Address,

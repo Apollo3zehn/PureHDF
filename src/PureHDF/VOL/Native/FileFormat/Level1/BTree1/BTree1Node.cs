@@ -2,11 +2,9 @@ using System.Text;
 
 namespace PureHDF.VOL.Native;
 
-// NOTE (async-first): the original shape was
-//     bool FoundDelegate<T, TUserData>(ulong address, T leftNode, out TUserData userData)
-// An `out` parameter cannot coexist with `async` (CS1988), so the result is returned as a tuple
-// instead. Callbacks supplied by NativeGroup/H5D_Chunk123_BTree1 need to await decode work, which
-// is why this had to change shape rather than merely gain a ValueTask return.
+// The result is a tuple rather than an `out` parameter: callbacks supplied by
+// NativeGroup/H5D_Chunk123_BTree1 await decode work, and an `out` parameter cannot coexist with
+// `async` (CS1988).
 internal delegate ValueTask<(bool Success, TUserData UserData)> FoundDelegate<T, TUserData>(
     ulong address,
     T leftNode);
@@ -17,12 +15,12 @@ internal delegate ValueTask<(bool Success, TUserData UserData)> FoundDelegate<T,
 // a cached node is immutable and context-free, so handing the same instance to two operations reading
 // through two different drivers is correct.
 //
-// A class rather than the former `readonly record struct` - it is what the type's own long-standing
-// TODO asked for, and it is required now that instances are cached: a struct would be boxed and
-// copied out on every cache hit.
+// A class rather than a `readonly record struct` - it is what the type's own long-standing TODO
+// asked for, and caching instances requires it: a struct would be boxed and copied out on every
+// cache hit.
 //
 // Cache is ONE instance per tree, shared by every node in it, and bounded - see the Decode overloads
-// and BoundedAddressCache for why a per-node cache bounded nothing.
+// and BoundedAddressCache for why a per-node cache bounds nothing.
 internal sealed record class BTree1Node<T>(
     byte NodeLevel,
     ushort EntriesUsed,
@@ -40,10 +38,10 @@ internal sealed record class BTree1Node<T>(
     /// Decodes the ROOT of a tree, giving it a fresh node cache that every node below it shares.
     /// </summary>
     /// <remarks>
-    /// The cache used to live on each node and hold only that node's children, which bounded nothing:
-    /// a node has at most as many children as its own capacity anyway, while the quantity that grows
-    /// with the file is the total number of nodes visited across the whole tree. One shared cache is
-    /// what makes a bound on it mean anything.
+    /// One cache shared by the whole tree, rather than one per node holding only that node's
+    /// children: a node has at most as many children as its own capacity, so a per-node cache bounds
+    /// nothing. The quantity that grows with the file is the total number of nodes visited across the
+    /// whole tree, which is what a shared cache can meaningfully bound.
     /// </remarks>
     public static ValueTask<BTree1Node<T>> Decode(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
@@ -89,24 +87,23 @@ internal sealed record class BTree1Node<T>(
         );
     }
 
-    // NOTE (async propagation): was a property; C# has no async property getters,
-    // so this became a method with the same name. No callers exist in the repo today.
+    // A method rather than a property: C# has no async property getters. No callers exist in the
+    // repo today.
     public async ValueTask<BTree1Node<T>> LeftSibling(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         context.Driver.SeekRelativeToBaseAddress((long)LeftSiblingAddress);
         return await BTree1Node<T>.Decode(context, decodeKey, Cache).ConfigureAwait(false);
     }
 
-    // NOTE (async propagation): was a property; see LeftSibling.
+    // A method rather than a property; see LeftSibling.
     public async ValueTask<BTree1Node<T>> RightSibling(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         context.Driver.SeekRelativeToBaseAddress((long)RightSiblingAddress);
         return await BTree1Node<T>.Decode(context, decodeKey, Cache).ConfigureAwait(false);
     }
 
-    // NOTE (async propagation): `out TUserData userData` cannot coexist with `async`
-    // (CS1988), so the out parameter became a tuple return. Callers outside this file
-    // (H5D_Chunk123_BTree1.cs, NativeGroup.cs) need updating — see report.
+    // The user data comes back in a tuple rather than through an `out` parameter, which cannot
+    // coexist with `async` (CS1988).
     public async ValueTask<(bool Success, TUserData UserData)> TryFindUserData<TUserData>(
         NativeReadContext context,
         DecodeKeyDelegate<T> decodeKey,
@@ -158,9 +155,7 @@ internal sealed record class BTree1Node<T>(
         return (false, default);
     }
 
-    // NOTE (async propagation): iterator that reads becomes IAsyncEnumerable<T> (rule 8).
-    // Caller outside this file (NativeGroup.cs:EnumerateSymbolTableNodes) needs updating —
-    // see report.
+    // An IAsyncEnumerable<T>, because the iterator reads from the file as it walks.
     public IAsyncEnumerable<BTree1Node<T>> EnumerateNodes(NativeReadContext context, DecodeKeyDelegate<T> decodeKey)
     {
         return EnumerateNodes(context, decodeKey, this);

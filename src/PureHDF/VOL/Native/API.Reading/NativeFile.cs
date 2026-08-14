@@ -44,11 +44,10 @@ public class NativeFile : NativeGroup, IDisposable
 
     #region Methods
 
-    // NOTE (async-first): the *Async variants below are the real implementation. These three
-    // synchronous entry points are preserved under their original names and block on them, so the
-    // existing synchronous public surface (H5File.OpenRead/Open) and every existing caller keep
-    // working unchanged. Blocking here is safe on a thread-backed host; a WebAssembly caller must
-    // use the *Async entry points instead, where nothing blocks.
+    // The *Async variants below are the real implementation. These three synchronous entry points
+    // block on them, so the synchronous public surface (H5File.OpenRead/Open) and its callers keep
+    // working. Blocking here is safe on a thread-backed host; a WebAssembly caller must use the
+    // *Async entry points instead, where nothing blocks.
     internal static NativeFile InternalOpenRead(
         string filePath,
         bool deleteOnClose = false,

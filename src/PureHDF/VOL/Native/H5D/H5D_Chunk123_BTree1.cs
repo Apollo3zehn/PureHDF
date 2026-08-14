@@ -75,8 +75,8 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
                 : _layout12.Address;
 
             // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
-            // H5D_Base for every Read (NativeDataset.cs), so this field used to die with the call and
-            // every read of a chunked dataset re-decoded the whole chunk index from scratch.
+            // H5D_Base for every Read (NativeDataset.cs), so a field alone would die with the call and
+            // every read of a chunked dataset would re-decode the whole chunk index from scratch.
             _btree1 = await NativeCache.GetStructure(
                 ReadContext,
                 address,

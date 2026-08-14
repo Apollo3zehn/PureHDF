@@ -146,8 +146,8 @@ internal static partial class ReadUtils
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
 
-    // NOTE (async-first): the per-element decode is awaited, so the destination is held as
-    // Memory<T> and indexed through .Span per iteration (a Span local cannot survive an await).
+    // The per-element decode is awaited, so the destination is held as Memory<T> and indexed
+    // through .Span per iteration (a Span local cannot survive an await).
     public static async ValueTask<object> DecodeReferenceArray<TElement>(NativeReadContext context, IH5ReadStream source, int[] dims, ElementDecodeDelegate elementDecode)
     {
         var array = Array.CreateInstance(typeof(TElement), dims);

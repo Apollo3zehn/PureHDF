@@ -37,9 +37,8 @@ internal record struct DataBlockPage<T>(
         Func<H5DriverBase, ValueTask<T>> decode)
     {
         // elements
-        // NOTE (async-first): was a lazy Enumerable.Range(...).Select(...).ToArray(); a lambda
-        // cannot be awaited inside Select, and these reads are strictly sequential, so this is
-        // now an explicit loop.
+        // An explicit loop rather than Enumerable.Range(...).Select(...).ToArray(): a lambda cannot
+        // be awaited inside Select, and these reads are strictly sequential.
         var elements = new T[(int)elementCount];
 
         for (var i = 0; i < elements.Length; i++)

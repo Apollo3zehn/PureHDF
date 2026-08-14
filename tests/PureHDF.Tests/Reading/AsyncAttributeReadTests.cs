@@ -12,10 +12,10 @@ namespace PureHDF.Tests.Reading;
 /// header when the object is resolved, so a FIXED-SIZE attribute is already in memory by the time it can
 /// be read and nothing suspends. A VARIABLE-LENGTH or reference datatype stores only a global heap ID
 /// inline, and resolving one seeks and reads the file - so those are the attributes that genuinely need
-/// an async read, and the ones a host that cannot block could not read at all before this existed.
+/// an async read, and the ones a host that cannot block depends on it for.
 /// <para>
 /// Both cases are covered, and the fixed-size one asserts that it costs no reads at all rather than
-/// merely that it returns the right answer - otherwise a regression that started routing fixed-size
+/// merely that it returns the right answer - otherwise a change that started routing fixed-size
 /// attribute reads through the file would pass unnoticed.
 /// </para>
 /// <para>

@@ -67,10 +67,8 @@ internal partial record class AttributeInfoMessage(
         return await nameIndex.TryFindRecord(context, DecodeRecord08, compare).ConfigureAwait(false);
     }
 
-    // PRE-EXISTING (behavior preserved, not introduced here): this seeks BTree2NameIndexAddress, not
-    // BTree2CreationOrderIndexAddress. The method has no callers in the tree, so the wrong seek is
-    // unreachable today; it is left as found rather than silently fixed as part of a concurrency
-    // change - see report.
+    // PRE-EXISTING: this seeks BTree2NameIndexAddress, not BTree2CreationOrderIndexAddress. The
+    // method has no callers in the tree, so the wrong seek is unreachable today.
     public async ValueTask<BTree2Header<BTree2Record09>> BTree2CreationOrder(NativeReadContext context)
     {
         context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);

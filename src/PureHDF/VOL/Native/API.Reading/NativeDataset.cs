@@ -567,7 +567,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         resultBuffer.Span.CopyTo(buffer);
     }
 
-    // Deliberately NOT async, and it no longer calls level 3 - it resolves and validates the memory
+    // Deliberately NOT async, and it does not call level 3 - it resolves and validates the memory
     // selection and hands it back, so its caller awaits level 3 directly.
     //
     // The reason is measurable: this defaults a selection and compares two counts, never reads, and an
@@ -614,9 +614,9 @@ public class NativeDataset : NativeObject, IH5Dataset
         // CONCURRENCY: a read operation begins in earnest here, so it gets its own driver and its
         // own context. Everything below must use `operationContext`; the file-level `Context` is
         // shared with concurrent operations and with object navigation, and its driver cursor is a
-        // plain field. Two exceptions remain, both pre-existing and both flagged where they occur:
-        // the external-file-list local heap and the virtual-dataset source lookup still resolve
-        // through the file-level driver.
+        // plain field. The two structures resolved outside this scope stay off that driver as well:
+        // the external-file-list local heap takes a context per call (ExternalFileListMessage.Heap),
+        // and the virtual-dataset source lookup opens a scope of its own (NativeGroup.GetAsync).
         using var operationScope = new NativeOperationScope(Context);
         var operationContext = operationScope.Context;
 
@@ -642,11 +642,11 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         /* read virtual delegate */
-        // Reads one source dataset straight into the gather buffer. This used to take a Span, which
-        // forced two things it no longer needs: a pooled scratch buffer plus a copy to bridge Span to
-        // the Memory<T> that ReadCoreLevel3 wants, and a GetAwaiter().GetResult() - so ReadAsync of a
-        // VIRTUAL dataset blocked on every source read. Both are gone now that the gather is awaitable;
-        // the destination is the caller's Memory and is written in place.
+        // Reads one source dataset straight into the gather buffer. Takes Memory<T> rather than Span,
+        // which is what ReadCoreLevel3 wants and what lets the gather be awaited: no pooled scratch
+        // buffer, no copy to bridge the two, and no GetAwaiter().GetResult() that would make ReadAsync
+        // of a VIRTUAL dataset block on every source read. The destination is the caller's Memory and
+        // is written in place.
         static ValueTask readVirtualDelegate(NativeDataset dataset, Memory<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
         {
             return dataset.ReadCoreLevel3(
@@ -685,9 +685,9 @@ public class NativeDataset : NativeObject, IH5Dataset
             * beginning of the storage area is computed as in a C array.
             */
             // NOTE: for a dataset with an external file list, H5D_Contiguous builds an
-            // ExternalFileListStream. Its local heap used to be decoded through the file-level driver
-            // captured by ExternalFileListMessage at navigation time; the message no longer holds a
-            // context, so the heap is now decoded through `operationContext` like everything else.
+            // ExternalFileListStream. ExternalFileListMessage holds no context, so its local heap is
+            // decoded through `operationContext` like everything else, rather than through a
+            // file-level driver captured at navigation time.
             LayoutClass.Contiguous => new H5D_Contiguous(operationContext, default!, datasetInfo, datasetAccess),
 
             /* Chunked: The array domain is regularly decomposed into chunks,

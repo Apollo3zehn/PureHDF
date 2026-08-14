@@ -45,20 +45,14 @@ internal abstract record class FractalHeapId(
         });
     }
 
-    // NOTE (was `Read<T>(func, ref List<BTree2Record01> record01Cache)`): the ref parameter existed
-    // so that one enumeration could reuse the huge-objects b-tree record set across the heap IDs it
-    // resolved. Exactly one of the six implementations ever read it, every caller had to thread a
-    // mutable local through, and a ref parameter cannot coexist with `async` (CS1988) - which made
-    // this method, and therefore every read path below it, permanently unconvertible.
+    // Async, and takes no cache parameter. Locating a heap object is itself a read - a managed ID
+    // walks the heap's indirect blocks, a huge ID consults a b-tree - so a synchronous Read here would
+    // block every dense attribute and dense link decode no matter how carefully the layers above it
+    // awaited. A `ref` parameter for the huge-objects b-tree record set cannot coexist with `async`
+    // (CS1988) either; the record set is per file and per address like every other structure, so it
+    // lives in NativeCache instead (see HugeObjectsFractalHeapIdSubType1).
     //
-    // The record set is per file and per address like every other structure, so it now lives in
-    // NativeCache (see HugeObjectsFractalHeapIdSubType1) and the parameter is gone. With it gone this
-    // could finally become async, which it now is: locating a heap object is itself a read (a managed
-    // ID walks the heap's indirect blocks, a huge ID consults a b-tree), so a synchronous Read meant
-    // every dense attribute and dense link decode blocked here no matter how carefully the layers
-    // above it awaited.
-    //
-    // `func` is async too, so a caller no longer has to bridge the decode it performs. Note that the
+    // `func` is async too, so a caller need not bridge the decode it performs. Note that the
     // callbacks in the tree ignore the driver handed to them and read from their own context - see the
     // remark in TinyObjectsFractalHeapIdSubType1.
     public abstract ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func);

@@ -7,11 +7,11 @@ namespace PureHDF.Tests.Reading;
 /// Guards that a by-name lookup does not re-decode the object header of the group it is called on.
 /// </summary>
 /// <remarks>
-/// <c>TryWalkPath</c> used to begin by dereferencing the group's OWN reference, which builds a second
-/// <c>NativeGroup</c> and decodes that group's object header again from the file. The cost is
-/// proportional to the number of LINKS rather than to the depth of the path, because a group storing
-/// its links compactly holds one header message per link - so a single lookup in a 1000-link group
-/// re-read 30,113 bytes and allocated 2.1 MB, and a missing name cost exactly as much as a hit.
+/// The failure mode is <c>TryWalkPath</c> beginning by dereferencing the group's OWN reference, which
+/// builds a second <c>NativeGroup</c> and decodes that group's object header again from the file. The
+/// cost is proportional to the number of LINKS rather than to the depth of the path, because a group
+/// storing its links compactly holds one header message per link - so a single lookup in a 1000-link
+/// group re-reads 30,113 bytes and allocates 2.1 MB, and a missing name costs exactly as much as a hit.
 /// <para>
 /// EVERY LOOKUP HERE USES A DIFFERENT NAME, and that is the point. The driver's read-ahead window is
 /// 4 KiB, so it covers a small group's whole object header and would hide this entirely: measured
@@ -65,7 +65,7 @@ public class LinkLookupCostTests
 
         // Assert - the header is already held, so resolving a name out of it should read nothing at
         // all. Asserting zero rather than a bound: there is no structure left to fetch, and a bound
-        // would quietly tolerate the regression coming back at a smaller size.
+        // would quietly tolerate a re-decode at a smaller size.
         Assert.Equal(0, reads);
         Assert.Equal(0, bytes);
     }

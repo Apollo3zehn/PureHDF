@@ -47,11 +47,11 @@ namespace Benchmark;
 // Cold_OpenAndReadMetadata sits at ~3,721 KB throughout, +8 KB against A for two 4 KiB windows (one
 // for the file-level driver, one per operation).
 //
-// The two small B regressions were the honest cost of the window on paths that re-read data already
-// decoded and cached, so they got no coalescing benefit and paid its bounds check and copy. Both are
-// back under their A figures in C, but that is a few hundred nanoseconds at single-digit microseconds
-// and should be read as noise rather than as an improvement. They remain useful as the guard for a
-// change that made them materially worse.
+// The two small B regressions are the honest cost of the window on paths that re-read data already
+// decoded and cached, so they get no coalescing benefit and pay its bounds check and copy. Both sit
+// under their A figures in C, but that is a few hundred nanoseconds at single-digit microseconds and
+// should be read as noise rather than as an improvement. They remain useful as the guard against a
+// change that makes them materially worse.
 [MemoryDiagnoser]
 public class MetadataRead
 {
@@ -192,10 +192,10 @@ public class MetadataRead
     /// Enumerating attributes on a file already open.
     /// </summary>
     /// <remarks>
-    /// This was intended to measure the field-by-field attribute decode and does not: the writer
+    /// This is intended to measure the field-by-field attribute decode and does not: the writer
     /// stores these attributes compactly, so they are already decoded inside the cached ObjectHeader
-    /// and this reads nothing from the file. Kept anyway, as the regression guard for a path that gets
-    /// no benefit from the window and therefore only pays for it.
+    /// and this reads nothing from the file. Retained as the guard for a path that gets no benefit
+    /// from the window and therefore only pays for it.
     /// </remarks>
     [Benchmark]
     public int Warm_EnumerateAttributes()

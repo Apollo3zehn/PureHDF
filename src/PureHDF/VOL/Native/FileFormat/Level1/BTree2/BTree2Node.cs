@@ -6,9 +6,8 @@ internal abstract record class BTree2Node<T>(
 {
     private byte _version;
 
-    // NOTE (async propagation): `out byte version, out T[] records` cannot coexist with
-    // `async` (CS1988), so both out parameters became a tuple return. Callers outside this
-    // file (BTree2InternalNode.cs, BTree2LeafNode.cs) need updating — see report.
+    // The version and records come back in a tuple rather than through `out` parameters, which
+    // cannot coexist with `async` (CS1988).
     public static async ValueTask<(byte Version, T[] Records)> Decode(
         NativeReadContext context,
         BTree2Header<T> header,

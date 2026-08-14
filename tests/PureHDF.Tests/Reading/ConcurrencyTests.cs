@@ -292,8 +292,9 @@ public class ConcurrencyTests
     }
 
     // NAVIGATION. Everything above resolves an object on the calling thread and only reads in
-    // parallel. These resolve in parallel, which is the case that used to move the ONE file-level
-    // cursor from several threads at once: Dereference / NativeObject.Header seek then read, so an
+    // parallel. These resolve in parallel, which is the case that moves the ONE file-level cursor from
+    // several threads at once unless each operation is isolated: Dereference / NativeObject.Header
+    // seek then read, so an
     // interleaving lands a header decode on another thread's offset. It shows up as a signature or
     // checksum FormatException, an absurd allocation, or - worst - a plausible wrong answer.
     //
@@ -308,9 +309,9 @@ public class ConcurrencyTests
     //   V18/V110  "dense" storage - LinkInfoMessage / AttributeInfoMessage, reached through a fractal
     //             heap and a b-tree v2. 1000 links/attributes is far past the compact threshold.
     //
-    // All four of those message types used to cache the heap or b-tree they decoded, in an
-    // unsynchronised lazy field, using a context captured at decode time. They now hold no context
-    // and cache nothing, so these tests also cover the fresh-decode-per-call path.
+    // None of those four message types holds a context or caches the heap or b-tree it decodes; an
+    // unsynchronised lazy field keyed on a context captured at decode time is exactly the hazard here.
+    // So these tests also cover the fresh-decode-per-call path.
 
     [Theory]
     [InlineData(DriverKind.FileHandle, H5F.libver_t.EARLIEST)]
@@ -404,8 +405,8 @@ public class ConcurrencyTests
     }
 
     // Dense attributes are the AttributeInfoMessage half of the same problem: the fractal heap and
-    // b-tree v2 it used to cache are now decoded per call, and both the by-name lookup and the
-    // enumeration drive them. EARLIEST is not covered here because it has no dense attribute storage
+    // b-tree v2 are decoded per call rather than cached on the message, and both the by-name lookup
+    // and the enumeration drive them. EARLIEST is not covered here because it has no dense storage
     // at all - 1000 attributes cannot fit in a 64 KB object header - so V18 and V110 are the two
     // versions that exercise this path.
     [Theory]

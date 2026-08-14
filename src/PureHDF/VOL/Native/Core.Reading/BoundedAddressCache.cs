@@ -23,8 +23,9 @@ namespace PureHDF.VOL.Native;
 /// bound rather than a switch.
 /// </para>
 /// <para>
-/// GLOBAL HEAP COLLECTIONS. These hold decoded variable-length PAYLOAD, so retention grew with how
-/// much variable-length data had been read and was released only when the file was closed. Not caching
+/// GLOBAL HEAP COLLECTIONS. These hold decoded variable-length PAYLOAD, so unbounded retention would
+/// grow with how much variable-length data has been read and be released only when the file closes.
+/// Not caching
 /// them is even less of an option than for nodes: decoding a collection decodes every object in it, and
 /// a variable-length read resolves many elements out of the same collection, so a miss is expensive
 /// and hits are the normal case.
@@ -76,8 +77,9 @@ internal sealed class BoundedAddressCache<T> where T : notnull
     // is not.
     //
     // 64 MiB keeps any realistic single-dataset working set resident while still bounding the case this
-    // exists for: a long-lived reader that walks gigabytes of variable-length data used to retain all of
-    // it until the file was closed. Note the scope - the budget is per OPEN FILE, so a process holding
+    // exists for: a long-lived reader that walks gigabytes of variable-length data, which would
+    // otherwise retain all of it until the file closed. Note the scope - the budget is per OPEN FILE,
+    // so a process holding
     // many files open should lower it via H5ReadOptions.
     public const long DefaultByteBudget = 64 * 1024 * 1024;
 

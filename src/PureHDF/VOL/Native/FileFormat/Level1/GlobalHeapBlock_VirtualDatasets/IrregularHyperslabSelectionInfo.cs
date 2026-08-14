@@ -63,11 +63,9 @@ internal record class IrregularHyperslabSelectionInfo(
     {
         var isFirst = true;
 
-        // NOTE (async conversion): these were `Span<ulong> ... = stackalloc ulong[...]`.
-        // A Span<T> (ref struct) cannot be preserved across an `await` boundary (CS4007),
-        // and these locals are read/written both before and after the awaits in the loop
-        // below, so they were changed to plain heap arrays. Same values, same lifetime,
-        // just not stack-allocated. See report for details.
+        // Plain heap arrays rather than `stackalloc`: a Span<T> (ref struct) cannot be preserved
+        // across an `await` boundary (CS4007), and these locals are read and written both before and
+        // after the awaits in the loop below.
         var previousStarts = new ulong[(int)rank];
         var previousEnds = new ulong[(int)rank];
         var sizes = new ulong[(int)rank];

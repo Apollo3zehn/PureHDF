@@ -59,11 +59,11 @@ internal partial record class FixedArrayDataBlock<T>
 
         driver.Seek(position, SeekOrigin.Begin);
 
-        // SYNC SURFACE: Encode is synchronous (the writer is), while driver.Read is async now. This
-        // ValueTask was previously discarded outright - no CS4014 warning, because the enclosing
-        // method is not async - so the checksum was computed over uninitialized pooled memory.
-        // AsTask() is required: blocking directly on an IValueTaskSource-backed ValueTask is not
-        // supported and throws.
+        // SYNC SURFACE: Encode is synchronous (the writer is), while driver.Read is async. The
+        // ValueTask must be waited on rather than discarded - discarding it draws no CS4014 warning,
+        // because the enclosing method is not async, and computes the checksum over uninitialized
+        // pooled memory. AsTask() is required: blocking directly on an IValueTaskSource-backed
+        // ValueTask is not supported and throws.
         driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
 
         var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);

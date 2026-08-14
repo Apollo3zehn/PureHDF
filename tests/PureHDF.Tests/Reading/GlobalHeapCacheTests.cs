@@ -9,10 +9,10 @@ namespace PureHDF.Tests.Reading;
 /// Covers the bound on the global heap collection cache.
 /// </summary>
 /// <remarks>
-/// This cache was the last one in the reader whose footprint grew with how much data had been read
-/// rather than with the shape of the file, and it was released only when the file closed - it holds
-/// decoded variable-length PAYLOAD, so a long-lived reader that had walked a large file retained all
-/// of it.
+/// Unbounded, this is the one cache in the reader whose footprint would grow with how much data has
+/// been read rather than with the shape of the file, and be released only when the file closed - it
+/// holds decoded variable-length PAYLOAD, so a long-lived reader that has walked a large file would
+/// retain all of it.
 /// <para>
 /// The bound is asserted through observable read counts rather than by measuring memory: a retained-byte
 /// measurement depends on GC timing and is not reproducible, whereas "this collection is still cached

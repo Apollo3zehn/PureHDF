@@ -82,9 +82,9 @@ public partial class H5NativeWriter : IDisposable
 
                 Context.Driver.SeekRelativeToBaseAddress(0);
 
-                // SYNC SURFACE: Encode became async with the driver; this runs from Dispose on the
-                // synchronous writer, so it must block. Unawaited, Dispose would close the driver
-                // before the superblock had been written.
+                // SYNC SURFACE: Encode is async, and this runs from Dispose on the synchronous
+                // writer, so it must block. Unawaited, Dispose would close the driver before the
+                // superblock has been written.
                 superblock.Encode(Context.Driver).GetAwaiter().GetResult();
 
                 // close driver

@@ -34,9 +34,9 @@ internal record class HugeObjectsFractalHeapIdSubType1(
         return await func(driver).ConfigureAwait(false);
     }
 
-    // An array rather than the List<> this used to build: the result is now shared between concurrent
-    // readers of the file, so "read-only from here on" should be the type's problem and not a
-    // convention. NativeCache.GetStructure seeks to the address first, so the header decode below
+    // An array rather than a List<>: the result is shared between concurrent readers of the file, so
+    // "read-only from here on" should be the type's problem and not a convention.
+    // NativeCache.GetStructure seeks to the address first, so the header decode below
     // starts where it expects to.
     private static async ValueTask<BTree2Record01[]> DecodeRecords(NativeReadContext context)
     {

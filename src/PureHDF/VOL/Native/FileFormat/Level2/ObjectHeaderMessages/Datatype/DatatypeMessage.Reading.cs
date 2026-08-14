@@ -1098,11 +1098,11 @@ internal partial record class DatatypeMessage(
     private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
         where T : struct
     {
-        // HOT PATH: plain unmanaged (numeric) datasets. The baseline did
+        // HOT PATH: plain unmanaged (numeric) datasets, which must reach
         //     source.ReadDataset(MemoryMarshal.AsBytes(target))
-        // i.e. a single zero-copy read straight into the caller's buffer. An intermediate version
-        // of this conversion regressed it to a pooled rent plus a full copy because Span<T> cannot
-        // be reinterpreted as Memory<byte>. The zero-copy read is restored either way below.
+        // i.e. a single zero-copy read straight into the caller's buffer. Span<T> cannot be
+        // reinterpreted as Memory<byte>, so both overloads below preserve the zero-copy read rather
+        // than falling back to a pooled rent plus a full copy.
         //
         // The Span overload is tried first because it matches the baseline exactly and allocates
         // nothing. The Memory overload needs `Cast`, which heap-allocates a CastMemoryManager per
@@ -1142,12 +1142,11 @@ internal partial record class DatatypeMessage(
     /// resolves the heap object it points at.
     /// </summary>
     /// <remarks>
-    /// THE async blocker, now removed. This used to be synchronous with two <c>out</c> parameters,
-    /// which cannot coexist with <c>async</c> (CS1988), and it bridged both of its reads with
-    /// <c>GetAwaiter().GetResult()</c>. Since every variable-length decode goes through here, that made
-    /// the public async surface unhonourable no matter how correct the layers above it were: a
-    /// variable-length read would block on I/O regardless. The <c>out</c> parameters become a result
-    /// struct, matching the tuple-return pattern used for the same reason elsewhere in this branch.
+    /// Every variable-length decode goes through here, so this must not block: if it did, a
+    /// variable-length read would block on I/O no matter how correct the layers above it were. Both of
+    /// its reads are therefore awaited, and the two results come back in a struct rather than through
+    /// <c>out</c> parameters, which cannot coexist with <c>async</c> (CS1988) - the same shape used for
+    /// the same reason elsewhere in the read path.
     /// <para>
     /// Not <c>async</c> itself. This sits in the innermost decode loop - once per element - so the
     /// common case must not pay for a state machine: a local source reads the header without

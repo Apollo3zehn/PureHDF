@@ -17,8 +17,7 @@ namespace PureHDF.Tests.Reading;
 /// different ways, and only one of them reads while doing so: compact data is already in the object
 /// header, contiguous data only needs the driver positioned, a chunk index has to be consulted and the
 /// chunk itself fetched (and possibly decompressed), and a virtual dataset delegates to other
-/// datasets. That last one used to be the documented exception, because its gather was
-/// <c>Span</c>-based and therefore blocked; it no longer is - see
+/// datasets. That last one gathers through <c>Memory</c> and so suspends like the rest - see
 /// <see cref="ReadAsyncOfAVirtualDatasetWorksWhenEveryReadSuspends" />.
 /// </para>
 /// <para>
@@ -158,8 +157,7 @@ public class AsyncDatasetReadTests
     /// The same gather with every read of the file suspended.
     /// </summary>
     /// <remarks>
-    /// This is the test the previous shape of the code could not have passed for the right reason: the
-    /// gather used to block on each source read.
+    /// This is what distinguishes a gather that awaits each source read from one that blocks on it.
     /// <para>
     /// What it does NOT show is a virtual dataset read entirely through the stream. The sources here are
     /// external files, resolved off the local filesystem and opened by path, so only the virtual

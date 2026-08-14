@@ -24,9 +24,8 @@ internal record class SharedMessageTableMessage(
         }
     }
 
-    // NOTE (async propagation): was a property; C# has no async property getters,
-    // so this became a method with the same name pattern used elsewhere in this
-    // wave (see ScratchPadTypes.cs). No callers exist in the repo today.
+    // A method rather than a property: C# has no async property getters. No callers exist in the
+    // repo today.
     public async ValueTask<SharedObjectHeaderMessageTable> GetSharedObjectHeaderMessageTable()
     {
         if (_sharedObjectHeaderMessageTable.Equals(default))

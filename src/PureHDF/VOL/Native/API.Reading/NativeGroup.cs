@@ -204,12 +204,12 @@ public class NativeGroup : NativeObject, IH5Group
     // GetEnumerator() call builds its own state machine and therefore its own scope, so two threads
     // enumerating the same returned IEnumerable do not share a driver.
     //
-    // Side effect worth naming: the link drain used to run eagerly, inside the Children() call itself.
-    // It now runs on the first MoveNext, together with everything else in the scope, so a malformed
-    // group throws when the result is enumerated rather than when it is requested. Children() returns
-    // IEnumerable and nothing in the tree depends on the earlier timing.
+    // Worth naming: the link drain runs on the first MoveNext, together with everything else in the
+    // scope, rather than eagerly inside the Children() call itself. A malformed group therefore throws
+    // when the result is enumerated rather than when it is requested. Children() returns IEnumerable
+    // and nothing in the tree depends on the timing.
     // Drains the async enumeration one item at a time rather than buffering it, so the synchronous
-    // Children() stays as lazy as it has always been while both surfaces share one implementation.
+    // Children() stays lazy while both surfaces share one implementation.
     private IEnumerable<IH5Object> EnumerateChildren(H5LinkAccess linkAccess)
     {
         using var scope = new NativeOperationScope(Context);
@@ -519,11 +519,10 @@ public class NativeGroup : NativeObject, IH5Group
 
         if (!skip)
         {
-            // NON-MECHANICAL (flagged, not guessed): EnumerateReferences is now
-            // IAsyncEnumerable<NativeNamedReference> (rule 8). This method stays
-            // synchronous (bool + out param, matching its own recursive contract and
-            // the public sync boundary above it), so the enumeration is drained with a
-            // blocking loop instead — same pattern as Children() above.
+            // EnumerateReferences is an IAsyncEnumerable<NativeNamedReference>, while this method is
+            // synchronous (bool + out param, matching its own recursive contract and the public sync
+            // boundary above it), so the enumeration is drained with a blocking loop - same pattern
+            // as Children() above.
             var references = DrainReferences(context, linkAccess);
 
             namedReference = references
@@ -702,10 +701,9 @@ public class NativeGroup : NativeObject, IH5Group
         }
     }
 
-    // NOTE (async propagation, rule 4 analog): `out LinkMessage? linkMessage` cannot
-    // coexist with `async` (CS1988), so the out parameter became a tuple return,
-    // matching the pattern used elsewhere in this wave (see BTree1Node.TryFindUserData,
-    // BTree2Header.TryFindRecord). Flagging as a shape change.
+    // The link message comes back in a tuple rather than through an `out` parameter, which cannot
+    // coexist with `async` (CS1988) - the same shape as BTree1Node.TryFindUserData and
+    // BTree2Header.TryFindRecord.
     private async ValueTask<(bool Success, LinkMessage? LinkMessage)> TryGetLinkMessageFromLinkInfoMessage(
         NativeReadContext context,
         LinkInfoMessage linkInfoMessage,
@@ -826,12 +824,10 @@ public class NativeGroup : NativeObject, IH5Group
 
     #region Callbacks
 
-    // ASYNC PROPAGATION: BTree1Node<T>'s `compare3` parameter is now
-    // `Func<T, T, ValueTask<int>>` (BTree1Node.cs, out of scope but already converted),
-    // so the former `.GetAwaiter().GetResult()` bridge is no longer needed here — this
-    // callback is awaited by BTree1Node<T>.LocateRecord itself.
+    // BTree1Node<T>'s `compare3` parameter is `Func<T, T, ValueTask<int>>`, so this callback is
+    // awaited by BTree1Node<T>.LocateRecord itself rather than bridged.
     //
-    // Deliberately not `async`, even though it returns a ValueTask to satisfy that delegate: now that
+    // Deliberately not `async`, even though it returns a ValueTask to satisfy that delegate: because
     // LocalHeap holds its data segment outright, comparing two names reads nothing and there is
     // nothing to suspend on. This runs once per b-tree comparison, so a state machine here would sit
     // on the inner loop of every by-name lookup.
@@ -861,11 +857,10 @@ public class NativeGroup : NativeObject, IH5Group
         return new ValueTask<int>(0);
     }
 
-    // ASYNC PROPAGATION: `FoundDelegate<T, TUserData>` (BTree1Node.cs, out of scope but
-    // already converted) is now `ValueTask<(bool Success, TUserData UserData)> (ulong
-    // address, T leftNode)` — the `out` parameter became a tuple return because `out`
-    // cannot coexist with `async` (CS1988). Callers curry `localHeap`/`name` via a
-    // lambda (see TryGetReference) matching this method's remaining parameters.
+    // Matches `FoundDelegate<T, TUserData>` (BTree1Node.cs), which returns the user data in a tuple
+    // rather than through an `out` parameter, since `out` cannot coexist with `async` (CS1988).
+    // Callers curry `localHeap`/`name` via a lambda (see TryGetReference) matching this method's
+    // remaining parameters.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static async ValueTask<(bool Success, BTree1SymbolTableUserData UserData)> NodeFound(NativeReadContext context, LocalHeap localHeap, string name, ulong address)
     {
@@ -908,15 +903,14 @@ public class NativeGroup : NativeObject, IH5Group
         return (true, userData);
     }
 
-    // ASYNC PROPAGATION: `BTree1Node<T>.Decode(...)` and `SymbolTableMessage.GetBTree1` take a
-    // `DecodeKeyDelegate<T>`, which `BTree1GroupKey.Decode` (BTree1Types.cs, already async) is simply
-    // awaited through instead of bridged.
+    // `BTree1Node<T>.Decode(...)` and `SymbolTableMessage.GetBTree1` take a `DecodeKeyDelegate<T>`,
+    // so `BTree1GroupKey.Decode` (BTree1Types.cs) is awaited through it rather than bridged.
     //
     // CONCURRENCY: takes the operation's context instead of reading the group's file-level one, so
     // the key decode happens on the same driver as the b-tree traversal that asks for it. Callers
-    // pass this method group directly - it used to be curried as `() => DecodeGroupKey(context)`,
-    // which allocated a closure per navigation call and, worse, made the decoded b-tree
-    // uncacheable, because the tree held the delegate and the delegate held a per-operation context.
+    // pass this method group directly rather than currying the context into a closure, which would
+    // allocate per navigation call and, worse, make the decoded b-tree uncacheable: the tree would
+    // hold the delegate and the delegate a per-operation context.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static async ValueTask<BTree1GroupKey> DecodeGroupKey(NativeReadContext context)
     {

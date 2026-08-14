@@ -157,10 +157,10 @@ internal static class NativeCache
     #region Global Heap
 
     // BOUNDED, and by BYTES rather than by entry count: a collection holds decoded variable-length
-    // payload, so this was the one cache in the reader whose footprint grew with how much data had been
-    // read and was released only when the file closed. A collection is at least 4 KiB with no upper
-    // bound - a single large value gets one to itself - so counting them would have bounded nothing.
-    // See BoundedAddressCache.
+    // payload, so this is the one cache in the reader whose footprint would otherwise grow with how
+    // much data has been read and be released only when the file closes. A collection is at least
+    // 4 KiB with no upper bound - a single large value gets one to itself - so counting entries would
+    // bound nothing. See BoundedAddressCache.
     private static readonly ConcurrentDictionary<NativeCacheToken, BoundedAddressCache<GlobalHeapCollection>> _globalHeapMap;
 
     /// <summary>
@@ -168,17 +168,16 @@ internal static class NativeCache
     /// </summary>
     /// <remarks>
     /// Not <c>async</c>, so that a hit - the common case, since a variable-length decode resolves many
-    /// elements out of the same collection - costs a dictionary lookup and no state machine. This used
-    /// to bridge <c>GlobalHeapCollection.Decode</c> with <c>GetAwaiter().GetResult()</c>, which is one
-    /// of the reads that made the public async surface impossible to honour: a variable-length read
-    /// would block here even when every layer above it was awaiting properly.
+    /// elements out of the same collection - costs a dictionary lookup and no state machine. A miss
+    /// awaits <c>GlobalHeapCollection.Decode</c> rather than blocking on it, which is what lets a
+    /// variable-length read honour the public async surface.
     /// </remarks>
     public static ValueTask<GlobalHeapCollection> GetGlobalHeapObject(
         NativeReadContext context,
         ulong address,
         bool restoreAddress = false)
     {
-        // NOTE (race fix): GetOrAdd (not AddOrUpdate-with-a-constant-new-value) so that
+        // GetOrAdd (not AddOrUpdate-with-a-constant-new-value) so that
         // when two threads both miss on the same token, the first-installed map wins and
         // is shared by both, instead of one thread's map (and anything decoded into it)
         // being silently discarded.
@@ -201,7 +200,7 @@ internal static class NativeCache
         bool restoreAddress,
         BoundedAddressCache<GlobalHeapCollection> addressToCollectionMap)
     {
-        // NOTE (per-operation drivers): this seek-decode-restore is why concurrent reads of
+        // This seek-decode-restore is why concurrent reads of
         // variable-length data need a driver per read operation and not merely a thread-safe
         // cache - it moves the cursor in the middle of a dataset/attribute decode. `context`
         // is the caller's context, so on a read path that is the operation driver.

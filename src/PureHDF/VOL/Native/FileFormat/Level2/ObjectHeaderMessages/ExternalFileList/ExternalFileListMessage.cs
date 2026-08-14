@@ -5,10 +5,10 @@
 // lifetime of the dataset, so it holds no NativeReadContext and caches nothing itself; the heap is
 // cached in NativeCache, per file and per address.
 //
-// Not caching the heap ON THIS MESSAGE also closed the last read path that still went through the
-// FILE-LEVEL driver: Heap() used to be decoded with the context captured at navigation time, so the
-// first read of an external-file-list dataset was not concurrency-safe. It now decodes through the
-// context of the read operation asking for it (H5D_Contiguous -> ExternalFileListStream).
+// Not caching the heap ON THIS MESSAGE is also what keeps every read path off the FILE-LEVEL driver:
+// Heap() decodes through the context of the read operation asking for it (H5D_Contiguous ->
+// ExternalFileListStream), rather than a context captured at navigation time, which would make the
+// first read of an external-file-list dataset unsafe under concurrency.
 internal record class ExternalFileListMessage(
     ushort AllocatedSlotCount,
     ushort UsedSlotCount,

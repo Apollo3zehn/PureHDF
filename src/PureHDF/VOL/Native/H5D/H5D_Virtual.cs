@@ -46,8 +46,8 @@ internal class H5D_Virtual<TResult> : H5D_Base
         }
     }
 
-    // RULE 4 CONVERSION: the constructor performed a driver read (VdsGlobalHeapBlock.Decode)
-    // and constructors cannot be async, so construction is now via this static factory.
+    // A static factory rather than a constructor: construction performs a driver read
+    // (VdsGlobalHeapBlock.Decode) and a constructor cannot be async.
     public static async ValueTask<H5D_Virtual<TResult>> Create(
         NativeReadContext readContext,
         NativeWriteContext writeContext,

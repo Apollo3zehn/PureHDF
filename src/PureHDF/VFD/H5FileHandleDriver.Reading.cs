@@ -35,8 +35,8 @@ internal partial class H5FileHandleDriver : H5DriverBase
     private readonly bool _leaveOpen;
 
     // COALESCING: RandomAccess.Read below is POSITIONAL, so it bypasses the FileStream's buffer
-    // entirely and a one-byte metadata field was a genuine pread. Reading a thousand dense
-    // attributes cost ~363,000 syscalls before this. One window per driver and a driver has one
+    // entirely, so without the window a one-byte metadata field is a genuine pread - reading a
+    // thousand dense attributes costs ~363,000 syscalls. One window per driver and a driver has one
     // logical reader, so it needs no synchronization - see ReadAheadWindow.
     private readonly ReadAheadWindow _readAhead = new();
 

@@ -39,9 +39,8 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     // Memory<TResult> rather than Span<TResult>, which is what makes the gather awaitable at all: a
     // Span cannot cross an await, and reading a source dataset is an await. The caller already holds a
-    // Memory and used to narrow it with .Span purely because this signature demanded one - so nothing
-    // is lost here, and NativeDataset's readVirtualDelegate loses the pooled scratch buffer and copy it
-    // needed to bridge the two.
+    // Memory, so nothing is lost by not narrowing it to a Span, and NativeDataset's
+    // readVirtualDelegate needs no pooled scratch buffer or copy to bridge the two.
     public async ValueTask ReadVirtualAsync(Memory<TResult> buffer)
     {
         // Overall algorithm:

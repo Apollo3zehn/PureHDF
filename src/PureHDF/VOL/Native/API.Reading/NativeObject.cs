@@ -146,8 +146,8 @@ public abstract class NativeObject : IH5Object
         // scope of its own on every Read.
         using var scope = new NativeOperationScope(Context);
 
-        // NOTE (async propagation): Attribute() is part of the synchronous public API
-        // surface and must block on the async internals by design.
+        // Attribute() is part of the synchronous public API surface and so blocks on the async
+        // internals by design.
         var (success, attributeMessage) = TryGetAttributeMessage(scope.Context, name).GetAwaiter().GetResult();
 
         if (!success || attributeMessage is null)
@@ -175,8 +175,8 @@ public abstract class NativeObject : IH5Object
         // CONCURRENCY: one scope for the whole lookup - see the note on Header above.
         using var scope = new NativeOperationScope(Context);
 
-        // NOTE (async propagation): AttributeExists() is part of the synchronous
-        // public API surface and must block on the async internals by design.
+        // AttributeExists() is part of the synchronous public API surface and so blocks on the
+        // async internals by design.
         var (success, _) = TryGetAttributeMessage(scope.Context, name).GetAwaiter().GetResult();
         return success;
     }
@@ -320,8 +320,8 @@ public abstract class NativeObject : IH5Object
         }
     }
 
-    // Streams the b-tree records instead of draining them into a list first, which the synchronous
-    // bridge here used to require. Safe because the record walk re-seeks before decoding each node
+    // Streams the b-tree records rather than draining them into a list first. Safe because the
+    // record walk re-seeks before decoding each node
     // (BTree2Header.EnumerateRecords), so resolving a heap ID between two records - which does move
     // the cursor - cannot derail it. Same shape as the link-message enumeration in NativeGroup.
     private static async IAsyncEnumerable<AttributeMessage> EnumerateAttributeMessagesFromAttributeInfoMessage(
