@@ -161,6 +161,8 @@ partial class H5NativeWriter
         // No flags, which means the reader applies its own defaults for those thresholds (8 compact /
         // 6 dense in the C library). Declaring values here would state a policy this writer does not
         // implement, since it always stores links compactly.
+        //
+        // See https://github.com/HDFGroup/hdf5/issues/6616 for more info.
         var groupInfoMessage = new GroupInfoMessage(
             Flags: default,
             MaximumCompactValue: default,

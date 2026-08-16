@@ -77,7 +77,6 @@ internal partial record class LinkInfoMessage(
     {
 
         var (driver, superblock) = context;
-        var b = driver.Position;
 
         // version
         var version = driver.ReadByte();

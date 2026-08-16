@@ -206,7 +206,6 @@ internal record class CompoundPropertyDescription(
 
     public override void Encode(H5DriverBase driver, uint typeSize)
     {
-        // name
         // The specification gives a compound member name no character set field, and the
         // reference library copies it as an opaque NUL-terminated byte string
         // (H5MM_xstrdup in H5Odtype.c), so whatever bytes the caller supplied are stored.

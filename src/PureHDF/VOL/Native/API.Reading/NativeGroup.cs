@@ -140,16 +140,6 @@ public class NativeGroup : NativeObject, IH5Group
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
         var current = isRooted ? Context.File.Reference : Reference;
 
-        // The first hop of a RELATIVE path is this group, whose object header is already decoded and
-        // held. Dereferencing our own reference to get it - which is what this did - builds a second
-        // NativeGroup and decodes that header again, from the file, on every lookup.
-        //
-        // The cost is proportional to the number of LINKS, not to the depth of the path, because a
-        // group that stores its links compactly keeps one header message per link: measured on a
-        // 1000-link group written by PureHDF's own writer, one LinkExists re-read 30,113 bytes and
-        // allocated 2.1 MB, and 2000 links doubled both. A lookup that missed cost exactly as much as
-        // one that hit, since the whole cost was the re-decode rather than the search.
-        //
         // Only the first iteration can reuse a group we already hold; every later segment names an
         // object not yet resolved, so this is cleared at the end of each pass.
         var group = isRooted ? null : this;
@@ -183,7 +173,8 @@ public class NativeGroup : NativeObject, IH5Group
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
         var current = isRooted ? Context.File.Reference : Reference;
 
-        // See InternalLinkExists for why the first hop of a relative path reuses this group.
+        // Only the first iteration can reuse a group we already hold; every later segment names an
+        // object not yet resolved, so this is cleared at the end of each pass.
         var group = isRooted ? null : this;
 
         for (int i = 0; i < segments.Length; i++)

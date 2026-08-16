@@ -12,6 +12,8 @@ namespace PureHDF.Tests.Writing;
 /// every byte >= 0x80 with <c>'?'</c>, destroying the name before any reader is involved.
 /// <para>These assertions go through h5dump rather than PureHDF's own reader, so they check
 /// what actually reached the file.</para>
+/// 
+/// More info: https://github.com/HDFGroup/hdf5/issues/6610
 /// </summary>
 [Collection(SharedHdf5StateCollection.Name)]
 public class NonAsciiNameWritingTests
