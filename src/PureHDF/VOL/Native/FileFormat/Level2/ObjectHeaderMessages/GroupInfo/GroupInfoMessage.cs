@@ -1,6 +1,6 @@
 ﻿namespace PureHDF.VOL.Native;
 
-internal record class GroupInfoMessage(
+internal partial record class GroupInfoMessage(
     GroupInfoMessageFlags Flags,
     ushort MaximumCompactValue,
     ushort MinimumDenseValue,
