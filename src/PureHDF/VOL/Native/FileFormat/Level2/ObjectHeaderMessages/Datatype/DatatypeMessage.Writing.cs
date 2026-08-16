@@ -732,7 +732,14 @@ internal partial record class DatatypeMessage : Message
                 else
                 {
                     using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
-                    target.WriteDataset(paddingBufferOwner.Memory.Span[..padding]);
+                    var paddingBuffer = paddingBufferOwner.Memory.Span[..padding];
+
+                    // Rent does not zero the buffer, so without this the padding written to the file is
+                    // whatever was last in that pooled memory. The stackalloc branch above clears for the
+                    // same reason.
+                    paddingBuffer.Clear();
+
+                    target.WriteDataset(paddingBuffer);
                 }
             }
         }
