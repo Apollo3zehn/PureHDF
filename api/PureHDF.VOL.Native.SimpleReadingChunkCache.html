@@ -333,6 +333,20 @@
 
 
 
+  <h4 class="section" id="PureHDF_VOL_Native_SimpleReadingChunkCache_GetChunk_System_UInt64_System_Func_System_Memory_System_Byte____remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>Safe to call concurrently. The lock is released around <code class="paramref">chunkReader</code>:
+holding it across a chunk read (I/O plus decompression) would serialize every reader
+sharing this cache and so defeat the point of reading in parallel. The cost is that two
+readers missing on the same chunk at the same time both decode it and one result is
+discarded - wasted work, never incorrect.</p>
+<p>
+    Evicting a chunk another reader is still decoding from is likewise safe, but only
+    because cached chunks are plain GC-allocated arrays (see H5D_Chunk.ReadChunk and
+    H5Filter.ExecutePipeline): eviction drops a reference, and the holder's Memory keeps
+    the array alive. Pooling cached chunks would break that, and a lock would then no
+    longer be sufficient.
+</p>
+</div>
 
 
 
