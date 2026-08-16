@@ -1,4 +1,4 @@
-using PureHDF.Selections;
+﻿using PureHDF.Selections;
 using System.Reflection;
 
 namespace PureHDF;
@@ -150,6 +150,31 @@ partial class H5NativeWriter
         };
 
         headerMessages.Add(ToHeaderMessage(linkInfoMessage));
+
+        // group info message
+        //
+        // Required, not optional: the HDF5 C library reads this message in H5G_obj_insert() to learn the
+        // link phase change thresholds before it inserts a link. Without it, adding ANY named object to
+        // a group - a dataset as much as a group - fails with "message type not found", so a file this
+        // writer produced could be read by every tool but extended by none of them.
+        //
+        // No flags, which means the reader applies its own defaults for those thresholds (8 compact /
+        // 6 dense in the C library). Declaring values here would state a policy this writer does not
+        // implement, since it always stores links compactly.
+        //
+        // See https://github.com/HDFGroup/hdf5/issues/6616 for more info.
+        var groupInfoMessage = new GroupInfoMessage(
+            Flags: default,
+            MaximumCompactValue: default,
+            MinimumDenseValue: default,
+            EstimatedEntryCount: default,
+            EstimatedEntryLinkNameLength: default
+        )
+        {
+            Version = 0
+        };
+
+        headerMessages.Add(ToHeaderMessage(groupInfoMessage));
 
         if (group.InternalAttributes is not null)
             AppendAttributesToHeaderMessages(group.InternalAttributes, headerMessages, Context);

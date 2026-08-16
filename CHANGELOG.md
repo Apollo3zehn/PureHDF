@@ -1,5 +1,19 @@
 ## v2.1.4 - 2026-07-29
 
+- [fix(writing): emit the group info message](https://github.com/Apollo3zehn/PureHDF/pull/178)
+- [fix(writing): zero the padding of a fixed-length string](https://github.com/Apollo3zehn/PureHDF/pull/177)
+- [fix(writing): key the datatype cache by everything the message depends on](https://github.com/Apollo3zehn/PureHDF/pull/173)
+- [fix(writing): encode datatype names as UTF-8](https://github.com/Apollo3zehn/PureHDF/pull/171)
+
+- [fix(reading): partial stream reads, cache thread safety, and group header re-decode](https://github.com/Apollo3zehn/PureHDF/pull/175)
+- [fix(reading): never decode strings as ASCII](https://github.com/Apollo3zehn/PureHDF/pull/170)
+
+Thanks @Blackclaws for your contributions!
+
+## v2.2.0 - 2026-08-16
+
+## v2.1.4 - 2026-07-29
+
 - [Make tests runnable on Windows and with newer h5dump, with related fixes](https://github.com/Apollo3zehn/PureHDF/pull/160)
   - Add SharedHdf5StateCollection to serialize tests using HDF5/global state, preventing failures from sharing problems.
   - Update xUnit dependencies and add Xunit.SkippableFact for conditional test skipping.

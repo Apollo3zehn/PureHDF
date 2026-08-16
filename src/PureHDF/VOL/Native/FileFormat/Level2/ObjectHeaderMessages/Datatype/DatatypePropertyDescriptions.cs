@@ -193,8 +193,7 @@ internal record class CompoundPropertyDescription(
 
     public override ushort GetEncodeSize(uint typeSize)
     {
-        // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
-        var nameBytesCount = Name.Length + 1;
+        var nameBytesCount = Encoding.UTF8.GetByteCount(Name) + 1;
         var byteCount = MathUtils.FindMinByteCount(typeSize);
 
         var encodeSize =
@@ -207,9 +206,12 @@ internal record class CompoundPropertyDescription(
 
     public override void Encode(H5DriverBase driver, uint typeSize)
     {
-        // name
-        // TODO is this really ASCII? The spec does not specify it but does it so for enumerated data type (there it is ASCII)
-        var nameBytes = Encoding.ASCII.GetBytes(Name);
+        // The specification gives a compound member name no character set field, and the
+        // reference library copies it as an opaque NUL-terminated byte string
+        // (H5MM_xstrdup in H5Odtype.c), so whatever bytes the caller supplied are stored.
+        // Real files therefore carry UTF-8 names: h5py writes "µA" as c2 b5 41 and both
+        // h5py and h5dump read it back intact. GetEncodeSize above counts the same bytes.
+        var nameBytes = Encoding.UTF8.GetBytes(Name);
         driver.Write(nameBytes);
         driver.Write((byte)0);
 
@@ -270,7 +272,7 @@ internal record class EnumerationPropertyDescription(
     {
         var encodeSize =
             BaseType.GetEncodeSize() +
-            Names.Aggregate(0, (sum, name) => sum + name.Length + 1) +
+            Names.Aggregate(0, (sum, name) => sum + Encoding.UTF8.GetByteCount(name) + 1) +
             Values.Aggregate(0, (sum, value) => sum + value.Length);
 
         return (ushort)encodeSize;
@@ -282,9 +284,13 @@ internal record class EnumerationPropertyDescription(
         BaseType.Encode(driver);
 
         // names
+        // The specification calls these ASCII, but the reference library stores them as
+        // opaque byte strings like compound member names and h5py round-trips UTF-8 through
+        // them, so encoding as ASCII would replace a caller's non-ASCII name with '?' while
+        // no reader requires it.
         foreach (var name in Names)
         {
-            var nameBytes = Encoding.ASCII.GetBytes(name);
+            var nameBytes = Encoding.UTF8.GetBytes(name);
             driver.Write(nameBytes);
             driver.Write((byte)0);
         }
@@ -390,7 +396,8 @@ internal record class OpaquePropertyDescription(
 
     public override ushort GetEncodeSize(uint typeSize)
     {
-        var unpaddedLength = Tag.Length + 1;
+        // Counted in bytes, since that is what the limit and the padding are measured in.
+        var unpaddedLength = Encoding.UTF8.GetByteCount(Tag) + 1;
 
         if (unpaddedLength > byte.MaxValue)
             throw new Exception($"The maximum opaque tag length is {byte.MaxValue - 1} bytes");
@@ -400,7 +407,7 @@ internal record class OpaquePropertyDescription(
 
     public override void Encode(H5DriverBase driver, uint typeSize)
     {
-        var bytes = Encoding.ASCII.GetBytes(Tag);
+        var bytes = Encoding.UTF8.GetBytes(Tag);
         var length = bytes.Length + 1;
         var padBytesCount = MathUtils.Ceil_N(length, 8) - length;
 

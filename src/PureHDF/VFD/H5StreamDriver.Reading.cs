@@ -44,20 +44,10 @@ internal partial class H5StreamDriver : H5DriverBase
     public override void ReadDataset(Span<byte> buffer)
     {
         if (_stream is IDatasetStream datasetStream)
-        {
             datasetStream.ReadDataset(buffer);
-        }
 
         else
-        {
-            var remainingBuffer = buffer;
-
-            while (remainingBuffer.Length > 0)
-            {
-                var count = _stream.Read(buffer);
-                remainingBuffer = remainingBuffer[count..];
-            }
-        }
+            _stream.ReadExactly(buffer);
     }
 
     public override void Read(Span<byte> buffer)
@@ -103,7 +93,8 @@ internal partial class H5StreamDriver : H5DriverBase
     {
         var size = Unsafe.SizeOf<T>();
         Span<byte> buffer = stackalloc byte[size];
-        _stream.Read(buffer);
+
+        _stream.ReadExactly(buffer);
 
         return MemoryMarshal.Cast<byte, T>(buffer)[0];
     }

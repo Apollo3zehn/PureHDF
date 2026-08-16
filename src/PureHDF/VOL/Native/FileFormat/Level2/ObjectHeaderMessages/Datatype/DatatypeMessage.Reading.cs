@@ -958,6 +958,8 @@ internal partial record class DatatypeMessage(
 
             source.ReadDataset(memory.Span);
 
+            // Decoded as UTF-8, which is correct for H5T_CSET_ASCII too, and matches
+            // GetDecodeInfoForVariableLengthString. See ReadUtils.
             var value = ReadUtils.ReadFixedLengthString(memory.Span);
             value = trim(value);
 

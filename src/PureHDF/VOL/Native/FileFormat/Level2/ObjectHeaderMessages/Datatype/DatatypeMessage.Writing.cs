@@ -109,27 +109,15 @@ internal partial record class DatatypeMessage : Message
         if (type == typeof(byte) && opaqueInfo is not null)
             type = typeof(H5OpaqueInfo);
 
-        // Cache
+        // Cache. The key is the type plus everything else the message depends on — a string's
+        // requested width, an opaque type's size and tag — because those come from the caller,
+        // so one type maps to many messages. Keying on all of it means strings and opaque types
+        // can be cached like anything else instead of having to be excluded.
         var cache = context.TypeToMessageMap;
-        
-        {
-            // Cannot use cache for string as the 'stringLength' can be different for each instance of the type
-            if (type == typeof(string) && stringLength != default)
-            {
-                //    
-            }
+        var cacheKey = new DatatypeCacheKey(type, stringLength, opaqueInfo);
 
-            // Cannot use cache for H5OpaqueInfo as the size can be different for each instance of the type
-            else if (type == typeof(H5OpaqueInfo))
-            {
-                //
-            }
-
-            else if (cache.TryGetValue(type, out var cachedMessage))
-            {
-                return cachedMessage;
-            }
-        }
+        if (cache.TryGetValue(cacheKey, out var cachedMessage))
+            return cachedMessage;
 
         //
         var endianness = BitConverter.IsLittleEndian
@@ -231,7 +219,7 @@ internal partial record class DatatypeMessage : Message
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
 
-        cache[type] = (newMessage, encode);
+        cache[cacheKey] = (newMessage, encode);
 
         return (newMessage, encode);
     }
@@ -744,11 +732,8 @@ internal partial record class DatatypeMessage : Message
                 else
                 {
                     using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
+                    
                     var paddingBuffer = paddingBufferOwner.Memory.Span[..padding];
-
-                    // Rent does not zero the buffer, so without this the padding written to the file is
-                    // whatever was last in that pooled memory. The stackalloc branch above clears for the
-                    // same reason.
                     paddingBuffer.Clear();
 
                     target.WriteDataset(paddingBuffer);

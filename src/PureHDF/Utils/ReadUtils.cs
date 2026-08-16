@@ -170,29 +170,32 @@ internal static partial class ReadUtils
         return array;
     }
 
-    public static string ReadFixedLengthString(Span<byte> data, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+    /* Strings are always decoded as UTF-8, never as ASCII.
+     *
+     * H5T_cset_t defines only H5T_CSET_ASCII and H5T_CSET_UTF8, and ASCII is a strict
+     * subset of UTF-8 — all 128 ASCII byte values decode identically under both — so a
+     * UTF-8 decoder is correct for every conformant payload, including the fields the
+     * format specification fixes as ASCII (filter names, driver identifiers, dates).
+     *
+     * Where the two differ is a payload that holds UTF-8 while being declared, or defaulted
+     * to, ASCII — which is what any writer that does not set a character set produces.
+     * There, Encoding.ASCII replaces every byte >= 0x80 with '?' silently and
+     * irrecoverably, and leaves the result indistinguishable from a literal '?'. UTF-8
+     * recovers such a payload, and marks genuinely malformed bytes U+FFFD.
+     */
+    public static string ReadFixedLengthString(Span<byte> data)
     {
-        return encoding switch
-        {
-            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
-            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
-            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
-        };
+        return Encoding.UTF8.GetString(data);
     }
 
-    public static string ReadFixedLengthString(H5DriverBase driver, int length, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+    public static string ReadFixedLengthString(H5DriverBase driver, int length)
     {
         var data = driver.ReadBytes(length);
 
-        return encoding switch
-        {
-            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data),
-            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data),
-            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
-        };
+        return Encoding.UTF8.GetString(data);
     }
 
-    public static string ReadNullTerminatedString(H5DriverBase driver, bool pad, int padSize = 8, CharacterSetEncoding encoding = CharacterSetEncoding.ASCII)
+    public static string ReadNullTerminatedString(H5DriverBase driver, bool pad, int padSize = 8)
     {
         var data = new List<byte>();
         var byteValue = driver.ReadByte();
@@ -203,17 +206,15 @@ internal static partial class ReadUtils
             byteValue = driver.ReadByte();
         }
 
-        var destination = encoding switch
-        {
-            CharacterSetEncoding.ASCII => Encoding.ASCII.GetString(data.ToArray()),
-            CharacterSetEncoding.UTF8 => Encoding.UTF8.GetString(data.ToArray()),
-            _ => throw new FormatException($"The character set encoding '{encoding}' is not supported.")
-        };
+        var destination = Encoding.UTF8.GetString(data.ToArray());
 
         if (pad)
         {
+            // The padding is measured from the bytes on disk, not from the decoded string:
+            // a multi-byte character makes the string shorter than the data it came from,
+            // which would seek to the wrong offset and desynchronise the driver.
             // https://stackoverflow.com/questions/20844983/what-is-the-best-way-to-calculate-number-of-padding-bytes
-            var paddingCount = (padSize - (destination.Length + 1) % padSize) % padSize;
+            var paddingCount = (padSize - (data.Count + 1) % padSize) % padSize;
             driver.Seek(paddingCount, SeekOrigin.Current);
         }
 

@@ -140,15 +140,25 @@ public class NativeGroup : NativeObject, IH5Group
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
         var current = isRooted ? Context.File.Reference : Reference;
 
+        // Only the first iteration can reuse a group we already hold; every later segment names an
+        // object not yet resolved, so this is cleared at the end of each pass.
+        var group = isRooted ? null : this;
+
         for (int i = 0; i < segments.Length; i++)
         {
-            if (current.Dereference() is not NativeGroup group)
-                return false;
+            if (group is null)
+            {
+                if (current.Dereference() is not NativeGroup dereferenced)
+                    return false;
+
+                group = dereferenced;
+            }
 
             if (!group.TryGetReference(segments[i], linkAccess, out var reference))
                 return false;
 
             current = reference;
+            group = null;
         }
 
         return true;
@@ -163,16 +173,28 @@ public class NativeGroup : NativeObject, IH5Group
         var segments = isRooted ? path.Split('/').Skip(1).ToArray() : path.Split('/');
         var current = isRooted ? Context.File.Reference : Reference;
 
+        // Only the first iteration can reuse a group we already hold; every later segment names an
+        // object not yet resolved, so this is cleared at the end of each pass.
+        var group = isRooted ? null : this;
+
         for (int i = 0; i < segments.Length; i++)
         {
-            // TODO: Use cache to store dereferenced objects (as it is done in HsdsGroup.cs)
-            if (current.Dereference() is not NativeGroup group)
-                throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
+            if (group is null)
+            {
+                // TODO: Use cache to store dereferenced objects (as it is done in HsdsGroup.cs). That
+                // would cover the remaining case - the intermediate segments of a deep path, and the
+                // root of a rooted one - which still re-decode a header per lookup.
+                if (current.Dereference() is not NativeGroup dereferenced)
+                    throw new Exception($"Path segment '{segments[i - 1]}' is not a group.");
+
+                group = dereferenced;
+            }
 
             if (!group.TryGetReference(segments[i], linkAccess, out var reference))
                 throw new Exception($"Could not find part of the path '{path}'.");
 
             current = reference;
+            group = null;
         }
 
         return current;
