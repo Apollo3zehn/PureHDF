@@ -1,4 +1,54 @@
-## v2.1.4 - 2026-07-29
+## v3.0.0 - 2026-08-27
+
+The native read path is now async-first, which makes PureHDF usable in Blazor WebAssembly: a browser cannot perform a synchronous HTTP range request, so the previous read path — which blocked at every step of a walk — could not open a remote file at all. The public synchronous API is unchanged and blocks once at the public boundary rather than at every step. See [#176](https://github.com/Apollo3zehn/PureHDF/pull/176).
+
+A driver is now allocated per read operation, so a dataset or attribute resolved once can be read concurrently through a single `H5File`. Object navigation (e.g. `file.Dataset("x")`, attribute enumeration) still moves the file-level cursor and remains single-threaded — resolve first, then read in parallel.
+
+Structural decodes (local heaps, b-tree and fractal-heap headers) are cached per file and per address instead of in lazy fields on retained header messages. Node and heap caches are bounded; measured on a 160k-chunk full read, peak cache memory dropped from 9,685 KiB (unbounded, linear in chunk count) to 1,560 KiB (bounded, flat).
+
+### Breaking changes
+- `IDatasetStream` interface contract rewritten. The single `void ReadDataset(Span<byte> buffer)` method is replaced by two `ValueTask` methods that each take an absolute offset (cursor-free, concurrency-safe):
+  - `ValueTask ReadDatasetAsync(long offset, Memory<byte> buffer)`
+  - `ValueTask ReadMetadataAsync(long offset, Memory<byte> buffer)`
+  - Both methods are required with no default implementation. Any out-of-tree `IDatasetStream` implementation must be updated. `AmazonS3Stream` in the extensions package is rewritten accordingly.
+
+### Features
+- Asynchronous `H5File.Open` overloads — 4 new static methods returning `Task<NativeFile>`, mirroring the synchronous `Open` set:
+  - `OpenReadAsync(string filePath, H5ReadOptions?, CancellationToken)`
+  - `OpenAsync(string filePath, FileMode, FileAccess, FileShare, H5ReadOptions?, CancellationToken)`
+  - `OpenAsync(Stream stream, bool leaveOpen, H5ReadOptions?, CancellationToken)` — the remote-source entry point for HTTP range-request streams in WASM
+  - `OpenAsync(MemoryMappedViewAccessor, H5ReadOptions?, CancellationToken)` — provided for symmetry; a memory-mapped view always completes synchronously
+- `IH5Attribute` / `NativeAttribute` — 2 new async members:
+  - `Task<T> ReadAsync<T>(ulong[]? memoryDims, CancellationToken)`
+  - `Task ReadAsync<T>(T buffer, ulong[]? memoryDims, CancellationToken)`
+- `NativeDataset` — 2 new `ReadAsync<T>` overloads taking `H5DatasetAccess` (existing overloads remain and delegate):
+  - `Task<T> ReadAsync<T>(H5DatasetAccess, Selection?, Selection?, ulong[]?, CancellationToken)`
+  - `Task ReadAsync<T>(H5DatasetAccess, T buffer, Selection?, Selection?, ulong[]?, CancellationToken)`
+- `NativeGroup` — 3 new async navigation overloads taking `H5LinkAccess` (existing overloads without it remain):
+  - `Task<bool> LinkExistsAsync(string path, H5LinkAccess, CancellationToken)`
+  - `Task<IH5Object> GetAsync(string path, H5LinkAccess, CancellationToken)`
+  - `Task<IEnumerable<IH5Object>> ChildrenAsync(H5LinkAccess, CancellationToken)`
+- `NativeFile` — 1 new member for region references:
+  - `Task<Selection> GetAsync(NativeRegionReference1, CancellationToken)`
+- `IReadingChunkCache` / `SimpleReadingChunkCache` — 1 new member:
+  - `ValueTask<Memory<byte>> GetChunkAsync(ulong chunkIndex, Func<ValueTask<Memory<byte>>> chunkReader)` — the interface has a default implementation bridging to `GetChunk`, so existing `IReadingChunkCache` implementations keep compiling (they block on misses); `SimpleReadingChunkCache` overrides it for true async.
+- `H5ReadOptions` — new parameter appended with a default (additive, non-breaking):
+  - `long GlobalHeapCacheByteBudget = 64 * 1024 * 1024`
+
+### Performance
+- Local file reads complete synchronously and return an already-completed `ValueTask` — a local file is not an asynchronous source, so the driver reads through `RandomAccess.Read` rather than queuing every read (including 2-byte metadata reads) onto the thread pool via `ReadAsync`. Benchmarks are at or below the v2.1.4 baseline, with allocation byte-identical to it.
+- Cached structural decodes per file (local heaps, v1/v2 b-trees, fractal-heap headers and blocks, chunk indexes), and bounded the node/heap caches so peak memory no longer grows with data volume.
+- Coalesced small structural reads in the driver via a read-ahead window, and stopped re-decoding the group object header on by-name lookups.
+- Batched non-variable-length reference/compound decode via the `IsBuffered` fast path, and cached the compiled constructor factory for compound class decode.
+
+### Bug fixes
+- Made `NativeCache` thread-safe (the inner dictionaries were plain `Dictionary` mutated with no synchronization) and re-keyed it per file instead of per driver instance.
+- Made object navigation concurrency-safe with a driver per read operation.
+- Stopped a zero-slot chunk cache from crashing on the first chunk.
+
+Thanks @Blackclaws for your contributions!
+
+## v2.2.0 - 2026-08-16
 
 - [fix(writing): emit the group info message](https://github.com/Apollo3zehn/PureHDF/pull/178)
 - [fix(writing): zero the padding of a fixed-length string](https://github.com/Apollo3zehn/PureHDF/pull/177)
@@ -9,8 +59,6 @@
 - [fix(reading): never decode strings as ASCII](https://github.com/Apollo3zehn/PureHDF/pull/170)
 
 Thanks @Blackclaws for your contributions!
-
-## v2.2.0 - 2026-08-16
 
 ## v2.1.4 - 2026-07-29
 
