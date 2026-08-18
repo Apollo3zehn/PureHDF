@@ -810,7 +810,7 @@ public class SelectionTests
             memorySelection,
             index => new(new SystemMemoryStream(chunksBuffers[(int)index])),
             default!,
-            (_, source, target) => source.ReadDataset(target.Cast<int, byte>()),
+            (_, source, target) => source.ReadDatasetAsync(target.Cast<int, byte>()),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1,
             AllowBulkCopy: true
@@ -930,7 +930,7 @@ public class SelectionTests
             targetSelection,
             getSourceStream,
             default!,
-            (_, source, target) => source.ReadDataset(target.Cast<int, byte>()),
+            (_, source, target) => source.ReadDatasetAsync(target.Cast<int, byte>()),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1,
             AllowBulkCopy: true
@@ -1062,7 +1062,7 @@ public class SelectionTests
             memorySelection,
             getSourceStream,
             default!,
-            (_, source, target) => source.ReadDataset(target.Cast<int, byte>()),
+            (_, source, target) => source.ReadDatasetAsync(target.Cast<int, byte>()),
             SourceTypeSize: 4,
             TargetTypeSizeFactor: 1,
             AllowBulkCopy: true
@@ -1164,7 +1164,7 @@ public class SelectionTests
                 datasetSelection,
                 index => h5dIntermediate.GetReadStream(index),
                 context,
-                (_, source, target) => source.ReadDataset(target.Cast<int, byte>()),
+                (_, source, target) => source.ReadDatasetAsync(target.Cast<int, byte>()),
                 SourceTypeSize: 4,
                 TargetTypeSizeFactor: 1,
                 AllowBulkCopy: true

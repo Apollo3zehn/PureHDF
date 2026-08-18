@@ -118,7 +118,7 @@ internal sealed class ReadAheadWindow
     /// <c>AttributeMessage.Decode</c> is the common instance. And a read that already reaches the
     /// end of the file has nothing to read ahead OF, so buffering it would just add a copy; folding
     /// that case in here also means a refill can never be asked for bytes past the end, which the
-    /// exact-read contract of <see cref="IDatasetStream.ReadMetadata" /> would reject.
+    /// exact-read contract of <see cref="IDatasetStream.ReadMetadataAsync" /> would reject.
     /// </remarks>
     public int GetRefillLength(int count, long position, long sourceLength)
     {

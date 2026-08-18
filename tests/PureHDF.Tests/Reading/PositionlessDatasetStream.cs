@@ -39,7 +39,7 @@ internal sealed class PositionlessDatasetStream : Stream, IDatasetStream
     public int MetadataReadCount => Volatile.Read(ref _metadataReadCount);
 
     /// <summary>
-    /// Total bytes served through <see cref="ReadMetadata" />, so that a caller can tell a read count
+    /// Total bytes served through <see cref="ReadMetadataAsync" />, so that a caller can tell a read count
     /// that is high because a lot of structure was read from one that is high because the same
     /// structure was read a few bytes at a time.
     /// </summary>
@@ -56,14 +56,14 @@ internal sealed class PositionlessDatasetStream : Stream, IDatasetStream
         Volatile.Write(ref _metadataBytesRead, 0);
     }
 
-    public ValueTask ReadDataset(long offset, Memory<byte> buffer)
+    public ValueTask ReadDatasetAsync(long offset, Memory<byte> buffer)
     {
         Interlocked.Increment(ref _datasetReadCount);
 
         return ReadCore(offset, buffer);
     }
 
-    public ValueTask ReadMetadata(long offset, Memory<byte> buffer)
+    public ValueTask ReadMetadataAsync(long offset, Memory<byte> buffer)
     {
         Interlocked.Increment(ref _metadataReadCount);
         Interlocked.Add(ref _metadataBytesRead, buffer.Length);

@@ -778,7 +778,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = new ScratchBuffer<byte>(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            await source.ReadDataset(buffer).ConfigureAwait(false);
+            await source.ReadDatasetAsync(buffer).ConfigureAwait(false);
 
             /* decode sequence length */
             var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(buffer.Span);
@@ -924,7 +924,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = new ScratchBuffer<byte>(totalSize);
             var buffer = memoryOwner.Memory[0..totalSize];
 
-            await source.ReadDataset(buffer).ConfigureAwait(false);
+            await source.ReadDatasetAsync(buffer).ConfigureAwait(false);
 
             /* skip the length of the sequence (H5Tvlen.c H5T_vlen_disk_read) */
             buffer = buffer.Slice(sizeof(uint));
@@ -987,7 +987,7 @@ internal partial record class DatatypeMessage(
             using var memoryOwner = new ScratchBuffer<byte>((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
-            await source.ReadDataset(memory).ConfigureAwait(false);
+            await source.ReadDatasetAsync(memory).ConfigureAwait(false);
 
             // Decoded as UTF-8, which is correct for H5T_CSET_ASCII too, and matches
             // GetDecodeInfoForVariableLengthString. See ReadUtils.
@@ -1042,7 +1042,7 @@ internal partial record class DatatypeMessage(
         // Variable-length sequences and strings store a fixed-size (length + global
         // heap id) header per cell in the dataset stream, with the payload living
         // in the global heap. The per-cell element decoder reads that header via
-        // source.ReadDataset(headerBytes) before resolving the heap object — and on
+        // source.ReadDatasetAsync(headerBytes) before resolving the heap object — and on
         // an N-cell decode pass that becomes N small ReadDataset calls into the
         // underlying IH5ReadStream. Pre-reading all N headers in one bulk call and
         // feeding the per-cell decoder from an in-memory wrapper collapses the
@@ -1066,7 +1066,7 @@ internal partial record class DatatypeMessage(
                 using var memoryOwner = new ScratchBuffer<byte>(totalBytes);
                 var bulk = memoryOwner.Memory[..totalBytes];
 
-                await source.ReadDataset(bulk).ConfigureAwait(false);
+                await source.ReadDatasetAsync(bulk).ConfigureAwait(false);
 
                 var localSource = new SystemMemoryStream(bulk);
 
@@ -1099,7 +1099,7 @@ internal partial record class DatatypeMessage(
         where T : struct
     {
         // HOT PATH: plain unmanaged (numeric) datasets, which must reach
-        //     source.ReadDataset(MemoryMarshal.AsBytes(target))
+        //     source.ReadDatasetAsync(MemoryMarshal.AsBytes(target))
         // i.e. a single zero-copy read straight into the caller's buffer. Span<T> cannot be
         // reinterpreted as Memory<byte>, so both overloads below preserve the zero-copy read rather
         // than falling back to a pooled rent plus a full copy.
@@ -1117,7 +1117,7 @@ internal partial record class DatatypeMessage(
             if (source.TryReadDatasetSync(MemoryMarshal.AsBytes(target.Span)))
                 return default;
 
-            return source.ReadDataset(target.Cast<T, byte>());
+            return source.ReadDatasetAsync(target.Cast<T, byte>());
         }
 
         return decode;
@@ -1212,7 +1212,7 @@ internal partial record class DatatypeMessage(
         using var memoryOwner = new ScratchBuffer<byte>(headerSize);
         var headerBuffer = memoryOwner.Memory[..headerSize];
 
-        await source.ReadDataset(headerBuffer).ConfigureAwait(false);
+        await source.ReadDatasetAsync(headerBuffer).ConfigureAwait(false);
 
         var sequenceLength = BinaryPrimitives.ReadUInt32LittleEndian(headerBuffer.Span);
         var globalHeapId = ReadingGlobalHeapId.Decode(context.Superblock, headerBuffer.Span[lengthSize..]);

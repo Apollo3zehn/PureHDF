@@ -9,16 +9,16 @@ internal interface IH5ReadStream : IDisposable
     void Seek(long offset, SeekOrigin origin);
 
     // Memory<byte> rather than Span<byte>: a Span cannot cross an await boundary.
-    ValueTask ReadDataset(Memory<byte> buffer);
+    ValueTask ReadDatasetAsync(Memory<byte> buffer);
 
     /// <summary>
     ///     Reads into <paramref name="buffer" /> without suspending, or returns <c>false</c> if this
     ///     source cannot serve the read synchronously (in which case the caller must go through
-    ///     <see cref="ReadDataset" />).
+    ///     <see cref="ReadDatasetAsync" />).
     /// </summary>
     /// <remarks>
     ///     This exists to keep the async conversion free on the hot decode path, not as a
-    ///     convenience. <see cref="ReadDataset" /> takes <c>Memory&lt;byte&gt;</c> because a
+    ///     convenience. <see cref="ReadDatasetAsync" /> takes <c>Memory&lt;byte&gt;</c> because a
     ///     <c>Span</c> cannot cross an <c>await</c> - but reinterpreting a <c>Memory&lt;T&gt;</c> as
     ///     <c>Memory&lt;byte&gt;</c> requires a heap-allocated <see cref="CastMemoryManager{T, U}" />
     ///     per call, whereas <c>MemoryMarshal.AsBytes</c> over a <c>Span</c> is free. Most sources on

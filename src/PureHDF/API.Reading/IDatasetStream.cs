@@ -53,7 +53,7 @@ public interface IDatasetStream
     /// This is the "actual data" signal: an implementation that caches may want to bypass its cache
     /// here, because bulk payload is usually large and read once. Must be safe to call concurrently.
     /// </remarks>
-    public ValueTask ReadDataset(long offset, Memory<byte> buffer);
+    public ValueTask ReadDatasetAsync(long offset, Memory<byte> buffer);
 
     /// <summary>
     /// Reads file structure: superblock, object headers, B-tree and heap nodes, chunk index records
@@ -72,5 +72,5 @@ public interface IDatasetStream
     /// implementation over a remote source will usually want to serve them from a cache of larger
     /// blocks. Must be safe to call concurrently.
     /// </remarks>
-    public ValueTask ReadMetadata(long offset, Memory<byte> buffer);
+    public ValueTask ReadMetadataAsync(long offset, Memory<byte> buffer);
 }

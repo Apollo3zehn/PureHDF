@@ -14,9 +14,9 @@ internal partial class OffsetStream : IH5ReadStream
 
     public long Position { get => _driver.Position - _baseAddress; }
 
-    public ValueTask ReadDataset(Memory<byte> buffer)
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
-        return _driver.ReadDataset(buffer);
+        return _driver.ReadDatasetAsync(buffer);
     }
 
     // Sync-capable exactly when the underlying driver is.

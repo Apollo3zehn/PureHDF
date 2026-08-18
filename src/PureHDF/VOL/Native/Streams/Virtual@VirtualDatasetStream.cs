@@ -35,7 +35,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public ValueTask ReadDataset(Memory<byte> buffer) => throw new NotImplementedException();
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer) => throw new NotImplementedException();
 
     // Memory<TResult> rather than Span<TResult>, which is what makes the gather awaitable at all: a
     // Span cannot cross an await, and reading a source dataset is an await. The caller already holds a

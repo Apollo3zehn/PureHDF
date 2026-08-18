@@ -29,7 +29,7 @@ internal class SlotStream : IH5ReadStream
 
     public long Length { get; }
 
-    public async ValueTask ReadDataset(Memory<byte> buffer)
+    public async ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         var length = (int)Math.Min(Length - Position, buffer.Length);
 

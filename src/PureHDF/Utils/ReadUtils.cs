@@ -141,7 +141,7 @@ internal static partial class ReadUtils
         using var memoryOwner = new ScratchBuffer<byte>(bytesOfType);
         var buffer = memoryOwner.Memory[..bytesOfType];
 
-        await source.ReadDataset(buffer).ConfigureAwait(false);
+        await source.ReadDatasetAsync(buffer).ConfigureAwait(false);
 
         return MemoryMarshal.Cast<byte, T>(buffer.Span)[0];
     }
@@ -172,7 +172,7 @@ internal static partial class ReadUtils
         using var memoryOwner = new ScratchBuffer<byte>(byteLength);
         var buffer = memoryOwner.Memory[..byteLength];
 
-        await source.ReadDataset(buffer).ConfigureAwait(false);
+        await source.ReadDatasetAsync(buffer).ConfigureAwait(false);
 
         MemoryMarshal.Cast<byte, TElement>(buffer.Span).CopyTo(memory.Span);
 

@@ -274,7 +274,7 @@ internal abstract class H5D_Chunk : H5D_Base
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
-                    await ReadContext.Driver.ReadDataset(chunk).ConfigureAwait(false);
+                    await ReadContext.Driver.ReadDatasetAsync(chunk).ConfigureAwait(false);
                 }
 
                 else
@@ -284,7 +284,7 @@ internal abstract class H5D_Chunk : H5D_Base
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
-                    await ReadContext.Driver.ReadDataset(buffer).ConfigureAwait(false);
+                    await ReadContext.Driver.ReadDatasetAsync(buffer).ConfigureAwait(false);
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,

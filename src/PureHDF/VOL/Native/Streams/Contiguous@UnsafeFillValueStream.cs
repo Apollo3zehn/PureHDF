@@ -18,7 +18,7 @@ internal class UnsafeFillValueStream : IH5ReadStream
     public long Position { get => _position; }
 
     // No IO at all: stays sync-completing. Not async, so `fixed` over the Span is still legal.
-    public ValueTask ReadDataset(Memory<byte> memory)
+    public ValueTask ReadDatasetAsync(Memory<byte> memory)
     {
         ReadCore(memory.Span);
 

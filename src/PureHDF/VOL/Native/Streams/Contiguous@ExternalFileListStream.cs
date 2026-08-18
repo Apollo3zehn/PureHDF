@@ -71,7 +71,7 @@ internal class ExternalFileListStream : IH5ReadStream
         return created;
     }
 
-    public async ValueTask ReadDataset(Memory<byte> buffer)
+    public async ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         var offset = 0;
         var remaining = buffer.Length;
@@ -93,7 +93,7 @@ internal class ExternalFileListStream : IH5ReadStream
 
             var length = (int)Math.Min(remaining, streamRemaining);
 
-            await _slotStream.ReadDataset(buffer.Slice(offset, length)).ConfigureAwait(false);
+            await _slotStream.ReadDatasetAsync(buffer.Slice(offset, length)).ConfigureAwait(false);
             _position += length;
             offset += length;
             remaining -= length;

@@ -7,7 +7,7 @@ internal abstract partial class H5DriverBase : IH5ReadStream
     public abstract long Position { get; }
     public abstract long Length { get; }
 
-    public abstract ValueTask ReadDataset(Memory<byte> buffer);
+    public abstract ValueTask ReadDatasetAsync(Memory<byte> buffer);
 
     // Defaults to "cannot read synchronously" so that a driver over a genuinely remote source is
     // never accidentally blocked on. Drivers over local sources override it; see IH5ReadStream.

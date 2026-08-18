@@ -122,7 +122,7 @@ internal partial class H5StreamDriver : H5DriverBase
         };
     }
 
-    public override ValueTask ReadDataset(Memory<byte> buffer)
+    public override ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         // Returning the callee's ValueTask directly, rather than `async`/`await`-ing it, avoids
         // building a state machine here just to forward a result.
@@ -136,7 +136,7 @@ internal partial class H5StreamDriver : H5DriverBase
         var offset = _position;
         _position += buffer.Length;
 
-        return _datasetStream.ReadDataset(offset, buffer);
+        return _datasetStream.ReadDatasetAsync(offset, buffer);
     }
 
     public override ValueTask Read(Memory<byte> buffer)
@@ -217,7 +217,7 @@ internal partial class H5StreamDriver : H5DriverBase
             var bypassOffset = _position;
             _position += buffer.Length;
 
-            return _datasetStream.ReadMetadata(bypassOffset, buffer);
+            return _datasetStream.ReadMetadataAsync(bypassOffset, buffer);
         }
 
         return RefillThenServe(buffer, refillLength);
@@ -231,7 +231,7 @@ internal partial class H5StreamDriver : H5DriverBase
         var offset = _position;
         var window = _readAhead!.BeginRefill(refillLength);
 
-        await _datasetStream!.ReadMetadata(offset, window).ConfigureAwait(false);
+        await _datasetStream!.ReadMetadataAsync(offset, window).ConfigureAwait(false);
 
         // ReadMetadata fills its buffer completely or throws, so the window holds exactly
         // refillLength bytes - and GetRefillLength only returns a length that covers the caller. So

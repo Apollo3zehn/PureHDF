@@ -16,7 +16,7 @@ internal partial class SystemMemoryStream : IH5ReadStream
     public Memory<byte> SlicedMemory { get; private set; }
 
     // In-memory source: already-completed ValueTask, no allocation.
-    public ValueTask ReadDataset(Memory<byte> buffer)
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         ReadCore(buffer.Span);
 

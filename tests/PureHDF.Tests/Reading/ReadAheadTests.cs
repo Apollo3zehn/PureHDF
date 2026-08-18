@@ -146,7 +146,7 @@ public class ReadAheadTests
     /// </summary>
     /// <remarks>
     /// This is where an off-by-one in the refill length shows up as an <see cref="EndOfStreamException"
-    /// />, because <see cref="IDatasetStream.ReadMetadata" /> is an exact-fill contract - asking it for
+    /// />, because <see cref="IDatasetStream.ReadMetadataAsync" /> is an exact-fill contract - asking it for
     /// one byte past the end is an error, not a short read.
     /// </remarks>
     [Fact]

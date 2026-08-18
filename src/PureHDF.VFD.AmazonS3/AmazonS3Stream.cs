@@ -109,7 +109,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     // Bulk payload: requested as its own byte range and never cached. A dataset chunk is typically
     // large and decoded once, so caching it would only displace the metadata that is re-read
     // constantly.
-    public ValueTask ReadDataset(long offset, Memory<byte> buffer)
+    public ValueTask ReadDatasetAsync(long offset, Memory<byte> buffer)
     {
         return ReadUncachedAsync(offset, buffer);
     }
@@ -117,7 +117,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     /// <inheritdoc />
     // Structure: small, numerous and highly repetitive reads, served from fixed-size cache slots so
     // that one range request covers many of them.
-    public ValueTask ReadMetadata(long offset, Memory<byte> buffer)
+    public ValueTask ReadMetadataAsync(long offset, Memory<byte> buffer)
     {
         return ReadCachedAsync(offset, buffer);
     }

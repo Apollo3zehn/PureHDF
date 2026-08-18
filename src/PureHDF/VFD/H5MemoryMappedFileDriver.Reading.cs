@@ -67,7 +67,7 @@ internal unsafe partial class H5MemoryMappedFileDriver : H5DriverBase
         }
     }
 
-    public override ValueTask ReadDataset(Memory<byte> buffer)
+    public override ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         ReadCore(buffer.Span);
 
