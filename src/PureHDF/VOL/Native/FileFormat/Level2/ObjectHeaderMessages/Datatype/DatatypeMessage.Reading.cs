@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -347,6 +348,22 @@ internal partial record class DatatypeMessage(
     // of the generic GetDecodeInfoForUnmanagedElement<T>.
     private static readonly ConcurrentDictionary<Type, ElementDecodeDelegate> _unmanagedElementDecoderCache = new();
 
+    // Caches a compiled parameterless-constructor factory per Type. The compound
+    // decode closure (GetDecodeInfoForReferenceCompound) invokes the factory on
+    // every element of class-typed compound data; a compiled delegate avoids the
+    // per-call reflection cost of constructor lookup and invocation. The factory
+    // is built once per Type via a compiled expression tree and is shared across
+    // all DatatypeMessage instances since the Type recurs across files.
+    // GetDecodeInfoForReferenceCompound validates the parameterless ctor for class
+    // types before the closure is built, so cache misses never throw.
+    private static readonly ConcurrentDictionary<Type, Func<object>> _parameterlessCtorCache = new();
+
+    private static Func<object> GetParameterlessConstructor(Type type)
+    {
+        return _parameterlessCtorCache.GetOrAdd(type, static t =>
+            Expression.Lambda<Func<object>>(Expression.New(t)).Compile());
+    }
+
     private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedElement = typeof(DatatypeMessage)
         .GetMethod(
             nameof(GetDecodeInfoForUnmanagedElement),
@@ -596,9 +613,11 @@ internal partial record class DatatypeMessage(
         }
 
         // decode
+        var factory = GetParameterlessConstructor(type);
+
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
-            var result = Activator.CreateInstance(type)!;
+            var result = factory();
             var basePosition = source.Position;
 
             foreach (var decodeStep in decodeSteps)
