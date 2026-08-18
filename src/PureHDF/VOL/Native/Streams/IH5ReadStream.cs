@@ -31,4 +31,23 @@ internal interface IH5ReadStream : IDisposable
     ///     </para>
     /// </remarks>
     bool TryReadDatasetSync(Span<byte> buffer) => false;
+
+    /// <summary>
+    ///     <c>true</c> when this stream is backed by an in-memory buffer, so every read is a plain
+    ///     memory copy with no IO and no per-call dispatch cost.
+    /// </summary>
+    /// <remarks>
+    ///     Decoders that loop over <see cref="ReadDatasetAsync" /> per element use this to decide
+    ///     whether to pre-read the whole batch into a pooled buffer and decode from an in-memory
+    ///     <see cref="SystemMemoryStream" /> wrapper (collapsing N small driver reads into one). For
+    ///     a source that is already in memory that bulk read would just duplicate the copy, so the
+    ///     per-element decode runs against the original stream instead.
+    ///     <para>
+    ///         The default is <c>false</c>: assume a live backing store (a file/stream/mmap driver,
+    ///         an external file) until the stream opts in. A memory-mapped driver is not
+    ///         <em>buffered</em> here - its data is reached through the driver read API, not exposed
+    ///         as a contiguous <c>Memory&lt;byte&gt;</c>, so batching its dispatch still helps.
+    ///     </para>
+    /// </remarks>
+    bool IsBuffered => false;
 }

@@ -31,6 +31,9 @@ internal partial class SystemMemoryStream : IH5ReadStream
         return true;
     }
 
+    // Backed by a Memory<byte>: reads are plain copies, no dispatch cost to amortize.
+    public bool IsBuffered => true;
+
     private void ReadCore(Span<byte> buffer)
     {
         var length = Math.Min(SlicedMemory.Length, buffer.Length);
