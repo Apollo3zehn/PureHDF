@@ -5,19 +5,19 @@ namespace PureHDF.VOL.Native;
 // CONCURRENCY / CACHING: immutable and context-free on purpose, so that a retained object-header
 // message can cache one (see SymbolTableMessage, ObjectHeaderScratchPad, ExternalFileListMessage).
 //
-// The previous shape held an H5DriverBase and read the data segment lazily on first GetObjectName.
-// That could not be cached for two independent reasons:
+// Two constraints drive the shape:
 //
-//   1. The driver is now a per-read-operation object handed back to NativeOperationSlot and reused,
-//      so a retained heap holding one would read through an unrelated operation's cursor.
-//   2. This was a `record struct` with a mutable `byte[]? _data` field and a non-readonly
-//      GetObjectName. Caching it as a `LocalHeap?` and reading through `.Value` hands out a COPY
-//      each time, so the lazy field would never be observed populated and the data segment would be
-//      re-read on every single name lookup - silently, at no diagnostic cost.
+//   1. The driver is a per-read-operation object handed back to NativeOperationSlot and reused,
+//      so a retained heap holding one would read through an unrelated operation's cursor. Holding
+//      no driver avoids that.
+//   2. A value type with a mutable field cannot be cached: reading through a `LocalHeap?` via
+//      `.Value` hands out a copy each time, so a lazily populated data field would never be observed
+//      populated and the data segment would be re-read on every name lookup — silently, at no
+//      diagnostic cost.
 //
-// Reading the segment eagerly and being a class fixes both: there is no lazy state left to share and
-// nothing to copy. It reads no more bytes than the lazy version did, because the lazy version also
-// read the whole segment - just at an unpredictable moment.
+// Reading the segment eagerly in the constructor and being a class satisfies both: there is no
+// lazy state to share and nothing to copy. The eager read costs no more bytes than a lazy one
+// would, because the whole segment is needed eventually — the difference is only when.
 internal sealed record class LocalHeap(byte[] Data)
 {
     private byte _version;

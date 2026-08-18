@@ -21,8 +21,9 @@ partial class H5NativeWriter
 
         // allowPositionless: false - the write path writes at the wrapped stream's own cursor, so a
         // driver that kept the cursor to itself (which is what IDatasetStream enables on the read
-        // side) would write at the wrong offsets. IDatasetStream is a read-side interface; this keeps
-        // a stream that happens to implement it writing exactly as it did before.
+        // side) would write at the wrong offsets. IDatasetStream is a read-side interface; this
+        // keeps a stream that happens to implement it writing at the wrapped stream's own cursor,
+        // unaffected by the read-side interface.
         var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen, allowPositionless: false);
 
         if (options.UserBlockSize != 0)

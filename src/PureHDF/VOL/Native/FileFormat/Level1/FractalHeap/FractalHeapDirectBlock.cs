@@ -5,9 +5,9 @@ namespace PureHDF.VOL.Native;
 // TODO: Implement this.
 // public byte[] ObjectData { get; set; }
 
-// CONCURRENCY: holds no NativeReadContext. It is transient - decoded inside FractalHeapHeader's
-// GetAddress/Locate and discarded - so a capture would have been survivable, but the ONLY thing that
-// needed one was a lazy GetHeapHeader() with no callers anywhere in the tree, so both are gone.
+// CONCURRENCY: holds no NativeReadContext. It is transient — decoded inside FractalHeapHeader's
+// GetAddress/Locate and discarded — so it has no need for a context: the only member that would have
+// used one (a lazy GetHeapHeader()) has no callers anywhere in the tree.
 internal sealed record class FractalHeapDirectBlock(
     ulong HeapHeaderAddress,
     ulong BlockOffset,

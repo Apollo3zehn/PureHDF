@@ -380,8 +380,8 @@ internal sealed record class BTree2Header<T>(
     /// Returns the leaf node at <paramref name="nodePointer" />, decoding it on a miss.
     /// </summary>
     /// <remarks>
-    /// The leaf was the one node on the lookup spine that was never cached, so every repeated lookup
-    /// re-decoded up to a full node of records to compare against. See
+    /// Caching the leaf matters because it is the node a lookup actually compares records against;
+    /// without it, every repeated lookup re-decodes up to a full node of records. See
     /// <see cref="GetInternalNode" /> for why enumeration does not use this.
     /// </remarks>
     private async ValueTask<BTree2LeafNode<T>> GetLeafNode(

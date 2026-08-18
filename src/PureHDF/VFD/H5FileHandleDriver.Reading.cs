@@ -5,12 +5,11 @@ using Microsoft.Win32.SafeHandles;
 namespace PureHDF.VFD;
 
 // CONCURRENCY MODEL (async-first): a driver instance is owned by exactly one logical reader and
-// must not be shared across concurrent readers. This replaces the previous model, where a single
-// driver was shared and the cursor lived in a ThreadLocal<long>.
+// must not be shared across concurrent readers.
 //
-// The change is forced, not stylistic: with async reads a continuation may resume on a different
-// thread, where the ThreadLocal cursor reads back as 0. The result was silent corruption - the
-// superblock scan desynced and every file reported "not a valid HDF 5 file".
+// With async reads a continuation may resume on a different thread, where a ThreadLocal cursor
+// reads back as 0 — the superblock scan desyncs and every file reports "not a valid HDF 5 file".
+// A per-driver cursor field avoids that entirely.
 //
 // Isolation is per *operation*, not per reader: the read path allocates a driver per read operation
 // over this same file handle (CreateOperationDriverCore below), so a dataset or attribute resolved

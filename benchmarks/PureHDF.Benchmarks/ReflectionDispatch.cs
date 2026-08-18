@@ -4,8 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Benchmark;
 
-// Isolates the per-call dispatch cost on the three sites where reflection
-// caching was added:
+// Isolates the per-call dispatch cost on the three sites that cache reflection delegates:
 //
 //   1. NativeAttribute.Read<T>             — (TResult, TElement) reader delegate cache
 //   2. NativeDataset.Read<T>               — same pattern

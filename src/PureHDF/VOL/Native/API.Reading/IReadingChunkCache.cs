@@ -25,9 +25,9 @@ public interface IReadingChunkCache
     /// every cache miss - which is most of a first read.
     /// <para>
     /// The default implementation bridges to <see cref="GetChunk" />, so an existing cache keeps
-    /// compiling and working unchanged; it simply blocks, exactly as it did before. Override this to
-    /// participate in a genuinely asynchronous read (see <c>SimpleReadingChunkCache</c>, where both
-    /// methods share their cache bookkeeping and differ only in how the reader is invoked).
+    /// compiling and working; it simply blocks on every cache miss. Override this to participate in a
+    /// genuinely asynchronous read (see <c>SimpleReadingChunkCache</c>, where both methods share their
+    /// cache bookkeeping and differ only in how the reader is invoked).
     /// </para>
     /// </remarks>
     public ValueTask<Memory<byte>> GetChunkAsync(

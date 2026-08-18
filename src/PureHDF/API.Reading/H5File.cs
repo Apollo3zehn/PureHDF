@@ -86,9 +86,9 @@ public partial class H5File
      * runtime - the synchronous overloads above cannot get as far as returning a file at all, and the
      * async surface on the returned object is unreachable. These are the entry points for that case.
      *
-     * The machinery is not new: NativeFile has been fully asynchronous internally since the read path
-     * was converted, and the synchronous overloads above are the ones bridging it with
-     * GetAwaiter().GetResult(). All that was missing was public access.
+     * NativeFile is fully asynchronous internally; the synchronous overloads above bridge it with
+     * GetAwaiter().GetResult(). These async overloads simply expose that internal machinery
+     * directly.
      */
 
     /// <summary>

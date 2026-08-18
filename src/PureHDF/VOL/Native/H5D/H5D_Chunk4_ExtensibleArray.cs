@@ -8,8 +8,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
     /// </summary>
     /// <remarks>
     /// <c>Blocks</c> is keyed by file address and holds three different kinds of object, which is safe
-    /// for the same reason it was safe when this was an instance dictionary: the three live at distinct
-    /// addresses, so one key space cannot confuse them.
+    /// because the three live at distinct addresses, so one key space cannot confuse them.
     /// <para>
     /// Bounded, because the number of secondary blocks, data blocks and pages grows with the chunk
     /// count - the same reason the b-tree node caches are bounded. Counted rather than byte-costed:

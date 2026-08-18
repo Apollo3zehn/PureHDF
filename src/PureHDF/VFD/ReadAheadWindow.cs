@@ -34,7 +34,8 @@ namespace PureHDF.VFD;
 /// It needs NO synchronization, NO eviction policy and NO invalidation, which is what keeps it
 /// small: a driver is owned by exactly one logical reader (see H5DriverBase), a window holds one
 /// range rather than a collection, and an HDF5 file open for reading does not change underneath it.
-/// Contrast the two stream-side caches, which had to get all three right - and did not.
+/// Contrast the two stream-side caches, which must get all three right — a non-trivial
+/// obligation that is easy to get wrong.
 /// </para>
 /// <para>
 /// Only STRUCTURAL reads come through here. Bulk dataset payload is read straight into the caller's

@@ -44,15 +44,15 @@ internal static class NativeCache
     //
     // This exists because the retained object-header messages (SymbolTableMessage, LinkInfoMessage,
     // AttributeInfoMessage, ...) may not cache these themselves. They outlive the read operation that
-    // decoded them, so anything they hold must be free of a per-operation driver; upstream cached
-    // them in unsynchronised lazy fields holding a captured context, which is exactly the
-    // cursor-corruption class the per-operation driver exists to prevent, so those caches were
-    // removed and every by-name lookup re-decoded the storage it had already walked.
+    // decoded them, so anything they hold must be free of a per-operation driver. Caching them in the
+    // messages themselves would require unsynchronised lazy fields holding a captured context, which
+    // is exactly the cursor-corruption class the per-operation driver exists to prevent. This cache
+    // restores the caching that the messages cannot provide, without touching them.
     //
-    // Keying here rather than on the message restores the caching without touching the messages:
-    // entries are per FILE and per ADDRESS, so two messages pointing at the same heap share one
-    // decode, the cache dies with the file, and record equality of the messages stays a function of
-    // the file bytes rather than of which lookups happened to run first.
+    // Keying here rather than on the message keeps entries per FILE and per ADDRESS, so two messages
+    // pointing at the same heap share one decode, the cache dies with the file, and record equality
+    // of the messages stays a function of the file bytes rather than of which lookups happened to
+    // run first.
     //
     // The cached values must be immutable or internally thread-safe, since concurrent operations on
     // one file share them. That is a real obligation on the value types, not an assumption: LocalHeap

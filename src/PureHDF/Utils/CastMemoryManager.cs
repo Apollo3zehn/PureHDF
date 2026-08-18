@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace PureHDF;
 
-// Ported from PureHDF.VOL.Hsds so the native read path can reinterpret Memory<T> as Memory<byte>
-// without copying. Needed because async-first made DecodeDelegate<T> take Memory<T> instead of
-// Span<T>, and MemoryMarshal.AsBytes only works on Span.
+// Lets the native read path reinterpret Memory<T> as Memory<byte> without copying. Needed because
+// DecodeDelegate<T> takes Memory<T> rather than Span<T> (a Span cannot cross an await), and
+// MemoryMarshal.AsBytes only works on Span.
 internal class CastMemoryManager<TFrom, TTo> : MemoryManager<TTo>
         where TFrom : struct
         where TTo : struct
@@ -22,9 +22,9 @@ internal class CastMemoryManager<TFrom, TTo> : MemoryManager<TTo>
         //
     }
 
-    // Pin/Unpin must work here, unlike in the HSDS copy this was ported from: the native read path
-    // hands this Memory to Stream.ReadAsync / RandomAccess.ReadAsync, both of which pin it. The
-    // pin is delegated to the underlying TFrom memory and the byte offset is recomputed.
+    // Pin/Unpin must work: the native read path hands this Memory to Stream.ReadAsync /
+    // RandomAccess.ReadAsync, both of which pin it. The pin is delegated to the underlying TFrom
+    // memory and the byte offset is recomputed.
     public override MemoryHandle Pin(int elementIndex = 0)
     {
         var byteOffset = elementIndex * Unsafe.SizeOf<TTo>();

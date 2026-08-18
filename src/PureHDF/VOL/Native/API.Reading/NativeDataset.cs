@@ -545,7 +545,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         //
         // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
         // and a decode that only partially fills it must leave the caller's remaining elements
-        // untouched - which is what happened when the caller's own span was decoded into directly.
+        // untouched, preserving the semantics of a direct decode into the caller's own span.
         using var spanOwner = new ScratchBuffer<TElement>(buffer.Length);
         var resultBuffer = spanOwner.Memory[..buffer.Length];
 
@@ -572,8 +572,8 @@ public class NativeDataset : NativeObject, IH5Dataset
     //
     // The reason is measurable: this defaults a selection and compares two counts, never reads, and an
     // `async` method that completes synchronously still costs a builder and an awaiter check. With
-    // three nested async levels a 10,000-iteration scalar read measured ~12% slower than the
-    // synchronous path it replaced, at byte-identical allocation - all of it state-machine setup. One
+    // three nested async levels a 10,000-iteration scalar read measured ~12% slower than a
+    // synchronous equivalent, at byte-identical allocation - all of it state-machine setup. One
     // level of the three had no reason to be async at all.
     private Selection ResolveMemorySelection<TElement>(
         Selection fileSelection,

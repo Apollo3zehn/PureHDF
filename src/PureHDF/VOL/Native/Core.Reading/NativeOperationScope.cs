@@ -48,7 +48,7 @@ internal readonly struct NativeOperationScope : IDisposable
         var idle = slot.TryTake();
 
         // Reuse. The cursor is wherever the previous operation left it, which does not matter: every
-        // read path seeks before its first read. BaseAddress was copied when the driver was made and
+        // read path seeks before its first read. BaseAddress is set when the driver is created and
         // never changes afterwards.
         if (idle is not null)
         {
