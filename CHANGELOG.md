@@ -7,10 +7,12 @@ A driver is now allocated per read operation, so a dataset or attribute resolved
 Structural decodes (local heaps, b-tree and fractal-heap headers) are cached per file and per address instead of in lazy fields on retained header messages. Node and heap caches are bounded; measured on a 160k-chunk full read, peak cache memory dropped from 9,685 KiB (unbounded, linear in chunk count) to 1,560 KiB (bounded, flat).
 
 ### Breaking changes
-- `IDatasetStream` interface contract rewritten. The single `void ReadDataset(Span<byte> buffer)` method is replaced by two `ValueTask` methods that each take an absolute offset (cursor-free, concurrency-safe):
+- `IDatasetStream` interface renamed to `IConcurrentStream` and made a standalone interface (no longer requires a `Stream` base). The single `void ReadDataset(Span<byte> buffer)` method is replaced by two `ValueTask` methods that each take an absolute offset (cursor-free, concurrency-safe):
   - `ValueTask ReadDatasetAsync(long offset, Memory<byte> buffer)`
   - `ValueTask ReadMetadataAsync(long offset, Memory<byte> buffer)`
-  - Both methods are required with no default implementation. Any out-of-tree `IDatasetStream` implementation must be updated. `AmazonS3Stream` in the extensions package is rewritten accordingly.
+  - A `long Length { get; }` property is added so the driver can size reads without a `Stream`.
+  - The interface now implements `IDisposable` so an implementation that owns a cache or semaphore (e.g. `AmazonS3Stream`) can release it.
+  - Both methods are required with no default implementation. Any out-of-tree `IDatasetStream` implementation must be renamed to `IConcurrentStream` and updated. `AmazonS3Stream` in the extensions package is rewritten accordingly — it no longer inherits `Stream`.
 
 ### Features
 - Asynchronous `H5File.Open` overloads — 4 new static methods returning `Task<NativeFile>`, mirroring the synchronous `Open` set:
@@ -18,6 +20,16 @@ Structural decodes (local heaps, b-tree and fractal-heap headers) are cached per
   - `OpenAsync(string filePath, FileMode, FileAccess, FileShare, H5ReadOptions?, CancellationToken)`
   - `OpenAsync(Stream stream, bool leaveOpen, H5ReadOptions?, CancellationToken)` — the remote-source entry point for HTTP range-request streams in WASM
   - `OpenAsync(MemoryMappedViewAccessor, H5ReadOptions?, CancellationToken)` — provided for symmetry; a memory-mapped view always completes synchronously
+- `H5File.Open` / `OpenAsync` overloads for `IConcurrentStream` — 2 new static methods, one sync and one async, taking the new standalone interface directly (no `Stream` required):
+  - `NativeFile Open(IConcurrentStream concurrentStream, bool leaveOpen, H5ReadOptions?)`
+  - `Task<NativeFile> OpenAsync(IConcurrentStream concurrentStream, bool leaveOpen, H5ReadOptions?, CancellationToken)`
+  - Always selects `H5StreamDriver` in positionless mode (read-only; no cursor, no writing), so a source that owns its own fetch — e.g. `AmazonS3Stream` — can drive the read path without wrapping a `Stream`.
+- `H5File.Open` / `OpenAsync` overloads for `ReadOnlyMemory<byte>` — 2 new static methods, one sync and one async, for reading an HDF5 file straight from an in-memory byte buffer, with no memory-mapped view and no copy:
+  - `NativeFile Open(ReadOnlyMemory<byte> source, H5ReadOptions?)`
+  - `Task<NativeFile> OpenAsync(ReadOnlyMemory<byte> source, H5ReadOptions?, CancellationToken)` — provided for symmetry; an in-memory buffer is a synchronous source, so this always completes without suspending.
+  - Backed by `H5MemoryDriver`, which slices the buffer directly; reads never suspend and always complete synchronously.
+  - Concurrent reads are supported: a per-operation driver carries its own position over the same buffer, so a dataset or attribute resolved once can be read from several threads through a single `H5File`.
+  - The caller owns the buffer; the driver never writes to it, and there is no `leaveOpen` flag.
 - `IH5Attribute` / `NativeAttribute` — 2 new async members:
   - `Task<T> ReadAsync<T>(ulong[]? memoryDims, CancellationToken)`
   - `Task ReadAsync<T>(T buffer, ulong[]? memoryDims, CancellationToken)`

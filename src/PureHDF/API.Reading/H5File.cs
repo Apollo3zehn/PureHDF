@@ -78,6 +78,53 @@ public partial class H5File
             options: options);
     }
 
+    /// <summary>
+    /// Opens an HDF5 file from an in-memory byte buffer.
+    /// </summary>
+    /// <param name="source">A read-only view of the bytes of an HDF5 file. The caller owns this buffer and may reuse or reclaim it after the returned <see cref="NativeFile"/> is disposed; the driver never writes to it.</param>
+    /// <param name="options">Options to control decoding behavior.</param>
+    /// <remarks>
+    /// Reads from an in-memory buffer never suspend, so this overload always completes synchronously
+    /// and the returned file's async read members complete without yielding. Concurrency is available:
+    /// a per-operation driver carries its own position over the same buffer, so a dataset or attribute
+    /// resolved once can be read from several threads through a single <c>H5File</c>.
+    /// </remarks>
+    public static NativeFile Open(
+        ReadOnlyMemory<byte> source,
+        H5ReadOptions? options = default)
+    {
+        return NativeFile.InternalOpen(
+            new H5MemoryDriver(source),
+            absoluteFilePath: string.Empty,
+            options: options);
+    }
+
+    /// <summary>
+    /// Opens an HDF5 file from a concurrent stream that reads by absolute offset.
+    /// </summary>
+    /// <param name="stream">
+    /// The concurrent stream to read from. It must be concurrency-safe across its two read methods.
+    /// </param>
+    /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
+    /// <param name="options">Options to control decoding behavior.</param>
+    /// <remarks>
+    /// Unlike the <see cref="Open(Stream, bool, H5ReadOptions?)" /> overload, this one does not
+    /// require a <see cref="Stream" /> base: any class implementing <see cref="IConcurrentStream" />
+    /// can be used directly. The stream is driven positionlessly - no cursor is shared, reads carry
+    /// their own offsets - so concurrent reads through a single <c>H5File</c> are safe once the
+    /// object has been resolved.
+    /// </remarks>
+    public static NativeFile Open(
+        IConcurrentStream stream,
+        bool leaveOpen = false,
+        H5ReadOptions? options = default)
+    {
+        return NativeFile.InternalOpen(
+            CreateDriver(stream, leaveOpen),
+            absoluteFilePath: string.Empty,
+            options: options);
+    }
+
     /* ASYNCHRONOUS OPEN
      *
      * Opening a file is not a cheap metadata-free operation: it reads the superblock, walks the
@@ -141,10 +188,12 @@ public partial class H5File
     /// <param name="options">Options to control decoding behavior.</param>
     /// <param name="cancellationToken">A token to cancel the current operation.</param>
     /// <remarks>
-    /// This is the overload that matters for a remote source. Implement <see cref="IDatasetStream"/> on
+    /// This is the overload that matters for a remote source. Implement <see cref="IConcurrentStream"/> on
     /// the stream as well: without it the driver falls back to the stream's own cursor, which cannot be
     /// shared between concurrent reads and does not receive the read-coalescing that makes a
-    /// round-trip-bound source usable.
+    /// round-trip-bound source usable. A class that does not inherit from <see cref="Stream"/> at all
+    /// can be opened through the <see cref="OpenAsync(IConcurrentStream, bool, H5ReadOptions?, CancellationToken)"/>
+    /// overload instead.
     /// </remarks>
     public static Task<NativeFile> OpenAsync(
         Stream stream,
@@ -189,6 +238,65 @@ public partial class H5File
     }
 
     /// <summary>
+    /// Opens an HDF5 file asynchronously from an in-memory byte buffer.
+    /// </summary>
+    /// <param name="source">A read-only view of the bytes of an HDF5 file. The caller owns this buffer and may reuse or reclaim it after the returned <see cref="NativeFile"/> is disposed; the driver never writes to it.</param>
+    /// <param name="options">Options to control decoding behavior.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <remarks>
+    /// Provided for symmetry rather than for concurrency: an in-memory buffer is a synchronous source,
+    /// so this always completes without suspending. It exists so that a caller written entirely against
+    /// the asynchronous surface does not have to special-case one driver.
+    /// </remarks>
+    public static Task<NativeFile> OpenAsync(
+        ReadOnlyMemory<byte> source,
+        H5ReadOptions? options = default,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return NativeFile
+            .InternalOpenAsync(
+                new H5MemoryDriver(source),
+                absoluteFilePath: string.Empty,
+                options: options)
+            .AsTask();
+    }
+
+    /// <summary>
+    /// Opens an HDF5 file asynchronously from a concurrent stream that reads by absolute offset.
+    /// </summary>
+    /// <param name="stream">
+    /// The concurrent stream to read from. It must be concurrency-safe across its two read methods.
+    /// </param>
+    /// <param name="leaveOpen">A boolean which indicates if the stream should be kept open when this class is disposed. The default is <see langword="false"/>.</param>
+    /// <param name="options">Options to control decoding behavior.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <remarks>
+    /// This is the WASM-critical overload for a remote source: opening a file reads the superblock,
+    /// walks object headers and decodes the root group, and on a source that cannot complete
+    /// synchronously the synchronous <see cref="Open(IConcurrentStream, bool, H5ReadOptions?)" />
+    /// overload cannot get as far as returning a file at all. Unlike the
+    /// <see cref="OpenAsync(Stream, bool, H5ReadOptions?, CancellationToken)" /> overload, no
+    /// <see cref="Stream" /> base is required.
+    /// </remarks>
+    public static Task<NativeFile> OpenAsync(
+        IConcurrentStream stream,
+        bool leaveOpen = false,
+        H5ReadOptions? options = default,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return NativeFile
+            .InternalOpenAsync(
+                CreateDriver(stream, leaveOpen),
+                absoluteFilePath: string.Empty,
+                options: options)
+            .AsTask();
+    }
+
+    /// <summary>
     /// Picks the driver for <paramref name="stream"/>, shared by the synchronous and asynchronous stream
     /// overloads so that the two cannot drift apart in which driver they choose.
     /// </summary>
@@ -202,6 +310,15 @@ public partial class H5File
         if (stream is FileStream fileStream)
             return new H5FileHandleDriver(fileStream, leaveOpen: leaveOpen);
 
+        return new H5StreamDriver(stream, leaveOpen: leaveOpen);
+    }
+
+    /// <summary>
+    /// Picks the driver for an <see cref="IConcurrentStream"/>. There is only one choice -
+    /// positionless mode - since that is what the interface contract provides.
+    /// </summary>
+    private static H5DriverBase CreateDriver(IConcurrentStream stream, bool leaveOpen)
+    {
         return new H5StreamDriver(stream, leaveOpen: leaveOpen);
     }
 }
