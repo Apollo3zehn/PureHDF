@@ -2,7 +2,7 @@ using HDF.PInvoke;
 using PureHDF.Selections;
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.Concurrency;
 
 /// <summary>
 /// The reader supports concurrent reads through one file - see <see cref="ConcurrencyTests" /> - but

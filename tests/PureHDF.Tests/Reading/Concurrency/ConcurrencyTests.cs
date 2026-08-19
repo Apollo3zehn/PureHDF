@@ -3,7 +3,7 @@ using HDF.PInvoke;
 using PureHDF.Selections;
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.Concurrency;
 
 // CONCURRENCY MODEL: a driver instance is owned by one logical reader (its cursor is a plain field,
 // because a ThreadLocal<long> reads back as 0 once an async continuation resumes on another thread).
