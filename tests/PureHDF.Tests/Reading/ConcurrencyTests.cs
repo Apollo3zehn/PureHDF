@@ -99,6 +99,36 @@ public class ConcurrencyTests
         });
     }
 
+    [Fact]
+    public void CanReadDatasetParallel_InMemoryBuffer_Threads()
+    {
+        // Arrange
+        var version = H5F.libver_t.LATEST;
+        var filePath = TestUtils.PrepareTestFile(version, TestUtils.AddChunkedDataset_Huge);
+        var fileBytes = ReadAllBytesAndDelete(filePath);
+
+        // Act
+        using var root = H5File.Open((ReadOnlyMemory<byte>)fileBytes);
+
+        // resolved once, on this thread - this test covers concurrent READS (see the note above)
+        var parent = root.Group("chunked");
+        var dataset = parent.Dataset("chunked_huge");
+
+        Parallel.For(0, 10, i =>
+        {
+            var fileSelection = new HyperslabSelection(
+                start: (uint)i * CHUNK_SIZE,
+                block: CHUNK_SIZE
+            );
+
+            var actual = dataset.Read<int[]>(fileSelection);
+
+            // Assert
+            var slicedData = SharedTestData.HugeData.AsSpan(i * CHUNK_SIZE, CHUNK_SIZE).ToArray();
+            Assert.True(actual.SequenceEqual(slicedData));
+        });
+    }
+
     // Variable-length data is the case the fixed-size tests above cannot reach, and the one that was
     // silently racy even before the async conversion: the element bytes hold a global-heap ID, so the
     // decoder calls NativeCache.GetGlobalHeapObject, which SEEKS AND READS the driver in the middle
@@ -110,6 +140,7 @@ public class ConcurrencyTests
     [Theory]
     [InlineData(DriverKind.FileHandle)]
     [InlineData(DriverKind.MemoryMappedFile)]
+    [InlineData(DriverKind.InMemoryBuffer)]
     public void CanReadVariableLengthDatasetParallel_Threads(DriverKind driverKind)
     {
         // Arrange
@@ -132,6 +163,12 @@ public class ConcurrencyTests
             mmf = MemoryMappedFile.CreateFromFile(filePath);
             accessor = mmf.CreateViewAccessor();
             root = H5File.Open(accessor);
+        }
+
+        else if (driverKind == DriverKind.InMemoryBuffer)
+        {
+            var fileBytes = ReadAllBytesAndDelete(filePath);
+            root = H5File.Open((ReadOnlyMemory<byte>)fileBytes);
         }
 
         else
@@ -490,7 +527,8 @@ public class ConcurrencyTests
     public enum DriverKind
     {
         FileHandle,
-        MemoryMappedFile
+        MemoryMappedFile,
+        InMemoryBuffer
     }
 
     /// <summary>

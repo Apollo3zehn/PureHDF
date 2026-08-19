@@ -1,27 +1,24 @@
 using HDF.PInvoke;
-using PureHDF.Selections;
 using Xunit;
 
 namespace PureHDF.Tests.Reading.VFD;
 
 // H5MemoryDriver is the driver behind H5File.Open(ReadOnlyMemory<byte>) and its async twin. It reads
 // a fixed in-memory buffer by slicing it directly - no Stream, no memory-mapped view, no cursor to
-// share - so it is concurrent by construction and never suspends. These tests cover the three things
-// that could break independently:
+// share - so it is concurrent by construction and never suspends. These tests cover its contract:
 //
 //   1. A plain read decodes the right bytes (the basic contract).
-//   2. Concurrent reads through one H5File stay correct - the per-operation driver carries its own
-//      position over the same buffer, so two threads slicing the same Span must not collide.
-//   3. Variable-length data resolves through the global heap, which seeks the driver mid-read; a
+//   2. Variable-length data resolves through the global heap, which seeks the driver mid-read; a
 //      driver that shared a cursor would corrupt the collection decode silently.
 //
 // The async overload is covered for parity: it exists for a caller written entirely against the
 // async surface, but the buffer is a synchronous source so it must agree with the synchronous open.
+//
+// Concurrency - parallel reads through one H5File - is exercised in ConcurrencyTests, alongside the
+// other drivers, rather than per driver here.
 [Collection(SharedHdf5StateCollection.Name)]
 public class H5MemoryDriverTests
 {
-    private const int CHUNK_SIZE = 1_000_000;
-
     private static readonly string[] VariableLengthExpected =
     [
         "001", "11", "22", "33", "44", "55", "66", "77", "  ", "AA", "ZZ", "!!"
@@ -47,40 +44,6 @@ public class H5MemoryDriverTests
 
         // Assert
         Assert.True(actual.SequenceEqual(SharedTestData.HugeData));
-    }
-
-    [Fact]
-    public void CanReadDatasetParallel_InMemoryBuffer()
-    {
-        // Arrange
-        var filePath = TestUtils.PrepareTestFile(
-            H5F.libver_t.LATEST,
-            TestUtils.AddChunkedDataset_Huge);
-
-        var fileBytes = ReadAllBytesAndDelete(filePath);
-
-        // Act
-        using var root = H5File.Open((ReadOnlyMemory<byte>)fileBytes);
-
-        // resolved once, on this thread - this test covers concurrent READS
-        var dataset = root.Group("chunked").Dataset("chunked_huge");
-
-        Parallel.For(0, 10, i =>
-        {
-            var fileSelection = new HyperslabSelection(
-                start: (uint)i * CHUNK_SIZE,
-                block: CHUNK_SIZE
-            );
-
-            var actual = dataset.Read<int[]>(fileSelection);
-
-            // Assert
-            var slicedData = SharedTestData.HugeData
-                .AsSpan(i * CHUNK_SIZE, CHUNK_SIZE)
-                .ToArray();
-
-            Assert.True(actual.SequenceEqual(slicedData));
-        });
     }
 
     [Fact]
