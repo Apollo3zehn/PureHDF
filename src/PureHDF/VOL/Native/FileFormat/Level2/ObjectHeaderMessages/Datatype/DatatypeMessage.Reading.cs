@@ -350,18 +350,21 @@ internal partial record class DatatypeMessage(
 
     // Caches a compiled parameterless-constructor factory per Type. The compound
     // decode closure (GetDecodeInfoForReferenceCompound) invokes the factory on
-    // every element of class-typed compound data; a compiled delegate avoids the
-    // per-call reflection cost of constructor lookup and invocation. The factory
-    // is built once per Type via a compiled expression tree and is shared across
-    // all DatatypeMessage instances since the Type recurs across files.
+    // every element of reference-typed compound data; a compiled delegate avoids
+    // the per-call reflection cost of constructor lookup and invocation. The
+    // factory is built once per Type via a compiled expression tree and is shared
+    // across all DatatypeMessage instances since the Type recurs across files.
     // GetDecodeInfoForReferenceCompound validates the parameterless ctor for class
-    // types before the closure is built, so cache misses never throw.
+    // types before the closure is built, so cache misses never throw. Value types
+    // have an implicit parameterless ctor; the factory boxes the result so it fits
+    // the Func<object> return type.
     private static readonly ConcurrentDictionary<Type, Func<object>> _parameterlessCtorCache = new();
 
     private static Func<object> GetParameterlessConstructor(Type type)
     {
         return _parameterlessCtorCache.GetOrAdd(type, static t =>
-            Expression.Lambda<Func<object>>(Expression.New(t)).Compile());
+            Expression.Lambda<Func<object>>(
+                Expression.Convert(Expression.New(t), typeof(object))).Compile());
     }
 
     private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedElement = typeof(DatatypeMessage)
