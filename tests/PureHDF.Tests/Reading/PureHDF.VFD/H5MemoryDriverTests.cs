@@ -3,7 +3,7 @@ using HDF.PInvoke;
 using PureHDF.Selections;
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.VFD;
 
 // H5MemoryDriver is the driver behind H5File.Open(ReadOnlyMemory<byte>) and its async twin. It reads
 // a fixed in-memory buffer by slicing it directly - no Stream, no memory-mapped view, no cursor to
@@ -19,7 +19,7 @@ namespace PureHDF.Tests.Reading;
 // The async overload is covered for parity: it exists for a caller written entirely against the
 // async surface, but the buffer is a synchronous source so it must agree with the synchronous open.
 [Collection(SharedHdf5StateCollection.Name)]
-public class MemoryBufferTests
+public class H5MemoryDriverTests
 {
     private const int CHUNK_SIZE = 1_000_000;
 
