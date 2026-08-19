@@ -1,13 +1,13 @@
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.VFD;
 
 /// <summary>
 /// A <see cref="Stream" /> is allowed to return fewer bytes than asked for, and several real ones do:
 /// network streams, pipes and decompressing streams routinely return partial reads. These tests pin
 /// the driver's behaviour when that happens.
 /// </summary>
-public class ShortReadTests
+public class H5StreamDriverTests
 {
     /// <summary>
     /// A stream that never returns more than <paramref name="maxBytesPerRead" /> bytes per call, so a
