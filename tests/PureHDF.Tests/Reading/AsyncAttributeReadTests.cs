@@ -243,12 +243,12 @@ public class AsyncAttributeReadTests
             () => attribute.ReadAsync(new string[12], cancellationToken: cts.Token));
     }
 
-    private static PositionlessDatasetStream OpenStringAttributes(bool suspend)
+    private static ConcurrentStream OpenStringAttributes(bool suspend)
     {
         var filePath = TestUtils.PrepareTestFile(
             H5F.libver_t.LATEST,
             fileId => TestUtils.AddString(fileId, ContainerType.Attribute));
 
-        return new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend);
+        return new ConcurrentStream(File.ReadAllBytes(filePath), suspend);
     }
 }

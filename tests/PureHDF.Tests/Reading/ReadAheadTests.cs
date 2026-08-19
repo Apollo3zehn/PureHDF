@@ -40,7 +40,7 @@ public class ReadAheadTests
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("mass_attributes");
 
@@ -78,7 +78,7 @@ public class ReadAheadTests
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.EARLIEST, TestUtils.AddMassLinks);
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("mass_links");
 
@@ -114,7 +114,7 @@ public class ReadAheadTests
 
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("mass_attributes");
 
@@ -146,7 +146,7 @@ public class ReadAheadTests
     /// </summary>
     /// <remarks>
     /// This is where an off-by-one in the refill length shows up as an <see cref="EndOfStreamException"
-    /// />, because <see cref="IDatasetStream.ReadMetadataAsync" /> is an exact-fill contract - asking it for
+    /// />, because <see cref="IConcurrentStream.ReadMetadataAsync" /> is an exact-fill contract - asking it for
     /// one byte past the end is an error, not a short read.
     /// </remarks>
     [Fact]
@@ -158,7 +158,7 @@ public class ReadAheadTests
 
         _output.WriteLine($"file size: {fileBytes.Length} bytes");
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
 
         // Act
@@ -179,7 +179,7 @@ public class ReadAheadTests
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("mass_attributes");
 
@@ -207,7 +207,7 @@ public class ReadAheadTests
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddMass(fileId, ContainerType.Attribute));
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: true);
+        using var stream = new ConcurrentStream(fileBytes, suspend: true);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("mass_attributes");
 
@@ -236,7 +236,7 @@ public class ReadAheadTests
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.V110, fileId => TestUtils.AddChunkedDatasetForHyperslab(fileId));
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var dataset = root.Dataset("chunked/hyperslab");
 

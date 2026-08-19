@@ -6,9 +6,9 @@ using Amazon.S3.Model;
 namespace PureHDF.VFD.AmazonS3;
 
 /// <summary>
-/// A stream that reads data from Amazon S3.
+/// A concurrent stream that reads data from Amazon S3 by absolute offset.
 /// </summary>
-public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
+public class AmazonS3Stream : IConcurrentStream
 {
     private readonly ConcurrentDictionary<long, IMemoryOwner<byte>> _cache = new();
     private readonly int _cacheSlotSize;
@@ -16,8 +16,9 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     private readonly string _key;
     private readonly AmazonS3Client _client;
 
-    // THREAD SAFETY: IDatasetStream requires both of its methods to be safe to call concurrently, and
-    // PureHDF does call them concurrently - a positionless stream gets one driver per read operation.
+    // THREAD SAFETY: IConcurrentStream requires both of its methods to be safe to call concurrently,
+    // and PureHDF does call them concurrently - a positionless stream gets one driver per read
+    // operation.
     //
     // ReadDataset needs no protection: it issues a range request for exactly the caller's buffer and
     // touches no shared state.
@@ -34,13 +35,6 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     // without any request at all, so serializing them costs little - and the alternative (a per-slot
     // async gate) would mean giving up the batching of adjacent missing slots into one request.
     private readonly SemaphoreSlim _cacheLock = new(initialCount: 1, maxCount: 1);
-
-    // CONCURRENCY MODEL: this cursor belongs to the base Stream contract (Position / Seek / Read)
-    // only. PureHDF does not use it - it reads through IDatasetStream, which carries an absolute
-    // offset per call - so concurrent PureHDF reads never touch it. A caller mixing the synchronous
-    // Stream API with concurrent reads from several threads is on their own, exactly as for any
-    // other Stream.
-    private long _position;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AmazonS3Stream" /> instance.
@@ -69,41 +63,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     /// <inheritdoc />
-    public override bool CanRead => true;
-
-    /// <inheritdoc />
-    public override bool CanSeek => true;
-
-    /// <inheritdoc />
-    public override bool CanWrite => false;
-
-    /// <inheritdoc />
-    public override long Length { get; }
-
-    /// <inheritdoc />
-    public override long Position
-    {
-        get => _position;
-        set => _position = value;
-    }
-
-    /// <inheritdoc />
-    // NOTE: System.IO.Stream's own contract is synchronous and cursor-based, so this override still
-    // blocks and still moves _position. It is a separate contract from IDatasetStream below, kept
-    // working unchanged; PureHDF itself never comes through here.
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        var slice = buffer.AsMemory(offset, count);
-
-        ReadCachedAsync(_position, slice)
-            .AsTask()
-            .GetAwaiter()
-            .GetResult();
-
-        _position += count;
-
-        return count;
-    }
+    public long Length { get; }
 
     /// <inheritdoc />
     // Bulk payload: requested as its own byte range and never cached. A dataset chunk is typically
@@ -123,53 +83,14 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
     }
 
     /// <inheritdoc />
-    public override long Seek(long offset, SeekOrigin origin)
+    public void Dispose()
     {
-        switch (origin)
+        foreach (var entry in _cache)
         {
-            case SeekOrigin.Begin:
-
-                _position = offset;
-
-                if (!(0 <= _position && _position < Length))
-                    throw new Exception("The offset exceeds the stream length.");
-
-                return _position;
-
-            case SeekOrigin.Current:
-
-                _position += offset;
-
-                if (!(0 <= _position && _position < Length))
-                    throw new Exception("The offset exceeds the stream length.");
-
-                return _position;
+            entry.Value.Dispose();
         }
 
-        throw new Exception($"Seek origin '{origin}' is not supported.");
-    }
-
-    /// <inheritdoc />
-    public override void SetLength(long value) => throw new NotImplementedException();
-
-    /// <inheritdoc />
-    public override void Flush() => throw new NotImplementedException();
-
-    /// <inheritdoc />
-    public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
-
-    /// <inheritdoc />
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            foreach (var entry in _cache)
-            {
-                entry.Value.Dispose();
-            }
-
-            _cacheLock.Dispose();
-        }
+        _cacheLock.Dispose();
     }
 
     private async ValueTask ReadUncachedAsync(long offset, Memory<byte> buffer)
@@ -205,7 +126,7 @@ public class AmazonS3Stream : Stream, IDatasetStream, IDisposable
         try
         {
             // The cursor is a local, threaded through the helpers: this path is positionless and must
-            // not observe or move _position.
+            // not observe or move any cursor.
             var position = offset;
 
             // TODO issue parallel requests

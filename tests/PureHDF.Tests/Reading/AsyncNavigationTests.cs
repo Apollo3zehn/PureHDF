@@ -338,7 +338,7 @@ public class AsyncNavigationTests
 
             try
             {
-                using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: true);
+                using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: true);
                 using var root = H5File.Open(stream);
 
                 var group = (NativeGroup)await root.GetAsync("mass_links");

@@ -47,7 +47,7 @@ public class GlobalHeapCacheTests
         // Arrange - 16 cells x 200 peaks x 16 bytes is ~51 KB of payload, far below the default budget.
         var (fileBytes, expected) = WriteVariableLengthFile(cellCount: 16, peaksPerCell: 200);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream);
         var dataset = root.Dataset("peaks");
 
@@ -82,7 +82,7 @@ public class GlobalHeapCacheTests
 
         var options = new H5ReadOptions(GlobalHeapCacheByteBudget: 256 * 1024);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: false, options);
         var dataset = root.Dataset("peaks");
 
@@ -124,7 +124,7 @@ public class GlobalHeapCacheTests
         // Arrange
         var (fileBytes, expected) = WriteVariableLengthFile(cellCount: 600, peaksPerCell: 400);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream);
         var dataset = root.Dataset("peaks");
 

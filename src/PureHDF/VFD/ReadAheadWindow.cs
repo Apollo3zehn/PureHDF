@@ -20,11 +20,12 @@ namespace PureHDF.VFD;
 /// </para>
 /// <para>
 /// Why this belongs in the driver rather than in the caller's stream. It is tempting to leave it to
-/// an <see cref="IDatasetStream" /> implementation - <c>AmazonS3Stream</c> does exactly that with
-/// 1 MiB slots - but that only helps a source that IS a stream. H5FileHandleDriver reads through
-/// <c>RandomAccess.Read</c>, which is positional and therefore BYPASSES the FileStream buffer
-/// entirely, so on a local file each of those reads is its own pread. (Derived, not traced: no
-/// syscall counter was available here, but the mapping is one read to one pread, and the read counts
+    /// an <see cref="IConcurrentStream" /> implementation - <c>AmazonS3Stream</c> does exactly that
+    /// with 1 MiB slots - but that only helps a source that IS a stream. H5FileHandleDriver reads
+    /// through <c>RandomAccess.Read</c>, which is positional and therefore BYPASSES the FileStream
+    /// buffer entirely, so on a local file each of those reads is its own pread. (Derived, not
+    /// traced: no syscall counter was available here, but the mapping is one read to one pread, and
+    /// the read counts
 /// themselves are measured - see NavigationCostTests.) There is no stream anywhere in that path to
 /// fix it in. Putting the window here fixes every driver at once, and composes with a caching stream
 /// rather than duplicating it: the stream still owns large-block transport caching, which is the part
@@ -57,7 +58,7 @@ internal sealed class ReadAheadWindow
     /// amplification of a scattered access pattern - a lookup that touches one field in each of two
     /// distant structures fetches two full windows. At 4 KiB that is a fair trade against a syscall
     /// or a round trip; at 64 KiB it would not be. A source that genuinely wants large blocks has
-    /// somewhere better to put them: an IDatasetStream implementation, which knows its own latency
+    /// somewhere better to put them: an IConcurrentStream implementation, which knows its own latency
     /// and bandwidth, whereas this layer knows neither.
     /// </para>
     /// </remarks>
@@ -119,7 +120,7 @@ internal sealed class ReadAheadWindow
     /// <c>AttributeMessage.Decode</c> is the common instance. And a read that already reaches the
     /// end of the file has nothing to read ahead OF, so buffering it would just add a copy; folding
     /// that case in here also means a refill can never be asked for bytes past the end, which the
-    /// exact-read contract of <see cref="IDatasetStream.ReadMetadataAsync" /> would reject.
+    /// exact-read contract of <see cref="IConcurrentStream.ReadMetadataAsync" /> would reject.
     /// </remarks>
     public int GetRefillLength(int count, long position, long sourceLength)
     {

@@ -173,7 +173,7 @@ public class AsyncDatasetReadTests
             H5F.libver_t.V110,
             fileId => TestUtils.AddVirtualDataset(fileId, "virtual"));
 
-        using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: true);
+        using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: true);
         using var root = await H5File.OpenAsync(stream, leaveOpen: true);
         var dataset = await root.DatasetAsync("vds");
         var selection = new HyperslabSelection(start: 3, stride: 4, count: 4, block: 2);
@@ -253,7 +253,7 @@ public class AsyncDatasetReadTests
 
         try
         {
-            using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: true);
+            using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: true);
             using var root = H5File.Open(stream);
 
             // Act

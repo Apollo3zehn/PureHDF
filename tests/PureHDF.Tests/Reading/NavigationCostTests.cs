@@ -8,14 +8,14 @@ namespace PureHDF.Tests.Reading;
 /// Measures what a REPEATED navigation call costs in structural reads.
 /// </summary>
 /// <remarks>
-/// The unit is <c>IDatasetStream.ReadMetadata</c> calls, not time. A read count is deterministic and
+/// The unit is <c>IConcurrentStream.ReadMetadata</c> calls, not time. A read count is deterministic and
 /// machine-independent; a timing on a laptop with an active frequency governor is not, and during
 /// this work a benchmark difference that looked real turned out to be governor drift. So the guard
 /// that protects this behavior counts reads.
 /// <para>
 /// A read COUNT alone cannot say whether it is high because a lot of structure was read or because a
 /// little structure was read a few bytes at a time, so
-/// <c>PositionlessDatasetStream.MetadataBytesRead</c> exists to tell those apart. Dividing the two is
+/// <c>ConcurrentStream.MetadataBytesRead</c> exists to tell those apart. Dividing the two is
 /// what established that what remained here after the structure caches was granularity rather than
 /// redundancy, and therefore that the fix was coalescing rather than another cache - see the note on
 /// dense attributes below.
@@ -277,7 +277,7 @@ public class NavigationCostTests
 
         try
         {
-            using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: false);
+            using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: false);
             using var root = H5File.Open(stream);
 
             var navigate = arrange(root);
@@ -290,7 +290,7 @@ public class NavigationCostTests
             navigate();
 
             // Navigation must not touch the bulk-payload path at all. If it does, the split between
-            // the two IDatasetStream methods has stopped meaning what it says and the metadata count
+            // the two IConcurrentStream methods has stopped meaning what it says and the metadata count
             // has quietly become an undercount.
             Assert.Equal(0, stream.DatasetReadCount);
 
@@ -319,7 +319,7 @@ public class NavigationCostTests
 
         try
         {
-            using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: false);
+            using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: false);
             using var root = H5File.Open(stream);
 
             var dataset = root.Dataset(datasetPath);

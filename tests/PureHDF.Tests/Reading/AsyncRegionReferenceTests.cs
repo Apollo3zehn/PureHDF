@@ -31,7 +31,7 @@ public class AsyncRegionReferenceTests
             HDF.PInvoke.H5F.libver_t.LATEST,
             fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
 
-        using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: true);
+        using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: true);
         using var root = await H5File.OpenAsync(stream, leaveOpen: true);
 
         var group = await root.GroupAsync("reference");
@@ -76,7 +76,7 @@ public class AsyncRegionReferenceTests
 
         var fileBytes = File.ReadAllBytes(filePath);
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
 
         var group = root.Group("reference");
@@ -108,7 +108,7 @@ public class AsyncRegionReferenceTests
             HDF.PInvoke.H5F.libver_t.LATEST,
             fileId => TestUtils.AddRegionReference(fileId, ContainerType.Dataset));
 
-        using var stream = new PositionlessDatasetStream(File.ReadAllBytes(filePath), suspend: false);
+        using var stream = new ConcurrentStream(File.ReadAllBytes(filePath), suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
 
         // Act + Assert

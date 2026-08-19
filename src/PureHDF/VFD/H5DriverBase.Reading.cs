@@ -37,8 +37,8 @@ internal abstract partial class H5DriverBase : IH5ReadStream
     // CONCURRENCY: returns a driver over the SAME underlying source but with its own independent
     // cursor, so one resolved dataset/attribute can be read from several threads at once. `null`
     // means "this source cannot be read concurrently; reuse me" - a plain Stream, for instance, has
-    // exactly one cursor and no positionless read API. (A Stream that implements IDatasetStream does
-    // offer positionless reads and therefore does isolate; see H5StreamDriver.)
+    // exactly one cursor and no positionless read API. (A Stream that implements IConcurrentStream
+    // does offer positionless reads and therefore does isolate; see H5StreamDriver.)
     //
     // Deliberately NOT virtual. BaseAddress is mutable driver state, set once by NativeFile after
     // the superblock is decoded, and every SeekRelativeToBaseAddress depends on it; a

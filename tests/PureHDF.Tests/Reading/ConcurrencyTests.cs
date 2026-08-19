@@ -13,7 +13,7 @@ namespace PureHDF.Tests.Reading;
 //
 // A source qualifies only if it can be read WITHOUT a cursor, so that a second driver over it is
 // correct: a file handle (RandomAccess.Read by offset), a memory-mapped accessor (absolute
-// addressing), or a Stream that implements IDatasetStream, whose reads each carry their own offset.
+// addressing), or a Stream that implements IConcurrentStream, whose reads each carry their own offset.
 // A plain Stream has one cursor and does not qualify.
 //
 // Object navigation - root.Group(), root.Dataset(), Children(), Attributes(), LinkExists() - takes a
@@ -175,7 +175,7 @@ public class ConcurrencyTests
         }
     }
 
-    // A Stream can now participate too, but only if it offers positionless reads: IDatasetStream
+    // A Stream can now participate too, but only if it offers positionless reads: IConcurrentStream
     // carries an absolute offset per read, so the driver keeps the cursor to itself and can hand a
     // second driver - with its own cursor - to each read operation. A plain Stream still cannot, and
     // there is no test asserting it can; it has exactly one cursor to share.
@@ -188,7 +188,7 @@ public class ConcurrencyTests
         var fileBytes = ReadAllBytesAndDelete(filePath);
 
         // Act
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream);
 
         // resolved once, on this thread - this test covers concurrent READS (see the note above)
@@ -209,7 +209,7 @@ public class ConcurrencyTests
             Assert.True(actual.SequenceEqual(slicedData));
         });
 
-        // Assert: both halves of IDatasetStream were actually exercised. The split is the reason the
+        // Assert: both halves of IConcurrentStream were actually exercised. The split is the reason the
         // interface has two methods - an implementation caches metadata and streams payload - so a
         // change that routed structural reads through ReadDataset would still decode correct bytes
         // and destroy the signal. This catches that.
@@ -237,7 +237,7 @@ public class ConcurrencyTests
         };
 
         // Act
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream);
 
         // resolved once, on this thread - this test covers concurrent READS (see the note above)
@@ -282,7 +282,7 @@ public class ConcurrencyTests
         };
 
         // Act
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: true);
+        using var stream = new ConcurrentStream(fileBytes, suspend: true);
         using var root = H5File.Open(stream);
 
         var actual = root.Group("string").Dataset("variable").Read<string[]>();

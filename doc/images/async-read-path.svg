@@ -317,7 +317,7 @@
 
     <rect x="1490" y="1238.0" width="305" height="84" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
     <text x="1642" y="1256.0" font-size="12" font-weight="700" fill="#7f1d1d" text-anchor="middle">POSITIONLESS mode</text>
-    <text x="1642" y="1274.0" font-size="11" fill="#7f1d1d" text-anchor="middle">stream implements IDatasetStream</text>
+    <text x="1642" y="1274.0" font-size="11" fill="#7f1d1d" text-anchor="middle">stream implements IConcurrentStream</text>
     <text x="1642" y="1290.0" font-size="11" fill="#7f1d1d" text-anchor="middle">cursor in driver · stream never seeked</text>
     <text x="1642" y="1306.0" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">HTTP range-request source</text>
     <text x="1642" y="1318.0" font-size="10" fill="#7f1d1d" text-anchor="middle">concurrent: hands out new driver</text>
@@ -330,7 +330,7 @@
     <text x="1962" y="1318.0" font-size="10" fill="#78350f" text-anchor="middle">non-concurrent: returns null</text>
 
     <rect x="1490" y="1330.0" width="630" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.3"/>
-    <text x="1805" y="1348.0" font-size="11" font-weight="600" fill="#1e3a8a" text-anchor="middle">ReadMetadataCore → ReadAheadWindow (positionless only) → IDatasetStream.ReadMetadataAsync</text>
+    <text x="1805" y="1348.0" font-size="11" font-weight="600" fill="#1e3a8a" text-anchor="middle">ReadMetadataCore → ReadAheadWindow (positionless only) → IConcurrentStream.ReadMetadataAsync</text>
 
     <rect x="1490" y="1370.0" width="630" height="34" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
     <text x="1805" y="1388.0" font-size="11" font-weight="700" fill="#7f1d1d" text-anchor="middle">RefillThenServe = ONLY async method on the read path · ReadScalarSlow on suspend</text>
@@ -362,11 +362,11 @@
     <text x="1100" y="1590.0" font-size="10" font-style="italic" fill="#14532d" text-anchor="middle">concurrency safe without a per-driver cursor of its own</text>
 
     <rect x="1470" y="1480.0" width="670" height="120" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
-    <text x="1805" y="1502.0" font-size="14" font-weight="700" fill="#7f1d1d" text-anchor="middle">IDatasetStream / Stream.ReadAsync</text>
+    <text x="1805" y="1502.0" font-size="14" font-weight="700" fill="#7f1d1d" text-anchor="middle">IConcurrentStream / Stream.ReadAsync</text>
     <text x="1805" y="1522.0" font-size="11" fill="#7f1d1d" text-anchor="middle">positionless: ReadDatasetAsync/ReadMetadataAsync carry offset</text>
     <text x="1805" y="1537.0" font-size="11" fill="#7f1d1d" text-anchor="middle">cursor: shared cursor + Stream.ReadAsync</text>
     <text x="1805" y="1557.0" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">GENUINELY SUSPENDS on HTTP/S3/remote</text>
-    <text x="1805" y="1575.0" font-size="10" font-style="italic" fill="#7f1d1d" text-anchor="middle">AmazonS3Stream implements IDatasetStream with 1 MiB slots</text>
+    <text x="1805" y="1575.0" font-size="10" font-style="italic" fill="#7f1d1d" text-anchor="middle">AmazonS3Stream implements IConcurrentStream with 1 MiB slots</text>
     <text x="1805" y="1590.0" font-size="10" font-style="italic" fill="#7f1d1d" text-anchor="middle">(its own block cache — composes with ReadAheadWindow, doesn't duplicate)</text>
   </g>
 

@@ -61,7 +61,7 @@ public class VirtualDatasetSameFileTests
         var bytes = File.ReadAllBytes(filePath);
         File.Delete(filePath);
 
-        using var stream = new PositionlessDatasetStream(bytes, suspend: true);
+        using var stream = new ConcurrentStream(bytes, suspend: true);
         using var root = await H5File.OpenAsync(stream, leaveOpen: true);
         var dataset = await root.DatasetAsync("vds_same_file");
 

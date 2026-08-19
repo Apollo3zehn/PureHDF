@@ -19,12 +19,13 @@ partial class H5NativeWriter
         if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
             throw new Exception("The stream must be readble, writable and seekable.");
 
-        // allowPositionless: false - the write path writes at the wrapped stream's own cursor, so a
-        // driver that kept the cursor to itself (which is what IDatasetStream enables on the read
-        // side) would write at the wrong offsets. IDatasetStream is a read-side interface; this
-        // keeps a stream that happens to implement it writing at the wrapped stream's own cursor,
-        // unaffected by the read-side interface.
-        var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen, allowPositionless: false);
+        // The Stream constructor takes cursor mode by construction, which is what the write path
+        // needs: it writes at the wrapped stream's own cursor, and positionless mode would decouple
+        // that cursor (Seek moves _position, Write lands at Stream.Position) and write at the wrong
+        // offsets. IConcurrentStream is a read-side interface; this keeps a stream that happens to
+        // implement it writing at the wrapped stream's own cursor, unaffected by the read-side
+        // interface.
+        var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
         if (options.UserBlockSize != 0)
         {

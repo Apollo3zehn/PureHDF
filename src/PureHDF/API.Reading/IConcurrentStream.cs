@@ -1,13 +1,13 @@
 namespace PureHDF;
 
 /// <summary>
-/// Implemented by a <see cref="Stream" /> that can serve PureHDF's reads by absolute offset instead
-/// of through the stream cursor.
+/// Implemented by a class that can serve PureHDF's reads by absolute offset instead of through a
+/// stream cursor, and that is safe to read from concurrently.
 /// </summary>
 /// <remarks>
 ///     Implementing this interface has two effects.
 ///     <para>
-///         First, it makes the stream concurrency-capable. PureHDF isolates a cursor per read
+///         First, it makes the source concurrency-capable. PureHDF isolates a cursor per read
 ///         operation, so a dataset or attribute resolved once can be read from several threads
 ///         through a single <c>H5File</c>. A cursor-based stream cannot participate in that - a
 ///         second reader would share the one cursor - whereas every read declared here carries the
@@ -15,34 +15,43 @@ namespace PureHDF;
 ///     </para>
 ///     <para>
 ///         Second, it tells the implementation which reads are worth caching. A range-request
-///         stream typically wants to cache small structural reads aggressively - the same superblock,
+///         source typically wants to cache small structural reads aggressively - the same superblock,
 ///         object header and B-tree bytes are re-read constantly - while streaming bulk payload
 ///         straight through, since caching a multi-megabyte chunk that is decoded once only wastes
 ///         memory. That is the whole reason there are two methods rather than one; both do the same
 ///         thing to the buffer.
 ///     </para>
 ///     <para>
-///         Both methods are required. Neither has a default implementation, deliberately: a stream
+///         Both methods are required. Neither has a default implementation, deliberately: a source
 ///         that silently fell back to a cursor-based read would reintroduce exactly the sharing
 ///         problem this interface exists to remove.
 ///     </para>
 ///     <para>
 ///         THREAD SAFETY: both methods must be safe to call concurrently on the same instance,
 ///         including with overlapping ranges. That is the point of the interface; PureHDF will issue
-///         concurrent calls whenever the caller reads concurrently. Note that the inherited
-///         <see cref="Stream" /> members (<see cref="Stream.Read(byte[], int, int)" />,
-///         <see cref="Stream.Seek" />, <see cref="Stream.Position" />) are a separate, cursor-based
-///         contract and carry no such requirement - PureHDF does not use them once this interface is
-///         implemented.
+///         concurrent calls whenever the caller reads concurrently.
+///     </para>
+///     <para>
+///         An implementation that also inherits from <see cref="Stream" /> may still be passed to the
+///         <see cref="H5File.Open(Stream, bool, H5ReadOptions?)" /> overloads, but it is NOT
+///         automatically promoted to positionless mode there: it runs in cursor mode like any other
+///         <see cref="Stream" />, and the concurrency this interface offers is not used. Pass it to
+///         the <see cref="H5File.Open(IConcurrentStream, bool, H5ReadOptions?)" /> overload to drive
+///         it positionlessly.
 ///     </para>
 /// </remarks>
-public interface IDatasetStream
+public interface IConcurrentStream : IDisposable
 {
+    /// <summary>
+    /// The total length, in bytes, of the data this source exposes.
+    /// </summary>
+    long Length { get; }
+
     /// <summary>
     /// Reads bulk dataset payload: the actual data of a dataset or attribute.
     /// </summary>
     /// <param name="offset">
-    /// The absolute offset, in bytes, from the start of the stream's data - not relative to any
+    /// The absolute offset, in bytes, from the start of the source's data - not relative to any
     /// cursor. Implementations must neither depend on nor mutate a cursor.
     /// </param>
     /// <param name="buffer">
@@ -60,7 +69,7 @@ public interface IDatasetStream
     /// and similar.
     /// </summary>
     /// <param name="offset">
-    /// The absolute offset, in bytes, from the start of the stream's data - not relative to any
+    /// The absolute offset, in bytes, from the start of the source's data - not relative to any
     /// cursor. Implementations must neither depend on nor mutate a cursor.
     /// </param>
     /// <param name="buffer">

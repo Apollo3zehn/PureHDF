@@ -43,7 +43,7 @@ public class LinkLookupCostTests
         // Arrange
         var fileBytes = WriteGroupWithManyLinks();
 
-        using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("links");
 
@@ -87,7 +87,7 @@ public class LinkLookupCostTests
         {
             var fileBytes = WriteGroupWithManyLinks(linkCount);
 
-            using var stream = new PositionlessDatasetStream(fileBytes, suspend: false);
+            using var stream = new ConcurrentStream(fileBytes, suspend: false);
             using var root = H5File.Open(stream, leaveOpen: true);
             var group = root.Group("links");
 
