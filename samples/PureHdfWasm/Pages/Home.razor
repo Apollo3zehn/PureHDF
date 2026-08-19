@@ -1,0 +1,182 @@
+﻿@page "/"
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="app-shell">
+    <header class="app-bar">
+        <MudText Typo="Typo.h6" Class="mr-4">PureHDF WASM</MudText>
+        <MudSpacer />
+        <input type="file"
+               @ref="_inputRef"
+               @onchange="OnFileSelectedAsync"
+               disabled="@_loading" />
+    </header>
+
+    <div class="app-body">
+        <nav class="app-nav">
+            @if (_loading)
+            {
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mt-4 d-flex justify-center" />
+            }
+            else if (_tree is not null)
+            {
+                <MudTreeView T="H5Node" SelectedValueChanged="OnNodeSelected" Class="pa-2">
+                    <TreeViewNode Node="_tree" />
+                </MudTreeView>
+            }
+        </nav>
+
+        <main class="app-main">
+            @if (_error is not null)
+            {
+                <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+            }
+
+            @if (_selected is null)
+            {
+                <div class="placeholder">
+                    <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Primary" Class="mb-4" />
+                    <MudText Typo="Typo.h5" Color="Color.Surface">
+                        Pick a local HDF5 file and select a node to view its metadata.
+                    </MudText>
+                </div>
+            }
+            else
+            {
+                <MudCard Elevation="0" Outlined="true">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h5">@_selected.Name</MudText>
+                            <MudChip Color="@KindColor(_selected.Kind)" Variant="Variant.Text" Class="ml-2" T="string">
+                                @_selected.Kind
+                            </MudChip>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (_selected.Shape is not null)
+                        {
+                            <MudText Class="mb-2"><b>Shape:</b> @_selected.Shape</MudText>
+                        }
+                        @if (_selected.DataType is not null)
+                        {
+                            <MudText Class="mb-2"><b>Datatype:</b> @_selected.DataType</MudText>
+                        }
+                        @if (_selected.Children.Count > 0)
+                        {
+                            <MudText Class="mb-2"><b>Children:</b> @_selected.Children.Count</MudText>
+                        }
+
+                        @if (_selected.Attributes.Count > 0)
+                        {
+                            <MudText Typo="Typo.h6" Class="mt-4 mb-2">Attributes</MudText>
+                            <MudSimpleTable Hover="true" Elevation="0" Style="border: 1px solid rgba(0,0,0,0.12)">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Shape</th>
+                                        <th>Datatype</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var attr in _selected.Attributes)
+                                    {
+                                        <tr>
+                                            <td>@attr.Name</td>
+                                            <td>@attr.Shape</td>
+                                            <td>@attr.DataType</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        }
+                        else if (_selected.Shape is null && _selected.DataType is null)
+                        {
+                            <MudText Color="Color.Surface" Class="mt-4 text-center" Typo="Typo.body2">
+                                No attributes.
+                            </MudText>
+                        }
+                    </MudCardContent>
+                </MudCard>
+            }
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool _loading;
+    private string? _error;
+    private H5Node? _tree;
+    private H5Node? _selected;
+
+    private IJSObjectReference? _module;
+    private ElementReference _inputRef;
+    private BlobSliceStream? _stream;
+    private NativeFile? _file;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/hdfInterop.js");
+    }
+
+    private async Task OnFileSelectedAsync(ChangeEventArgs e)
+    {
+        _error = null;
+        _tree = null;
+        _selected = null;
+        _loading = true;
+
+        try
+        {
+            var blob = await _module!.InvokeAsync<IJSObjectReference?>("getFileObject", _inputRef);
+
+            if (blob is null)
+            {
+                _error = "No file selected.";
+                return;
+            }
+
+            var length = await _module!.InvokeAsync<long>("getBlobSize", blob);
+
+            _file?.Dispose();
+
+            if (_stream is not null)
+                await _stream.DisposeAsync().ConfigureAwait(false);
+
+            _stream = new BlobSliceStream(_module!, blob, length);
+            _file = await H5File.OpenAsync(_stream, leaveOpen: true);
+
+            _tree = await H5TreeWalker.WalkAsync(_file);
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void OnNodeSelected(H5Node? node)
+    {
+        _selected = node;
+    }
+
+    private static Color KindColor(string kind) => kind switch
+    {
+        "File" => Color.Primary,
+        "Group" => Color.Info,
+        "Dataset" => Color.Success,
+        "Attribute" => Color.Default,
+        _ => Color.Default
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        _file?.Dispose();
+        _stream?.Dispose();
+
+        if (_module is not null)
+            await _module.DisposeAsync().ConfigureAwait(false);
+    }
+}

@@ -120,6 +120,24 @@ file.Write("path/to/file.h5");
 
 See the [docs](https://apollo3zehn.github.io/PureHDF/writing/index.html) to learn more about `data types`, `multidimensional arrays`, `chunks`, `compression`, `slicing` and more.
 
+# WebAssembly Sample
+
+The `samples/PureHdfWasm` project is a Blazor WebAssembly app that opens a local HDF5 file entirely in the browser, reading bytes on demand through the `IConcurrentStream` API with `Blob.slice()` JS interop (no server round-trips, no File System Access API — works in Firefox).
+
+![PureHDF WASM sample](doc/images/wasm.png)
+
+The app shows a tree of the file's groups, datasets and attributes in the left sidebar and the metadata of the selected node in the main panel. It is a proof of concept, not a full-featured HDF5 file viewer.
+
+## Run
+
+From the repository root:
+
+```bash
+dotnet run --project samples/PureHdfWasm/PureHdfWasm.csproj
+```
+
+Then open `http://localhost:8080` in your browser, pick an `.h5` file with the file input, and browse the tree.
+
 # Development
 
 The tests of PureHDF are executed against `.NET 6` and `.NET 8` so these two runtimes are required. Please note that due to an currently unknown reason the writing tests cannot be run in parallel to other tests because some unrelated temp files are in use although they should not be and thus cannot be accessed by the unit tests.
