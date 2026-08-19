@@ -29,14 +29,14 @@ namespace Benchmark;
 //                    no-op for batch size 1; included as a control)
 //
 // Measured results (net10.0, default job, 2000 elements x 6 members). 5f0a23c
-// is the last release before contiguous decode batching; HEAD adds the
+// is the last release before contiguous decode batching; d972f97 adds the
 // IsBuffered gate on IH5ReadStream.
 //
-//   Method       | 5f0a23c   | HEAD      | Speedup
-//   -------------|----------:|----------:|--------:
-//   ReadAll      | 8.312 ms  | 1.218 ms  | 6.8x
-//   ReadByWindow | 8.504 ms  | 1.233 ms  | 6.9x
-//   ReadPerCell  | 11.617 ms | 6.203 ms  | 1.9x
+//   Method       |   5f0a23c |  d972f97 | Speedup
+//   -------------|----------:|---------:|--------:
+//   ReadAll      |  8.312 ms | 1.218 ms |    6.8x
+//   ReadByWindow |  8.504 ms | 1.233 ms |    6.9x
+//   ReadPerCell  | 11.617 ms | 6.203 ms |    1.9x
 //
 // ReadAll / ReadByWindow: batching collapses N*M live driver dispatches into
 // one bulk ReadDatasetAsync + N*M in-memory SystemMemoryStream copies; the ~7x

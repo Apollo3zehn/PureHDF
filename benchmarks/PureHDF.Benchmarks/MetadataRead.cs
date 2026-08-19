@@ -32,14 +32,14 @@ namespace Benchmark;
 // after.
 //
 // Measured on this machine (net10.0, default job). 5f0a23c is the last release
-// before the driver read-ahead window; HEAD adds it.
+// before the driver read-ahead window; d972f97 adds it.
 //
-//   Method                    | 5f0a23c   | HEAD      | Speedup
-//   --------------------------|----------:|----------:|--------:
-//   Cold_OpenAndReadMetadata  | 49,052 us | 7,505 us  | 6.5x
-//   Warm_LookupLinksByName    | 3,702 us  | 2,587 us  | 1.4x
-//   Warm_EnumerateAttributes  | 7.70 us   | 12.25 us  | 0.6x
-//   Warm_ReadChunkedSelection | 4.55 us   | 4.86 us   | 0.9x
+//   Method                    |   5f0a23c |  d972f97 | Speedup
+//   --------------------------|----------:|---------:|--------:
+//   Cold_OpenAndReadMetadata  | 49,052 us | 7,505 us |    6.5x
+//   Warm_LookupLinksByName    |  3,702 us | 2,587 us |    1.4x
+//   Warm_EnumerateAttributes  |   7.70 us | 12.25 us |    0.6x
+//   Warm_ReadChunkedSelection |   4.55 us |  4.86 us |    0.9x
 //
 // Allocations are flat across both columns (~13.1 MB for Cold, ~175 KB for
 // Warm_LookupLinksByName): the window changes where bytes come from, not how

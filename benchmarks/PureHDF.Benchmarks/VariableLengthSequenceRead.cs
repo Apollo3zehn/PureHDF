@@ -10,11 +10,11 @@ namespace Benchmark;
 // variable-length decode path after the global-heap cache is warm.
 //
 // Measured on this machine (net10.0, default job, 60 cells x 200 peaks).
-// 5f0a23c is the last release before the driver read-ahead window; HEAD adds it.
+// 5f0a23c is the last release before the driver read-ahead window; d972f97 adds it.
 //
-//   Method                   | 5f0a23c  | HEAD     | Speedup
-//   -------------------------|---------:|---------:|--------:
-//   ReadVariableLengthPeaks  | 19.16 us | 19.65 us | 0.98x
+//   Method                  |  5f0a23c |  d972f97 | Speedup
+//   ------------------------|---------:|---------:|--------:
+//   ReadVariableLengthPeaks | 19.16 us | 19.65 us |   0.98x
 //
 // Flat (error bars overlap). This path was not targeted by any change since
 // 5f0a23c; allocation is unchanged at ~192 KB.

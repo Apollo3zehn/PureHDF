@@ -18,13 +18,13 @@ namespace Benchmark;
 // versus per-cell decode work shows up across the three rows.
 //
 // Measured on this machine (net10.0, default job, 600 cells x 200 elements).
-// 5f0a23c is the last release before the driver read-ahead window; HEAD adds it.
+// 5f0a23c is the last release before the driver read-ahead window; d972f97 adds it.
 //
-//   Method       | 5f0a23c    | HEAD       | Speedup
+//   Method       |    5f0a23c |    d972f97 | Speedup
 //   -------------|-----------:|-----------:|--------:
-//   ReadAll      | 175.0 us   | 174.4 us   | 1.00x
-//   ReadByWindow | 202.9 us  | 197.5 us   | 1.03x
-//   ReadPerCell  | 1,532.0 us | 1,649.2 us | 0.93x
+//   ReadAll      |   175.0 us |   174.4 us |   1.00x
+//   ReadByWindow |   202.9 us |   197.5 us |   1.03x
+//   ReadPerCell  | 1,532.0 us | 1,649.2 us |   0.93x
 //
 // ReadAll and ReadByWindow are flat (error bars overlap). ReadPerCell is a
 // small real regression (600 single-cell Read calls each pay the window's
