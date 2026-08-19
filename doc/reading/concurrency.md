@@ -15,10 +15,10 @@ A per-operation driver is allocated for every read, so a dataset or attribute re
 > [!WARNING]
 > The `Open(Stream)` overload is only thread-safe when the stream is a `FileStream`: PureHDF unwraps a `FileStream` to a handle driver that reads positionally (`RandomAccess.Read`), so each operation carries its own position and never touches the stream's cursor. Any other `Stream` subclass is driven through a shared cursor, so concurrent reads through it silently corrupt data. To read a non-`FileStream` remote source concurrently, implement `IConcurrentStream` and use `Open(IConcurrentStream)` instead.
 
-> The multi-threading support comes **without** significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
+> The multi-threading support comes **without** significant usage of locking. Only the global heap cache and the chunk cache use thread synchronization primitives.
 
-> [!WARNING]
-> The default `SimpleReadingChunkCache` is not thread safe and therefore every read operation must use its own cache (which is the default). This will be solved in a future release.
+> [!NOTE]
+> The default `SimpleReadingChunkCache` is thread safe and may be shared across concurrent reads by passing one instance via `H5DatasetAccess.ChunkCache`. The default path builds a fresh cache per read, so the lock only matters when you opt into sharing — which is the only reason to pass a cache in the first place, since it is what makes repeated reads of the same chunks cheap.
 
 ## Multi-Threading (Memory-Mapped File)
 
