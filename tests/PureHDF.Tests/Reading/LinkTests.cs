@@ -102,7 +102,7 @@ public class LinkTests
     }
 
     [Fact]
-    public void CanOpenDataset_DataLayoutMessage12()
+    public async Task CanOpenDataset_DataLayoutMessage12()
     {
         /* We use a simple binary file which encodes a data layout message because 
             * it is VERY hard to generate a real h5 file with data layout 1 or 2 as 
@@ -125,7 +125,7 @@ public class LinkTests
         var context = new NativeReadContext(driver, superblock) { ReadOptions = default! };
 
         // Act
-        var layout = DataLayoutMessage12.Decode(context, version: 1);
+        var layout = await DataLayoutMessage12.Decode(context, version: 1);
 
         // Assert
         Assert.Equal(2, layout.Rank);

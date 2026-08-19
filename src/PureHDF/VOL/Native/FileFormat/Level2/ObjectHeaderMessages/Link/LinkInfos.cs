@@ -13,12 +13,12 @@ internal record class HardLinkInfo(
     ulong HeaderAddress
 ) : LinkInfo
 {
-    public static HardLinkInfo Decode(NativeReadContext context)
+    public static async ValueTask<HardLinkInfo> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         return new HardLinkInfo(
-            HeaderAddress: superblock.ReadOffset(driver)
+            HeaderAddress: await superblock.ReadOffset(driver).ConfigureAwait(false)
         );
     }
 
@@ -37,14 +37,14 @@ internal record class SoftLinkInfo(
     string Value
 ) : LinkInfo
 {
-    public static SoftLinkInfo Decode(H5DriverBase driver)
+    public static async ValueTask<SoftLinkInfo> Decode(H5DriverBase driver)
     {
-        var valueLength = driver.ReadUInt16();
+        var valueLength = await driver.ReadUInt16().ConfigureAwait(false);
 
         // The value has no character set field of its own and is a path made of link names,
         // which may be UTF-8; decoded as ASCII it no longer names the object it points at
         // and the link silently fails to resolve. Encode below writes UTF-8.
-        var value = ReadUtils.ReadFixedLengthString(driver, valueLength);
+        var value = await ReadUtils.ReadFixedLengthString(driver, valueLength).ConfigureAwait(false);
 
         return new SoftLinkInfo(
             Value: value
@@ -109,21 +109,21 @@ internal record class ExternalLinkInfo(
         }
     }
 
-    public static ExternalLinkInfo Decode(H5DriverBase driver)
+    public static async ValueTask<ExternalLinkInfo> Decode(H5DriverBase driver)
     {
         // value length
-        var _ = driver.ReadUInt16();
+        var _ = await driver.ReadUInt16().ConfigureAwait(false);
 
         // version and flags
-        var data = driver.ReadByte();
+        var data = await driver.ReadByte().ConfigureAwait(false);
         var version = (byte)((data & 0xF0) >> 4); // take only upper 4 bits
         var flags = (byte)((data & 0x0F) >> 0); // take only lower 4 bits
 
         // file name
-        var filePath = ReadUtils.ReadNullTerminatedString(driver, pad: false);
+        var filePath = await ReadUtils.ReadNullTerminatedString(driver, pad: false).ConfigureAwait(false);
 
         // full object path
-        var fullObjectPath = ReadUtils.ReadNullTerminatedString(driver, pad: false);
+        var fullObjectPath = await ReadUtils.ReadNullTerminatedString(driver, pad: false).ConfigureAwait(false);
 
         return new ExternalLinkInfo(
             FilePath: filePath,
@@ -150,12 +150,12 @@ internal record class UserDefinedLinkInfo(
     byte[] Data
 ) : LinkInfo
 {
-    public static UserDefinedLinkInfo Decode(H5DriverBase driver)
+    public static async ValueTask<UserDefinedLinkInfo> Decode(H5DriverBase driver)
     {
-        var dataLength = driver.ReadUInt16();
+        var dataLength = await driver.ReadUInt16().ConfigureAwait(false);
 
         return new UserDefinedLinkInfo(
-            Data: driver.ReadBytes(dataLength)
+            Data: await driver.ReadBytes(dataLength).ConfigureAwait(false)
         );
     }
 

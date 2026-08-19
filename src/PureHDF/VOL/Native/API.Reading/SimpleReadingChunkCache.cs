@@ -91,18 +91,46 @@ public class SimpleReadingChunkCache : IReadingChunkCache
     /// </remarks>
     public Memory<byte> GetChunk(ulong chunkIndex, Func<Memory<byte>> chunkReader)
     {
+        if (TryGetCachedChunk(chunkIndex, out var cached))
+            return cached;
+
+        return Install(chunkIndex, chunkReader());
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Shares all of its bookkeeping with <see cref="GetChunk" /> - the only difference is that the
+    /// chunk reader is awaited rather than blocked on. The lock is not held across it either way, so
+    /// nothing about the concurrency reasoning above changes.
+    /// </remarks>
+    public async ValueTask<Memory<byte>> GetChunkAsync(ulong chunkIndex, Func<ValueTask<Memory<byte>>> chunkReader)
+    {
+        if (TryGetCachedChunk(chunkIndex, out var cached))
+            return cached;
+
+        return Install(chunkIndex, await chunkReader().ConfigureAwait(false));
+    }
+
+    private bool TryGetCachedChunk(ulong chunkIndex, out Memory<byte> chunk)
+    {
         lock (_lock)
         {
             if (_chunkInfoMap.TryGetValue(chunkIndex, out var cached))
             {
                 cached.LastAccess = Environment.TickCount64;
+                chunk = cached.Chunk;
 
-                return cached.Chunk;
+                return true;
             }
         }
 
-        var buffer = chunkReader();
+        chunk = default;
 
+        return false;
+    }
+
+    private Memory<byte> Install(ulong chunkIndex, Memory<byte> buffer)
+    {
         lock (_lock)
         {
             // Another reader may have installed this chunk while we were decoding it. Prefer the

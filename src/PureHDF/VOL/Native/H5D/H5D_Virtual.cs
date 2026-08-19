@@ -18,25 +18,19 @@ internal class H5D_Virtual<TResult> : H5D_Base
 
     #region Constructors
 
-    public H5D_Virtual(
+    private H5D_Virtual(
         NativeReadContext readContext,
         NativeWriteContext writeContext,
         DatasetInfo dataset,
         H5DatasetAccess datasetAccess,
         TResult? fillValue,
-        ReadVirtualDelegate<TResult> readVirtualDelegate)
+        ReadVirtualDelegate<TResult> readVirtualDelegate,
+        VdsGlobalHeapBlock block)
         : base(readContext, writeContext, dataset, datasetAccess)
     {
         _fillValue = fillValue;
         _readVirtualDelegate = readVirtualDelegate;
-
-        var layoutMessage = (DataLayoutMessage4)dataset.Layout;
-        var collection = NativeCache.GetGlobalHeapObject(readContext, ((VirtualStoragePropertyDescription)layoutMessage.Properties).Address);
-        var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
-        var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
-        using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
-
-        _block = VdsGlobalHeapBlock.Decode(localDriver, readContext.Superblock);
+        _block = block;
 
         // https://docs.hdfgroup.org/archive/support/HDF5/docNewFeatures/VDS/HDF5-VDS-requirements-use-cases-2014-12-10.pdf
         // "A source dataset may have different rank and dimension sizes than the VDS. However, if a
@@ -52,6 +46,36 @@ internal class H5D_Virtual<TResult> : H5D_Base
         }
     }
 
+    // A static factory rather than a constructor: construction performs a driver read
+    // (VdsGlobalHeapBlock.Decode) and a constructor cannot be async.
+    public static async ValueTask<H5D_Virtual<TResult>> Create(
+        NativeReadContext readContext,
+        NativeWriteContext writeContext,
+        DatasetInfo dataset,
+        H5DatasetAccess datasetAccess,
+        TResult? fillValue,
+        ReadVirtualDelegate<TResult> readVirtualDelegate)
+    {
+        var layoutMessage = (DataLayoutMessage4)dataset.Layout;
+        var collection = await NativeCache
+            .GetGlobalHeapObject(readContext, ((VirtualStoragePropertyDescription)layoutMessage.Properties).Address)
+            .ConfigureAwait(false);
+        var index = ((VirtualStoragePropertyDescription)layoutMessage.Properties).Index;
+        var objectData = collection.GlobalHeapObjects[(int)index].ObjectData;
+        using var localDriver = new H5StreamDriver(new MemoryStream(objectData), leaveOpen: false);
+
+        var block = await VdsGlobalHeapBlock.Decode(localDriver, readContext.Superblock).ConfigureAwait(false);
+
+        return new H5D_Virtual<TResult>(
+            readContext,
+            writeContext,
+            dataset,
+            datasetAccess,
+            fillValue,
+            readVirtualDelegate,
+            block);
+    }
+
     #endregion
 
     #region Properties
@@ -65,7 +89,7 @@ internal class H5D_Virtual<TResult> : H5D_Base
         return Dataset.Space.Dimensions;
     }
 
-    public override IH5ReadStream GetReadStream(ulong chunkIndex)
+    public override ValueTask<IH5ReadStream> GetReadStream(ulong chunkIndex)
     {
         _stream ??= new VirtualDatasetStream<TResult>(
             ReadContext.File,
@@ -76,7 +100,8 @@ internal class H5D_Virtual<TResult> : H5D_Base
             _readVirtualDelegate
         );
 
-        return _stream;
+        // The VDS mapping block was decoded during construction; building the stream reads nothing.
+        return new ValueTask<IH5ReadStream>(_stream);
     }
 
     public override IH5WriteStream GetWriteStream(ulong chunkIndex)

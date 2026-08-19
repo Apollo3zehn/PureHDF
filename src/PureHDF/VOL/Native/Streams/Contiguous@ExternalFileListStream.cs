@@ -6,30 +6,44 @@ internal class ExternalFileListStream : IH5ReadStream
     private long _position;
     private bool _loadSlot;
     private SlotStream? _slotStream;
-    private readonly SlotStream[] _slotStreams;
+    private readonly NativeFile _file;
+    private readonly NativeReadContext _context;
+    private readonly ExternalFileListMessage _externalFileList;
+    private readonly H5DatasetAccess _datasetAccess;
+    private readonly ExternalFileListSlot[] _slots;
+    private readonly long[] _offsets;
+    private readonly SlotStream?[] _slotStreamCache;
 
+    // CONCURRENCY: `context` must be the context of the read operation that created this stream, not
+    // the file-level one. The local heap holding the external file names is decoded through it, and
+    // this stream lives exactly as long as the H5D_Contiguous that owns it - i.e. one operation.
     public ExternalFileListStream(
-        NativeFile file,
+        NativeReadContext context,
         ExternalFileListMessage externalFileList,
         H5DatasetAccess datasetAccess)
     {
+        _context = context;
+        _file = context.File;
+        _externalFileList = externalFileList;
+        _datasetAccess = datasetAccess;
+
+        _slots = externalFileList.SlotDefinitions;
+        _offsets = new long[_slots.Length];
+        _slotStreamCache = new SlotStream?[_slots.Length];
+
         var offset = 0L;
 
-        _slotStreams = externalFileList
-            .SlotDefinitions
-            .Select(slot =>
-            {
-                var stream = new SlotStream(file, externalFileList.Heap, slot, offset, datasetAccess);
-                offset += stream.Length;
-                return stream;
-            })
-            .ToArray();
+        for (var i = 0; i < _slots.Length; i++)
+        {
+            _offsets[i] = offset;
+            offset += (long)_slots[i].Size;
+        }
 
-        if (_slotStreams.Any())
+        if (_slots.Length > 0)
         {
             _length =
-                _slotStreams.Last().Offset +
-                _slotStreams.Last().Length;
+                _offsets[^1] +
+                (long)_slots[^1].Size;
         }
         else
         {
@@ -39,7 +53,25 @@ internal class ExternalFileListStream : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public void ReadDataset(Span<byte> buffer)
+    private async ValueTask<SlotStream> GetOrCreateSlotStream(int index)
+    {
+        var cached = _slotStreamCache[index];
+
+        if (cached is not null)
+            return cached;
+
+        var heap = await _externalFileList.Heap(_context).ConfigureAwait(false);
+
+        var created = new SlotStream(
+            _file, heap, _slots[index], _offsets[index], _datasetAccess
+        );
+
+        _slotStreamCache[index] = created;
+
+        return created;
+    }
+
+    public async ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         var offset = 0;
         var remaining = buffer.Length;
@@ -48,8 +80,9 @@ internal class ExternalFileListStream : IH5ReadStream
         {
             if (_slotStream is null || _loadSlot)
             {
-                _slotStream = _slotStreams.Last(stream => stream.Offset <= _position);
-                _slotStream.Seek(_position - _slotStream.Offset, SeekOrigin.Begin);
+                var index = Enumerable.Range(0, _offsets.Length).Last(i => _offsets[i] <= _position);
+                _slotStream = await GetOrCreateSlotStream(index).ConfigureAwait(false);
+                _slotStream.Seek(_position - _offsets[index], SeekOrigin.Begin);
                 _loadSlot = false;
             }
 
@@ -60,7 +93,7 @@ internal class ExternalFileListStream : IH5ReadStream
 
             var length = (int)Math.Min(remaining, streamRemaining);
 
-            _slotStream.ReadDataset(buffer.Slice(offset, length));
+            await _slotStream.ReadDatasetAsync(buffer.Slice(offset, length)).ConfigureAwait(false);
             _position += length;
             offset += length;
             remaining -= length;
@@ -110,9 +143,9 @@ internal class ExternalFileListStream : IH5ReadStream
     {
         if (!_disposedValue)
         {
-            foreach (var stream in _slotStreams)
+            foreach (var stream in _slotStreamCache)
             {
-                stream.Dispose();
+                stream?.Dispose();
             }
 
             _disposedValue = true;

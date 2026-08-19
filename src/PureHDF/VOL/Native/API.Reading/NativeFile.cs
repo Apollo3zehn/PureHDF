@@ -44,21 +44,59 @@ public class NativeFile : NativeGroup, IDisposable
 
     #region Methods
 
+    // The *Async variants below are the real implementation. These three synchronous entry points
+    // block on them, so the synchronous public surface (H5File.OpenRead/Open) and its callers keep
+    // working. Blocking here is safe on a thread-backed host; a WebAssembly caller must use the
+    // *Async entry points instead, where nothing blocks.
     internal static NativeFile InternalOpenRead(
         string filePath,
         bool deleteOnClose = false,
         H5ReadOptions? options = default)
     {
-        return InternalOpen(
+        return InternalOpenReadAsync(filePath, deleteOnClose, options)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    internal static NativeFile InternalOpen(
+        string filePath,
+        FileMode fileMode,
+        FileAccess fileAccess,
+        FileShare fileShare,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
+    {
+        return InternalOpenAsync(filePath, fileMode, fileAccess, fileShare, deleteOnClose, options)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    internal static NativeFile InternalOpen(
+        H5DriverBase driver,
+        string absoluteFilePath,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
+    {
+        return InternalOpenAsync(driver, absoluteFilePath, deleteOnClose, options)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    internal static async ValueTask<NativeFile> InternalOpenReadAsync(
+        string filePath,
+        bool deleteOnClose = false,
+        H5ReadOptions? options = default)
+    {
+        return await InternalOpenAsync(
             filePath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
             deleteOnClose: deleteOnClose,
-            options: options);
+            options: options).ConfigureAwait(false);
     }
 
-    internal static NativeFile InternalOpen(
+    internal static async ValueTask<NativeFile> InternalOpenAsync(
         string filePath,
         FileMode fileMode,
         FileAccess fileAccess,
@@ -77,14 +115,14 @@ public class NativeFile : NativeGroup, IDisposable
 
         var driver = new H5FileHandleDriver(stream, leaveOpen: false);
 
-        return InternalOpen(
+        return await InternalOpenAsync(
             driver,
             absoluteFilePath,
             deleteOnClose,
-            options);
+            options).ConfigureAwait(false);
     }
 
-    internal static NativeFile InternalOpen(
+    internal static async ValueTask<NativeFile> InternalOpenAsync(
         H5DriverBase driver,
         string absoluteFilePath,
         bool deleteOnClose = false,
@@ -95,7 +133,7 @@ public class NativeFile : NativeGroup, IDisposable
 
         // superblock
         var stepSize = 512;
-        var signature = driver.ReadBytes(8);
+        var signature = await driver.ReadBytes(8).ConfigureAwait(false);
 
         while (!ValidateSignature(signature, Superblock.Signature))
         {
@@ -104,16 +142,16 @@ public class NativeFile : NativeGroup, IDisposable
             if (driver.Position >= driver.Length)
                 throw new Exception("The file is not a valid HDF 5 file.");
 
-            signature = driver.ReadBytes(8);
+            signature = await driver.ReadBytes(8).ConfigureAwait(false);
             stepSize *= 2;
         }
 
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         Superblock superblock = version switch
         {
-            >= 0 and < 2 => Superblock01.Decode(driver, version),
-            >= 2 and < 4 => Superblock23.Decode(driver, version),
+            >= 0 and < 2 => await Superblock01.Decode(driver, version).ConfigureAwait(false),
+            >= 2 and < 4 => await Superblock23.Decode(driver, version).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The superblock version '{version}' is not supported.")
         };
 
@@ -147,7 +185,7 @@ public class NativeFile : NativeGroup, IDisposable
             ReadOptions = options ?? new()
         };
 
-        var header = ObjectHeader.Construct(context);
+        var header = await ObjectHeader.Construct(context).ConfigureAwait(false);
 
         var file = new NativeFile(context, default, header, absoluteFilePath, deleteOnClose);
         var reference = new NativeNamedReference("/", address, file);
@@ -171,23 +209,68 @@ public class NativeFile : NativeGroup, IDisposable
     /// <returns>The requested selection.</returns>
     public Selection Get(NativeRegionReference1 reference)
     {
+        // Blocks once, at the public boundary. GetAsync below runs the same core and awaits it.
+        return GetRegionSelection(reference)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <summary>
+    /// Gets the file selection that is referenced by the given <paramref name="reference"/>.
+    /// </summary>
+    /// <param name="reference">The reference of the region.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>A task which returns the requested selection.</returns>
+    /// <remarks>
+    /// Resolving a region reference reads the global heap collection the reference points into, so this
+    /// genuinely suspends on a source that cannot be read synchronously - which is why the synchronous
+    /// <see cref="Get(NativeRegionReference1)"/> cannot serve one there.
+    /// </remarks>
+    public Task<Selection> GetAsync(NativeRegionReference1 reference, CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only, as elsewhere on this surface: the decode below does not thread
+        // a token through.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return GetRegionSelection(reference).AsTask();
+    }
+
+    private async ValueTask<Selection> GetRegionSelection(NativeRegionReference1 reference)
+    {
         if (reference.Equals(default))
             throw new Exception("The reference is invalid");
 
-        Context.Driver.SeekRelativeToBaseAddress((long)reference.CollectionAddress);
+        // CONCURRENCY: resolving a region reference seeks and reads the driver (GetGlobalHeapObject
+        // does so as a side effect), so it takes a scope of its own rather than moving the shared
+        // file-level cursor. The scope is held across the awaits below, which is safe because it is
+        // per-OPERATION rather than per-thread.
+        using var scope = new NativeOperationScope(Context);
+        var context = scope.Context;
+
+        context.Driver.SeekRelativeToBaseAddress((long)reference.CollectionAddress);
 
         var globalHeapId = new ReadingGlobalHeapId(
             CollectionAddress: reference.CollectionAddress,
             ObjectIndex: reference.ObjectIndex);
 
-        var globalHeapCollection = NativeCache.GetGlobalHeapObject(Context, globalHeapId.CollectionAddress);
+        // The only read here that can actually suspend: it fetches the collection from the file. The two
+        // decodes below run against a MemoryStream over bytes this already produced.
+        var globalHeapCollection = await NativeCache
+            .GetGlobalHeapObject(context, globalHeapId.CollectionAddress)
+            .ConfigureAwait(false);
+
         var globalHeapObject = globalHeapCollection.GlobalHeapObjects[(int)globalHeapId.ObjectIndex];
 
         using var localDriver = new H5StreamDriver(new MemoryStream(globalHeapObject.ObjectData), leaveOpen: false);
-        var address = Context.Superblock.ReadOffset(localDriver);
-        var dataspaceSelection = DataspaceSelection.Decode(localDriver);
 
-        Selection selection = dataspaceSelection.Info switch
+        // Discarded on purpose: the region reference's object data begins with the address of the
+        // dataset the selection applies to, and this read is here to step the cursor past it. The
+        // caller gets the selection alone, so the address itself is not needed.
+        _ = await context.Superblock.ReadOffset(localDriver).ConfigureAwait(false);
+
+        var dataspaceSelection = await DataspaceSelection.Decode(localDriver).ConfigureAwait(false);
+
+        return dataspaceSelection.Info switch
         {
             H5S_SEL_NONE none => new NoneSelection(),
             H5S_SEL_POINTS points => new PointSelection(points.PointData),
@@ -200,8 +283,6 @@ public class NativeFile : NativeGroup, IDisposable
             H5S_SEL_ALL all => new AllSelection(),
             _ => throw new NotSupportedException($"The dataspace selection type '{dataspaceSelection.Info.GetType().FullName}' is not supported.")
         };
-
-        return selection;
     }
 
     #endregion
@@ -217,7 +298,7 @@ public class NativeFile : NativeGroup, IDisposable
         {
             if (disposing)
             {
-                NativeCache.Clear(Context.Driver);
+                NativeCache.Clear(Context);
                 Context.Driver.Dispose();
 
                 if (_deleteOnClose && File.Exists(Path))

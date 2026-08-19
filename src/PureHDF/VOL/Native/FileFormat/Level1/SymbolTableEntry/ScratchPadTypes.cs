@@ -9,56 +9,47 @@ internal record class SymbolicLinkScratchPad(
     uint LinkValueOffset
 ) : ScratchPad
 {
-    public static SymbolicLinkScratchPad Decode(H5DriverBase driver)
+    public static async ValueTask<SymbolicLinkScratchPad> Decode(H5DriverBase driver)
     {
         return new SymbolicLinkScratchPad(
-            LinkValueOffset: driver.ReadUInt32()
+            LinkValueOffset: await driver.ReadUInt32().ConfigureAwait(false)
         );
     }
 }
 
+// CONCURRENCY (retained): this scratch pad is attached to a NativeNamedReference
+// (NativeNamedReference.ScratchPad) and handed to the caller, and a NativeGroup built from that
+// reference keeps it for its whole lifetime - so it OUTLIVES the navigation operation that decoded
+// it. It therefore holds no NativeReadContext and caches nothing; see the note on LinkInfoMessage
+// for why a captured per-operation driver would be a correctness bug rather than merely stale.
 internal record class ObjectHeaderScratchPad(
-    NativeReadContext Context,
     ulong BTree1Address,
     ulong NameHeapAddress
 ) : ScratchPad
 {
-    private LocalHeap _localHeap;
-    private BTree1Node<BTree1GroupKey> _btree1Node;
-
-    public static ObjectHeaderScratchPad Decode(NativeReadContext context)
+    public static async ValueTask<ObjectHeaderScratchPad> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         return new ObjectHeaderScratchPad(
-            Context: context,
-            BTree1Address: superblock.ReadLength(driver),
-            NameHeapAddress: superblock.ReadLength(driver)
+            BTree1Address: await superblock.ReadLength(driver).ConfigureAwait(false),
+            NameHeapAddress: await superblock.ReadLength(driver).ConfigureAwait(false)
         );
     }
 
-    public LocalHeap LocalHeap
+    public ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
     {
-        get
-        {
-            if (_localHeap.Equals(default))
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)NameHeapAddress);
-                _localHeap = LocalHeap.Decode(Context);
-            }
-
-            return _localHeap;
-        }
+        return NativeCache.GetStructure(context, NameHeapAddress, LocalHeap.Decode);
     }
 
-    public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
+    public ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
+        NativeReadContext context,
+        DecodeKeyDelegate<BTree1GroupKey> decodeKey)
     {
-        if (_btree1Node.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-            _btree1Node = BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey);
-        }
-
-        return _btree1Node;
+        return NativeCache.GetStructure(
+            context,
+            BTree1Address,
+            decodeKey,
+            static (c, dk) => BTree1Node<BTree1GroupKey>.Decode(c, dk));
     }
 }

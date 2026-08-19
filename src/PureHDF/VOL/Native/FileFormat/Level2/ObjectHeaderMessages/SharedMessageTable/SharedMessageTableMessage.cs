@@ -24,32 +24,31 @@ internal record class SharedMessageTableMessage(
         }
     }
 
-    public SharedObjectHeaderMessageTable SharedObjectHeaderMessageTable
+    // A method rather than a property: C# has no async property getters. No callers exist in the
+    // repo today.
+    public async ValueTask<SharedObjectHeaderMessageTable> GetSharedObjectHeaderMessageTable()
     {
-        get
+        if (_sharedObjectHeaderMessageTable.Equals(default))
         {
-            if (_sharedObjectHeaderMessageTable.Equals(default))
-            {
-                Driver.SeekRelativeToBaseAddress((long)SharedObjectHeaderMessageTableAddress);
-                _sharedObjectHeaderMessageTable = SharedObjectHeaderMessageTable.Decode(Driver);
-            }
-
-            return _sharedObjectHeaderMessageTable;
+            Driver.SeekRelativeToBaseAddress((long)SharedObjectHeaderMessageTableAddress);
+            _sharedObjectHeaderMessageTable = await SharedObjectHeaderMessageTable.Decode(Driver).ConfigureAwait(false);
         }
+
+        return _sharedObjectHeaderMessageTable;
     }
 
-    public static SharedMessageTableMessage Decode(NativeReadContext context)
+    public static async ValueTask<SharedMessageTableMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // shared object header message table address
-        var sharedObjectHeaderMessageTableAddress = superblock.ReadOffset(driver);
+        var sharedObjectHeaderMessageTableAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // index count
-        var indexCount = driver.ReadByte();
+        var indexCount = await driver.ReadByte().ConfigureAwait(false);
 
         return new SharedMessageTableMessage(
             Driver: driver,

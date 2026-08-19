@@ -12,7 +12,7 @@
             "artifacts/bin/PureHDF.Filters.Deflate.SharpZipLib/Release/netstandard2.0/PureHDF.Filters.Deflate.SharpZipLib.dll",
             "artifacts/bin/PureHDF.Filters.Lzf/Release/netstandard2.0/PureHDF.Filters.Lzf.dll",
             "artifacts/bin/PureHDF.VFD.AmazonS3/Release/netstandard2.1/PureHDF.VFD.AmazonS3.dll",
-            "artifacts/bin/PureHDF.VOL.Hsds/Release/net6.0/PureHDF.VOL.Hsds.dll"
+            "artifacts/bin/PureHDF.VOL.Hsds/Release/net8.0/PureHDF.VOL.Hsds.dll"
           ]
         }
       ],

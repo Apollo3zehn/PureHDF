@@ -25,27 +25,27 @@ internal record class DataLayoutMessage12(
         }
     }
 
-    public static DataLayoutMessage12 Decode(NativeReadContext context, byte version)
+    public static async ValueTask<DataLayoutMessage12> Decode(NativeReadContext context, byte version)
     {
         /* H5Olayout.c (H5O__layout_decode) */
 
         var (driver, superblock) = context;
 
         // rank
-        var rank = driver.ReadByte();
+        var rank = await driver.ReadByte().ConfigureAwait(false);
 
         // layout class
-        var layoutClass = (LayoutClass)driver.ReadByte();
+        var layoutClass = (LayoutClass)await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(5);
+        await driver.ReadBytes(5).ConfigureAwait(false);
 
         // data address
         var address = layoutClass switch
         {
             LayoutClass.Compact => ulong.MaxValue, // invalid address
-            LayoutClass.Contiguous => superblock.ReadOffset(driver),
-            LayoutClass.Chunked => superblock.ReadOffset(driver),
+            LayoutClass.Contiguous => await superblock.ReadOffset(driver).ConfigureAwait(false),
+            LayoutClass.Chunked => await superblock.ReadOffset(driver).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The layout class '{layoutClass}' is not supported.")
         };
 
@@ -54,7 +54,7 @@ internal record class DataLayoutMessage12(
 
         for (int i = 0; i < rank; i++)
         {
-            dimensionSizes[i] = driver.ReadUInt32();
+            dimensionSizes[i] = await driver.ReadUInt32().ConfigureAwait(false);
         }
 
         // compact data size
@@ -62,8 +62,8 @@ internal record class DataLayoutMessage12(
 
         if (layoutClass == LayoutClass.Compact)
         {
-            var compactDataSize = driver.ReadUInt32();
-            compactData = driver.ReadBytes((int)compactDataSize);
+            var compactDataSize = await driver.ReadUInt32().ConfigureAwait(false);
+            compactData = await driver.ReadBytes((int)compactDataSize).ConfigureAwait(false);
         }
 
         else

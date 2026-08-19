@@ -2,8 +2,10 @@
 
 namespace PureHDF.VOL.Native;
 
+// CONCURRENCY (retained message): see the note on LinkInfoMessage - this message is retained in
+// ObjectHeader.HeaderMessages for the lifetime of the NativeObject, so it holds no
+// NativeReadContext and caches nothing. Every accessor takes the calling operation's context.
 internal partial record class AttributeInfoMessage(
-    NativeReadContext Context,
     CreationOrderFlags Flags,
     ushort MaximumCreationIndex,
     ulong FractalHeapAddress,
@@ -12,9 +14,6 @@ internal partial record class AttributeInfoMessage(
 ) : Message
 {
     private byte _version;
-    private FractalHeapHeader? _fractalHeap;
-    private BTree2Header<BTree2Record08>? _bTree2NameIndex;
-    private BTree2Header<BTree2Record09>? _bTree2CreationOrder;
 
     public required byte Version
     {
@@ -31,78 +30,83 @@ internal partial record class AttributeInfoMessage(
         }
     }
 
-    public FractalHeapHeader FractalHeap
+    public ValueTask<FractalHeapHeader> FractalHeap(NativeReadContext context)
     {
-        get
-        {
-            if (_fractalHeap is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)FractalHeapAddress);
-                _fractalHeap = FractalHeapHeader.Decode(Context);
-            }
+        return NativeCache.GetStructure(context, FractalHeapAddress, FractalHeapHeader.Decode);
+    }
 
-            return _fractalHeap;
+    // The b-tree header is an implementation detail: it is useless without the key decoder that
+    // matches its record type, and that decoder is private here. So the message exposes the two
+    // OPERATIONS a caller actually wants instead of handing out a header the caller cannot drive -
+    // which also means the caching below is invisible to every caller.
+    private ValueTask<BTree2Header<BTree2Record08>> BTree2NameIndex(NativeReadContext context)
+    {
+        return NativeCache.GetStructure(
+            context,
+            BTree2NameIndexAddress,
+            (DecodeKeyDelegate<BTree2Record08>)DecodeRecord08,
+            static (c, dk) => BTree2Header<BTree2Record08>.Decode(c, dk));
+    }
+
+    public async IAsyncEnumerable<BTree2Record08> EnumerateNameIndexRecords(NativeReadContext context)
+    {
+        var nameIndex = await BTree2NameIndex(context).ConfigureAwait(false);
+
+        await foreach (var record in nameIndex.EnumerateRecords(context, DecodeRecord08))
+        {
+            yield return record;
         }
     }
 
-    public BTree2Header<BTree2Record08> BTree2NameIndex
+    public async ValueTask<(bool Success, BTree2Record08 Result)> TryFindNameIndexRecord(
+        NativeReadContext context,
+        Func<BTree2Record08, ValueTask<int>> compare)
     {
-        get
-        {
-            if (_bTree2NameIndex is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
-                _bTree2NameIndex = BTree2Header<BTree2Record08>.Decode(Context, DecodeRecord08);
-            }
+        var nameIndex = await BTree2NameIndex(context).ConfigureAwait(false);
 
-            return _bTree2NameIndex;
-        }
+        return await nameIndex.TryFindRecord(context, DecodeRecord08, compare).ConfigureAwait(false);
     }
 
-    public BTree2Header<BTree2Record09> BTree2CreationOrder
+    // PRE-EXISTING: this seeks BTree2NameIndexAddress, not BTree2CreationOrderIndexAddress. The
+    // method has no callers in the tree, so the wrong seek is unreachable today.
+    public async ValueTask<BTree2Header<BTree2Record09>> BTree2CreationOrder(NativeReadContext context)
     {
-        get
-        {
-            if (_bTree2CreationOrder is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
-                _bTree2CreationOrder = BTree2Header<BTree2Record09>.Decode(Context, DecodeRecord09);
-            }
+        context.Driver.SeekRelativeToBaseAddress((long)BTree2NameIndexAddress);
 
-            return _bTree2CreationOrder;
-        }
+        return await BTree2Header<BTree2Record09>
+            .Decode(context, DecodeRecord09)
+            .ConfigureAwait(false);
     }
 
-    public static AttributeInfoMessage Decode(NativeReadContext context)
+    public static async ValueTask<AttributeInfoMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // flags
-        var flags = (CreationOrderFlags)driver.ReadByte();
+        var flags = (CreationOrderFlags)await driver.ReadByte().ConfigureAwait(false);
 
         // maximum creation index
         var maximumCreationIndex = default(ushort);
 
         if (flags.HasFlag(CreationOrderFlags.TrackCreationOrder))
-            maximumCreationIndex = driver.ReadUInt16();
+            maximumCreationIndex = await driver.ReadUInt16().ConfigureAwait(false);
 
         // fractal heap address
-        var fractalHeapAddress = superblock.ReadOffset(driver);
+        var fractalHeapAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // b-tree 2 name index address
-        var bTree2NameIndexAddress = superblock.ReadOffset(driver);
+        var bTree2NameIndexAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // b-tree 2 creation order index address
         var bTree2CreationOrderIndexAddress = default(ulong);
 
         if (flags.HasFlag(CreationOrderFlags.IndexCreationOrder))
-            bTree2CreationOrderIndexAddress = superblock.ReadOffset(driver);
+            bTree2CreationOrderIndexAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new AttributeInfoMessage(
-            Context: context,
             Flags: flags,
             MaximumCreationIndex: maximumCreationIndex,
             FractalHeapAddress: fractalHeapAddress,
@@ -115,8 +119,8 @@ internal partial record class AttributeInfoMessage(
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record08 DecodeRecord08() => BTree2Record08.Decode(Context.Driver);
+    private static async ValueTask<BTree2Record08> DecodeRecord08(NativeReadContext context) => await BTree2Record08.Decode(context.Driver).ConfigureAwait(false);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree2Record09 DecodeRecord09() => BTree2Record09.Decode(Context.Driver);
+    private static async ValueTask<BTree2Record09> DecodeRecord09(NativeReadContext context) => await BTree2Record09.Decode(context.Driver).ConfigureAwait(false);
 }

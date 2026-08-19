@@ -24,14 +24,14 @@ internal partial record class FillValueMessage(
         }
     }
 
-    public static FillValueMessage Decode(H5DriverBase driver)
+    public static async ValueTask<FillValueMessage> Decode(H5DriverBase driver)
     {
         // see also H5dcpl.c (H5P_is_fill_value_defined) and H5Dint.c (H5D__update_oh_info):
         // if size = 0 then default value should be applied
         // if size = -1 then fill value is explicitly undefined
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         uint size;
         SpaceAllocationTime allocationTime;
@@ -43,36 +43,36 @@ internal partial record class FillValueMessage(
         {
             case 1:
 
-                allocationTime = (SpaceAllocationTime)driver.ReadByte();
-                fillTime = (FillValueWriteTime)driver.ReadByte();
+                allocationTime = (SpaceAllocationTime)await driver.ReadByte().ConfigureAwait(false);
+                fillTime = (FillValueWriteTime)await driver.ReadByte().ConfigureAwait(false);
 
-                var isDefined1 = driver.ReadByte() == 1;
+                var isDefined1 = await driver.ReadByte().ConfigureAwait(false) == 1;
 
                 if (isDefined1)
                 {
-                    size = driver.ReadUInt32();
-                    value = driver.ReadBytes((int)size);
+                    size = await driver.ReadUInt32().ConfigureAwait(false);
+                    value = await driver.ReadBytes((int)size).ConfigureAwait(false);
                 }
 
                 break;
 
             case 2:
 
-                allocationTime = (SpaceAllocationTime)driver.ReadByte();
-                fillTime = (FillValueWriteTime)driver.ReadByte();
-                var isDefined2 = driver.ReadByte() == 1;
+                allocationTime = (SpaceAllocationTime)await driver.ReadByte().ConfigureAwait(false);
+                fillTime = (FillValueWriteTime)await driver.ReadByte().ConfigureAwait(false);
+                var isDefined2 = await driver.ReadByte().ConfigureAwait(false) == 1;
 
                 if (isDefined2)
                 {
-                    size = driver.ReadUInt32();
-                    value = driver.ReadBytes((int)size);
+                    size = await driver.ReadUInt32().ConfigureAwait(false);
+                    value = await driver.ReadBytes((int)size).ConfigureAwait(false);
                 }
 
                 break;
 
             case 3:
 
-                var flags = driver.ReadByte();
+                var flags = await driver.ReadByte().ConfigureAwait(false);
                 allocationTime = (SpaceAllocationTime)((flags & 0x03) >> 0);    // take only bits 0 and 1
                 fillTime = (FillValueWriteTime)((flags & 0x0C) >> 2);           // take only bits 2 and 3
                 var isUndefined = (flags & (1 << 4)) > 0;                       // take only bit 4
@@ -87,8 +87,8 @@ internal partial record class FillValueMessage(
                 // defined
                 else if (isDefined3)
                 {
-                    size = driver.ReadUInt32();
-                    value = driver.ReadBytes((int)size);
+                    size = await driver.ReadUInt32().ConfigureAwait(false);
+                    value = await driver.ReadBytes((int)size).ConfigureAwait(false);
                 }
 
                 break;

@@ -32,7 +32,7 @@ internal record class ExtensibleArraySecondaryBlock(
         }
     }
 
-    public static ExtensibleArraySecondaryBlock Decode(NativeReadContext context, ExtensibleArrayHeader header, uint index)
+    public static async ValueTask<ExtensibleArraySecondaryBlock> Decode(NativeReadContext context, ExtensibleArrayHeader header, uint index)
     {
         var (driver, superblock) = context;
 
@@ -64,20 +64,20 @@ internal record class ExtensibleArraySecondaryBlock(
         }
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // client ID
-        var clientID = (ClientID)driver.ReadByte();
+        var clientID = (ClientID)await driver.ReadByte().ConfigureAwait(false);
 
         // header address
-        var headerAddress = superblock.ReadOffset(driver);
+        var headerAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // block offset
-        var blockOffset = ReadUtils.ReadUlong(driver, header.ArrayOffsetsSize);
+        var blockOffset = await ReadUtils.ReadUlong(driver, header.ArrayOffsetsSize).ConfigureAwait(false);
 
         // page bitmap
         // H5EAcache.c (H5EA__cache_sblock_deserialize)
@@ -91,7 +91,7 @@ internal record class ExtensibleArraySecondaryBlock(
             var totalPageInitSize = dataBlocksCount * dataBlockPageInitBitMaskSize;
 
             /* Retrieve the 'page init' bitmasks */
-            pageBitmap = driver.ReadBytes((int)totalPageInitSize);
+            pageBitmap = await driver.ReadBytes((int)totalPageInitSize).ConfigureAwait(false);
         }
 
         else
@@ -104,11 +104,11 @@ internal record class ExtensibleArraySecondaryBlock(
 
         for (ulong i = 0; i < dataBlocksCount; i++)
         {
-            dataBlockAddresses[i] = superblock.ReadOffset(driver);
+            dataBlockAddresses[i] = await superblock.ReadOffset(driver).ConfigureAwait(false);
         }
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new ExtensibleArraySecondaryBlock(
             ClientID: clientID,

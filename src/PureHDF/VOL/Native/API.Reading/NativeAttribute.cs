@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Buffers;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace PureHDF.VOL.Native;
@@ -15,7 +16,12 @@ public class NativeAttribute : IH5Attribute
 
 	// Delegate type for reads, including an instance parameter.
     // Statically cached keyed by (TResult, TElement).
-    private delegate TResult? ReaderDelegate<TResult>(
+    //
+    // Returns an awaitable, so that ONE reader serves both Read and ReadAsync: the synchronous
+    // overloads block on it at the public boundary, the asynchronous ones await it. Same shape as
+    // NativeDataset.ReaderDelegate and for the same reason - the alternative is a second copy of the
+    // decode pipeline.
+    private delegate ValueTask<TResult?> ReaderDelegate<TResult>(
         NativeAttribute @this,
         TResult? buffer,
         IH5ReadStream source,
@@ -101,7 +107,12 @@ public class NativeAttribute : IH5Attribute
         var reader = GetReader<T>(elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        return reader(this, buffer: default, source, memoryDims)!;
+        // Blocks once, at the public boundary. ReadAsync below runs the same reader and awaits it.
+        // For a fixed-size attribute there is nothing to block ON - the bytes are already in
+        // Message.InputData - so this returns without ever suspending.
+        return reader(this, buffer: default, source, memoryDims)
+            .GetAwaiter()
+            .GetResult()!;
     }
 
     /// <inheritdoc />
@@ -113,7 +124,44 @@ public class NativeAttribute : IH5Attribute
         var reader = GetReader<T>(elementType);
         var source = new SystemMemoryStream(Message.InputData);
 
-        reader(this, buffer, source, memoryDims);
+        reader(this, buffer, source, memoryDims)
+            .GetAwaiter()
+            .GetResult();
+    }
+
+    /// <inheritdoc />
+    public async Task<T> ReadAsync<T>(
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only: the decode pipeline does not thread a token through, so this
+        // cancels before work starts rather than interrupting a read in flight. A caller passing an
+        // already-cancelled token must not get a completed read back regardless.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
+        var source = new SystemMemoryStream(Message.InputData);
+
+        return (await reader(this, buffer: default, source, memoryDims).ConfigureAwait(false))!;
+    }
+
+    /// <inheritdoc />
+    public async Task ReadAsync<T>(
+        T buffer,
+        ulong[]? memoryDims = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only: the decode pipeline does not thread a token through, so this
+        // cancels before work starts rather than interrupting a read in flight. A caller passing an
+        // already-cancelled token must not get a completed read back regardless.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
+        var source = new SystemMemoryStream(Message.InputData);
+
+        await reader(this, buffer, source, memoryDims).ConfigureAwait(false);
     }
 
     /* This overload is required because Span<T> is not allowed as generic argument and
@@ -141,15 +189,19 @@ public class NativeAttribute : IH5Attribute
         );
     }
 
-    private TResult? ReadCoreLevel1_generic<TResult, TElement>(
+    private async ValueTask<TResult?> ReadCoreLevel1_generic<TResult, TElement>(
         TResult? buffer,
         IH5ReadStream source,
         ulong[]? memoryDims = null)
     {
-        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>();
+        // CONCURRENCY: see the note on the other ReadCoreLevel1 overload below.
+        using var operationScope = new NativeOperationScope(_context);
+        var operationContext = operationScope.Context;
+
+        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>(operationContext);
 
         /* result buffer / result array */
-        Span<TElement> resultBuffer;
+        Memory<TElement> resultBuffer;
         var resultArray = default(Array);
 
         if (buffer is null || buffer.Equals(default(TResult)))
@@ -181,17 +233,21 @@ public class NativeAttribute : IH5Attribute
                 ? Array.CreateInstance(typeof(TElement), memoryDims.Select(dim => (int)dim).ToArray())
                 : new TResult[1];
 
-            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory.Span;
+            resultBuffer = new ArrayMemoryManager<TElement>(resultArray).Memory;
         }
 
         else
         {
             /* result buffer */
             (var resultMemoryBuffer, memoryDims) = ReadUtils.ToMemory<TResult, TElement>(buffer);
-            resultBuffer = resultMemoryBuffer.Span;
+            resultBuffer = resultMemoryBuffer;
         }
 
-        ReadCoreLevel2(source, memoryDims, fileElementCount, decoder, resultBuffer);
+        // The operation scope above is held across this await, which is safe because it is
+        // per-OPERATION and not per-thread: the driver it owns belongs to this read alone, so a
+        // continuation resuming on another thread still has exclusive use of it.
+        await ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer)
+            .ConfigureAwait(false);
 
         /* return */
         return resultArray is null
@@ -204,23 +260,53 @@ public class NativeAttribute : IH5Attribute
         IH5ReadStream source,
         ulong[]? memoryDims = null)
     {
-        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>();
+        // CONCURRENCY: an attribute's own bytes live in the object header (Message.InputData) and
+        // are decoded from a SystemMemoryStream, not from the driver - so at first glance no
+        // per-operation driver is needed here. It is: variable-length and reference data store
+        // global-heap IDs inline, and the decoder resolves them through
+        // NativeCache.GetGlobalHeapObject, which SEEKS AND READS the driver. Two threads reading a
+        // string attribute concurrently would race on the shared cursor exactly like a dataset read
+        // does. Fixed-size attributes pay one driver allocation and never use it.
+        using var operationScope = new NativeOperationScope(_context);
+        var operationContext = operationScope.Context;
+
+        var (decoder, fileElementCount) = GetDecoderAndFileElementCount<TElement>(operationContext);
 
         /* result buffer */
         if (memoryDims is null)
             memoryDims = [(ulong)buffer.Length];
 
-        var resultBuffer = buffer;
+        // The public Read<T>(Span<T>) overload cannot hand its Span to an async decoder (a Span
+        // cannot cross an await), so decode into a pooled Memory<TElement> and copy out. This is
+        // the unavoidable cost of the Span-based overload; the array/Memory overloads above pass
+        // their buffer straight through with no copy.
+        // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
+        // so a decode that only partially fills it must not write garbage back over the caller's
+        // remaining elements.
+        using var owner = new ScratchBuffer<TElement>(buffer.Length);
+        var resultBuffer = owner.Memory[..buffer.Length];
 
-        ReadCoreLevel2(source, memoryDims, fileElementCount, decoder, resultBuffer);
+        buffer.CopyTo(resultBuffer.Span);
+
+        // BLOCKS, and cannot do otherwise: this overload takes a Span, which is a ref struct and so
+        // cannot live across an await (CS4012), which rules out an async counterpart for it. There is
+        // therefore no async form of Read<T>(Span<T>) on the public surface, and a caller on a host that
+        // cannot block must use one of the array/Memory overloads via ReadAsync instead. Harmless for a
+        // fixed-size attribute, which never suspends; a variable-length one really would block here.
+        ReadCoreLevel2(operationContext, source, memoryDims, fileElementCount, decoder, resultBuffer)
+            .GetAwaiter()
+            .GetResult();
+
+        resultBuffer.Span.CopyTo(buffer);
     }
 
-    private static void ReadCoreLevel2<TElement>(
+    private static ValueTask ReadCoreLevel2<TElement>(
+        NativeReadContext context,
         IH5ReadStream source,
         ulong[] memoryDims,
         ulong fileElementCount,
         DecodeDelegate<TElement> decoder,
-        Span<TElement> resultBuffer)
+        Memory<TElement> resultBuffer)
     {
         /* memory element count */
         var memoryElementCount = memoryDims.Aggregate(1UL, (product, dim) => product * dim);
@@ -230,10 +316,15 @@ public class NativeAttribute : IH5Attribute
             throw new Exception("The total file element count does not match the total memory element count.");
 
         /* decode */
-        decoder(source, resultBuffer);
+        // Not `async`: for a fixed-size attribute the decoder reads only from `source`, a memory stream
+        // over bytes already held in the object header, so it completes synchronously and no state
+        // machine is built. A variable-length or reference datatype is the case that genuinely
+        // suspends - it resolves global heap IDs through the driver.
+        return decoder(context, source, resultBuffer);
     }
 
-    private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>()
+    private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>(
+        NativeReadContext context)
     {
         /* check endianness */
         var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
@@ -247,7 +338,7 @@ public class NativeAttribute : IH5Attribute
 
         /* get decoder (succeeds only if decoding is possible) */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(
-            _context, 
+            context,
             /* isRawMode: not useful for attributes, but could be implemented later; 
              * note: compare to NativeDataset (look for endianness related code and #101) 
              */

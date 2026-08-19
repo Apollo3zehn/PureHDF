@@ -21,27 +21,27 @@ internal partial record class FilterPipelineMessage(
         }
     }
 
-    public static FilterPipelineMessage Decode(H5DriverBase driver)
+    public static async ValueTask<FilterPipelineMessage> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // filter count
-        var filterCount = driver.ReadByte();
+        var filterCount = await driver.ReadByte().ConfigureAwait(false);
 
         if (filterCount > 32)
             throw new FormatException($"An instance of type {nameof(FilterPipelineMessage)} can only contain a maximum of 32 filters.");
 
         // reserved
         if (version == 1)
-            driver.ReadBytes(6);
+            await driver.ReadBytes(6).ConfigureAwait(false);
 
         // filter descriptions
         var filterDescriptions = new FilterDescription[filterCount];
 
         for (int i = 0; i < filterCount; i++)
         {
-            filterDescriptions[i] = FilterDescription.Decode(driver, version);
+            filterDescriptions[i] = await FilterDescription.Decode(driver, version).ConfigureAwait(false);
         }
 
         return new FilterPipelineMessage(

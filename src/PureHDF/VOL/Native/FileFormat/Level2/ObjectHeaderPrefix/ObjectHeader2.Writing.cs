@@ -4,7 +4,7 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
-    public ulong Encode(NativeWriteContext context)
+    public async ValueTask<ulong> Encode(NativeWriteContext context)
     {
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
@@ -54,12 +54,12 @@ internal partial record class ObjectHeader2
         // checksum
         var encodeSizeWithoutChecksum = (int)(encodeSize - sizeof(uint));
         using var buffer = MemoryPool<byte>.Shared.Rent(encodeSizeWithoutChecksum);
-        var checksumData = buffer.Memory.Span[..encodeSizeWithoutChecksum];
+        var checksumData = buffer.Memory[..encodeSizeWithoutChecksum];
 
         driver.SeekRelativeToBaseAddress(address);
-        driver.Read(checksumData);
+        await driver.Read(checksumData).ConfigureAwait(false);
 
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
 
         driver.Write(checksum);
 

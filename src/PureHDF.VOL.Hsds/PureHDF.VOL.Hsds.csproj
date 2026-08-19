@@ -4,7 +4,7 @@
     <Description>Enables access to the Highly Scalable Data Service (HSDS) for PureHDF.</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 HSDS</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

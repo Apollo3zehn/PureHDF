@@ -17,7 +17,26 @@ internal class UnsafeFillValueStream : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public unsafe void ReadDataset(Span<byte> buffer)
+    // No IO at all: stays sync-completing. Not async, so `fixed` over the Span is still legal.
+    public ValueTask ReadDatasetAsync(Memory<byte> memory)
+    {
+        ReadCore(memory.Span);
+
+        return default;
+    }
+
+    // No IO at all, so always synchronous.
+    public bool TryReadDatasetSync(Span<byte> buffer)
+    {
+        ReadCore(buffer);
+
+        return true;
+    }
+
+    // Backed by an in-memory fill-value byte[]: reads are plain copies, no dispatch cost.
+    public bool IsBuffered => true;
+
+    private unsafe void ReadCore(Span<byte> buffer)
     {
         if (_fillValue is null)
         {

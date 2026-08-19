@@ -6,24 +6,22 @@ internal record class BTree2LeafNode<T>(
     T[] Records
 ) : BTree2Node<T>(Records) where T : struct, IBTree2Record
 {
-    public static BTree2LeafNode<T> Decode(
-        H5DriverBase driver,
+    public static async ValueTask<BTree2LeafNode<T>> Decode(
+        NativeReadContext context,
         BTree2Header<T> header,
         ulong recordCount,
-        Func<T> decodeKey)
+        DecodeKeyDelegate<T> decodeKey)
     {
-        Decode(
-            driver,
+        var (version, records) = await Decode(
+            context,
             header,
             recordCount,
             Signature,
-            decodeKey,
-            out var version,
-            out var records
-        );
+            decodeKey
+        ).ConfigureAwait(false);
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await context.Driver.ReadUInt32().ConfigureAwait(false);
 
         return new BTree2LeafNode<T>(records)
         {

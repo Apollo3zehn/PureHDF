@@ -22,19 +22,19 @@ internal record class DataLayoutMessage3(
         }
     }
 
-    internal static DataLayoutMessage3 Decode(NativeReadContext context, byte version)
+    internal static async ValueTask<DataLayoutMessage3> Decode(NativeReadContext context, byte version)
     {
         var (driver, _) = context;
 
         // layout class
-        var layoutClass = (LayoutClass)driver.ReadByte();
+        var layoutClass = (LayoutClass)await driver.ReadByte().ConfigureAwait(false);
 
         // storage property description
         StoragePropertyDescription properties = (version, layoutClass) switch
         {
-            (_, LayoutClass.Compact) => CompactStoragePropertyDescription.Decode(driver),
-            (_, LayoutClass.Contiguous) => ContiguousStoragePropertyDescription.Decode(context),
-            (3, LayoutClass.Chunked) => ChunkedStoragePropertyDescription3.Decode(context),
+            (_, LayoutClass.Compact) => await CompactStoragePropertyDescription.Decode(driver).ConfigureAwait(false),
+            (_, LayoutClass.Contiguous) => await ContiguousStoragePropertyDescription.Decode(context).ConfigureAwait(false),
+            (3, LayoutClass.Chunked) => await ChunkedStoragePropertyDescription3.Decode(context).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The layout class '{layoutClass}' is not supported for the data layout message version '{version}'.")
         };
 

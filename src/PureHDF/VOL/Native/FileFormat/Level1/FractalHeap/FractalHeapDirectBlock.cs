@@ -5,15 +5,16 @@ namespace PureHDF.VOL.Native;
 // TODO: Implement this.
 // public byte[] ObjectData { get; set; }
 
-internal record class FractalHeapDirectBlock(
-    NativeReadContext Context,
+// CONCURRENCY: holds no NativeReadContext. It is transient — decoded inside FractalHeapHeader's
+// GetAddress/Locate and discarded — so it has no need for a context: the only member that would have
+// used one (a lazy GetHeapHeader()) has no callers anywhere in the tree.
+internal sealed record class FractalHeapDirectBlock(
     ulong HeapHeaderAddress,
     ulong BlockOffset,
     ulong HeaderSize
 )
 {
     private byte _version;
-    private FractalHeapHeader? _header;
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("FHDB");
 
@@ -32,53 +33,38 @@ internal record class FractalHeapDirectBlock(
         }
     }
 
-    public FractalHeapHeader HeapHeader
-    {
-        get
-        {
-            if (_header is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)HeapHeaderAddress);
-                _header = FractalHeapHeader.Decode(Context);
-            }
-
-            return _header;
-        }
-    }
-
-    public static FractalHeapDirectBlock Decode(NativeReadContext context, FractalHeapHeader header)
+    public static async ValueTask<FractalHeapDirectBlock> Decode(NativeReadContext context, FractalHeapHeader header)
     {
         var (driver, superblock) = context;
 
         var headerSize = 0UL;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         headerSize += 4;
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
         headerSize += 1;
 
         // heap header address
-        var heapHeaderAddress = superblock.ReadOffset(driver);
+        var heapHeaderAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
         headerSize += superblock.OffsetsSize;
 
         // block offset
         var blockOffsetFieldSize = (int)Math.Ceiling(header.MaximumHeapSize / 8.0);
-        var blockOffset = ReadUtils.ReadUlong(driver, (ulong)blockOffsetFieldSize);
+        var blockOffset = await ReadUtils.ReadUlong(driver, (ulong)blockOffsetFieldSize).ConfigureAwait(false);
         headerSize += (ulong)blockOffsetFieldSize;
 
         // checksum
         if (header.Flags.HasFlag(FractalHeapHeaderFlags.DirectBlocksAreChecksummed))
         {
-            var _ = driver.ReadUInt32();
+            var _ = await driver.ReadUInt32().ConfigureAwait(false);
             headerSize += 4;
         }
 
         return new FractalHeapDirectBlock(
-            Context: context,
             HeapHeaderAddress: heapHeaderAddress,
             BlockOffset: blockOffset,
             HeaderSize: headerSize

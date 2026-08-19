@@ -15,12 +15,14 @@ internal readonly record struct BTree1GroupKey(
     ulong LocalHeapByteOffset
 ) : IBTree1Key
 {
-    public static BTree1GroupKey Decode(NativeReadContext context)
+    public static async ValueTask<BTree1GroupKey> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var localHeapByteOffset = await superblock.ReadLength(driver).ConfigureAwait(false);
+
         return new BTree1GroupKey(
-            LocalHeapByteOffset: superblock.ReadLength(driver)
+            LocalHeapByteOffset: localHeapByteOffset
         );
     }
 }
@@ -31,21 +33,21 @@ internal readonly record struct BTree1RawDataChunksKey(
     ulong[] ScaledChunkOffsets
 ) : IBTree1Key
 {
-    public static BTree1RawDataChunksKey Decode(
+    public static async ValueTask<BTree1RawDataChunksKey> Decode(
         H5DriverBase driver,
         byte rank,
         ulong[] rawChunkDims)
     {
         // H5Dbtree.c (H5D__btree_decode_key)
 
-        var chunkSize = driver.ReadUInt32();
-        var filterMask = driver.ReadUInt32();
+        var chunkSize = await driver.ReadUInt32().ConfigureAwait(false);
+        var filterMask = await driver.ReadUInt32().ConfigureAwait(false);
 
         var scaledChunkOffsets = new ulong[rank + 1];
 
         for (byte i = 0; i < rank + 1; i++) // Do not change this! We MUST read rank + 1 values!
         {
-            scaledChunkOffsets[i] = driver.ReadUInt64() / rawChunkDims[i];
+            scaledChunkOffsets[i] = await driver.ReadUInt64().ConfigureAwait(false) / rawChunkDims[i];
         }
 
         return new BTree1RawDataChunksKey(

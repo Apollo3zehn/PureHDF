@@ -15,7 +15,26 @@ internal partial class SystemMemoryStream : IH5ReadStream
 
     public Memory<byte> SlicedMemory { get; private set; }
 
-    public void ReadDataset(Span<byte> buffer)
+    // In-memory source: already-completed ValueTask, no allocation.
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer)
+    {
+        ReadCore(buffer.Span);
+
+        return default;
+    }
+
+    // Always synchronous - this is a memory copy.
+    public bool TryReadDatasetSync(Span<byte> buffer)
+    {
+        ReadCore(buffer);
+
+        return true;
+    }
+
+    // Backed by a Memory<byte>: reads are plain copies, no dispatch cost to amortize.
+    public bool IsBuffered => true;
+
+    private void ReadCore(Span<byte> buffer)
     {
         var length = Math.Min(SlicedMemory.Length, buffer.Length);
 

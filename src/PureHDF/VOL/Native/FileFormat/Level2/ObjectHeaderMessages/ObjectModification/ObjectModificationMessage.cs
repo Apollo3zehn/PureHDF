@@ -21,16 +21,16 @@ internal record class ObjectModificationMessage(
         }
     }
 
-    public static ObjectModificationMessage Decode(H5DriverBase driver)
+    public static async ValueTask<ObjectModificationMessage> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // seconds after unix epoch
-        var secondsAfterUnixEpoch = driver.ReadUInt32();
+        var secondsAfterUnixEpoch = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new ObjectModificationMessage(
             SecondsAfterUnixEpoch: secondsAfterUnixEpoch

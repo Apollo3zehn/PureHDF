@@ -21,13 +21,13 @@ internal record class H5S_SEL_NONE(
         }
     }
 
-    public static H5S_SEL_NONE Decode(H5DriverBase driver)
+    public static async ValueTask<H5S_SEL_NONE> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadUInt32();
+        var version = await driver.ReadUInt32().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(8);
+        await driver.ReadBytes(8).ConfigureAwait(false);
 
         return new H5S_SEL_NONE(
         //

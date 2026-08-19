@@ -9,9 +9,9 @@ internal record class ArrayBitFieldDescription(
 //
 ) : DatatypeBitFieldDescription
 {
-    public static ArrayBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<ArrayBitFieldDescription> Decode(H5DriverBase driver)
     {
-        _ = driver.ReadBytes(3);
+        _ = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new ArrayBitFieldDescription(
         //
@@ -30,9 +30,9 @@ internal record class BitFieldBitFieldDescription(
     bool PaddingTypeHigh
 ) : DatatypeBitFieldDescription, IByteOrderAware
 {
-    public static BitFieldBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<BitFieldBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new BitFieldBitFieldDescription(
             ByteOrder: (ByteOrder)(data[0] & 0x01),
@@ -51,9 +51,9 @@ internal record class CompoundBitFieldDescription(
     ushort MemberCount
 ) : DatatypeBitFieldDescription
 {
-    public static CompoundBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<CompoundBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new CompoundBitFieldDescription(
             MemberCount: (ushort)(data[0] + (data[1] << 8))
@@ -75,9 +75,9 @@ internal record class EnumerationBitFieldDescription(
     ushort MemberCount
 ) : DatatypeBitFieldDescription
 {
-    public static EnumerationBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<EnumerationBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new EnumerationBitFieldDescription(
             MemberCount: (ushort)(data[0] + (data[1] << 8))
@@ -102,9 +102,9 @@ internal record class FixedPointBitFieldDescription(
     bool IsSigned
 ) : DatatypeBitFieldDescription, IByteOrderAware
 {
-    public static FixedPointBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<FixedPointBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new FixedPointBitFieldDescription(
             ByteOrder: (ByteOrder)(data[0] & 0x01),
@@ -138,9 +138,9 @@ internal record class FloatingPointBitFieldDescription(
     byte SignLocation
 ) : DatatypeBitFieldDescription, IByteOrderAware
 {
-    public static FloatingPointBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<FloatingPointBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         // byte order
         ByteOrder byteOrder;
@@ -203,9 +203,9 @@ internal record class OpaqueBitFieldDescription(
     byte TagByteLength
 ) : DatatypeBitFieldDescription
 {
-    public static OpaqueBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<OpaqueBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new OpaqueBitFieldDescription(
             TagByteLength: data[0]
@@ -226,9 +226,9 @@ internal record class ReferenceBitFieldDescription(
     InternalReferenceType Type
 ) : DatatypeBitFieldDescription
 {
-    public static ReferenceBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<ReferenceBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new ReferenceBitFieldDescription(
             Type: (InternalReferenceType)(data[0] & 0x0F)
@@ -250,9 +250,9 @@ internal record class StringBitFieldDescription(
     CharacterSetEncoding Encoding
 ) : DatatypeBitFieldDescription
 {
-    public static StringBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<StringBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new StringBitFieldDescription(
             PaddingType: (PaddingType)(data[0] & 0x0F),
@@ -275,9 +275,9 @@ internal record class TimeBitFieldDescription(
     ByteOrder ByteOrder
 ) : DatatypeBitFieldDescription
 {
-    public static TimeBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<TimeBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new TimeBitFieldDescription(
             ByteOrder: (ByteOrder)(data[0] & 0x01)
@@ -296,9 +296,9 @@ internal record class VariableLengthBitFieldDescription(
     CharacterSetEncoding Encoding
 ) : DatatypeBitFieldDescription
 {
-    public static VariableLengthBitFieldDescription Decode(H5DriverBase driver)
+    public static async ValueTask<VariableLengthBitFieldDescription> Decode(H5DriverBase driver)
     {
-        var data = driver.ReadBytes(3);
+        var data = await driver.ReadBytes(3).ConfigureAwait(false);
 
         return new VariableLengthBitFieldDescription(
             Type: (InternalVariableLengthType)(data[0] & 0x0F),

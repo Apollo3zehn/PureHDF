@@ -6,14 +6,18 @@ internal readonly record struct ExternalFileListSlot(
     ulong Size
 )
 {
-    public static ExternalFileListSlot Decode(NativeReadContext context)
+    public static async ValueTask<ExternalFileListSlot> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var nameHeapOffset = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var offset = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var size = await superblock.ReadLength(driver).ConfigureAwait(false);
+
         return new ExternalFileListSlot(
-            NameHeapOffset: superblock.ReadLength(driver),
-            Offset: superblock.ReadLength(driver),
-            Size: superblock.ReadLength(driver)
+            NameHeapOffset: nameHeapOffset,
+            Offset: offset,
+            Size: size
         );
     }
 }

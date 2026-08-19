@@ -17,7 +17,10 @@ public class NativeDataset : NativeObject, IH5Dataset
 
 	// Delegate type for reads, including an instance parameter.
     // Statically cached keyed by (TResult, TElement).
-    private delegate TResult? ReaderDelegate<TResult>(
+    //
+    // Returns an awaitable, so that one reader serves both Read and ReadAsync: the synchronous
+    // overloads block on it at the public boundary, the asynchronous ones await it.
+    private delegate ValueTask<TResult?> ReaderDelegate<TResult>(
         NativeDataset @this,
         TResult? buffer,
         Selection? fileSelection,
@@ -225,6 +228,7 @@ public class NativeDataset : NativeObject, IH5Dataset
         var (elementType, _) = WriteUtils.GetElementType(typeof(T));
         var reader = GetReader<T>(elementType);
 
+        // Blocks once, at the public boundary. ReadAsync below runs the same reader and awaits it.
         return reader(
             this,
             buffer: default,
@@ -232,7 +236,9 @@ public class NativeDataset : NativeObject, IH5Dataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false)!;
+            skipShuffle: false)
+            .GetAwaiter()
+            .GetResult()!;
     }
 
     /// <summary>
@@ -261,7 +267,9 @@ public class NativeDataset : NativeObject, IH5Dataset
             memorySelection,
             memoryDims,
             datasetAccess,
-            skipShuffle: false);
+            skipShuffle: false)
+            .GetAwaiter()
+            .GetResult();
     }
 
     /* The following two methods are required because Span<T> is not allowed as generic
@@ -328,7 +336,47 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        return ReadAsync<T>(
+            datasetAccess: default,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Reads the data.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    /// <returns>The read data as array of <typeparamref name="T"/>.</returns>
+    public async Task<T> ReadAsync<T>(
+        H5DatasetAccess datasetAccess,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default,
+        CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only. The decode pipeline below does not thread a token through, so
+        // this cancels before work starts rather than interrupting a read in flight - but a caller
+        // passing an already-cancelled token must not get a completed read back.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
+
+        return (await reader(
+            this,
+            buffer: default,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess,
+            skipShuffle: false).ConfigureAwait(false))!;
     }
 
     /// <inheritdoc />
@@ -339,10 +387,52 @@ public class NativeDataset : NativeObject, IH5Dataset
         ulong[]? memoryDims = null,
         CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException("The native VOL connector does not support async read operations.");
+        return ReadAsync(
+            datasetAccess: default,
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            cancellationToken);
     }
 
-    internal TResult? ReadCoreLevel1_Generic<TResult, TElement>(
+    /// <summary>
+    /// Reads the data into the provided buffer.
+    /// </summary>
+    /// <typeparam name="T">The type of the data to read.</typeparam>
+    /// <param name="datasetAccess">The dataset access properties.</param>
+    /// <param name="buffer">The buffer to read the data into.</param>
+    /// <param name="fileSelection">The selection within the source HDF5 dataset.</param>
+    /// <param name="memorySelection">The selection within the destination memory.</param>
+    /// <param name="memoryDims">The dimensions of the destination memory buffer.</param>
+    /// <param name="cancellationToken">A token to cancel the current operation.</param>
+    public async Task ReadAsync<T>(
+        H5DatasetAccess datasetAccess,
+        T buffer,
+        Selection? fileSelection = default,
+        Selection? memorySelection = default,
+        ulong[]? memoryDims = default,
+        CancellationToken cancellationToken = default)
+    {
+        // Honored at the boundary only. The decode pipeline below does not thread a token through, so
+        // this cancels before work starts rather than interrupting a read in flight - but a caller
+        // passing an already-cancelled token must not get a completed read back.
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var (elementType, _) = WriteUtils.GetElementType(typeof(T));
+        var reader = GetReader<T>(elementType);
+
+        await reader(
+            this,
+            buffer,
+            fileSelection,
+            memorySelection,
+            memoryDims,
+            datasetAccess,
+            skipShuffle: false).ConfigureAwait(false);
+    }
+
+    internal async ValueTask<TResult?> ReadCoreLevel1_Generic<TResult, TElement>(
         TResult? buffer,
         Selection? fileSelection = default,
         Selection? memorySelection = default,
@@ -405,14 +495,14 @@ public class NativeDataset : NativeObject, IH5Dataset
             resultBuffer = resultMemoryBuffer;
         }
 
-        ReadCoreLevel2(
+        await ReadCoreLevel3(
+            resultBuffer,
             fileSelection,
-            memorySelection,
-            memoryDims,
+            ResolveMemorySelection<TElement>(fileSelection, memorySelection, memoryDims, isRawMode),
             fileDims,
-            resultBuffer.Span,
-            datasetAccess,
-            isRawMode: isRawMode);
+            memoryDims,
+            isRawMode,
+            datasetAccess).ConfigureAwait(false);
 
         /* return */
         if (DataUtils.IsMemory(resultType))
@@ -449,25 +539,46 @@ public class NativeDataset : NativeObject, IH5Dataset
         if (memoryDims is null)
             memoryDims = [(ulong)buffer.Length];
 
-        var resultBuffer = buffer;
+        // The public Read<T>(Span<T>) overload cannot hand its Span to an async decoder (a Span
+        // cannot cross an await), so decode into a pooled Memory<TElement> and copy out. The
+        // array/Memory overloads pass their buffer through with no copy.
+        //
+        // The caller's contents are copied IN first: a pooled buffer is recycled rather than zeroed,
+        // and a decode that only partially fills it must leave the caller's remaining elements
+        // untouched, preserving the semantics of a direct decode into the caller's own span.
+        using var spanOwner = new ScratchBuffer<TElement>(buffer.Length);
+        var resultBuffer = spanOwner.Memory[..buffer.Length];
 
-        ReadCoreLevel2(
-            fileSelection,
-            memorySelection,
-            memoryDims,
-            fileDims,
+        buffer.CopyTo(resultBuffer.Span);
+
+        // Blocks: this overload takes a Span, which cannot cross an await, so it has no asynchronous
+        // counterpart to defer to. IH5Dataset exposes no Span-based async read either.
+        ReadCoreLevel3(
             resultBuffer,
-            datasetAccess,
-            isRawMode: isRawMode);
+            fileSelection,
+            ResolveMemorySelection<TElement>(fileSelection, memorySelection, memoryDims, isRawMode),
+            fileDims,
+            memoryDims,
+            isRawMode,
+            datasetAccess)
+            .GetAwaiter()
+            .GetResult();
+
+        resultBuffer.Span.CopyTo(buffer);
     }
 
-    private void ReadCoreLevel2<TElement>(
+    // Deliberately NOT async, and it does not call level 3 - it resolves and validates the memory
+    // selection and hands it back, so its caller awaits level 3 directly.
+    //
+    // The reason is measurable: this defaults a selection and compares two counts, never reads, and an
+    // `async` method that completes synchronously still costs a builder and an awaiter check. With
+    // three nested async levels a 10,000-iteration scalar read measured ~12% slower than a
+    // synchronous equivalent, at byte-identical allocation - all of it state-machine setup. One
+    // level of the three had no reason to be async at all.
+    private Selection ResolveMemorySelection<TElement>(
         Selection fileSelection,
         Selection? memorySelection,
         ulong[] memoryDims,
-        ulong[] fileDims,
-        Span<TElement> resultBuffer,
-        H5DatasetAccess datasetAccess,
         bool isRawMode)
     {
         /* memory selection */
@@ -488,20 +599,11 @@ public class NativeDataset : NativeObject, IH5Dataset
         if (memorySelection.TotalElementCount != fileSelection.TotalElementCount)
             throw new Exception("The total file selection element count does not match the total memory selection element count.");
 
-        /* decode */
-        ReadCoreLevel3(
-            resultBuffer,
-            fileSelection,
-            memorySelection,
-            fileDims,
-            memoryDims,
-            isRawMode,
-            datasetAccess
-        );
+        return memorySelection;
     }
 
-    private void ReadCoreLevel3<TElement>(
-        Span<TElement> resultBuffer,
+    private async ValueTask ReadCoreLevel3<TElement>(
+        Memory<TElement> resultBuffer,
         Selection fileSelection,
         Selection memorySelection,
         ulong[] fileDims,
@@ -509,8 +611,17 @@ public class NativeDataset : NativeObject, IH5Dataset
         bool isRawMode,
         H5DatasetAccess datasetAccess = default)
     {
+        // CONCURRENCY: a read operation begins in earnest here, so it gets its own driver and its
+        // own context. Everything below must use `operationContext`; the file-level `Context` is
+        // shared with concurrent operations and with object navigation, and its driver cursor is a
+        // plain field. The two structures resolved outside this scope stay off that driver as well:
+        // the external-file-list local heap takes a context per call (ExternalFileListMessage.Heap),
+        // and the virtual-dataset source lookup opens a scope of its own (NativeGroup.GetAsync).
+        using var operationScope = new NativeOperationScope(Context);
+        var operationContext = operationScope.Context;
+
         /* get decoder (succeeds only if decoding is possible) */
-        var decoder = InternalDataType.GetDecodeInfo<TElement>(Context, isRawMode);
+        var decoder = InternalDataType.GetDecodeInfo<TElement>(operationContext, isRawMode);
 
         /* fill value */
         TElement? fillValue;
@@ -520,7 +631,8 @@ public class NativeDataset : NativeObject, IH5Dataset
             // TODO cache this
             var target = new TElement[1];
             var fillValueDecodeStream = new SystemMemoryStream(InternalFillValue.Value);
-            decoder.Invoke(fillValueDecodeStream, target);
+
+            await decoder.Invoke(operationContext, fillValueDecodeStream, target).ConfigureAwait(false);
             fillValue = target[0];
         }
 
@@ -530,8 +642,14 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         /* read virtual delegate */
-        void readVirtualDelegate(NativeDataset dataset, Span<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
-            => dataset.ReadCoreLevel3(
+        // Reads one source dataset straight into the gather buffer. Takes Memory<T> rather than Span,
+        // which is what ReadCoreLevel3 wants and what lets the gather be awaited: no pooled scratch
+        // buffer, no copy to bridge the two, and no GetAwaiter().GetResult() that would make ReadAsync
+        // of a VIRTUAL dataset block on every source read. The destination is the caller's Memory and
+        // is written in place.
+        static ValueTask readVirtualDelegate(NativeDataset dataset, Memory<TElement> destination, Selection fileSelection, H5DatasetAccess datasetAccess)
+        {
+            return dataset.ReadCoreLevel3(
                 resultBuffer: destination,
                 fileSelection: fileSelection,
                 memorySelection: new HyperslabSelection(0, (ulong)destination.Length),
@@ -539,6 +657,7 @@ public class NativeDataset : NativeObject, IH5Dataset
                 memoryDims: [(ulong)destination.Length],
                 isRawMode: false,
                 datasetAccess: datasetAccess);
+        }
 
         /* dataset info */
         var datasetInfo = new DatasetInfo(
@@ -556,7 +675,7 @@ public class NativeDataset : NativeObject, IH5Dataset
             /* Compact: The array is stored in one contiguous block as part of
              * this object header message. 
              */
-            LayoutClass.Compact => new H5D_Compact(Context, default!, datasetInfo, datasetAccess),
+            LayoutClass.Compact => new H5D_Compact(operationContext, default!, datasetInfo, datasetAccess),
 
             /* Contiguous: The array is stored in one contiguous area of the file. 
             * This layout requires that the size of the array be constant: 
@@ -565,7 +684,11 @@ public class NativeDataset : NativeObject, IH5Dataset
             * storage size of the array. The offset of an element from the 
             * beginning of the storage area is computed as in a C array.
             */
-            LayoutClass.Contiguous => new H5D_Contiguous(Context, default!, datasetInfo, datasetAccess),
+            // NOTE: for a dataset with an external file list, H5D_Contiguous builds an
+            // ExternalFileListStream. ExternalFileListMessage holds no context, so its local heap is
+            // decoded through `operationContext` like everything else, rather than through a
+            // file-level driver captured at navigation time.
+            LayoutClass.Contiguous => new H5D_Contiguous(operationContext, default!, datasetInfo, datasetAccess),
 
             /* Chunked: The array domain is regularly decomposed into chunks,
              * and each chunk is allocated and stored separately. This layout 
@@ -576,7 +699,7 @@ public class NativeDataset : NativeObject, IH5Dataset
              * calculated by traversing the chunk index that stores the chunk 
              * addresses. 
              */
-            LayoutClass.Chunked => H5D_Chunk.Create(Context, default!, datasetInfo, datasetAccess, default),
+            LayoutClass.Chunked => H5D_Chunk.Create(operationContext, default!, datasetInfo, datasetAccess, default),
 
             /* Virtual: This is only supported for version 4 of the Data Layout 
              * message. The message stores information that is used to locate 
@@ -584,7 +707,14 @@ public class NativeDataset : NativeObject, IH5Dataset
              * mapping information. The mapping associates the VDS to the source
              * dataset elements that are stored across a collection of HDF5 files.
              */
-            LayoutClass.VirtualStorage => new H5D_Virtual<TElement>(Context, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate),
+            // H5D_Virtual's constructor is private; construction goes through the async static
+            // factory `Create` because it performs a driver read (VdsGlobalHeapBlock.Decode).
+            //
+            // The VDS block is decoded through the operation driver. Resolving the source datasets
+            // goes through NativeReadContext.File - i.e. object navigation - which takes a scope of
+            // its own per call, so it does not move the shared file-level cursor. Each source read
+            // then opens its own operation driver on top.
+            LayoutClass.VirtualStorage => await H5D_Virtual<TElement>.Create(operationContext, default!, datasetInfo, datasetAccess, fillValue, readVirtualDelegate).ConfigureAwait(false),
 
             /* default */
             _ => throw new Exception($"The data layout class '{InternalDataLayout.LayoutClass}' is not supported.")
@@ -608,18 +738,20 @@ public class NativeDataset : NativeObject, IH5Dataset
             fileSelection,
             memorySelection,
             GetSourceStream: h5d.GetReadStream,
+            Context: operationContext,
             Decoder: decoder,
             SourceTypeSize: (int)InternalDataType.Size,
             TargetTypeSizeFactor: (int)rawModeTargetTypeSizeFactor,
             AllowBulkCopy: InternalDataLayout.LayoutClass != LayoutClass.VirtualStorage
         );
 
-        SelectionHelper
+        await SelectionHelper
             .Decode(
                 sourceRank: fileDims.Length,
                 targetRank: memoryDims.Length,
                 decodeInfo,
-                resultBuffer);
+                resultBuffer)
+            .ConfigureAwait(false);
     }
 
     private (ulong[], Selection) GetFileDimsAndSelection(

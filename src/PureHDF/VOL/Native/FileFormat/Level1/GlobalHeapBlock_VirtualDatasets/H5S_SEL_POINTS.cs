@@ -22,10 +22,10 @@ internal record class H5S_SEL_POINTS(
         }
     }
 
-    public static H5S_SEL_POINTS Decode(H5DriverBase driver)
+    public static async ValueTask<H5S_SEL_POINTS> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadUInt32();
+        var version = await driver.ReadUInt32().ConfigureAwait(false);
 
         // encode size
         byte encodeSize;
@@ -37,16 +37,16 @@ internal record class H5S_SEL_POINTS(
                 encodeSize = 4;
 
                 // reserved
-                _ = driver.ReadBytes(4);
+                _ = await driver.ReadBytes(4).ConfigureAwait(false);
 
                 // length
-                _ = driver.ReadUInt32();
+                _ = await driver.ReadUInt32().ConfigureAwait(false);
 
                 break;
 
             case 2:
                 // encode size
-                encodeSize = driver.ReadByte();
+                encodeSize = await driver.ReadByte().ConfigureAwait(false);
 
                 break;
 
@@ -55,10 +55,10 @@ internal record class H5S_SEL_POINTS(
         }
 
         // rank
-        var rank = driver.ReadUInt32();
+        var rank = await driver.ReadUInt32().ConfigureAwait(false);
 
         // point count
-        var pointCount = ReadEncodedValue(driver, encodeSize);
+        var pointCount = await ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
 
         // point data
         var pointData = new ulong[pointCount, rank];
@@ -67,7 +67,7 @@ internal record class H5S_SEL_POINTS(
         {
             for (int dimension = 0; dimension < rank; dimension++)
             {
-                pointData[pointIndex, dimension] = ReadEncodedValue(driver, encodeSize);
+                pointData[pointIndex, dimension] = await ReadEncodedValue(driver, encodeSize).ConfigureAwait(false);
             }
         }
 

@@ -21,11 +21,11 @@ internal record class BogusMessage(
         }
     }
 
-    public static BogusMessage Decode(H5DriverBase driver)
+    public static async ValueTask<BogusMessage> Decode(H5DriverBase driver)
     {
         return new BogusMessage()
         {
-            BogusValue = driver.ReadUInt32()
+            BogusValue = await driver.ReadUInt32().ConfigureAwait(false)
         };
     }
 }

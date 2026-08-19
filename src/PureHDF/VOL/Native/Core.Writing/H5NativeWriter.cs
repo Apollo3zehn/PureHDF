@@ -19,6 +19,12 @@ partial class H5NativeWriter
         if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
             throw new Exception("The stream must be readble, writable and seekable.");
 
+        // The Stream constructor takes cursor mode by construction, which is what the write path
+        // needs: it writes at the wrapped stream's own cursor, and positionless mode would decouple
+        // that cursor (Seek moves _position, Write lands at Stream.Position) and write at the wrong
+        // offsets. IConcurrentStream is a read-side interface; this keeps a stream that happens to
+        // implement it writing at the wrapped stream's own cursor, unaffected by the read-side
+        // interface.
         var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
 
         if (options.UserBlockSize != 0)
@@ -138,7 +144,6 @@ partial class H5NativeWriter
 
         // link info message
         var linkInfoMessage = new LinkInfoMessage(
-            Context: default!,
             Flags: CreationOrderFlags.None,
             MaximumCreationIndex: default,
             FractalHeapAddress: Superblock.UndefinedAddress,
@@ -260,7 +265,10 @@ partial class H5NativeWriter
         };
 
         // encode object header
-        var address = objectHeader.Encode(Context);
+        // ObjectHeader2.Encode() is async, because it reads back the just-written bytes to compute a
+        // checksum. This method and its public entry point (H5File.Write(), which has no async
+        // counterpart) are synchronous, so the call is bridged here.
+        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
 
         return address;
     }
@@ -451,7 +459,8 @@ partial class H5NativeWriter
             chunk.FlushChunkCache();
 
         // encode object header
-        var address = objectHeader.Encode(Context);
+        // Bridged for the same reason as in EncodeGroup above.
+        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
         var end = (ulong)Context.Driver.Position - Context.Driver.BaseAddress;
 
         Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)address, (int)(end - address));
@@ -574,7 +583,6 @@ partial class H5NativeWriter
         if (attributes.Any())
         {
             var attributeInfoMessage = new AttributeInfoMessage(
-                default!,
                 Flags: CreationOrderFlags.None,
                 MaximumCreationIndex: default,
                 FractalHeapAddress: Superblock.UndefinedAddress,

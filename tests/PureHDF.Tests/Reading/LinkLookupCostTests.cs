@@ -7,90 +7,50 @@ namespace PureHDF.Tests.Reading;
 /// Guards that a by-name lookup does not re-decode the object header of the group it is called on.
 /// </summary>
 /// <remarks>
-/// The walk used to begin by dereferencing the group's OWN reference, which builds a second
-/// <c>NativeGroup</c> and decodes that group's object header again from the file. The cost is
-/// proportional to the number of LINKS rather than to the depth of the path, because a group storing
-/// its links compactly holds one header message per link - so a single lookup in a 1000-link group
-/// re-read tens of kilobytes, and a name that did not exist cost exactly as much as one that did.
+/// The failure mode is <c>TryWalkPath</c> beginning by dereferencing the group's OWN reference, which
+/// builds a second <c>NativeGroup</c> and decodes that group's object header again from the file. The
+/// cost is proportional to the number of LINKS rather than to the depth of the path, because a group
+/// storing its links compactly holds one header message per link - so a single lookup in a 1000-link
+/// group re-reads 30,113 bytes and allocates 2.1 MB, and a missing name costs exactly as much as a hit.
 /// <para>
-/// Every lookup here uses a DIFFERENT name, deliberately: repeating one name would be served from the
-/// decoded header either way and would look clean even with the defect present.
+/// EVERY LOOKUP HERE USES A DIFFERENT NAME, and that is the point. The driver's read-ahead window is
+/// 4 KiB, so it covers a small group's whole object header and would hide this entirely: measured
+/// against the unfixed code, a 100-link group reported ZERO bytes read while a 1000-link group reported
+/// 30 KB. Repeating one name would look clean for the same reason. So the group here is large enough
+/// that its header cannot fit in the window, and the names vary.
 /// </para>
 /// <para>
-/// Written with PureHDF's own writer, also deliberately. It emits no b-tree name index, so links are
-/// always stored compactly no matter how many there are - which is both the shape that makes this
-/// expensive and the shape a file produced by this library always has.
+/// Written with PureHDF's own writer deliberately. It emits no b-tree name index, so links are always
+/// stored compactly no matter how many there are - which is the shape that makes this expensive, and
+/// the shape a file produced by this library always has. See notes/backlog.md.
 /// </para>
 /// </remarks>
-public class LinkLookupCostTests(ITestOutputHelper output)
+[Collection(SharedHdf5StateCollection.Name)]
+public class LinkLookupCostTests
 {
-    /// <summary>
-    /// Counts what the reader actually pulls from the stream, so a lookup's cost can be asserted
-    /// rather than inferred.
-    /// </summary>
-    private sealed class CountingStream(byte[] data) : Stream
+    private const int LinkCount = 1_000;
+
+    private readonly ITestOutputHelper _output;
+
+    public LinkLookupCostTests(ITestOutputHelper output)
     {
-        private readonly MemoryStream _inner = new(data);
-
-        public long BytesRead { get; private set; }
-
-        public int ReadCount { get; private set; }
-
-        public void ResetCounts()
-        {
-            BytesRead = 0;
-            ReadCount = 0;
-        }
-
-        public override bool CanRead => true;
-        public override bool CanSeek => true;
-        public override bool CanWrite => false;
-        public override long Length => _inner.Length;
-
-        public override long Position
-        {
-            get => _inner.Position;
-            set => _inner.Position = value;
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            var read = _inner.Read(buffer, offset, count);
-
-            BytesRead += read;
-            ReadCount++;
-
-            return read;
-        }
-
-        public override int Read(Span<byte> buffer)
-        {
-            var read = _inner.Read(buffer);
-
-            BytesRead += read;
-            ReadCount++;
-
-            return read;
-        }
-
-        public override long Seek(long offset, SeekOrigin origin) => _inner.Seek(offset, origin);
-        public override void Flush() { }
-        public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        _output = output;
     }
 
     [Fact]
     public void RepeatedLookupsDoNotRedecodeTheGroupHeader()
     {
         // Arrange
-        using var stream = new CountingStream(WriteGroupWithManyLinks(1_000));
+        var fileBytes = WriteGroupWithManyLinks();
+
+        using var stream = new ConcurrentStream(fileBytes, suspend: false);
         using var root = H5File.Open(stream, leaveOpen: true);
         var group = root.Group("links");
 
-        // Warm up: decodes the group's object header, including all of its link messages.
+        // Warm up: decodes the group's object header, including all LinkCount link messages.
         _ = group.LinkExists("member_0000");
 
-        // Act - 20 distinct names, spread across the group so that no two are adjacent.
+        // Act - 20 DISTINCT names, spread across the group so that no two are adjacent.
         stream.ResetCounts();
 
         for (int i = 0; i < 20; i++)
@@ -98,13 +58,16 @@ public class LinkLookupCostTests(ITestOutputHelper output)
             Assert.True(group.LinkExists($"member_{i * 47:D4}"));
         }
 
-        output.WriteLine($"20 lookups of distinct names: {stream.ReadCount} reads, {stream.BytesRead} bytes");
+        var bytes = stream.MetadataBytesRead;
+        var reads = stream.MetadataReadCount;
+
+        _output.WriteLine($"20 lookups of distinct names: {reads} reads, {bytes} bytes");
 
         // Assert - the header is already held, so resolving a name out of it should read nothing at
         // all. Asserting zero rather than a bound: there is no structure left to fetch, and a bound
-        // would quietly tolerate the regression coming back at a smaller size.
-        Assert.Equal(0, stream.ReadCount);
-        Assert.Equal(0, stream.BytesRead);
+        // would quietly tolerate a re-decode at a smaller size.
+        Assert.Equal(0, reads);
+        Assert.Equal(0, bytes);
     }
 
     /// <summary>
@@ -122,7 +85,9 @@ public class LinkLookupCostTests(ITestOutputHelper output)
 
         foreach (var linkCount in new[] { 500, 1_000, 2_000 })
         {
-            using var stream = new CountingStream(WriteGroupWithManyLinks(linkCount));
+            var fileBytes = WriteGroupWithManyLinks(linkCount);
+
+            using var stream = new ConcurrentStream(fileBytes, suspend: false);
             using var root = H5File.Open(stream, leaveOpen: true);
             var group = root.Group("links");
 
@@ -131,12 +96,12 @@ public class LinkLookupCostTests(ITestOutputHelper output)
             stream.ResetCounts();
             _ = group.LinkExists($"member_{linkCount / 2:D4}");
 
-            measurements.Add((linkCount, stream.BytesRead));
+            measurements.Add((linkCount, stream.MetadataBytesRead));
         }
 
         foreach (var (links, bytes) in measurements)
         {
-            output.WriteLine($"{links,5} links: {bytes,8:N0} bytes per lookup");
+            _output.WriteLine($"{links,5} links: {bytes,8:N0} bytes per lookup");
         }
 
         Assert.All(measurements, measurement => Assert.Equal(0, measurement.Bytes));
@@ -148,9 +113,9 @@ public class LinkLookupCostTests(ITestOutputHelper output)
     /// </summary>
     /// <remarks>
     /// The fix reuses <c>this</c> for the FIRST segment of a relative path only, so these are the paths
-    /// where it must not have broken anything - and the nested case additionally proves the reuse is
-    /// cleared between segments, since keeping it would resolve every segment against the same group
-    /// and find nothing.
+    /// where it must not have broken anything - and the nested case additionally proves that `group` is
+    /// cleared between segments, since reusing it would resolve every segment against the same group and
+    /// find nothing.
     /// </remarks>
     [Fact]
     public void RootedAndNestedPathsStillResolve()
@@ -198,7 +163,7 @@ public class LinkLookupCostTests(ITestOutputHelper output)
         }
     }
 
-    private static byte[] WriteGroupWithManyLinks(int linkCount)
+    private static byte[] WriteGroupWithManyLinks(int linkCount = LinkCount)
     {
         var filePath = Path.GetTempFileName();
 

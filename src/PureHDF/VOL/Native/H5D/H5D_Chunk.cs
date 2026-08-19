@@ -174,12 +174,16 @@ internal abstract class H5D_Chunk : H5D_Base
         return ChunkDims;
     }
 
-    public override IH5ReadStream GetReadStream(ulong chunkIndex)
+    public override async ValueTask<IH5ReadStream> GetReadStream(ulong chunkIndex)
     {
-        var buffer = _readingChunkCache
-            .GetChunk(
+        // The one layout where resolving a stream genuinely reads: on a cache miss this fetches (and
+        // possibly decompresses) the chunk. A third-party IReadingChunkCache that does not override
+        // GetChunkAsync still works, but blocks - see the default implementation on the interface.
+        var buffer = await _readingChunkCache
+            .GetChunkAsync(
                 chunkIndex,
-                chunkReader: () => ReadChunk(chunkIndex));
+                chunkReader: () => ReadChunk(chunkIndex))
+            .ConfigureAwait(false);
 
         var stream = new SystemMemoryStream(buffer);
 
@@ -209,7 +213,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
     protected abstract ulong[] GetRawChunkDims();
 
-    protected abstract ChunkInfo GetReadChunkInfo(ulong chunkIndex);
+    protected abstract ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex);
 
     protected abstract ChunkInfo GetWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);
 
@@ -220,7 +224,7 @@ internal abstract class H5D_Chunk : H5D_Base
         FlushChunkCache();
     }
 
-    private Memory<byte> ReadChunk(
+    private async ValueTask<Memory<byte>> ReadChunk(
         ulong chunkIndex)
     {
         Memory<byte> chunk;
@@ -244,7 +248,7 @@ internal abstract class H5D_Chunk : H5D_Base
 
         else
         {
-            var chunkInfo = GetReadChunkInfo(chunkIndex);
+            var chunkInfo = await GetReadChunkInfo(chunkIndex).ConfigureAwait(false);
 
             if (ReadContext.Superblock.IsUndefinedAddress(chunkInfo.Address))
             {
@@ -270,17 +274,17 @@ internal abstract class H5D_Chunk : H5D_Base
                         .AllocateUninitializedArray<byte>((int)ChunkByteSize);
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
-                    ReadContext.Driver.ReadDataset(chunk.Span);
+                    await ReadContext.Driver.ReadDatasetAsync(chunk).ConfigureAwait(false);
                 }
 
                 else
                 {
                     var rawChunkSize = (int)chunkInfo.Size;
-                    using var filterBufferOwner = MemoryPool<byte>.Shared.Rent(rawChunkSize);
+                    using var filterBufferOwner = new ScratchBuffer<byte>(rawChunkSize);
                     var buffer = filterBufferOwner.Memory[0..rawChunkSize];
 
                     ReadContext.Driver.SeekRelativeToBaseAddress((long)chunkInfo.Address);
-                    ReadContext.Driver.ReadDataset(buffer.Span);
+                    await ReadContext.Driver.ReadDatasetAsync(buffer).ConfigureAwait(false);
 
                     chunk = H5Filter.ExecutePipeline(
                         Dataset.FilterPipeline.FilterDescriptions,

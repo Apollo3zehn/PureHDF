@@ -42,41 +42,41 @@ internal record class ExtensibleArrayHeader(
         }
     }
 
-    public static ExtensibleArrayHeader Decode(NativeReadContext context)
+    public static async ValueTask<ExtensibleArrayHeader> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // client ID
-        var clientID = (ClientID)driver.ReadByte();
+        var clientID = (ClientID)await driver.ReadByte().ConfigureAwait(false);
 
         // byte fields
-        var elementSize = driver.ReadByte();
-        var extensibleArrayMaximumNumberOfElementsBits = driver.ReadByte();
-        var indexBlockElementsCount = driver.ReadByte();
-        var dataBlockMininumElementsCount = driver.ReadByte();
-        var secondaryBlockMinimumDataBlockPointerCount = driver.ReadByte();
-        var dataBlockPageMaximumNumberOfElementsBits = driver.ReadByte();
+        var elementSize = await driver.ReadByte().ConfigureAwait(false);
+        var extensibleArrayMaximumNumberOfElementsBits = await driver.ReadByte().ConfigureAwait(false);
+        var indexBlockElementsCount = await driver.ReadByte().ConfigureAwait(false);
+        var dataBlockMininumElementsCount = await driver.ReadByte().ConfigureAwait(false);
+        var secondaryBlockMinimumDataBlockPointerCount = await driver.ReadByte().ConfigureAwait(false);
+        var dataBlockPageMaximumNumberOfElementsBits = await driver.ReadByte().ConfigureAwait(false);
 
         // length fields
-        var secondaryBlocksCount = superblock.ReadLength(driver);
-        var secondaryBlocksSize = superblock.ReadLength(driver);
-        var dataBlocksCount = superblock.ReadLength(driver);
-        var dataBlocksSize = superblock.ReadLength(driver);
-        var maximumIndexSet = superblock.ReadLength(driver);
-        var elementsCount = superblock.ReadLength(driver);
+        var secondaryBlocksCount = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var secondaryBlocksSize = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var dataBlocksCount = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var dataBlocksSize = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var maximumIndexSet = await superblock.ReadLength(driver).ConfigureAwait(false);
+        var elementsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // index block address
-        var indexBlockAddress = superblock.ReadOffset(driver);
+        var indexBlockAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         // H5EA.hdr.c (H5EA__hdr_init)
 

@@ -9,39 +9,39 @@ internal record class SharedMessage(
 {
     private byte _version;
 
-    public static SharedMessage Decode(NativeReadContext context)
+    public static async ValueTask<SharedMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // H5Oshared.c (H5O__shared_decode)
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // type
         SharedMessageLocation type;
 
         if (version == 3)
         {
-            type = (SharedMessageLocation)driver.ReadByte();
+            type = (SharedMessageLocation)await driver.ReadByte().ConfigureAwait(false);
         }
 
         else
         {
-            driver.ReadByte();
+            await driver.ReadByte().ConfigureAwait(false);
             type = SharedMessageLocation.AnotherObjectsHeader;
         }
 
         // reserved
         if (version == 1)
-            driver.ReadBytes(6);
+            await driver.ReadBytes(6).ConfigureAwait(false);
 
         // address
         ulong address;
 
         if (version == 1)
         {
-            address = superblock.ReadOffset(driver);
+            address = await superblock.ReadOffset(driver).ConfigureAwait(false);
         }
         else
         {
@@ -57,7 +57,7 @@ internal record class SharedMessage(
 
             else
             {
-                address = superblock.ReadOffset(driver);
+                address = await superblock.ReadOffset(driver).ConfigureAwait(false);
             }
         }
 

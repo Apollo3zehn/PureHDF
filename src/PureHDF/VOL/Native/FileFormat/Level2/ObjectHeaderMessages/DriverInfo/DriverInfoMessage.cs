@@ -23,22 +23,22 @@ internal record class DriverInfoMessage(
         }
     }
 
-    public static DriverInfoMessage Decode(H5DriverBase driver)
+    public static async ValueTask<DriverInfoMessage> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // driver id
-        var driverId = ReadUtils.ReadFixedLengthString(driver, 8);
+        var driverId = await ReadUtils.ReadFixedLengthString(driver, 8).ConfigureAwait(false);
 
         // driver info size
-        var driverInfoSize = driver.ReadUInt16();
+        var driverInfoSize = await driver.ReadUInt16().ConfigureAwait(false);
 
         // driver info
         DriverInfo driverInfo = driverId switch
         {
-            "NCSAmulti" => MultiDriverInfo.Decode(driver),
-            "NCSAfami" => FamilyDriverInfo.Decode(driver),
+            "NCSAmulti" => await MultiDriverInfo.Decode(driver).ConfigureAwait(false),
+            "NCSAfami" => await FamilyDriverInfo.Decode(driver).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The driver ID '{driverId}' is not supported.")
         };
 
