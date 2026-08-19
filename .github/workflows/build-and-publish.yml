@@ -9,6 +9,11 @@ on:
     tags:
       - '*'
 
+  pull_request:
+    branches:
+      - master
+      - dev
+
 jobs:
 
   build:
@@ -110,7 +115,7 @@ jobs:
     name: Publish (dev)
     runs-on: ubuntu-latest
 
-    if: ${{ needs.build.outputs.is_release != 'true' }}
+    if: ${{ github.event_name != 'pull_request' && needs.build.outputs.is_release != 'true' }}
 
     steps:
 
@@ -131,7 +136,7 @@ jobs:
     name: Publish (release)
     runs-on: ubuntu-latest
 
-    if: ${{ needs.build.outputs.is_release == 'true' }}
+    if: ${{ github.event_name != 'pull_request' && needs.build.outputs.is_release == 'true' }}
 
     steps:
 
