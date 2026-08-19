@@ -25,6 +25,12 @@ The minimum supported target framework version is `.NET 6.0+`.
 
 To keep the code base clean, version 2 of PureHDF targets [active .NET versions](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only, which are `.NET 6` and `.NET 8` as of now (August 2024).
 
+# Version 3
+
+The minimum supported target framework version is `.NET 8.0+`.
+
+To keep the code base clean, version 3 of PureHDF targets [active .NET versions](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only, which are `.NET 8` and `.NET 10` as of now (August 2026).
+
 # Installation
 
 ```bash
@@ -140,7 +146,7 @@ Then open `http://localhost:8080` in your browser, pick an `.h5` file with the f
 
 # Development
 
-The tests of PureHDF are executed against `.NET 6` and `.NET 8` so these two runtimes are required. Please note that due to an currently unknown reason the writing tests cannot be run in parallel to other tests because some unrelated temp files are in use although they should not be and thus cannot be accessed by the unit tests.
+The tests of PureHDF are executed against `.NET 8` and `.NET 10` so these two runtimes are required. Please note that due to an currently unknown reason the writing tests cannot be run in parallel to other tests because some unrelated temp files are in use although they should not be and thus cannot be accessed by the unit tests.
 
 If you are using Visual Studio Code as your IDE, you can simply execute one of the predefined test tasks by selecting `Run Tasks` from the global menu (`Ctrl+Shift+P`). The following test tasks are predefined:
 

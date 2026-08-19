@@ -7,6 +7,7 @@ A driver is now allocated per read operation, so a dataset or attribute resolved
 Structural decodes (local heaps, b-tree and fractal-heap headers) are cached per file and per address instead of in lazy fields on retained header messages. Node and heap caches are bounded; measured on a 160k-chunk full read, peak cache memory dropped from 9,685 KiB (unbounded, linear in chunk count) to 1,560 KiB (bounded, flat).
 
 ### Breaking changes
+- Dropped support for `.NET 6`; version 3 targets `.NET 8` and `.NET 10` only. The minimum supported target framework is now `.NET 8.0+`.
 - `IDatasetStream` interface renamed to `IConcurrentStream` and made a standalone interface (no longer requires a `Stream` base). The single `void ReadDataset(Span<byte> buffer)` method is replaced by two `ValueTask` methods that each take an absolute offset (cursor-free, concurrency-safe):
   - `ValueTask ReadDatasetAsync(long offset, Memory<byte> buffer)`
   - `ValueTask ReadMetadataAsync(long offset, Memory<byte> buffer)`
@@ -46,6 +47,7 @@ Structural decodes (local heaps, b-tree and fractal-heap headers) are cached per
   - `ValueTask<Memory<byte>> GetChunkAsync(ulong chunkIndex, Func<ValueTask<Memory<byte>>> chunkReader)` — the interface has a default implementation bridging to `GetChunk`, so existing `IReadingChunkCache` implementations keep compiling (they block on misses); `SimpleReadingChunkCache` overrides it for true async.
 - `H5ReadOptions` — new parameter appended with a default (additive, non-breaking):
   - `long GlobalHeapCacheByteBudget = 64 * 1024 * 1024`
+- Added `samples/PureHdfWasm`, a Blazor WebAssembly proof-of-concept app that opens a local HDF5 file entirely in the browser via `Blob.slice()` JS interop over `IConcurrentStream` (no server round-trips, no File System Access API — works in Firefox). Shows a tree of groups/datasets/attributes and the selected node's metadata. See the README for how to run it.
 
 ### Performance
 - Local file reads complete synchronously and return an already-completed `ValueTask` — a local file is not an asynchronous source, so the driver reads through `RandomAccess.Read` rather than queuing every read (including 2-byte metadata reads) onto the thread pool via `ReadAsync`. Benchmarks are at or below the v2.1.4 baseline, with allocation byte-identical to it.

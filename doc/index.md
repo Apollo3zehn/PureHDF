@@ -21,6 +21,10 @@ To keep the code base clean, version 2 of PureHDF supports [active .NET versions
 
 Version 1 of PureHDF supports all .NET versions starting with `.NET 4.7.2` and continues to receive bug fixes. Features will be backported upon request if feasible.
 
+# Version 3 changes
+
+To keep the code base clean, version 3 of PureHDF supports [active .NET versions](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core) only, which are `.NET 8` and `.NET 10` as of now (August 2026).
+
 # Installation
 
 ```bash
