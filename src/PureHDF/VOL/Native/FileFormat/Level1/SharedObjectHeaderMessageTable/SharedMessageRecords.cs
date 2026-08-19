@@ -15,27 +15,27 @@ internal record class ObjectHeaderSharedMessageRecord(
     ulong ObjectHeaderAddress
 ) : SharedMessageRecord(MessageLocation)
 {
-    public static ObjectHeaderSharedMessageRecord Decode(NativeReadContext context)
+    public static async ValueTask<ObjectHeaderSharedMessageRecord> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // message location
-        var messageLocation = (MessageLocation)driver.ReadByte();
+        var messageLocation = (MessageLocation)await driver.ReadByte().ConfigureAwait(false);
 
         // hash value
-        var hashValue = driver.ReadUInt32();
+        var hashValue = await driver.ReadUInt32().ConfigureAwait(false);
 
         // reserved
-        driver.ReadByte();
+        await driver.ReadByte().ConfigureAwait(false);
 
         // message type
-        var messageType = (MessageType)driver.ReadByte();
+        var messageType = (MessageType)await driver.ReadByte().ConfigureAwait(false);
 
         // creation index
-        var creationIndex = driver.ReadUInt16();
+        var creationIndex = await driver.ReadUInt16().ConfigureAwait(false);
 
         // object header address
-        var objectHeaderAddress = superblock.ReadOffset(driver);
+        var objectHeaderAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         return new ObjectHeaderSharedMessageRecord(
             MessageLocation: messageLocation,
@@ -54,13 +54,13 @@ internal record class FractalHeapSharedMessageRecord(
     ulong FractalHeapId
 ) : SharedMessageRecord(MessageLocation)
 {
-    public static FractalHeapSharedMessageRecord Decode(H5DriverBase driver)
+    public static async ValueTask<FractalHeapSharedMessageRecord> Decode(H5DriverBase driver)
     {
         return new FractalHeapSharedMessageRecord(
-            MessageLocation: (MessageLocation)driver.ReadByte(),
-            HashValue: driver.ReadUInt32(),
-            ReferenceCount: driver.ReadUInt32(),
-            FractalHeapId: driver.ReadUInt64()
+            MessageLocation: (MessageLocation)await driver.ReadByte().ConfigureAwait(false),
+            HashValue: await driver.ReadUInt32().ConfigureAwait(false),
+            ReferenceCount: await driver.ReadUInt32().ConfigureAwait(false),
+            FractalHeapId: await driver.ReadUInt64().ConfigureAwait(false)
         );
     }
 }

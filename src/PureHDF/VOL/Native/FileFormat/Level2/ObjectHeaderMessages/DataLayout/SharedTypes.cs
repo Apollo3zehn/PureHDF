@@ -31,19 +31,23 @@ internal record struct DataBlockPage<T>(
     T[] Elements
 )
 {
-    public static DataBlockPage<T> Decode(
+    public static async ValueTask<DataBlockPage<T>> Decode(
         H5DriverBase driver,
         ulong elementCount,
-        Func<H5DriverBase, T> decode)
+        Func<H5DriverBase, ValueTask<T>> decode)
     {
         // elements
-        var elements = Enumerable
-            .Range(0, (int)elementCount)
-            .Select(i => decode(driver))
-            .ToArray();
+        // An explicit loop rather than Enumerable.Range(...).Select(...).ToArray(): a lambda cannot
+        // be awaited inside Select, and these reads are strictly sequential.
+        var elements = new T[(int)elementCount];
+
+        for (var i = 0; i < elements.Length; i++)
+        {
+            elements[i] = await decode(driver).ConfigureAwait(false);
+        }
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new DataBlockPage<T>(
             Elements: elements

@@ -1,36 +1,39 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿namespace PureHDF.VOL.Native;
 
-namespace PureHDF.VOL.Native;
-
-internal record class ManagedObjectsFractalHeapId(
-    H5DriverBase Driver,
+// Holds the context rather than a bare driver, now that FractalHeapHeader.GetAddress needs one. Safe
+// to capture: this is constructed per heap-ID read inside a single operation (FractalHeapId.Construct)
+// and discarded, so it never outlives the driver it holds.
+internal sealed record class ManagedObjectsFractalHeapId(
+    NativeReadContext Context,
     FractalHeapHeader Header,
     ulong Offset,
     ulong Length
 ) : FractalHeapId
 {
-    public static ManagedObjectsFractalHeapId Decode(
-        H5DriverBase driver,
+    public static async ValueTask<ManagedObjectsFractalHeapId> Decode(
+        NativeReadContext context,
         H5DriverBase localDriver,
         FractalHeapHeader header,
         ulong offsetByteCount,
         ulong lengthByteCount)
     {
         return new ManagedObjectsFractalHeapId(
-            Driver: driver,
+            Context: context,
             Header: header,
-            Offset: ReadUtils.ReadUlong(localDriver, offsetByteCount),
-            Length: ReadUtils.ReadUlong(localDriver, lengthByteCount)
+            Offset: await ReadUtils.ReadUlong(localDriver, offsetByteCount).ConfigureAwait(false),
+            Length: await ReadUtils.ReadUlong(localDriver, lengthByteCount).ConfigureAwait(false)
         );
     }
 
-    public override T Read<T>(
-        Func<H5DriverBase, T> func,
-        [AllowNull] ref List<BTree2Record01> record01Cache)
+    public override async ValueTask<T> Read<T>(Func<H5DriverBase, ValueTask<T>> func)
     {
-        var address = Header.GetAddress(this);
+        // Locating a managed object walks the heap's indirect blocks, so this is a read in its own
+        // right - which is why a synchronous Read<T> blocked every dense attribute and dense link
+        // lookup regardless of how the layers above it awaited.
+        var address = await Header.GetAddress(Context, this).ConfigureAwait(false);
 
-        Driver.SeekRelativeToBaseAddress((long)address);
-        return func(Driver);
+        Context.Driver.SeekRelativeToBaseAddress((long)address);
+
+        return await func(Context.Driver).ConfigureAwait(false);
     }
 }

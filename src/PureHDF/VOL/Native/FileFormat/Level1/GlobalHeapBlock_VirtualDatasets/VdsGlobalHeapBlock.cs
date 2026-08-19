@@ -21,24 +21,24 @@ internal readonly record struct VdsGlobalHeapBlock(
         }
     }
 
-    public static VdsGlobalHeapBlock Decode(H5DriverBase localDriver, Superblock superblock)
+    public static async ValueTask<VdsGlobalHeapBlock> Decode(H5DriverBase localDriver, Superblock superblock)
     {
         // version
-        var version = localDriver.ReadByte();
+        var version = await localDriver.ReadByte().ConfigureAwait(false);
 
         // entry count
-        var entryCount = superblock.ReadLength(localDriver);
+        var entryCount = await superblock.ReadLength(localDriver).ConfigureAwait(false);
 
         // vds dataset entries
         var vdsDatasetEntries = new VdsDatasetEntry[(int)entryCount];
 
         for (ulong i = 0; i < entryCount; i++)
         {
-            vdsDatasetEntries[i] = VdsDatasetEntry.Decode(localDriver);
+            vdsDatasetEntries[i] = await VdsDatasetEntry.Decode(localDriver).ConfigureAwait(false);
         }
 
         // checksum
-        var _ = localDriver.ReadUInt32();
+        var _ = await localDriver.ReadUInt32().ConfigureAwait(false);
 
         return new VdsGlobalHeapBlock(
             VdsDatasetEntries: vdsDatasetEntries

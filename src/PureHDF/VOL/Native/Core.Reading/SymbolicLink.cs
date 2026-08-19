@@ -41,14 +41,23 @@ internal class SymbolicLink
 
     #region Methods
 
-    public NativeNamedReference GetTarget(H5LinkAccess linkAccess)
+    // CONCURRENCY: `operationContext` is the context of the navigation operation resolving this link.
+    // The same-file branch continues on it, so a soft link costs no extra driver and the whole walk
+    // stays on one cursor. The external-file branch deliberately does NOT use it: the target lives in
+    // a different NativeFile whose driver reads a different byte stream, so it takes the
+    // scope-creating InternalGet overload and runs on that file's own driver.
+    //
+    // Async because resolving a link is a path walk, and a path walk reads. Both callers
+    // (NativeGroup.GetObjectReference and GetObjectReferencesForSymbolTableEntry) are themselves
+    // async, so there is no synchronous counterpart worth keeping.
+    public async ValueTask<NativeNamedReference> GetTarget(NativeReadContext operationContext, H5LinkAccess linkAccess)
     {
         // this file
         if (string.IsNullOrWhiteSpace(_objectPath))
         {
             try
             {
-                var reference = _parent.InternalGet(_value, linkAccess);
+                var reference = await _parent.InternalGet(operationContext, _value, linkAccess).ConfigureAwait(false);
                 reference.Name = _name;
                 return reference;
             }
@@ -70,9 +79,9 @@ internal class SymbolicLink
                     ?? throw new Exception($"Could not find file {_value}.");
 
                 var externalFile = NativeCache
-                    .GetNativeFile(_parent.Context.Driver, absoluteFilePath);
+                    .GetNativeFile(_parent.Context, absoluteFilePath);
 
-                return externalFile.InternalGet(_objectPath, linkAccess);
+                return await externalFile.InternalGet(_objectPath, linkAccess).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

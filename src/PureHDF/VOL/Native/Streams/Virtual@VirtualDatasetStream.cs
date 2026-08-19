@@ -2,7 +2,7 @@
 
 namespace PureHDF;
 
-internal delegate void ReadVirtualDelegate<TResult>(NativeDataset dataset, Span<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
+internal delegate ValueTask ReadVirtualDelegate<TResult>(NativeDataset dataset, Memory<TResult> destination, Selection fileSelection, H5DatasetAccess datasetAccess);
 
 internal class VirtualDatasetStream<TResult> : IH5ReadStream
 {
@@ -35,9 +35,13 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
 
     public long Position { get => _position; }
 
-    public void ReadDataset(Span<byte> buffer) => throw new NotImplementedException();
+    public ValueTask ReadDatasetAsync(Memory<byte> buffer) => throw new NotImplementedException();
 
-    public void ReadVirtual(Span<TResult> buffer)
+    // Memory<TResult> rather than Span<TResult>, which is what makes the gather awaitable at all: a
+    // Span cannot cross an await, and reading a source dataset is an await. The caller already holds a
+    // Memory, so nothing is lost by not narrowing it to a Span, and NativeDataset's
+    // readVirtualDelegate needs no pooled scratch buffer or copy to bridge the two.
+    public async ValueTask ReadVirtualAsync(Memory<TResult> buffer)
     {
         // Overall algorithm:
         // - We get a linear index.
@@ -99,7 +103,7 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
             var sourceDatasetInfo = default(DatasetInfo);
 
             if (!foundEntry.Equals(default))
-                sourceDatasetInfo = GetDatasetInfo(foundEntry);
+                sourceDatasetInfo = await GetDatasetInfoAsync(foundEntry).ConfigureAwait(false);
 
             if (sourceDatasetInfo is not null && !foundEntry.Equals(default))
             {
@@ -111,21 +115,25 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                         sourceDimensions,
                         foundEntry.SourceSelection));
 
-                _readVirtual(
+                await _readVirtual(
                     dataset: sourceDatasetInfo.Dataset,
                     destination: slicedBuffer,
                     fileSelection: selection,
-                    datasetAccess: sourceDatasetInfo.DatasetAccess);
+                    datasetAccess: sourceDatasetInfo.DatasetAccess).ConfigureAwait(false);
             }
 
             // Fill value
+            //
+            // NOTE: reached not only for a genuinely unmapped region, but also whenever the source could
+            // not be RESOLVED - see GetDatasetInfoAsync. That makes an unreachable source look like a
+            // legitimately empty one.
             else
             {
                 if (_fillValue is not null)
-                    slicedBuffer.Fill(_fillValue);
+                    slicedBuffer.Span.Fill(_fillValue);
 
                 else
-                    slicedBuffer.Clear();
+                    slicedBuffer.Span.Clear();
             }
 
             // Update state
@@ -161,7 +169,27 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
         }
     }
 
-    private DatasetInfo? GetDatasetInfo(VdsDatasetEntry entry)
+    /// <summary>
+    /// Resolves the source dataset an entry points at, or <see langword="null" /> when it cannot be
+    /// found.
+    /// </summary>
+    /// <remarks>
+    /// LIMITATION, not introduced here: an EXTERNAL source is located on the local filesystem and
+    /// nowhere else. <c>FindExternalFileForVirtualDataset</c> probes paths with <c>File.Exists</c> and
+    /// the file is then opened by path, so there is no way to supply a stream - a virtual dataset read
+    /// through a remote stream can only reach sources in its OWN file, where
+    /// <c>SourceFileName == "."</c> reuses the already-open file and no second source is needed.
+    /// <para>
+    /// Worse, failure is silent: returning null sends the caller down the fill-value branch, so an
+    /// unreachable source reads as legitimately empty data rather than raising. See notes/backlog.md.
+    /// </para>
+    /// <para>
+    /// The lookups below are awaited rather than blocked on, which is what the same-file case needs: it
+    /// resolves the link and the dataset through <c>_file</c>, and that file may be the remote one being
+    /// read.
+    /// </para>
+    /// </remarks>
+    private async ValueTask<DatasetInfo?> GetDatasetInfoAsync(VdsDatasetEntry entry)
     {
         if (!_datasetInfoMap.TryGetValue(entry, out var info))
         {
@@ -172,17 +200,17 @@ internal class VirtualDatasetStream<TResult> : IH5ReadStream
                 var file = filePath == "."
                     // this file
                     ? _file
-                    // external file
-                    : H5File.OpenRead(filePath);
+                    // external file - always local, so this completes synchronously
+                    : await H5File.OpenReadAsync(filePath).ConfigureAwait(false);
 
-                if (file.LinkExists(entry.SourceDataset, linkAccess: default /* no link access available */))
+                if (await file.LinkExistsAsync(entry.SourceDataset, linkAccess: default /* no link access available */).ConfigureAwait(false))
                 {
                     var datasetAccess = _datasetAccess;
 
                     if (_datasetAccess.ChunkCache is null)
                         datasetAccess = _datasetAccess with { ChunkCache = new SimpleReadingChunkCache() };
 
-                    var dataset = (NativeDataset)file.Dataset(entry.SourceDataset);
+                    var dataset = (NativeDataset)await file.GetAsync(entry.SourceDataset).ConfigureAwait(false);
 
                     info = new DatasetInfo(file, dataset, datasetAccess);
                     _datasetInfoMap[entry] = info;

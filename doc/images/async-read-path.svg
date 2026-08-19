@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2200 1690" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" text-rendering="geometricPrecision">
+  <title>PureHDF Async-First Read Path — Sync vs Async Code Paths</title>
+  <desc>Layered dependency graph of the PureHDF read path on branch feat/async-read-path, showing where each driver and stream sits in the sync/already-completed/suspending cost tiers, the TryReadDatasetSync vs ReadDatasetAsync branch, the ReadAheadWindow coalescing layer, the IsBuffered gate on IH5ReadStream, and how each layout feeds the per-element decode.</desc>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="arr-thin" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#64748b"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="2200" height="1690" fill="#fbfbfd"/>
+
+  <!-- ===================== TITLE ===================== -->
+  <text x="60" y="46" font-size="26" font-weight="700" fill="#0f172a">PureHDF Async-First Read Path — Sync vs Async Code Paths</text>
+  <text x="60" y="74" font-size="15" fill="#475569">Branch feat/async-read-path  ·  cost tier per layer  ·  IsBuffered gate: contiguous batching matches chunked/compact for compound/reference reads</text>
+
+  <!-- ===================== LEGEND (horizontal strip) ===================== -->
+  <g id="legend">
+    <rect x="60" y="80" width="2080" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="76" y="112" font-size="14" font-weight="700" fill="#0f172a">Cost tier</text>
+
+    <rect x="168" y="92" width="28" height="30" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="206" y="106" font-size="12" font-weight="600" fill="#14532d">SYNC — Span path, no ValueTask, zero alloc</text>
+    <text x="206" y="122" font-size="11" fill="#475569">TryReadDatasetSync=true · MemoryMarshal.AsBytes is free</text>
+
+    <rect x="688" y="92" width="28" height="30" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="726" y="106" font-size="12" font-weight="600" fill="#78350f">ALREADY-COMPLETED ValueTask — no state machine, zero alloc</text>
+    <text x="726" y="122" font-size="11" fill="#475569">return default; · inlines, no continuation boxed</text>
+
+    <rect x="1208" y="92" width="28" height="30" rx="4" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1246" y="106" font-size="12" font-weight="600" fill="#7f1d1d">GENUINELY SUSPENDS — state machine, may box continuation</text>
+    <text x="1246" y="122" font-size="11" fill="#475569">async/await · only when source can actually suspend</text>
+
+    <rect x="1728" y="92" width="28" height="30" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="1766" y="106" font-size="12" font-weight="600" fill="#1e3a8a">BUFFER / WINDOW layer</text>
+    <text x="1766" y="122" font-size="11" fill="#475569">ReadAheadWindow · SystemMemoryStream · CastMemoryManager</text>
+  </g>
+
+  <!-- ===================== LAYER 1 — PUBLIC API ===================== -->
+  <g id="layer-public">
+    <text x="60" y="178.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 1 · PUBLIC API  (sync surface blocks on async core — gray = blocking wrapper, not the zero-alloc Span fast path; async is the only safe entry on a host that cannot block, e.g. WASM)</text>
+    <rect x="60" y="190.0" width="2080" height="80" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+
+    <!-- 1. Open file -->
+    <rect x="80" y="200.0" width="490" height="66" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="325" y="218.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">Open file</text>
+    <rect x="88" y="224.0" width="234" height="38" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+    <text x="205" y="240.0" font-size="11" font-weight="600" fill="#334155" text-anchor="middle">Open / OpenRead</text>
+    <text x="205" y="256.0" font-size="9.5" fill="#475569" text-anchor="middle">.GetAwaiter().GetResult() — blocks</text>
+    <rect x="328" y="224.0" width="234" height="38" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+    <text x="445" y="240.0" font-size="11" font-weight="600" fill="#7f1d1d" text-anchor="middle">OpenAsync</text>
+    <text x="445" y="256.0" font-size="9.5" fill="#7f1d1d" text-anchor="middle">decodes superblock — suspends on remote</text>
+
+    <!-- 2. Resolve object by path -->
+    <rect x="585" y="200.0" width="490" height="66" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="830" y="218.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">Resolve object by path</text>
+    <rect x="593" y="224.0" width="234" height="38" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+    <text x="710" y="240.0" font-size="11" font-weight="600" fill="#334155" text-anchor="middle">Get(path)</text>
+    <text x="710" y="256.0" font-size="9.5" fill="#475569" text-anchor="middle">.GetAwaiter().GetResult() — blocks</text>
+    <rect x="833" y="224.0" width="234" height="38" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+    <text x="950" y="240.0" font-size="11" font-weight="600" fill="#7f1d1d" text-anchor="middle">GetAsync(path)</text>
+    <text x="950" y="256.0" font-size="9.5" fill="#7f1d1d" text-anchor="middle">walks path, decodes links — suspends on remote</text>
+
+    <!-- 3. Read dataset -->
+    <rect x="1090" y="200.0" width="490" height="66" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="1335" y="218.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">Read dataset</text>
+    <rect x="1098" y="224.0" width="234" height="38" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+    <text x="1215" y="240.0" font-size="11" font-weight="600" fill="#334155" text-anchor="middle">Read&lt;T&gt;(...)</text>
+    <text x="1215" y="256.0" font-size="9.5" fill="#475569" text-anchor="middle">.GetAwaiter().GetResult() — blocks</text>
+    <rect x="1338" y="224.0" width="234" height="38" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+    <text x="1455" y="240.0" font-size="11" font-weight="600" fill="#7f1d1d" text-anchor="middle">ReadAsync&lt;T&gt;(...)</text>
+    <text x="1455" y="256.0" font-size="9.5" fill="#7f1d1d" text-anchor="middle">walks selection, decodes — suspends on remote</text>
+
+    <!-- 4. Read attribute -->
+    <rect x="1595" y="200.0" width="490" height="66" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="1840" y="218.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">Read attribute</text>
+    <rect x="1603" y="224.0" width="234" height="38" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1"/>
+    <text x="1720" y="240.0" font-size="11" font-weight="600" fill="#334155" text-anchor="middle">Read&lt;T&gt;()</text>
+    <text x="1720" y="256.0" font-size="9.5" fill="#475569" text-anchor="middle">.GetAwaiter().GetResult() — blocks</text>
+    <rect x="1843" y="224.0" width="234" height="38" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1"/>
+    <text x="1960" y="240.0" font-size="11" font-weight="600" fill="#7f1d1d" text-anchor="middle">ReadAsync&lt;T&gt;()</text>
+    <text x="1960" y="256.0" font-size="9.5" fill="#7f1d1d" text-anchor="middle">VL/ref resolves global heap — suspends on remote</text>
+  </g>
+
+  <!-- arrow L1 → L2 -->
+  <line x1="1100" y1="272.0" x2="1100" y2="292.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== LAYER 2 — NATIVE READ PATH ===================== -->
+  <g id="layer-native">
+    <text x="60" y="318.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 2 · NATIVE READ PATH  (decode, selection, batching)</text>
+    <rect x="60" y="330.0" width="1510" height="200" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+
+    <rect x="80" y="346.0" width="470" height="80" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="315" y="366.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">SelectionHelper</text>
+    <text x="315" y="385.0" font-size="11" fill="#475569" text-anchor="middle">walks selection per chunk</text>
+    <text x="315" y="401.0" font-size="11" fill="#475569" text-anchor="middle">→ GetReadStream(chunkIndex) per chunk</text>
+    <text x="315" y="417.0" font-size="11" fill="#475569" text-anchor="middle">→ decode delegate per element</text>
+
+    <rect x="565" y="346.0" width="475" height="80" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="802" y="366.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">DecodeDelegate&lt;T&gt;  ·  ElementDecodeDelegate</text>
+    <text x="802" y="385.0" font-size="11" fill="#475569" text-anchor="middle">both return ValueTask&lt;T&gt; / ValueTask&lt;object?&gt;</text>
+    <text x="802" y="401.0" font-size="11" font-weight="600" fill="#7f1d1d" text-anchor="middle">ElementDecodeDelegate BOXES every primitive element</text>
+    <text x="802" y="417.0" font-size="11" fill="#475569" text-anchor="middle">~24-32 B/element — no async trick fixes this</text>
+
+    <rect x="1055" y="346.0" width="495" height="80" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="1302" y="366.0" font-size="13" font-weight="600" fill="#14532d" text-anchor="middle">DatatypeMessage :1148  HOT UNMANAGED DECODE</text>
+    <text x="1302" y="385.0" font-size="11" fill="#14532d" text-anchor="middle">1. TryReadDatasetSync(Span) — taken when source opts in</text>
+    <text x="1302" y="401.0" font-size="11" fill="#14532d" text-anchor="middle">2. fallback to ReadDatasetAsync(Memory) + Cast only on suspend</text>
+    <text x="1302" y="417.0" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">Skips CastMemoryManager alloc on local/mmap sources</text>
+
+    <rect x="80" y="438.0" width="350" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="255" y="458.0" font-size="13" font-weight="600" fill="#1e3a8a" text-anchor="middle">DatatypeMessage :1059  decodeBatched (VL)</text>
+    <text x="255" y="477.0" font-size="11" fill="#1e3a8a" text-anchor="middle">bulk-read N×cellHeaderSize → SystemMemoryStream</text>
+    <text x="255" y="493.0" font-size="11" fill="#1e3a8a" text-anchor="middle">one ReadDatasetAsync for N cell headers</text>
+    <text x="255" y="509.0" font-size="11" font-style="italic" fill="#64748b" text-anchor="middle">payloads still in global heap</text>
+
+    <rect x="445" y="438.0" width="350" height="80" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="620" y="458.0" font-size="13" font-weight="600" fill="#1e3a8a" text-anchor="middle">DatatypeMessage :1112  decode (non-VL compound/ref)</text>
+    <text x="620" y="477.0" font-size="11" fill="#1e3a8a" text-anchor="middle">IsBuffered gate → bulk-read only when live driver</text>
+    <text x="620" y="493.0" font-size="11" fill="#1e3a8a" text-anchor="middle">N×M dispatches → 1 bulk read + N×M in-memory copies</text>
+    <text x="620" y="509.0" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">collapses N×M driver dispatches to one bulk read</text>
+
+    <rect x="810" y="438.0" width="740" height="80" rx="6" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="1180" y="458.0" font-size="13" font-weight="600" fill="#0f172a" text-anchor="middle">ReadUtils.DecodeUnmanagedElement / DecodeUnmanagedArray</text>
+    <text x="1180" y="477.0" font-size="11" fill="#475569" text-anchor="middle">secondary paths, single bulk read each</text>
+    <text x="1180" y="493.0" font-size="11" fill="#475569" text-anchor="middle">reflection-based (GetDecodeInfoForUnmanagedArray :709)</text>
+    <text x="1180" y="509.0" font-size="11" font-style="italic" fill="#64748b" text-anchor="middle">marginal benefit from TryReadDatasetSync — removes 1 of 3 async layers</text>
+  </g>
+
+  <!-- ReadAheadWindow side callout -->
+  <g id="readahead-callout">
+    <rect x="1590" y="330.0" width="550" height="200" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="1610" y="356.0" font-size="15" font-weight="700" fill="#1e3a8a">ReadAheadWindow — coalescing, NOT caching</text>
+    <text x="1610" y="378.0" font-size="12" fill="#1e3a8a">4 KiB sliding window · one per driver · NO synchronization</text>
+    <text x="1610" y="396.0" font-size="12" fill="#1e3a8a">(driver has one logical reader → no contention)</text>
+
+    <line x1="1610" y1="408.0" x2="2120" y2="408.0" stroke="#93c5fd" stroke-width="1"/>
+
+    <text x="1610" y="428.0" font-size="12" font-weight="600" fill="#1e3a8a">Why it exists</text>
+    <text x="1610" y="446.0" font-size="11" fill="#1e3a8a">RandomAccess.Read is positional pread — bypasses</text>
+    <text x="1610" y="461.0" font-size="11" fill="#1e3a8a">FileStream buffer entirely. Without it: 484 reads /</text>
+    <text x="1610" y="476.0" font-size="11" fill="#1e3a8a">1,828 B for one attribute lookup → ~363 k syscalls.</text>
+    <text x="1610" y="491.0" font-size="11" fill="#1e3a8a">With window: same lookup = 2 fetches.</text>
+
+    <text x="1610" y="513.0" font-size="11" font-style="italic" fill="#64748b">Structural reads only. Bulk payload bypasses (large,</text>
+    <text x="1610" y="526.0" font-size="11" font-style="italic" fill="#64748b">read-once → would evict the structure it holds).</text>
+  </g>
+
+  <!-- arrow L2 → L3 -->
+  <line x1="1100" y1="532.0" x2="1100" y2="552.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== LAYER 3 — LAYOUTS ===================== -->
+  <g id="layer-layouts">
+    <text x="60" y="578.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 3 · LAYOUTS  (GetReadStream(chunkIndex) → IH5ReadStream)</text>
+    <rect x="60" y="590.0" width="2080" height="150" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+
+    <rect x="80" y="608.0" width="670" height="120" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="415" y="630.0" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">H5D_Contiguous  ·  GetReadStream</text>
+    <text x="415" y="650.0" font-size="12" fill="#1e3a8a" text-anchor="middle">→ OffsetStream wrapping the live file driver</text>
+    <text x="415" y="668.0" font-size="12" font-weight="700" fill="#2563eb" text-anchor="middle">BATCHED  (via IsBuffered gate on decode)</text>
+    <text x="415" y="686.0" font-size="11" fill="#1e3a8a" text-anchor="middle">OffsetStream IsBuffered=false → bulk-read triggers</text>
+    <text x="415" y="702.0" font-size="11" fill="#1e3a8a" text-anchor="middle">N×M driver dispatches → 1 read + N×M in-memory copies</text>
+    <text x="415" y="718.0" font-size="11" font-style="italic" fill="#64748b" text-anchor="middle">non-VL compound/reference/array only · blittable struct takes zero-copy fast path</text>
+
+    <rect x="765" y="608.0" width="670" height="120" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="1100" y="630.0" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">H5D_Chunk  ·  GetReadStream</text>
+    <text x="1100" y="650.0" font-size="12" fill="#1e3a8a" text-anchor="middle">cache miss → fetch + decompress chunk → buffer</text>
+    <text x="1100" y="668.0" font-size="12" font-weight="700" fill="#2563eb" text-anchor="middle">BATCHED</text>
+    <text x="1100" y="686.0" font-size="11" fill="#1e3a8a" text-anchor="middle">→ SystemMemoryStream over the chunk buffer</text>
+    <text x="1100" y="702.0" font-size="11" fill="#1e3a8a" text-anchor="middle">per-element reads are memory copies, not syscalls</text>
+    <text x="1100" y="718.0" font-size="11" font-style="italic" fill="#64748b" text-anchor="middle">TryReadDatasetSync=true (SystemMemoryStream opts in)</text>
+
+    <rect x="1450" y="608.0" width="670" height="120" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="1785" y="630.0" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">H5D_Compact  ·  GetReadStream</text>
+    <text x="1785" y="650.0" font-size="12" fill="#1e3a8a" text-anchor="middle">→ SystemMemoryStream over the object-header bytes</text>
+    <text x="1785" y="668.0" font-size="12" font-weight="700" fill="#2563eb" text-anchor="middle">BATCHED  (in-place)</text>
+    <text x="1785" y="686.0" font-size="11" fill="#1e3a8a" text-anchor="middle">data lives in the object header itself</text>
+    <text x="1785" y="702.0" font-size="11" fill="#1e3a8a" text-anchor="middle">per-element reads are memory copies</text>
+    <text x="1785" y="718.0" font-size="11" font-style="italic" fill="#64748b" text-anchor="middle">TryReadDatasetSync=true</text>
+  </g>
+
+  <!-- arrow L3 → L4 -->
+  <line x1="1100" y1="742.0" x2="1100" y2="762.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== LAYER 4 — IH5ReadStream ===================== -->
+  <g id="layer-stream-iface">
+    <text x="60" y="788.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 4 · IH5ReadStream  (internal interface)</text>
+    <rect x="60" y="800.0" width="2080" height="110" rx="8" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5"/>
+
+    <rect x="80" y="818.0" width="495" height="76" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="327" y="840.0" font-size="14" font-weight="600" fill="#581c87" text-anchor="middle">ValueTask ReadDatasetAsync(Memory&lt;byte&gt;)</text>
+    <text x="327" y="860.0" font-size="11" fill="#581c87" text-anchor="middle">default path · Memory because Span can't cross await</text>
+    <text x="327" y="876.0" font-size="11" fill="#581c87" text-anchor="middle">called by hundreds of internal call sites</text>
+
+    <rect x="590" y="818.0" width="495" height="76" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="837" y="840.0" font-size="14" font-weight="600" fill="#14532d" text-anchor="middle">bool TryReadDatasetSync(Span&lt;byte&gt;)  →  default false</text>
+    <text x="837" y="860.0" font-size="11" fill="#14532d" text-anchor="middle">opt-in sync path · zero-alloc Span via MemoryMarshal.AsBytes</text>
+    <text x="837" y="876.0" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">avoids CastMemoryManager alloc (~32 B/scalar) on hot decode</text>
+
+    <rect x="1100" y="818.0" width="495" height="76" rx="6" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="1347" y="840.0" font-size="14" font-weight="600" fill="#1e3a8a" text-anchor="middle">bool IsBuffered  →  default false</text>
+    <text x="1347" y="860.0" font-size="11" fill="#1e3a8a" text-anchor="middle">true = SystemMemoryStream / UnsafeFillValueStream</text>
+    <text x="1347" y="876.0" font-size="11" font-weight="600" fill="#2563eb" text-anchor="middle">gates bulk-read in compound/reference decode</text>
+
+    <rect x="1610" y="818.0" width="510" height="76" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="1865" y="840.0" font-size="14" font-weight="600" fill="#581c87" text-anchor="middle">void Seek(long offset, SeekOrigin origin)</text>
+    <text x="1865" y="860.0" font-size="11" fill="#581c87" text-anchor="middle">pure arithmetic — never IO · deliberately synchronous</text>
+    <text x="1865" y="876.0" font-size="11" fill="#581c87" text-anchor="middle">in-memory or range-backed sources seek by offset math</text>
+  </g>
+
+  <!-- arrow L4 → L5 -->
+  <line x1="1100" y1="912.0" x2="1100" y2="932.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== LAYER 5 — H5DriverBase ===================== -->
+  <g id="layer-driver-base">
+    <text x="60" y="958.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 5 · H5DriverBase  (abstract base · implements IH5ReadStream)</text>
+    <rect x="60" y="970.0" width="2080" height="90" rx="8" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.5"/>
+
+    <rect x="80" y="984.0" width="640" height="62" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="400" y="1006.0" font-size="13" font-weight="600" fill="#581c87" text-anchor="middle">abstract ValueTask ReadDatasetAsync(Memory&lt;byte&gt;)</text>
+    <text x="400" y="1028.0" font-size="11" fill="#581c87" text-anchor="middle">each driver implements — already-completed or suspending</text>
+
+    <rect x="735" y="984.0" width="640" height="62" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="1055" y="1006.0" font-size="13" font-weight="600" fill="#14532d" text-anchor="middle">virtual bool TryReadDatasetSync(Span&lt;byte&gt;)  =>  false</text>
+    <text x="1055" y="1028.0" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">default: assume remote → never accidentally blocked on</text>
+
+    <rect x="1390" y="984.0" width="730" height="62" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="1755" y="1006.0" font-size="13" font-weight="600" fill="#581c87" text-anchor="middle">H5DriverBase? TryCreateOperationDriver()  →  per-op driver</text>
+    <text x="1755" y="1028.0" font-size="11" fill="#581c87" text-anchor="middle">same source, own cursor → concurrent reads of one resolved dataset</text>
+  </g>
+
+  <!-- arrow L5 → L6 (splits into 3 drivers) -->
+  <line x1="400" y1="1062.0" x2="400" y2="1092.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1100" y1="1062.0" x2="1100" y2="1092.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1800" y1="1062.0" x2="1800" y2="1092.0" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== LAYER 6 — THREE DRIVERS ===================== -->
+  <g id="layer-drivers">
+    <text x="60" y="1118.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 6 · DRIVERS  (per-source — TryReadDatasetSync opt-in is decided here)</text>
+
+    <!-- H5FileHandleDriver -->
+    <rect x="60" y="1130.0" width="670" height="280" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text x="395" y="1154.0" font-size="15" font-weight="700" fill="#78350f" text-anchor="middle">H5FileHandleDriver  (local file)</text>
+    <text x="395" y="1173.0" font-size="11" fill="#78350f" text-anchor="middle">FileStream without FileOptions.Asynchronous</text>
+
+    <rect x="80" y="1186.0" width="630" height="44" rx="5" fill="#dcfce7" stroke="#16a34a" stroke-width="1.3"/>
+    <text x="395" y="1204.0" font-size="12" font-weight="600" fill="#14532d" text-anchor="middle">TryReadDatasetSync = TRUE  →  ReadCore(Span) direct</text>
+    <text x="395" y="1220.0" font-size="11" fill="#14532d" text-anchor="middle">zero-alloc Span path on hot decode</text>
+
+    <rect x="80" y="1238.0" width="305" height="64" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.3"/>
+    <text x="232" y="1256.0" font-size="12" font-weight="600" fill="#78350f" text-anchor="middle">ReadDatasetAsync → default</text>
+    <text x="232" y="1272.0" font-size="11" fill="#78350f" text-anchor="middle">already-completed ValueTask</text>
+    <text x="232" y="1288.0" font-size="11" fill="#78350f" text-anchor="middle">no state machine, no alloc</text>
+
+    <rect x="405" y="1238.0" width="305" height="64" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.3"/>
+    <text x="557" y="1256.0" font-size="12" font-weight="600" fill="#1e3a8a" text-anchor="middle">ReadMetadataCore</text>
+    <text x="557" y="1272.0" font-size="11" fill="#1e3a8a" text-anchor="middle">→ ReadAheadWindow coalesce</text>
+    <text x="557" y="1288.0" font-size="11" fill="#1e3a8a" text-anchor="middle">→ RandomAccess.Read on miss</text>
+
+    <rect x="80" y="1312.0" width="630" height="44" rx="5" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+    <text x="395" y="1330.0" font-size="11" font-weight="600" fill="#0f172a" text-anchor="middle">ReadDatasetAsync BYPASSES ReadAheadWindow</text>
+    <text x="395" y="1346.0" font-size="11" fill="#475569" text-anchor="middle">bulk payload straight into caller's buffer — would evict the structure</text>
+
+    <rect x="80" y="1366.0" width="630" height="34" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.3"/>
+    <text x="395" y="1388.0" font-size="11" fill="#78350f" text-anchor="middle">ReadScalar uses 8-byte field, IsCompletedSuccessfully fast path (no async)</text>
+  </g>
+
+  <!-- H5MemoryMappedFileDriver -->
+  <g id="driver-mmap">
+    <rect x="765" y="1130.0" width="670" height="280" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text x="1100" y="1154.0" font-size="15" font-weight="700" fill="#78350f" text-anchor="middle">H5MemoryMappedFileDriver  (memory-mapped)</text>
+    <text x="1100" y="1173.0" font-size="11" fill="#78350f" text-anchor="middle">MemoryMappedViewAccessor · genuinely synchronous source</text>
+
+    <rect x="785" y="1186.0" width="630" height="44" rx="5" fill="#dcfce7" stroke="#16a34a" stroke-width="1.3"/>
+    <text x="1100" y="1204.0" font-size="12" font-weight="600" fill="#14532d" text-anchor="middle">TryReadDatasetSync = TRUE</text>
+    <text x="1100" y="1220.0" font-size="11" fill="#14532d" text-anchor="middle">zero-alloc Span path on hot decode</text>
+
+    <rect x="785" y="1238.0" width="630" height="64" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.3"/>
+    <text x="1100" y="1256.0" font-size="12" font-weight="600" fill="#78350f" text-anchor="middle">ReadDatasetAsync → ReadCore → default ValueTask</text>
+    <text x="1100" y="1272.0" font-size="11" fill="#78350f" text-anchor="middle">already-completed, no state machine, no allocation</text>
+    <text x="1100" y="1288.0" font-size="11" fill="#78350f" text-anchor="middle">cost-identical to a direct sync read</text>
+
+    <rect x="785" y="1312.0" width="630" height="44" rx="5" fill="#ffffff" stroke="#94a3b8" stroke-width="1.3"/>
+    <text x="1100" y="1330.0" font-size="11" font-weight="600" fill="#0f172a" text-anchor="middle">NO ReadAheadWindow</text>
+    <text x="1100" y="1346.0" font-size="11" fill="#475569" text-anchor="middle">accessor is already random-access in-memory — window would only add a copy</text>
+
+    <rect x="785" y="1366.0" width="630" height="34" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.3"/>
+    <text x="1100" y="1388.0" font-size="11" fill="#78350f" text-anchor="middle">ReadByte/ReadUInt16/... → new ValueTask&lt;T&gt;(value) — already-completed</text>
+  </g>
+
+  <!-- H5StreamDriver -->
+  <g id="driver-stream">
+    <rect x="1470" y="1130.0" width="670" height="280" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+    <text x="1805" y="1154.0" font-size="15" font-weight="700" fill="#7f1d1d" text-anchor="middle">H5StreamDriver  (stream — two modes)</text>
+    <text x="1805" y="1173.0" font-size="11" fill="#7f1d1d" text-anchor="middle">only driver that can genuinely suspend</text>
+
+    <rect x="1490" y="1186.0" width="630" height="44" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.3"/>
+    <text x="1805" y="1204.0" font-size="12" font-weight="600" fill="#7f1d1d" text-anchor="middle">TryReadDatasetSync = FALSE  (inherited, both modes)</text>
+    <text x="1805" y="1220.0" font-size="11" fill="#7f1d1d" text-anchor="middle">a stream may genuinely suspend — blocking on it is what async avoids</text>
+
+    <rect x="1490" y="1238.0" width="305" height="84" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1642" y="1256.0" font-size="12" font-weight="700" fill="#7f1d1d" text-anchor="middle">POSITIONLESS mode</text>
+    <text x="1642" y="1274.0" font-size="11" fill="#7f1d1d" text-anchor="middle">stream implements IConcurrentStream</text>
+    <text x="1642" y="1290.0" font-size="11" fill="#7f1d1d" text-anchor="middle">cursor in driver · stream never seeked</text>
+    <text x="1642" y="1306.0" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">HTTP range-request source</text>
+    <text x="1642" y="1318.0" font-size="10" fill="#7f1d1d" text-anchor="middle">concurrent: hands out new driver</text>
+
+    <rect x="1805" y="1238.0" width="315" height="84" rx="5" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="1962" y="1256.0" font-size="12" font-weight="700" fill="#78350f" text-anchor="middle">CURSOR mode</text>
+    <text x="1962" y="1274.0" font-size="11" fill="#78350f" text-anchor="middle">plain Stream · in-tree uses only</text>
+    <text x="1962" y="1290.0" font-size="11" fill="#78350f" text-anchor="middle">Stream.Seek + Stream.ReadAsync</text>
+    <text x="1962" y="1306.0" font-size="11" font-weight="600" fill="#d97706" text-anchor="middle">MemoryStream → sync-completes</text>
+    <text x="1962" y="1318.0" font-size="10" fill="#78350f" text-anchor="middle">non-concurrent: returns null</text>
+
+    <rect x="1490" y="1330.0" width="630" height="34" rx="5" fill="#dbeafe" stroke="#2563eb" stroke-width="1.3"/>
+    <text x="1805" y="1348.0" font-size="11" font-weight="600" fill="#1e3a8a" text-anchor="middle">ReadMetadataCore → ReadAheadWindow (positionless only) → IConcurrentStream.ReadMetadataAsync</text>
+
+    <rect x="1490" y="1370.0" width="630" height="34" rx="5" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1805" y="1388.0" font-size="11" font-weight="700" fill="#7f1d1d" text-anchor="middle">RefillThenServe = ONLY async method on the read path · ReadScalarSlow on suspend</text>
+  </g>
+
+  <!-- arrows L6 → L7 -->
+  <line x1="395" y1="1412.0" x2="395" y2="1442.0" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="1100" y1="1412.0" x2="1100" y2="1442.0" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="1805" y1="1412.0" x2="1805" y2="1442.0" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+
+  <!-- ===================== LAYER 7 — OS / SOURCE ===================== -->
+  <g id="layer-os">
+    <text x="60" y="1468.0" font-size="14" font-weight="700" fill="#64748b" letter-spacing="1.5">LAYER 7 · UNDERLYING SOURCE  (where the bytes actually come from)</text>
+
+    <rect x="60" y="1480.0" width="670" height="120" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="395" y="1502.0" font-size="14" font-weight="700" fill="#14532d" text-anchor="middle">RandomAccess.Read  (pread, positional)</text>
+    <text x="395" y="1522.0" font-size="11" fill="#14532d" text-anchor="middle">bypasses FileStream buffer entirely — that's the</text>
+    <text x="395" y="1537.0" font-size="11" fill="#14532d" text-anchor="middle">whole reason ReadAheadWindow exists</text>
+    <text x="395" y="1557.0" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">SYNC · no thread-pool queueing</text>
+    <text x="395" y="1575.0" font-size="10" font-style="italic" fill="#14532d" text-anchor="middle">RandomAccess.ReadAsync on Unix + non-async FileStream would queue</text>
+    <text x="395" y="1590.0" font-size="10" font-style="italic" fill="#14532d" text-anchor="middle">every read to thread pool → +633 B/Read → 40-60% slowdown</text>
+
+    <rect x="765" y="1480.0" width="670" height="120" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="1100" y="1502.0" font-size="14" font-weight="700" fill="#14532d" text-anchor="middle">MemoryMappedViewAccessor  (absolute)</text>
+    <text x="1100" y="1522.0" font-size="11" fill="#14532d" text-anchor="middle">ReadByte/ReadUInt16/... addressed by absolute position</text>
+    <text x="1100" y="1537.0" font-size="11" fill="#14532d" text-anchor="middle">AcquirePointer/ReleasePointer refcount with interlocked ops</text>
+    <text x="1100" y="1557.0" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">SYNC · genuinely synchronous source</text>
+    <text x="1100" y="1575.0" font-size="10" font-style="italic" fill="#14532d" text-anchor="middle">second driver over same accessor = own _position, correct</text>
+    <text x="1100" y="1590.0" font-size="10" font-style="italic" fill="#14532d" text-anchor="middle">concurrency safe without a per-driver cursor of its own</text>
+
+    <rect x="1470" y="1480.0" width="670" height="120" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1805" y="1502.0" font-size="14" font-weight="700" fill="#7f1d1d" text-anchor="middle">IConcurrentStream / Stream.ReadAsync</text>
+    <text x="1805" y="1522.0" font-size="11" fill="#7f1d1d" text-anchor="middle">positionless: ReadDatasetAsync/ReadMetadataAsync carry offset</text>
+    <text x="1805" y="1537.0" font-size="11" fill="#7f1d1d" text-anchor="middle">cursor: shared cursor + Stream.ReadAsync</text>
+    <text x="1805" y="1557.0" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">GENUINELY SUSPENDS on HTTP/S3/remote</text>
+    <text x="1805" y="1575.0" font-size="10" font-style="italic" fill="#7f1d1d" text-anchor="middle">AmazonS3Stream implements IConcurrentStream with 1 MiB slots</text>
+    <text x="1805" y="1590.0" font-size="10" font-style="italic" fill="#7f1d1d" text-anchor="middle">(its own block cache — composes with ReadAheadWindow, doesn't duplicate)</text>
+  </g>
+
+  <!-- ===================== FOOTER ===================== -->
+  <g id="footer">
+    <text x="80" y="1644.0" font-size="11" fill="#64748b">Layout batching status — Chunked: batched (SystemMemoryStream over chunk buffer, IsBuffered=true)  ·  Compact: batched (in-place, IsBuffered=true)  ·  Contiguous: batched via IsBuffered gate (OffsetStream IsBuffered=false → bulk-read triggers, collapses compound/reference dispatch)</text>
+    <text x="80" y="1662.0" font-size="11" fill="#64748b">Per-operation driver model: resolve first (single-threaded, file-level cursor) → read in parallel (per-op driver, own cursor, shared source). Parallelism does not require one reader per thread.</text>
+  </g>
+</svg>

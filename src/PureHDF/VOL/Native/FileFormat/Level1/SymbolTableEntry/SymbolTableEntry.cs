@@ -7,38 +7,50 @@ internal readonly record struct SymbolTableEntry(
     ScratchPad? ScratchPad
 )
 {
-    public static SymbolTableEntry Decode(NativeReadContext context)
+    public static async ValueTask<SymbolTableEntry> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // link name offset
-        var linkNameOffset = superblock.ReadOffset(driver);
+        var linkNameOffset = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // object header address
-        var headerAddress = superblock.ReadOffset(driver);
+        var headerAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // cache type
-        var cacheType = (CacheType)driver.ReadUInt32();
+        var cacheType = (CacheType)await driver.ReadUInt32().ConfigureAwait(false);
 
         // reserved
-        driver.ReadUInt32();
+        await driver.ReadUInt32().ConfigureAwait(false);
 
         // scratch pad
         var before = driver.Position;
 
-        ScratchPad? scratchPad = cacheType switch
+        ScratchPad? scratchPad;
+
+        switch (cacheType)
         {
-            CacheType.NoCache => null,
-            CacheType.ObjectHeader => ObjectHeaderScratchPad.Decode(context),
-            CacheType.SymbolicLink => SymbolicLinkScratchPad.Decode(driver),
-            _ => throw new NotSupportedException()
-        };
+            case CacheType.NoCache:
+                scratchPad = null;
+                break;
+
+            case CacheType.ObjectHeader:
+                scratchPad = await ObjectHeaderScratchPad.Decode(context).ConfigureAwait(false);
+                break;
+
+            case CacheType.SymbolicLink:
+                scratchPad = await SymbolicLinkScratchPad.Decode(driver).ConfigureAwait(false);
+                break;
+
+            default:
+                throw new NotSupportedException();
+        }
 
         var after = driver.Position;
         var length = after - before;
 
         // read as many bytes as needed to read a total of 16 bytes, even if the scratch pad is not used
-        driver.ReadBytes((int)(16 - length));
+        await driver.ReadBytes((int)(16 - length)).ConfigureAwait(false);
 
         return new SymbolTableEntry(
             LinkNameOffset: linkNameOffset,

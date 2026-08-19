@@ -31,28 +31,28 @@ internal partial record class FixedArrayDataBlock<T>(
         }
     }
 
-    public static FixedArrayDataBlock<T> Decode(
+    public static async ValueTask<FixedArrayDataBlock<T>> Decode(
         NativeReadContext context,
         ulong elementsPerPage,
         ulong pageCount,
         ulong pageBitmapSize,
         ulong entriesCount,
-        Func<H5DriverBase, T> decode)
+        Func<H5DriverBase, ValueTask<T>> decode)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, FixedArrayDataBlock<T>.Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // client ID
-        var clientID = (ClientID)driver.ReadByte();
+        var clientID = (ClientID)await driver.ReadByte().ConfigureAwait(false);
 
         // header address
-        var headerAddress = superblock.ReadOffset(driver);
+        var headerAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // page bitmap
         byte[] pageBitmap;
@@ -60,7 +60,7 @@ internal partial record class FixedArrayDataBlock<T>(
 
         if (pageCount > 0)
         {
-            pageBitmap = driver.ReadBytes((int)pageBitmapSize);
+            pageBitmap = await driver.ReadBytes((int)pageBitmapSize).ConfigureAwait(false);
             elements = Array.Empty<T>();
         }
 
@@ -69,14 +69,16 @@ internal partial record class FixedArrayDataBlock<T>(
         {
             pageBitmap = Array.Empty<byte>();
 
-            elements = Enumerable
-                .Range(0, (int)entriesCount)
-                .Select(i => decode(driver))
-                .ToArray();
+            elements = new T[(int)entriesCount];
+
+            for (var i = 0; i < (int)entriesCount; i++)
+            {
+                elements[i] = await decode(driver).ConfigureAwait(false);
+            }
         }
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         // last page element count
         var lastPageElementCount = entriesCount % elementsPerPage == 0

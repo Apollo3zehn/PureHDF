@@ -35,38 +35,35 @@ internal record struct FreeSpaceSectionList(
         }
     }
 
-    public FreeSpaceManagerHeader FreeSpaceManagerHeader
+    public async ValueTask<FreeSpaceManagerHeader> GetFreeSpaceManagerHeader()
     {
-        get
+        if (_freeSpaceManagerHeader is null)
         {
-            if (_freeSpaceManagerHeader is null)
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)FreeSpaceManagerHeaderAddress);
-                _freeSpaceManagerHeader = FreeSpaceManagerHeader.Decode(Context);
-            };
+            Context.Driver.SeekRelativeToBaseAddress((long)FreeSpaceManagerHeaderAddress);
+            _freeSpaceManagerHeader = await FreeSpaceManagerHeader.Decode(Context).ConfigureAwait(false);
+        };
 
-            return _freeSpaceManagerHeader;
-        }
+        return _freeSpaceManagerHeader;
     }
 
-    public static FreeSpaceSectionList Decode(NativeReadContext context)
+    public static async ValueTask<FreeSpaceSectionList> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // free space manager header address
-        var freeSpaceManagerHeaderAddress = superblock.ReadOffset(driver);
+        var freeSpaceManagerHeaderAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // TODO: implement everything
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new FreeSpaceSectionList(
             Context: context,

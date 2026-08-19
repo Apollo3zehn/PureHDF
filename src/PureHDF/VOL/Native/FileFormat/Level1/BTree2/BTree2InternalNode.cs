@@ -7,24 +7,22 @@ internal record class BTree2InternalNode<T>(
     BTree2NodePointer[] NodePointers
 ) : BTree2Node<T>(Records) where T : struct, IBTree2Record
 {
-    public static BTree2InternalNode<T> Decode(
+    public static async ValueTask<BTree2InternalNode<T>> Decode(
         NativeReadContext context,
         BTree2Header<T> header,
         ulong recordCount,
         int nodeLevel,
-        Func<T> decodeKey)
+        DecodeKeyDelegate<T> decodeKey)
     {
         var (driver, superblock) = context;
 
-        Decode(
-            driver,
+        var (version, records) = await Decode(
+            context,
             header,
             recordCount,
             Signature,
-            decodeKey,
-            out var version,
-            out var records
-        );
+            decodeKey
+        ).ConfigureAwait(false);
 
         var nodePointers = new BTree2NodePointer[recordCount + 1];
 
@@ -32,17 +30,17 @@ internal record class BTree2InternalNode<T>(
         for (ulong i = 0; i < recordCount + 1; i++)
         {
             // address
-            var address = superblock.ReadOffset(driver);
+            var address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
             // record count
-            var childRecordCount = ReadUtils.ReadUlong(driver, header.MaxRecordCountSize);
+            var childRecordCount = await ReadUtils.ReadUlong(driver, header.MaxRecordCountSize).ConfigureAwait(false);
 
             // total record count
             ulong totalRecordCount;
 
             if (nodeLevel > 1)
             {
-                var totalChildRecordCount = ReadUtils.ReadUlong(driver, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize);
+                var totalChildRecordCount = await ReadUtils.ReadUlong(driver, header.NodeInfos[nodeLevel - 1].CumulatedTotalRecordCountSize).ConfigureAwait(false);
                 totalRecordCount = totalChildRecordCount;
             }
 
@@ -58,7 +56,7 @@ internal record class BTree2InternalNode<T>(
         }
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new BTree2InternalNode<T>(
             records,

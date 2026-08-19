@@ -1,11 +1,19 @@
 # Concurrency
 
-Reading data from a dataset is thread-safe in the following cases, depending on the type of `H5File` constructor method you used:
+Reading data from a dataset is thread-safe in the following cases, depending on which `H5File.Open` overload you used:
 
-|         | Open(`string`) | Open(`MemoryMappedViewAccessor`) | Open(`Stream`)                                        |
-| ------- | -------------- | -------------------------------- | ----------------------------------------------------- |
-| .NET 4+ | x              | ✓                               | x                                                     |
-| .NET 6+ | ✓             | ✓                               | ✓ (if: `Stream` is `FileStream` or `AmazonS3Stream`) |
+| Overload | Concurrent reads |
+| -------- | ---------------- |
+| `Open(string)` / `OpenRead(string)` | ✓ |
+| `Open(MemoryMappedViewAccessor)` | ✓ |
+| `Open(ReadOnlyMemory<byte>)` | ✓ |
+| `Open(IConcurrentStream)` | ✓ |
+| `Open(Stream)` | ✓ only if the stream is a `FileStream`; otherwise ✗ |
+
+A per-operation driver is allocated for every read, so a dataset or attribute resolved once can be read concurrently through a single `H5File`. Object navigation (e.g. `file.Dataset("x")`, attribute enumeration) still moves the file-level cursor and remains single-threaded — resolve first, then read in parallel.
+
+> [!WARNING]
+> The `Open(Stream)` overload is only thread-safe when the stream is a `FileStream`: PureHDF unwraps a `FileStream` to a handle driver that reads positionally (`RandomAccess.Read`), so each operation carries its own position and never touches the stream's cursor. Any other `Stream` subclass is driven through a shared cursor, so concurrent reads through it silently corrupt data. To read a non-`FileStream` remote source concurrently, implement `IConcurrentStream` and use `Open(IConcurrentStream)` instead.
 
 > The multi-threading support comes **without** significant usage of locking. Currently only the global heap cache uses thread synchronization primitives.
 
@@ -69,3 +77,26 @@ Parallel.For(0, SEGMENT_COUNT, i =>
 });
 
 ```
+
+## Multi-Threading (In-Memory Buffer)
+
+When the file is already in memory — for example, downloaded from a remote store or decompressed in place — pass the buffer directly. Reads are pure span slices over the same buffer and never suspend, so no async entry point is needed:
+
+```cs
+using var file = H5File.Open(sourceBuffer);
+
+var dataset = file.Dataset("xxx");
+var buffer = new float[TOTAL_ELEMENT_COUNT];
+
+Parallel.For(0, SEGMENT_COUNT, i =>
+{
+    var start = i * SEGMENT_SIZE;
+    var partialBuffer = buffer.Slice(start, length: SEGMENT_SIZE);
+    var fileSelection = new HyperslabSelection(start, block: SEGMENT_SIZE)
+
+    dataset.Read<float>(partialBuffer, fileSelection);
+});
+
+```
+
+The caller owns `sourceBuffer`; the driver never writes to it. Do not mutate the buffer while the `H5File` is open.

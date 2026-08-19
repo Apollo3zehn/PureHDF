@@ -23,14 +23,14 @@ internal record class BTreeKValuesMessage(
         }
     }
 
-    public static BTreeKValuesMessage Decode(H5DriverBase driver)
+    public static async ValueTask<BTreeKValuesMessage> Decode(H5DriverBase driver)
     {
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         return new BTreeKValuesMessage(
-            IndexedStorageInternalNodeK: driver.ReadUInt16(),
-            GroupInternalNodeK: driver.ReadUInt16(),
-            GroupLeafNodeK: driver.ReadUInt16()
+            IndexedStorageInternalNodeK: await driver.ReadUInt16().ConfigureAwait(false),
+            GroupInternalNodeK: await driver.ReadUInt16().ConfigureAwait(false),
+            GroupLeafNodeK: await driver.ReadUInt16().ConfigureAwait(false)
         )
         {
             Version = version

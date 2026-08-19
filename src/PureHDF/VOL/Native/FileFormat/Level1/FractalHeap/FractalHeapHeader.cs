@@ -2,10 +2,12 @@
 
 namespace PureHDF.VOL.Native;
 
+// CONCURRENCY / CACHING: holds no NativeReadContext, so that a decoded heap header can be cached per
+// file (see NativeCache.GetStructure) and shared by concurrent navigation operations. The context is
+// passed per call to the two methods that read - everything else here is decoded format data.
+//
 // this should be a class because it has so many fields
-internal record class FractalHeapHeader(
-    NativeReadContext Context,
-
+internal sealed record class FractalHeapHeader(
     ushort HeapIdLength,
     ushort IOFilterEncodedLength,
     FractalHeapHeaderFlags Flags,
@@ -71,89 +73,89 @@ internal record class FractalHeapHeader(
         }
     }
 
-    public static FractalHeapHeader Decode(NativeReadContext context)
+    public static async ValueTask<FractalHeapHeader> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // heap ID length
-        var heapIdLength = driver.ReadUInt16();
+        var heapIdLength = await driver.ReadUInt16().ConfigureAwait(false);
 
         // I/O filter encoder length
-        var ioFilterEncodedLength = driver.ReadUInt16();
+        var ioFilterEncodedLength = await driver.ReadUInt16().ConfigureAwait(false);
 
         // flags
-        var flags = (FractalHeapHeaderFlags)driver.ReadByte();
+        var flags = (FractalHeapHeaderFlags)(await driver.ReadByte().ConfigureAwait(false));
 
         /* next group */
 
         // managed objects maximum size
-        var managedObjectsMaximumSize = driver.ReadUInt32();
+        var managedObjectsMaximumSize = await driver.ReadUInt32().ConfigureAwait(false);
 
         // next huge object id
-        var nextHugeObjectId = superblock.ReadLength(driver);
+        var nextHugeObjectId = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // huge objects BTree2 address
-        var hugeObjectsBTree2Address = superblock.ReadOffset(driver);
+        var hugeObjectsBTree2Address = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // managed blocks free space amount
-        var managedBlocksFreeSpaceAmount = superblock.ReadLength(driver);
+        var managedBlocksFreeSpaceAmount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // managed block free space manager address
-        var managedBlockFreeSpaceManagerAddress = superblock.ReadOffset(driver);
+        var managedBlockFreeSpaceManagerAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // heap managed space amount
-        var heapManagedSpaceAmount = superblock.ReadLength(driver);
+        var heapManagedSpaceAmount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // heap allocated managed space amount
-        var heapAllocatedManagedSpaceAmount = superblock.ReadLength(driver);
+        var heapAllocatedManagedSpaceAmount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // managed space direct block allocation iterator offset
-        var managedSpaceDirectBlockAllocationIteratorOffset = superblock.ReadLength(driver);
+        var managedSpaceDirectBlockAllocationIteratorOffset = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // heap managed objects count
-        var heapManagedObjectsCount = superblock.ReadLength(driver);
+        var heapManagedObjectsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // heap huge objects size
-        var heapHugeObjectsSize = superblock.ReadLength(driver);
+        var heapHugeObjectsSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // heap huge objects cound
-        var heapHugeObjectsCount = superblock.ReadLength(driver);
+        var heapHugeObjectsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // heap tiny objects size
-        var heapTinyObjectsSize = superblock.ReadLength(driver);
+        var heapTinyObjectsSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // heap tiny objects count
-        var heapTinyObjectsCount = superblock.ReadLength(driver);
+        var heapTinyObjectsCount = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         /* next group */
 
         // table width
-        var tableWidth = driver.ReadUInt16();
+        var tableWidth = await driver.ReadUInt16().ConfigureAwait(false);
 
         // starting block size
-        var startingBlockSize = superblock.ReadLength(driver);
+        var startingBlockSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // maximum direct block size
-        var maximumDirectBlockSize = superblock.ReadLength(driver);
+        var maximumDirectBlockSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // maximum heap size
-        var maximumHeapSize = driver.ReadUInt16();
+        var maximumHeapSize = await driver.ReadUInt16().ConfigureAwait(false);
 
         // root indirect block rows starting number
-        var rootIndirectBlockRowsStartingNumber = driver.ReadUInt16();
+        var rootIndirectBlockRowsStartingNumber = await driver.ReadUInt16().ConfigureAwait(false);
 
         // root block address
-        var rootBlockAddress = superblock.ReadOffset(driver);
+        var rootBlockAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
         // root indirect block rows count
-        var rootIndirectBlockRowsCount = driver.ReadUInt16();
+        var rootIndirectBlockRowsCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         /* next group */
 
@@ -164,13 +166,13 @@ internal record class FractalHeapHeader(
 
         if (ioFilterEncodedLength > 0)
         {
-            filteredRootDirectBlockSize = superblock.ReadLength(driver);
-            ioFilterMask = driver.ReadUInt32();
-            ioFilterInfo = FilterPipelineMessage.Decode(driver);
+            filteredRootDirectBlockSize = await superblock.ReadLength(driver).ConfigureAwait(false);
+            ioFilterMask = await driver.ReadUInt32().ConfigureAwait(false);
+            ioFilterInfo = await FilterPipelineMessage.Decode(driver).ConfigureAwait(false);
         }
 
         // checksum
-        var checksum = driver.ReadUInt32();
+        var checksum = await driver.ReadUInt32().ConfigureAwait(false);
 
         // cache some values
         ulong[] rowBlockSizes;
@@ -301,7 +303,6 @@ internal record class FractalHeapHeader(
         }
 
         return new FractalHeapHeader(
-            Context: context,
 
             HeapIdLength: heapIdLength,
             IOFilterEncodedLength: ioFilterEncodedLength,
@@ -354,7 +355,7 @@ internal record class FractalHeapHeader(
     }
 
     // from H5HF__man_op_real
-    public ulong GetAddress(ManagedObjectsFractalHeapId heapId)
+    public async ValueTask<ulong> GetAddress(NativeReadContext context, ManagedObjectsFractalHeapId heapId)
     {
         FractalHeapDirectBlock directBlock;
         ulong directBlockSize;
@@ -372,15 +373,18 @@ internal record class FractalHeapHeader(
         else
         {
             /* Look up indirect block containing direct block */
-            var (indirectBlock, entry) = Locate(heapId.Offset);
+            var (indirectBlock, entry) = await Locate(context, heapId.Offset).ConfigureAwait(false);
 
             /* Set direct block info */
             directBlockSize = RowBlockSizes[entry / TableWidth];
             directBlockAddress = indirectBlock.Entries[entry].Address;
         }
 
-        Context.Driver.SeekRelativeToBaseAddress((long)directBlockAddress);
-        directBlock = FractalHeapDirectBlock.Decode(Context, this);
+        // Cached by address: a dense by-name lookup resolves a heap ID per name comparison, and every
+        // one of those walked back to the same handful of blocks.
+        directBlock = await NativeCache
+            .GetStructure(context, directBlockAddress, this, static (c, header) => FractalHeapDirectBlock.Decode(c, header))
+            .ConfigureAwait(false);
 
         /* Compute offset of object within block */
         if (heapId.Offset >= directBlock.BlockOffset + directBlockSize)
@@ -400,12 +404,11 @@ internal record class FractalHeapHeader(
     }
 
     // from H5HF__man_dblock_locate
-    private (FractalHeapIndirectBlock IndirectBlock, ulong entry) Locate(ulong offset)
+    private async ValueTask<(FractalHeapIndirectBlock IndirectBlock, ulong entry)> Locate(NativeReadContext context, ulong offset)
     {
         var (row, column) = Lookup(offset);
 
-        Context.Driver.SeekRelativeToBaseAddress((long)RootBlockAddress);
-        var indirectBlock = FractalHeapIndirectBlock.Decode(Context, this, RootIndirectBlockRowsCount);
+        var indirectBlock = await GetIndirectBlock(context, RootBlockAddress, RootIndirectBlockRowsCount).ConfigureAwait(false);
 
         uint entry;
 
@@ -424,8 +427,7 @@ internal record class FractalHeapHeader(
             var indirectBlockEntry = indirectBlock.Entries[entry];
 
             /* Use new indirect block */
-            Context.Driver.SeekRelativeToBaseAddress((long)indirectBlockEntry.Address);
-            indirectBlock = FractalHeapIndirectBlock.Decode(Context, this, nrows);
+            indirectBlock = await GetIndirectBlock(context, indirectBlockEntry.Address, nrows).ConfigureAwait(false);
 
             /* Look up row & column in new indirect block for object */
             (row, column) = Lookup(offset - indirectBlock.BlockOffset);
@@ -437,6 +439,17 @@ internal record class FractalHeapHeader(
         entry = row * TableWidth + column;
 
         return (indirectBlock, entry);
+    }
+
+    // Cached by address, for the same reason as the direct block in GetAddress. The row count is
+    // determined by the address in a well-formed heap, so it is not part of the key.
+    private ValueTask<FractalHeapIndirectBlock> GetIndirectBlock(NativeReadContext context, ulong address, uint rowCount)
+    {
+        return NativeCache.GetStructure(
+            context,
+            address,
+            (Header: this, RowCount: rowCount),
+            static (c, state) => FractalHeapIndirectBlock.Decode(c, state.Header, state.RowCount));
     }
 
     // from H5HF_dtable_lookup

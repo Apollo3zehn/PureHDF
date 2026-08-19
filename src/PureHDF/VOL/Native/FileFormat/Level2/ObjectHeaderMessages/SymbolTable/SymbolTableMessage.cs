@@ -1,47 +1,41 @@
 ﻿namespace PureHDF.VOL.Native;
 
+// CONCURRENCY (retained message): see the note on LinkInfoMessage - this message is retained in
+// ObjectHeader.HeaderMessages for the lifetime of the NativeObject, so it holds no
+// NativeReadContext and caches nothing itself. Both accessors take the calling operation's context.
+// Caching lives in NativeCache instead, keyed per file and per address, which is what keeps a
+// repeated by-name lookup from re-decoding storage it has already walked.
 internal record class SymbolTableMessage(
-    NativeReadContext Context,
     ulong BTree1Address,
     ulong LocalHeapAddress
 ) : Message
 {
-    private LocalHeap _localHeap;
-    private BTree1Node<BTree1GroupKey> _bTree1;
-
-    public static SymbolTableMessage Decode(NativeReadContext context)
+    public static async ValueTask<SymbolTableMessage> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
+        var btree1Address = await superblock.ReadOffset(driver).ConfigureAwait(false);
+        var localHeapAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
+
         return new SymbolTableMessage(
-            Context: context,
-            BTree1Address: superblock.ReadOffset(driver),
-            LocalHeapAddress: superblock.ReadOffset(driver)
+            BTree1Address: btree1Address,
+            LocalHeapAddress: localHeapAddress
         );
     }
 
-    public LocalHeap LocalHeap
+    public ValueTask<LocalHeap> GetLocalHeap(NativeReadContext context)
     {
-        get
-        {
-            if (_localHeap.Equals(default))
-            {
-                Context.Driver.SeekRelativeToBaseAddress((long)LocalHeapAddress);
-                _localHeap = LocalHeap.Decode(Context);
-            }
-
-            return _localHeap;
-        }
+        return NativeCache.GetStructure(context, LocalHeapAddress, LocalHeap.Decode);
     }
 
-    public BTree1Node<BTree1GroupKey> GetBTree1(Func<BTree1GroupKey> decodeKey)
+    public ValueTask<BTree1Node<BTree1GroupKey>> GetBTree1(
+        NativeReadContext context,
+        DecodeKeyDelegate<BTree1GroupKey> decodeKey)
     {
-        if (_bTree1.Equals(default))
-        {
-            Context.Driver.SeekRelativeToBaseAddress((long)BTree1Address);
-            _bTree1 = BTree1Node<BTree1GroupKey>.Decode(Context, decodeKey);
-        }
-
-        return _bTree1;
+        return NativeCache.GetStructure(
+            context,
+            BTree1Address,
+            decodeKey,
+            static (c, dk) => BTree1Node<BTree1GroupKey>.Decode(c, dk));
     }
 }

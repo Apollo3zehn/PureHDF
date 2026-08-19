@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Buffers;
+
+namespace PureHDF.VOL.Native;
 
 internal partial record class Superblock23
 {
@@ -14,7 +16,7 @@ internal partial record class Superblock23
         sizeof(ulong) +
         sizeof(uint);
 
-    public void Encode(H5DriverBase driver)
+    public async ValueTask Encode(H5DriverBase driver)
     {
         var position = driver.Position;
 
@@ -30,9 +32,16 @@ internal partial record class Superblock23
 
         // checksum
         driver.Seek(position, SeekOrigin.Begin);
-        Span<byte> checksumData = stackalloc byte[ENCODE_SIZE - sizeof(int)];
-        driver.Read(checksumData);
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+        var checksumSize = ENCODE_SIZE - sizeof(int);
+        using var owner = MemoryPool<byte>.Shared.Rent(checksumSize);
+        var checksumData = owner.Memory[..checksumSize];
+        await driver.Read(checksumData).ConfigureAwait(false);
+        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
+
+        // The read above is async now, which leaves a BufferedFileStream's read buffer in a state
+        // where the sync Write below triggers an internal FlushRead + relative seek that can fail.
+        // Seeking absolutely to the write position first keeps the stream consistent.
+        driver.Seek(position + checksumSize, SeekOrigin.Begin);
 
         driver.Write(checksum);
     }

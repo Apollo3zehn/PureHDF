@@ -33,7 +33,7 @@ internal partial record class ObjectHeader2(
         }
     }
 
-    internal static ObjectHeader2 Decode(NativeReadContext context, byte version)
+    internal static async ValueTask<ObjectHeader2> Decode(NativeReadContext context, byte version)
     {
         var driver = context.Driver;
 
@@ -41,7 +41,7 @@ internal partial record class ObjectHeader2(
         var address = (ulong)context.Driver.Position;
 
         // flags
-        var flags = (ObjectHeaderFlags)driver.ReadByte();
+        var flags = (ObjectHeaderFlags)await driver.ReadByte().ConfigureAwait(false);
 
         // access time, modification time, change time and birth time
         var accessTime = default(uint);
@@ -51,10 +51,10 @@ internal partial record class ObjectHeader2(
 
         if (flags.HasFlag(ObjectHeaderFlags.StoreFileAccessTimes))
         {
-            accessTime = driver.ReadUInt32();
-            modificationTime = driver.ReadUInt32();
-            changeTime = driver.ReadUInt32();
-            birthTime = driver.ReadUInt32();
+            accessTime = await driver.ReadUInt32().ConfigureAwait(false);
+            modificationTime = await driver.ReadUInt32().ConfigureAwait(false);
+            changeTime = await driver.ReadUInt32().ConfigureAwait(false);
+            birthTime = await driver.ReadUInt32().ConfigureAwait(false);
         }
 
         // maximum compact attributes count and minimum dense attributes count
@@ -63,13 +63,13 @@ internal partial record class ObjectHeader2(
 
         if (flags.HasFlag(ObjectHeaderFlags.StoreNonDefaultAttributePhaseChangeValues))
         {
-            maximumCompactAttributesCount = driver.ReadUInt16();
-            minimumDenseAttributesCount = driver.ReadUInt16();
+            maximumCompactAttributesCount = await driver.ReadUInt16().ConfigureAwait(false);
+            minimumDenseAttributesCount = await driver.ReadUInt16().ConfigureAwait(false);
         }
 
         // size of chunk 0
         var chunkFieldSize = (byte)(1 << ((byte)flags & 0x03));
-        var sizeOfChunk0 = ReadUtils.ReadUlong(driver, chunkFieldSize);
+        var sizeOfChunk0 = await ReadUtils.ReadUlong(driver, chunkFieldSize).ConfigureAwait(false);
 
         // with creation order
         var withCreationOrder = flags.HasFlag(ObjectHeaderFlags.TrackAttributeCreationOrder);
@@ -78,12 +78,12 @@ internal partial record class ObjectHeader2(
         // TODO: read gap and checksum
 
         // header messages
-        var headerMessages = ReadHeaderMessages(
+        var headerMessages = await ReadHeaderMessages(
             context,
             address,
             sizeOfChunk0,
             version: 2,
-            withCreationOrder);
+            withCreationOrder).ConfigureAwait(false);
 
         var objectHeader = new ObjectHeader2(
             address,

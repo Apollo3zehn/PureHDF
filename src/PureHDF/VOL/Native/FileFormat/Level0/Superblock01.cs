@@ -25,34 +25,34 @@ internal record class Superblock01(
 
     public SymbolTableEntry RootGroupSymbolTableEntry { get; private set; } = default!;
 
-    public static Superblock01 Decode(H5DriverBase driver, byte version)
+    public static async ValueTask<Superblock01> Decode(H5DriverBase driver, byte version)
     {
         var superBlockVersion = version;
-        var freeSpaceStorageVersion = driver.ReadByte();
-        var rootGroupSymbolTableEntryVersion = driver.ReadByte();
-        driver.ReadByte();
+        var freeSpaceStorageVersion = await driver.ReadByte().ConfigureAwait(false);
+        var rootGroupSymbolTableEntryVersion = await driver.ReadByte().ConfigureAwait(false);
+        await driver.ReadByte().ConfigureAwait(false);
 
-        var sharedHeaderMessageFormatVersion = driver.ReadByte();
-        var offsetsSize = driver.ReadByte();
-        var lengthsSize = driver.ReadByte();
-        driver.ReadByte();
+        var sharedHeaderMessageFormatVersion = await driver.ReadByte().ConfigureAwait(false);
+        var offsetsSize = await driver.ReadByte().ConfigureAwait(false);
+        var lengthsSize = await driver.ReadByte().ConfigureAwait(false);
+        await driver.ReadByte().ConfigureAwait(false);
 
-        var groupLeafNodeK = driver.ReadUInt16();
-        var groupInternalNodeK = driver.ReadUInt16();
+        var groupLeafNodeK = await driver.ReadUInt16().ConfigureAwait(false);
+        var groupInternalNodeK = await driver.ReadUInt16().ConfigureAwait(false);
 
-        var fileConsistencyFlags = (FileConsistencyFlags)driver.ReadUInt32();
+        var fileConsistencyFlags = (FileConsistencyFlags)await driver.ReadUInt32().ConfigureAwait(false);
         var indexedStorageInternalNodeK = default(ushort);
 
         if (superBlockVersion == 1)
         {
-            indexedStorageInternalNodeK = driver.ReadUInt16();
-            driver.ReadUInt16();
+            indexedStorageInternalNodeK = await driver.ReadUInt16().ConfigureAwait(false);
+            await driver.ReadUInt16().ConfigureAwait(false);
         }
 
-        var baseAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var freeSpaceInfoAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var endOfFileAddress = ReadUtils.ReadUlong(driver, offsetsSize);
-        var driverInfoBlockAddress = ReadUtils.ReadUlong(driver, offsetsSize);
+        var baseAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var freeSpaceInfoAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var endOfFileAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
+        var driverInfoBlockAddress = await ReadUtils.ReadUlong(driver, offsetsSize).ConfigureAwait(false);
 
         var superblock = new Superblock01(
             driver,
@@ -75,27 +75,24 @@ internal record class Superblock01(
         };
 
         var context = new NativeReadContext(driver, superblock) { ReadOptions = new() };
-        var rootGroupSymbolTableEntry = SymbolTableEntry.Decode(context);
+        var rootGroupSymbolTableEntry = await SymbolTableEntry.Decode(context).ConfigureAwait(false);
 
         superblock.RootGroupSymbolTableEntry = rootGroupSymbolTableEntry;
 
         return superblock;
     }
 
-    public DriverInfoBlock? DriverInfoBlock
+    public async ValueTask<DriverInfoBlock?> GetDriverInfoBlock()
     {
-        get
+        if (IsUndefinedAddress(DriverInfoBlockAddress))
         {
-            if (IsUndefinedAddress(DriverInfoBlockAddress))
-            {
-                return default;
-            }
+            return default;
+        }
 
-            else
-            {
-                _driverInfoBlock ??= Native.DriverInfoBlock.Decode(Driver);
-                return _driverInfoBlock;
-            }
+        else
+        {
+            _driverInfoBlock ??= await Native.DriverInfoBlock.Decode(Driver).ConfigureAwait(false);
+            return _driverInfoBlock;
         }
     }
 }

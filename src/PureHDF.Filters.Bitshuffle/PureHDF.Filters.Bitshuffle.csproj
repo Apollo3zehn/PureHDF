@@ -4,7 +4,7 @@
     <Description>Enables Bitshuffle filter support for PureHDF (based on https://github.com/kiyo-masui/bitshuffle).</Description>
     <PackageTags>HDF HDF5 hierarchical data file H5 Bitshuffle</PackageTags>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <PackageIcon>nuget.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

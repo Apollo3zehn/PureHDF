@@ -55,4 +55,19 @@ internal class HsdsAttribute : IH5Attribute
     {
         throw new NotImplementedException("This methods is not yet implemented on the HSDS attribute.");
     }
+
+    // An HSDS attribute arrives fully materialized in the JSON of the request that listed it, so by the
+    // time this is reachable there is nothing left to await - the value is deserialized out of memory.
+    // Completing synchronously is honest here, rather than a bridge that hides a blocking read.
+    public Task<T> ReadAsync<T>(ulong[]? memoryDims = null, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return Task.FromResult(Read<T>(memoryDims));
+    }
+
+    public Task ReadAsync<T>(T buffer, ulong[]? memoryDims = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("This methods is not yet implemented on the HSDS attribute.");
+    }
 }

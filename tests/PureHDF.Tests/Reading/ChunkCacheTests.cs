@@ -6,9 +6,9 @@ public class ChunkCacheTests
 {
     /// <summary>
     /// A slot count of zero means "do not cache", and the constructor accepts it - it only rejects a
-    /// negative count. It used to crash on the first chunk instead: with no slots the preemption loop
-    /// ran on an empty map, and FirstOrDefault over an empty sequence yields a default KeyValuePair
-    /// whose Value is null.
+    /// negative count. The failure mode it guards against is a crash on the first chunk: with no slots
+    /// the preemption loop runs on an empty map, and FirstOrDefault over an empty sequence yields a
+    /// default KeyValuePair whose Value is null.
     /// </summary>
     [Fact]
     public void ZeroChunkSlotsDisablesTheCacheInsteadOfCrashing()
@@ -26,6 +26,24 @@ public class ChunkCacheTests
         Assert.Equal(expected, second.ToArray());
         Assert.Equal(0, cache.ConsumedSlots);
         Assert.Equal(0UL, cache.ConsumedBytes);
+    }
+
+    /// <summary>
+    /// Both entry points share the same installation bookkeeping, so both reach the same loop.
+    /// </summary>
+    [Fact]
+    public async Task ZeroChunkSlotsDisablesTheCacheInsteadOfCrashing_Async()
+    {
+        // Arrange
+        var cache = new SimpleReadingChunkCache(chunkSlotCount: 0);
+        var expected = new byte[] { 1, 2, 3 };
+
+        // Act
+        var chunk = await cache.GetChunkAsync(0, () => new ValueTask<Memory<byte>>(expected.AsMemory()));
+
+        // Assert
+        Assert.Equal(expected, chunk.ToArray());
+        Assert.Equal(0, cache.ConsumedSlots);
     }
 
     [Fact]

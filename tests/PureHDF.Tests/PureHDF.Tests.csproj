@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net8.0;net6.0;</TargetFrameworks>
+    <TargetFrameworks>net10.0;net8.0;</TargetFrameworks>
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
 
     <!-- to make P/Invoke target file happy -->

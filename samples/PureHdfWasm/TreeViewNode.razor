@@ -1,0 +1,34 @@
+@if (Node.Children.Count > 0)
+{
+    <MudTreeViewItem Text="@Node.Name"
+                     Value="@Node"
+                     Expanded="@Node.IsExpanded"
+                     Icon="@GetIcon(Node.Kind)"
+                     T="H5Node">
+        @foreach (var child in Node.Children)
+        {
+            <TreeViewNode Node="child" />
+        }
+    </MudTreeViewItem>
+}
+else
+{
+    <MudTreeViewItem Text="@Node.Name"
+                     Value="@Node"
+                     Icon="@GetIcon(Node.Kind)"
+                     T="H5Node" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public H5Node Node { get; set; } = null!;
+
+    private static string GetIcon(string kind) => kind switch
+    {
+        "File" => Icons.Material.Filled.Description,
+        "Group" => Icons.Material.Filled.Folder,
+        "Dataset" => Icons.Material.Filled.TableChart,
+        "Attribute" => Icons.Material.Filled.Label,
+        _ => Icons.Material.Filled.InsertDriveFile
+    };
+}

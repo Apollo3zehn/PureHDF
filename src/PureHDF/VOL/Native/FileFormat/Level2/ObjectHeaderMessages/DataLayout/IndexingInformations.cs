@@ -14,7 +14,7 @@ internal record class SingleChunkIndexingInformation(
 {
     public ulong FilteredChunkSize { get; set; }
 
-    public static SingleChunkIndexingInformation Decode(NativeReadContext context, ChunkedStoragePropertyFlags flags)
+    public static async ValueTask<SingleChunkIndexingInformation> Decode(NativeReadContext context, ChunkedStoragePropertyFlags flags)
     {
         var filteredChunkSize = default(ulong);
         var chunkFilters = default(uint);
@@ -24,10 +24,10 @@ internal record class SingleChunkIndexingInformation(
             var (driver, superblock) = context;
 
             // filtered chunk size
-            filteredChunkSize = superblock.ReadLength(driver);
+            filteredChunkSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
             // chunk filters
-            chunkFilters = driver.ReadUInt32();
+            chunkFilters = await driver.ReadUInt32().ConfigureAwait(false);
         }
 
         return new SingleChunkIndexingInformation(
@@ -83,9 +83,9 @@ internal record class FixedArrayIndexingInformation(
     byte PageBits
 ) : IndexingInformation
 {
-    public static FixedArrayIndexingInformation Decode(H5DriverBase driver)
+    public static async ValueTask<FixedArrayIndexingInformation> Decode(H5DriverBase driver)
     {
-        var pageBits = driver.ReadByte();
+        var pageBits = await driver.ReadByte().ConfigureAwait(false);
 
         if (pageBits == 0)
             throw new Exception("Invalid fixed array creation parameter.");
@@ -115,34 +115,34 @@ internal record class ExtensibleArrayIndexingInformation(
     ushort PageBitCount
 ) : IndexingInformation
 {
-    public static ExtensibleArrayIndexingInformation Decode(H5DriverBase driver)
+    public static async ValueTask<ExtensibleArrayIndexingInformation> Decode(H5DriverBase driver)
     {
         // max bit count
-        var maxBitCount = driver.ReadByte();
+        var maxBitCount = await driver.ReadByte().ConfigureAwait(false);
 
         if (maxBitCount == 0)
             throw new Exception("Invalid extensible array creation parameter.");
 
         // index element count
-        var indexElementsCount = driver.ReadByte();
+        var indexElementsCount = await driver.ReadByte().ConfigureAwait(false);
 
         if (indexElementsCount == 0)
             throw new Exception("Invalid extensible array creation parameter.");
 
         // min pointer count
-        var minPointerCount = driver.ReadByte();
+        var minPointerCount = await driver.ReadByte().ConfigureAwait(false);
 
         if (minPointerCount == 0)
             throw new Exception("Invalid extensible array creation parameter.");
 
         // min element count
-        var minElementsCount = driver.ReadByte();
+        var minElementsCount = await driver.ReadByte().ConfigureAwait(false);
 
         if (minElementsCount == 0)
             throw new Exception("Invalid extensible array creation parameter.");
 
         // page bit count
-        var pageBitCount = driver.ReadByte();
+        var pageBitCount = await driver.ReadByte().ConfigureAwait(false);
 
         if (pageBitCount == 0)
             throw new Exception("Invalid extensible array creation parameter.");
@@ -173,12 +173,16 @@ internal record class BTree2IndexingInformation(
     byte MergePercent
 ) : IndexingInformation
 {
-    public static BTree2IndexingInformation Decode(H5DriverBase driver)
+    public static async ValueTask<BTree2IndexingInformation> Decode(H5DriverBase driver)
     {
+        var nodeSize = await driver.ReadUInt32().ConfigureAwait(false);
+        var splitPercent = await driver.ReadByte().ConfigureAwait(false);
+        var mergePercent = await driver.ReadByte().ConfigureAwait(false);
+
         return new BTree2IndexingInformation(
-            NodeSize: driver.ReadUInt32(),
-            SplitPercent: driver.ReadByte(),
-            MergePercent: driver.ReadByte()
+            NodeSize: nodeSize,
+            SplitPercent: splitPercent,
+            MergePercent: mergePercent
         );
     }
 

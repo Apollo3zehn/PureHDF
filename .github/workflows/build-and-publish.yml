@@ -9,6 +9,11 @@ on:
     tags:
       - '*'
 
+  pull_request:
+    branches:
+      - master
+      - dev
+
 jobs:
 
   build:
@@ -55,7 +60,9 @@ jobs:
 
       - uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
       - name: Build
         run: |
@@ -108,7 +115,7 @@ jobs:
     name: Publish (dev)
     runs-on: ubuntu-latest
 
-    if: ${{ needs.build.outputs.is_release != 'true' }}
+    if: ${{ github.event_name != 'pull_request' && needs.build.outputs.is_release != 'true' }}
 
     steps:
 
@@ -129,7 +136,7 @@ jobs:
     name: Publish (release)
     runs-on: ubuntu-latest
 
-    if: ${{ needs.build.outputs.is_release == 'true' }}
+    if: ${{ github.event_name != 'pull_request' && needs.build.outputs.is_release == 'true' }}
 
     steps:
 

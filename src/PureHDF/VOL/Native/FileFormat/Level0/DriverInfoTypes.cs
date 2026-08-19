@@ -14,9 +14,9 @@ internal abstract record class DriverInfo();
 
 internal record class FamilyDriverInfo() : DriverInfo
 {
-    public static FamilyDriverInfo Decode(H5DriverBase driver)
+    public static async ValueTask<FamilyDriverInfo> Decode(H5DriverBase driver)
     {
-        var _ = driver.ReadUInt64();
+        var _ = await driver.ReadUInt64().ConfigureAwait(false);
 
         return new FamilyDriverInfo();
     }
@@ -24,18 +24,18 @@ internal record class FamilyDriverInfo() : DriverInfo
 
 internal record class MultiDriverInfo() : DriverInfo
 {
-    public static MultiDriverInfo Decode(H5DriverBase driver)
+    public static async ValueTask<MultiDriverInfo> Decode(H5DriverBase driver)
     {
         // member mapping
-        var memberMapping1 = (MemberMapping)driver.ReadByte();
-        var memberMapping2 = (MemberMapping)driver.ReadByte();
-        var memberMapping3 = (MemberMapping)driver.ReadByte();
-        var memberMapping4 = (MemberMapping)driver.ReadByte();
-        var memberMapping5 = (MemberMapping)driver.ReadByte();
-        var memberMapping6 = (MemberMapping)driver.ReadByte();
+        var memberMapping1 = (MemberMapping)await driver.ReadByte().ConfigureAwait(false);
+        var memberMapping2 = (MemberMapping)await driver.ReadByte().ConfigureAwait(false);
+        var memberMapping3 = (MemberMapping)await driver.ReadByte().ConfigureAwait(false);
+        var memberMapping4 = (MemberMapping)await driver.ReadByte().ConfigureAwait(false);
+        var memberMapping5 = (MemberMapping)await driver.ReadByte().ConfigureAwait(false);
+        var memberMapping6 = (MemberMapping)await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // member count
         var memberCount = new MemberMapping[] {
@@ -49,8 +49,8 @@ internal record class MultiDriverInfo() : DriverInfo
 
         for (int i = 0; i < memberCount; i++)
         {
-            memberFileStartAddresses[i] = driver.ReadUInt64();
-            memberFileEndAddresses[i] = driver.ReadUInt64();
+            memberFileStartAddresses[i] = await driver.ReadUInt64().ConfigureAwait(false);
+            memberFileEndAddresses[i] = await driver.ReadUInt64().ConfigureAwait(false);
         }
 
         // member names
@@ -58,7 +58,7 @@ internal record class MultiDriverInfo() : DriverInfo
 
         for (int i = 0; i < memberCount; i++)
         {
-            memberNames[i] = ReadUtils.ReadNullTerminatedString(driver, pad: true);
+            memberNames[i] = await ReadUtils.ReadNullTerminatedString(driver, pad: true).ConfigureAwait(false);
         }
 
         return new MultiDriverInfo();
@@ -84,25 +84,25 @@ internal readonly record struct DriverInfoBlock()
         }
     }
 
-    public static DriverInfoBlock Decode(H5DriverBase driver)
+    public static async ValueTask<DriverInfoBlock> Decode(H5DriverBase driver)
     {
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // driver info size
-        var _1 = driver.ReadUInt32();
+        var _1 = await driver.ReadUInt32().ConfigureAwait(false);
 
         // driver id
-        var driverId = ReadUtils.ReadFixedLengthString(driver, 8);
+        var driverId = await ReadUtils.ReadFixedLengthString(driver, 8).ConfigureAwait(false);
 
         // driver info
         DriverInfo _2 = driverId switch
         {
-            "NCSAmulti" => MultiDriverInfo.Decode(driver),
-            "NCSAfami" => FamilyDriverInfo.Decode(driver),
+            "NCSAmulti" => await MultiDriverInfo.Decode(driver).ConfigureAwait(false),
+            "NCSAfami" => await FamilyDriverInfo.Decode(driver).ConfigureAwait(false),
             _ => throw new NotSupportedException($"The driver ID '{driverId}' is not supported.")
         };
 

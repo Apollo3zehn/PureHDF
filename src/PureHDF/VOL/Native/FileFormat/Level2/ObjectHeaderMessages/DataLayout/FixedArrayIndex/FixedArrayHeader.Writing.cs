@@ -1,4 +1,6 @@
-﻿namespace PureHDF.VOL.Native;
+﻿using System.Buffers;
+
+namespace PureHDF.VOL.Native;
 
 internal partial record class FixedArrayHeader
 {
@@ -12,7 +14,7 @@ internal partial record class FixedArrayHeader
         sizeof(ulong) +
         sizeof(uint);
 
-    internal void Encode(H5DriverBase driver)
+    internal async ValueTask Encode(H5DriverBase driver)
     {
         var position = driver.Position;
 
@@ -39,9 +41,14 @@ internal partial record class FixedArrayHeader
 
         // Checksum
         driver.Seek(position, SeekOrigin.Begin);
-        Span<byte> checksumData = stackalloc byte[ENCODE_SIZE - sizeof(int)];
-        driver.Read(checksumData);
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+        using var owner = MemoryPool<byte>.Shared.Rent(ENCODE_SIZE - sizeof(int));
+        var checksumData = owner.Memory[..(ENCODE_SIZE - sizeof(int))];
+        await driver.Read(checksumData).ConfigureAwait(false);
+        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
+
+        // Absolute seek: see Superblock23.Encode - the async read leaves a BufferedFileStream's
+        // read buffer in a state where the sync Write below can fail inside FlushRead.
+        driver.Seek(position + (ENCODE_SIZE - sizeof(int)), SeekOrigin.Begin);
 
         driver.Write(checksum);
     }

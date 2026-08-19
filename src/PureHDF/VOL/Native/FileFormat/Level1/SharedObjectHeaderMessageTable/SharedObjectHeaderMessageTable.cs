@@ -18,17 +18,17 @@ internal readonly record struct SharedObjectHeaderMessageTable(
 {
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("SMTB");
 
-    public static SharedObjectHeaderMessageTable Decode(H5DriverBase driver)
+    public static async ValueTask<SharedObjectHeaderMessageTable> Decode(H5DriverBase driver)
     {
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         //
         // TODO: implement this correctly
 
         // checksum
-        var _ = driver.ReadUInt32();
+        var _ = await driver.ReadUInt32().ConfigureAwait(false);
 
         return new SharedObjectHeaderMessageTable(
         //

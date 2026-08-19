@@ -1,9 +1,25 @@
-﻿using System.Collections.Concurrent;
-
-namespace PureHDF.VOL.Native;
+﻿namespace PureHDF.VOL.Native;
 
 internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
 {
+    /// <summary>
+    /// Everything a repeated read needs to reuse below the header: the index block, and the secondary
+    /// blocks, data blocks and data block pages reached through it.
+    /// </summary>
+    /// <remarks>
+    /// <c>Blocks</c> is keyed by file address and holds three different kinds of object, which is safe
+    /// because the three live at distinct addresses, so one key space cannot confuse them.
+    /// <para>
+    /// Bounded, because the number of secondary blocks, data blocks and pages grows with the chunk
+    /// count - the same reason the b-tree node caches are bounded. Counted rather than byte-costed:
+    /// these are index structures of broadly similar size, not payload.
+    /// </para>
+    /// </remarks>
+    private sealed record class CachedIndex<T>(
+        ExtensibleArrayIndexBlock<T> IndexBlock,
+        BoundedAddressCache<object> Blocks
+    ) where T : DataBlockElement;
+
     #region Fields
 
     private int _unlimitedDim;
@@ -13,10 +29,6 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
     private ulong[] _swizzledDownMaxChunkCounts = default!;
 
     private ExtensibleArrayHeader? _header;
-
-    private object? _indexBlock;
-
-    private ConcurrentDictionary<ulong, object> _addressToObjectMap { get; } = new();
 
     #endregion
 
@@ -71,7 +83,7 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         }
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    protected override async ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         // H5Dearray.c (H5D__earray_idx_get_addr)
 
@@ -102,14 +114,14 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         {
             var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
 
-            var element = GetElement(chunkIndex, driver =>
+            var element = await GetElement(chunkIndex, async driver =>
             {
                 return new FilteredDataBlockElement(
-                    Address: ReadContext.Superblock.ReadOffset(driver),
-                    ChunkSize: (uint)ReadUtils.ReadUlong(driver, chunkSizeLength),
-                    FilterMask: driver.ReadUInt32()
+                    Address: await ReadContext.Superblock.ReadOffset(driver).ConfigureAwait(false),
+                    ChunkSize: (uint)await ReadUtils.ReadUlong(driver, chunkSizeLength).ConfigureAwait(false),
+                    FilterMask: await driver.ReadUInt32().ConfigureAwait(false)
                 );
-            });
+            }).ConfigureAwait(false);
 
             return element is not null
                 ? new ChunkInfo(element.Address, element.ChunkSize, element.FilterMask)
@@ -117,12 +129,12 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         }
         else
         {
-            var element = GetElement(chunkIndex, driver =>
+            var element = await GetElement(chunkIndex, async driver =>
             {
                 return new DataBlockElement(
-                    Address: ReadContext.Superblock.ReadOffset(driver)
+                    Address: await ReadContext.Superblock.ReadOffset(driver).ConfigureAwait(false)
                 );
-            });
+            }).ConfigureAwait(false);
 
             return element is not null
                 ? new ChunkInfo(element.Address, ChunkByteSize, 0)
@@ -135,13 +147,14 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
         throw new NotImplementedException();
     }
 
-    private T? GetElement<T>(ulong index, Func<H5DriverBase, T> decode) where T : DataBlockElement
+    private async ValueTask<T?> GetElement<T>(ulong index, Func<H5DriverBase, ValueTask<T>> decode) where T : DataBlockElement
     {
-        if (_header is null)
-        {
-            ReadContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
-            _header = ExtensibleArrayHeader.Decode(ReadContext);
-        }
+        // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh H5D_Base for
+        // every Read (NativeDataset.cs), so anything held in a field here dies with the call and every
+        // read of a chunked dataset re-decodes the chunk index from scratch.
+        _header ??= await NativeCache
+            .GetStructure(ReadContext, Chunked4.Address, ExtensibleArrayHeader.Decode)
+            .ConfigureAwait(false);
 
         // H5EA.c (H5EA_get)
 
@@ -158,34 +171,41 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 return null;
 
             /* Get the index block */
-            if (_indexBlock is null)
-            {
-                ReadContext.Driver.SeekRelativeToBaseAddress((long)_header.IndexBlockAddress);
+            var cached = await NativeCache
+                .GetStructure(
+                    ReadContext,
+                    _header.IndexBlockAddress,
+                    (Header: _header, Decode: decode),
+                    static async (context, state) =>
+                    {
+                        var indexBlock = await ExtensibleArrayIndexBlock<T>.Decode(
+                            context.Driver,
+                            context.Superblock,
+                            state.Header,
+                            state.Decode).ConfigureAwait(false);
 
-                _indexBlock = ExtensibleArrayIndexBlock<T>.Decode(
-                    ReadContext.Driver,
-                    ReadContext.Superblock,
-                    _header,
-                    decode);
-            }
+                        return new CachedIndex<T>(indexBlock, new BoundedAddressCache<object>());
+                    })
+                .ConfigureAwait(false);
 
-            return LookupElement(
-                _header, 
-                (ExtensibleArrayIndexBlock<T>)_indexBlock, 
-                index, 
+            return await LookupElement(
+                _header,
+                cached,
+                index,
                 decode
-            );
+            ).ConfigureAwait(false);
         }
     }
 
-    private T? LookupElement<T>(
+    private async ValueTask<T?> LookupElement<T>(
         ExtensibleArrayHeader header,
-        ExtensibleArrayIndexBlock<T> indexBlock,
-        ulong index, 
-        Func<H5DriverBase, T> decode) where T : DataBlockElement
+        CachedIndex<T> cached,
+        ulong index,
+        Func<H5DriverBase, ValueTask<T>> decode) where T : DataBlockElement
     {
         // H5EA.c (H5EA__lookup_elmt)
-        var chunkSizeLength = MathUtils.ComputeChunkSizeLength(ChunkByteSize);
+        var indexBlock = cached.IndexBlock;
+        var blocks = cached.Blocks;
 
         /* Check if element is in index block */
         if (index < header.IndexBlockElementsCount)
@@ -216,19 +236,22 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 /* Get data block */
                 var dataBlockAddress = indexBlock.DataBlockAddresses[dataBlockIndex];
 
-                var dataBlock = (ExtensibleArrayDataBlock<T>)_addressToObjectMap
-                    .GetOrAdd(dataBlockAddress, address =>
+                if (!blocks.TryGetValue(dataBlockAddress, out var dataBlockObj))
                 {
                     var elementsCount = header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
-                    
-                    ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
 
-                    return ExtensibleArrayDataBlock<T>.Decode(
+                    ReadContext.Driver.SeekRelativeToBaseAddress((long)dataBlockAddress);
+
+                    var decoded = await ExtensibleArrayDataBlock<T>.Decode(
                         ReadContext,
                         header,
                         elementsCount,
-                        decode);
-                });
+                        decode).ConfigureAwait(false);
+
+                    dataBlockObj = blocks.GetOrAdd(dataBlockAddress, decoded);
+                }
+
+                var dataBlock = (ExtensibleArrayDataBlock<T>)dataBlockObj;
 
                 /* Adjust index to offset in data block */
                 elementIndex %= header.SecondaryBlockInfos[secondaryBlockIndex].ElementsCount;
@@ -249,16 +272,19 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                 /* Get super block */
                 var secondaryBlockAddress = indexBlock.SecondaryBlockAddresses[secondaryBlockOffset];
 
-                var secondaryBlock = (ExtensibleArraySecondaryBlock)_addressToObjectMap
-                    .GetOrAdd(secondaryBlockAddress, address =>
+                if (!blocks.TryGetValue(secondaryBlockAddress, out var secondaryBlockObj))
                 {
-                    ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
+                    ReadContext.Driver.SeekRelativeToBaseAddress((long)secondaryBlockAddress);
 
-                    return ExtensibleArraySecondaryBlock.Decode(
+                    var decoded = await ExtensibleArraySecondaryBlock.Decode(
                         ReadContext,
                         header,
-                        secondaryBlockIndex);
-                });
+                        secondaryBlockIndex).ConfigureAwait(false);
+
+                    secondaryBlockObj = blocks.GetOrAdd(secondaryBlockAddress, decoded);
+                }
+
+                var secondaryBlock = (ExtensibleArraySecondaryBlock)secondaryBlockObj;
 
                 /* Compute the data block index in super block */
                 var dataBlockIndex = elementIndex / secondaryBlock.ElementCount;
@@ -303,16 +329,19 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                         return null;
 
                     /* Get data block page */
-                    var dataBlockPage = (DataBlockPage<T>)_addressToObjectMap
-                        .GetOrAdd(dataBlockPageAddress, address =>
+                    if (!blocks.TryGetValue(dataBlockPageAddress, out var dataBlockPageObj))
                     {
-                        ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
+                        ReadContext.Driver.SeekRelativeToBaseAddress((long)dataBlockPageAddress);
 
-                        return DataBlockPage<T>.Decode(
+                        var decoded = await DataBlockPage<T>.Decode(
                             ReadContext.Driver,
                             header.DataBlockPageElementsCount,
-                            decode);
-                    });
+                            decode).ConfigureAwait(false);
+
+                        dataBlockPageObj = blocks.GetOrAdd(dataBlockPageAddress, decoded);
+                    }
+
+                    var dataBlockPage = (DataBlockPage<T>)dataBlockPageObj;
 
                     /* Set 'thing' info to refer to the data block page */
                     return dataBlockPage.Elements[elementIndex];
@@ -323,17 +352,20 @@ internal class H5D_Chunk4_ExtensibleArray : H5D_Chunk4
                     /* Get data block */
                     var dataBlockAddress = secondaryBlock.DataBlockAddresses[dataBlockIndex];
 
-                    var dataBlock = (ExtensibleArrayDataBlock<T>)_addressToObjectMap
-                        .GetOrAdd(dataBlockAddress, address =>
+                    if (!blocks.TryGetValue(dataBlockAddress, out var dataBlockObj))
                     {
-                        ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
+                        ReadContext.Driver.SeekRelativeToBaseAddress((long)dataBlockAddress);
 
-                        return ExtensibleArrayDataBlock<T>.Decode(
+                        var decoded = await ExtensibleArrayDataBlock<T>.Decode(
                             ReadContext,
                             header,
                             secondaryBlock.ElementCount,
-                            decode);
-                    });
+                            decode).ConfigureAwait(false);
+
+                        dataBlockObj = blocks.GetOrAdd(dataBlockAddress, decoded);
+                    }
+
+                    var dataBlock = (ExtensibleArrayDataBlock<T>)dataBlockObj;
 
                     /* Set 'thing' info to refer to the data block */
                     return dataBlock.Elements[elementIndex];

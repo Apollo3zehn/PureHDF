@@ -1342,10 +1342,13 @@ public class FilterTests
         var parent = root.Group("filtered");
         var dataset = (NativeDataset)parent.Dataset($"shuffle_{bytesOfType}");
 
+        // Blocks deliberately: this helper feeds synchronous [Theory] data.
         var shuffled = dataset
             .ReadCoreLevel1_Generic<T[], T>(
                 buffer: default,
-                skipShuffle: true)!;
+                skipShuffle: true)
+            .GetAwaiter()
+            .GetResult()!;
 
         return shuffled;
     }

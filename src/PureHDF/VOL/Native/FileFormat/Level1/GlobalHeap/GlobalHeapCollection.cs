@@ -41,24 +41,24 @@ internal readonly record struct GlobalHeapCollection(
         }
     }
 
-    public static GlobalHeapCollection Decode(NativeReadContext context)
+    public static async ValueTask<GlobalHeapCollection> Decode(NativeReadContext context)
     {
         // TODO: do not decode individual global heap objects and use a Memory<byte> of size 4096 instead
-        
+
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // collection size
-        var collectionSize = superblock.ReadLength(driver);
+        var collectionSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // global heap objects
         var globalHeapObjects = new Dictionary<int, GlobalHeapObject>();
@@ -69,7 +69,7 @@ internal readonly record struct GlobalHeapCollection(
         while (remaining > headerSize)
         {
             var before = driver.Position;
-            var globalHeapObject = GlobalHeapObject.Decode(context);
+            var globalHeapObject = await GlobalHeapObject.Decode(context).ConfigureAwait(false);
 
             // Global Heap Object 0 (free space) can appear at the end of the collection.
             if (globalHeapObject.ObjectIndex == 0)

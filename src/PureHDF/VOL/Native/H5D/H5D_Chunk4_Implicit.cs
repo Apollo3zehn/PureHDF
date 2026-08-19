@@ -14,11 +14,12 @@ internal class H5D_Chunk4_Implicit : H5D_Chunk4
         //
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    // Pure arithmetic, no IO: sync-completing ValueTask, no allocation.
+    protected override ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         var chunkOffset = chunkIndex * ChunkByteSize;
 
-        return new ChunkInfo(Chunked4.Address + chunkOffset, ChunkByteSize, 0);
+        return new ValueTask<ChunkInfo>(new ChunkInfo(Chunked4.Address + chunkOffset, ChunkByteSize, 0));
     }
 
     protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)

@@ -7,13 +7,13 @@ internal readonly record struct VdsDatasetEntry(
     DataspaceSelection VirtualSelection
 )
 {
-    public static VdsDatasetEntry Decode(H5DriverBase driver)
+    public static async ValueTask<VdsDatasetEntry> Decode(H5DriverBase driver)
     {
         return new VdsDatasetEntry(
-            SourceFileName: ReadUtils.ReadNullTerminatedString(driver, pad: false),
-            SourceDataset: ReadUtils.ReadNullTerminatedString(driver, pad: false),
-            SourceSelection: DataspaceSelection.Decode(driver),
-            VirtualSelection: DataspaceSelection.Decode(driver)
+            SourceFileName: await ReadUtils.ReadNullTerminatedString(driver, pad: false).ConfigureAwait(false),
+            SourceDataset: await ReadUtils.ReadNullTerminatedString(driver, pad: false).ConfigureAwait(false),
+            SourceSelection: await DataspaceSelection.Decode(driver).ConfigureAwait(false),
+            VirtualSelection: await DataspaceSelection.Decode(driver).ConfigureAwait(false)
         );
     }
 }

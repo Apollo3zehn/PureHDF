@@ -26,7 +26,7 @@ internal class H5D_Contiguous : H5D_Base
         return Dataset.Space.GetDims();
     }
 
-    public override IH5ReadStream GetReadStream(ulong chunkIndex)
+    public override ValueTask<IH5ReadStream> GetReadStream(ulong chunkIndex)
     {
         if (_readStream is null)
         {
@@ -35,7 +35,7 @@ internal class H5D_Contiguous : H5D_Base
             if (ReadContext.Superblock.IsUndefinedAddress(address))
             {
                 if (Dataset.ExternalFileList is not null)
-                    _readStream = new ExternalFileListStream(ReadContext.File, Dataset.ExternalFileList, DatasetAccess);
+                    _readStream = new ExternalFileListStream(ReadContext, Dataset.ExternalFileList, DatasetAccess);
 
                 else
                     _readStream = new UnsafeFillValueStream(Dataset.FillValue.Value ?? [0]);
@@ -49,7 +49,8 @@ internal class H5D_Contiguous : H5D_Base
             }
         }
 
-        return _readStream;
+        // The stream is positioned, not read from - the decoder reads through it afterwards.
+        return new ValueTask<IH5ReadStream>(_readStream);
     }
 
     public override IH5WriteStream GetWriteStream(ulong chunkIndex)

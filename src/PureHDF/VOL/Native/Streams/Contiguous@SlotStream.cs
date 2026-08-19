@@ -4,15 +4,18 @@ internal class SlotStream : IH5ReadStream
 {
     private long _position;
     private readonly NativeFile _file;
-    private readonly LocalHeap _heap;
+    private readonly string _name;
     private Stream? _stream;
     private readonly ExternalFileListSlot _slot;
     private readonly H5DatasetAccess _datasetAccess;
 
+    // This briefly needed a static async factory instead, because resolving the name through the
+    // local heap performed a driver read and a constructor cannot be async. LocalHeap now holds its
+    // data segment outright, so the lookup is a synchronous array scan and a constructor does again.
     public SlotStream(NativeFile file, LocalHeap heap, ExternalFileListSlot slot, long offset, H5DatasetAccess datasetAccess)
     {
         _file = file;
-        _heap = heap;
+        _name = heap.GetObjectName(slot.NameHeapOffset);
         _slot = slot;
         Offset = offset;
         _datasetAccess = datasetAccess;
@@ -26,16 +29,16 @@ internal class SlotStream : IH5ReadStream
 
     public long Length { get; }
 
-    public void ReadDataset(Span<byte> buffer)
+    public async ValueTask ReadDatasetAsync(Memory<byte> buffer)
     {
         var length = (int)Math.Min(Length - Position, buffer.Length);
 
         _stream = EnsureStream();
 
-        var actualLength = _stream.Read(buffer[..length]);
+        var actualLength = await _stream.ReadAsync(buffer[..length]).ConfigureAwait(false);
 
         // If file is shorter than slot: fill remaining buffer with zeros.
-        buffer[actualLength..length]
+        buffer.Span[actualLength..length]
             .Clear();
 
         _position += length;
@@ -65,8 +68,7 @@ internal class SlotStream : IH5ReadStream
     {
         if (_stream is null)
         {
-            var name = _heap.GetObjectName(_slot.NameHeapOffset);
-            var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, name, _datasetAccess);
+            var filePath = FilePathUtils.FindExternalFileForDatasetAccess(_file.FolderPath, _name, _datasetAccess);
 
             if (!File.Exists(filePath))
                 throw new Exception($"External file '{filePath}' does not exist.");

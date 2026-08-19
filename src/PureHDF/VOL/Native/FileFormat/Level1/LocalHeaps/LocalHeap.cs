@@ -1,23 +1,32 @@
-﻿using System.Text;
+using System.Text;
 
 namespace PureHDF.VOL.Native;
 
-internal record struct LocalHeap(
-    H5DriverBase Driver,
-    ulong DataSegmentSize,
-    ulong FreeListHeadOffset,
-    ulong DataSegmentAddress
-)
+// CONCURRENCY / CACHING: immutable and context-free on purpose, so that a retained object-header
+// message can cache one (see SymbolTableMessage, ObjectHeaderScratchPad, ExternalFileListMessage).
+//
+// Two constraints drive the shape:
+//
+//   1. The driver is a per-read-operation object handed back to NativeOperationSlot and reused,
+//      so a retained heap holding one would read through an unrelated operation's cursor. Holding
+//      no driver avoids that.
+//   2. A value type with a mutable field cannot be cached: reading through a `LocalHeap?` via
+//      `.Value` hands out a copy each time, so a lazily populated data field would never be observed
+//      populated and the data segment would be re-read on every name lookup — silently, at no
+//      diagnostic cost.
+//
+// Reading the segment eagerly in the constructor and being a class satisfies both: there is no
+// lazy state to share and nothing to copy. The eager read costs no more bytes than a lazy one
+// would, because the whole segment is needed eventually — the difference is only when.
+internal sealed record class LocalHeap(byte[] Data)
 {
     private byte _version;
-
-    private byte[]? _data;
 
     public static byte[] Signature { get; } = Encoding.ASCII.GetBytes("HEAP");
 
     public required byte Version
     {
-        readonly get
+        get
         {
             return _version;
         }
@@ -30,59 +39,46 @@ internal record struct LocalHeap(
         }
     }
 
-    public byte[] Data
-    {
-        get
-        {
-            if (_data is null)
-            {
-                Driver.SeekRelativeToBaseAddress((long)DataSegmentAddress);
-                _data = Driver.ReadBytes((int)DataSegmentSize);
-            }
-
-            return _data;
-        }
-    }
-
-    public static LocalHeap Decode(NativeReadContext context)
+    public static async ValueTask<LocalHeap> Decode(NativeReadContext context)
     {
         var (driver, superblock) = context;
 
         // signature
-        var signature = driver.ReadBytes(4);
+        var signature = await driver.ReadBytes(4).ConfigureAwait(false);
         MathUtils.ValidateSignature(signature, Signature);
 
         // version
-        var version = driver.ReadByte();
+        var version = await driver.ReadByte().ConfigureAwait(false);
 
         // reserved
-        driver.ReadBytes(3);
+        await driver.ReadBytes(3).ConfigureAwait(false);
 
         // data segment size
-        var dataSegmentSize = superblock.ReadLength(driver);
+        var dataSegmentSize = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // free list head offset
-        var freeListHeadOffset = superblock.ReadLength(driver);
+        _ = await superblock.ReadLength(driver).ConfigureAwait(false);
 
         // data segment address
-        var dataSegmentAddress = superblock.ReadOffset(driver);
+        var dataSegmentAddress = await superblock.ReadOffset(driver).ConfigureAwait(false);
 
-        return new LocalHeap(
-            Driver: driver,
-            DataSegmentSize: dataSegmentSize,
-            FreeListHeadOffset: freeListHeadOffset,
-            DataSegmentAddress: dataSegmentAddress
-        )
+        // data segment
+        driver.SeekRelativeToBaseAddress((long)dataSegmentAddress);
+        var data = await driver.ReadBytes((int)dataSegmentSize).ConfigureAwait(false);
+
+        return new LocalHeap(data)
         {
             Version = version
         };
     }
 
+    // Synchronous, because the bytes are already here. Every caller was `await`-ing a method that
+    // usually completed synchronously anyway; NodeCompare3 in particular runs once per b-tree
+    // comparison, so this removes a state machine from the inner loop of a name lookup.
     public string GetObjectName(ulong offset)
     {
         var end = Array.IndexOf(Data, (byte)0, (int)offset);
-        var bytes = Data[(int)offset..end];
 
-        return Encoding.UTF8.GetString(bytes);
+        return Encoding.UTF8.GetString(Data.AsSpan((int)offset..end));
     }
 }

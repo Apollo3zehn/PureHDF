@@ -63,22 +63,25 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             throw new Exception("No layout information found.");
     }
 
-    protected override ChunkInfo GetReadChunkInfo(ulong chunkIndex)
+    protected override async ValueTask<ChunkInfo> GetReadChunkInfo(ulong chunkIndex)
     {
         var chunkIndices = MathUtils.ToCoordinates(chunkIndex, ScaledDims);
 
         // load B-Tree 1
-        if (!_btree1.HasValue)
+        if (_btree1 is null)
         {
             var address = _layout12 is null
                 ? ((ChunkedStoragePropertyDescription3)_layout3!.Properties).Address
                 : _layout12.Address;
 
-            ReadContext.Driver.SeekRelativeToBaseAddress((long)address);
-
-            BTree1RawDataChunksKey decodeKey() => DecodeRawDataChunksKey(ChunkRank, RawChunkDims);
-
-            _btree1 = BTree1Node<BTree1RawDataChunksKey>.Decode(ReadContext, decodeKey);
+            // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh
+            // H5D_Base for every Read (NativeDataset.cs), so a field alone would die with the call and
+            // every read of a chunked dataset would re-decode the whole chunk index from scratch.
+            _btree1 = await NativeCache.GetStructure(
+                ReadContext,
+                address,
+                (DecodeKeyDelegate<BTree1RawDataChunksKey>)DecodeRawDataChunksKey,
+                static (c, dk) => BTree1Node<BTree1RawDataChunksKey>.Decode(c, dk)).ConfigureAwait(false);
         }
 
         // get key and child address
@@ -86,12 +89,16 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
             .Append(0UL)
             .ToArray();
 
-        var success = _btree1.Value.TryFindUserData(
-            out var userData,
+        var (success, userData) = await _btree1.TryFindUserData<BTree1RawDataChunkUserData>(
+            ReadContext,
+            DecodeRawDataChunksKey,
             (leftKey, rightKey)
-                => NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey),
-            (ulong address, BTree1RawDataChunksKey leftKey, out BTree1RawDataChunkUserData userData)
-                => NodeFound(ChunkRank, chunkIndices, address, leftKey, out userData));
+                => new ValueTask<int>(NodeCompare3(ChunkRank, extendedChunkIndices, leftKey, rightKey)),
+            (ulong address, BTree1RawDataChunksKey leftKey) =>
+            {
+                var found = NodeFound(ChunkRank, chunkIndices, address, leftKey, out var userData);
+                return new ValueTask<(bool, BTree1RawDataChunkUserData)>((found, userData));
+            }).ConfigureAwait(false);
 
         return success
             ? new ChunkInfo(userData.ChildAddress, userData.ChunkSize, userData.FilterMask)
@@ -107,10 +114,13 @@ internal class H5D_Chunk123_BTree1 : H5D_Chunk
 
     #region Callbacks
 
+    // Matches DecodeKeyDelegate<BTree1RawDataChunksKey>: the rank and chunk dimensions are per-dataset
+    // constants read off this instance, so only the context has to be threaded through - and it must
+    // be the CALLER's, not ReadContext, so that the key decode uses the same driver as the traversal.
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private BTree1RawDataChunksKey DecodeRawDataChunksKey(byte rank, ulong[] rawChunkDims)
+    private ValueTask<BTree1RawDataChunksKey> DecodeRawDataChunksKey(NativeReadContext context)
     {
-        return BTree1RawDataChunksKey.Decode(ReadContext.Driver, rank, rawChunkDims);
+        return BTree1RawDataChunksKey.Decode(context.Driver, ChunkRank, RawChunkDims);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -7,7 +7,8 @@ internal record DecodeInfo<T>(
     ulong[] TargetChunkDims,
     Selection SourceSelection,
     Selection TargetSelection,
-    Func<ulong, IH5ReadStream> GetSourceStream,
+    Func<ulong, ValueTask<IH5ReadStream>> GetSourceStream,
+    NativeReadContext Context,
     DecodeDelegate<T> Decoder,
     int SourceTypeSize,
     int TargetTypeSizeFactor,
@@ -251,11 +252,13 @@ internal static class SelectionHelper
         }
     }
 
-    public static void Decode<TResult>(
+    // The walk carries Memory<TResult> rather than Span<TResult>: the per-step decode is awaited,
+    // and a Span cannot cross an await.
+    public static async ValueTask Decode<TResult>(
         int sourceRank,
         int targetRank,
         DecodeInfo<TResult> decodeInfo,
-        Span<TResult> targetBuffer)
+        Memory<TResult> targetBuffer)
     {
         /* validate selections */
         if (decodeInfo.SourceSelection.TotalElementCount != decodeInfo.TargetSelection.TotalElementCount)
@@ -286,21 +289,21 @@ internal static class SelectionHelper
         ).GetEnumerator();
 
         /* select method */
-        DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer);
+        await DecodeStream(sourceWalker, targetWalker, decodeInfo, targetBuffer).ConfigureAwait(false);
     }
 
-    private static void DecodeStream<TResult>(
+    private static async ValueTask DecodeStream<TResult>(
         IEnumerator<RelativeStep> sourceWalker,
         IEnumerator<RelativeStep> targetWalker,
         DecodeInfo<TResult> decodeInfo,
-        Span<TResult> targetBuffer)
+        Memory<TResult> targetBuffer)
     {
         /* initialize source walker */
         var sourceStream = default(IH5ReadStream);
         var lastSourceChunkIndex = 0UL;
 
         /* initialize target walker */
-        var currentTarget = default(Span<TResult>);
+        var currentTarget = default(Memory<TResult>);
 
         /* walk until end */
         while (sourceWalker.MoveNext())
@@ -311,7 +314,7 @@ internal static class SelectionHelper
             if (sourceStream is null /* if stream not assigned yet */ ||
                 sourceStep.ChunkIndex != lastSourceChunkIndex /* or the chunk has changed */)
             {
-                sourceStream = decodeInfo.GetSourceStream(sourceStep.ChunkIndex);
+                sourceStream = await decodeInfo.GetSourceStream(sourceStep.ChunkIndex).ConfigureAwait(false);
                 lastSourceChunkIndex = sourceStep.ChunkIndex;
             }
 
@@ -343,17 +346,18 @@ internal static class SelectionHelper
                 {
                     sourceStream.Seek(currentOffset * decodeInfo.SourceTypeSize, SeekOrigin.Begin);
 
-                    decodeInfo.Decoder(
+                    await decodeInfo.Decoder(
+                        decodeInfo.Context,
                         sourceStream,
-                        currentTarget[..targetLength]);
+                        currentTarget[..targetLength]).ConfigureAwait(false);
                 }
 
                 else
                 {
                     virtualDatasetStream.Seek(currentOffset, SeekOrigin.Begin);
 
-                    virtualDatasetStream.ReadVirtual(
-                        currentTarget[..targetLength]);
+                    await virtualDatasetStream.ReadVirtualAsync(
+                        currentTarget[..targetLength]).ConfigureAwait(false);
                 }
 
                 currentOffset += length;

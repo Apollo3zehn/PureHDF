@@ -25,7 +25,7 @@ internal record ObjectHeader1(
         }
     }
 
-    internal static ObjectHeader1 Decode(NativeReadContext context, byte version)
+    internal static async ValueTask<ObjectHeader1> Decode(NativeReadContext context, byte version)
     {
         var driver = context.Driver;
 
@@ -33,29 +33,29 @@ internal record ObjectHeader1(
         var address = (ulong)driver.Position;
 
         // reserved
-        driver.ReadByte();
+        await driver.ReadByte().ConfigureAwait(false);
 
         // header messages count
-        var headerMessagesCount = driver.ReadUInt16();
+        var headerMessagesCount = await driver.ReadUInt16().ConfigureAwait(false);
 
         // object reference count
-        var objectReferenceCount = driver.ReadUInt32();
+        var objectReferenceCount = await driver.ReadUInt32().ConfigureAwait(false);
 
         // object header size
-        var objectHeaderSize = driver.ReadUInt32();
+        var objectHeaderSize = await driver.ReadUInt32().ConfigureAwait(false);
 
         // header messages
 
         // read padding bytes that align the following message to an 8 byte boundary
         if (objectHeaderSize > 0)
-            driver.ReadBytes(4);
+            await driver.ReadBytes(4).ConfigureAwait(false);
 
-        var headerMessages = ReadHeaderMessages(
+        var headerMessages = await ReadHeaderMessages(
             context,
             address,
             objectHeaderSize,
             version: 1,
-            withCreationOrder: false);
+            withCreationOrder: false).ConfigureAwait(false);
 
         var objectHeader = new ObjectHeader1(
             address,
