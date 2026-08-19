@@ -2,7 +2,7 @@ using PureHDF.Selections;
 using PureHDF.VOL.Native;
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.Async;
 
 /// <summary>
 /// Covers <see cref="NativeFile.GetAsync"/>, the asynchronous form of region reference resolution.

@@ -2,7 +2,7 @@ using HDF.PInvoke;
 using PureHDF.Selections;
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.Async;
 
 /// <summary>
 /// Covers <c>NativeDataset.ReadAsync</c>, which threw <see cref="NotImplementedException" /> until the

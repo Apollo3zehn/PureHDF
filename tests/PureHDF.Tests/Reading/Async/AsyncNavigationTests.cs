@@ -1,7 +1,7 @@
 using HDF.PInvoke;
 using Xunit;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.Async;
 
 /// <summary>
 /// Covers the async navigation surface - <c>GetAsync</c>, <c>LinkExistsAsync</c>,

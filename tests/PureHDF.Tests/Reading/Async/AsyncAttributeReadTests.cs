@@ -2,7 +2,7 @@ using HDF.PInvoke;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace PureHDF.Tests.Reading;
+namespace PureHDF.Tests.Reading.Async;
 
 /// <summary>
 /// Covers <see cref="IH5Attribute.ReadAsync{T}(ulong[], System.Threading.CancellationToken)" />.
