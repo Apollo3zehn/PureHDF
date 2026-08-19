@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2620 1300" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" text-rendering="geometricPrecision">
+  <title>PureHDF Read Path — Driver &amp; Stream Selection by Use Case</title>
+  <desc>Use-case decision diagram: for each source scenario (local file by path, memory-mapped file, in-memory byte buffer, plain Stream, custom IConcurrentStream, Amazon S3 stream) the H5File.Open overload used, the internal driver selected, the stream contract (IConcurrentStream positionless vs plain Stream cursor vs memory), the underlying IO source and its cost tier, and whether concurrent reads and genuine suspension apply.</desc>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect width="2620" height="1300" fill="#fbfbfd"/>
+
+  <!-- ===================== TITLE ===================== -->
+  <text x="60" y="46" font-size="26" font-weight="700" fill="#0f172a">PureHDF Read Path — Driver &amp; Stream Selection by Use Case</text>
+  <text x="60" y="74" font-size="15" fill="#475569">Which <tspan font-weight="600" fill="#0f172a">H5File.Open</tspan> overload, which internal driver, and which stream contract applies to each source scenario</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <g id="legend">
+    <rect x="60" y="80" width="2500" height="54" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="76" y="112" font-size="14" font-weight="700" fill="#0f172a">Cost tier</text>
+
+    <rect x="168" y="92" width="24" height="30" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="200" y="106" font-size="12" font-weight="600" fill="#14532d">SYNC — genuinely synchronous source</text>
+    <text x="200" y="122" font-size="11" fill="#475569">RandomAccess.Read (pread) · MemoryMappedViewAccessor · ReadOnlyMemory&lt;byte&gt; · never suspends</text>
+
+    <rect x="793" y="92" width="24" height="30" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="825" y="106" font-size="12" font-weight="600" fill="#78350f">ALREADY-COMPLETED ValueTask</text>
+    <text x="825" y="122" font-size="11" fill="#475569">returns default · no state machine · in-memory or local-file source</text>
+
+    <rect x="1418" y="92" width="24" height="30" rx="4" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1450" y="106" font-size="12" font-weight="600" fill="#7f1d1d">GENUINELY SUSPENDS</text>
+    <text x="1450" y="122" font-size="11" fill="#475569">async/await · only when source is remote (e.g. HTTP range, S3)</text>
+
+    <rect x="2043" y="92" width="24" height="30" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="2075" y="106" font-size="12" font-weight="600" fill="#1e3a8a">CACHE / WINDOW layer</text>
+    <text x="2075" y="122" font-size="11" fill="#475569">ReadAheadWindow · AmazonS3Stream 1 MiB slots</text>
+  </g>
+
+  <!-- ===================== LANE HEADERS (use cases) ===================== -->
+  <!-- Lane geometry: x=60,480,900,1320,1740,2160  width=410  centers: 265,685,1105,1525,1945,2365 -->
+
+  <!-- Lane 1: Local file (by path) -->
+  <g id="lane-local-file">
+    <rect x="60" y="150" width="410" height="64" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text x="265" y="176" font-size="16" font-weight="700" fill="#78350f" text-anchor="middle">Local file (by path)</text>
+    <text x="265" y="196" font-size="11" fill="#78350f" text-anchor="middle">server / desktop / console app</text>
+  </g>
+
+  <!-- Lane 2: Memory-mapped -->
+  <g id="lane-mmap">
+    <rect x="480" y="150" width="410" height="64" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="685" y="176" font-size="16" font-weight="700" fill="#14532d" text-anchor="middle">Memory-mapped file</text>
+    <text x="685" y="196" font-size="11" fill="#14532d" text-anchor="middle">large local file · random access · many small reads</text>
+  </g>
+
+  <!-- Lane 3: In-memory buffer -->
+  <g id="lane-memory">
+    <rect x="900" y="150" width="410" height="64" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+    <text x="1105" y="176" font-size="16" font-weight="700" fill="#14532d" text-anchor="middle">In-memory buffer</text>
+    <text x="1105" y="196" font-size="11" fill="#14532d" text-anchor="middle">ReadOnlyMemory&lt;byte&gt; · pre-loaded bytes · no file needed</text>
+  </g>
+
+  <!-- Lane 4: Plain Stream -->
+  <g id="lane-memstream">
+    <rect x="1320" y="150" width="410" height="64" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+    <text x="1525" y="176" font-size="16" font-weight="700" fill="#78350f" text-anchor="middle">Plain Stream</text>
+    <text x="1525" y="196" font-size="11" fill="#78350f" text-anchor="middle">any non-FileStream · e.g. MemoryStream</text>
+  </g>
+
+  <!-- Lane 5: Custom IConcurrentStream -->
+  <g id="lane-iconcurrent">
+    <rect x="1740" y="150" width="410" height="64" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+    <text x="1945" y="176" font-size="16" font-weight="700" fill="#7f1d1d" text-anchor="middle">Custom IConcurrentStream</text>
+    <text x="1945" y="196" font-size="11" fill="#7f1d1d" text-anchor="middle">bring-your-own async source · HTTP range, custom transport</text>
+  </g>
+
+  <!-- Lane 6: Amazon S3 -->
+  <g id="lane-s3">
+    <rect x="2160" y="150" width="410" height="64" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+    <text x="2365" y="176" font-size="16" font-weight="700" fill="#7f1d1d" text-anchor="middle">Amazon S3 stream</text>
+    <text x="2365" y="196" font-size="11" fill="#7f1d1d" text-anchor="middle">remote object storage · PureHDF.VFD.AmazonS3</text>
+  </g>
+
+  <!-- header → API arrows -->
+  <line x1="265"  y1="214" x2="265"  y2="228" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <line x1="685"  y1="214" x2="685"  y2="228" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="1105" y1="214" x2="1105" y2="228" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="1525" y1="214" x2="1525" y2="228" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <line x1="1945" y1="214" x2="1945" y2="228" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+  <line x1="2365" y1="214" x2="2365" y2="228" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+
+  <!-- ===================== ROW 1: PUBLIC API ===================== -->
+  <g id="hdr-api">
+    <rect x="60" y="228" width="2500" height="30" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <text x="80" y="248" font-size="13" font-weight="700" fill="#0f172a" letter-spacing="1.2">PUBLIC API</text>
+    <text x="300" y="248" font-size="12" fill="#475569">Which H5File.Open overload you call to open the file</text>
+  </g>
+
+  <g id="row-api">
+    <rect x="60"   y="260" width="410" height="70" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="265"  y="282" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">H5File.OpenRead(path)</text>
+    <text x="265"  y="298" font-size="11" fill="#334155" text-anchor="middle">H5File.Open(path, mode, access, share)</text>
+    <text x="265"  y="316" font-size="11" font-weight="600" fill="#d97706" text-anchor="middle">async: OpenReadAsync / OpenAsync(path, …)</text>
+
+    <rect x="480"  y="260" width="410" height="70" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="685"  y="282" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">H5File.Open(accessor)</text>
+    <text x="685"  y="298" font-size="11" fill="#334155" text-anchor="middle">MemoryMappedViewAccessor</text>
+    <text x="685"  y="316" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">async: OpenAsync(accessor) — symmetry, always sync</text>
+
+    <rect x="900"  y="260" width="410" height="70" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="1105" y="282" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">H5File.Open(ReadOnlyMemory&lt;byte&gt;)</text>
+    <text x="1105" y="298" font-size="11" fill="#334155" text-anchor="middle">caller owns the buffer · driver never writes</text>
+    <text x="1105" y="316" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">no async overload — always a sync source</text>
+
+    <rect x="1320" y="260" width="410" height="70" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="1525" y="282" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">H5File.Open(stream) / OpenAsync</text>
+    <text x="1525" y="298" font-size="11" fill="#334155" text-anchor="middle">plain Stream (no IConcurrentStream)</text>
+    <text x="1525" y="316" font-size="11" fill="#334155" text-anchor="middle">e.g. MemoryStream</text>
+
+    <rect x="1740" y="260" width="410" height="70" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="1945" y="282" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">H5File.Open(IConcurrentStream) / OpenAsync</text>
+    <text x="1945" y="298" font-size="11" fill="#334155" text-anchor="middle">any IConcurrentStream implementation</text>
+    <text x="1945" y="316" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">positionless: concurrency + read-ahead</text>
+
+    <rect x="2160" y="260" width="410" height="70" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+    <text x="2365" y="282" font-size="12" font-weight="600" fill="#0f172a" text-anchor="middle">H5File.Open(s3Stream) / OpenAsync</text>
+    <text x="2365" y="298" font-size="11" fill="#334155" text-anchor="middle">AmazonS3Stream : IConcurrentStream</text>
+    <text x="2365" y="316" font-size="11" fill="#334155" text-anchor="middle">from PureHDF.VFD.AmazonS3 package</text>
+  </g>
+
+  <!-- API → Driver arrows -->
+  <line x1="265"  y1="330" x2="265"  y2="348" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="685"  y1="330" x2="685"  y2="348" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1105" y1="330" x2="1105" y2="348" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1525" y1="330" x2="1525" y2="348" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1945" y1="330" x2="1945" y2="348" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="2365" y1="330" x2="2365" y2="348" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== ROW 2: DRIVER ===================== -->
+  <g id="hdr-driver">
+    <rect x="60" y="348" width="2500" height="30" rx="6" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
+    <text x="80" y="368" font-size="13" font-weight="700" fill="#1e3a8a" letter-spacing="1.2">DRIVER  (internal VFD layer)</text>
+    <text x="300" y="368" font-size="12" fill="#475569">Which internal driver CreateDriver selects to read bytes from the source</text>
+  </g>
+
+  <g id="row-driver">
+    <rect x="60"   y="380" width="410" height="96" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="265"  y="404" font-size="14" font-weight="700" fill="#78350f" text-anchor="middle">H5FileHandleDriver</text>
+    <text x="265"  y="422" font-size="11" fill="#78350f" text-anchor="middle">over FileStream (no FileOptions.Asynchronous)</text>
+    <text x="265"  y="442" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">selection: InternalOpenAsync(filePath) constructs</text>
+    <text x="265"  y="456" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">new FileStream + new H5FileHandleDriver</text>
+    <text x="265"  y="470" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">(a FileStream passed as Stream is unwrapped to this driver)</text>
+
+    <rect x="480"  y="380" width="410" height="96" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="685"  y="404" font-size="14" font-weight="700" fill="#14532d" text-anchor="middle">H5MemoryMappedFileDriver</text>
+    <text x="685"  y="422" font-size="11" fill="#14532d" text-anchor="middle">over MemoryMappedViewAccessor</text>
+    <text x="685"  y="442" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">selection: the Open(accessor) overload</text>
+    <text x="685"  y="456" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">constructs new H5MemoryMappedFileDriver(accessor)</text>
+    <text x="685"  y="470" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">directly — no stream involved</text>
+
+    <rect x="900"  y="380" width="410" height="96" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="1105" y="404" font-size="14" font-weight="700" fill="#14532d" text-anchor="middle">H5MemoryDriver</text>
+    <text x="1105" y="422" font-size="11" fill="#14532d" text-anchor="middle">over ReadOnlyMemory&lt;byte&gt; (Span slices)</text>
+    <text x="1105" y="442" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">selection: the Open(ReadOnlyMemory&lt;byte&gt;) overload</text>
+    <text x="1105" y="456" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">constructs new H5MemoryDriver(source) directly —</text>
+    <text x="1105" y="470" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">no stream, no file handle, no syscall</text>
+
+    <rect x="1320" y="380" width="410" height="96" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="1525" y="404" font-size="14" font-weight="700" fill="#78350f" text-anchor="middle">H5StreamDriver — cursor</text>
+    <text x="1525" y="422" font-size="11" fill="#78350f" text-anchor="middle">passed as Stream (cursor mode by construction)</text>
+    <text x="1525" y="442" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">selection: CreateDriver(Stream) sees a non-FileStream →</text>
+    <text x="1525" y="456" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">H5StreamDriver Stream constructor →</text>
+    <text x="1525" y="470" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">cursor mode (Stream.Seek + Stream.ReadAsync)</text>
+
+    <rect x="1740" y="380" width="410" height="96" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1945" y="404" font-size="14" font-weight="700" fill="#7f1d1d" text-anchor="middle">H5StreamDriver — positionless</text>
+    <text x="1945" y="422" font-size="11" fill="#7f1d1d" text-anchor="middle">passed as IConcurrentStream (positionless by construction)</text>
+    <text x="1945" y="442" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">selection: the IConcurrentStream overload →</text>
+    <text x="1945" y="456" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">CreateDriver(IConcurrentStream) → IConcurrentStream ctor</text>
+    <text x="1945" y="470" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">→ cursor lives in the driver, stream never seeked</text>
+
+    <rect x="2160" y="380" width="410" height="96" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="2365" y="404" font-size="14" font-weight="700" fill="#7f1d1d" text-anchor="middle">H5StreamDriver — positionless</text>
+    <text x="2365" y="422" font-size="11" fill="#7f1d1d" text-anchor="middle">AmazonS3Stream implements IConcurrentStream</text>
+    <text x="2365" y="442" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">selection: same path as a remote Stream —</text>
+    <text x="2365" y="456" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">CreateDriver → H5StreamDriver, positionless because</text>
+    <text x="2365" y="470" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">the stream offers absolute-offset reads</text>
+  </g>
+
+  <!-- Driver → Stream contract arrows -->
+  <line x1="265"  y1="476" x2="265"  y2="494" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="685"  y1="476" x2="685"  y2="494" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1105" y1="476" x2="1105" y2="494" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1525" y1="476" x2="1525" y2="494" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <line x1="1945" y1="476" x2="1945" y2="494" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+  <line x1="2365" y1="476" x2="2365" y2="494" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+
+  <!-- ===================== ROW 3: STREAM CONTRACT ===================== -->
+  <g id="hdr-stream">
+    <rect x="60" y="494" width="2500" height="30" rx="6" fill="#faf5ff" stroke="#c4b5fd" stroke-width="1"/>
+    <text x="80" y="514" font-size="13" font-weight="700" fill="#581c87" letter-spacing="1.2">STREAM CONTRACT</text>
+    <text x="300" y="514" font-size="12" fill="#475569">The interface the driver uses to read — handle, accessor, memory, IConcurrentStream (positionless), or cursor Stream</text>
+  </g>
+
+  <g id="row-stream">
+    <rect x="60"   y="526" width="410" height="82" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.4"/>
+    <text x="265"  y="548" font-size="12" font-weight="600" fill="#581c87" text-anchor="middle">no Stream contract — handle-based</text>
+    <text x="265"  y="566" font-size="11" fill="#475569" text-anchor="middle">reads go through SafeFileHandle (pread)</text>
+    <text x="265"  y="582" font-size="11" fill="#475569" text-anchor="middle">the FileStream is kept only to own the handle</text>
+    <text x="265"  y="598" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">TryReadDatasetSync = TRUE (opt-in Span fast path)</text>
+
+    <rect x="480"  y="526" width="410" height="82" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.4"/>
+    <text x="685"  y="548" font-size="12" font-weight="600" fill="#581c87" text-anchor="middle">no Stream contract — accessor-based</text>
+    <text x="685"  y="566" font-size="11" fill="#475569" text-anchor="middle">ReadByte/ReadUInt16 by absolute position</text>
+    <text x="685"  y="582" font-size="11" fill="#475569" text-anchor="middle">AcquirePointer/ReleasePointer refcounted</text>
+    <text x="685"  y="598" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">TryReadDatasetSync = TRUE</text>
+
+    <rect x="900"  y="526" width="410" height="82" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.4"/>
+    <text x="1105" y="548" font-size="12" font-weight="600" fill="#581c87" text-anchor="middle">no Stream contract — memory-based</text>
+    <text x="1105" y="566" font-size="11" fill="#475569" text-anchor="middle">ReadCore = source.Span.Slice(…).CopyTo</text>
+    <text x="1105" y="582" font-size="11" fill="#475569" text-anchor="middle">scalars via MemoryMarshal.Read&lt;T&gt;</text>
+    <text x="1105" y="598" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">TryReadDatasetSync = TRUE</text>
+
+    <rect x="1320" y="526" width="410" height="82" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="1.4"/>
+    <text x="1525" y="548" font-size="12" font-weight="600" fill="#581c87" text-anchor="middle">plain Stream  (cursor-based)</text>
+    <text x="1525" y="566" font-size="11" fill="#475569" text-anchor="middle">Stream.Seek + Stream.ReadAsync</text>
+    <text x="1525" y="582" font-size="11" fill="#475569" text-anchor="middle">shared cursor — not concurrency-safe</text>
+    <text x="1525" y="598" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">TryReadDatasetSync = FALSE</text>
+
+    <rect x="1740" y="526" width="410" height="82" rx="6" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.6"/>
+    <text x="1945" y="548" font-size="12" font-weight="600" fill="#581c87" text-anchor="middle">IConcurrentStream  (positionless, public)</text>
+    <text x="1945" y="566" font-size="11" fill="#475569" text-anchor="middle">ReadDatasetAsync(offset, Memory)</text>
+    <text x="1945" y="582" font-size="11" fill="#475569" text-anchor="middle">ReadMetadataAsync(offset, Memory)</text>
+    <text x="1945" y="598" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">cursor-free, concurrency-safe · TryReadDatasetSync = FALSE</text>
+
+    <rect x="2160" y="526" width="410" height="82" rx="6" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.6"/>
+    <text x="2365" y="548" font-size="12" font-weight="600" fill="#581c87" text-anchor="middle">IConcurrentStream  (positionless, public)</text>
+    <text x="2365" y="566" font-size="11" fill="#475569" text-anchor="middle">AmazonS3Stream implements both methods</text>
+    <text x="2365" y="582" font-size="11" fill="#475569" text-anchor="middle">thread-safe under SemaphoreSlim mutex</text>
+    <text x="2365" y="598" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">cursor-free, concurrency-safe · TryReadDatasetSync = FALSE</text>
+  </g>
+
+  <!-- Stream → IO arrows -->
+  <line x1="265"  y1="608" x2="265"  y2="626" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="685"  y1="608" x2="685"  y2="626" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="1105" y1="608" x2="1105" y2="626" stroke="#16a34a" stroke-width="2" marker-end="url(#arr-green)"/>
+  <line x1="1525" y1="608" x2="1525" y2="626" stroke="#d97706" stroke-width="2" marker-end="url(#arr-amber)"/>
+  <line x1="1945" y1="608" x2="1945" y2="626" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+  <line x1="2365" y1="608" x2="2365" y2="626" stroke="#dc2626" stroke-width="2" marker-end="url(#arr-red)"/>
+
+  <!-- ===================== ROW 4: UNDERLYING SOURCE ===================== -->
+  <g id="hdr-io">
+    <rect x="60" y="626" width="2500" height="30" rx="6" fill="#f0fdfa" stroke="#5eead4" stroke-width="1"/>
+    <text x="80" y="646" font-size="13" font-weight="700" fill="#115e59" letter-spacing="1.2">UNDERLYING SOURCE</text>
+    <text x="300" y="646" font-size="12" fill="#475569">Where the bytes physically come from and the cost tier of each read</text>
+  </g>
+
+  <g id="row-io">
+    <rect x="60"   y="658" width="410" height="96" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="265"  y="682" font-size="13" font-weight="700" fill="#14532d" text-anchor="middle">RandomAccess.Read  (pread, positional)</text>
+    <text x="265"  y="700" font-size="11" fill="#14532d" text-anchor="middle">bypasses the FileStream buffer entirely</text>
+    <text x="265"  y="716" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">SYNC · never queues to the thread pool</text>
+    <text x="265"  y="732" font-size="10" fill="#14532d" text-anchor="middle">ReadDatasetAsync → default (already-completed)</text>
+    <text x="265"  y="746" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">ReadAheadWindow (4 KiB) coalesces structural reads</text>
+
+    <rect x="480"  y="658" width="410" height="96" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="685"  y="682" font-size="13" font-weight="700" fill="#14532d" text-anchor="middle">MemoryMappedViewAccessor</text>
+    <text x="685"  y="700" font-size="11" fill="#14532d" text-anchor="middle">addressed by absolute position in the view</text>
+    <text x="685"  y="716" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">SYNC · genuinely synchronous source</text>
+    <text x="685"  y="732" font-size="10" fill="#14532d" text-anchor="middle">ReadDatasetAsync → ReadCore → default</text>
+    <text x="685"  y="746" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">no ReadAheadWindow — already random-access in memory</text>
+
+    <rect x="900"  y="658" width="410" height="96" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="1105" y="682" font-size="13" font-weight="700" fill="#14532d" text-anchor="middle">ReadOnlyMemory&lt;byte&gt;  (in-process buffer)</text>
+    <text x="1105" y="700" font-size="11" fill="#14532d" text-anchor="middle">addressed by absolute position into the span</text>
+    <text x="1105" y="716" font-size="11" font-weight="600" fill="#16a34a" text-anchor="middle">SYNC · a Span slice is never a syscall</text>
+    <text x="1105" y="732" font-size="10" fill="#14532d" text-anchor="middle">ReadDatasetAsync → ReadCore → default</text>
+    <text x="1105" y="746" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">no ReadAheadWindow — already random-access in memory</text>
+
+    <rect x="1320" y="658" width="410" height="96" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+    <text x="1525" y="682" font-size="13" font-weight="700" fill="#78350f" text-anchor="middle">Stream.ReadAsync</text>
+    <text x="1525" y="700" font-size="11" fill="#78350f" text-anchor="middle">via the shared stream cursor</text>
+    <text x="1525" y="716" font-size="11" font-weight="600" fill="#d97706" text-anchor="middle">MemoryStream → sync-completes</text>
+    <text x="1525" y="732" font-size="10" fill="#78350f" text-anchor="middle">a genuinely async Stream still suspends here</text>
+    <text x="1525" y="746" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">no ReadAheadWindow in cursor mode</text>
+
+    <rect x="1740" y="658" width="410" height="96" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="1945" y="682" font-size="13" font-weight="700" fill="#7f1d1d" text-anchor="middle">IConcurrentStream → your read primitive</text>
+    <text x="1945" y="700" font-size="11" fill="#7f1d1d" text-anchor="middle">e.g. HTTP range GET, custom async transport</text>
+    <text x="1945" y="716" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">GENUINELY SUSPENDS · async/await</text>
+    <text x="1945" y="732" font-size="10" fill="#7f1d1d" text-anchor="middle">network-bound or lazy-loaded bytes</text>
+    <text x="1945" y="746" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">ReadAheadWindow coalesces metadata reads (blue layer)</text>
+
+    <rect x="2160" y="658" width="410" height="96" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="2365" y="682" font-size="13" font-weight="700" fill="#7f1d1d" text-anchor="middle">AmazonS3Stream → S3 GetObject range</text>
+    <text x="2365" y="700" font-size="11" fill="#7f1d1d" text-anchor="middle">1 MiB slot block cache (configurable)</text>
+    <text x="2365" y="716" font-size="11" font-weight="600" fill="#dc2626" text-anchor="middle">GENUINELY SUSPENDS · async/await</text>
+    <text x="2365" y="732" font-size="10" fill="#7f1d1d" text-anchor="middle">dataset payload bypasses the cache (read once)</text>
+    <text x="2365" y="746" font-size="10" font-style="italic" fill="#64748b" text-anchor="middle">composes with ReadAheadWindow — does not duplicate it</text>
+  </g>
+
+  <!-- IO → Concurrency arrows -->
+  <line x1="265"  y1="754" x2="265"  y2="772" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="685"  y1="754" x2="685"  y2="772" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1105" y1="754" x2="1105" y2="772" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1525" y1="754" x2="1525" y2="772" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1945" y1="754" x2="1945" y2="772" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="2365" y1="754" x2="2365" y2="772" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== ROW 5: CONCURRENT READS ===================== -->
+  <g id="hdr-concurrency">
+    <rect x="60" y="772" width="2500" height="30" rx="6" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="80" y="792" font-size="13" font-weight="700" fill="#14532d" letter-spacing="1.2">CONCURRENT READS</text>
+    <text x="300" y="792" font-size="12" fill="#475569">Can multiple threads read from the same opened file at once?</text>
+  </g>
+
+  <g id="row-concurrency">
+    <rect x="60"   y="804" width="410" height="56" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+    <text x="265"  y="828" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">✓  yes</text>
+    <text x="265"  y="846" font-size="11" fill="#475569" text-anchor="middle">per-op driver · own cursor · shared SafeFileHandle</text>
+
+    <rect x="480"  y="804" width="410" height="56" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+    <text x="685"  y="828" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">✓  yes</text>
+    <text x="685"  y="846" font-size="11" fill="#475569" text-anchor="middle">second driver = own _position · accessor is safe</text>
+
+    <rect x="900"  y="804" width="410" height="56" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+    <text x="1105" y="828" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">✓  yes</text>
+    <text x="1105" y="846" font-size="11" fill="#475569" text-anchor="middle">per-op driver · own _position · same buffer</text>
+
+    <rect x="1320" y="804" width="410" height="56" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+    <text x="1525" y="828" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">✗  no</text>
+    <text x="1525" y="846" font-size="11" fill="#475569" text-anchor="middle">returns null · shared cursor — concurrent reads race</text>
+
+    <rect x="1740" y="804" width="410" height="56" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+    <text x="1945" y="828" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">✓  yes</text>
+    <text x="1945" y="846" font-size="11" fill="#475569" text-anchor="middle">per-op driver · positionless · no shared cursor</text>
+
+    <rect x="2160" y="804" width="410" height="56" rx="6" fill="#f1f5f9" stroke="#64748b" stroke-width="1.4"/>
+    <text x="2365" y="828" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">✓  yes</text>
+    <text x="2365" y="846" font-size="11" fill="#475569" text-anchor="middle">per-op driver · AmazonS3Stream thread-safe (mutex)</text>
+  </g>
+
+  <!-- Concurrency → Suspends arrows -->
+  <line x1="265"  y1="860" x2="265"  y2="878" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="685"  y1="860" x2="685"  y2="878" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1105" y1="860" x2="1105" y2="878" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1525" y1="860" x2="1525" y2="878" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="1945" y1="860" x2="1945" y2="878" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="2365" y1="860" x2="2365" y2="878" stroke="#334155" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ===================== ROW 6: GENUINELY SUSPENDS ===================== -->
+  <g id="hdr-suspends">
+    <rect x="60" y="878" width="2500" height="30" rx="6" fill="#fffbeb" stroke="#fcd34d" stroke-width="1"/>
+    <text x="80" y="898" font-size="13" font-weight="700" fill="#78350f" letter-spacing="1.2">GENUINELY SUSPENDS</text>
+    <text x="300" y="898" font-size="12" fill="#475569">Does ReadAsync actually yield to the caller, or complete synchronously?</text>
+  </g>
+
+  <g id="row-suspends">
+    <rect x="60"   y="910" width="410" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+    <text x="265"  y="934" font-size="13" font-weight="700" fill="#78350f" text-anchor="middle">✗  never — sync-completing ValueTask</text>
+    <text x="265"  y="952" font-size="11" fill="#78350f" text-anchor="middle">a local file is not an asynchronous source</text>
+
+    <rect x="480"  y="910" width="410" height="56" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+    <text x="685"  y="934" font-size="13" font-weight="700" fill="#14532d" text-anchor="middle">✗  never</text>
+    <text x="685"  y="952" font-size="11" fill="#14532d" text-anchor="middle">memory-mapped view is genuinely synchronous</text>
+
+    <rect x="900"  y="910" width="410" height="56" rx="6" fill="#dcfce7" stroke="#16a34a" stroke-width="1.4"/>
+    <text x="1105" y="934" font-size="13" font-weight="700" fill="#14532d" text-anchor="middle">✗  never</text>
+    <text x="1105" y="952" font-size="11" fill="#14532d" text-anchor="middle">an in-memory buffer is genuinely synchronous</text>
+
+    <rect x="1320" y="910" width="410" height="56" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+    <text x="1525" y="934" font-size="13" font-weight="700" fill="#78350f" text-anchor="middle">depends on the Stream</text>
+    <text x="1525" y="952" font-size="11" fill="#78350f" text-anchor="middle">MemoryStream: ✗ sync-completes · other: may suspend</text>
+
+    <rect x="1740" y="910" width="410" height="56" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+    <text x="1945" y="934" font-size="13" font-weight="700" fill="#7f1d1d" text-anchor="middle">✓  yes</text>
+    <text x="1945" y="952" font-size="11" fill="#7f1d1d" text-anchor="middle">the async path exists for this source</text>
+
+    <rect x="2160" y="910" width="410" height="56" rx="6" fill="#fee2e2" stroke="#dc2626" stroke-width="1.4"/>
+    <text x="2365" y="934" font-size="13" font-weight="700" fill="#7f1d1d" text-anchor="middle">✓  yes</text>
+    <text x="2365" y="952" font-size="11" fill="#7f1d1d" text-anchor="middle">S3 range requests are network-bound</text>
+  </g>
+
+  <!-- ===================== SELECTION RULE CALLOUT ===================== -->
+  <g id="selection-rules">
+    <rect x="60" y="986" width="2500" height="180" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="80" y="1012" font-size="15" font-weight="700" fill="#0f172a">CreateDriver selection rules  (H5File.cs — shared by sync and async stream overloads)</text>
+    <line x1="80" y1="1022" x2="2540" y2="1022" stroke="#e2e8f0" stroke-width="1"/>
+
+    <text x="80" y="1046" font-size="12" font-weight="600" fill="#334155">1. Open(IConcurrentStream) overload:</text>
+    <text x="80" y="1064" font-size="11" fill="#475569">→ H5StreamDriver positionless mode (IConcurrentStream constructor). The cursor lives in the driver; the source is never seeked; reads are concurrent.</text>
+
+    <text x="80" y="1104" font-size="12" font-weight="600" fill="#334155">2. Open(Stream) overload:</text>
+    <text x="80" y="1122" font-size="11" fill="#475569">→ A FileStream is unwrapped to H5FileHandleDriver (positional pread); its own cursor is never used.</text>
+    <text x="80" y="1136" font-size="11" fill="#475569">  Any other Stream → H5StreamDriver cursor mode (Stream constructor): Stream.Seek + Stream.ReadAsync, non-concurrent.</text>
+    <text x="80" y="1154" font-size="10" font-style="italic" fill="#64748b">  The mode is chosen by which overload is called — there is no auto-detection. A Stream that also implements IConcurrentStream gets cursor mode through the Stream overload; the caller picks positionless by passing it as IConcurrentStream instead.</text>
+  </g>
+
+  <!-- ===================== FOOTER ===================== -->
+  <g id="footer">
+    <text x="60" y="1206" font-size="12" font-weight="600" fill="#0f172a">How to read this diagram</text>
+    <text x="60" y="1226" font-size="11" fill="#475569">Pick the column matching your source. The vertical flow is: public API you call → internal driver selected → stream contract used → underlying IO + cost tier → concurrency and suspension behavior.</text>
+    <text x="60" y="1244" font-size="11" fill="#475569">The only genuinely-suspending sources are IConcurrentStream implementations (e.g. a custom HTTP range source, Amazon S3). Local files, memory-mapped views and in-memory buffers always complete synchronously and return an already-completed ValueTask.</text>
+    <text x="60" y="1262" font-size="11" fill="#475569">Concurrency is available on every source except one opened through the Stream overload (cursor mode): resolve the object first (single-threaded, file-level cursor), then read in parallel — one driver per operation, each with its own cursor.</text>
+    <text x="60" y="1280" font-size="11" font-style="italic" fill="#64748b">Drivers (H5FileHandleDriver, H5StreamDriver, H5MemoryMappedFileDriver, H5MemoryDriver) and ReadAheadWindow are internal — not public API. The public contracts are H5File.Open*, IConcurrentStream and the async read/navigation members.</text>
+  </g>
+</svg>

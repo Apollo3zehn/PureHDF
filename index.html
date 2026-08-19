@@ -76,20 +76,25 @@
 
 <p><a href="https://www.nuget.org/packages/PureHDF"><img src="https://img.shields.io/nuget/vpre/PureHDF.svg?label=Nuget" alt="NuGet"></a></p>
 <p>A pure C# library without native dependencies that makes reading and writing of HDF5 files (groups, datasets, attributes, ...) very easy.</p>
-<p>The minimum supported target framework is .NET Standard 2.0 which includes</p>
-<ul>
-<li>.NET Framework 4.6.1+</li>
-<li>.NET Core (all versions)</li>
-<li>.NET 5+</li>
-</ul>
 <p>This library runs on all platforms (ARM, x86, x64) and operating systems (Linux, Windows, MacOS, Raspbian, etc) that are supported by the .NET ecosystem without special configuration.</p>
 <p>The implemention follows the <a href="https://docs.hdfgroup.org/hdf5/v1_10/_f_m_t3.html">HDF5 File Format Specification (HDF5 1.10)</a>.</p>
 <blockquote>
-<p>Please read the <a href="reading/index.html">reading</a> or <a href="writing/index.html">writing</a> docs to get started with PureHDF.</p>
+<p>Please read the <a href="https://apollo3zehn.github.io/PureHDF/">docs</a> for samples and API documentation.</p>
 </blockquote>
-<h1 id="version-2-changes">Version 2 changes</h1>
-<p>To keep the code base clean, version 2 of PureHDF supports <a href="https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core">active .NET versions</a> only, which are <code>.NET 6</code> and <code>.NET 8</code> as of now (June 2024).</p>
-<p>Version 1 of PureHDF supports all .NET versions starting with <code>.NET 4.7.2</code> and continues to receive bug fixes. Features will be backported upon request if feasible.</p>
+<h1 id="version-1">Version 1</h1>
+<p>The minimum supported target framework is .NET Standard 2.0 which includes</p>
+<ul>
+<li><code>.NET Framework 4.6.1+</code></li>
+<li><code>.NET Core (all versions)</code></li>
+<li><code>.NET 5+</code></li>
+</ul>
+<p>Version 1 of PureHDF supports all .NET versions starting with <code>.NET 4.7.2</code>. No further updates are planned.</p>
+<h1 id="version-2">Version 2</h1>
+<p>The minimum supported target framework version is <code>.NET 6.0+</code>.</p>
+<p>To keep the code base clean, version 2 of PureHDF targets <a href="https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core">active .NET versions</a> only, which are <code>.NET 6</code> and <code>.NET 8</code> as of now (August 2024).</p>
+<h1 id="version-3">Version 3</h1>
+<p>The minimum supported target framework version is <code>.NET 8.0+</code>.</p>
+<p>To keep the code base clean, version 3 of PureHDF targets <a href="https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core">active .NET versions</a> only, which are <code>.NET 8</code> and <code>.NET 10</code> as of now (August 2026).</p>
 <h1 id="installation">Installation</h1>
 <pre><code class="lang-bash">dotnet add package PureHDF
 </code></pre>
@@ -141,6 +146,11 @@
 <tr>
 <td>✓</td>
 <td>-</td>
+<td>async reading</td>
+</tr>
+<tr>
+<td>✓</td>
+<td>-</td>
 <td>multithreading (^1)</td>
 </tr>
 <tr>
@@ -155,7 +165,7 @@
 </tr>
 </tbody>
 </table>
-<h1 id="comparison-table">Comparison table</h1>
+<h1 id="comparison-table">Comparison Table</h1>
 <p>Overwhelmed by the number of different HDF 5 libraries? Here is a comparison table:</p>
 <blockquote>
 <p>Note: The following table considers only projects listed on Nuget.org</p>

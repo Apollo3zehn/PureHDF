@@ -295,6 +295,57 @@
 
   <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
 
+  <h3 id="PureHDF_H5File_Open_PureHDF_IConcurrentStream_System_Boolean_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(PureHDF.IConcurrentStream,System.Boolean,PureHDF.H5ReadOptions)">
+  Open(IConcurrentStream, bool, H5ReadOptions?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 file from a concurrent stream that reads by absolute offset.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static NativeFile Open(IConcurrentStream stream, bool leaveOpen = false, H5ReadOptions? options = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>stream</code> <a class="xref" href="PureHDF.IConcurrentStream.html">IConcurrentStream</a></dt>
+    <dd><p>The concurrent stream to read from. It must be concurrency-safe across its two read methods.</p>
+</dd>
+    <dt><code>leaveOpen</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean which indicates if the stream should be kept open when this class is disposed. The default is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section" id="PureHDF_H5File_Open_PureHDF_IConcurrentStream_System_Boolean_PureHDF_H5ReadOptions__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>Unlike the <a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_Open_System_IO_Stream_System_Boolean_PureHDF_H5ReadOptions_">Open(Stream, bool, H5ReadOptions?)</a> overload, this one does not
+require a <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream">Stream</a> base: any class implementing <a class="xref" href="PureHDF.IConcurrentStream.html">IConcurrentStream</a>
+can be used directly. The stream is driven positionlessly - no cursor is shared, reads carry
+their own offsets - so concurrent reads through a single <code>H5File</code> are safe once the
+object has been resolved.</p>
+</div>
+
+
+
+
+  <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
+
   <h3 id="PureHDF_H5File_Open_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor,PureHDF.H5ReadOptions)">
   Open(MemoryMappedViewAccessor, H5ReadOptions?)
   
@@ -380,6 +431,53 @@
 
   <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
 
+  <h3 id="PureHDF_H5File_Open_System_ReadOnlyMemory_System_Byte__PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(System.ReadOnlyMemory{System.Byte},PureHDF.H5ReadOptions)">
+  Open(ReadOnlyMemory&lt;byte&gt;, H5ReadOptions?)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 file from an in-memory byte buffer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static NativeFile Open(ReadOnlyMemory&lt;byte&gt; source, H5ReadOptions? options = null)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>source</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.readonlymemory-1">ReadOnlyMemory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
+    <dd><p>A read-only view of the bytes of an HDF5 file. The caller owns this buffer and may reuse or reclaim it after the returned <a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a> is disposed; the driver never writes to it.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section" id="PureHDF_H5File_Open_System_ReadOnlyMemory_System_Byte__PureHDF_H5ReadOptions__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>Reads from an in-memory buffer never suspend, so this overload always completes synchronously
+and the returned file's async read members complete without yielding. Concurrency is available:
+a per-operation driver carries its own position over the same buffer, so a dataset or attribute
+resolved once can be read from several threads through a single <code>H5File</code>.</p>
+</div>
+
+
+
+
+  <a id="PureHDF_H5File_Open_" data-uid="PureHDF.H5File.Open*"></a>
+
   <h3 id="PureHDF_H5File_Open_System_String_System_IO_FileMode_System_IO_FileAccess_System_IO_FileShare_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.Open(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,PureHDF.H5ReadOptions)">
   Open(string, FileMode, FileAccess, FileShare, H5ReadOptions?)
   
@@ -428,6 +526,267 @@
 
 
 
+  <a id="PureHDF_H5File_OpenAsync_" data-uid="PureHDF.H5File.OpenAsync*"></a>
+
+  <h3 id="PureHDF_H5File_OpenAsync_PureHDF_IConcurrentStream_System_Boolean_PureHDF_H5ReadOptions_System_Threading_CancellationToken_" data-uid="PureHDF.H5File.OpenAsync(PureHDF.IConcurrentStream,System.Boolean,PureHDF.H5ReadOptions,System.Threading.CancellationToken)">
+  OpenAsync(IConcurrentStream, bool, H5ReadOptions?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 file asynchronously from a concurrent stream that reads by absolute offset.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Task&lt;NativeFile&gt; OpenAsync(IConcurrentStream stream, bool leaveOpen = false, H5ReadOptions? options = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>stream</code> <a class="xref" href="PureHDF.IConcurrentStream.html">IConcurrentStream</a></dt>
+    <dd><p>The concurrent stream to read from. It must be concurrency-safe across its two read methods.</p>
+</dd>
+    <dt><code>leaveOpen</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean which indicates if the stream should be kept open when this class is disposed. The default is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section" id="PureHDF_H5File_OpenAsync_PureHDF_IConcurrentStream_System_Boolean_PureHDF_H5ReadOptions_System_Threading_CancellationToken__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>This is the WASM-critical overload for a remote source: opening a file reads the superblock,
+walks object headers and decodes the root group, and on a source that cannot complete
+synchronously the synchronous <a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_Open_PureHDF_IConcurrentStream_System_Boolean_PureHDF_H5ReadOptions_">Open(IConcurrentStream, bool, H5ReadOptions?)</a>
+overload cannot get as far as returning a file at all. Unlike the
+<a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_OpenAsync_System_IO_Stream_System_Boolean_PureHDF_H5ReadOptions_System_Threading_CancellationToken_">OpenAsync(Stream, bool, H5ReadOptions?, CancellationToken)</a> overload, no
+<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream">Stream</a> base is required.</p>
+</div>
+
+
+
+
+  <a id="PureHDF_H5File_OpenAsync_" data-uid="PureHDF.H5File.OpenAsync*"></a>
+
+  <h3 id="PureHDF_H5File_OpenAsync_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_PureHDF_H5ReadOptions_System_Threading_CancellationToken_" data-uid="PureHDF.H5File.OpenAsync(System.IO.MemoryMappedFiles.MemoryMappedViewAccessor,PureHDF.H5ReadOptions,System.Threading.CancellationToken)">
+  OpenAsync(MemoryMappedViewAccessor, H5ReadOptions?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 memory-mapped file asynchronously.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Task&lt;NativeFile&gt; OpenAsync(MemoryMappedViewAccessor accessor, H5ReadOptions? options = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>accessor</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.memorymappedfiles.memorymappedviewaccessor">MemoryMappedViewAccessor</a></dt>
+    <dd><p>The memory-mapped accessor to use.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section" id="PureHDF_H5File_OpenAsync_System_IO_MemoryMappedFiles_MemoryMappedViewAccessor_PureHDF_H5ReadOptions_System_Threading_CancellationToken__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>Provided for symmetry rather than for concurrency: a memory-mapped view is a synchronous source,
+so this always completes without suspending. It exists so that a caller written entirely against
+the asynchronous surface does not have to special-case one driver.</p>
+</div>
+
+
+
+
+  <a id="PureHDF_H5File_OpenAsync_" data-uid="PureHDF.H5File.OpenAsync*"></a>
+
+  <h3 id="PureHDF_H5File_OpenAsync_System_IO_Stream_System_Boolean_PureHDF_H5ReadOptions_System_Threading_CancellationToken_" data-uid="PureHDF.H5File.OpenAsync(System.IO.Stream,System.Boolean,PureHDF.H5ReadOptions,System.Threading.CancellationToken)">
+  OpenAsync(Stream, bool, H5ReadOptions?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 stream asynchronously.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Task&lt;NativeFile&gt; OpenAsync(Stream stream, bool leaveOpen = false, H5ReadOptions? options = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>stream</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream">Stream</a></dt>
+    <dd><p>The stream to use. It must be readable and seekable.</p>
+</dd>
+    <dt><code>leaveOpen</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.boolean">bool</a></dt>
+    <dd><p>A boolean which indicates if the stream should be kept open when this class is disposed. The default is <a href="https://learn.microsoft.com/dotnet/csharp/language-reference/builtin-types/bool">false</a>.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section" id="PureHDF_H5File_OpenAsync_System_IO_Stream_System_Boolean_PureHDF_H5ReadOptions_System_Threading_CancellationToken__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>This is the overload that matters for a remote source. Implement <a class="xref" href="PureHDF.IConcurrentStream.html">IConcurrentStream</a> on
+the stream as well: without it the driver falls back to the stream's own cursor, which cannot be
+shared between concurrent reads and does not receive the read-coalescing that makes a
+round-trip-bound source usable. A class that does not inherit from <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.stream">Stream</a> at all
+can be opened through the <a class="xref" href="PureHDF.H5File.html#PureHDF_H5File_OpenAsync_PureHDF_IConcurrentStream_System_Boolean_PureHDF_H5ReadOptions_System_Threading_CancellationToken_">OpenAsync(IConcurrentStream, bool, H5ReadOptions?, CancellationToken)</a>
+overload instead.</p>
+</div>
+
+
+
+
+  <a id="PureHDF_H5File_OpenAsync_" data-uid="PureHDF.H5File.OpenAsync*"></a>
+
+  <h3 id="PureHDF_H5File_OpenAsync_System_ReadOnlyMemory_System_Byte__PureHDF_H5ReadOptions_System_Threading_CancellationToken_" data-uid="PureHDF.H5File.OpenAsync(System.ReadOnlyMemory{System.Byte},PureHDF.H5ReadOptions,System.Threading.CancellationToken)">
+  OpenAsync(ReadOnlyMemory&lt;byte&gt;, H5ReadOptions?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 file asynchronously from an in-memory byte buffer.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Task&lt;NativeFile&gt; OpenAsync(ReadOnlyMemory&lt;byte&gt; source, H5ReadOptions? options = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>source</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.readonlymemory-1">ReadOnlyMemory</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.byte">byte</a>&gt;</dt>
+    <dd><p>A read-only view of the bytes of an HDF5 file. The caller owns this buffer and may reuse or reclaim it after the returned <a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a> is disposed; the driver never writes to it.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+  <h4 class="section" id="PureHDF_H5File_OpenAsync_System_ReadOnlyMemory_System_Byte__PureHDF_H5ReadOptions_System_Threading_CancellationToken__remarks">Remarks</h4>
+  <div class="markdown level1 remarks"><p>Provided for symmetry rather than for concurrency: an in-memory buffer is a synchronous source,
+so this always completes without suspending. It exists so that a caller written entirely against
+the asynchronous surface does not have to special-case one driver.</p>
+</div>
+
+
+
+
+  <a id="PureHDF_H5File_OpenAsync_" data-uid="PureHDF.H5File.OpenAsync*"></a>
+
+  <h3 id="PureHDF_H5File_OpenAsync_System_String_System_IO_FileMode_System_IO_FileAccess_System_IO_FileShare_PureHDF_H5ReadOptions_System_Threading_CancellationToken_" data-uid="PureHDF.H5File.OpenAsync(System.String,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare,PureHDF.H5ReadOptions,System.Threading.CancellationToken)">
+  OpenAsync(string, FileMode, FileAccess, FileShare, H5ReadOptions?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 file asynchronously.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Task&lt;NativeFile&gt; OpenAsync(string filePath, FileMode mode, FileAccess fileAccess, FileShare fileShare, H5ReadOptions? options = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>filePath</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the file to open.</p>
+</dd>
+    <dt><code>mode</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.filemode">FileMode</a></dt>
+    <dd><p>A <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.filemode">FileMode</a> value that specifies whether a file is created if one does not exist, and determines whether the contents of existing files are retained or overwritten.</p>
+</dd>
+    <dt><code>fileAccess</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileaccess">FileAccess</a></dt>
+    <dd><p>A <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileaccess">FileAccess</a> value that specifies the operations that can be performed on the file.</p>
+</dd>
+    <dt><code>fileShare</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileshare">FileShare</a></dt>
+    <dd><p>A <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.io.fileshare">FileShare</a> value specifying the type of access other threads have to the file.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
   <a id="PureHDF_H5File_OpenRead_" data-uid="PureHDF.H5File.OpenRead*"></a>
 
   <h3 id="PureHDF_H5File_OpenRead_System_String_PureHDF_H5ReadOptions_" data-uid="PureHDF.H5File.OpenRead(System.String,PureHDF.H5ReadOptions)">
@@ -456,6 +815,50 @@
   <h4 class="section">Returns</h4>
   <dl class="parameters">
     <dt><a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5File_OpenReadAsync_" data-uid="PureHDF.H5File.OpenReadAsync*"></a>
+
+  <h3 id="PureHDF_H5File_OpenReadAsync_System_String_PureHDF_H5ReadOptions_System_Threading_CancellationToken_" data-uid="PureHDF.H5File.OpenReadAsync(System.String,PureHDF.H5ReadOptions,System.Threading.CancellationToken)">
+  OpenReadAsync(string, H5ReadOptions?, CancellationToken)
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>Opens an HDF5 file for reading asynchronously. Please see the <a href="https://learn.microsoft.com/en-us/dotnet/api/system.io.file.openread#remarks">Remarks</a> section for more information how the file is opened.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static Task&lt;NativeFile&gt; OpenReadAsync(string filePath, H5ReadOptions? options = null, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>filePath</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The path of the file to open.</p>
+</dd>
+    <dt><code>options</code> <a class="xref" href="PureHDF.H5ReadOptions.html">H5ReadOptions</a></dt>
+    <dd><p>Options to control decoding behavior.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>A token to cancel the current operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="PureHDF.VOL.Native.NativeFile.html">NativeFile</a>&gt;</dt>
     <dd></dd>
   </dl>
 

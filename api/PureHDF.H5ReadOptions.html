@@ -157,8 +157,8 @@
 
   <a id="PureHDF_H5ReadOptions__ctor_" data-uid="PureHDF.H5ReadOptions.#ctor*"></a>
 
-  <h3 id="PureHDF_H5ReadOptions__ctor_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Func_System_Reflection_FieldInfo_System_String__System_Func_System_Reflection_PropertyInfo_System_String__" data-uid="PureHDF.H5ReadOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.String})">
-  H5ReadOptions(bool, bool, bool, bool, Func&lt;FieldInfo, string?&gt;?, Func&lt;PropertyInfo, string?&gt;?)
+  <h3 id="PureHDF_H5ReadOptions__ctor_System_Boolean_System_Boolean_System_Boolean_System_Boolean_System_Func_System_Reflection_FieldInfo_System_String__System_Func_System_Reflection_PropertyInfo_System_String__System_Int64_" data-uid="PureHDF.H5ReadOptions.#ctor(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Func{System.Reflection.FieldInfo,System.String},System.Func{System.Reflection.PropertyInfo,System.String},System.Int64)">
+  H5ReadOptions(bool, bool, bool, bool, Func&lt;FieldInfo, string?&gt;?, Func&lt;PropertyInfo, string?&gt;?, long)
   
   </h3>
 
@@ -167,7 +167,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public H5ReadOptions(bool IncludeStructFields = true, bool IncludeStructProperties = false, bool IncludeClassFields = false, bool IncludeClassProperties = true, Func&lt;FieldInfo, string?&gt;? FieldNameMapper = null, Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper = null)</code></pre>
+    <pre><code class="lang-csharp hljs">public H5ReadOptions(bool IncludeStructFields = true, bool IncludeStructProperties = false, bool IncludeClassFields = false, bool IncludeClassProperties = true, Func&lt;FieldInfo, string?&gt;? FieldNameMapper = null, Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper = null, long GlobalHeapCacheByteBudget = 67108864)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -189,6 +189,17 @@
 </dd>
     <dt><code>PropertyNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
     <dd><p>Maps a <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a> to the name of the HDF5 member.</p>
+</dd>
+    <dt><code>GlobalHeapCacheByteBudget</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
+    <dd><p>A value that indicates how many bytes of decoded variable-length data may be cached per open file.
+The default value is 64 MiB.</p>
+<p>
+This bounds the only read cache whose footprint grows with how much data has been read rather than
+with the shape of the file, because it holds decoded payload rather than file structure. Raising it
+speeds up repeated reads of the same variable-length data; lowering it caps memory, which matters for
+a process holding many files open at once, since the budget applies PER FILE. Below the working set
+of a single read pass, repeated reads degrade to re-decoding everything.
+</p>
 </dd>
   </dl>
 
@@ -260,6 +271,46 @@
   <h4 class="section">Property Value</h4>
   <dl class="parameters">
     <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="PureHDF_H5ReadOptions_GlobalHeapCacheByteBudget_" data-uid="PureHDF.H5ReadOptions.GlobalHeapCacheByteBudget*"></a>
+
+  <h3 id="PureHDF_H5ReadOptions_GlobalHeapCacheByteBudget" data-uid="PureHDF.H5ReadOptions.GlobalHeapCacheByteBudget">
+  GlobalHeapCacheByteBudget
+  
+  </h3>
+
+  <div class="markdown level1 summary"><p>A value that indicates how many bytes of decoded variable-length data may be cached per open file.
+The default value is 64 MiB.</p>
+<p>
+This bounds the only read cache whose footprint grows with how much data has been read rather than
+with the shape of the file, because it holds decoded payload rather than file structure. Raising it
+speeds up repeated reads of the same variable-length data; lowering it caps memory, which matters for
+a process holding many files open at once, since the budget applies PER FILE. Below the working set
+of a single read pass, repeated reads degrade to re-decoding everything.
+</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public long GlobalHeapCacheByteBudget { get; init; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
     <dd></dd>
   </dl>
 
@@ -436,8 +487,8 @@
 
   <a id="PureHDF_H5ReadOptions_Deconstruct_" data-uid="PureHDF.H5ReadOptions.Deconstruct*"></a>
 
-  <h3 id="PureHDF_H5ReadOptions_Deconstruct_System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Func_System_Reflection_FieldInfo_System_String___System_Func_System_Reflection_PropertyInfo_System_String___" data-uid="PureHDF.H5ReadOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.String}@)">
-  Deconstruct(out bool, out bool, out bool, out bool, out Func&lt;FieldInfo, string?&gt;?, out Func&lt;PropertyInfo, string?&gt;?)
+  <h3 id="PureHDF_H5ReadOptions_Deconstruct_System_Boolean__System_Boolean__System_Boolean__System_Boolean__System_Func_System_Reflection_FieldInfo_System_String___System_Func_System_Reflection_PropertyInfo_System_String___System_Int64__" data-uid="PureHDF.H5ReadOptions.Deconstruct(System.Boolean@,System.Boolean@,System.Boolean@,System.Boolean@,System.Func{System.Reflection.FieldInfo,System.String}@,System.Func{System.Reflection.PropertyInfo,System.String}@,System.Int64@)">
+  Deconstruct(out bool, out bool, out bool, out bool, out Func&lt;FieldInfo, string?&gt;?, out Func&lt;PropertyInfo, string?&gt;?, out long)
   
   </h3>
 
@@ -445,7 +496,7 @@
   <div class="markdown level1 conceptual"></div>
 
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">public void Deconstruct(out bool IncludeStructFields, out bool IncludeStructProperties, out bool IncludeClassFields, out bool IncludeClassProperties, out Func&lt;FieldInfo, string?&gt;? FieldNameMapper, out Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper)</code></pre>
+    <pre><code class="lang-csharp hljs">public void Deconstruct(out bool IncludeStructFields, out bool IncludeStructProperties, out bool IncludeClassFields, out bool IncludeClassProperties, out Func&lt;FieldInfo, string?&gt;? FieldNameMapper, out Func&lt;PropertyInfo, string?&gt;? PropertyNameMapper, out long GlobalHeapCacheByteBudget)</code></pre>
   </div>
 
   <h4 class="section">Parameters</h4>
@@ -461,6 +512,8 @@
     <dt><code>FieldNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.fieldinfo">FieldInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
     <dd></dd>
     <dt><code>PropertyNameMapper</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-2">Func</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.reflection.propertyinfo">PropertyInfo</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd></dd>
+    <dt><code>GlobalHeapCacheByteBudget</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.int64">long</a></dt>
     <dd></dd>
   </dl>
 

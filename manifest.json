@@ -345,10 +345,10 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "api/PureHDF.IDatasetStream.yml",
+      "source_relative_path": "api/PureHDF.IConcurrentStream.yml",
       "output": {
         ".html": {
-          "relative_path": "api/PureHDF.IDatasetStream.html"
+          "relative_path": "api/PureHDF.IConcurrentStream.html"
         }
       },
       "version": ""
@@ -828,6 +828,16 @@
     },
     {
       "type": "Resource",
+      "source_relative_path": "images/async-read-path.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/async-read-path.svg"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
       "source_relative_path": "images/automatic1111.png",
       "output": {
         "resource": {
@@ -872,6 +882,26 @@
       "output": {
         "resource": {
           "relative_path": "images/nuget.png"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/use-case-driver-selection.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/use-case-driver-selection.svg"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/wasm.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/wasm.png"
         }
       },
       "version": ""
