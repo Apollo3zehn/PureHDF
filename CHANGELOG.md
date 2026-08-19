@@ -1,4 +1,4 @@
-## v3.0.0 - 2026-08-27
+## v3.0.0-beta.1 - 2026-08-19
 
 The native read path is now async-first, which makes PureHDF usable in Blazor WebAssembly: a browser cannot perform a synchronous HTTP range request, so the previous read path — which blocked at every step of a walk — could not open a remote file at all. The public synchronous API is unchanged and blocks once at the public boundary rather than at every step. See [#176](https://github.com/Apollo3zehn/PureHDF/pull/176).
 
