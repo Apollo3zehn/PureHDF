@@ -146,7 +146,7 @@ See the [docs](https://apollo3zehn.github.io/PureHDF/writing/index.html) to lear
 
 The `samples/PureHdfWasm` project is a Blazor WebAssembly app that opens a local HDF5 file entirely in the browser, reading bytes on demand through the `IConcurrentStream` API with `Blob.slice()` JS interop (no server round-trips, no File System Access API — works in Firefox).
 
-![PureHDF WASM sample](https://apollo3zehn.github.io/PureHDF/images/wasm.png)
+![PureHDF WASM sample](https://github.com/Apollo3zehn/PureHDF/raw/master/doc/images/wasm.png)
 
 The app shows a tree of the file's groups, datasets and attributes in the left sidebar and the metadata of the selected node in the main panel. It is a proof of concept, not a full-featured HDF5 file viewer.
 
