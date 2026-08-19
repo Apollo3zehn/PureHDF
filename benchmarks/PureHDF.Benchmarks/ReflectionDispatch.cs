@@ -21,6 +21,24 @@ namespace Benchmark;
 // GetDecodeInfoForUnmanagedElement(Type) cache because the compound branch
 // of BuildDecodeInfo routes the known-compound case through the Type-keyed
 // overload (DatatypeMessage.Reading.cs:438).
+//
+// Measured on this machine (net10.0, default job, 10,000 Read calls per
+// method). 5f0a23c is the last release before the driver read-ahead window;
+// HEAD adds it.
+//
+//   Method                        | 5f0a23c  | HEAD     | Speedup
+//   ------------------------------|---------:|---------:|--------:
+//   Dataset_ReadScalarInt         | 5.300 ms | 6.762 ms | 0.78x
+//   Dataset_ReadScalarCompound    | 7.422 ms | 8.386 ms | 0.89x
+//   Attribute_ReadScalarInt       | 1.199 ms | 1.452 ms | 0.83x
+//   Attribute_ReadScalarCompound  | 2.108 ms | 2.543 ms | 0.83x
+//
+// All four regress: 13-28% slower per call with tight error bars (under 3% of
+// the mean at the default job). These paths issue tiny reads that get no
+// coalescing benefit and pay the read-ahead window's per-call bounds check on
+// every Read; the per-call overhead is the honest cost of the window on the
+// tiny-payload path. Allocations are unchanged. Kept as the guard that this
+// overhead does not grow further.
 [MemoryDiagnoser]
 public class ReflectionDispatch
 {

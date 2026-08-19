@@ -16,6 +16,21 @@ namespace Benchmark;
 // Each access pattern measures the same total decode work but a different
 // per-Read-call multiplier, so the relative cost of per-Read fixed overhead
 // versus per-cell decode work shows up across the three rows.
+//
+// Measured on this machine (net10.0, default job, 600 cells x 200 elements).
+// 5f0a23c is the last release before the driver read-ahead window; HEAD adds it.
+//
+//   Method       | 5f0a23c    | HEAD       | Speedup
+//   -------------|-----------:|-----------:|--------:
+//   ReadAll      | 175.0 us   | 174.4 us   | 1.00x
+//   ReadByWindow | 202.9 us  | 197.5 us   | 1.03x
+//   ReadPerCell  | 1,532.0 us | 1,649.2 us | 0.93x
+//
+// ReadAll and ReadByWindow are flat (error bars overlap). ReadPerCell is a
+// small real regression (600 single-cell Read calls each pay the window's
+// per-call bounds check). This path's cost is dominated by per-cell
+// global-heap decode, which the read-ahead work did not target. Allocations
+// are flat (~1.4 MB ReadAll, ~2.8 MB ReadPerCell).
 [MemoryDiagnoser]
 public class VariableLengthCompoundRead
 {

@@ -31,27 +31,22 @@ namespace Benchmark;
 // NavigationCostTests: 363,269 reads to enumerate 1000 dense attributes before the window, 1,042
 // after.
 //
-// MEASURED on this machine (net10.0, Release). Column A is before the driver read-ahead window,
-// column B adds it, column C adds the TryWalkPath fix that stopped a by-name lookup re-decoding the
-// object header of the group it was called on - a defect this benchmark is what surfaced.
+// Measured on this machine (net10.0, default job). 5f0a23c is the last release
+// before the driver read-ahead window; HEAD adds it.
 //
-//                                    A            B            C
-//   Cold_OpenAndReadMetadata   22,102 us    2,405 us     2,036 us     10.9x faster overall
-//   Warm_LookupLinksByName    356,136 us   27,098 us     1,912 us    186.0x faster overall
-//   Warm_EnumerateAttributes     9.45 us     10.00 us      9.03 us
-//   Warm_ReadChunkedSelection    3.55 us      3.73 us      3.42 us
+//   Method                    | 5f0a23c   | HEAD      | Speedup
+//   --------------------------|----------:|----------:|--------:
+//   Cold_OpenAndReadMetadata  | 49,052 us | 7,505 us  | 6.5x
+//   Warm_LookupLinksByName    | 3,702 us  | 2,587 us  | 1.4x
+//   Warm_EnumerateAttributes  | 7.70 us   | 12.25 us  | 0.6x
+//   Warm_ReadChunkedSelection | 4.55 us   | 4.86 us   | 0.9x
 //
-// Allocation tells the second half of the story, and more clearly than the timings do:
-// Warm_LookupLinksByName allocated 26,121 KB in both A and B - the window changed where bytes came
-// from but not how much was decoded - and 169 KB in C. That is 261 KB per lookup down to 1.7 KB.
-// Cold_OpenAndReadMetadata sits at ~3,721 KB throughout, +8 KB against A for two 4 KiB windows (one
-// for the file-level driver, one per operation).
-//
-// The two small B regressions are the honest cost of the window on paths that re-read data already
-// decoded and cached, so they get no coalescing benefit and pay its bounds check and copy. Both sit
-// under their A figures in C, but that is a few hundred nanoseconds at single-digit microseconds and
-// should be read as noise rather than as an improvement. They remain useful as the guard against a
-// change that makes them materially worse.
+// Allocations are flat across both columns (~13.1 MB for Cold, ~175 KB for
+// Warm_LookupLinksByName): the window changes where bytes come from, not how
+// much is decoded. The two warm regressions are the honest cost of the window
+// on paths that re-read data already decoded and cached, so they get no
+// coalescing benefit and pay its per-call bounds check. They are kept as
+// guards against a change that makes them materially worse.
 [MemoryDiagnoser]
 public class MetadataRead
 {

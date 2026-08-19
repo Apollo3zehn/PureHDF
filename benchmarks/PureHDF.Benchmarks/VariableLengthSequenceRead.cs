@@ -5,6 +5,19 @@ using PureHDF.VOL.Native;
 
 namespace Benchmark;
 
+// Exercises Read<Peak[][]> on a 1-D dataset of 60 variable-length sequences of
+// a blittable struct (200 peaks each). Measures the steady-state cost of the
+// variable-length decode path after the global-heap cache is warm.
+//
+// Measured on this machine (net10.0, default job, 60 cells x 200 peaks).
+// 5f0a23c is the last release before the driver read-ahead window; HEAD adds it.
+//
+//   Method                   | 5f0a23c  | HEAD     | Speedup
+//   -------------------------|---------:|---------:|--------:
+//   ReadVariableLengthPeaks  | 19.16 us | 19.65 us | 0.98x
+//
+// Flat (error bars overlap). This path was not targeted by any change since
+// 5f0a23c; allocation is unchanged at ~192 KB.
 [MemoryDiagnoser]
 public class VariableLengthSequenceRead
 {
