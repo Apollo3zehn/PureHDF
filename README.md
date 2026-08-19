@@ -17,7 +17,7 @@ The minimum supported target framework is .NET Standard 2.0 which includes
 - `.NET Core (all versions)`
 - `.NET 5+`
 
-Version 1 of PureHDF supports all .NET versions starting with `.NET 4.7.2` and continues to receive bug fixes. Features will be backported upon request if feasible.
+Version 1 of PureHDF supports all .NET versions starting with `.NET 4.7.2`. No further updates are planned.
 
 # Version 2
 
@@ -36,6 +36,22 @@ To keep the code base clean, version 3 of PureHDF targets [active .NET versions]
 ```bash
 dotnet add package PureHDF
 ```
+
+# Feature overview
+
+| Reading | Writing | Feature                      |
+| ------- | ------- | ---------------------------- |
+| &check; | &check; | generic API                  |
+| &check; | &check; | easy filter access           |
+| &check; | &check; | hardware-accelerated filters |
+| &check; | &check; | data slicing                 |
+| &check; | &check; | multidimensional arrays      |
+| &check; | &check; | compound data                |
+| &check; | &check; | variable-length data         |
+| &check; | -       | async reading                |
+| &check; | -       | multithreading (^1)          |
+| &check; | -       | Amazon S3 access             |
+| &check; | -       | HSDS (^2) access             |
 
 # Quick Start
 
@@ -130,7 +146,7 @@ See the [docs](https://apollo3zehn.github.io/PureHDF/writing/index.html) to lear
 
 The `samples/PureHdfWasm` project is a Blazor WebAssembly app that opens a local HDF5 file entirely in the browser, reading bytes on demand through the `IConcurrentStream` API with `Blob.slice()` JS interop (no server round-trips, no File System Access API — works in Firefox).
 
-![PureHDF WASM sample](doc/images/wasm.png)
+![PureHDF WASM sample](https://apollo3zehn.github.io/PureHDF/images/wasm.png)
 
 The app shows a tree of the file's groups, datasets and attributes in the left sidebar and the metadata of the selected node in the main panel. It is a proof of concept, not a full-featured HDF5 file viewer.
 
