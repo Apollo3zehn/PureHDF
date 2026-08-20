@@ -109,7 +109,7 @@ internal class GlobalHeapManager
             CollectionSize = (ulong)collectionSize
         };
 
-        _baseAddress = _freeSpaceManager.Allocate(collectionSize);
+        _baseAddress = _freeSpaceManager.Allocate(collectionSize, AllocationKind.Metadata);
         _memory = new byte[collectionSize - COLLECTION_HEADER_SIZE];
 
         //

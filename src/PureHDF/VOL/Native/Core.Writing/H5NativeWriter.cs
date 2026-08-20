@@ -13,7 +13,47 @@ partial class H5NativeWriter
 
     private ulong _rootGroupAddress;
 
+    /// <summary>
+    /// Totals up how many bytes of structure <paramref name="file" /> needs, by encoding it against a
+    /// stream that discards everything.
+    /// </summary>
+    /// <remarks>
+    /// Exact rather than estimated, because it is the same encoder and the same allocator - so it
+    /// accounts for the things an estimate cannot, above all the global heap's 4 kB collection
+    /// granularity and a chunk index's dependence on chunk count. It does not compress, since no
+    /// metadata size depends on compressed output; see <see cref="NativeWriteContext.SizeOnly" />.
+    /// <para>
+    /// Chunk indexes are allocated when the writer is disposed rather than during encoding, so the total
+    /// is only complete after Dispose has run - hence the explicit call rather than a using block.
+    /// </para>
+    /// </remarks>
+    internal static long MeasureMetadataSize(H5File file, H5WriteOptions options)
+    {
+        var sizingOptions = options with
+        {
+            // Interleaved, so that this pass allocates no region of its own and the total it reports is
+            // purely the sum of what the file needs.
+            MetadataPlacement = H5MetadataPlacement.Interleaved,
+            MetadataReservation = 0
+        };
+
+        using var stream = new SizingStream();
+
+        var writer = new H5NativeWriter(file, stream, sizingOptions, leaveOpen: true, sizeOnly: true);
+
+        writer.Write();
+        writer.Dispose();
+
+        return writer.Context.FreeSpaceManager.MetadataAllocated;
+    }
+
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
+        : this(file, stream, options, leaveOpen, sizeOnly: false)
+    {
+        //
+    }
+
+    private H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen, bool sizeOnly)
     {
         // TODO readable is only required for checksums, maybe this requirement can be lifted by renting Memory<byte> and calculate the checksum over that memory
         if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
@@ -39,8 +79,35 @@ partial class H5NativeWriter
                 throw new Exception("The user block size is invalid.");
         }
 
-        var freeSpaceManager = new FreeSpaceManager();
-        freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
+        var freeSpaceManager = new FreeSpaceManager(
+            options.MetadataPlacement,
+            blockSize: options.MetadataPlacement == H5MetadataPlacement.Interleaved
+                ? 0
+                : options.MetadataBlockSize);
+
+        // The superblock must sit at offset zero, which is why it does not go through Allocate - see
+        // AllocateAtFront.
+        freeSpaceManager.AllocateAtFront(Superblock23.ENCODE_SIZE);
+
+        if (options.MetadataPlacement == H5MetadataPlacement.FrontLoaded && !sizeOnly)
+        {
+            // No reservation given: measure the file instead of guessing at it. The sizing pass runs
+            // Interleaved, so it cannot recurse back into this branch.
+            //
+            // SLACK is added to the measured figure and is not optional. The measurement is the total of
+            // every metadata allocation INCLUDING the superblock, but the superblock is allocated before
+            // the region exists and so is served from outside it - leaving the region short by exactly
+            // that much. Reserving the bare total exhausts the region to the byte and spills the final
+            // allocation into a whole extra block. The slack also absorbs the global heap's 4 kB
+            // collection granularity, which is the coarsest thing the allocator hands out.
+            const long slack = 3 * 4096;
+
+            var reservation = options.MetadataReservation > 0
+                ? options.MetadataReservation
+                : MeasureMetadataSize(file, options) + slack;
+
+            freeSpaceManager.ReserveMetadataRegion(reservation);
+        }
 
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
@@ -58,7 +125,10 @@ partial class H5NativeWriter
             ObjectReferenceCountMap: new(),
             RawValueToDatasetMap: new(ReferenceEqualityComparer.Instance),
             ShortlivedStream: new(memory: default)
-        );
+        )
+        {
+            SizeOnly = sizeOnly
+        };
 
         File = file;
         Context = writeContext;

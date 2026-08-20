@@ -10,7 +10,7 @@ internal partial record class ObjectHeader2
         var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
 
         var freeSpaceManager = context.FreeSpaceManager;
-        var address = freeSpaceManager.Allocate((long)encodeSize);
+        var address = freeSpaceManager.Allocate((long)encodeSize, AllocationKind.Metadata);
 
         var driver = context.Driver;
         driver.SeekRelativeToBaseAddress(address);

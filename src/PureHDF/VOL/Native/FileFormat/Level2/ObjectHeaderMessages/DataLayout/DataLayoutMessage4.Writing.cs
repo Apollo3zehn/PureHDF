@@ -67,7 +67,7 @@ internal partial record class DataLayoutMessage4
             /* some indexes can only be allocated later */
             var address = indexInfo.EncodeSize == 0
                 ? Superblock.UndefinedAddress
-                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize);
+                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, AllocationKind.Metadata);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Rank: (byte)(chunkDimensions.Length + 1),
@@ -142,7 +142,7 @@ internal partial record class DataLayoutMessage4
             /* create contiguous dataset */
             if (dataLayout == default)
             {
-                var address = context.FreeSpaceManager.Allocate(dataEncodeSize);
+                var address = context.FreeSpaceManager.Allocate(dataEncodeSize, AllocationKind.RawData);
 
                 var properties = new ContiguousStoragePropertyDescription(
                     Size: (ulong)dataEncodeSize

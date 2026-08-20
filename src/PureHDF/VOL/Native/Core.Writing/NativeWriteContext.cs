@@ -28,4 +28,18 @@ internal record NativeWriteContext(
     Dictionary<H5Object, int> ObjectReferenceCountMap,
     Dictionary<object, H5Dataset> RawValueToDatasetMap,
     SystemMemoryStream ShortlivedStream
-);
+)
+{
+    /// <summary>
+    /// Set for the pass whose only purpose is to total up how much structure the file needs, so that a
+    /// front-loaded reservation can be sized exactly instead of estimated.
+    /// </summary>
+    /// <remarks>
+    /// Everything that decides a SIZE still runs: every object is encoded, every chunk is enumerated and
+    /// allocated, every heap collection is opened. What is skipped is compressing chunk payload, because
+    /// no metadata size depends on the compressed result - a filtered chunk index entry's size field is
+    /// sized from <c>ChunkByteSize</c>, the uncompressed chunk size - and compression is around 97% of a
+    /// filtered write, so running it would make the pass cost as much as the file it is measuring.
+    /// </remarks>
+    public bool SizeOnly { get; init; }
+}
