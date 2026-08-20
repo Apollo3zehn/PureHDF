@@ -46,6 +46,47 @@ Nullable value types (e.g. `int?`) require special handling within the HDF5 file
 
 Summary: To represent nullable value types, we use the HDF5 internal variable-length sequence data type with a sequence length of `1`.
 
+# Strings
+
+Strings are written as HDF5 `variable-length` strings by default, which stores the value in the file's global heap and lets it be any length. Set `DefaultStringLength` to write `fixed-length` strings instead, of that width in **bytes** - not characters, so a width chosen by counting characters is too small for anything outside ASCII:
+
+```cs
+var options = new H5WriteOptions(DefaultStringLength: 32);
+
+file.Write(filePath, options);
+```
+
+A value too long for a declared width is truncated. Set `StringOverflow` to fail the write instead:
+
+```cs
+var options = new H5WriteOptions(DefaultStringLength: 32)
+{
+    StringOverflow = H5StringOverflow.Throw
+};
+```
+
+A `null` cannot be written into a fixed-length string at all, because the field has no way to record the difference between `null` and an empty string. Such a write is refused; use variable-length strings for data that contains nulls.
+
+## Attributes
+
+Attributes do not follow `DefaultStringLength`. A string attribute is `fixed-length`, as wide as its own longest value, so it neither truncates nor pads - which matters because `DefaultStringLength` is file-global, and one width wide enough for the largest attribute in the file pads out every smaller one.
+
+Set `AttributeStringLength` to change that:
+
+```cs
+var options = new H5WriteOptions(DefaultStringLength: 32)
+{
+    // Attributes take DefaultStringLength as well, so 32 bytes here.
+    AttributeStringLength = H5AttributeStringLength.Inherit
+};
+```
+
+The three values are `Measured` (the default, as wide as the value), `Inherit` (`DefaultStringLength`, or variable-length when it is 0) and `VariableLength` (always variable-length, whatever `DefaultStringLength` says).
+
+An attribute holding a `null` element stays variable-length, since that is the only kind of string field that can hold one - so measuring never loses a value.
+
+This applies to an attribute whose elements *are* strings. A string that is a *member* of a compound attribute keeps its width from `DefaultStringLength` or a string length mapper, because a member's width has to stay the same across every object sharing that type.
+
 # Opaque Data
 
 Create an instance of the `H5OpaqueInfo` type and pass it to the `H5Dataset` constructor to treat byte arrays as opaque data:
