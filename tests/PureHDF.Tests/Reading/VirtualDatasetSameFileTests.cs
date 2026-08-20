@@ -19,6 +19,12 @@ namespace PureHDF.Tests.Reading;
 /// process working directory - so it resolves them off the filesystem and says nothing about streams.
 /// </para>
 /// </remarks>
+/// <remarks>
+/// Opted into the shared-state collection because <c>TestUtils.PrepareTestFile</c> drives the HDF5 C
+/// library, whose file tracking is process-global. Left out, these tests fail intermittently against
+/// whatever else happens to be creating a file at the same moment.
+/// </remarks>
+[Collection(SharedHdf5StateCollection.Name)]
 public class VirtualDatasetSameFileTests
 {
     private static readonly int[] _expected =
