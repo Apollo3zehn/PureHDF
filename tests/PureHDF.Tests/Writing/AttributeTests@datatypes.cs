@@ -654,7 +654,7 @@ public partial class AttributeTests
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {

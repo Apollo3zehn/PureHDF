@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -21,7 +22,19 @@ internal partial record class AttributeMessage
         // TODO cache this
         var method = _methodInfoCreateAttributeMessage.MakeGenericMethod(h5attribute.Type, elementType);
 
-        return (AttributeMessage)method.Invoke(default, [context, name, h5attribute, isScalar])!;
+        try
+        {
+            return (AttributeMessage)method.Invoke(default, [context, name, h5attribute, isScalar])!;
+        }
+
+        // Rethrown unwrapped, as in H5NativeWriter.EncodeDataset and for the same reason: this is where a
+        // caller's own data is rejected, and reflection would otherwise replace a specific message with
+        // "Exception has been thrown by the target of an invocation".
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw; // unreachable; the compiler cannot see that the line above always throws
+        }
     }
 
     private static AttributeMessage InternalCreate<T, TElement>(

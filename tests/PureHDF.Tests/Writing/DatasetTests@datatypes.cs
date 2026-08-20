@@ -530,11 +530,13 @@ public partial class DatasetTests
         void action() => file.Write(filePath);
 
         // Assert
-        var exception = Assert.Throws<TargetInvocationException>(action);
+        var exception = Assert.Throws<Exception>(action);
 
+        // Read straight off the exception: encoding rethrows unwrapped, so the reflection layers no
+        // longer have to be walked through to reach the message.
         Assert.Equal(
-            "The current object is already being encoded which suggests a circular reference.", 
-            exception.InnerException!.InnerException!.Message);
+            "The current object is already being encoded which suggests a circular reference.",
+            exception.Message);
     }
 
     [Fact]
@@ -740,7 +742,7 @@ public partial class DatasetTests
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {
