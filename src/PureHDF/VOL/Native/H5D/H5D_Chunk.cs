@@ -315,6 +315,21 @@ internal abstract class H5D_Chunk : H5D_Base
         {
             var filterMask = 0U;
 
+            // A sizing pass registers the chunk without compressing it. Registering it is required,
+            // because the index's size comes from how many chunks there are - but the compressed length
+            // is not, because the width of an index entry's size field comes from ChunkSizeLength, which
+            // is computed from the UNCOMPRESSED ChunkByteSize. Passing the uncompressed length is
+            // therefore both consistent with that width and an upper bound.
+            //
+            // This is the one thing such a pass must skip: compression is around 97% of a filtered
+            // write, so running it would cost as much as the write being measured.
+            if (WriteContext.SizeOnly)
+            {
+                _ = GetWriteChunkInfo(chunkIndex, (uint)ChunkByteSize, filterMask);
+
+                return;
+            }
+
             var buffer = H5Filter.ExecutePipeline(
                 Dataset.FilterPipeline.FilterDescriptions,
                 filterMask,

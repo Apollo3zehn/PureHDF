@@ -53,7 +53,7 @@ internal partial record class ObjectHeader2
         headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
 
-        return context.FreeSpaceManager.Allocate(encodeSize);
+        return context.FreeSpaceManager.Allocate(encodeSize, AllocationKind.Metadata);
     }
 
     private void EncodeCore(H5DriverBase driver, ulong headerMessagesEncodeSize)

@@ -65,6 +65,26 @@ public partial class H5NativeWriter : IDisposable
                 Context.GlobalHeapManager.Encode();
 
                 // superblock
+                //
+                // The end-of-file address must cover everything ALLOCATED, not merely everything
+                // written, because an address can be referenced without ever being written to: a
+                // dataset created through BeginWrite has its payload allocated and named by its layout
+                // message whether or not the caller ever writes it. Nothing extends the stream over
+                // that payload, and a placement decides whether anything else does - an interleaved
+                // file usually has metadata allocated after it, whose writes extend the stream by
+                // accident, while a front-loaded one serves metadata from the front and leaves the
+                // stream ending before the payload the layout points at. h5dump then rejects the
+                // dataset outright: "invalid dataset size, likely file corruption".
+                //
+                // So the stream is extended to the allocator's mark rather than the address being
+                // trimmed to the stream. Trimming would be smaller - an abandoned region tail is
+                // usually the last thing in the file, and it is referenced by nothing - but it cannot
+                // be told apart from the payload case here, and getting it wrong truncates data.
+                var highWaterMark = Context.FreeSpaceManager.HighWaterMark;
+
+                if (Context.Driver.Length < highWaterMark)
+                    Context.Driver.SetLength(highWaterMark);
+
                 var endOfFileAddress = (ulong)Context.Driver.Length;
 
                 var superblock = new Superblock23(

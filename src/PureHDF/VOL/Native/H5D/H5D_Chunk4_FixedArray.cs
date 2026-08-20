@@ -81,7 +81,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         if (Dataset.FilterPipeline is not null)
         {
             chunkInfo = new ChunkInfo(
-                Address: (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize),
+                Address: (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize, AllocationKind.RawData),
                 Size: chunkSize,
                 FilterMask: filterMask
             );
@@ -139,7 +139,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 };
 
                 var dataBlockEncodeSize = dataBlock.GetEncodeSize(pageCount, pageBitmapSize, entrySize);
-                var dataBlockAddress = WriteContext.FreeSpaceManager.Allocate((long)dataBlockEncodeSize);
+                var dataBlockAddress = WriteContext.FreeSpaceManager.Allocate((long)dataBlockEncodeSize, AllocationKind.Metadata);
 
                 var header = new FixedArrayHeader(
                     Superblock: default!,

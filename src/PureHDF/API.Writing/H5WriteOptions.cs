@@ -67,4 +67,55 @@ public record H5WriteOptions(
     List<H5Filter>? Filters = default,
     H5AttributeStringLength AttributeStringLength = H5AttributeStringLength.Measured,
     H5StringOverflow StringOverflow = H5StringOverflow.Truncate
-);
+)
+{
+    // Declared in the body rather than as further positional parameters, deliberately: adding a
+    // parameter to a record's primary constructor changes its signature, which is a binary-breaking
+    // change for anything compiled against the previous version, while adding a property is not.
+
+    /// <summary>
+    /// Where the writer places file structure relative to dataset payload. The default,
+    /// <see cref="H5MetadataPlacement.Interleaved" />, allocates in encode order and adds nothing to a
+    /// write.
+    /// </summary>
+    /// <remarks>
+    /// Set <see cref="H5MetadataPlacement.FrontLoaded" /> to keep structure together at the front of the
+    /// file, which is what a reader fetching ranges over a high-latency link wants. See
+    /// <see cref="H5MetadataPlacement" /> for what each one buys and costs.
+    /// </remarks>
+    public H5MetadataPlacement MetadataPlacement { get; init; } = H5MetadataPlacement.Interleaved;
+
+    /// <summary>
+    /// The size in bytes of a metadata block, used when <see cref="MetadataPlacement" /> is
+    /// <see cref="H5MetadataPlacement.Aggregated" />. The default is 8 MB.
+    /// </summary>
+    /// <remarks>
+    /// Larger blocks cluster more structure together and waste more of the final block. A block smaller
+    /// than the largest single metadata allocation cannot hold it, and such an allocation falls back to
+    /// being placed inline.
+    /// </remarks>
+    public long MetadataBlockSize { get; init; } = 8 * 1024 * 1024;
+
+    /// <summary>
+    /// The size in bytes reserved at the front of the file for structure, used when
+    /// <see cref="MetadataPlacement" /> is <see cref="H5MetadataPlacement.FrontLoaded" />. Zero, the
+    /// default, means the writer measures it.
+    /// </summary>
+    /// <remarks>
+    /// Measuring means encoding the file once against a stream that discards everything, which yields an
+    /// exact figure rather than an estimate because it is the same encoder and allocator. It does not
+    /// compress, so on a filtered write it adds a low single-digit percentage; on an unfiltered write the
+    /// share is larger, but an unfiltered write is cheap to begin with.
+    /// <para>
+    /// Set an explicit value to skip that pass. Doing so also covers the one case a measurement cannot
+    /// reach: variable-length data written through
+    /// <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> after the initial write. Such data goes
+    /// on the global heap, and how much heap it needs follows from the values themselves, which the
+    /// measuring pass has not seen. Everything else about a deferred dataset is already covered, since a
+    /// chunk index is sized from the chunk count, which comes from the dimensions rather than from the
+    /// data. A reservation that falls short spills into blocks, so the effect is a loss of locality for
+    /// the remainder rather than a failure.
+    /// </para>
+    /// </remarks>
+    public long MetadataReservation { get; init; }
+}

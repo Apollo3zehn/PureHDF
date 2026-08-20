@@ -23,7 +23,7 @@ internal partial record class DataLayoutMessage4
                     .Ceiling(dataDimensions[dimension] / (double)chunkDimensions[dimension]);
             }
 
-            (IndexingInformation IndexingInformation, long EncodeSize, ChunkedStoragePropertyFlags Flags) indexInfo;
+            (IndexingInformation IndexingInformation, long EncodeSize, AllocationKind Kind, ChunkedStoragePropertyFlags Flags) indexInfo;
 
             if (chunkCount == 1)
             {
@@ -37,6 +37,7 @@ internal partial record class DataLayoutMessage4
                 indexInfo = (
                     indexingInformation,
                     0,
+                    AllocationKind.Metadata,
                     flags);
             }
 
@@ -50,6 +51,7 @@ internal partial record class DataLayoutMessage4
                                 PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
                             ),
                             FixedArrayHeader.ENCODE_SIZE,
+                            AllocationKind.Metadata,
                             ChunkedStoragePropertyFlags.None
                         )
                     :
@@ -60,6 +62,13 @@ internal partial record class DataLayoutMessage4
                                 chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * 
                                 typeSize
                             ),
+
+                            /* An implicit index has no index structure at all: the chunks sit
+                             * contiguously from this address, so what is allocated here is the whole
+                             * payload rather than metadata. See H5D_Chunk4_Implicit, which derives a
+                             * chunk's address by offsetting into it arithmetically.
+                             */
+                            AllocationKind.RawData,
                             ChunkedStoragePropertyFlags.None
                         );
             }
@@ -67,7 +76,7 @@ internal partial record class DataLayoutMessage4
             /* some indexes can only be allocated later */
             var address = indexInfo.EncodeSize == 0
                 ? Superblock.UndefinedAddress
-                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize);
+                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, indexInfo.Kind);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Rank: (byte)(chunkDimensions.Length + 1),
@@ -142,7 +151,7 @@ internal partial record class DataLayoutMessage4
             /* create contiguous dataset */
             if (dataLayout == default)
             {
-                var address = context.FreeSpaceManager.Allocate(dataEncodeSize);
+                var address = context.FreeSpaceManager.Allocate(dataEncodeSize, AllocationKind.RawData);
 
                 var properties = new ContiguousStoragePropertyDescription(
                     Size: (ulong)dataEncodeSize
