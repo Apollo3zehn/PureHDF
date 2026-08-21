@@ -65,6 +65,18 @@ public partial class H5NativeWriter : IDisposable
                 Context.GlobalHeapManager.Encode();
 
                 // superblock
+                //
+                // The end-of-file address must cover everything ALLOCATED, not merely everything
+                // written. A metadata region whose tail was never filled is allocated space past the
+                // last write, so with a front-loaded or aggregated placement the stream can be shorter
+                // than the allocator's high-water mark. The stream is extended to match rather than the
+                // address being trimmed to the stream: leaving the declared end of file beyond the
+                // actual file makes it look truncated to tools that compare the two.
+                var highWaterMark = Context.FreeSpaceManager.HighWaterMark;
+
+                if (Context.Driver.Length < highWaterMark)
+                    Context.Driver.SetLength(highWaterMark);
+
                 var endOfFileAddress = (ulong)Context.Driver.Length;
 
                 var superblock = new Superblock23(
