@@ -1,8 +1,8 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace PureHDF.VOL.Native;
@@ -13,9 +13,6 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage : Message
 {
-    private static readonly MethodInfo _methodInfoGetTypeInfoForTopLevelUnmanagedMemory = typeof(DatatypeMessage)
-        .GetMethod(nameof(GetTypeInfoForTopLevelUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
-
     private const int DATATYPE_MESSAGE_VERSION = 3;
 
     // reference size                = GHEAP address + GHEAP index
@@ -24,30 +21,37 @@ internal partial record class DatatypeMessage : Message
     // variable length entry size           length
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
+    private static readonly MethodInfo _methodInfoGetTypeInfoForTopLevelUnmanagedMemory = typeof(DatatypeMessage)
+        .GetMethod(nameof(GetTypeInfoForTopLevelUnmanagedMemory), BindingFlags.NonPublic | BindingFlags.Static)!;
+
+    // stringLength declares the width for a fixed-length string, overriding
+    // H5WriteOptions.DefaultStringLength. Null defers to that option, which is what every dataset does;
+    // an attribute answers for itself according to H5WriteOptions.AttributeStringLength - a measured width
+    // along with the padding it implies, or an explicit 0 to force variable-length even where the option
+    // declares a width. See AttributeMessage.GetStringLengthForAttribute.
     public static (DatatypeMessage, EncodeDelegate<T>) Create<T>(
         NativeWriteContext context,
         Memory<T> topLevelData,
         bool isScalar,
-        H5OpaqueInfo? opaqueInfo
+        H5OpaqueInfo? opaqueInfo,
+        int? stringLength = default,
+        PaddingType stringPadding = PaddingType.NullTerminate
     )
     {
-        var isScalarDictionary = isScalar &&
-            !topLevelData.Equals(default) &&
-            typeof(IDictionary).IsAssignableFrom(typeof(T)) &&
-            typeof(T).GenericTypeArguments[0] == typeof(string);
+        bool isScalarDictionary = isScalar &&
+                                  !topLevelData.Equals(default) &&
+                                  typeof(IDictionary).IsAssignableFrom(typeof(T)) &&
+                                  typeof(T).GenericTypeArguments[0] == typeof(string);
 
         if (isScalar)
             return isScalarDictionary
                 ? GetTypeInfoForTopLevelDictionary<T>(context, (IDictionary)topLevelData.Span[0]!)
-                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength: default);
+                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength, stringPadding);
 
-        else
-            return
-                DataUtils.IsReferenceOrContainsReferences(typeof(T)) || 
-                Nullable.GetUnderlyingType(typeof(T)) is not null
-
-                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo)
-
+        return
+            DataUtils.IsReferenceOrContainsReferences(typeof(T)) ||
+            Nullable.GetUnderlyingType(typeof(T)) is not null
+                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo, stringLength, stringPadding)
                 : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
                     // TODO cache
                     .MakeGenericMethod(typeof(T))
@@ -56,25 +60,22 @@ internal partial record class DatatypeMessage : Message
 
     public override void Encode(H5DriverBase driver)
     {
-        var classVersion = (byte)((byte)Class & 0x0F | Version << 4);
+        byte classVersion = (byte)(((byte)Class & 0x0F) | (Version << 4));
         driver.Write(classVersion);
 
         BitField.Encode(driver);
 
         driver.Write(Size);
 
-        foreach (var property in Properties)
-        {
-            property.Encode(driver, Size);
-        }
+        foreach (var property in Properties) property.Encode(driver, Size);
     }
 
     public override ushort GetEncodeSize()
     {
-        var propertiesEncodeSize = Properties.Aggregate(0, (sum, properties)
+        int propertiesEncodeSize = Properties.Aggregate(0, (sum, properties)
             => sum + properties.GetEncodeSize(Size));
 
-        var encodeSize =
+        int encodeSize =
             sizeof(byte) +
             sizeof(byte) * 3 +
             sizeof(uint) +
@@ -85,12 +86,15 @@ internal partial record class DatatypeMessage : Message
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForScalar_SpecialEncode<T>(
         NativeWriteContext context,
-        int stringLength = default)
+        int? stringLength = default,
+        PaddingType stringPadding = PaddingType.NullTerminate)
     {
-        var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength);
+        var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength, stringPadding: stringPadding);
 
         void encodeFirstElement(Memory<T> source, IH5WriteStream target)
-            => encode(source.Span[0]!, target);
+        {
+            encode(source.Span[0]!, target);
+        }
 
         return (dataType, encodeFirstElement);
     }
@@ -98,11 +102,13 @@ internal partial record class DatatypeMessage : Message
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForScalar(
         NativeWriteContext context,
         Type type,
-        int stringLength = default,
-        H5OpaqueInfo? opaqueInfo = default)
+        int? stringLength = default,
+        H5OpaqueInfo? opaqueInfo = default,
+        PaddingType stringPadding = PaddingType.NullTerminate)
     {
-        if (stringLength == default)
-            stringLength = context.WriteOptions.DefaultStringLength;
+        // Null means no answer was given, so the file-global option decides. A zero IS an answer - it asks
+        // for a variable-length string even where that option declares a width.
+        int resolvedStringLength = stringLength ?? context.WriteOptions.DefaultStringLength;
 
         // special case: opaque (= byte[])
         // use unique type to make cache happy
@@ -114,7 +120,7 @@ internal partial record class DatatypeMessage : Message
         // so one type maps to many messages. Keying on all of it means strings and opaque types
         // can be cached like anything else instead of having to be excluded.
         var cache = context.TypeToMessageMap;
-        var cacheKey = new DatatypeCacheKey(type, stringLength, opaqueInfo);
+        var cacheKey = new DatatypeCacheKey(type, resolvedStringLength, stringPadding, opaqueInfo);
 
         if (cache.TryGetValue(cacheKey, out var cachedMessage))
             return cachedMessage;
@@ -124,17 +130,17 @@ internal partial record class DatatypeMessage : Message
             ? ByteOrder.LittleEndian
             : ByteOrder.BigEndian;
 
-        (var newMessage, var encode) = type switch
+        var (newMessage, encode) = type switch
         {
             /* string */
             Type when type == typeof(string)
-                => stringLength == 0
+                => resolvedStringLength == 0
                     ? GetTypeInfoForVariableLengthString(context)
-                    : GetTypeInfoForFixedLengthString(context, stringLength),
+                    : GetTypeInfoForFixedLengthString(context, resolvedStringLength, stringPadding),
 
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) &&
-                        type.GenericTypeArguments[0] == typeof(string)
+                      type.GenericTypeArguments[0] == typeof(string)
                 => GetTypeInfoForVariableLengthSequence(context, typeof(KeyValuePair<,>)
                     .MakeGenericType(type.GenericTypeArguments)),
 
@@ -216,7 +222,7 @@ internal partial record class DatatypeMessage : Message
             Type when type.IsValueType
                 => GetTypeInfoForReferenceLikeType(context, type),
 
-            _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
+            _ => throw new NotSupportedException($"The data type '{type}' is not supported.")
         };
 
         cache[cacheKey] = (newMessage, encode);
@@ -233,7 +239,7 @@ internal partial record class DatatypeMessage : Message
         {
             Span<byte> buffer = stackalloc byte[]
             {
-                ((bool)source) ? (byte)1 : (byte)0
+                (bool)source ? (byte)1 : (byte)0
             };
 
             target.WriteDataset(buffer);
@@ -248,18 +254,16 @@ internal partial record class DatatypeMessage : Message
     {
         var underlyingType = Enum.GetUnderlyingType(type);
         var enumValues = Enum.GetValues(type);
-        var enumObjects = new object[enumValues.Length];
+        object[] enumObjects = new object[enumValues.Length];
 
-        for (int i = 0; i < enumValues.Length; i++)
-        {
-            enumObjects[i] = enumValues.GetValue(i)!;
-        }
+        for (int i = 0; i < enumValues.Length; i++) enumObjects[i] = enumValues.GetValue(i)!;
 
-        var values = (underlyingType switch
+        byte[][] values = (underlyingType switch
         {
-            Type t when t == typeof(byte) => enumObjects.Select(enumValue => new byte[] { (byte)enumValue }),
-            Type t when t == typeof(sbyte) => enumObjects.Select(enumValue => new byte[] { unchecked((byte)enumValue) }),
-            Type t when t == typeof(ushort) => enumObjects.Select(enumValue => BitConverter.GetBytes((ushort)enumValue)),
+            Type t when t == typeof(byte) => enumObjects.Select(enumValue => new[] { (byte)enumValue }),
+            Type t when t == typeof(sbyte) => enumObjects.Select(enumValue => new[] { unchecked((byte)enumValue) }),
+            Type t when t == typeof(ushort) =>
+                enumObjects.Select(enumValue => BitConverter.GetBytes((ushort)enumValue)),
             Type t when t == typeof(short) => enumObjects.Select(enumValue => BitConverter.GetBytes((short)enumValue)),
             Type t when t == typeof(uint) => enumObjects.Select(enumValue => BitConverter.GetBytes((uint)enumValue)),
             Type t when t == typeof(int) => enumObjects.Select(enumValue => BitConverter.GetBytes((int)enumValue)),
@@ -271,18 +275,16 @@ internal partial record class DatatypeMessage : Message
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, Enum.GetUnderlyingType(type));
 
         var properties = new EnumerationPropertyDescription(
-            BaseType: baseMessage,
-            Names: Enum.GetNames(type),
-            Values: values
+            baseMessage,
+            Enum.GetNames(type),
+            values
         );
 
         var message = new DatatypeMessage(
             baseMessage.Size,
-
             new EnumerationBitFieldDescription(
-                MemberCount: (ushort)Enum.GetNames(type).Length
+                (ushort)Enum.GetNames(type).Length
             ),
-
             [
                 properties
             ]
@@ -310,14 +312,14 @@ internal partial record class DatatypeMessage : Message
             var fieldNameMapper = context.WriteOptions.FieldNameMapper;
 
             properties[i] = new CompoundPropertyDescription(
-                Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
-                MemberByteOffset: (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
-                MemberTypeMessage: fieldMessage
+                fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
+                (ulong)Marshal.OffsetOf(type, fieldInfo.Name),
+                fieldMessage
             );
         }
 
         var bitfield = new CompoundBitFieldDescription(
-            MemberCount: (ushort)fieldInfos.Length
+            (ushort)fieldInfos.Length
         );
 
         /* H5Odtype.c (H5O_dtype_decode_helper: case H5T_COMPOUND) */
@@ -335,14 +337,16 @@ internal partial record class DatatypeMessage : Message
         };
 
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
-        var parameters = new object[2];
+        object[] parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
         {
             parameters[0] = source;
             parameters[1] = target;
             invokeEncodeUnmanagedElement.Invoke(default, parameters);
-        };
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -353,12 +357,12 @@ internal partial record class DatatypeMessage : Message
     {
         CompoundBitFieldDescription bitfield;
 
-        var offset = 0U;
-        var isValueType = type.IsValueType;
-        var defaultStringLength = context.WriteOptions.DefaultStringLength;
+        uint offset = 0U;
+        bool isValueType = type.IsValueType;
+        int defaultStringLength = context.WriteOptions.DefaultStringLength;
 
         // fields
-        var includeFields = isValueType
+        bool includeFields = isValueType
             ? context.WriteOptions.IncludeStructFields
             : context.WriteOptions.IncludeClassFields;
 
@@ -371,7 +375,7 @@ internal partial record class DatatypeMessage : Message
             : Array.Empty<ElementEncodeDelegate>();
 
         // properties
-        var includeProperties = isValueType
+        bool includeProperties = isValueType
             ? context.WriteOptions.IncludeStructProperties
             : context.WriteOptions.IncludeClassProperties;
 
@@ -388,7 +392,7 @@ internal partial record class DatatypeMessage : Message
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
-            MemberCount: (ushort)(fieldInfos.Length + propertyInfos.Length)
+            (ushort)(fieldInfos.Length + propertyInfos.Length)
         );
 
         /* H5Odtype.c (H5O_dtype_decode_helper: case H5T_COMPOUND) */
@@ -408,18 +412,20 @@ internal partial record class DatatypeMessage : Message
                 var fieldInfo = fieldInfos[i];
                 var underlyingType = fieldInfo.FieldType;
 
-                var stringLength = underlyingType == typeof(string)
-                    ? fieldStringLengthMapper is null ? defaultStringLength : fieldStringLengthMapper(fieldInfo) ?? defaultStringLength
+                int stringLength = underlyingType == typeof(string)
+                    ? fieldStringLengthMapper is null
+                        ? defaultStringLength
+                        : fieldStringLengthMapper(fieldInfo) ?? defaultStringLength
                     : defaultStringLength;
 
-                var (fieldMessage, fieldEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength: stringLength);
+                var (fieldMessage, fieldEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength);
 
                 fieldEncodes[i] = fieldEncode;
 
                 properties[i] = new CompoundPropertyDescription(
-                    Name: fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
-                    MemberByteOffset: offset,
-                    MemberTypeMessage: fieldMessage
+                    fieldNameMapper is null ? fieldInfo.Name : fieldNameMapper(fieldInfo) ?? fieldInfo.Name,
+                    offset,
+                    fieldMessage
                 );
 
                 offset += fieldMessage.Size;
@@ -436,18 +442,22 @@ internal partial record class DatatypeMessage : Message
                 var propertyInfo = propertyInfos[i];
                 var underlyingType = propertyInfo.PropertyType;
 
-                var stringLength = underlyingType == typeof(string)
-                    ? propertyStringLengthMapper is null ? defaultStringLength : propertyStringLengthMapper(propertyInfo) ?? defaultStringLength
+                int stringLength = underlyingType == typeof(string)
+                    ? propertyStringLengthMapper is null
+                        ? defaultStringLength
+                        : propertyStringLengthMapper(propertyInfo) ?? defaultStringLength
                     : defaultStringLength;
 
-                var (propertyMessage, propertyEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength: stringLength);
+                var (propertyMessage, propertyEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength);
 
                 propertyEncodes[i] = propertyEncode;
 
                 properties[fieldInfos.Length + i] = new CompoundPropertyDescription(
-                    Name: propertyNameMapper is null ? propertyInfo.Name : propertyNameMapper(propertyInfo) ?? propertyInfo.Name,
-                    MemberByteOffset: offset,
-                    MemberTypeMessage: propertyMessage
+                    propertyNameMapper is null
+                        ? propertyInfo.Name
+                        : propertyNameMapper(propertyInfo) ?? propertyInfo.Name,
+                    offset,
+                    propertyMessage
                 );
 
                 offset += propertyMessage.Size;
@@ -460,7 +470,7 @@ internal partial record class DatatypeMessage : Message
             for (int i = 0; i < fieldEncodes.Length; i++)
             {
                 var memberEncode = fieldEncodes[i];
-                var typeSize = (int)properties[i].MemberTypeMessage.Size;
+                int typeSize = (int)properties[i].MemberTypeMessage.Size;
                 var fieldInfo = fieldInfos[i];
 
                 memberEncode(fieldInfo.GetValue(source)!, target);
@@ -470,7 +480,7 @@ internal partial record class DatatypeMessage : Message
             for (int i = 0; i < propertyEncodes.Length; i++)
             {
                 var memberEncode = propertyEncodes[i];
-                var typeSize = (int)properties[i].MemberTypeMessage.Size;
+                int typeSize = (int)properties[i].MemberTypeMessage.Size;
                 var propertyInfo = propertyInfos[i];
 
                 memberEncode(propertyInfo.GetValue(source)!, target);
@@ -498,18 +508,15 @@ internal partial record class DatatypeMessage : Message
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, baseType);
 
         var message = new DatatypeMessage(
-
             VLEN_REFERENCE_SIZE,
-
             new VariableLengthBitFieldDescription(
-                Type: InternalVariableLengthType.Sequence,
-                PaddingType: default,
-                Encoding: default
+                InternalVariableLengthType.Sequence,
+                default,
+                default
             ),
-
             [
-                new VariableLengthPropertyDescription (
-                    BaseType: baseMessage
+                new VariableLengthPropertyDescription(
+                    baseMessage
                 )
             ]
         )
@@ -525,20 +532,20 @@ internal partial record class DatatypeMessage : Message
 
             if (source is not null)
             {
-                var itemCount = 1;
+                int itemCount = 1;
 
-                var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
+                uint typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
                     .BaseType
                     .Size;
 
-                var totalLength = (int)typeSize * itemCount;
+                int totalLength = (int)typeSize * itemCount;
 
                 (globalHeapId, var memory) = context.GlobalHeapManager
                     .AddObject(totalLength);
 
                 /* Cannot use context.ShortlivedStream here because baseEncode could recursively call
-                * this method and then the ShortlivedStream would be reset too early.
-                */
+                 * this method and then the ShortlivedStream would be reset too early.
+                 */
                 var localTarget = new SystemMemoryStream(memory);
 
                 // encode item
@@ -564,18 +571,15 @@ internal partial record class DatatypeMessage : Message
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, baseType);
 
         var message = new DatatypeMessage(
-
             VLEN_REFERENCE_SIZE,
-
             new VariableLengthBitFieldDescription(
-                Type: InternalVariableLengthType.Sequence,
-                PaddingType: default,
-                Encoding: default
+                InternalVariableLengthType.Sequence,
+                default,
+                default
             ),
-
             [
-                new VariableLengthPropertyDescription (
-                    BaseType: baseMessage
+                new VariableLengthPropertyDescription(
+                    baseMessage
                 )
             ]
         )
@@ -592,13 +596,13 @@ internal partial record class DatatypeMessage : Message
             if (source is not null)
             {
                 var enumerable = (IEnumerable)source;
-                var itemCount = WriteUtils.GetEnumerableLength(enumerable);
+                int itemCount = WriteUtils.GetEnumerableLength(enumerable);
 
-                var typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
+                uint typeSize = ((VariableLengthPropertyDescription)message.Properties[0])
                     .BaseType
                     .Size;
 
-                var totalLength = (int)typeSize * itemCount;
+                int totalLength = (int)typeSize * itemCount;
                 lengthArray[0] = itemCount;
 
                 (globalHeapId, var memory) = context.GlobalHeapManager
@@ -610,10 +614,7 @@ internal partial record class DatatypeMessage : Message
                 var localTarget = new SystemMemoryStream(memory);
 
                 // encode items
-                foreach (var item in enumerable)
-                {
-                    baseEncode(item, localTarget);
-                }
+                foreach (object? item in enumerable) baseEncode(item, localTarget);
             }
 
             // encode variable length object
@@ -634,18 +635,15 @@ internal partial record class DatatypeMessage : Message
         var (baseMessage, baseEncode) = GetTypeInfoForScalar(context, typeof(byte));
 
         var message = new DatatypeMessage(
-
             VLEN_REFERENCE_SIZE,
-
             new VariableLengthBitFieldDescription(
-                Type: InternalVariableLengthType.String,
-                PaddingType: PaddingType.NullPad,
-                Encoding: CharacterSetEncoding.UTF8
+                InternalVariableLengthType.String,
+                PaddingType.NullPad,
+                CharacterSetEncoding.UTF8
             ),
-
             [
-                new VariableLengthPropertyDescription (
-                    BaseType: baseMessage
+                new VariableLengthPropertyDescription(
+                    baseMessage
                 )
             ]
         )
@@ -661,8 +659,8 @@ internal partial record class DatatypeMessage : Message
 
             if (source is not null)
             {
-                var stringData = (string)source;
-                var stringLength = Encoding.UTF8.GetByteCount(stringData);
+                string stringData = (string)source;
+                int stringLength = Encoding.UTF8.GetByteCount(stringData);
 
                 lengthArray[0] = stringLength;
 
@@ -672,7 +670,7 @@ internal partial record class DatatypeMessage : Message
                 context.ShortlivedStream.Reset(memory);
 
                 // TODO can array creation be avoided here?
-                var bytes = Encoding.UTF8.GetBytes(stringData);
+                byte[] bytes = Encoding.UTF8.GetBytes(stringData);
                 context.ShortlivedStream.WriteDataset(bytes);
             }
 
@@ -688,18 +686,41 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
+    /// <summary>
+    ///     A fixed-length string datatype of <paramref name="length" /> bytes.
+    /// </summary>
+    /// <remarks>
+    ///     <paramref name="padding" /> says what the unused bytes of the field mean. A measured width passes
+    ///     <see cref="PaddingType.NullPad" />; a width the caller declared keeps
+    ///     <see cref="PaddingType.NullTerminate" />.
+    ///     <para>
+    ///         The choice does not change what a reader gets. There is no conversion path between fixed- and
+    ///         variable-length strings in the C library at all, so every consumer reads the field into a
+    ///         fixed-width buffer, and those bytes are identical either way - a value shorter than the field is
+    ///         followed by nulls whatever the declaration says, and stops a C string at the same place.
+    ///     </para>
+    ///     <para>
+    ///         What it changes is writing. The C library reserves the final byte of a NullTerminate field when
+    ///         it converts a value into one, so a tool rewriting the field through a wider datatype lands
+    ///         length - 1 bytes and drops the last character of a value that fills it. A measured width is
+    ///         filled to its last byte by the longest element by construction, so NullTerminate would put
+    ///         exactly that element at risk. NullPad leaves the whole width writable.
+    ///     </para>
+    ///     <para>
+    ///         The cost is that <c>h5dump</c> honours NullPad literally and prints a shorter value with its
+    ///         padding attached, as <c>"Wafer\000\000"</c>. That is a rendering difference in one tool, not
+    ///         something a reader sees.
+    ///     </para>
+    /// </remarks>
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForFixedLengthString(
-        NativeWriteContext context, int length)
+        NativeWriteContext context, int length, PaddingType padding = PaddingType.NullTerminate)
     {
         var message = new DatatypeMessage(
-
             (uint)length,
-
             new StringBitFieldDescription(
-                PaddingType: PaddingType.NullTerminate,
-                Encoding: CharacterSetEncoding.UTF8
+                padding,
+                CharacterSetEncoding.UTF8
             ),
-
             Array.Empty<DatatypePropertyDescription>()
         )
         {
@@ -709,16 +730,39 @@ internal partial record class DatatypeMessage : Message
 
         void encode(object source, IH5WriteStream target)
         {
+            string? value = (string?)source;
+
+            // Refused rather than emptied. A fixed-length field has no way to hold the difference between
+            // null and an empty string, and writing one as the other loses the distinction with nothing to
+            // show for it - the same reason StringOverflow.Throw exists for a value that does not fit.
+            if (value is null)
+                throw new InvalidOperationException(
+                    $"A null string does not fit a fixed-length string of {length} bytes, which has no way "
+                    + "to represent the difference between null and an empty string. Write variable-length "
+                    + "strings instead - H5WriteOptions.DefaultStringLength of 0, or "
+                    + "H5AttributeStringLength.VariableLength for an attribute - or replace the null with an "
+                    + "empty string.");
+
             var stringBytes = Encoding.UTF8
-                .GetBytes((string)source)
+                .GetBytes(value)
                 .AsSpan();
 
-            var truncate = Math.Min(stringBytes.Length, length);
-            stringBytes = stringBytes[..truncate];
+            if (stringBytes.Length > length)
+            {
+                if (context.WriteOptions.StringOverflow == H5StringOverflow.Throw)
+                    throw new InvalidOperationException(
+                        $"The string '{value}' needs {stringBytes.Length} UTF-8 bytes and does not "
+                        + $"fit a fixed-length string of {length} bytes. Note that an HDF5 string width is "
+                        + "in BYTES, not characters, so a width counted in characters is too small for any "
+                        + "value outside ASCII. Set H5WriteOptions.StringOverflow to Truncate to discard "
+                        + "the excess instead.");
+
+                stringBytes = stringBytes[..length];
+            }
 
             target.WriteDataset(stringBytes);
 
-            var padding = length - stringBytes.Length;
+            int padding = length - stringBytes.Length;
 
             if (padding > 0)
             {
@@ -732,7 +776,7 @@ internal partial record class DatatypeMessage : Message
                 else
                 {
                     using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
-                    
+
                     var paddingBuffer = paddingBufferOwner.Memory.Span[..padding];
                     paddingBuffer.Clear();
 
@@ -748,13 +792,10 @@ internal partial record class DatatypeMessage : Message
         NativeWriteContext context)
     {
         var message = new DatatypeMessage(
-
             (uint)Unsafe.SizeOf<NativeObjectReference1>(),
-
             new ReferenceBitFieldDescription(
-                Type: InternalReferenceType.ObjectReference
+                InternalReferenceType.ObjectReference
             ),
-
             []
         )
         {
@@ -767,7 +808,7 @@ internal partial record class DatatypeMessage : Message
             var objectReference = (H5ObjectReference)source;
 
             if (!context.ObjectToAddressMap
-                .TryGetValue(objectReference.ReferencedObject, out var address))
+                    .TryGetValue(objectReference.ReferencedObject, out ulong address))
             {
                 context.ObjectToAddressMap[objectReference.ReferencedObject] = default;
 
@@ -778,7 +819,7 @@ internal partial record class DatatypeMessage : Message
                     address = context.Writer.EncodeDataset(dataset);
 
                 else
-                    throw new Exception($"Named data types cannot yet be used in combination with H5ObjectReference.");
+                    throw new Exception("Named data types cannot yet be used in combination with H5ObjectReference.");
 
                 context.ObjectToAddressMap[objectReference.ReferencedObject] = address;
             }
@@ -800,15 +841,12 @@ internal partial record class DatatypeMessage : Message
         H5OpaqueInfo opaqueInfo)
     {
         var message = new DatatypeMessage(
-
             opaqueInfo.TypeSize,
-
             new OpaqueBitFieldDescription(
-                TagByteLength: (byte)MathUtils.Ceil_N(opaqueInfo.Tag.Length + 1, 8)
+                (byte)MathUtils.Ceil_N(opaqueInfo.Tag.Length + 1, 8)
             ),
-
             [
-                new OpaquePropertyDescription(Tag: opaqueInfo.Tag)
+                new OpaquePropertyDescription(opaqueInfo.Tag)
             ]
         )
         {
@@ -829,19 +867,16 @@ internal partial record class DatatypeMessage : Message
         ByteOrder endianness)
     {
         var message = new DatatypeMessage(
-
             (uint)Marshal.SizeOf(type),
-
             new FixedPointBitFieldDescription(
-                ByteOrder: endianness,
-                PaddingTypeLow: default,
-                PaddingTypeHigh: default,
-                IsSigned: false
+                endianness,
+                default,
+                default,
+                false
             ),
-
             [
-                new FixedPointPropertyDescription(BitOffset: 0,
-                    BitPrecision: (ushort)(Marshal.SizeOf(type) * 8)
+                new FixedPointPropertyDescription(0,
+                    (ushort)(Marshal.SizeOf(type) * 8)
                 )
             ]
         )
@@ -851,14 +886,16 @@ internal partial record class DatatypeMessage : Message
         };
 
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
-        var parameters = new object[2];
+        object[] parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
         {
             parameters[0] = source;
             parameters[1] = target;
             invokeEncodeUnmanagedElement.Invoke(default, parameters);
-        };
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -868,19 +905,16 @@ internal partial record class DatatypeMessage : Message
         ByteOrder endianness)
     {
         var message = new DatatypeMessage(
-
             (uint)Marshal.SizeOf(type),
-
             new FixedPointBitFieldDescription(
-                ByteOrder: endianness,
-                PaddingTypeLow: default,
-                PaddingTypeHigh: default,
-                IsSigned: true
+                endianness,
+                default,
+                default,
+                true
             ),
-
             [
-                new FixedPointPropertyDescription(BitOffset: 0,
-                    BitPrecision: (ushort)(Marshal.SizeOf(type) * 8)
+                new FixedPointPropertyDescription(0,
+                    (ushort)(Marshal.SizeOf(type) * 8)
                 )
             ]
         )
@@ -890,14 +924,16 @@ internal partial record class DatatypeMessage : Message
         };
 
         var invokeEncodeUnmanagedElement = WriteUtils.MethodInfoEncodeUnmanagedElement.MakeGenericMethod(type);
-        var parameters = new object[2];
+        object[] parameters = new object[2];
 
         void encode(object source, IH5WriteStream target)
         {
             parameters[0] = source;
             parameters[1] = target;
             invokeEncodeUnmanagedElement.Invoke(default, parameters);
-        };
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -907,27 +943,25 @@ internal partial record class DatatypeMessage : Message
         ByteOrder endianness)
     {
         var message = new DatatypeMessage(
-
             (uint)Unsafe.SizeOf<Half>(),
-
             new FloatingPointBitFieldDescription(
-                ByteOrder: endianness,
-                PaddingTypeLow: default,
-                PaddingTypeHigh: default,
-                PaddingTypeInternal: default,
-                MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
-                SignLocation: 15
+                endianness,
+                default,
+                default,
+                default,
+                MantissaNormalization.MsbIsNotStoredButImplied,
+                15
             ),
 
             // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
             [
-                new FloatingPointPropertyDescription(BitOffset: 0,
-                    BitPrecision: 16,
-                    ExponentLocation: 10,
-                    ExponentSize: 5,
-                    MantissaLocation: 0,
-                    MantissaSize: 10,
-                    ExponentBias: 15
+                new FloatingPointPropertyDescription(0,
+                    16,
+                    10,
+                    5,
+                    0,
+                    10,
+                    15
                 )
             ]
         )
@@ -940,7 +974,9 @@ internal partial record class DatatypeMessage : Message
         {
             Span<Half> data = stackalloc Half[] { (Half)source };
             target.WriteDataset(MemoryMarshal.AsBytes(data));
-        };
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -950,27 +986,25 @@ internal partial record class DatatypeMessage : Message
         ByteOrder endianness)
     {
         var message = new DatatypeMessage(
-
             sizeof(float),
-
             new FloatingPointBitFieldDescription(
-                ByteOrder: endianness,
-                PaddingTypeLow: default,
-                PaddingTypeHigh: default,
-                PaddingTypeInternal: default,
-                MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
-                SignLocation: 31
+                endianness,
+                default,
+                default,
+                default,
+                MantissaNormalization.MsbIsNotStoredButImplied,
+                31
             ),
 
             // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
             [
-                new FloatingPointPropertyDescription(BitOffset: 0,
-                    BitPrecision: 32,
-                    ExponentLocation: 23,
-                    ExponentSize: 8,
-                    MantissaLocation: 0,
-                    MantissaSize: 23,
-                    ExponentBias: 127
+                new FloatingPointPropertyDescription(0,
+                    32,
+                    23,
+                    8,
+                    0,
+                    23,
+                    127
                 )
             ]
         )
@@ -983,7 +1017,9 @@ internal partial record class DatatypeMessage : Message
         {
             Span<float> data = stackalloc float[] { (float)source };
             target.WriteDataset(MemoryMarshal.AsBytes(data));
-        };
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -993,27 +1029,25 @@ internal partial record class DatatypeMessage : Message
         ByteOrder endianness)
     {
         var message = new DatatypeMessage(
-
             sizeof(double),
-
             new FloatingPointBitFieldDescription(
-                ByteOrder: endianness,
-                PaddingTypeLow: default,
-                PaddingTypeHigh: default,
-                PaddingTypeInternal: default,
-                MantissaNormalization: MantissaNormalization.MsbIsNotStoredButImplied,
-                SignLocation: 63
+                endianness,
+                default,
+                default,
+                default,
+                MantissaNormalization.MsbIsNotStoredButImplied,
+                63
             ),
 
             // https://en.wikipedia.org/wiki/IEEE_754#Basic_and_interchange_formats
             [
-                new FloatingPointPropertyDescription(BitOffset: 0,
-                    BitPrecision: 64,
-                    ExponentLocation: 52,
-                    ExponentSize: 11,
-                    MantissaLocation: 0,
-                    MantissaSize: 52,
-                    ExponentBias: 1023
+                new FloatingPointPropertyDescription(0,
+                    64,
+                    52,
+                    11,
+                    0,
+                    52,
+                    1023
                 )
             ]
         )
@@ -1026,7 +1060,9 @@ internal partial record class DatatypeMessage : Message
         {
             Span<double> data = stackalloc double[] { (double)source };
             target.WriteDataset(MemoryMarshal.AsBytes(data));
-        };
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -1037,21 +1073,21 @@ internal partial record class DatatypeMessage : Message
     {
         var elementType = topLevelData.GetType().GenericTypeArguments[1];
         var (valueMessage, valueEncode) = GetTypeInfoForScalar(context, elementType);
-        var memberCount = (ushort)topLevelData.Count;
-        var memberSize = valueMessage.Size;
+        ushort memberCount = (ushort)topLevelData.Count;
+        uint memberSize = valueMessage.Size;
 
         var propertyDescriptions = new CompoundPropertyDescription[memberCount];
-        var offset = 0UL;
-        var index = 0;
+        ulong offset = 0UL;
+        int index = 0;
 
         foreach (DictionaryEntry entry in topLevelData)
         {
-            var key = (string)entry.Key;
+            string key = (string)entry.Key;
 
             var propertyDescription = new CompoundPropertyDescription(
-                Name: key,
-                MemberByteOffset: offset,
-                MemberTypeMessage: valueMessage
+                key,
+                offset,
+                valueMessage
             );
 
             offset += memberSize;
@@ -1061,13 +1097,10 @@ internal partial record class DatatypeMessage : Message
         }
 
         var message = new DatatypeMessage(
-
             valueMessage.Size * memberCount,
-
             new CompoundBitFieldDescription(
-                MemberCount: memberCount
+                memberCount
             ),
-
             propertyDescriptions
         )
         {
@@ -1077,10 +1110,7 @@ internal partial record class DatatypeMessage : Message
 
         void encode(Memory<T> source, IH5WriteStream target)
         {
-            foreach (var value in topLevelData.Values)
-            {
-                valueEncode(value, target);
-            }
+            foreach (object? value in topLevelData.Values) valueEncode(value, target);
         }
 
         return (message, encode);
@@ -1088,19 +1118,21 @@ internal partial record class DatatypeMessage : Message
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelMemory<T>(
         NativeWriteContext context,
-        H5OpaqueInfo? opaqueInfo)
+        H5OpaqueInfo? opaqueInfo,
+        int? stringLength = default,
+        PaddingType stringPadding = PaddingType.NullTerminate)
     {
-        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T), opaqueInfo: opaqueInfo);
+        var (message, elementEncode) =
+            GetTypeInfoForScalar(context, typeof(T), stringLength, opaqueInfo, stringPadding);
 
         void encode(Memory<T> source, IH5WriteStream target)
         {
             var sourceSpan = source.Span;
 
-            for (int i = 0; i < source.Length; i++)
-            {
-                elementEncode(sourceSpan[i]!, target);
-            }
-        };
+            for (int i = 0; i < source.Length; i++) elementEncode(sourceSpan[i]!, target);
+        }
+
+        ;
 
         return (message, encode);
     }
@@ -1112,7 +1144,9 @@ internal partial record class DatatypeMessage : Message
         var (message, _) = GetTypeInfoForScalar(context, typeof(T), opaqueInfo: opaqueInfo);
 
         static void encode(Memory<T> source, IH5WriteStream target)
-            => target.WriteDataset(MemoryMarshal.AsBytes(source.Span));
+        {
+            target.WriteDataset(MemoryMarshal.AsBytes(source.Span));
+        }
 
         return (message, encode);
     }

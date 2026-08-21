@@ -386,7 +386,7 @@ public partial class DatasetTests
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {
@@ -414,7 +414,7 @@ public partial class DatasetTests
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {

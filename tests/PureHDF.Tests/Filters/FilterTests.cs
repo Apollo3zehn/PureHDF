@@ -720,7 +720,7 @@ public class FilterTests
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {

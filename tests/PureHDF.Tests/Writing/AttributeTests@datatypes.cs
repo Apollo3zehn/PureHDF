@@ -8,7 +8,9 @@ public partial class AttributeTests
 {
     public static IList<object[]> CommonData { get; } = WritingTestData.Common;
     public static IList<object[]> CommonData_FixedLengthString { get; } = WritingTestData.Common_FixedLengthString;
-    public static IList<object[]> CommonData_FixedLengthStringMapper { get; } = WritingTestData.Common_FixedLengthStringMapper;
+
+    public static IList<object[]> CommonData_FixedLengthStringMapper { get; } =
+        WritingTestData.Common_FixedLengthStringMapper;
 
     [Theory]
     [MemberData(nameof(CommonData))]
@@ -19,7 +21,7 @@ public partial class AttributeTests
         var file = new H5File();
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         static string? fieldNameMapper(FieldInfo fieldInfo)
         {
@@ -34,7 +36,8 @@ public partial class AttributeTests
         }
 
         var options = new H5WriteOptions(
-            IncludeStructProperties: type == typeof(WritingTestRecordStruct) || type == typeof(Dictionary<string, int>[]),
+            IncludeStructProperties: type == typeof(WritingTestRecordStruct) ||
+                                     type == typeof(Dictionary<string, int>[]),
             FieldNameMapper: fieldNameMapper,
             PropertyNameMapper: propertyNameMapper
         );
@@ -46,9 +49,9 @@ public partial class AttributeTests
         try
         {
             /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var suffix = type switch
+            string? suffix = type switch
             {
                 Type when
                     type == typeof(bool)
@@ -59,9 +62,9 @@ public partial class AttributeTests
                     => $"_{type.GenericTypeArguments[0].Name}_{type.GenericTypeArguments[1].Name}",
 
                 Type when type !=
-                    typeof(string) &&
-                    typeof(IEnumerable).IsAssignableFrom(type) &&
-                    !type.IsArray
+                          typeof(string) &&
+                          typeof(IEnumerable).IsAssignableFrom(type) &&
+                          !type.IsArray
                     => $"_{type.GenericTypeArguments[0].Name}",
 
                 Type when
@@ -72,8 +75,14 @@ public partial class AttributeTests
                 _ => default
             };
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data_{type.Name}{suffix}.dump")
+            /* Most of these expectations are shared with the dataset tests. The exceptions are the cases
+             * whose ELEMENTS are strings: an attribute measures those into a fixed-length datatype where
+             * a dataset leaves them variable-length, so each of them has an attr_ fixture of its own. The
+             * compound and dictionary cases stay shared, because only their MEMBERS are strings. */
+            string expected = File
+                .ReadAllText(File.Exists($"DumpFiles/attr_{type.Name}{suffix}.dump")
+                    ? $"DumpFiles/attr_{type.Name}{suffix}.dump"
+                    : $"DumpFiles/data_{type.Name}{suffix}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -95,10 +104,10 @@ public partial class AttributeTests
         var file = new H5File();
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         var options = new H5WriteOptions(
-            DefaultStringLength: 6
+            6
         );
 
         // Act
@@ -108,10 +117,15 @@ public partial class AttributeTests
         try
         {
             /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data_default_fls_{type.Name}.dump")
+            /* Attributes have their own expectations here, not the dataset ones: a string attribute's
+             * fixed-length width is measured from its own value, while a compound member's is declared
+             * by DefaultStringLength. So the String[] case comes out 10 bytes wide with every element
+             * intact, where a dataset declares 6 and truncates. The other cases are identical to the
+             * dataset fixtures - the compound ones because only their MEMBERS are strings. */
+            string expected = File
+                .ReadAllText($"DumpFiles/attr_default_fls_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -133,7 +147,7 @@ public partial class AttributeTests
         var file = new H5File();
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         static int? fieldStringLengthMapper(FieldInfo fieldInfo)
         {
@@ -148,7 +162,7 @@ public partial class AttributeTests
         }
 
         var options = new H5WriteOptions(
-            DefaultStringLength: 3,
+            3,
             FieldStringLengthMapper: fieldStringLengthMapper,
             PropertyStringLengthMapper: propertyStringLengthMapper
         );
@@ -160,9 +174,9 @@ public partial class AttributeTests
         try
         {
             /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
+            string expected = File
                 .ReadAllText($"DumpFiles/data_default_flsm_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
@@ -177,7 +191,7 @@ public partial class AttributeTests
     }
 
     [Theory]
-    [InlineData([1])]
+    [InlineData(1)]
     [InlineData([null])]
     public void CanWrite_NullableValueType_Scalar(int? data)
     {
@@ -186,7 +200,7 @@ public partial class AttributeTests
 
         file.Attributes["Nullable`1"] = new H5Attribute<int?>(data);
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -194,10 +208,10 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
-            var suffix = data is null ? "null" : "value";
+            string? actual = TestUtils.DumpH5File(filePath);
+            string suffix = data is null ? "null" : "value";
 
-            var expected = File
+            string expected = File
                 .ReadAllText($"DumpFiles/data_Nullable`1_Int32_{suffix}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
@@ -217,7 +231,7 @@ public partial class AttributeTests
         // Arrange
         var file = new H5File();
 
-        var data = new int?[]
+        int?[] data = new int?[]
         {
             1,
             null,
@@ -228,7 +242,7 @@ public partial class AttributeTests
 
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -236,10 +250,10 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data_Nullable`1_Int32[].dump")
+            string expected = File
+                .ReadAllText("DumpFiles/data_Nullable`1_Int32[].dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -274,7 +288,7 @@ public partial class AttributeTests
 
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -282,10 +296,10 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data___f__AnonymousType0`4.dump")
+            string expected = File
+                .ReadAllText("DumpFiles/data___f__AnonymousType0`4.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -306,11 +320,11 @@ public partial class AttributeTests
         // Arrange
         var file = new H5File();
 
-        var data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        byte[] data = new byte[] { 0x01, 0x02, 0x03, 0x04 };
 
         var opaqueInfo = new H5OpaqueInfo(
-            TypeSize: 2,
-            Tag: "My tag"
+            2,
+            "My tag"
         );
 
         var attribute = asMemory
@@ -319,7 +333,7 @@ public partial class AttributeTests
 
         file.Attributes["opaque"] = attribute;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -327,10 +341,10 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data_opaque.dump")
+            string expected = File
+                .ReadAllText("DumpFiles/data_opaque.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -347,31 +361,31 @@ public partial class AttributeTests
     public void CanWrite_OpaqueWithDifferentSizes()
     {
         // Arrange
-        var data1 = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10 };
-        var data2 = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+        byte[] data1 = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x10 };
+        byte[] data2 = new byte[] { 0x01, 0x02, 0x03, 0x04 };
 
         var opaqueInfo1 = new H5OpaqueInfo(
-            TypeSize: (uint)data1.Length,
-            Tag: "My tag"
+            (uint)data1.Length,
+            "My tag"
         );
 
         var opaqueInfo2 = new H5OpaqueInfo(
-            TypeSize: (uint)data2.Length,
-            Tag: "My tag"
+            (uint)data2.Length,
+            "My tag"
         );
 
         var file1 = new H5File();
         file1.Attributes["opaque1"] = new H5Attribute(data1, opaqueInfo: opaqueInfo1);
         file1.Attributes["opaque2"] = new H5Attribute(data2, opaqueInfo: opaqueInfo2);
 
-        var filePath1 = Path.GetTempFileName();
+        string filePath1 = Path.GetTempFileName();
 
         /* Other order */
         var file2 = new H5File();
         file2.Attributes["opaque1"] = new H5Attribute(data2, opaqueInfo: opaqueInfo2);
         file2.Attributes["opaque2"] = new H5Attribute(data1, opaqueInfo: opaqueInfo1);
 
-        var filePath2 = Path.GetTempFileName();
+        string filePath2 = Path.GetTempFileName();
 
         // Act
         file1.Write(filePath1);
@@ -380,10 +394,10 @@ public partial class AttributeTests
         // Assert 1
         try
         {
-            var actual1 = TestUtils.DumpH5File(filePath1);
+            string? actual1 = TestUtils.DumpH5File(filePath1);
 
-            var expected1 = File
-                .ReadAllText($"DumpFiles/data_opaque_multiple_1.dump")
+            string expected1 = File
+                .ReadAllText("DumpFiles/data_opaque_multiple_1.dump")
                 .Replace("<file-path>", filePath1)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -398,10 +412,10 @@ public partial class AttributeTests
         // Assert 2
         try
         {
-            var actual2 = TestUtils.DumpH5File(filePath2);
+            string? actual2 = TestUtils.DumpH5File(filePath2);
 
-            var expected2 = File
-                .ReadAllText($"DumpFiles/data_opaque_multiple_2.dump")
+            string expected2 = File
+                .ReadAllText("DumpFiles/data_opaque_multiple_2.dump")
                 .Replace("<file-path>", filePath2)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -418,12 +432,12 @@ public partial class AttributeTests
     public void CanWrite_ObjectReference()
     {
         // Arrange
-        var dataset = new H5Dataset(data: 1);
+        var dataset = new H5Dataset(1);
         var group = new H5Group();
 
         var file = new H5File
         {
-            Attributes = 
+            Attributes =
             {
                 ["references"] = new H5ObjectReference[] { dataset, dataset, group }
             },
@@ -431,7 +445,7 @@ public partial class AttributeTests
             ["group"] = group
         };
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -439,10 +453,10 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data_object_reference_attribute.dump")
+            string expected = File
+                .ReadAllText("DumpFiles/data_object_reference_attribute.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
@@ -460,15 +474,15 @@ public partial class AttributeTests
         // Arrange
         var file = new H5File();
 
-        var data = new int[,,]
+        int[,,] data = new[,,]
         {
             {
-                {  0,  1,  2 },
-                {  3,  4,  5 },
-                {  6,  7,  8 }
+                { 0, 1, 2 },
+                { 3, 4, 5 },
+                { 6, 7, 8 }
             },
             {
-                {  9, 10, 11 },
+                { 9, 10, 11 },
                 { 12, 13, 14 },
                 { 15, 16, 17 }
             },
@@ -476,14 +490,14 @@ public partial class AttributeTests
                 { 18, 19, 20 },
                 { 21, 22, 23 },
                 { 24, 25, 26 }
-            },
+            }
         };
 
         var type = data.GetType();
 
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -491,9 +505,9 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
+            string expected = File
                 .ReadAllText($"DumpFiles/data_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
@@ -513,7 +527,7 @@ public partial class AttributeTests
         // Arrange
         var file = new H5File();
 
-        var data = new string[,,]
+        string[,,] data = new[,,]
         {
             {
                 { "A", "B", "C" },
@@ -529,14 +543,14 @@ public partial class AttributeTests
                 { "S", "T", "U" },
                 { "V", "W", "X" },
                 { "Y", "Z", "Ä" }
-            },
+            }
         };
 
         var type = data.GetType();
 
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -544,10 +558,10 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/data_{type.Name}.dump")
+            string expected = File
+                .ReadAllText($"DumpFiles/attr_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -566,13 +580,13 @@ public partial class AttributeTests
         // Arrange
         var file = new H5File();
 
-        foreach (var data in WritingTestData.Numerical)
+        foreach (object data in WritingTestData.Numerical)
         {
             var type = data.GetType();
             file.Attributes[type.Name] = data;
         }
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -580,9 +594,9 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
+            string expected = File
                 .ReadAllText("DumpFiles/data_large_array.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
@@ -603,13 +617,13 @@ public partial class AttributeTests
         // Arrange
         var file = new H5File();
 
-        foreach (var data in WritingTestData.Numerical_Int128)
+        foreach (object data in WritingTestData.Numerical_Int128)
         {
             var type = data.GetType();
             file.Attributes[type.Name] = data;
         }
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath);
@@ -617,9 +631,9 @@ public partial class AttributeTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
+            string expected = File
                 .ReadAllText("DumpFiles/data_large_array_int128.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
@@ -638,23 +652,30 @@ public partial class AttributeTests
     public void ThrowsForInvalidNumberOfCompoundMembers()
     {
         // Arrange
-        var data = new object[] { new Dictionary<string, object>() {
-            ["A"] = 1, ["B"] = "-2", ["C"] = 3
-        }};
+        object[] data = new object[]
+        {
+            new Dictionary<string, object>
+            {
+                ["A"] = 1, ["B"] = "-2", ["C"] = 3
+            }
+        };
 
         var type = data.GetType();
         var file = new H5File();
         file.Attributes[type.Name] = data;
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
-        void action() => file.Write(filePath);
+        void action()
+        {
+            file.Write(filePath);
+        }
 
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {

@@ -12,7 +12,7 @@ public class MiscTests
         {
             ["g"] = new H5Group
             {
-                ["d"] = new H5Dataset(1.1, chunks: [1]),
+                ["d"] = new H5Dataset(1.1, [1])
             },
             Attributes =
             {
@@ -20,7 +20,7 @@ public class MiscTests
             }
         };
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
         // Act
         file.Write(filePath, new H5WriteOptions { UserBlockSize = 512 });
@@ -28,10 +28,10 @@ public class MiscTests
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/misc_with_user_block.dump")
+            string expected = File
+                .ReadAllText("DumpFiles/misc_with_user_block.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
@@ -49,23 +49,24 @@ public class MiscTests
         // Arrange
         var file = new H5File();
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 100; i++) file.Attributes[i.ToString()] = $"The attribute content {i}.";
+
+        string filePath = Path.GetTempFileName();
+
+        // Act - the global heap is where a VARIABLE-length string goes, and an attribute is measured into a
+        // fixed-length one by default, so the collections this is about only exist if that is turned off.
+        file.Write(filePath, new H5WriteOptions
         {
-            file.Attributes[i.ToString()] = $"The attribute content {i}.";
-        }
-
-        var filePath = Path.GetTempFileName();
-
-        // Act
-        file.Write(filePath);
+            AttributeStringLength = H5AttributeStringLength.VariableLength
+        });
 
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/misc_global_heap_collections.dump")
+            string expected = File
+                .ReadAllText("DumpFiles/misc_global_heap_collections.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);
@@ -82,23 +83,28 @@ public class MiscTests
     {
         // Arrange
         var file = new H5File();
-        var lorem = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.";
+        string lorem =
+            "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.";
 
         file.Attributes["large"] = string
             .Join(' ', Enumerable.Range(0, 27).Select(_ => lorem));
 
-        var filePath = Path.GetTempFileName();
+        string filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        // Act - variable-length, so that the value lands in a global heap collection rather than in a
+        // measured fixed-length attribute.
+        file.Write(filePath, new H5WriteOptions
+        {
+            AttributeStringLength = H5AttributeStringLength.VariableLength
+        });
 
         // Assert
         try
         {
-            var actual = TestUtils.DumpH5File(filePath);
+            string? actual = TestUtils.DumpH5File(filePath);
 
-            var expected = File
-                .ReadAllText($"DumpFiles/misc_global_heap_collection_large.dump")
+            string expected = File
+                .ReadAllText("DumpFiles/misc_global_heap_collection_large.dump")
                 .Replace("<file-path>", filePath);
 
             Assert.Equal(expected, actual);

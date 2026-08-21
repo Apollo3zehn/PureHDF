@@ -1,5 +1,6 @@
 ﻿using PureHDF.Selections;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 
 namespace PureHDF;
 
@@ -281,7 +282,19 @@ partial class H5NativeWriter
         // TODO cache this
         var method = _methodInfoEncodeDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        return (ulong)method.Invoke(this, [dataset, dataset.Data, isScalar])!;
+        try
+        {
+            return (ulong)method.Invoke(this, [dataset, dataset.Data, isScalar])!;
+        }
+
+        // Rethrown unwrapped, preserving the original stack: encoding is where a caller's own data is
+        // rejected, and reflection would otherwise replace a specific, actionable message with
+        // "Exception has been thrown by the target of an invocation".
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            throw; // unreachable; the compiler cannot see that the line above always throws
+        }
     }
 
     private ulong InternalEncodeDataset<T, TElement>(
