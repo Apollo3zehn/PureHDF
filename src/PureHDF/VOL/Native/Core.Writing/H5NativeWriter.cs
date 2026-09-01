@@ -96,17 +96,15 @@ partial class H5NativeWriter
             // No reservation given: measure the file instead of guessing at it. The sizing pass runs
             // Interleaved, so it cannot recurse back into this branch.
             //
-            // SLACK is added to the measured figure and is not optional. The measurement is the total of
-            // every metadata allocation INCLUDING the superblock, but the superblock is allocated before
-            // the region exists and so is served from outside it - leaving the region short by exactly
-            // that much. Reserving the bare total exhausts the region to the byte and spills the final
-            // allocation into a whole extra block. The slack also absorbs the global heap's 4 kB
-            // collection granularity, which is the coarsest thing the allocator hands out.
-            const long slack = 3 * 4096;
-
+            // The superblock is subtracted because the measurement totals every metadata allocation
+            // INCLUDING it, while the superblock is allocated before the region exists and so is served
+            // from outside it - leaving the region longer than anything will ever ask of it by exactly
+            // that much. Subtracting makes the reservation the exact number of bytes that will be served
+            // from it, which is what lets a front-loaded file come out the same size as an interleaved
+            // one rather than merely close to it.
             var reservation = options.MetadataReservation > 0
                 ? options.MetadataReservation
-                : MeasureMetadataSize(file, options) + slack;
+                : MeasureMetadataSize(file, options) - Superblock23.ENCODE_SIZE;
 
             freeSpaceManager.ReserveMetadataRegion(reservation);
         }

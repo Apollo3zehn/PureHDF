@@ -47,14 +47,14 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         // files either - it would never be reached.
         MetadataBlockSize = 1024 * 1024,
 
-        // Deliberately generous. h5stat reports 522,088 bytes of "File metadata" for these files,
-        // but the ALLOCATED footprint is larger than that figure: global heap collections are
-        // allocated at a 4 kB minimum each and mostly left partly empty, which h5stat counts as
-        // unaccounted space rather than metadata. So 1 MB against a 522 kB report does not cover these
-        // files: the shortfall spills into a second region, which is the graceful path but costs the
-        // locality this is measuring. Size a reservation against measured file growth, not against the
-        // metadata line.
-        MetadataReservation = 3 * 1024 * 1024
+        // An explicit reservation, so these files exercise the path that skips the sizing pass. 1 MB
+        // against a measured need of 878,158 bytes, which covers it with room to spare - and the room
+        // is the point of the setting rather than a flaw in it: an explicit reservation abandons its
+        // unused tail, which is the price of not measuring. Size one against measured file growth
+        // rather than against h5stat's "File metadata" line, which reports 522,088 bytes here: global
+        // heap collections are allocated at a 4 kB minimum each and mostly left partly empty, and
+        // h5stat counts that as unaccounted space rather than as metadata.
+        MetadataReservation = 1024 * 1024
     };
 
     private static byte[] Write(Func<int, string> hint, int payloadPerGroup, H5WriteOptions? options = null)
@@ -284,8 +284,8 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// With no reservation given, the writer measures the file rather than estimating it - so the
-    /// reservation should be tight enough to cost about what aggregation costs, not multiples of it.
+    /// With no reservation given, the writer measures the file rather than estimating it - and a
+    /// measurement is exact, so front loading costs nothing at all rather than a little.
     /// </summary>
     /// <remarks>
     /// This is the assertion that pins the reservation to a measurement rather than to a model of the
@@ -295,7 +295,7 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     /// encoder and the same allocator.
     /// </remarks>
     [Fact]
-    public void AutoSizedFrontLoadingCostsAboutWhatAggregationCosts()
+    public void AutoSizedFrontLoadingCostsNothing()
     {
         const int slotSize = 1024 * 1024;
 
@@ -320,10 +320,50 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         // Locality: the whole point.
         Assert.True(after * 2 < afterTotal, $"structure touched {after} of {afterTotal} slots.");
 
-        // Size: a measured reservation is exact, so the only waste is the fixed slack the writer adds
-        // to keep the final allocation from spilling - a constant, not a fraction of the file. That
-        // makes this cheaper than aggregation, which pays for a whole unused block.
-        Assert.True(overhead < 0.005, $"auto-sized front loading cost {overhead:P2}, expected under 0.5%.");
+        // Size: a measured reservation is the exact number of bytes that will be served from it, so this
+        // costs nothing at all rather than a little. Asserted as equality, because "close enough" is what
+        // hid twelve kilobytes of slack that no test objected to.
+        Assert.Equal(interleaved.Length, autoSized.Length);
+        Assert.Equal(0, overhead);
+
+        // One region, nothing abandoned: the measurement was neither short (which spills into a second
+        // region and loses the locality) nor long (which pays for a tail nothing uses). This is the
+        // assertion that makes the two failure modes visible - MetadataRegionsOpened exists to report
+        // exactly this and was checked nowhere.
+        var probe = new H5File();
+
+        for (int i = 0; i < GroupCount; i++)
+        {
+            var group = new H5Group
+            {
+                ["values"] = new H5Dataset(Enumerable.Range(i, 2_000).ToArray())
+            };
+
+            group.Attributes = new Dictionary<string, object> { ["Meta::TypeHint"] = _sharedHint };
+            probe[$"unit{i:D5}"] = group;
+        }
+
+        var probePath = Path.GetTempFileName();
+
+        try
+        {
+            var writer = probe.BeginWrite(probePath, new H5WriteOptions
+            {
+                PreferCompactDatasetLayout = false,
+                MetadataPlacement = H5MetadataPlacement.FrontLoaded
+            });
+
+            writer.Dispose();
+
+            Assert.Equal(1, writer.Context.FreeSpaceManager.MetadataRegionsOpened);
+            Assert.Equal(0, writer.Context.FreeSpaceManager.MetadataAbandoned);
+        }
+
+        finally
+        {
+            if (File.Exists(probePath))
+                File.Delete(probePath);
+        }
 
         // And it must still be a correct file.
         using var root = H5File.Open(new MemoryStream(autoSized), leaveOpen: true);
@@ -680,8 +720,10 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     {
         const int slotSize = 1024 * 1024;
 
-        var shared = Write(_ => _sharedHint, payloadPerGroup: 2_000);
-        var distinct = Write(TypeHint, payloadPerGroup: 2_000);
+        // Options() rather than the default: the class remark above explains why compact layout has to
+        // be off for these files to measure anything.
+        var shared = Write(_ => _sharedHint, payloadPerGroup: 2_000, Options());
+        var distinct = Write(TypeHint, payloadPerGroup: 2_000, Options());
 
         var (sharedTouched, sharedTotal) = SlotsTouched(shared, slotSize);
         var (distinctTouched, distinctTotal) = SlotsTouched(distinct, slotSize);

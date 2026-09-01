@@ -57,8 +57,9 @@ public enum H5MetadataPlacement
     /// <para>
     /// A reservation too small for the file places the remainder as <see cref="Aggregated" /> would, which
     /// loses locality rather than failing. One too large wastes the unused tail, which <c>h5stat</c>
-    /// reports as unaccounted space. A measured reservation is neither, so the only file-size cost is the
-    /// small fixed slack the writer adds to keep the last allocation from spilling.
+    /// reports as unaccounted space. A measured reservation is neither: it is the exact number of bytes
+    /// that will be served from it, so a front-loaded file is the same size as an interleaved one rather
+    /// than merely close to it, and nothing is abandoned.
     /// Set <see cref="H5WriteOptions.MetadataReservation" /> when writing variable-length data after the
     /// initial write through <see cref="H5File.BeginWrite(string, H5WriteOptions?)" />: the global heap
     /// such data needs is sized from the values, which the measuring pass has not seen.
