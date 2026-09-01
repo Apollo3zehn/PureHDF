@@ -239,15 +239,16 @@ public class MetadataLayoutTests(ITestOutputHelper output)
             root.Write(filePath, Options(placement));
 
             // Act
-            var dump = TestUtils.DumpH5File(filePath);
+            var result = TestUtils.RunH5Dump(filePath);
 
-            Skip.If(dump is null, "h5dump is not available.");
+            Skip.If(result is null, "h5dump is not available.");
 
             // Assert - it parsed the file and found the contents, rather than reporting a bad superblock
-            // or a truncated file.
-            Assert.DoesNotContain("error", dump, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("values", dump);
-            Assert.Contains("Meta::TypeHint", dump);
+            // or a truncated file. Asked of the exit code and the raw error stream rather than of
+            // DumpH5File's output, which strips the error stack and so can never contain a complaint.
+            Assert.False(result!.Failed, $"h5dump rejected the file:{Environment.NewLine}{result.Diagnostics}");
+            Assert.Contains("values", result.Stdout);
+            Assert.Contains("Meta::TypeHint", result.Stdout);
         }
 
         finally
@@ -682,6 +683,57 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         // Anything other than equality means space is being claimed that nothing accounts for.
         Assert.True(growth > 0, "this fixture no longer abandons anything, so it proves nothing");
         Assert.Equal(growth, abandoned);
+    }
+
+    /// <summary>
+    /// Options that cannot mean anything are rejected rather than quietly ignored.
+    /// </summary>
+    /// <remarks>
+    /// Accepted, a non-positive block size would turn <see cref="H5MetadataPlacement.Aggregated" /> into
+    /// <see cref="H5MetadataPlacement.Interleaved" /> without a word: the block path is gated on a
+    /// positive size, so a caller asking for clustering would get none and nothing to tell them why.
+    /// Interleaved ignores the setting, because it does not use blocks.
+    /// </remarks>
+    [Theory]
+    [InlineData(H5MetadataPlacement.Aggregated, 0L, 0L)]
+    [InlineData(H5MetadataPlacement.Aggregated, -1L, 0L)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 0L, 0L)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 8 * 1024 * 1024L, -1L)]
+    [InlineData(H5MetadataPlacement.Interleaved, 8 * 1024 * 1024L, -1L)]
+    public void DegeneratePlacementOptionsAreRejected(
+        H5MetadataPlacement placement,
+        long blockSize,
+        long reservation)
+    {
+        var file = new H5File { ["d"] = new H5Dataset(Enumerable.Range(0, 64).ToArray()) };
+
+        Assert.ThrowsAny<Exception>(() => file.Write(new MemoryStream(), new H5WriteOptions
+        {
+            MetadataPlacement = placement,
+            MetadataBlockSize = blockSize,
+            MetadataReservation = reservation
+        }));
+    }
+
+    /// <summary>
+    /// A block size interleaving never consults is not an error.
+    /// </summary>
+    [Fact]
+    public void InterleavingIgnoresTheBlockSize()
+    {
+        var file = new H5File { ["d"] = new H5Dataset(Enumerable.Range(0, 64).ToArray()) };
+        var stream = new MemoryStream();
+
+        file.Write(stream, new H5WriteOptions
+        {
+            MetadataPlacement = H5MetadataPlacement.Interleaved,
+            MetadataBlockSize = 0
+        });
+
+        stream.Position = 0;
+
+        using var root = H5File.Open(stream, leaveOpen: true);
+        Assert.Equal(Enumerable.Range(0, 64).ToArray(), root.Dataset("d").Read<int[]>());
     }
 
     /// <summary>

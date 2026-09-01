@@ -233,6 +233,18 @@ public class RangeReadCostTests(ITestOutputHelper output)
                 $"a measured reservation fetched {frontLoaded.Bytes:N0} B against aggregation's "
                 + $"{aggregated.Bytes:N0} B, so measuring the file bought nothing");
 
+            // Round trips, which is what the whole exercise is about and what every figure quoted for
+            // this feature is stated in. A measured reservation is one contiguous span, so walking the
+            // structure is one request; asserted as a number rather than a ratio because the number is
+            // the claim. Aggregation clusters into a handful, and interleaving needs one per block it
+            // spans.
+            Assert.Equal(1, frontLoaded.Requests);
+
+            Assert.True(
+                aggregated.Requests > 1 && aggregated.Requests * 4 < interleaved.Requests,
+                $"aggregation took {aggregated.Requests} requests against interleaving's "
+                + $"{interleaved.Requests}, which is not the handful-against-all-of-them this reports");
+
             // What aggregation must not do is buy that locality with file size. Blocks are claimed in
             // full, so a block of fixed size is a floor rather than a proportional cost: at a fixed 8 MB
             // this file would come out three times larger, which is a bad trade however few ranges it

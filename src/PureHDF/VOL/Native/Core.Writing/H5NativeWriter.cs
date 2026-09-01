@@ -81,6 +81,16 @@ partial class H5NativeWriter
                 throw new Exception("The user block size is invalid.");
         }
 
+        if (options.MetadataReservation < 0)
+            throw new Exception("The metadata reservation must not be negative.");
+
+        // Only meaningful away from Interleaved, which passes zero deliberately below. Rejected rather
+        // than tolerated because a non-positive ceiling silently turns Aggregated into Interleaved: the
+        // block path is gated on a positive size, so the caller asks for clustering and gets none, with
+        // nothing to indicate why.
+        if (options.MetadataPlacement != H5MetadataPlacement.Interleaved && options.MetadataBlockSize <= 0)
+            throw new Exception("The metadata block size must be greater than zero.");
+
         var freeSpaceManager = new FreeSpaceManager(
             options.MetadataPlacement,
             blockSize: options.MetadataPlacement == H5MetadataPlacement.Interleaved

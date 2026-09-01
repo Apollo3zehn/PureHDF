@@ -91,13 +91,15 @@ public class EndOfFileAddressTests(ITestOutputHelper output)
 
             // The C library is stricter than PureHDF's own reader here - it validates a contiguous
             // dataset's extent against the end of the file, which is exactly the check being satisfied.
-            var dump = TestUtils.DumpH5File(filePath);
+            var result = TestUtils.RunH5Dump(filePath);
 
-            Skip.If(dump is null, "h5dump is not available.");
+            Skip.If(result is null, "h5dump is not available.");
 
-            Assert.DoesNotContain("corruption", dump, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("error", dump, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("never-written", dump);
+            // The exit code and the raw error stream, not DumpH5File's output: that strips the error
+            // stack, so a test asserting the dump does not contain "corruption" passes on a file h5dump
+            // called corrupt.
+            Assert.False(result!.Failed, $"h5dump rejected the file:{Environment.NewLine}{result.Diagnostics}");
+            Assert.Contains("never-written", result.Stdout);
         }
 
         finally

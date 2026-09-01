@@ -95,6 +95,10 @@ public record H5WriteOptions(
     /// value, so what a file pays is proportional to the metadata it has rather than a floor it pays
     /// whatever its size. Raising this clusters more structure per block once a file is large enough to
     /// reach it. An allocation larger than this cannot be held by a block at all, and is placed inline.
+    /// <para>
+    /// Must be greater than zero for any placement other than
+    /// <see cref="H5MetadataPlacement.Interleaved" />, which uses no blocks and ignores it.
+    /// </para>
     /// </remarks>
     public long MetadataBlockSize { get; init; } = 8 * 1024 * 1024;
 
