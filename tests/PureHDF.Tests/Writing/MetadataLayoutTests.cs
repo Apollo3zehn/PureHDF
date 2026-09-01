@@ -430,6 +430,91 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     }
 
     /// <summary>
+    /// What a deferred write costs the sizing pass, which can only be what the values decide.
+    /// </summary>
+    /// <remarks>
+    /// The pass runs before the caller has written anything through the writer, so the question is which
+    /// metadata it can still account for. A chunk index it can: its size follows from the chunk count,
+    /// and that follows from the dimensions, which are fixed when the dataset is declared -
+    /// <c>WriteChunkInfos</c> is sized to <c>TotalChunkCount</c> in <c>H5D_Chunk4.Initialize</c>, and
+    /// writing data later fills entries in an array whose length was settled then. Global heap space it
+    /// cannot: how much a variable-length value needs follows from the value.
+    /// <para>
+    /// So the shortfall is zero for fixed-size deferred data and nonzero only for variable-length, which
+    /// is why <see cref="H5WriteOptions.MetadataReservation" /> is worth setting for the latter and
+    /// nothing for the former. Asserted rather than reasoned, because the distinction is the entire
+    /// guidance given for deferred writes.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void OnlyVariableLengthDeferredDataOutrunsTheSizingPass()
+    {
+        var options = new H5WriteOptions
+        {
+            PreferCompactDatasetLayout = false,
+            MetadataPlacement = H5MetadataPlacement.Interleaved
+        };
+
+        long Shortfall<T>(string label, Func<H5Dataset<T>> makeDataset, T data)
+        {
+            var measured = H5NativeWriter.MeasureMetadataSize(
+                new H5File { ["d"] = makeDataset() }, options);
+
+            var dataset = makeDataset();
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                var writer = new H5File { ["d"] = dataset }.BeginWrite(filePath, options);
+                writer.Write(dataset, data);
+                writer.Dispose();
+
+                var allocated = writer.Context.FreeSpaceManager.MetadataAllocated;
+
+                output.WriteLine($"{label,-38} measured {measured,9:N0}   allocated {allocated,9:N0}   shortfall {allocated - measured,9:N0}");
+
+                return allocated - measured;
+            }
+
+            finally
+            {
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+        }
+
+        var ints = Enumerable.Range(0, 1 << 16).ToArray();
+
+        var filtered = Shortfall(
+            "filtered chunked int (fixed array)",
+            () => new H5Dataset<int[]>(fileDims: [(ulong)ints.Length], chunks: [4096], datasetCreation: new(Filters: [DeflateFilter.Id])),
+            ints);
+
+        var unfiltered = Shortfall(
+            "unfiltered chunked int (implicit index)",
+            () => new H5Dataset<int[]>(fileDims: [(ulong)ints.Length], chunks: [4096]),
+            ints);
+
+        var strings = Enumerable.Range(0, 2_000).Select(i => new string('x', 120) + i).ToArray();
+
+        var variableLength = Shortfall(
+            "contiguous strings (global heap)",
+            () => new H5Dataset<string[]>(fileDims: [(ulong)strings.Length]),
+            strings);
+
+        // A chunk index is fully accounted for, however the chunks are indexed.
+        Assert.Equal(0, filtered);
+        Assert.Equal(0, unfiltered);
+
+        // Variable-length data is not, and by an amount worth reserving against rather than a rounding
+        // error - here 288 kB of global heap the pass had no way to see.
+        Assert.True(
+            variableLength > 200_000,
+            $"variable-length deferred data fell short by only {variableLength:N0} bytes, so this no "
+            + $"longer demonstrates the case MetadataReservation exists for.");
+    }
+
+    /// <summary>
     /// A small file must not pay a whole metadata block.
     /// </summary>
     /// <remarks>
