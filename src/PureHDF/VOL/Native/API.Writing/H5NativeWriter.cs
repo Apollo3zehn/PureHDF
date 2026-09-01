@@ -80,7 +80,11 @@ public partial class H5NativeWriter : IDisposable
                 // trimmed to the stream. Trimming would be smaller - an abandoned region tail is
                 // usually the last thing in the file, and it is referenced by nothing - but it cannot
                 // be told apart from the payload case here, and getting it wrong truncates data.
-                var highWaterMark = Context.FreeSpaceManager.HighWaterMark;
+                // BaseAddress is added because the allocator counts from the superblock while the
+                // driver's Length and SetLength count from the start of the file, and a user block puts
+                // those a UserBlockSize apart. Comparing them untranslated makes the guard read as
+                // already-long-enough and skip an extension the file needs.
+                var highWaterMark = (long)Context.Driver.BaseAddress + Context.FreeSpaceManager.HighWaterMark;
 
                 if (Context.Driver.Length < highWaterMark)
                     Context.Driver.SetLength(highWaterMark);

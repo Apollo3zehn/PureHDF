@@ -25,11 +25,25 @@ public class EndOfFileAddressTests(ITestOutputHelper output)
     private const int ElementCount = 100_000;
     private const long PayloadBytes = ElementCount * sizeof(double);
 
+    /// <remarks>
+    /// Run with and without a user block, because the two are counted from different places: the
+    /// allocator counts from the superblock, the stream from the start of the file, and a user block puts
+    /// those a <see cref="H5WriteOptions.UserBlockSize" /> apart. Comparing them untranslated makes the
+    /// file look long enough already and skips the extension, which is invisible until a user block is
+    /// in play - so the zero case cannot stand in for the nonzero one.
+    /// <para>
+    /// 512 because it is the smallest user block the format allows, which keeps the file small while
+    /// still putting the two coordinate systems apart.
+    /// </para>
+    /// </remarks>
     [SkippableTheory]
-    [InlineData(H5MetadataPlacement.Interleaved)]
-    [InlineData(H5MetadataPlacement.Aggregated)]
-    [InlineData(H5MetadataPlacement.FrontLoaded)]
-    public void AnUnwrittenDeferredPayloadIsStillCoveredByTheFile(H5MetadataPlacement placement)
+    [InlineData(H5MetadataPlacement.Interleaved, 0UL)]
+    [InlineData(H5MetadataPlacement.Aggregated, 0UL)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 0UL)]
+    [InlineData(H5MetadataPlacement.Interleaved, 512UL)]
+    [InlineData(H5MetadataPlacement.Aggregated, 512UL)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 512UL)]
+    public void AnUnwrittenDeferredPayloadIsStillCoveredByTheFile(H5MetadataPlacement placement, ulong userBlockSize)
     {
         // Arrange - a dataset whose payload is allocated and referenced, and which is then never
         // written. Compact layout is off so the payload cannot end up inside the object header.
@@ -49,7 +63,8 @@ public class EndOfFileAddressTests(ITestOutputHelper output)
             using (var writer = file.BeginWrite(filePath, new H5WriteOptions
             {
                 PreferCompactDatasetLayout = false,
-                MetadataPlacement = placement
+                MetadataPlacement = placement,
+                UserBlockSize = userBlockSize
             }))
             {
                 // Deliberately no write: the point is the payload nobody fills.
@@ -57,14 +72,15 @@ public class EndOfFileAddressTests(ITestOutputHelper output)
 
             var size = new FileInfo(filePath).Length;
 
-            output.WriteLine($"{placement,-12} file {size,10:N0} bytes, payload alone {PayloadBytes,10:N0}");
+            output.WriteLine($"{placement,-12} user block {userBlockSize,5}, file {size,10:N0} bytes, payload alone {PayloadBytes,10:N0}");
 
             // Assert - checkable without any external tool: the file cannot be shorter than a region
             // its own layout message points at.
             Assert.True(
-                size > PayloadBytes,
-                $"{placement} produced {size:N0} bytes for a file referencing {PayloadBytes:N0} bytes of "
-                + $"payload, so the end-of-file address does not cover what the layout points at.");
+                size > PayloadBytes + (long)userBlockSize,
+                $"{placement} with a {userBlockSize}-byte user block produced {size:N0} bytes for a file "
+                + $"referencing {PayloadBytes:N0} bytes of payload, so the end-of-file address does not "
+                + $"cover what the layout points at.");
 
             // And PureHDF must still see the dataset it declared.
             using (var root = H5File.OpenRead(filePath))
