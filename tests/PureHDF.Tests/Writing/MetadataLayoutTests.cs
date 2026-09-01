@@ -620,7 +620,8 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     /// </summary>
     /// <remarks>
     /// A region is claimed in full and there is no free list, so file size over the interleaved layout
-    /// is exactly what was claimed and not used. That makes the two independently measurable, which is
+    /// is exactly what was claimed and not used, across every region. That makes the two independently
+    /// measurable, which is
     /// the only reason the metric can be checked at all rather than merely reported: growth is observed
     /// from outside, abandonment is reported from inside, and they have to agree.
     /// <para>
@@ -659,7 +660,9 @@ public class MetadataLayoutTests(ITestOutputHelper output)
                 writer.Write(dataset, strings);
                 writer.Dispose();
 
-                return (new FileInfo(filePath).Length, writer.Context.FreeSpaceManager.MetadataAbandoned);
+                var fsm = writer.Context.FreeSpaceManager;
+
+                return (new FileInfo(filePath).Length, fsm.MetadataAbandoned + fsm.PayloadAbandoned);
             }
 
             finally
@@ -678,9 +681,11 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         // Interleaving claims no region, so it can abandon nothing.
         Assert.Equal(0, interleavedAbandoned);
 
-        // Exactly the growth, not approximately. Interleaving claims precisely what it uses, so the
-        // same content written with a region claims those same allocations plus whatever it abandoned.
-        // Anything other than equality means space is being claimed that nothing accounts for.
+        // Exactly the growth, not approximately, and summed over both clustered regions: structure and
+        // deferred payload are gathered independently, so a file carrying a vlen dataset abandons a tail
+        // in each. Interleaving claims precisely what it uses, so the same content written with regions
+        // claims those same allocations plus whatever they abandoned. Anything other than equality means
+        // space is being claimed that nothing accounts for.
         Assert.True(growth > 0, "this fixture no longer abandons anything, so it proves nothing");
         Assert.Equal(growth, abandoned);
     }

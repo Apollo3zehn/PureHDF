@@ -18,15 +18,28 @@ internal enum AllocationKind
     Metadata,
 
     /// <summary>
-    /// Dataset payload: contiguous data, chunk data, and the global heap collections holding a dataset's
-    /// own variable-length elements.
+    /// Dataset payload written at the address it was allocated: contiguous data and chunk data.
+    /// </summary>
+    RawData,
+
+    /// <summary>
+    /// Dataset payload allocated now and written later - the global heap collections holding a dataset's
+    /// own variable-length elements, which are filled progressively and flushed in batches.
     /// </summary>
     /// <remarks>
-    /// The global heap serves both kinds, which is why <see cref="GlobalHeapManager.AllocationKind" />
-    /// exists. Counting all of it as structure put 97% of a variable-length string dataset in the
-    /// metadata region and left a placement nothing to separate.
+    /// Payload, so it stays out of the metadata region: counted as structure, it makes up 97% of a
+    /// variable-length string dataset and leaves a placement nothing to separate. But clustered
+    /// rather than bump-allocated, because the gap between allocating and writing is what costs a
+    /// streaming writer. A writer uploading to object storage buffers the file in fixed parts and can
+    /// only ship a part once every byte in it is written, so a region allocated now and written much
+    /// later is a hole that pins its part. Scattered through the file, those holes pin every part and
+    /// the whole object stays in memory; gathered into a few blocks, they pin a few.
+    /// <para>
+    /// Chunk and contiguous payload needs none of this - it is written at the address it was allocated,
+    /// so it leaves no hole behind.
+    /// </para>
     /// </remarks>
-    RawData
+    DeferredRawData
 }
 
 internal class FreeSpaceManager
@@ -47,19 +60,29 @@ internal class FreeSpaceManager
     private readonly long _blockSize;
 
     private long _length;
-    private long _nextBlockSize;
     private long _abandonedByReplacement;
+    private long _payloadAbandonedByReplacement;
 
-    // The metadata region currently being filled: [_metadataCursor, _metadataRegionEnd). Empty when
-    // the two are equal, which is always the case for H5MetadataPlacement.Interleaved.
-    private long _metadataCursor;
-    private long _metadataRegionEnd;
+    // The region currently being filled for each kind that gets one: [Cursor, End). Empty when the two
+    // are equal, which is always the case for H5MetadataPlacement.Interleaved. Metadata and deferred
+    // payload are clustered independently - they must not share a block, or payload would land inside
+    // the region a reader fetches to walk the structure.
+    private Region _metadata;
+    private Region _deferredRawData;
 
     public FreeSpaceManager(H5MetadataPlacement placement = H5MetadataPlacement.Interleaved, long blockSize = 0)
     {
         _placement = placement;
         _blockSize = blockSize;
-        _nextBlockSize = Math.Min(INITIAL_BLOCK_SIZE, blockSize);
+        _metadata = new Region { NextBlockSize = Math.Min(INITIAL_BLOCK_SIZE, blockSize) };
+        _deferredRawData = new Region { NextBlockSize = Math.Min(INITIAL_BLOCK_SIZE, blockSize) };
+    }
+
+    private struct Region
+    {
+        public long Cursor;
+        public long End;
+        public long NextBlockSize;
     }
 
     /// <summary>
@@ -106,7 +129,18 @@ internal class FreeSpaceManager
     /// write ended now, and the open region's tail shrinks as allocations are served from it.
     /// </para>
     /// </remarks>
-    public long MetadataAbandoned => _abandonedByReplacement + (_metadataRegionEnd - _metadataCursor);
+    public long MetadataAbandoned => _abandonedByReplacement + (_metadata.End - _metadata.Cursor);
+
+    /// <summary>
+    /// The same, for the blocks holding <see cref="AllocationKind.DeferredRawData" />.
+    /// </summary>
+    /// <remarks>
+    /// Reported separately because it is payload: it is not what a reservation should be sized against,
+    /// and it is not what <see cref="MetadataRegionsOpened" /> counts. Together with
+    /// <see cref="MetadataAbandoned" /> it accounts for every byte a clustered file carries that an
+    /// interleaved one does not.
+    /// </remarks>
+    public long PayloadAbandoned => _payloadAbandonedByReplacement + (_deferredRawData.End - _deferredRawData.Cursor);
 
     /// <summary>
     /// Allocates metadata at the current end of the file, bypassing regions and blocks entirely.
@@ -141,9 +175,9 @@ internal class FreeSpaceManager
         if (size <= 0)
             return;
 
-        _metadataCursor = _length;
-        _metadataRegionEnd = _length + size;
-        _length = _metadataRegionEnd;
+        _metadata.Cursor = _length;
+        _metadata.End = _length + size;
+        _length = _metadata.End;
         MetadataRegionsOpened++;
     }
 
@@ -156,50 +190,88 @@ internal class FreeSpaceManager
         {
             MetadataAllocated += length;
 
-            // Serve from the open region while it has room.
-            if (_metadataCursor + length <= _metadataRegionEnd)
+            if (TryServeClustered(ref _metadata, length, out var metadataAddress, out var abandoned))
             {
-                var reserved = _metadataCursor;
-                _metadataCursor += length;
+                if (abandoned >= 0)
+                {
+                    _abandonedByReplacement += abandoned;
+                    MetadataRegionsOpened++;
+                }
 
-                return reserved;
-            }
-
-            // The region is exhausted (or was never opened). Opening a fresh one clusters what follows
-            // instead of scattering it. FrontLoaded does this too rather than failing: an estimate that
-            // came out short degrades to Aggregated behaviour for the remainder, which is worse for
-            // locality but still correct and still far better than interleaving.
-            //
-            // Whatever is left of the old region is abandoned - there is no free list to return it to -
-            // so this trades a bounded amount of file size for locality. The waste is at most one
-            // request's worth per region, since a region is only replaced when the request does not
-            // fit, plus the unused tail of the final region.
-            if (_blockSize > 0 && length <= _blockSize)
-            {
-                // Big enough for the request that opened it, since a block too small to serve that
-                // request would be abandoned immediately and the request placed inline.
-                var openedSize = Math.Max(_nextBlockSize, length);
-
-                _abandonedByReplacement += _metadataRegionEnd - _metadataCursor;
-                MetadataRegionsOpened++;
-
-                _metadataCursor = _length;
-                _metadataRegionEnd = _length + openedSize;
-                _length = _metadataRegionEnd;
-                _nextBlockSize = Math.Min(openedSize * 2, _blockSize);
-
-                var address = _metadataCursor;
-                _metadataCursor += length;
-
-                return address;
+                return metadataAddress;
             }
         }
 
-        // Raw data, metadata too large to fit a block, and everything at all when the placement is
-        // Interleaved: straight bump allocation at the end of the file, with no region or block involved.
+        // Payload that is written long after it is allocated, so it is gathered rather than scattered -
+        // see AllocationKind.DeferredRawData. Its own blocks, never the metadata region: a reader
+        // walking the structure must not have to fetch this.
+        else if (kind == AllocationKind.DeferredRawData)
+        {
+            // Counted apart from the structure region's figures, which is what PayloadAbandoned is for.
+            if (TryServeClustered(ref _deferredRawData, length, out var deferredAddress, out var payloadAbandoned))
+            {
+                if (payloadAbandoned >= 0)
+                    _payloadAbandonedByReplacement += payloadAbandoned;
+
+                return deferredAddress;
+            }
+        }
+
         var bumped = _length;
         _length += length;
 
         return bumped;
+    }
+
+    /// <summary>
+    /// Serves <paramref name="length" /> from <paramref name="region" />, opening a fresh block when the
+    /// current one is exhausted. False when blocks are disabled or the request is too large for one, in
+    /// which case the caller bump-allocates instead.
+    /// </summary>
+    /// <remarks>
+    /// Whatever is left of a replaced region is abandoned - there is no free list to return it to - so
+    /// this trades a bounded amount of file size for locality. The waste is at most one request's worth
+    /// per region, since a region is only replaced when the request does not fit, plus the unused tail
+    /// of the final region.
+    /// </remarks>
+    private bool TryServeClustered(ref Region region, long length, out long address, out long abandoned)
+    {
+        // Serve from the open region while it has room.
+        if (region.Cursor + length <= region.End)
+        {
+            address = region.Cursor;
+            region.Cursor += length;
+            abandoned = -1;
+
+            return true;
+        }
+
+        // Exhausted, or never opened. Opening a fresh one clusters what follows instead of scattering
+        // it. FrontLoaded does this too rather than failing: a reservation that came out short degrades
+        // to Aggregated behaviour for the remainder, which is worse for locality but still correct and
+        // still far better than interleaving.
+        if (_blockSize > 0 && length <= _blockSize)
+        {
+            // Big enough for the request that opened it, since a block too small to serve that request
+            // would be abandoned immediately and the request placed inline.
+            var openedSize = Math.Max(region.NextBlockSize, length);
+
+            abandoned = region.End - region.Cursor;
+
+            region.Cursor = _length;
+            region.End = _length + openedSize;
+            _length = region.End;
+            region.NextBlockSize = Math.Min(openedSize * 2, _blockSize);
+
+            address = region.Cursor;
+            region.Cursor += length;
+
+            return true;
+        }
+
+        address = default;
+        abandoned = -1;
+
+        return false;
     }
 }

@@ -140,7 +140,13 @@ internal class GlobalHeapManager
             CollectionSize = (ulong)collectionSize
         };
 
-        var baseAddress = _freeSpaceManager.Allocate(collectionSize, kind);
+        // A collection is always allocated now and written later - filled progressively, flushed in
+        // batches - so a payload collection is clustered rather than bump-allocated. See
+        // AllocationKind.DeferredRawData: the gap between allocating and writing is what pins a
+        // streaming writer's buffers, and scattering these holes through the file pins all of them.
+        var baseAddress = _freeSpaceManager.Allocate(
+            collectionSize,
+            kind == AllocationKind.Metadata ? AllocationKind.Metadata : AllocationKind.DeferredRawData);
 
         var collectionState = new GlobalHeapCollectionState(
             Collection: collection,
