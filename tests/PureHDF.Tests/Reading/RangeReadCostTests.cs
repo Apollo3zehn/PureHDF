@@ -147,34 +147,45 @@ public class RangeReadCostTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// The same content written both ways, so the only variable is where the structure went.
+    /// The same content written every way, so the only variable is where the structure went.
     /// </summary>
+    /// <remarks>
+    /// Both clustered placements are measured, not just the best one. They answer different questions: a
+    /// reservation is sized by measuring the file first and gets the structure into one range, while
+    /// aggregation needs no such pass and settles for a handful. A caller choosing between them wants the
+    /// gap between the two, and a caller who cannot afford the sizing pass wants to know that aggregation
+    /// is still worth having - neither of which a two-way comparison against interleaving shows.
+    /// </remarks>
     [Fact]
-    public async Task AFrontLoadedFileIsFarCheaperToWalkRemotelyThanAnInterleavedOne()
+    public async Task EveryClusteredPlacementIsFarCheaperToWalkRemotelyThanInterleaving()
     {
         // Arrange - deflate forces chunked layout, without which these datasets would be stored
         // compact (payload inside the object header) and there would be no separation to measure.
         var interleavedPath = Path.GetTempFileName();
+        var aggregatedPath = Path.GetTempFileName();
         var frontLoadedPath = Path.GetTempFileName();
 
         try
         {
-            BuildTree().Write(
-                interleavedPath,
-                new H5WriteOptions(Filters: [DeflateFilter.Id]) { MetadataPlacement = H5MetadataPlacement.Interleaved });
+            void Write(string filePath, H5MetadataPlacement placement) => BuildTree().Write(
+                filePath,
+                new H5WriteOptions(Filters: [DeflateFilter.Id]) { MetadataPlacement = placement });
 
-            BuildTree().Write(
-                frontLoadedPath,
-                new H5WriteOptions(Filters: [DeflateFilter.Id]) { MetadataPlacement = H5MetadataPlacement.FrontLoaded });
+            Write(interleavedPath, H5MetadataPlacement.Interleaved);
+            Write(aggregatedPath, H5MetadataPlacement.Aggregated);
+            Write(frontLoadedPath, H5MetadataPlacement.FrontLoaded);
 
             // Act
             var interleaved = await MeasureWalkAsync(interleavedPath, ControlBlockSize);
+            var aggregated = await MeasureWalkAsync(aggregatedPath, ControlBlockSize);
             var frontLoaded = await MeasureWalkAsync(frontLoadedPath, ControlBlockSize);
 
             Report("interleaved", interleavedPath, interleaved);
+            Report("aggregated", aggregatedPath, aggregated);
             Report("front-loaded", frontLoadedPath, frontLoaded);
 
-            // Assert - the walk must see the same file both ways, or the comparison is meaningless.
+            // Assert - the walk must see the same file every way, or the comparison is meaningless.
+            Assert.Equal(interleaved.Walk, aggregated.Walk);
             Assert.Equal(interleaved.Walk, frontLoaded.Walk);
             Assert.Equal(GroupCount, frontLoaded.Walk.Datasets);
 
@@ -191,11 +202,37 @@ public class RangeReadCostTests(ITestOutputHelper output)
                 frontLoaded.Blocks < interleaved.Blocks,
                 $"a front-loaded walk must hold fewer blocks, but it held {frontLoaded.Blocks} against "
                 + $"{interleaved.Blocks}");
+
+            // Aggregation has to earn its place without a sizing pass.
+            Assert.True(
+                aggregated.Bytes < interleaved.Bytes / 2,
+                $"aggregation must at least halve what a remote walk transfers, but it fetched "
+                + $"{aggregated.Bytes:N0} B against {interleaved.Bytes:N0} B");
+
+            // Measuring the file cannot do worse than not measuring it.
+            Assert.True(
+                frontLoaded.Bytes <= aggregated.Bytes,
+                $"a measured reservation fetched {frontLoaded.Bytes:N0} B against aggregation's "
+                + $"{aggregated.Bytes:N0} B, so measuring the file bought nothing");
+
+            // What aggregation must not do is buy that locality with file size. Blocks are claimed in
+            // full, so a block of fixed size is a floor rather than a proportional cost: at a fixed 8 MB
+            // this file would come out three times larger, which is a bad trade however few ranges it
+            // takes to walk. Growth is bounded from the reader's side here and from the writer's side in
+            // MetadataLayoutTests.
+            var interleavedSize = new FileInfo(interleavedPath).Length;
+            var aggregatedSize = new FileInfo(aggregatedPath).Length;
+
+            Assert.True(
+                aggregatedSize < interleavedSize * 1.1,
+                $"aggregation produced {aggregatedSize:N0} bytes against {interleavedSize:N0} interleaved, "
+                + $"so a whole block is being claimed regardless of how little metadata the file has");
         }
 
         finally
         {
             File.Delete(interleavedPath);
+            File.Delete(aggregatedPath);
             File.Delete(frontLoadedPath);
         }
     }
