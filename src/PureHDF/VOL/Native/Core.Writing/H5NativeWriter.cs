@@ -549,7 +549,7 @@ partial class H5NativeWriter
 
         h5d.Initialize();
 
-        if (!memoryData.Equals(default))
+        if (!memoryData.Equals(default) && (!Context.SizeOnly || SizingPassNeedsData<TElement>(dataLayout)))
         {
             WriteData(
                 h5d,
@@ -582,6 +582,40 @@ partial class H5NativeWriter
 
         // Bridged for the same reason as in EncodeGroup above.
         return objectHeader.Encode(Context).GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Whether a sizing pass has to encode this dataset's data, or can leave it alone.
+    /// </summary>
+    /// <remarks>
+    /// The pass exists to total up metadata, so it only has to do work that decides how much metadata
+    /// there is. Copying fixed-size payload into a layout decides nothing: a contiguous region and an
+    /// implicit chunk index are raw data, a fixed-array index is sized from the chunk count, and every
+    /// index's encoded width comes from the dataspace rather than from a value. So for fixed-size
+    /// elements the pass skips the whole data path - no selection walk, no chunk buffers, no byte
+    /// copying, no raw chunk allocation - on top of already skipping compression.
+    /// <para>
+    /// What it cannot skip is data whose encoding allocates. That is why the test is on TElement rather
+    /// than on the dataset type: an array is itself a reference, so asking this of the dataset type
+    /// answers yes for every array-backed dataset and the pass would skip nothing.
+    /// </para>
+    /// </remarks>
+    private static bool SizingPassNeedsData<TElement>(DataLayoutMessage4 dataLayout)
+    {
+        // A compact dataset's payload is embedded in its object header, so here the data IS metadata.
+        // Nothing to save either way - compact is capped at 64 kB.
+        if (dataLayout.Properties is CompactStoragePropertyDescription)
+            return true;
+
+        // Anything holding a reference goes through the per-element encoder, which allocates: a
+        // variable-length string or sequence takes global heap space sized from the values themselves,
+        // and an object reference encodes the object it points at, header and all.
+        if (DataUtils.IsReferenceOrContainsReferences(typeof(TElement)))
+            return true;
+
+        // Nullable<T> is encoded as a variable-length sequence of one, so it takes global heap space
+        // too - and contains no reference, so the check above does not see it.
+        return Nullable.GetUnderlyingType(typeof(TElement)) is not null;
     }
 
     private static void InternalWriteDataset<T, TElement>(
