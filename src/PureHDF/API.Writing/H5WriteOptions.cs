@@ -109,14 +109,14 @@ public record H5WriteOptions(
     /// compress, so on a filtered write it adds a low single-digit percentage; on an unfiltered write the
     /// share is larger, but an unfiltered write is cheap to begin with.
     /// <para>
-    /// Set an explicit value to skip that pass. Doing so also covers the one case a measurement cannot
-    /// reach: variable-length data written through
-    /// <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> after the initial write. Such data goes
-    /// on the global heap, and how much heap it needs follows from the values themselves, which the
-    /// measuring pass has not seen. Everything else about a deferred dataset is already covered, since a
-    /// chunk index is sized from the chunk count, which comes from the dimensions rather than from the
-    /// data. A reservation that falls short spills into blocks, so the effect is a loss of locality for
-    /// the remainder rather than a failure.
+    /// Set an explicit value only to skip that pass. It buys nothing else: a measured reservation is the
+    /// exact number of bytes that will be served from it, so it abandons nothing, while an explicit one
+    /// abandons whatever it over-reserved. Data written later through
+    /// <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> needs no allowance either - a chunk
+    /// index is sized from the chunk count, which comes from the dimensions rather than from the data,
+    /// and a variable-length value's heap space is payload rather than structure, so writing more of it
+    /// does not move the total. A reservation that nonetheless falls short spills into blocks, which
+    /// loses locality for the remainder rather than failing.
     /// </para>
     /// </remarks>
     public long MetadataReservation { get; init; }

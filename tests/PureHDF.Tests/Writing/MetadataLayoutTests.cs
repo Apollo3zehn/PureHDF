@@ -470,24 +470,25 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// What a deferred write costs the sizing pass, which can only be what the values decide.
+    /// Nothing a deferred write does outruns the sizing pass.
     /// </summary>
     /// <remarks>
     /// The pass runs before the caller has written anything through the writer, so the question is which
-    /// metadata it can still account for. A chunk index it can: its size follows from the chunk count,
-    /// and that follows from the dimensions, which are fixed when the dataset is declared -
-    /// <c>WriteChunkInfos</c> is sized to <c>TotalChunkCount</c> in <c>H5D_Chunk4.Initialize</c>, and
-    /// writing data later fills entries in an array whose length was settled then. Global heap space it
-    /// cannot: how much a variable-length value needs follows from the value.
+    /// metadata it can still account for. All of it, as it turns out. A chunk index's size follows from
+    /// the chunk count, and that follows from the dimensions, which are fixed when the dataset is
+    /// declared - <c>WriteChunkInfos</c> is sized to <c>TotalChunkCount</c> in
+    /// <c>H5D_Chunk4.Initialize</c>, and writing data later fills entries in an array whose length was
+    /// settled then. And a variable-length value's global heap space is allocated as payload rather than
+    /// as structure, so however much of it a caller writes later, the metadata total does not move.
     /// <para>
-    /// So the shortfall is zero for fixed-size deferred data and nonzero only for variable-length, which
-    /// is why <see cref="H5WriteOptions.MetadataReservation" /> is worth setting for the latter and
-    /// nothing for the former. Asserted rather than reasoned, because the distinction is the entire
-    /// guidance given for deferred writes.
+    /// That is what makes <see cref="H5WriteOptions.MetadataReservation" /> unnecessary for a deferred
+    /// write rather than advisable for some of them. Asserted rather than reasoned, because it is the
+    /// entire guidance given for deferred writes - and the guidance said the opposite twice before this
+    /// test existed.
     /// </para>
     /// </remarks>
     [Fact]
-    public void OnlyVariableLengthDeferredDataOutrunsTheSizingPass()
+    public void NothingDeferredOutrunsTheSizingPass()
     {
         var options = new H5WriteOptions
         {
@@ -546,12 +547,9 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         Assert.Equal(0, filtered);
         Assert.Equal(0, unfiltered);
 
-        // Variable-length data is not, and by an amount worth reserving against rather than a rounding
-        // error - here 288 kB of global heap the pass had no way to see.
-        Assert.True(
-            variableLength > 200_000,
-            $"variable-length deferred data fell short by only {variableLength:N0} bytes, so this no "
-            + $"longer demonstrates the case MetadataReservation exists for.");
+        // And so is variable-length data, now that its heap collections are payload. This was 294,912
+        // bytes short while they counted as structure.
+        Assert.Equal(0, variableLength);
     }
 
     /// <summary>
@@ -631,9 +629,9 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     /// </para>
     /// </remarks>
     [Theory]
-    [InlineData(H5MetadataPlacement.Aggregated)]
-    [InlineData(H5MetadataPlacement.FrontLoaded)]
-    public void AbandonedSpaceAccountsForTheFileGrowth(H5MetadataPlacement placement)
+    [InlineData(H5MetadataPlacement.Aggregated, 0L)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 256 * 1024L)]
+    public void AbandonedSpaceAccountsForTheFileGrowth(H5MetadataPlacement placement, long reservation)
     {
         var strings = Enumerable.Range(0, 500).Select(i => $"deferred-{i}-" + new string('y', i % 61)).ToArray();
 
@@ -648,7 +646,13 @@ public class MetadataLayoutTests(ITestOutputHelper output)
                 var writer = file.BeginWrite(filePath, new H5WriteOptions
                 {
                     PreferCompactDatasetLayout = false,
-                    MetadataPlacement = value
+                    MetadataPlacement = value,
+
+                    // Explicit and deliberately generous for the front-loaded case. Left at zero, the
+                    // reservation is exactly what the structure needs and abandons nothing, so there would
+                    // be no waste for the metric to account for and the assertion below would hold for the
+                    // wrong reason.
+                    MetadataReservation = reservation
                 });
 
                 writer.Write(dataset, strings);
@@ -674,10 +678,80 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         Assert.Equal(0, interleavedAbandoned);
 
         // Exactly the growth, not approximately. Interleaving claims precisely what it uses, so the
-        // same content written with a region claims the same allocations plus whatever it abandoned -
-        // and the front-loaded reservation's fixed slack is part of that, claimed and unused like the
-        // rest. Anything other than equality means space is being claimed that nothing accounts for.
+        // same content written with a region claims those same allocations plus whatever it abandoned.
+        // Anything other than equality means space is being claimed that nothing accounts for.
+        Assert.True(growth > 0, "this fixture no longer abandons anything, so it proves nothing");
         Assert.Equal(growth, abandoned);
+    }
+
+    /// <summary>
+    /// A dataset's variable-length values are its payload; an attribute's are structure.
+    /// </summary>
+    /// <remarks>
+    /// Both live on the global heap, so one classification for the whole heap has to be wrong for one of
+    /// them. Counted all as structure, a dataset of variable-length strings with no attributes at all
+    /// measures 97% structure, so a front-loaded region swallows the payload and there is nothing left to
+    /// separate - silently, since the file stays valid and the same size and only the locality quietly
+    /// fails to materialise.
+    /// <para>
+    /// The distinction is the reader's, as everywhere else here: an attribute's value is read while
+    /// browsing a file, a dataset's elements only when reading that dataset.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void ADatasetsVariableLengthValuesArePayloadAndAnAttributesAreStructure()
+    {
+        var options = new H5WriteOptions
+        {
+            PreferCompactDatasetLayout = false,
+            MetadataPlacement = H5MetadataPlacement.Interleaved
+        };
+
+        var strings = Enumerable.Range(0, 2_000).Select(i => new string('x', 500) + i).ToArray();
+
+        double StructureShare(string label, Func<H5File> makeFile)
+        {
+            var measured = H5NativeWriter.MeasureMetadataSize(makeFile(), options);
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                makeFile().Write(filePath, options);
+
+                var size = new FileInfo(filePath).Length;
+                var share = measured / (double)size;
+
+                output.WriteLine($"{label,-38} structure {measured,10:N0} of {size,10:N0} = {share,7:P1}");
+
+                return share;
+            }
+
+            finally
+            {
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+        }
+
+        var datasetOnly = StructureShare(
+            "vlen strings as dataset, no attributes",
+            () => new H5File { ["d"] = new H5Dataset(strings) });
+
+        var jagged = StructureShare(
+            "jagged arrays as dataset, no attributes",
+            () => new H5File { ["d"] = new H5Dataset(Enumerable.Range(0, 2_000).Select(i => Enumerable.Range(0, 125).ToArray()).ToArray()) });
+
+        var attributeOnly = StructureShare(
+            "one large string as an attribute",
+            () => new H5File { ["g"] = new H5Group { Attributes = new Dictionary<string, object> { ["h"] = string.Join(",", strings.Take(200)) } } });
+
+        // A dataset's heap is payload: what remains as structure is the object headers and the
+        // superblock, a rounding error against a megabyte of strings. Counted as structure, it is 97.3%.
+        Assert.True(datasetOnly < 0.01, $"a variable-length dataset measured {datasetOnly:P1} structure.");
+        Assert.True(jagged < 0.01, $"a jagged-array dataset measured {jagged:P1} structure.");
+
+        // An attribute's heap is structure, and an attributes-only file is therefore all structure.
+        Assert.True(attributeOnly > 0.99, $"an attribute-only file measured {attributeOnly:P1} structure.");
     }
 
     /// <summary>

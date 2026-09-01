@@ -11,15 +11,21 @@ namespace PureHDF.VOL.Native;
 internal enum AllocationKind
 {
     /// <summary>
-    /// File structure: the superblock, object headers, chunk indexes and their data blocks, and global
-    /// heap collections. Global heap counts as metadata because it holds attribute payload, which is
-    /// what a viewer reads while browsing rather than while reading a dataset.
+    /// File structure: the superblock, object headers, chunk indexes and their data blocks, and the
+    /// global heap collections holding attribute values - which a viewer reads while browsing a file,
+    /// rather than while reading a dataset.
     /// </summary>
     Metadata,
 
     /// <summary>
-    /// Dataset payload: contiguous data and chunk data.
+    /// Dataset payload: contiguous data, chunk data, and the global heap collections holding a dataset's
+    /// own variable-length elements.
     /// </summary>
+    /// <remarks>
+    /// The global heap serves both kinds, which is why <see cref="GlobalHeapManager.AllocationKind" />
+    /// exists. Counting all of it as structure put 97% of a variable-length string dataset in the
+    /// metadata region and left a placement nothing to separate.
+    /// </remarks>
     RawData
 }
 

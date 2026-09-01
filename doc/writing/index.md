@@ -99,9 +99,9 @@ aggregated     fetched   786,432 B of 4,052,705 B    19.4% of file    3 requests
 front-loaded   fetched   262,144 B of 4,062,879 B     6.5% of file    1 request
 ```
 
-Front loading always ends at a single request, since the reservation is one contiguous span. The interleaved cost is the whole file however large it grows, so the gap widens with size.
+Front loading ends at a single request whenever the reservation holds all the structure, since it is one contiguous span; a reservation that falls short spills into blocks and costs one request per block. The interleaved cost is the whole file however large it grows, so the gap widens with size.
 
-`FrontLoaded` sizes its reservation by measuring rather than estimating: the writer encodes the file once against a stream that discards everything and reads the total off its allocator. The pass does not compress and, for fixed-size data, does not touch the data at all, so it costs a fraction of the write it precedes. Set `MetadataReservation` to a byte count to skip the pass - and do set it when writing variable-length data through `BeginWrite`, since how much global heap such data needs follows from values the pass has not seen yet.
+`FrontLoaded` sizes its reservation by measuring rather than estimating: the writer encodes the file once against a stream that discards everything and reads the total off its allocator. The pass does not compress and, for fixed-size data, does not touch the data at all, so it costs a fraction of the write it precedes. Because the figure is exact, a front-loaded file is the same size as an interleaved one rather than merely close to it. Set `MetadataReservation` to a byte count to skip the pass; nothing else requires it, including a deferred write through `BeginWrite`, since nothing written later changes how much structure the file has.
 
 A reservation that turns out too small spills into blocks, so it loses locality rather than failing. All three placements produce valid HDF5 - the format imposes no ordering - and the choice costs nothing on read for a local file.
 

@@ -1,4 +1,5 @@
 using PureHDF.Selections;
+using PureHDF.VOL.Native;
 
 namespace PureHDF;
 
@@ -29,14 +30,27 @@ public partial class H5NativeWriter : IDisposable
         // TODO cache this
         var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        method.Invoke(this,
-        [
-            info.H5D,
-            info.Encode,
-            data,
-            memorySelection,
-            fileSelection
-        ]);
+        // As in InternalEncodeDataset: variable-length elements written here are the dataset's payload,
+        // so their heap collections are allocated as payload too.
+        var enclosing = Context.GlobalHeapManager.AllocationKind;
+        Context.GlobalHeapManager.AllocationKind = AllocationKind.RawData;
+
+        try
+        {
+            method.Invoke(this,
+            [
+                info.H5D,
+                info.Encode,
+                data,
+                memorySelection,
+                fileSelection
+            ]);
+        }
+
+        finally
+        {
+            Context.GlobalHeapManager.AllocationKind = enclosing;
+        }
     }
 
     /// <summary>

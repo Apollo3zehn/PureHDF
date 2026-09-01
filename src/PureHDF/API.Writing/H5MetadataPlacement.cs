@@ -34,10 +34,10 @@ public enum H5MetadataPlacement
     /// <para>
     /// Blocks start small and double up to <see cref="H5WriteOptions.MetadataBlockSize" />, so the space
     /// claimed is proportional to the metadata the file turns out to have rather than a floor it pays
-    /// whatever its size. The cost is a handful of clusters rather than one: measured over a range-
-    /// fetching reader on an 18 MB file, walking the structure took 7 requests and 10.0% of the file,
-    /// against 70 requests and all of it under <see cref="Interleaved" />. Prefer
-    /// <see cref="FrontLoaded" /> where the round trips matter - it reached 4 - and this where the sizing
+    /// whatever its size. The cost is a handful of clusters rather than one: measured over a
+    /// range-fetching reader on a 4 MB file of 600 groups, walking the structure took 3 requests and
+    /// 19.4% of the file, against 16 requests and all of it under <see cref="Interleaved" />. Prefer
+    /// <see cref="FrontLoaded" /> where the round trips matter - it took 1 - and this where the sizing
     /// pass is unwelcome.
     /// </para>
     /// </remarks>
@@ -60,9 +60,8 @@ public enum H5MetadataPlacement
     /// reports as unaccounted space. A measured reservation is neither: it is the exact number of bytes
     /// that will be served from it, so a front-loaded file is the same size as an interleaved one rather
     /// than merely close to it, and nothing is abandoned.
-    /// Set <see cref="H5WriteOptions.MetadataReservation" /> when writing variable-length data after the
-    /// initial write through <see cref="H5File.BeginWrite(string, H5WriteOptions?)" />: the global heap
-    /// such data needs is sized from the values, which the measuring pass has not seen.
+    /// A deferred write through <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> needs no
+    /// allowance for this: nothing a caller writes later changes how much structure the file has.
     /// </para>
     /// <para>
     /// Suited to a file written once and then only read - which is every file this library produces, as

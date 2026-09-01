@@ -549,13 +549,27 @@ partial class H5NativeWriter
 
         if (!memoryData.Equals(default) && (!Context.SizeOnly || SizingPassNeedsData<TElement>(dataLayout)))
         {
-            WriteData(
-                h5d,
-                encode,
-                memoryData,
-                dataset.FileSelection,
-                dataset.MemorySelection,
-                memoryDims ?? throw new Exception("This should never happen."));
+            // Variable-length elements encoded from here belong to the dataset, so the heap collections
+            // holding them are payload rather than structure. Restored rather than left set, because an
+            // object reference among these elements encodes the object it points at, attributes and all.
+            var enclosing = Context.GlobalHeapManager.AllocationKind;
+            Context.GlobalHeapManager.AllocationKind = AllocationKind.RawData;
+
+            try
+            {
+                WriteData(
+                    h5d,
+                    encode,
+                    memoryData,
+                    dataset.FileSelection,
+                    dataset.MemorySelection,
+                    memoryDims ?? throw new Exception("This should never happen."));
+            }
+
+            finally
+            {
+                Context.GlobalHeapManager.AllocationKind = enclosing;
+            }
         }
 
         Context.DatasetToInfoMap[dataset] = (h5d, encode);
