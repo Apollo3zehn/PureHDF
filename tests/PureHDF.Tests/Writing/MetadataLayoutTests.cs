@@ -42,8 +42,9 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         PreferCompactDatasetLayout = false,
         MetadataPlacement = placement,
 
-        // Scaled to these files. The waste is bounded by the block size, so on a 16 MB file an 8 MB
-        // default block would cost 50% while on the 620 MB file it costs 1.3%.
+        // Lowered from the 8 MB default only to keep the ceiling in view on files this size. Blocks
+        // double up to the ceiling rather than starting at it, so the default would not inflate these
+        // files either - it would never be reached.
         MetadataBlockSize = 1024 * 1024,
 
         // Deliberately generous. h5stat reports 522,088 bytes of "File metadata" for these files,
@@ -426,6 +427,68 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         output.WriteLine($"{label,-24} measured {measured,10:N0}   allocated {allocated,10:N0}");
 
         Assert.Equal(allocated, measured);
+    }
+
+    /// <summary>
+    /// A small file must not pay a whole metadata block.
+    /// </summary>
+    /// <remarks>
+    /// A block is claimed in full, so a block of fixed size is a floor on file size rather than a
+    /// proportional cost: at a fixed 8 MB, the 33 kB of metadata this file needs makes an 8.4 MB file -
+    /// 205 times the interleaved layout. Blocks therefore start small and double, which bounds
+    /// what is claimed at roughly twice what is used.
+    /// <para>
+    /// Deferred variable-length data is the case that provokes it hardest, and under every placement:
+    /// aggregation opens its first block, and a front-loaded reservation cannot have measured the global
+    /// heap these strings need, so it exhausts and spills into a block too.
+    /// </para>
+    /// </remarks>
+    [Theory]
+    [InlineData(H5MetadataPlacement.Aggregated)]
+    [InlineData(H5MetadataPlacement.FrontLoaded)]
+    public void ASmallFileDoesNotPayAWholeMetadataBlock(H5MetadataPlacement placement)
+    {
+        var strings = Enumerable.Range(0, 500).Select(i => $"deferred-{i}-" + new string('y', i % 61)).ToArray();
+
+        long Write(H5MetadataPlacement value)
+        {
+            var dataset = new H5Dataset<string[]>(fileDims: [(ulong)strings.Length]);
+            var file = new H5File { ["strings"] = dataset };
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                using (var writer = file.BeginWrite(filePath, new H5WriteOptions
+                {
+                    PreferCompactDatasetLayout = false,
+                    MetadataPlacement = value
+
+                    // MetadataBlockSize left at its 8 MB default: the ceiling a block claimed whole would pay in full.
+                }))
+                {
+                    writer.Write(dataset, strings);
+                }
+
+                return new FileInfo(filePath).Length;
+            }
+
+            finally
+            {
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+        }
+
+        var interleaved = Write(H5MetadataPlacement.Interleaved);
+        var clustered = Write(placement);
+
+        output.WriteLine($"interleaved {interleaved,10:N0} bytes   {placement,-12} {clustered,10:N0} bytes   {clustered / (double)interleaved,6:N2}x");
+
+        // A small multiple, not a small difference: some overhead is inherent to claiming space up
+        // front. What must not happen is a block of fixed size dwarfing the file, which would be 205x here.
+        Assert.True(
+            clustered < interleaved * 4,
+            $"{placement} produced {clustered:N0} bytes against {interleaved:N0} interleaved, so a block is being claimed whole.");
     }
 
     /// <summary>

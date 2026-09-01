@@ -88,7 +88,7 @@ file.Write("path/to/file.h5", options);
 | Placement | Allocation | Effect |
 |---|---|---|
 | `Interleaved` | in encode order | the default; adds nothing to a write |
-| `Aggregated` | from large blocks, forming a few clusters | needs no estimate of the total; costs at most one unused block |
+| `Aggregated` | from blocks that double in size, forming a few clusters | needs no estimate of the total; costs a proportion of the metadata, not a fixed block |
 | `FrontLoaded` | from one region reserved at the front | a reader fetches all structure in one range |
 
 Measured over a stream counting what an HTTP range client would transfer, walking a file of 600 groups with deflated datasets at 256 kB ranges (on .NET 8 - a runtime whose deflate packs the same data differently moves the absolute figures, not the ratio):

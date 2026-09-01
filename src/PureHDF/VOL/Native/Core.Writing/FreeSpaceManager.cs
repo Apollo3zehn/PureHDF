@@ -25,10 +25,23 @@ internal enum AllocationKind
 
 internal class FreeSpaceManager
 {
+    /// <summary>
+    /// The size of the first metadata block. Blocks double from here up to the configured maximum.
+    /// </summary>
+    /// <remarks>
+    /// A block is claimed in full, so a fixed size is paid in full however little metadata the file
+    /// turns out to have: at a fixed 8 MB, 33 kB of metadata makes an 8.4 MB file. Doubling bounds the
+    /// total claimed at roughly twice what is used, which is a proportional cost rather than a floor,
+    /// while a file with enough metadata still reaches the maximum after a handful of blocks and clusters
+    /// at full block size from then on.
+    /// </remarks>
+    private const long INITIAL_BLOCK_SIZE = 64 * 1024;
+
     private readonly H5MetadataPlacement _placement;
     private readonly long _blockSize;
 
     private long _length;
+    private long _nextBlockSize;
 
     // The metadata region currently being filled: [_metadataCursor, _metadataRegionEnd). Empty when
     // the two are equal, which is always the case for H5MetadataPlacement.Interleaved.
@@ -39,6 +52,7 @@ internal class FreeSpaceManager
     {
         _placement = placement;
         _blockSize = blockSize;
+        _nextBlockSize = Math.Min(INITIAL_BLOCK_SIZE, blockSize);
     }
 
     /// <summary>
@@ -141,12 +155,17 @@ internal class FreeSpaceManager
             // fit, plus the unused tail of the final region.
             if (_blockSize > 0 && length <= _blockSize)
             {
+                // Big enough for the request that opened it, since a block too small to serve that
+                // request would be abandoned immediately and the request placed inline.
+                var openedSize = Math.Max(_nextBlockSize, length);
+
                 MetadataAbandoned += _metadataRegionEnd - _metadataCursor;
                 MetadataRegionsOpened++;
 
                 _metadataCursor = _length;
-                _metadataRegionEnd = _length + _blockSize;
+                _metadataRegionEnd = _length + openedSize;
                 _length = _metadataRegionEnd;
+                _nextBlockSize = Math.Min(openedSize * 2, _blockSize);
 
                 var address = _metadataCursor;
                 _metadataCursor += length;

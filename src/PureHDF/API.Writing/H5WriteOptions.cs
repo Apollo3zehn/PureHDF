@@ -86,13 +86,15 @@ public record H5WriteOptions(
     public H5MetadataPlacement MetadataPlacement { get; init; } = H5MetadataPlacement.Interleaved;
 
     /// <summary>
-    /// The size in bytes of a metadata block, used when <see cref="MetadataPlacement" /> is
-    /// <see cref="H5MetadataPlacement.Aggregated" />. The default is 8 MB.
+    /// The largest metadata block the writer will open, in bytes. The default is 8 MB. It applies when
+    /// <see cref="MetadataPlacement" /> is <see cref="H5MetadataPlacement.Aggregated" />, and to the
+    /// remainder when a <see cref="H5MetadataPlacement.FrontLoaded" /> reservation runs out.
     /// </summary>
     /// <remarks>
-    /// Larger blocks cluster more structure together and waste more of the final block. A block smaller
-    /// than the largest single metadata allocation cannot hold it, and such an allocation falls back to
-    /// being placed inline.
+    /// A ceiling rather than a fixed size: the first block is small and each one doubles up to this
+    /// value, so what a file pays is proportional to the metadata it has rather than a floor it pays
+    /// whatever its size. Raising this clusters more structure per block once a file is large enough to
+    /// reach it. An allocation larger than this cannot be held by a block at all, and is placed inline.
     /// </remarks>
     public long MetadataBlockSize { get; init; } = 8 * 1024 * 1024;
 
