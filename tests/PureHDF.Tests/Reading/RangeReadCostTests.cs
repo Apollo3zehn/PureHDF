@@ -47,19 +47,37 @@ public class RangeReadCostTests(ITestOutputHelper output)
     /// <summary>
     /// Builds a tree shaped like a report: many small groups, each carrying attributes and a dataset.
     /// </summary>
+    /// <remarks>
+    /// The payload is a periodic signal with a slow drift, rounded to two decimals - a measurement
+    /// series, which is what such files typically hold. Its shape is chosen for how it compresses, since the file
+    /// sizes reported below are only as meaningful as the payload is representative. Three properties
+    /// matter, and a plainer choice fails at least one:
+    /// <list type="bullet">
+    /// <item>It compresses, to about 39%, so the file is neither dominated by payload nor unrealistically
+    /// small - a run of zeroes compresses away to nothing and leaves too few blocks for locality to be
+    /// expressible at all.</item>
+    /// <item>It compresses to nearly the same size on every runtime. .NET 9 replaced the bundled zlib
+    /// with zlib-ng, whose match finder differs below maximum effort, so a payload can compress quite
+    /// differently across target frameworks: this one lands within 0.2%, where a strided integer ramp -
+    /// pathological for a fast match finder - differed by 73% and moved every figure here with it.</item>
+    /// <item>It is deterministic, so the figures are reproducible rather than merely typical.</item>
+    /// </list>
+    /// The rounding is what buys the compression: full-mantissa doubles differ in their low bytes at
+    /// every sample and barely compress at all.
+    /// </remarks>
     private static H5File BuildTree()
     {
         var root = new H5File();
 
         for (var i = 0; i < GroupCount; i++)
         {
-            var data = new int[4_096];
+            // 2,048 doubles is 16 kB of payload per group, which keeps the file the size the block
+            // arithmetic above assumes.
+            var data = new double[2_048];
 
             for (var j = 0; j < data.Length; j++)
             {
-                // Varied, because deflate over a run of zeroes compresses unrepresentatively well and
-                // would leave the file too small for block-level effects to show.
-                data[j] = (i * 31) + (j * 7);
+                data[j] = Math.Round(Math.Sin((j + i) / 50.0) * 100 + (j * 0.01), 2);
             }
 
             root[$"unit{i:D4}"] = new H5Group

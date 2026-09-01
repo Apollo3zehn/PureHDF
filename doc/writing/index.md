@@ -91,11 +91,12 @@ file.Write("path/to/file.h5", options);
 | `Aggregated` | from blocks that double in size, forming a few clusters | needs no estimate of the total; costs a proportion of the metadata, not a fixed block |
 | `FrontLoaded` | from one region reserved at the front | a reader fetches all structure in one range |
 
-Measured over a stream counting what an HTTP range client would transfer, walking a file of 600 groups with deflated datasets at 256 kB ranges (on .NET 8 - a runtime whose deflate packs the same data differently moves the absolute figures, not the ratio):
+Measured over a stream counting what an HTTP range client would transfer, walking a file of 600 groups of deflated measurement series at 256 kB ranges:
 
 ```
-interleaved    fetched 3,666,125 B of 3,666,125 B   100.0% of file   14 requests
-front-loaded   fetched   262,144 B of 3,678,461 B     7.1% of file    1 request
+interleaved    fetched 4,050,543 B of 4,050,543 B   100.0% of file   16 requests
+aggregated     fetched   786,432 B of 4,052,705 B    19.4% of file    3 requests
+front-loaded   fetched   262,144 B of 4,062,879 B     6.5% of file    1 request
 ```
 
 Front loading always ends at a single request, since the reservation is one contiguous span. The interleaved cost is the whole file however large it grows, so the gap widens with size.
