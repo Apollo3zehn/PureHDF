@@ -42,6 +42,7 @@ internal class FreeSpaceManager
 
     private long _length;
     private long _nextBlockSize;
+    private long _abandonedByReplacement;
 
     // The metadata region currently being filled: [_metadataCursor, _metadataRegionEnd). Empty when
     // the two are equal, which is always the case for H5MetadataPlacement.Interleaved.
@@ -79,13 +80,27 @@ internal class FreeSpaceManager
     public long MetadataAllocated { get; private set; }
 
     /// <summary>
-    /// How many metadata regions were opened, and how much of them was abandoned unused. More than one
-    /// region under <see cref="H5MetadataPlacement.FrontLoaded" /> means the reservation was too small
-    /// and the remainder spilled.
+    /// How many metadata regions were opened. More than one under
+    /// <see cref="H5MetadataPlacement.FrontLoaded" /> means the reservation was too small and the
+    /// remainder spilled.
     /// </summary>
     public int MetadataRegionsOpened { get; private set; }
 
-    public long MetadataAbandoned { get; private set; }
+    /// <summary>
+    /// How much of those regions was claimed and never used.
+    /// </summary>
+    /// <remarks>
+    /// Includes the tail of the region still open, which is the whole point: that tail is the largest
+    /// part of the waste on a file that opened one region and half filled it, and counting only regions
+    /// already replaced reported 48 bytes where 8 MB had been claimed. A region is replaced only when a
+    /// request does not fit, so the remainders that get counted on replacement are small by
+    /// construction, and the one that does not is not.
+    /// <para>
+    /// Live rather than final while a write is in progress: it answers what would be abandoned if the
+    /// write ended now, and the open region's tail shrinks as allocations are served from it.
+    /// </para>
+    /// </remarks>
+    public long MetadataAbandoned => _abandonedByReplacement + (_metadataRegionEnd - _metadataCursor);
 
     /// <summary>
     /// Allocates metadata at the current end of the file, bypassing regions and blocks entirely.
@@ -159,7 +174,7 @@ internal class FreeSpaceManager
                 // request would be abandoned immediately and the request placed inline.
                 var openedSize = Math.Max(_nextBlockSize, length);
 
-                MetadataAbandoned += _metadataRegionEnd - _metadataCursor;
+                _abandonedByReplacement += _metadataRegionEnd - _metadataCursor;
                 MetadataRegionsOpened++;
 
                 _metadataCursor = _length;

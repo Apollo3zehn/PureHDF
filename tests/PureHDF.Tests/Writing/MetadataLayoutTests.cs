@@ -492,6 +492,70 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     }
 
     /// <summary>
+    /// The abandoned figure has to account for the space the file actually grew by.
+    /// </summary>
+    /// <remarks>
+    /// A region is claimed in full and there is no free list, so file size over the interleaved layout
+    /// is exactly what was claimed and not used. That makes the two independently measurable, which is
+    /// the only reason the metric can be checked at all rather than merely reported: growth is observed
+    /// from outside, abandonment is reported from inside, and they have to agree.
+    /// <para>
+    /// Counting only regions already replaced would not agree. A region is replaced only when a request
+    /// does not fit it, so those remainders are small by construction - 48 bytes against 8 MB of growth
+    /// here - while the tail of the region left open is the part that is actually large.
+    /// </para>
+    /// </remarks>
+    [Theory]
+    [InlineData(H5MetadataPlacement.Aggregated)]
+    [InlineData(H5MetadataPlacement.FrontLoaded)]
+    public void AbandonedSpaceAccountsForTheFileGrowth(H5MetadataPlacement placement)
+    {
+        var strings = Enumerable.Range(0, 500).Select(i => $"deferred-{i}-" + new string('y', i % 61)).ToArray();
+
+        (long Size, long Abandoned) Write(H5MetadataPlacement value)
+        {
+            var dataset = new H5Dataset<string[]>(fileDims: [(ulong)strings.Length]);
+            var file = new H5File { ["strings"] = dataset };
+            var filePath = Path.GetTempFileName();
+
+            try
+            {
+                var writer = file.BeginWrite(filePath, new H5WriteOptions
+                {
+                    PreferCompactDatasetLayout = false,
+                    MetadataPlacement = value
+                });
+
+                writer.Write(dataset, strings);
+                writer.Dispose();
+
+                return (new FileInfo(filePath).Length, writer.Context.FreeSpaceManager.MetadataAbandoned);
+            }
+
+            finally
+            {
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+        }
+
+        var (interleavedSize, interleavedAbandoned) = Write(H5MetadataPlacement.Interleaved);
+        var (size, abandoned) = Write(placement);
+        var growth = size - interleavedSize;
+
+        output.WriteLine($"{placement,-12} grew {growth,10:N0} bytes, reports {abandoned,10:N0} abandoned");
+
+        // Interleaving claims no region, so it can abandon nothing.
+        Assert.Equal(0, interleavedAbandoned);
+
+        // Exactly the growth, not approximately. Interleaving claims precisely what it uses, so the
+        // same content written with a region claims the same allocations plus whatever it abandoned -
+        // and the front-loaded reservation's fixed slack is part of that, claimed and unused like the
+        // rest. Anything other than equality means space is being claimed that nothing accounts for.
+        Assert.Equal(growth, abandoned);
+    }
+
+    /// <summary>
     /// An unfiltered chunked dataset's payload is payload, however the format reaches it.
     /// </summary>
     /// <remarks>
