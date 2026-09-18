@@ -77,6 +77,38 @@ public partial class AttributeTests
         }
     }
 
+    /// <summary>
+    /// A scalar whose value is null is one element that is null, not an absence of elements.
+    /// </summary>
+    /// <remarks>
+    /// A nullable value type already behaves this way, because WriteUtils.ToMemory answers it as one
+    /// element. A nullable REFERENCE type arrives as a plain null, indistinguishable from an attribute
+    /// carrying no data, and so produced a null dataspace - which holds no elements and cannot be read
+    /// back at all. The HDF5 C library writes this as a scalar variable-length string whose value is a
+    /// null pointer, and h5dump prints it as NULL rather than as "".
+    /// </remarks>
+    [Fact]
+    public void CanWrite_Space_Scalar_NullValue()
+    {
+        // Arrange - the value cast rather than 'default', which binds to the null-dataspace constructor.
+        var file = new H5File();
+
+        file.Attributes["text"] = new H5Attribute<string?>((string?)null);
+
+        var stream = new MemoryStream();
+
+        // Act
+        file.Write(stream);
+
+        // Assert
+        stream.Seek(0, SeekOrigin.Begin);
+
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(H5DataspaceType.Scalar, actual.Attribute("text").Space.Type);
+        Assert.Null(actual.Attribute("text").Read<string?>());
+    }
+
     [Fact]
     public void CanWrite_Space_2D()
     {
