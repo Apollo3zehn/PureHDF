@@ -32,6 +32,8 @@ public class EndiannessTests
 
     private class ArrayMemberClass { public int[] v { get; set; } = default!; }
 
+    private class MixedClass { public int le { get; set; } public int be { get; set; } }
+
     private static NativeFile OpenFixture()
     {
         var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId
@@ -112,6 +114,35 @@ public class EndiannessTests
         Assert.Equal(2, actual.Length);
         Assert.Equal(1, actual[0].a);
         Assert.Equal(2.0, actual[0].b);
+    }
+
+    /// <summary>
+    /// Two members of the SAME .NET type and opposite byte orders, in one element, read as a class.
+    /// </summary>
+    /// <remarks>
+    /// This pins the decoder cache key rather than the conversion. The per-element decoders are cached
+    /// process-wide, and keying that cache on the .NET type alone is not enough once a decoder converts:
+    /// both members here are <c>int</c>, so one cache entry would have to serve both orders and whichever
+    /// member was decoded first would decide for the other.
+    /// <para>
+    /// Reading the same dataset into a struct does not cover this - that goes through the bulk path,
+    /// which converts by layout and never consults the per-element cache. The failure is otherwise
+    /// invisible until some unrelated read of the same .NET type happens to go second, which makes it
+    /// depend on the order files are opened in rather than on anything in the file.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void MembersOfOneTypeAndOppositeOrdersDoNotShareADecoder()
+    {
+        using var root = OpenFixture();
+
+        var actual = root.Group("endianness").Dataset("mixed_compound").Read<MixedClass[]>();
+
+        Assert.Equal(2, actual.Length);
+        Assert.Equal(7, actual[0].le);
+        Assert.Equal(7, actual[0].be);
+        Assert.Equal(8, actual[1].le);
+        Assert.Equal(8, actual[1].be);
     }
 
     /// <summary>An array datatype carries its order below the array, on the base type.</summary>
