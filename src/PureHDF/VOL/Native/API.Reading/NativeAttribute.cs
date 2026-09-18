@@ -208,6 +208,8 @@ public class NativeAttribute : IH5Attribute
         {
             var resultType = typeof(TResult);
 
+            EnsureNullDataspaceCanBeRepresented(resultType);
+
             /* memory dims */
             if (DataUtils.IsArray(resultType))
             {
@@ -323,6 +325,26 @@ public class NativeAttribute : IH5Attribute
         return decoder(context, source, resultBuffer);
     }
 
+    /// <summary>
+    /// A null dataspace holds no elements, which only an array result type can express.
+    /// </summary>
+    /// <remarks>
+    /// The read itself needs no special case: the file element count is already zero for a null
+    /// dataspace, so the result buffer is sized zero, the count check passes and the decoder has nothing
+    /// to do. A scalar result type is the one shape with no way to say "no element", and would
+    /// otherwise fail further in as a count mismatch that does not mention the dataspace.
+    /// </remarks>
+    private void EnsureNullDataspaceCanBeRepresented(Type resultType)
+    {
+        if (Message.Dataspace.Type != DataspaceType.Null)
+            return;
+
+        if (!DataUtils.IsArray(resultType))
+            throw new InvalidOperationException(
+                $"The attribute '{Name}' has a null dataspace and so holds no elements, which cannot be "
+                + $"read into the scalar type '{resultType.Name}'. Read it as an array instead.");
+    }
+
     private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>(
         NativeReadContext context)
     {
@@ -331,10 +353,6 @@ public class NativeAttribute : IH5Attribute
 
         if (byteOrderAware is not null)
             DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
-
-        /* fast path for null dataspace */
-        if (Message.Dataspace.Type == DataspaceType.Null)
-            throw new Exception("Attributes with null dataspace cannot be read.");
 
         /* get decoder (succeeds only if decoding is possible) */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(
