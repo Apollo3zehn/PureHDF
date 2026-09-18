@@ -127,13 +127,30 @@ internal partial record class AttributeMessage
         H5Attribute attribute,
         bool isScalar)
     {
-        var memoryData = default(Memory<TElement>);
-        var memoryDims = default(ulong[]);
+        Memory<TElement> memoryData;
+        ulong[]? memoryDims;
 
-        if (!attribute.IsNullDataspace)
+        if (attribute.IsNullDataspace)
         {
-            (memoryData, memoryDims)
-                = WriteUtils.ToMemory<T, TElement>(attribute.Data);
+            memoryData = default;
+            memoryDims = default;
+        }
+
+        /* A scalar whose value is null is one element that is null, which is not the same thing as
+         * carrying no data. WriteUtils.ToMemory cannot tell those apart - it is handed an object? and a
+         * null reference is all it gets - so it answers with no dimensions, and no dimensions is how
+         * DataspaceMessage.Create is asked for a null dataspace. This keeps nullable reference types
+         * behaving like nullable value types.
+         */
+        else if (attribute.Data is null && isScalar)
+        {
+            memoryData = new TElement[1];
+            memoryDims = [];
+        }
+
+        else
+        {
+            (memoryData, memoryDims) = WriteUtils.ToMemory<T, TElement>(attribute.Data);
         }
 
         var type = memoryData.GetType();
@@ -186,8 +203,7 @@ internal partial record class AttributeMessage
 
         // attribute
         // TODO avoid creation of system memory stream too often
-        var dataEncodeSize = datatype.Size * dataspace.Dimensions
-            .Aggregate(1UL, (product, dimension) => product * dimension);
+        var dataEncodeSize = GetDataEncodeSize(datatype, dataspace);
 
         var buffer = new byte[dataEncodeSize];
         var localWriter = new SystemMemoryStream(buffer);
@@ -200,6 +216,10 @@ internal partial record class AttributeMessage
             InputData: default,
             EncodeData: driver =>
             {
+                /* a null dataspace holds no elements, so there is nothing to encode */
+                if (dataspace.Type == DataspaceType.Null)
+                    return;
+
                 encode(memoryData, localWriter);
                 driver.Write(buffer);
             }
@@ -209,6 +229,27 @@ internal partial record class AttributeMessage
         };
 
         return attributeMessage;
+    }
+
+    /// <summary>
+    /// The number of bytes the attribute's data encodes to.
+    /// </summary>
+    /// <remarks>
+    /// A null dataspace has no data elements (H5Screate: "A null dataspace, H5S_NULL, has no data
+    /// elements."), so it encodes to nothing. The size cannot be derived from the dimensions alone,
+    /// because a null dataspace has none and the product of no dimensions is one - which reserves one
+    /// element's worth of space for an attribute that holds no elements. The HDF5 C library writes no
+    /// data at all here, whatever the datatype.
+    /// </remarks>
+    private static ulong GetDataEncodeSize(
+        DatatypeMessage datatype,
+        DataspaceMessage dataspace)
+    {
+        if (dataspace.Type == DataspaceType.Null)
+            return 0;
+
+        return datatype.Size * dataspace.Dimensions
+            .Aggregate(1UL, (product, dimension) => product * dimension);
     }
 
     /// <summary>
@@ -231,9 +272,7 @@ internal partial record class AttributeMessage
         DataspaceMessage dataspace)
     {
         var nameEncodeSize = (ulong)Encoding.UTF8.GetByteCount(name) + 1;
-
-        var dataSize = datatype.Size * dataspace.Dimensions
-            .Aggregate(1UL, (product, dimension) => product * dimension);
+        var dataSize = GetDataEncodeSize(datatype, dataspace);
 
         return
             sizeof(byte) +
