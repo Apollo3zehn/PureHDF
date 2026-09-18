@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -16,20 +16,6 @@ internal static class DataUtils
         var isReferenceOrContainsReferences = (bool)generic.Invoke(null, null)!;
 
         return isReferenceOrContainsReferences;
-    }
-
-    public static void CheckEndianness(ByteOrder byteOrder)
-    {
-        if (byteOrder == ByteOrder.VaxEndian)
-            throw new Exception("VAX-endian byte order is not supported.");
-
-        var isLittleEndian = BitConverter.IsLittleEndian;
-
-        if ((isLittleEndian && byteOrder != ByteOrder.LittleEndian) ||
-           (!isLittleEndian && byteOrder != ByteOrder.BigEndian))
-        {
-            throw new Exception("Byte order conversion is not (yet) support by PureHDF.");
-        }
     }
 
     public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)

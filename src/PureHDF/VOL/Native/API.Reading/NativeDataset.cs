@@ -782,15 +782,6 @@ public class NativeDataset : NativeObject, IH5Dataset
             };
         }
 
-        /* check endianness */
-        if (!isRawMode)
-        {
-            var byteOrderAware = InternalDataType.BitField as IByteOrderAware;
-
-            if (byteOrderAware is not null)
-                DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
-        }
-
         /* memory selection + dims validation */
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");

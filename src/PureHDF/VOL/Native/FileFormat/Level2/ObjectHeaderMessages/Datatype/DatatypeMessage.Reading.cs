@@ -219,7 +219,7 @@ internal partial record class DatatypeMessage(
             (false, false) when memoryTypeSize == fileTypeSize || isRawMode
                 => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
                     .MakeGenericMethod(typeof(TElement))
-                    .Invoke(default, [])!,
+                    .Invoke(default, [GetByteOrderSwaps(isRawMode)])!,
             _ 
                 => throw new Exception("Unable to decode values types of different type size.")
         };
@@ -355,7 +355,15 @@ internal partial record class DatatypeMessage(
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
             => await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
 
-        return decode;
+        // This decoder runs per LEAF, so a compound reaching it does so once per member and each
+        // member answers for its own byte order - which is what lets one struct hold both.
+        if (!NeedsByteOrderSwap())
+            return decode;
+
+        async ValueTask<object?> decodeAndConvert(NativeReadContext context, IH5ReadStream source)
+            => ReverseBytes(await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false));
+
+        return decodeAndConvert;
     }
 
     // Builds and caches one ElementDecodeDelegate per element Type. Previously the
@@ -704,7 +712,8 @@ internal partial record class DatatypeMessage(
         {
             (true, _) => GetDecodeInfoForReferenceArray(elementType, elementDecode, property),
             (false, true) => throw new Exception("Unable to decode a reference type as value type."),
-            (false, false) when memoryTypeSize == fileTypeSize => GetDecodeInfoForUnmanagedArray(elementType, property),
+            (false, false) when memoryTypeSize == fileTypeSize
+                => GetDecodeInfoForUnmanagedArray(elementType, property, CollectByteOrderSwaps(property.BaseType)),
             _ => throw new Exception("Unable to decode values types of different type size.")
         };
 
@@ -748,9 +757,12 @@ internal partial record class DatatypeMessage(
 
     private static ElementDecodeDelegate GetDecodeInfoForUnmanagedArray(
         Type elementType,
-        ArrayPropertyDescription property
+        ArrayPropertyDescription property,
+        ByteOrderSwap[] swaps
     )
     {
+        var baseTypeSize = (int)property.BaseType.Size;
+
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
@@ -769,7 +781,13 @@ internal partial record class DatatypeMessage(
             // See GetDecodeInfoForReferenceArray: unwrap the boxed ValueTask<object>.
             var task = (ValueTask<object>)invokeDecodeUnmanagedArray.Invoke(default, parameters)!;
 
-            return await task.ConfigureAwait(false);
+            var result = await task.ConfigureAwait(false);
+
+            // The elements were bulk-copied, so they did not pass the per-leaf decoder that converts.
+            if (result is Array array)
+                ApplyByteOrderSwaps(array, baseTypeSize, swaps);
+
+            return result;
         }
 
         return decode;
@@ -885,7 +903,7 @@ internal partial record class DatatypeMessage(
         {
             var fastDecode = (ElementDecodeDelegate)_methodInfoBuildVariableLengthSequenceUnmanagedDecoder
                 .MakeGenericMethod(elementType)
-                .Invoke(default, [(int)property.BaseType.Size])!;
+                .Invoke(default, [(int)property.BaseType.Size, CollectByteOrderSwaps(property.BaseType)])!;
 
             memoryType ??= Type.GetType($"{elementType}[]")
                 ?? throw new Exception($"Unable to find array type for element type {elementType}.");
@@ -1185,7 +1203,21 @@ internal partial record class DatatypeMessage(
         }
     }
 
-    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
+    /// <summary>
+    /// The byte reversals this datatype needs before its decoded bytes mean anything on this host.
+    /// </summary>
+    /// <remarks>
+    /// Raw mode asks for the file's bytes as they are, so it converts nothing.
+    /// </remarks>
+    private ByteOrderSwap[] GetByteOrderSwaps(bool isRawMode)
+    {
+        if (isRawMode)
+            return [];
+
+        return CollectByteOrderSwaps(this);
+    }
+
+    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>(ByteOrderSwap[] swaps)
         where T : struct
     {
         // HOT PATH: plain unmanaged (numeric) datasets, which must reach
@@ -1210,7 +1242,25 @@ internal partial record class DatatypeMessage(
             return source.ReadDatasetAsync(target.Cast<T, byte>());
         }
 
-        return decode;
+        // Data already in the host's byte order - which is nearly all of it - keeps the delegate
+        // above untouched, capturing nothing and adding no pass over the buffer.
+        if (swaps.Length == 0)
+            return decode;
+
+        var elementSize = Unsafe.SizeOf<T>();
+
+        async ValueTask decodeAndConvert(
+            NativeReadContext context, IH5ReadStream source, Memory<T> target)
+        {
+            // The read stays zero-copy; the conversion is a second pass over the bytes it landed in,
+            // rather than a staging buffer.
+            if (!source.TryReadDatasetSync(MemoryMarshal.AsBytes(target.Span)))
+                await source.ReadDatasetAsync(target.Cast<T, byte>()).ConfigureAwait(false);
+
+            ApplyByteOrderSwaps(MemoryMarshal.AsBytes(target.Span), elementSize, swaps);
+        }
+
+        return decodeAndConvert;
     }
 
     /// <summary>
@@ -1330,7 +1380,8 @@ internal partial record class DatatypeMessage(
     }
 
     private static ElementDecodeDelegate BuildVariableLengthSequenceUnmanagedDecoder<TElement>(
-        int fileTypeSize)
+        int fileTypeSize,
+        ByteOrderSwap[] swaps)
         where TElement : unmanaged
     {
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
@@ -1351,6 +1402,9 @@ internal partial record class DatatypeMessage(
 
             var byteCount = count * fileTypeSize;
             MemoryMarshal.Cast<byte, TElement>(objectData.AsSpan(0, byteCount)).CopyTo(result);
+
+            // Bulk-copied from the heap, so the values have not been converted yet.
+            ApplyByteOrderSwaps(MemoryMarshal.AsBytes(result.AsSpan()), fileTypeSize, swaps);
 
             return result;
         }
