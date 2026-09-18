@@ -17,6 +17,9 @@ namespace PureHDF.Tests.Reading;
 /// is for - no single answer per dataset can be right for it.
 /// </para>
 /// </remarks>
+// Builds its fixtures through the HDF5 C library, so it serialises with the other classes that
+// touch that process-global state.
+[Collection(SharedHdf5StateCollection.Name)]
 public class EndiannessTests
 {
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

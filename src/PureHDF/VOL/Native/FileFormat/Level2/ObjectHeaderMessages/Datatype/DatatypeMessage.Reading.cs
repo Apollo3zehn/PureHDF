@@ -372,7 +372,11 @@ internal partial record class DatatypeMessage(
     // through a typed delegate built once per element type pays the reflection
     // once at cache-miss time and makes the per-element call a direct invocation
     // of the generic GetDecodeInfoForUnmanagedElement<T>.
-    private static readonly ConcurrentDictionary<Type, ElementDecodeDelegate> _unmanagedElementDecoderCache = new();
+    // The byte order is part of the key, not only the type: the decoder this builds converts or does
+    // not convert according to the datatype it was built from, and this cache is process-wide. Keyed on
+    // the type alone, the first big-endian int read would hand its converting decoder to every
+    // little-endian int afterwards, for the life of the process.
+    private static readonly ConcurrentDictionary<(Type, bool), ElementDecodeDelegate> _unmanagedElementDecoderCache = new();
 
     // Caches a compiled parameterless-constructor factory per Type. The compound
     // decode closure (GetDecodeInfoForReferenceCompound) invokes the factory on
@@ -404,9 +408,9 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
-        return _unmanagedElementDecoderCache.GetOrAdd(type, t =>
+        return _unmanagedElementDecoderCache.GetOrAdd((type, NeedsByteOrderSwap()), key =>
         {
-            var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(t);
+            var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(key.Item1);
             return (ElementDecodeDelegate)method.Invoke(this, parameters: null)!;
         });
     }
