@@ -14,6 +14,18 @@ partial class H5NativeWriter
 
     private ulong _rootGroupAddress;
 
+    // Shared rather than created per dataset: it is immutable and the same for all of them, and every
+    // dataset keeps its own reference for the writer's lifetime through DatasetInfo.
+    /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
+    private static readonly FillValueMessage _defaultFillValueMessage = new(
+        AllocationTime: SpaceAllocationTime.Early,
+        FillTime: FillValueWriteTime.Never,
+        Value: default
+    )
+    {
+        Version = 3
+    };
+
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
         // TODO writing never reads from the stream (checksums are computed from the encoded bytes), so the
@@ -531,15 +543,7 @@ partial class H5NativeWriter
             chunkDimensions: chunkDimensions);
 
         // fill value
-        /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
-        var fillValueMessage = new FillValueMessage(
-            AllocationTime: SpaceAllocationTime.Early,
-            FillTime: FillValueWriteTime.Never,
-            Value: default
-        )
-        {
-            Version = 3
-        };
+        var fillValueMessage = _defaultFillValueMessage;
 
         // header messages
         var headerMessages = new List<HeaderMessage>()
