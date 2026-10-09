@@ -25,11 +25,6 @@ public partial class H5NativeWriter : IDisposable
         if (!Context.DatasetToInfoMap.TryGetValue(dataset, out var info))
             throw new Exception("The provided dataset does not belong to this file.");
 
-        var (elementType, _) = WriteUtils.GetElementType(dataset.Type);
-
-        // TODO cache this
-        var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
-
         // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
         // so their heap collections are allocated as payload too.
         var enclosing = Context.GlobalHeapManager.AllocationKind;
@@ -37,14 +32,12 @@ public partial class H5NativeWriter : IDisposable
 
         try
         {
-            method.Invoke(this,
-            [
+            WriteDatasetDispatchCache<T>.Dispatch(
                 info.H5D ?? CreateLayout(info.Info, dataset.DatasetCreation),
                 info.Encode,
                 data,
                 memorySelection,
-                fileSelection
-            ]);
+                fileSelection);
         }
 
         finally

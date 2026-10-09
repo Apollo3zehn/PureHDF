@@ -1,16 +1,20 @@
 ﻿using PureHDF.Selections;
+using System.Collections.Concurrent;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 
 namespace PureHDF;
 
 partial class H5NativeWriter
 {
-    private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5NativeWriter)
-        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private delegate ulong EncodeDatasetDispatch(H5NativeWriter writer, H5Dataset dataset);
 
-    private static readonly MethodInfo _methodInfoWriteDataset = typeof(H5NativeWriter)
-        .GetMethod(nameof(InternalWriteDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
+    private delegate void WriteDatasetDispatch<T>(
+        H5D_Base h5d, object encode, T data, Selection? memorySelection, Selection? fileSelection);
+
+    // One closed generic method per dataset type, built once. Building it per call (MakeGenericMethod
+    // plus Invoke) would allocate a method, its type arguments and an argument array for every dataset
+    // encoded and every write - the bulk of what encoding a file of many small datasets allocates.
+    private static readonly ConcurrentDictionary<Type, EncodeDatasetDispatch> _encodeDatasetDispatchCache = new();
 
     private ulong _rootGroupAddress;
 
@@ -412,25 +416,53 @@ partial class H5NativeWriter
     internal ulong EncodeDataset(
         H5Dataset dataset)
     {
-        var (elementType, isScalar) = WriteUtils.GetElementType(dataset.Type);
+        var dispatch = _encodeDatasetDispatchCache.GetOrAdd(dataset.Type, CreateEncodeDatasetDispatch);
 
-        // TODO cache this
-        var method = _methodInfoEncodeDataset.MakeGenericMethod(dataset.Type, elementType);
+        return dispatch(this, dataset);
+    }
 
-        try
+    private static EncodeDatasetDispatch CreateEncodeDatasetDispatch(Type type)
+    {
+        var (elementType, isScalar) = WriteUtils.GetElementType(type);
+
+        var method = typeof(H5NativeWriter)
+            .GetMethod(isScalar ? nameof(EncodeScalarDataset) : nameof(EncodeNonScalarDataset), BindingFlags.NonPublic | BindingFlags.Static)!
+            .MakeGenericMethod(type, elementType);
+
+        return method.CreateDelegate<EncodeDatasetDispatch>();
+    }
+
+    // Two entry points rather than a captured isScalar, so the cached delegate binds straight to a
+    // static method with no closure in between.
+    private static ulong EncodeScalarDataset<T, TElement>(H5NativeWriter writer, H5Dataset dataset)
+        => writer.InternalEncodeDataset<T, TElement>(dataset, dataset.Data is null ? default! : (T)dataset.Data, isScalar: true);
+
+    private static ulong EncodeNonScalarDataset<T, TElement>(H5NativeWriter writer, H5Dataset dataset)
+        => writer.InternalEncodeDataset<T, TElement>(dataset, dataset.Data is null ? default! : (T)dataset.Data, isScalar: false);
+
+    /// <summary>
+    /// The write dispatch for <typeparamref name="T" />, built on first use. A static generic class
+    /// rather than a dictionary, because <see cref="Write{T}" /> knows <typeparamref name="T" />
+    /// statically and only the element type has to be found by reflection.
+    /// </summary>
+    private static class WriteDatasetDispatchCache<T>
+    {
+        public static readonly WriteDatasetDispatch<T> Dispatch = Create();
+
+        private static WriteDatasetDispatch<T> Create()
         {
-            return (ulong)method.Invoke(this, [dataset, dataset.Data, isScalar])!;
-        }
+            var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
-        // Rethrown unwrapped, preserving the original stack: encoding is where a caller's own data is
-        // rejected, and reflection would otherwise replace a specific, actionable message with
-        // "Exception has been thrown by the target of an invocation".
-        catch (TargetInvocationException ex) when (ex.InnerException is not null)
-        {
-            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-            throw; // unreachable; the compiler cannot see that the line above always throws
+            return typeof(H5NativeWriter)
+                .GetMethod(nameof(WriteDatasetUntyped), BindingFlags.NonPublic | BindingFlags.Static)!
+                .MakeGenericMethod(typeof(T), elementType)
+                .CreateDelegate<WriteDatasetDispatch<T>>();
         }
     }
+
+    private static void WriteDatasetUntyped<T, TElement>(
+        H5D_Base h5d, object encode, T data, Selection? memorySelection, Selection? fileSelection)
+        => InternalWriteDataset(h5d, (EncodeDelegate<TElement>)encode, data, memorySelection, fileSelection);
 
     private ulong InternalEncodeDataset<T, TElement>(
         H5Dataset dataset,
