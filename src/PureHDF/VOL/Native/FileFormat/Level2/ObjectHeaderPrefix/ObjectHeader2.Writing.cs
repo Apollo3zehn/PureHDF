@@ -1,20 +1,58 @@
 ﻿using System.Buffers;
+using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
-    public async ValueTask<ulong> Encode(NativeWriteContext context)
+    // Encoded into a pooled buffer and checksummed from it, then written to the file in one piece.
+    // Writing straight to the file and reading the header back for its checksum cost an async read
+    // per object header, and flushed a buffered stream's write buffer each time.
+    //
+    // Completes synchronously; the ValueTask keeps the signature its callers already bridge.
+    public ValueTask<ulong> Encode(NativeWriteContext context)
     {
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
-        var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
+        var encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
 
         var freeSpaceManager = context.FreeSpaceManager;
-        var address = freeSpaceManager.Allocate((long)encodeSize);
+        var address = freeSpaceManager.Allocate(encodeSize);
 
-        var driver = context.Driver;
-        driver.SeekRelativeToBaseAddress(address);
+        var rented = ArrayPool<byte>.Shared.Rent(encodeSize);
 
+        try
+        {
+            var buffer = rented.AsMemory(0, encodeSize);
+
+            // Cleared because a pooled array holds whatever its last user left, and anything an encoder
+            // skips over rather than writes would otherwise end up in the file.
+            buffer.Span.Clear();
+
+            using var driver = new H5SpanWriteDriver(
+                buffer,
+                origin: (long)context.Driver.BaseAddress + address);
+
+            EncodeCore(driver, headerMessagesEncodeSize);
+
+            var checksumData = buffer.Span[..(encodeSize - sizeof(uint))];
+            var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
+
+            driver.Write(checksum);
+
+            context.Driver.SeekRelativeToBaseAddress(address);
+            context.Driver.Write(buffer.Span);
+        }
+
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(rented);
+        }
+
+        return new ValueTask<ulong>((ulong)address);
+    }
+
+    private void EncodeCore(H5DriverBase driver, ulong headerMessagesEncodeSize)
+    {
         // signature
         driver.Write(Signature);
 
@@ -50,20 +88,6 @@ internal partial record class ObjectHeader2
 
         // header messages
         WriteHeaderMessages(driver, withCreationOrder);
-
-        // checksum
-        var encodeSizeWithoutChecksum = (int)(encodeSize - sizeof(uint));
-        using var buffer = MemoryPool<byte>.Shared.Rent(encodeSizeWithoutChecksum);
-        var checksumData = buffer.Memory[..encodeSizeWithoutChecksum];
-
-        driver.SeekRelativeToBaseAddress(address);
-        await driver.Read(checksumData).ConfigureAwait(false);
-
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-        driver.Write(checksum);
-
-        return (ulong)address;
     }
 
     public void WriteHeaderMessages(H5DriverBase driver, bool withCreationOrder)

@@ -268,9 +268,9 @@ partial class H5NativeWriter
         };
 
         // encode object header
-        // ObjectHeader2.Encode() is async, because it reads back the just-written bytes to compute a
-        // checksum. This method and its public entry point (H5File.Write(), which has no async
-        // counterpart) are synchronous, so the call is bridged here.
+        // ObjectHeader2.Encode() returns a ValueTask but completes synchronously. This method and its
+        // public entry point (H5File.Write(), which has no async counterpart) are synchronous, so the
+        // call is bridged here.
         var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
 
         return address;
