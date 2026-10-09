@@ -466,22 +466,72 @@ partial class H5NativeWriter
     /// </summary>
     private static class WriteDatasetDispatchCache<T>
     {
-        public static readonly WriteDatasetDispatch<T> Dispatch = Create();
+        public static readonly WriteDatasetDispatch<T> Dispatch =
+            Create<WriteDatasetDispatch<T>>(nameof(WriteDatasetUntyped));
 
-        private static WriteDatasetDispatch<T> Create()
+        public static readonly WriteWholeContiguousDispatch<T> WholeContiguous =
+            Create<WriteWholeContiguousDispatch<T>>(nameof(WriteWholeContiguous));
+
+        private static TDelegate Create<TDelegate>(string methodName) where TDelegate : Delegate
         {
             var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
             return typeof(H5NativeWriter)
-                .GetMethod(nameof(WriteDatasetUntyped), BindingFlags.NonPublic | BindingFlags.Static)!
+                .GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)!
                 .MakeGenericMethod(typeof(T), elementType)
-                .CreateDelegate<WriteDatasetDispatch<T>>();
+                .CreateDelegate<TDelegate>();
         }
     }
 
     private static void WriteDatasetUntyped<T, TElement>(
         H5D_Base h5d, object encode, T data, Selection? memorySelection, Selection? fileSelection)
         => InternalWriteDataset(h5d, (EncodeDelegate<TElement>)encode, data, memorySelection, fileSelection);
+
+    private delegate bool WriteWholeContiguousDispatch<T>(
+        H5NativeWriter writer, ContiguousTarget target, object encode, T data);
+
+    /// <summary>
+    /// Writes all of a contiguous dataset's data in one go, when the data covers the dataset exactly.
+    /// </summary>
+    /// <remarks>
+    /// The general path gets to the same single encoder call for this case, but on the way walks both
+    /// selections and builds the layout, selections, encode info and closures that the walk needs -
+    /// about 1.5 kB and most of the per-call cost of writing a small dataset.
+    /// <para>
+    /// Narrow on purpose: anything it does not recognise as the whole dataset written from one buffer
+    /// returns false and is left to the general path, which also produces the errors for data that
+    /// does not fit.
+    /// </para>
+    /// </remarks>
+    /// <returns>True if the data was written; false if the general path has to write it.</returns>
+    private static bool WriteWholeContiguous<T, TElement>(
+        H5NativeWriter writer, ContiguousTarget target, object encode, T data)
+    {
+        // Opaque data is counted in bytes rather than elements, and a scalar dataspace has no
+        // dimensions to compare the data against - both are left to the general path.
+        if (target.Type.Class == DatatypeMessageClass.Opaque || target.FileDims.Length == 0)
+            return false;
+
+        var (memoryData, _) = WriteUtils.ToMemory<T, TElement>(data);
+
+        if (memoryData.Equals(default))
+            return false;
+
+        var elementCount = 1UL;
+
+        foreach (var dimension in target.FileDims)
+            elementCount *= dimension;
+
+        if ((ulong)memoryData.Length != elementCount)
+            return false;
+
+        var driver = writer.Context.Driver;
+        driver.SeekRelativeToBaseAddress((long)target.Address);
+
+        ((EncodeDelegate<TElement>)encode)(memoryData, new OffsetStream(driver));
+
+        return true;
+    }
 
     private ulong InternalEncodeDataset<T, TElement>(
         H5Dataset dataset,

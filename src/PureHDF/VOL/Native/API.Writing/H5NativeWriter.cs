@@ -32,6 +32,14 @@ public partial class H5NativeWriter : IDisposable
 
         try
         {
+            if (info.Contiguous is { } target &&
+                memorySelection is null or AllSelection &&
+                fileSelection is null or AllSelection &&
+                WriteDatasetDispatchCache<T>.WholeContiguous(this, target, info.Encode, data))
+            {
+                return;
+            }
+
             WriteDatasetDispatchCache<T>.Dispatch(
                 info.H5D ?? CreateLayout(info.GetInfo(), dataset.DatasetCreation),
                 info.Encode,
