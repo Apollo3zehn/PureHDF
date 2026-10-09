@@ -39,7 +39,7 @@ public partial class H5NativeWriter : IDisposable
         {
             method.Invoke(this,
             [
-                info.H5D,
+                info.H5D ?? CreateLayout(info.Info, dataset.DatasetCreation),
                 info.Encode,
                 data,
                 memorySelection,
@@ -76,7 +76,7 @@ public partial class H5NativeWriter : IDisposable
                 // chunk indexes
                 foreach (var entry in Context.DatasetToInfoMap)
                 {
-                    entry.Value.H5D.Dispose();
+                    entry.Value.H5D?.Dispose();
                 }
 
                 // global heap collections

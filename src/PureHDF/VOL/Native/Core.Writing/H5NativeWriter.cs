@@ -194,8 +194,8 @@ partial class H5NativeWriter
 
         // Payload written later finds its address in the layout, so the layout has to name where the
         // payload ended up rather than where it was placed provisionally.
-        foreach (var (h5d, _) in Context.DatasetToInfoMap.Values)
-            RelocateLayout(h5d.Dataset, freeSpaceManager);
+        foreach (var deferred in Context.DatasetToInfoMap.Values)
+            RelocateLayout(deferred.Info, freeSpaceManager);
 
         foreach (var write in staging.PostponedWrites)
             write();
@@ -591,17 +591,7 @@ partial class H5NativeWriter
         );
 
         /* buffer provider */
-        H5D_Base h5d = dataLayout.LayoutClass switch
-        {
-            LayoutClass.Compact => new H5D_Compact(default!, Context, datasetInfo, default),
-            LayoutClass.Contiguous => new H5D_Contiguous(default!, Context, datasetInfo, default),
-            LayoutClass.Chunked => H5D_Chunk.Create(default!, Context, datasetInfo, default, dataset.DatasetCreation),
-
-            /* default */
-            _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
-        };
-
-        h5d.Initialize();
+        var h5d = CreateLayout(datasetInfo, dataset.DatasetCreation);
 
         if (!memoryData.Equals(default))
         {
@@ -625,7 +615,10 @@ partial class H5NativeWriter
                 WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData);
         }
 
-        Context.DatasetToInfoMap[dataset] = (h5d, encode);
+        Context.DatasetToInfoMap[dataset] = new DeferredDataset(
+            H5D: h5d is H5D_Chunk ? h5d : null,
+            Info: datasetInfo,
+            Encode: encode);
 
         /* Note: Ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.
@@ -654,6 +647,23 @@ partial class H5NativeWriter
         RecordProvisionalAddress(dataLayout.Properties, address, headerLength);
 
         return address;
+    }
+
+    internal H5D_Base CreateLayout(DatasetInfo datasetInfo, H5DatasetCreation datasetCreation)
+    {
+        H5D_Base h5d = datasetInfo.Layout.LayoutClass switch
+        {
+            LayoutClass.Compact => new H5D_Compact(default!, Context, datasetInfo, default),
+            LayoutClass.Contiguous => new H5D_Contiguous(default!, Context, datasetInfo, default),
+            LayoutClass.Chunked => H5D_Chunk.Create(default!, Context, datasetInfo, default, datasetCreation),
+
+            /* default */
+            _ => throw new Exception($"The data layout class '{datasetInfo.Layout.LayoutClass}' is not supported.")
+        };
+
+        h5d.Initialize();
+
+        return h5d;
     }
 
     /// <summary>

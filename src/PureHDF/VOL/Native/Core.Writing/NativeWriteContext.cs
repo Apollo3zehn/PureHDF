@@ -21,6 +21,18 @@ internal readonly record struct DatatypeCacheKey(
     PaddingType StringPadding,
     H5OpaqueInfo? OpaqueInfo);
 
+/// <summary>
+/// What the writer keeps per dataset so that its data can be written after its object header.
+/// </summary>
+/// <remarks>
+/// <see cref="H5D" /> is kept only for a chunked dataset, whose layout carries state from encoding to
+/// <see cref="H5NativeWriter.Dispose()" /> (its chunk cache and the index it allocates then). A compact or
+/// contiguous layout holds nothing that <see cref="Info" /> does not, so it is built again for each write
+/// rather than held - for a file of many small datasets it would otherwise be the largest thing the
+/// writer keeps per dataset.
+/// </remarks>
+internal readonly record struct DeferredDataset(H5D_Base? H5D, DatasetInfo Info, object Encode);
+
 internal record NativeWriteContext(
     H5NativeWriter Writer,
     H5File File,
@@ -28,7 +40,7 @@ internal record NativeWriteContext(
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
-    Dictionary<H5Dataset, (H5D_Base H5D, object Encode)> DatasetToInfoMap,
+    Dictionary<H5Dataset, DeferredDataset> DatasetToInfoMap,
     Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader)> DatasetInfoToObjectHeaderMap,
     Dictionary<DatatypeCacheKey, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, ulong> ObjectToAddressMap,
