@@ -18,10 +18,10 @@ partial class H5NativeWriter
 
     private ulong _rootGroupAddress;
 
-    // Shared rather than created per dataset: it is immutable and the same for all of them, and every
-    // dataset keeps its own reference for the writer's lifetime through DatasetInfo.
+    // Shared rather than created per dataset: it is immutable and the same for all of them, and a
+    // dataset whose DatasetInfo the writer keeps until Dispose would otherwise hold a copy of its own.
     /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
-    private static readonly FillValueMessage _defaultFillValueMessage = new(
+    internal static readonly FillValueMessage DefaultFillValueMessage = new(
         AllocationTime: SpaceAllocationTime.Early,
         FillTime: FillValueWriteTime.Never,
         Value: default
@@ -205,7 +205,13 @@ partial class H5NativeWriter
         // Payload written later finds its address in the layout, so the layout has to name where the
         // payload ended up rather than where it was placed provisionally.
         foreach (var deferred in Context.DatasetToInfoMap.Values)
-            RelocateLayout(deferred.Info, freeSpaceManager);
+        {
+            if (deferred.Contiguous is { } contiguous)
+                contiguous.Address = freeSpaceManager.Relocate(contiguous.Address);
+
+            else
+                RelocateLayout(deferred.H5D?.Dataset ?? deferred.GetInfo(), freeSpaceManager);
+        }
 
         foreach (var write in staging.PostponedWrites)
             write();
@@ -588,7 +594,7 @@ partial class H5NativeWriter
             chunkDimensions: chunkDimensions);
 
         // fill value
-        var fillValueMessage = _defaultFillValueMessage;
+        var fillValueMessage = DefaultFillValueMessage;
 
         // header messages
         var headerMessages = new List<HeaderMessage>()
@@ -660,10 +666,22 @@ partial class H5NativeWriter
                 WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData);
         }
 
-        Context.DatasetToInfoMap[dataset] = new DeferredDataset(
-            H5D: h5d is H5D_Chunk ? h5d : null,
-            Info: datasetInfo,
-            Encode: encode);
+        Context.DatasetToInfoMap[dataset] = h5d switch
+        {
+            H5D_Chunk => new DeferredDataset(h5d, Info: null, Contiguous: null, encode),
+
+            H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredDataset(
+                H5D: null,
+                Info: null,
+                Contiguous: new ContiguousTarget(
+                    FileDims: dataspace.Dimensions,
+                    Type: datatype,
+                    Address: dataLayout.Properties.Address,
+                    Size: ((ContiguousStoragePropertyDescription)dataLayout.Properties).Size),
+                encode),
+
+            _ => new DeferredDataset(H5D: null, datasetInfo, Contiguous: null, encode)
+        };
 
         /* Note: Ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.

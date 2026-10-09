@@ -33,7 +33,7 @@ public partial class H5NativeWriter : IDisposable
         try
         {
             WriteDatasetDispatchCache<T>.Dispatch(
-                info.H5D ?? CreateLayout(info.Info, dataset.DatasetCreation),
+                info.H5D ?? CreateLayout(info.GetInfo(), dataset.DatasetCreation),
                 info.Encode,
                 data,
                 memorySelection,
