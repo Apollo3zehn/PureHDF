@@ -189,9 +189,16 @@ partial class H5NativeWriter
             write();
     }
 
+    /// <remarks>
+    /// Only objects linked more than once end up in <paramref name="counts" />, since a missing entry
+    /// already means a count of one. A count for every object would be one dictionary entry per
+    /// dataset, held for the writer's whole lifetime - tens of megabytes for a few hundred thousand
+    /// datasets - to record a number that is almost always one. The set of objects seen so far is
+    /// needed only for the walk and is dropped with it.
+    /// </remarks>
     private void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
     {
-        var visitedGroups = new HashSet<H5Group>();
+        var seen = new HashSet<H5Object>();
 
         void Walk(H5Group group)
         {
@@ -205,10 +212,13 @@ partial class H5NativeWriter
                 // instances and shared raw values are counted by object identity.
                 var h5Object = GetH5Object(entry.Value);
 
-                counts.TryGetValue(h5Object, out var current);
-                counts[h5Object] = current + 1;
+                if (!seen.Add(h5Object))
+                {
+                    counts[h5Object] = counts.GetValueOrDefault(h5Object, 1) + 1;
+                    continue;
+                }
 
-                if (entry.Value is H5Group childGroup && visitedGroups.Add(childGroup))
+                if (h5Object is H5Group childGroup)
                     Walk(childGroup);
             }
         }
