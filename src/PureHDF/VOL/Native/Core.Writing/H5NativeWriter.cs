@@ -129,7 +129,13 @@ partial class H5NativeWriter
     {
         // Count the incoming links for every shared object so that multiply-linked
         // objects can carry an accurate object reference count message (hard links).
-        CountReferences(File, Context.ObjectReferenceCountMap);
+        var (objectCount, datasetCount) = CountReferences(File, Context.ObjectReferenceCountMap);
+
+        // Sized up front because both end up with an entry per object or dataset and live until
+        // Dispose. Grown by doubling instead, they end up to twice the size they need, and every
+        // step on the way leaves the previous entry array behind on the large object heap.
+        Context.ObjectToAddressMap.EnsureCapacity(objectCount);
+        Context.DatasetToInfoMap.EnsureCapacity(datasetCount);
 
         // root group
         Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
@@ -212,9 +218,11 @@ partial class H5NativeWriter
     /// datasets - to record a number that is almost always one. The set of objects seen so far is
     /// needed only for the walk and is dropped with it.
     /// </remarks>
-    private void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
+    /// <returns>How many distinct objects are linked below <paramref name="root" />, and how many of them are datasets.</returns>
+    private (int ObjectCount, int DatasetCount) CountReferences(H5Group root, Dictionary<H5Object, int> counts)
     {
         var seen = new HashSet<H5Object>();
+        var datasetCount = 0;
 
         void Walk(H5Group group)
         {
@@ -236,10 +244,15 @@ partial class H5NativeWriter
 
                 if (h5Object is H5Group childGroup)
                     Walk(childGroup);
+
+                else if (h5Object is H5Dataset)
+                    datasetCount++;
             }
         }
 
         Walk(root);
+
+        return (seen.Count, datasetCount);
     }
 
     private H5Object GetH5Object(object value)
