@@ -1,6 +1,7 @@
 ﻿using PureHDF.Selections;
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace PureHDF;
 
@@ -107,10 +108,9 @@ partial class H5NativeWriter
             FreeSpaceManager: freeSpaceManager,
             GlobalHeapManager: globalHeapManager,
             WriteOptions: options,
-            DatasetToInfoMap: new(),
+            Objects: new(),
             DatasetInfoToObjectHeaderMap: new(),
             TypeToMessageMap: new(),
-            ObjectToAddressMap: new(),
             ObjectReferenceCountMap: new(),
             RawValueToDatasetMap: new(ReferenceEqualityComparer.Instance),
             ShortlivedStream: new(memory: default)
@@ -129,13 +129,12 @@ partial class H5NativeWriter
     {
         // Count the incoming links for every shared object so that multiply-linked
         // objects can carry an accurate object reference count message (hard links).
-        var (objectCount, datasetCount) = CountReferences(File, Context.ObjectReferenceCountMap);
+        var objectCount = CountReferences(File, Context.ObjectReferenceCountMap);
 
-        // Sized up front because both end up with an entry per object or dataset and live until
-        // Dispose. Grown by doubling instead, they end up to twice the size they need, and every
-        // step on the way leaves the previous entry array behind on the large object heap.
-        Context.ObjectToAddressMap.EnsureCapacity(objectCount);
-        Context.DatasetToInfoMap.EnsureCapacity(datasetCount);
+        // Sized up front because it ends up with an entry per object and lives until Dispose. Grown by
+        // doubling instead, it ends up to twice the size it needs, and every step on the way leaves the
+        // previous entry array behind on the large object heap.
+        Context.Objects.EnsureCapacity(objectCount);
 
         // root group
         Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
@@ -204,14 +203,8 @@ partial class H5NativeWriter
 
         // Payload written later finds its address in the layout, so the layout has to name where the
         // payload ended up rather than where it was placed provisionally.
-        foreach (var deferred in Context.DatasetToInfoMap.Values)
-        {
-            if (deferred.Contiguous is { } contiguous)
-                contiguous.Address = freeSpaceManager.Relocate(contiguous.Address);
-
-            else
-                RelocateLayout(deferred.H5D?.Dataset ?? deferred.GetInfo(), freeSpaceManager);
-        }
+        foreach (var entry in Context.Objects.Values)
+            entry.Deferred?.Relocate(freeSpaceManager);
 
         foreach (var write in staging.PostponedWrites)
             write();
@@ -224,11 +217,10 @@ partial class H5NativeWriter
     /// datasets - to record a number that is almost always one. The set of objects seen so far is
     /// needed only for the walk and is dropped with it.
     /// </remarks>
-    /// <returns>How many distinct objects are linked below <paramref name="root" />, and how many of them are datasets.</returns>
-    private (int ObjectCount, int DatasetCount) CountReferences(H5Group root, Dictionary<H5Object, int> counts)
+    /// <returns>How many distinct objects are linked below <paramref name="root" />.</returns>
+    private int CountReferences(H5Group root, Dictionary<H5Object, int> counts)
     {
         var seen = new HashSet<H5Object>();
-        var datasetCount = 0;
 
         void Walk(H5Group group)
         {
@@ -250,15 +242,12 @@ partial class H5NativeWriter
 
                 if (h5Object is H5Group childGroup)
                     Walk(childGroup);
-
-                else if (h5Object is H5Dataset)
-                    datasetCount++;
             }
         }
 
         Walk(root);
 
-        return (seen.Count, datasetCount);
+        return seen.Count;
     }
 
     private H5Object GetH5Object(object value)
@@ -292,6 +281,35 @@ partial class H5NativeWriter
 
             headerMessages.Add(ToHeaderMessage(objectReferenceCountMessage));
         }
+    }
+
+    /// <summary>
+    /// Returns the address of <paramref name="h5Object" />'s object header, encoding the object first if
+    /// this is the first link to it.
+    /// </summary>
+    internal ulong GetOrEncodeObject(H5Object h5Object)
+    {
+        ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(Context.Objects, h5Object, out var exists);
+
+        if (exists)
+        {
+            return entry.Address == default
+                ? throw new Exception("The current object is already being encoded which suggests a circular reference.")
+                : entry.Address;
+        }
+
+        var address = h5Object switch
+        {
+            H5Group group => EncodeGroup(group),
+            H5Dataset dataset => EncodeDataset(dataset),
+            _ => throw new Exception("Named data types cannot yet be used in combination with H5ObjectReference.")
+        };
+
+        // Looked up again rather than through the ref above: encoding adds entries for everything
+        // below this object, which can grow the map and move its entries.
+        CollectionsMarshal.GetValueRefOrNullRef(Context.Objects, h5Object).Address = address;
+
+        return address;
     }
 
     internal ulong EncodeGroup(
@@ -345,8 +363,6 @@ partial class H5NativeWriter
         {
             ValidateLinkName(entry.Key);
 
-            ulong linkAddress;
-
             LinkType linkType;
             LinkInfo linkInfo;
 
@@ -358,28 +374,7 @@ partial class H5NativeWriter
 
             else
             {
-                var h5Object = GetH5Object(entry.Value);
-
-                if (!Context.ObjectToAddressMap.TryGetValue(h5Object, out linkAddress))
-                {
-                    Context.ObjectToAddressMap[h5Object] = default;
-
-                    if (entry.Value is H5Group childGroup)
-                        linkAddress = EncodeGroup(childGroup);
-
-                    else if (entry.Value is H5Dataset dataset1)
-                        linkAddress = EncodeDataset(dataset1);
-
-                    else
-                        linkAddress = EncodeDataset((H5Dataset)h5Object);
-
-                    Context.ObjectToAddressMap[h5Object] = linkAddress;
-                }
-
-                else if (linkAddress == default)
-                {
-                    throw new Exception("The current object is already being encoded which suggests a circular reference.");
-                }
+                var linkAddress = GetOrEncodeObject(GetH5Object(entry.Value));
 
                 linkType = LinkType.Hard;
                 linkInfo = new HardLinkInfo(HeaderAddress: linkAddress);
@@ -488,7 +483,7 @@ partial class H5NativeWriter
         => InternalWriteDataset(h5d, (EncodeDelegate<TElement>)encode, data, memorySelection, fileSelection);
 
     private delegate bool WriteWholeContiguousDispatch<T>(
-        H5NativeWriter writer, ContiguousTarget target, object encode, T data);
+        H5NativeWriter writer, DeferredContiguous target, T data);
 
     /// <summary>
     /// Writes all of a contiguous dataset's data in one go, when the data covers the dataset exactly.
@@ -505,7 +500,7 @@ partial class H5NativeWriter
     /// </remarks>
     /// <returns>True if the data was written; false if the general path has to write it.</returns>
     private static bool WriteWholeContiguous<T, TElement>(
-        H5NativeWriter writer, ContiguousTarget target, object encode, T data)
+        H5NativeWriter writer, DeferredContiguous target, T data)
     {
         // Opaque data is counted in bytes rather than elements, and a scalar dataspace has no
         // dimensions to compare the data against - both are left to the general path.
@@ -528,7 +523,7 @@ partial class H5NativeWriter
         var driver = writer.Context.Driver;
         driver.SeekRelativeToBaseAddress((long)target.Address);
 
-        ((EncodeDelegate<TElement>)encode)(memoryData, new OffsetStream(driver));
+        ((EncodeDelegate<TElement>)target.Encode)(memoryData, new OffsetStream(driver));
 
         return true;
     }
@@ -716,22 +711,21 @@ partial class H5NativeWriter
                 WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData);
         }
 
-        Context.DatasetToInfoMap[dataset] = h5d switch
+        DeferredDataset deferred = h5d switch
         {
-            H5D_Chunk => new DeferredDataset(h5d, Info: null, Contiguous: null, encode),
+            H5D_Chunk => new DeferredLayout(h5d, encode),
 
-            H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredDataset(
-                H5D: null,
-                Info: null,
-                Contiguous: new ContiguousTarget(
-                    FileDims: dataspace.Dimensions,
-                    Type: datatype,
-                    Address: dataLayout.Properties.Address,
-                    Size: ((ContiguousStoragePropertyDescription)dataLayout.Properties).Size),
+            H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredContiguous(
+                fileDims: dataspace.Dimensions,
+                type: datatype,
+                address: dataLayout.Properties.Address,
+                size: ((ContiguousStoragePropertyDescription)dataLayout.Properties).Size,
                 encode),
 
-            _ => new DeferredDataset(H5D: null, datasetInfo, Contiguous: null, encode)
+            _ => new DeferredInfo(datasetInfo, encode)
         };
+
+        CollectionsMarshal.GetValueRefOrAddDefault(Context.Objects, dataset, out _).Deferred = deferred;
 
         /* Note: Ensures that the chunk cache is flushed and all 
          * chunk sizes / addresses are known, before encoding the object header.
@@ -796,16 +790,6 @@ partial class H5NativeWriter
             AddressOffset: (int)(properties.AddressPosition - headerPosition)));
     }
 
-    /// <summary>
-    /// Moves a provisionally placed payload address to where it ended up. See
-    /// <see cref="FreeSpaceManager.ReserveProvisionalRegion" />.
-    /// </summary>
-    private static void RelocateLayout(DatasetInfo info, FreeSpaceManager freeSpaceManager)
-    {
-        if (info.Layout is DataLayoutMessage4 layout)
-            layout.Properties.Address = freeSpaceManager.Relocate(layout.Properties.Address);
-    }
-
     // Separate from InternalEncodeDataset so that the closure is only allocated for a dataset that has
     // data to postpone: a lambda capturing that method's locals would allocate for every dataset.
     private void PostponeData<TElement>(
@@ -819,7 +803,7 @@ partial class H5NativeWriter
     {
         staging.PostponedWrites.Add(() =>
         {
-            RelocateLayout(h5d.Dataset, Context.FreeSpaceManager);
+            DeferredDataset.RelocateLayout(h5d.Dataset, Context.FreeSpaceManager);
 
             WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, AllocationKind.RawData);
 

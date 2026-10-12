@@ -22,54 +22,100 @@ internal readonly record struct DatatypeCacheKey(
     H5OpaqueInfo? OpaqueInfo);
 
 /// <summary>
+/// What the writer knows about an object it has linked: where its header is, and for a dataset, what
+/// it needs to write the dataset's data later.
+/// </summary>
+/// <remarks>
+/// One entry per object, in one map, rather than a map of addresses and another of datasets keyed by
+/// the same objects. A mutable struct so an entry can be completed in place: it is added when its
+/// object starts encoding (<see cref="Address" /> still zero, which is how a circular reference is
+/// detected) and gets its address when encoding finishes.
+/// </remarks>
+internal struct EncodedObject
+{
+    public ulong Address;
+
+    /// <summary>Set for a dataset whose data can still be written, otherwise null.</summary>
+    public DeferredDataset? Deferred;
+}
+
+/// <summary>
 /// What the writer keeps per dataset so that its data can be written after its object header.
 /// </summary>
 /// <remarks>
-/// Exactly one of <see cref="H5D" />, <see cref="Info" /> and <see cref="Contiguous" /> is set:
-/// <list type="bullet">
-/// <item><see cref="H5D" /> for a chunked dataset, whose layout carries state from encoding to
-/// <see cref="H5NativeWriter.Dispose()" /> (its chunk cache and the index it allocates then).</item>
-/// <item><see cref="Contiguous" /> for a contiguous one, which needs no more than where its data goes
-/// and what it looks like. Everything else is built again for each write.</item>
-/// <item><see cref="Info" /> for anything else (compact, null dataspace), rare enough not to matter.</item>
-/// </list>
-/// A file of many small datasets is almost all contiguous ones, and for those, holding the full
-/// layout and messages instead was most of what the writer kept per dataset.
+/// A file of many small datasets is almost all <see cref="DeferredContiguous" />, which holds no more
+/// than where the data goes and what it looks like. Holding the full layout and messages for those
+/// would be most of what the writer keeps per dataset.
 /// </remarks>
-internal readonly record struct DeferredDataset(
-    H5D_Base? H5D,
-    DatasetInfo? Info,
-    ContiguousTarget? Contiguous,
-    object Encode)
+internal abstract class DeferredDataset(object encode)
 {
-    public DatasetInfo GetInfo() => Info ?? Contiguous?.ToDatasetInfo()
-        ?? throw new InvalidOperationException("A deferred dataset with a layout has no dataset info.");
+    /// <summary>The element encoder, an <c>EncodeDelegate</c> of the dataset's element type.</summary>
+    public object Encode { get; } = encode;
+
+    /// <summary>A layout that has to be kept from encoding to Dispose, otherwise null.</summary>
+    public virtual H5D_Base? H5D => null;
+
+    public abstract DatasetInfo GetInfo();
+
+    /// <summary>
+    /// Moves a provisionally placed payload address to where it ended up. See
+    /// <see cref="FreeSpaceManager.ReserveProvisionalRegion" />.
+    /// </summary>
+    public virtual void Relocate(FreeSpaceManager freeSpaceManager)
+        => RelocateLayout(GetInfo(), freeSpaceManager);
+
+    public static void RelocateLayout(DatasetInfo info, FreeSpaceManager freeSpaceManager)
+    {
+        if (info.Layout is DataLayoutMessage4 layout)
+            layout.Properties.Address = freeSpaceManager.Relocate(layout.Properties.Address);
+    }
+}
+
+/// <summary>
+/// A chunked dataset, whose layout carries state from encoding to
+/// <see cref="H5NativeWriter.Dispose()" />: its chunk cache, and the index it allocates then.
+/// </summary>
+internal sealed class DeferredLayout(H5D_Base h5d, object encode) : DeferredDataset(encode)
+{
+    public override H5D_Base H5D { get; } = h5d;
+
+    public override DatasetInfo GetInfo() => H5D.Dataset;
 }
 
 /// <summary>
 /// The minimum to write a contiguous dataset's data: its dimensions and datatype, and where its data
-/// goes.
+/// goes. Everything else is built again for each write.
 /// </summary>
-internal sealed record class ContiguousTarget(ulong[] FileDims, DatatypeMessage Type, ulong Address, ulong Size)
+internal sealed class DeferredContiguous(
+    ulong[] fileDims, DatatypeMessage type, ulong address, ulong size, object encode) : DeferredDataset(encode)
 {
-    /// <summary>
-    /// Settable so that a provisionally placed address can be moved to where the payload ended up. See
-    /// <see cref="FreeSpaceManager.ReserveProvisionalRegion" />.
-    /// </summary>
-    public ulong Address { get; set; } = Address;
+    public ulong[] FileDims { get; } = fileDims;
 
-    public DatasetInfo ToDatasetInfo() => new(
+    public DatatypeMessage Type { get; } = type;
+
+    public ulong Address { get; private set; } = address;
+
+    public override void Relocate(FreeSpaceManager freeSpaceManager)
+        => Address = freeSpaceManager.Relocate(Address);
+
+    public override DatasetInfo GetInfo() => new(
         Space: DataspaceMessage.Create(FileDims),
         Type: Type,
         Layout: new DataLayoutMessage4(
             LayoutClass: LayoutClass.Contiguous,
-            Properties: new ContiguousStoragePropertyDescription(Size: Size) { Address = Address })
+            Properties: new ContiguousStoragePropertyDescription(Size: size) { Address = Address })
         {
             Version = 4
         },
         FillValue: H5NativeWriter.DefaultFillValueMessage,
         FilterPipeline: default,
         ExternalFileList: default);
+}
+
+/// <summary>Anything else (compact, null dataspace): rare enough to keep in full.</summary>
+internal sealed class DeferredInfo(DatasetInfo info, object encode) : DeferredDataset(encode)
+{
+    public override DatasetInfo GetInfo() => info;
 }
 
 internal record NativeWriteContext(
@@ -79,10 +125,9 @@ internal record NativeWriteContext(
     FreeSpaceManager FreeSpaceManager,
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
-    Dictionary<H5Dataset, DeferredDataset> DatasetToInfoMap,
+    Dictionary<H5Object, EncodedObject> Objects,
     Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader)> DatasetInfoToObjectHeaderMap,
     Dictionary<DatatypeCacheKey, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
-    Dictionary<H5Object, ulong> ObjectToAddressMap,
     Dictionary<H5Object, int> ObjectReferenceCountMap,
     Dictionary<object, H5Dataset> RawValueToDatasetMap,
     SystemMemoryStream ShortlivedStream

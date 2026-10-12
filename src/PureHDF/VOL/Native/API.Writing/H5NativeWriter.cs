@@ -22,7 +22,7 @@ public partial class H5NativeWriter : IDisposable
         Selection? memorySelection = default,
         Selection? fileSelection = default)
     {
-        if (!Context.DatasetToInfoMap.TryGetValue(dataset, out var info))
+        if (Context.Objects.GetValueOrDefault(dataset).Deferred is not { } info)
             throw new Exception("The provided dataset does not belong to this file.");
 
         // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
@@ -32,10 +32,10 @@ public partial class H5NativeWriter : IDisposable
 
         try
         {
-            if (info.Contiguous is { } target &&
+            if (info is DeferredContiguous target &&
                 memorySelection is null or AllSelection &&
                 fileSelection is null or AllSelection &&
-                WriteDatasetDispatchCache<T>.WholeContiguous(this, target, info.Encode, data))
+                WriteDatasetDispatchCache<T>.WholeContiguous(this, target, data))
             {
                 return;
             }
@@ -75,9 +75,9 @@ public partial class H5NativeWriter : IDisposable
                 PlaceStructure();
 
                 // chunk indexes
-                foreach (var entry in Context.DatasetToInfoMap)
+                foreach (var entry in Context.Objects.Values)
                 {
-                    entry.Value.H5D?.Dispose();
+                    entry.Deferred?.H5D?.Dispose();
                 }
 
                 // global heap collections
