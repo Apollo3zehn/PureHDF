@@ -1055,25 +1055,28 @@ internal partial record class DatatypeMessage(
             if (BitField is not StringBitFieldDescription bitField)
                 throw new Exception("String bit field description must not be null.");
 
-            Func<string, string> trim = bitField.PaddingType switch
-            {
-                PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
-                PaddingType.NullPad => value => value.TrimEnd('\0'),
-                PaddingType.SpacePad => value => value.TrimEnd(' '),
-                _ => throw new Exception("Unsupported padding type.")
-            };
-
             using var memoryOwner = new ScratchBuffer<byte>((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
             await source.ReadDatasetAsync(memory).ConfigureAwait(false);
 
+            // Trimmed as bytes, before decoding, so that only the value is turned into a string and never
+            // the padding: decoding the whole field first would build a string as wide as the field for
+            // every element. The same result either way - in UTF-8 a 0x00 or 0x20 byte is only ever that
+            // character, never part of a longer sequence, so cutting at one never splits a character.
+            var bytes = memory.Span;
+
+            var value = bitField.PaddingType switch
+            {
+                PaddingType.NullTerminate => bytes.IndexOf((byte)0) is var end and >= 0 ? bytes[..end] : bytes,
+                PaddingType.NullPad => bytes.TrimEnd((byte)0),
+                PaddingType.SpacePad => bytes.TrimEnd((byte)' '),
+                _ => throw new Exception("Unsupported padding type.")
+            };
+
             // Decoded as UTF-8, which is correct for H5T_CSET_ASCII too, and matches
             // GetDecodeInfoForVariableLengthString. See ReadUtils.
-            var value = ReadUtils.ReadFixedLengthString(memory.Span);
-            value = trim(value);
-
-            return value;
+            return ReadUtils.ReadFixedLengthString(value);
         }
 
         return decode;
