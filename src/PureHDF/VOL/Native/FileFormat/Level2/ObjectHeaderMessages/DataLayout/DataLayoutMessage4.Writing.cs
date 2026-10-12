@@ -122,16 +122,16 @@ internal partial record class DataLayoutMessage4
 
             var dataEncodeSize = (long)(dataBlockSize * typeSize);
 
-            // TODO: The ushort.MaxValue limit is not stated in the specification but
-            // makes sense because of the size field of the Compact Storage Property
-            // Description.
+            // The whole layout message - version, layout class, a two-byte data size, then the data -
+            // has to fit the two-byte size an object header message declares.
             //
             // See also H5Dcompact.c (H5D__compact_construct): "Verify data size is 
             // smaller than maximum header message size (64KB) minus other layout 
             // message fields."
+            const int compactLayoutFieldsSize = sizeof(byte) + sizeof(byte) + sizeof(ushort);
 
             /* try to create compact dataset */
-            if (preferCompact && dataEncodeSize <= ushort.MaxValue && !isDeferred)
+            if (preferCompact && dataEncodeSize <= ushort.MaxValue - compactLayoutFieldsSize && !isDeferred)
             {
                 // TODO avoid creation of system memory stream too often
                 var buffer = new byte[dataEncodeSize];
@@ -153,11 +153,6 @@ internal partial record class DataLayoutMessage4
                 {
                     Version = 4
                 };
-
-                var dataLayoutEncodeSize = dataLayout.GetEncodeSize();
-
-                if (dataEncodeSize + dataLayoutEncodeSize > ushort.MaxValue)
-                    dataLayout = default;
             }
 
             /* create contiguous dataset */
