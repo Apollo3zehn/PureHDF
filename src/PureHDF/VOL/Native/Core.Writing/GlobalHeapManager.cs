@@ -309,23 +309,35 @@ internal class GlobalHeapManager
     }
 
     /// <summary>
-    /// Writes the collections that are full or, all things considered, as full as they will get, if they hold
-    /// more than <see cref="H5WriteOptions.GlobalHeapFlushThreshold" />.
+    /// Writes every collection that can take no more objects, leaving only the ones still being filled - one
+    /// per allocation kind at most - allocated but unwritten.
     /// </summary>
     /// <remarks>
-    /// Only to be called between top-level encodes. Flushing used to happen whenever a new collection was
-    /// opened, which can be in the middle of a nested variable-length value: the outer value's collection
-    /// was written while that value was still being filled, and dropped, so the rest of it never reached
-    /// the file.
+    /// Only to be called between top-level encodes. A collection is replaced while an object is being added,
+    /// which can be in the middle of a nested variable-length value whose outer object it holds and which is
+    /// still being filled - so it is written at the next point where nothing is half-encoded. Written and
+    /// dropped as soon as it is replaced, it would miss the rest of that value, which would then never
+    /// reach the file.
+    /// <para>
+    /// Each unwritten collection is a hole behind the end of what has been written, and a destination that
+    /// only accepts complete parts - an upload in parts - has to hold the part around it until the hole is
+    /// filled. Writing them here bounds that to the collections still filling.
+    /// </para>
     /// </remarks>
-    public void FlushIfOverThreshold()
+    public void WriteClosedCollections()
     {
-        if (_pendingCollections.Sum(state => (long)state.Collection.CollectionSize) >= _options.GlobalHeapFlushThreshold)
-            Encode();
+        var open = _openCollections.Values;
+        var closed = _pendingCollections.Where(state => !open.Contains(state)).ToList();
+
+        if (closed.Count == 0)
+            return;
+
+        WriteCollections(closed);
+        _pendingCollections.RemoveAll(closed.Contains);
     }
 
     /// <summary>
-    /// Writes every collection allocated so far. Like <see cref="FlushIfOverThreshold" />, only to be called
+    /// Writes every collection allocated so far. Like <see cref="WriteClosedCollections" />, only to be called
     /// between top-level encodes.
     /// </summary>
     public void Encode()

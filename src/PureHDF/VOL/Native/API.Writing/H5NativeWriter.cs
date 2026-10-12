@@ -53,8 +53,8 @@ public partial class H5NativeWriter : IDisposable
             Context.GlobalHeapManager.AllocationKind = enclosing;
         }
 
-        // Between top-level encodes is the only safe point to write collections that may still be filling.
-        Context.GlobalHeapManager.FlushIfOverThreshold();
+        // Between top-level encodes is the only safe point to write heap collections; see there.
+        Context.GlobalHeapManager.WriteClosedCollections();
     }
 
     /// <summary>

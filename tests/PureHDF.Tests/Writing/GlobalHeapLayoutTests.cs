@@ -1,5 +1,6 @@
 using System.Buffers.Binary;
 using System.Text;
+using PureHDF.Selections;
 using Xunit;
 
 namespace PureHDF.Tests.Writing;
@@ -120,6 +121,33 @@ public class GlobalHeapLayoutTests
     }
 
     [Fact]
+    public void AfterEachWriteOnlyTheCollectionStillFillingIsLeftUnwritten()
+    {
+        // Arrange - writes too small for a heap of their own, sharing collections
+        var dataset = new H5Dataset<string[]>(fileDims: [2_000]);
+        var file = new H5File { ["strings"] = dataset };
+        var stream = new MemoryStream();
+        var data = Enumerable.Range(0, 2_000).Select(i => $"small-{i}").ToArray();
+
+        // Act
+        using (var writer = file.BeginWrite(stream, new H5WriteOptions()))
+        {
+            for (var start = 0; start < data.Length; start += 20)
+            {
+                writer.Write(dataset, data[start..(start + 20)], fileSelection: new HyperslabSelection((ulong)start, 20));
+
+                // Assert - every collection but the one being filled is in the stream already
+                var written = Collections(stream.ToArray()).Count;
+                var allocated = CollectionsNeeded(data[..(start + 20)]);
+
+                Assert.True(written >= allocated - 1, $"After {start + 20} values only {written} of {allocated} collections were written.");
+            }
+        }
+
+        AssertReadable(stream.ToArray(), "/strings", data);
+    }
+
+    [Fact]
     public void AttributeValuesAreWrittenBeforeBeginWriteReturns()
     {
         // Arrange
@@ -176,6 +204,28 @@ public class GlobalHeapLayoutTests
     }
 
     private static int Align8(int size) => (size + 7) / 8 * 8;
+
+    // How many minimum-sized collections a run of values packed one after the other fills.
+    private static int CollectionsNeeded(string[] values)
+    {
+        var count = 1;
+        var consumed = 0;
+
+        foreach (var value in values)
+        {
+            var size = ObjectHeaderSize + Align8(Encoding.UTF8.GetByteCount(value));
+
+            if (consumed + size > MinimumCollectionSize - CollectionHeaderSize)
+            {
+                count++;
+                consumed = 0;
+            }
+
+            consumed += size;
+        }
+
+        return count;
+    }
 
     private static byte[] Write(H5File file, H5WriteOptions options)
     {
