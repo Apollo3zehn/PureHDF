@@ -73,6 +73,27 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         }
     }
 
+    /// <remarks>
+    /// An unfiltered chunk is stored at its full size, so its address does not depend on its content: an
+    /// implicit index fixes it when the layout is created, and a single chunk gets it on its first write.
+    /// </remarks>
+    protected override bool TryGetWriteThroughAddress(ulong chunkIndex, out ulong address)
+    {
+        if (Dataset.FilterPipeline is not null)
+        {
+            address = default;
+            return false;
+        }
+
+        var chunkInfo = WriteChunkInfos[chunkIndex];
+
+        if (chunkInfo.Address == Superblock.UndefinedAddress)
+            chunkInfo = GetWriteChunkInfo(chunkIndex, (uint)ChunkByteSize, filterMask: 0);
+
+        address = chunkInfo.Address;
+        return true;
+    }
+
     protected abstract ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);
 
     protected override ChunkInfo GetWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)

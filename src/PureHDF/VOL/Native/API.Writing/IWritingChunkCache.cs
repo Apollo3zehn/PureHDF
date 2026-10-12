@@ -17,6 +17,24 @@ public interface IWritingChunkCache
         Action<ulong, Memory<byte>> chunkWriter);
 
     /// <summary>
+    /// Removes a chunk from the cache without writing it, so the caller can write it now.
+    /// </summary>
+    /// <param name="chunkIndex">The linear chunk index.</param>
+    /// <param name="chunk">The removed chunk, if it was cached.</param>
+    /// <returns>True if the chunk was cached and has been removed.</returns>
+    /// <remarks>
+    /// Lets a chunk be written as soon as all of its elements have arrived, rather than when the cache is
+    /// flushed - without it, a chunked dataset written in batches holds all of its data until the writer
+    /// is disposed. The default returns false, which keeps that behavior for a cache that does not
+    /// implement it.
+    /// </remarks>
+    public bool TryRemove(ulong chunkIndex, out Memory<byte> chunk)
+    {
+        chunk = default;
+        return false;
+    }
+
+    /// <summary>
     /// Flushes the chunk.
     /// </summary>
     /// <param name="chunkWriter">The chunk writer used for chunks being flushed from the cache.</param>

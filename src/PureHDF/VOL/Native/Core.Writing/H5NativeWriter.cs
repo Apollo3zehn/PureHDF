@@ -1023,7 +1023,8 @@ partial class H5NativeWriter
             Encoder: encode,
             SourceTypeSizeFactor: (int)opaqueSourceTypeSizeFactor,
             TargetTypeSize: (int)datatype.Size,
-            AllowBulkCopy: true
+            AllowBulkCopy: true,
+            TargetElementsWritten: h5d is H5D_Chunk chunk ? chunk.OnElementsWritten : null
         );
 
         /* encode data */

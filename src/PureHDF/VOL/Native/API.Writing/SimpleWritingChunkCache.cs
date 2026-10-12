@@ -31,6 +31,19 @@ public partial class SimpleWritingChunkCache : IWritingChunkCache
     }
 
     /// <inheritdoc />
+    public bool TryRemove(ulong chunkIndex, out Memory<byte> chunk)
+    {
+        if (_chunkInfoMap.Remove(chunkIndex, out var chunkInfo))
+        {
+            chunk = chunkInfo.Chunk;
+            return true;
+        }
+
+        chunk = default;
+        return false;
+    }
+
+    /// <inheritdoc />
     public void Flush(Action<ulong, Memory<byte>>? chunkWriter = null)
     {
         foreach (var entry in _chunkInfoMap)
