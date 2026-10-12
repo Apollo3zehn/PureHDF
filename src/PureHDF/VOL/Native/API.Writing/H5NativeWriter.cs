@@ -30,7 +30,7 @@ public partial class H5NativeWriter : IDisposable
         // TODO cache this
         var method = _methodInfoWriteDataset.MakeGenericMethod(dataset.Type, elementType);
 
-        // As in InternalEncodeDataset: variable-length elements written here are the dataset's payload,
+        // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
         // so their heap collections are allocated as payload too.
         var enclosing = Context.GlobalHeapManager.AllocationKind;
         Context.GlobalHeapManager.AllocationKind = AllocationKind.RawData;
@@ -69,6 +69,10 @@ public partial class H5NativeWriter : IDisposable
         {
             if (disposing)
             {
+                // A write that failed before its structure was complete still leaves a file of what
+                // it got through.
+                PlaceStructure();
+
                 // chunk indexes
                 foreach (var entry in Context.DatasetToInfoMap)
                 {

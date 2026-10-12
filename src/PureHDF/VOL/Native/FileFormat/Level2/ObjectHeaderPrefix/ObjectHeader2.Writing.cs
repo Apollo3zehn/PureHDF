@@ -10,8 +10,13 @@ internal partial record class ObjectHeader2
     //
     // Completes synchronously; its callers in H5NativeWriter block on the ValueTask it returns.
     public ValueTask<ulong> Encode(NativeWriteContext context)
+        => new(Encode(context, out _));
+
+    /// <param name="context">The write context.</param>
+    /// <param name="encodeSize">The size of the encoded header.</param>
+    public ulong Encode(NativeWriteContext context, out int encodeSize)
     {
-        var address = Allocate(context, out var encodeSize, out var headerMessagesEncodeSize);
+        var address = Allocate(context, out encodeSize, out var headerMessagesEncodeSize);
 
         context.Driver.SeekRelativeToBaseAddress(address);
         ChecksummedStructure.Write(
@@ -20,11 +25,11 @@ internal partial record class ObjectHeader2
             (Header: this, headerMessagesEncodeSize),
             static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
 
-        return new ValueTask<ulong>((ulong)address);
+        return (ulong)address;
     }
 
     /// <summary>
-    /// Encodes the header like <see cref="Encode" />, and also returns the encoded bytes.
+    /// Encodes the header like <see cref="Encode(NativeWriteContext, out int)" />, and also returns the encoded bytes.
     /// </summary>
     /// <remarks>
     /// For a header that has to be patched after it is written - a chunked dataset's, once its index is

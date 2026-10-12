@@ -14,8 +14,16 @@ namespace PureHDF.Tests.Writing;
 /// </remarks>
 public class WriteWithoutReadingTests
 {
-    [SkippableFact]
-    public void ADeferredContiguousDatasetIsWrittenWithoutReading()
+    public static TheoryData<H5MetadataPlacement> Placements => new()
+    {
+        H5MetadataPlacement.FrontLoaded,
+        H5MetadataPlacement.Aggregated,
+        H5MetadataPlacement.Interleaved
+    };
+
+    [SkippableTheory]
+    [MemberData(nameof(Placements))]
+    public void ADeferredContiguousDatasetIsWrittenWithoutReading(H5MetadataPlacement placement)
     {
         // Arrange
         var data = SharedTestData.SmallData;
@@ -27,7 +35,7 @@ public class WriteWithoutReadingTests
         };
 
         // Act
-        var bytes = WriteForbiddingReads(file, new H5WriteOptions(), writer =>
+        var bytes = WriteForbiddingReads(file, new H5WriteOptions { MetadataPlacement = placement }, writer =>
             writer.Write(dataset, data));
 
         // Assert
@@ -35,8 +43,9 @@ public class WriteWithoutReadingTests
     }
 
     // The single-chunk index patches its dataset's object header once the filtered chunk's size is known.
-    [SkippableFact]
-    public void ASingleFilteredChunkIsWrittenWithoutReading()
+    [SkippableTheory]
+    [MemberData(nameof(Placements))]
+    public void ASingleFilteredChunkIsWrittenWithoutReading(H5MetadataPlacement placement)
     {
         // Arrange
         var data = SharedTestData.SmallData;
@@ -47,7 +56,7 @@ public class WriteWithoutReadingTests
 
         var file = new H5File { ["chunked"] = dataset };
 
-        var options = new H5WriteOptions(Filters: [DeflateFilter.Id]);
+        var options = new H5WriteOptions(Filters: [DeflateFilter.Id]) { MetadataPlacement = placement };
 
         // Act
         var bytes = WriteForbiddingReads(file, options, writer => writer.Write(dataset, data));
@@ -57,8 +66,9 @@ public class WriteWithoutReadingTests
     }
 
     // Several filtered chunks are indexed by a fixed array, whose header and data block are checksummed.
-    [SkippableFact]
-    public void SeveralFilteredChunksAreWrittenWithoutReading()
+    [SkippableTheory]
+    [MemberData(nameof(Placements))]
+    public void SeveralFilteredChunksAreWrittenWithoutReading(H5MetadataPlacement placement)
     {
         // Arrange
         var data = SharedTestData.SmallData;
@@ -69,7 +79,7 @@ public class WriteWithoutReadingTests
 
         var file = new H5File { ["chunked"] = dataset };
 
-        var options = new H5WriteOptions(Filters: [DeflateFilter.Id]);
+        var options = new H5WriteOptions(Filters: [DeflateFilter.Id]) { MetadataPlacement = placement };
 
         // Act
         var bytes = WriteForbiddingReads(file, options, writer => writer.Write(dataset, data));
@@ -79,8 +89,9 @@ public class WriteWithoutReadingTests
     }
 
     // Variable-length strings go to the global heap, and an attribute's value is encoded into its header.
-    [SkippableFact]
-    public void VariableLengthStringsAndAttributesAreWrittenWithoutReading()
+    [SkippableTheory]
+    [MemberData(nameof(Placements))]
+    public void VariableLengthStringsAndAttributesAreWrittenWithoutReading(H5MetadataPlacement placement)
     {
         // Arrange
         var data = new[] { "one", "two", "three" };
@@ -94,7 +105,7 @@ public class WriteWithoutReadingTests
         };
 
         // Act
-        var bytes = WriteForbiddingReads(file, new H5WriteOptions(), _ => { });
+        var bytes = WriteForbiddingReads(file, new H5WriteOptions { MetadataPlacement = placement }, _ => { });
 
         // Assert
         AssertValidAndEqual(bytes, "/strings", data);

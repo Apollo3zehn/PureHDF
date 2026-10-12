@@ -13,7 +13,8 @@ internal enum AllocationKind
     /// <summary>
     /// File structure: the superblock, object headers, chunk indexes and their data blocks, and the
     /// global heap collections holding attribute values - which a viewer reads while browsing a file,
-    /// rather than while reading a dataset.
+    /// rather than while reading a dataset - or a compact dataset's variable-length values, since its
+    /// data is part of its header.
     /// </summary>
     Metadata,
 
@@ -23,8 +24,9 @@ internal enum AllocationKind
     RawData,
 
     /// <summary>
-    /// Dataset payload allocated now and written later - the global heap collections holding a dataset's
-    /// own variable-length elements, which are filled progressively and flushed in batches.
+    /// Dataset payload allocated now and written later - the global heap collections holding a
+    /// non-compact dataset's own variable-length elements, which are filled progressively and flushed
+    /// in batches.
     /// </summary>
     /// <remarks>
     /// Payload, so it stays out of the metadata region: counted as structure, it makes up 97% of a
@@ -56,6 +58,13 @@ internal class FreeSpaceManager
     /// </remarks>
     private const long INITIAL_BLOCK_SIZE = 64 * 1024;
 
+    /// <summary>
+    /// Where payload is placed while the structure before it is still growing - see
+    /// <see cref="ReserveProvisionalRegion" />. Far beyond any real file, so an address at or past it is
+    /// unambiguously provisional.
+    /// </summary>
+    public const long PROVISIONAL_PAYLOAD_BASE = 1L << 48;
+
     private readonly H5MetadataPlacement _placement;
     private readonly long _blockSize;
 
@@ -69,6 +78,10 @@ internal class FreeSpaceManager
     // the region a reader fetches to walk the structure.
     private Region _metadata;
     private Region _deferredRawData;
+
+    // How far provisional payload moved once the structure was placed; zero before then.
+    private long _provisionalShift;
+    private bool _isProvisional;
 
     public FreeSpaceManager(H5MetadataPlacement placement = H5MetadataPlacement.Interleaved, long blockSize = 0)
     {
@@ -120,13 +133,15 @@ internal class FreeSpaceManager
     /// </summary>
     /// <remarks>
     /// Includes the tail of the region still open, which is the whole point: that tail is the largest
-    /// part of the waste on a file that opened one region and half filled it, and counting only regions
-    /// already replaced reported 48 bytes where 8 MB had been claimed. A region is replaced only when a
-    /// request does not fit, so the remainders that get counted on replacement are small by
-    /// construction, and the one that does not is not.
+    /// part of the waste on a file that opened one region and half filled it - counting only replaced
+    /// regions would report 48 bytes where 8 MB had been claimed. A region is replaced only when a
+    /// request does not fit, so the remainders counted on replacement are small by construction, and
+    /// the open one is not.
     /// <para>
-    /// Live rather than final while a write is in progress: it answers what would be abandoned if the
-    /// write ended now, and the open region's tail shrinks as allocations are served from it.
+    /// Live rather than final while a write is in progress: the open region's tail shrinks as
+    /// allocations are served from it. While a front-loaded write holds its structure, the open region
+    /// runs to <see cref="PROVISIONAL_PAYLOAD_BASE" />, so the figure means something only once
+    /// <see cref="PlaceProvisionalRegion" /> has closed it.
     /// </para>
     /// </remarks>
     public long MetadataAbandoned => _abandonedByReplacement + (_metadata.End - _metadata.Cursor);
@@ -180,6 +195,67 @@ internal class FreeSpaceManager
         _length = _metadata.End;
         MetadataRegionsOpened++;
     }
+
+    /// <summary>
+    /// Reserves everything from here up to <see cref="PROVISIONAL_PAYLOAD_BASE" /> for metadata, and
+    /// places payload from there, until <see cref="PlaceProvisionalRegion" /> shrinks the region to
+    /// what was used and moves the payload down behind it.
+    /// </summary>
+    /// <remarks>
+    /// Front loading puts all structure before all payload, so a payload address depends on how large
+    /// the structure turns out to be. Placing payload provisionally lets the structure be encoded once,
+    /// as it is, rather than measured by encoding it a first time. The price is that every provisional
+    /// address the structure names has to be corrected before it is written, which is
+    /// <see cref="Relocate" />.
+    /// </remarks>
+    public void ReserveProvisionalRegion()
+    {
+        ReserveMetadataRegion(PROVISIONAL_PAYLOAD_BASE - _length);
+        _isProvisional = true;
+    }
+
+    /// <summary>
+    /// Ends the region <see cref="ReserveProvisionalRegion" /> opened where its metadata ends, and moves
+    /// the payload placed so far to start there.
+    /// </summary>
+    /// <returns>Where the structure ends, which is where the payload now begins.</returns>
+    public long PlaceProvisionalRegion()
+    {
+        if (!_isProvisional)
+            throw new InvalidOperationException("No provisional region is open.");
+
+        var structureEnd = _metadata.Cursor;
+
+        _provisionalShift = PROVISIONAL_PAYLOAD_BASE - structureEnd;
+        _metadata.End = structureEnd;
+        _length -= _provisionalShift;
+
+        // A payload block opened provisionally moves with the payload in it.
+        if (_deferredRawData.End >= PROVISIONAL_PAYLOAD_BASE)
+        {
+            _deferredRawData.Cursor -= _provisionalShift;
+            _deferredRawData.End -= _provisionalShift;
+        }
+
+        _isProvisional = false;
+
+        return structureEnd;
+    }
+
+    /// <summary>
+    /// Whether <paramref name="address" /> is payload placed provisionally and not yet moved.
+    /// </summary>
+    public bool IsProvisional(ulong address)
+        => _isProvisional && address >= PROVISIONAL_PAYLOAD_BASE && address != Superblock.UndefinedAddress;
+
+    /// <summary>
+    /// Where a provisionally placed address ended up; any other address is returned unchanged, so this
+    /// can be applied to an address more than once.
+    /// </summary>
+    public ulong Relocate(ulong address)
+        => address >= PROVISIONAL_PAYLOAD_BASE && address != Superblock.UndefinedAddress
+            ? address - (ulong)_provisionalShift
+            : address;
 
     public long Allocate(long length, AllocationKind kind)
     {

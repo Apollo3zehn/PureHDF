@@ -30,7 +30,8 @@ internal class GlobalHeapManager
     /// </summary>
     /// <remarks>
     /// A global heap collection is metadata when it holds attribute values, which a viewer reads while
-    /// browsing a file, and raw data when it holds a dataset's own variable-length elements, which it
+    /// browsing a file, or a compact dataset's variable-length values, whose data is part of its header;
+    /// it is raw data when it holds any other dataset's own variable-length elements, which a viewer
     /// reads only when reading that dataset. Both go through this one manager, so without the
     /// distinction a dataset of variable-length strings has its entire payload allocated as structure -
     /// measured at 97% of such a file - and a placement that segregates structure from payload has

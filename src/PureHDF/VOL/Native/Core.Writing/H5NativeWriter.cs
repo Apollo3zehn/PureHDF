@@ -67,7 +67,19 @@ partial class H5NativeWriter
         // offsets. IConcurrentStream is a read-side interface; this keeps a stream that happens to
         // implement it writing at the wrapped stream's own cursor, unaffected by the read-side
         // interface.
-        var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
+        //
+        // Front loading without a given reservation encodes the structure once and places it when it is
+        // complete; until then it is held in memory. See StructureStaging.
+        var stagesStructure =
+            options.MetadataPlacement == H5MetadataPlacement.FrontLoaded &&
+            options.MetadataReservation == 0 &&
+            !sizeOnly;
+
+        var stagingStream = stagesStructure
+            ? new StructureStagingStream(stream, leaveOpen)
+            : null;
+
+        var driver = new H5StreamDriver(stagingStream ?? stream, leaveOpen: leaveOpen);
 
         if (options.UserBlockSize != 0)
         {
@@ -101,7 +113,12 @@ partial class H5NativeWriter
         // AllocateAtFront.
         freeSpaceManager.AllocateAtFront(Superblock23.ENCODE_SIZE);
 
-        if (options.MetadataPlacement == H5MetadataPlacement.FrontLoaded && !sizeOnly)
+        if (stagesStructure)
+        {
+            freeSpaceManager.ReserveProvisionalRegion();
+        }
+
+        else if (options.MetadataPlacement == H5MetadataPlacement.FrontLoaded && !sizeOnly)
         {
             // No reservation given: measure the file instead of guessing at it. The sizing pass runs
             // Interleaved, so it cannot recurse back into this branch.
@@ -137,7 +154,8 @@ partial class H5NativeWriter
             ShortlivedStream: new(memory: default)
         )
         {
-            SizeOnly = sizeOnly
+            SizeOnly = sizeOnly,
+            Staging = stagingStream is null ? null : new StructureStaging(stagingStream)
         };
 
         File = file;
@@ -155,6 +173,75 @@ partial class H5NativeWriter
         // root group
         Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
         _rootGroupAddress = EncodeGroup(File);
+
+        PlaceStructure();
+    }
+
+    /// <summary>
+    /// Finishes a write that holds its structure until it is complete: moves the payload behind the
+    /// structure, corrects the payload addresses the structure names, writes the structure, and then the
+    /// payload that came with the tree.
+    /// </summary>
+    /// <remarks>
+    /// Does nothing for a write that does not stage its structure, or once it has run.
+    /// </remarks>
+    private void PlaceStructure()
+    {
+        if (Context.Staging is not { } staging)
+            return;
+
+        Context.Staging = null;
+
+        var freeSpaceManager = Context.FreeSpaceManager;
+
+        // Attribute values are structure, and the last of it.
+        Context.GlobalHeapManager.Encode();
+
+        freeSpaceManager.PlaceProvisionalRegion();
+
+        var buffer = default(byte[]);
+
+        try
+        {
+            foreach (var provisional in staging.Addresses)
+            {
+                if (buffer is null || buffer.Length < provisional.HeaderLength)
+                {
+                    if (buffer is not null)
+                        System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+
+                    buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(provisional.HeaderLength);
+                }
+
+                var header = buffer.AsSpan(0, provisional.HeaderLength);
+                var field = header.Slice(provisional.AddressOffset, sizeof(ulong));
+
+                staging.Stream.ReadStaged(provisional.HeaderPosition, header);
+
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(
+                    field,
+                    freeSpaceManager.Relocate(System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(field)));
+
+                ChecksummedStructure.UpdateChecksum(header);
+                staging.Stream.Patch(provisional.HeaderPosition, header);
+            }
+        }
+
+        finally
+        {
+            if (buffer is not null)
+                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+        }
+
+        staging.Stream.Commit();
+
+        // Payload written later finds its address in the layout, so the layout has to name where the
+        // payload ended up rather than where it was placed provisionally.
+        foreach (var (h5d, _) in Context.DatasetToInfoMap.Values)
+            RelocateLayout(h5d.Dataset, freeSpaceManager);
+
+        foreach (var write in staging.PostponedWrites)
+            write();
     }
 
     private void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
@@ -559,27 +646,24 @@ partial class H5NativeWriter
 
         if (!memoryData.Equals(default) && (!Context.SizeOnly || SizingPassNeedsData<TElement>(dataLayout)))
         {
-            // Variable-length elements encoded from here belong to the dataset, so the heap collections
-            // holding them are payload rather than structure. Restored rather than left set, because an
-            // object reference among these elements encodes the object it points at, attributes and all.
-            var enclosing = Context.GlobalHeapManager.AllocationKind;
-            Context.GlobalHeapManager.AllocationKind = AllocationKind.RawData;
+            var fileSelection = dataset.FileSelection;
+            var memorySelection = dataset.MemorySelection;
 
-            try
-            {
-                WriteData(
-                    h5d,
-                    encode,
-                    memoryData,
-                    dataset.FileSelection,
-                    dataset.MemorySelection,
-                    memoryDims ?? throw new Exception("This should never happen."));
-            }
+            var dims = memoryDims ?? throw new Exception("This should never happen.");
 
-            finally
-            {
-                Context.GlobalHeapManager.AllocationKind = enclosing;
-            }
+            // A compact dataset's data is part of its header, so it is structure, and so are the
+            // variable-length values it points at. Placed as payload, they would also be named by a
+            // staged header with an address that is still provisional.
+            if (dataLayout.Properties is CompactStoragePropertyDescription)
+                WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.Metadata);
+
+            // Payload has nowhere final to go while the structure is staged, so it is written once the
+            // structure is placed.
+            else if (Context.Staging is { } staging)
+                PostponeData(staging, h5d, encode, memoryData, fileSelection, memorySelection, dims);
+
+            else
+                WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData);
         }
 
         Context.DatasetToInfoMap[dataset] = (h5d, encode);
@@ -599,11 +683,93 @@ partial class H5NativeWriter
             var (chunkedAddress, encoded) = objectHeader.EncodeAndKeep(Context);
             Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)chunkedAddress, encoded);
 
+            // The kept copy is not corrected along with the staged header: Dispose rewrites it from the
+            // layout's own (relocated) address before it writes it anyway.
+            RecordProvisionalAddress(dataLayout.Properties, chunkedAddress, encoded.Length);
+
             return chunkedAddress;
         }
 
-        // Bridged for the same reason as in EncodeGroup above.
-        return objectHeader.Encode(Context).GetAwaiter().GetResult();
+        var address = objectHeader.Encode(Context, out var headerLength);
+
+        RecordProvisionalAddress(dataLayout.Properties, address, headerLength);
+
+        return address;
+    }
+
+    /// <summary>
+    /// Notes where a staged header names provisional payload, so that it is corrected before it is
+    /// written. See <see cref="PlaceStructure" />.
+    /// </summary>
+    private void RecordProvisionalAddress(StoragePropertyDescription properties, ulong headerAddress, int headerLength)
+    {
+        if (Context.Staging is not { } staging || !Context.FreeSpaceManager.IsProvisional(properties.Address))
+            return;
+
+        var headerPosition = (long)Context.Driver.BaseAddress + (long)headerAddress;
+
+        staging.Addresses.Add(new ProvisionalAddress(
+            HeaderPosition: headerPosition,
+            HeaderLength: headerLength,
+            AddressOffset: (int)(properties.AddressPosition - headerPosition)));
+    }
+
+    /// <summary>
+    /// Moves a provisionally placed payload address to where it ended up. See
+    /// <see cref="FreeSpaceManager.ReserveProvisionalRegion" />.
+    /// </summary>
+    private static void RelocateLayout(DatasetInfo info, FreeSpaceManager freeSpaceManager)
+    {
+        if (info.Layout is DataLayoutMessage4 layout)
+            layout.Properties.Address = freeSpaceManager.Relocate(layout.Properties.Address);
+    }
+
+    // Separate from InternalEncodeDataset so that the closure is only allocated for a dataset that has
+    // data to postpone: a lambda capturing that method's locals would allocate for every dataset.
+    private void PostponeData<TElement>(
+        StructureStaging staging,
+        H5D_Base h5d,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData,
+        Selection? fileSelection,
+        Selection? memorySelection,
+        ulong[] memoryDims)
+    {
+        staging.PostponedWrites.Add(() =>
+        {
+            RelocateLayout(h5d.Dataset, Context.FreeSpaceManager);
+
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, AllocationKind.RawData);
+
+            if (h5d is H5D_Chunk chunk)
+                chunk.FlushChunkCache();
+        });
+    }
+
+    private void WriteDatasetData<TElement>(
+        H5D_Base h5d,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData,
+        Selection? fileSelection,
+        Selection? memorySelection,
+        ulong[] memoryDims,
+        AllocationKind heapAllocationKind)
+    {
+        // Variable-length elements encoded from here belong to the dataset: payload, unless the dataset
+        // is compact and its data is part of its header. Restored rather than left set, because an
+        // object reference among these elements encodes the object it points at, attributes and all.
+        var enclosing = Context.GlobalHeapManager.AllocationKind;
+        Context.GlobalHeapManager.AllocationKind = heapAllocationKind;
+
+        try
+        {
+            WriteData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims);
+        }
+
+        finally
+        {
+            Context.GlobalHeapManager.AllocationKind = enclosing;
+        }
     }
 
     /// <summary>
