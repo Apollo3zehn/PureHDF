@@ -9,9 +9,26 @@ internal class GlobalHeapManager
     private const int COLLECTION_HEADER_SIZE = 16;
     private const int OBJECT_HEADER_SIZE = 16;
 
+    // An object's index within its collection is 16 bits wide in the file format, whatever room the
+    // heap ID has for it.
+    private const int MAXIMUM_OBJECTS_PER_COLLECTION = ushort.MaxValue;
+
+    // A reader loads a collection whole to reach any one object in it, so a heap planned for a write is
+    // split into adjacent collections of at most this size: reading one value never costs more than this,
+    // while the write's values stay together in the file.
+    private const int MAXIMUM_PLANNED_COLLECTION_SIZE = 1 << 20;
+
     private readonly FreeSpaceManager _freeSpaceManager;
-    private readonly Dictionary<long, GlobalHeapCollectionState> _collectionMap = new();
+
+    // Allocated but not yet written, in allocation order.
+    private readonly List<GlobalHeapCollectionState> _pendingCollections = new();
     private readonly Dictionary<AllocationKind, GlobalHeapCollectionState> _openCollections = new();
+
+    // Set while a dataset write is measured (see BeginRecording) and while it is written into the collections
+    // planned from that measurement (see TryBeginPlanned).
+    private List<int>? _recordedSizes;
+    private List<GlobalHeapCollectionState>? _plannedCollections;
+    private int _plannedIndex;
     private readonly H5DriverBase _driver;
     private readonly H5WriteOptions _options;
 
@@ -54,21 +71,162 @@ internal class GlobalHeapManager
 
     public (WritingGlobalHeapId, Memory<byte>) AddObject(int objectSize)
     {
-        // validation
         var kind = AllocationKind;
+
+        // A dataset's own values, while one of its writes is being measured or written to plan. Anything
+        // else arriving meanwhile - an attribute of an object a reference points at - is metadata, and goes
+        // where metadata always goes.
+        if (kind == AllocationKind.RawData)
+        {
+            if (_recordedSizes is not null)
+            {
+                _recordedSizes.Add(objectSize);
+                return (default, new byte[objectSize]);
+            }
+
+            if (_plannedCollections is not null)
+                return AddObjectTo(NextPlannedCollection(objectSize), objectSize);
+        }
 
         _openCollections.TryGetValue(kind, out var collectionState);
 
-        if (collectionState is null ||
-            collectionState.Consumed + OBJECT_HEADER_SIZE + AlignSize(objectSize) > collectionState.Memory.Length)
+        if (collectionState is not null && Fits(collectionState, objectSize))
+            return AddObjectTo(collectionState, objectSize);
+
+        var requiredSize = AlignSize(objectSize) + OBJECT_HEADER_SIZE + COLLECTION_HEADER_SIZE;
+
+        // Too large for a collection of the usual size: it gets one of its own, and the open collection stays
+        // open. Replacing the open collection instead would abandon whatever room it has left, so that one
+        // large value among small ones would cost a nearly empty collection.
+        if (requiredSize > _options.MinimumGlobalHeapCollectionSize)
+            return AddObjectTo(AddNewCollection(kind, requiredSize), objectSize);
+
+        collectionState = AddNewCollection(kind, _options.MinimumGlobalHeapCollectionSize);
+        _openCollections[kind] = collectionState;
+
+        return AddObjectTo(collectionState, objectSize);
+    }
+
+    /// <summary>
+    /// Starts measuring a dataset write: until <see cref="EndRecording" />, its objects are only counted and
+    /// sized, and are given memory that is thrown away.
+    /// </summary>
+    public void BeginRecording()
+    {
+        _recordedSizes = new List<int>();
+    }
+
+    /// <summary>
+    /// Ends a measurement started by <see cref="BeginRecording" />.
+    /// </summary>
+    /// <returns>The size of every object the write added, in the order it added them.</returns>
+    public List<int> EndRecording()
+    {
+        var recordedSizes = _recordedSizes ?? throw new InvalidOperationException("No recording is in progress.");
+        _recordedSizes = null;
+
+        return recordedSizes;
+    }
+
+    /// <summary>
+    /// Allocates collections sized exactly for the objects <paramref name="objectSizes" /> describes, and serves
+    /// a dataset write's objects from them until <see cref="EndPlanned" />.
+    /// </summary>
+    /// <remarks>
+    /// Gives a write's variable-length values one contiguous heap of its own, rather than a run of
+    /// minimum-sized collections shared with whatever else needs heap space at the time. Collections are
+    /// split where one would exceed the object limit or 1 MiB.
+    /// <para>
+    /// Declined for a write whose values would not fill a collection of the minimum size, which every
+    /// collection has to be: one per such write would mostly be padding, so small writes keep sharing.
+    /// </para>
+    /// </remarks>
+    /// <returns>False if the write should share collections instead.</returns>
+    public bool TryBeginPlanned(List<int> objectSizes)
+    {
+        var minimumSize = _options.MinimumGlobalHeapCollectionSize;
+        var totalSize = COLLECTION_HEADER_SIZE + OBJECT_HEADER_SIZE + objectSizes.Sum(size => (long)OBJECT_HEADER_SIZE + AlignSize(size));
+
+        if (objectSizes.Count == 0 || totalSize < minimumSize)
+            return false;
+
+        var planned = new List<GlobalHeapCollectionState>();
+        var objectCount = 0;
+        var objectBytes = 0L;
+
+        void Close()
         {
-            collectionState = AddNewCollection(
-                kind,
-                collectionSize: Math.Max(
-                    _options.MinimumGlobalHeapCollectionSize, 
-                    AlignSize(objectSize) + OBJECT_HEADER_SIZE + COLLECTION_HEADER_SIZE));
+            // Room for the header of object 0 is kept, which records the free space - none, here, unless the
+            // collection had to be padded to the minimum size.
+            var collectionSize = (int)Math.Max(minimumSize, COLLECTION_HEADER_SIZE + objectBytes + OBJECT_HEADER_SIZE);
+            planned.Add(CreateCollection(collectionSize, AllocationKind.RawData));
+
+            objectCount = 0;
+            objectBytes = 0;
         }
 
+        foreach (var size in objectSizes)
+        {
+            var objectSize = OBJECT_HEADER_SIZE + AlignSize(size);
+
+            if (objectCount == MAXIMUM_OBJECTS_PER_COLLECTION ||
+                objectCount > 0 && COLLECTION_HEADER_SIZE + objectBytes + objectSize + OBJECT_HEADER_SIZE > MAXIMUM_PLANNED_COLLECTION_SIZE)
+            {
+                Close();
+            }
+
+            objectCount++;
+            objectBytes += objectSize;
+        }
+
+        Close();
+
+        _plannedCollections = planned;
+        _plannedIndex = 0;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Writes the collections <see cref="TryBeginPlanned" /> allocated, now that the write has filled them.
+    /// </summary>
+    public void EndPlanned()
+    {
+        var planned = _plannedCollections ?? throw new InvalidOperationException("No planned write is in progress.");
+        _plannedCollections = null;
+
+        WriteCollections(planned);
+    }
+
+    /// <summary>
+    /// Ends a planned write that failed, without writing its collections.
+    /// </summary>
+    public void AbandonPlanned()
+    {
+        _plannedCollections = null;
+    }
+
+    private GlobalHeapCollectionState NextPlannedCollection(int objectSize)
+    {
+        var planned = _plannedCollections!;
+
+        while (_plannedIndex < planned.Count && !Fits(planned[_plannedIndex], objectSize))
+            _plannedIndex++;
+
+        return _plannedIndex < planned.Count
+            ? planned[_plannedIndex]
+            : throw new InvalidOperationException(
+                "A write added heap objects its measurement did not account for. Encoding it twice must add the same objects in the same order.");
+    }
+
+    private bool Fits(GlobalHeapCollectionState collectionState, int objectSize)
+    {
+        return collectionState.Index < MAXIMUM_OBJECTS_PER_COLLECTION &&
+            collectionState.Consumed + OBJECT_HEADER_SIZE + AlignSize(objectSize) <= collectionState.Memory.Length;
+    }
+
+    private (WritingGlobalHeapId, Memory<byte>) AddObjectTo(GlobalHeapCollectionState collectionState, int objectSize)
+    {
         var memory = collectionState.Memory;
 
         // encode object header
@@ -119,20 +277,21 @@ internal class GlobalHeapManager
 
     private GlobalHeapCollectionState AddNewCollection(AllocationKind kind, int collectionSize)
     {
-        // flush before we are able to continue
-        if (
-            _collectionMap.Sum(entry => (long)entry.Value.Collection.CollectionSize) >= 
-            _options.GlobalHeapFlushThreshold
-        )
-        {
-            Encode();
-            _collectionMap.Clear();
+        // A collection is always allocated now and written later - filled progressively, flushed in
+        // batches - so a payload collection is clustered rather than bump-allocated. See
+        // AllocationKind.DeferredRawData: the gap between allocating and writing is what pins a
+        // streaming writer's buffers, and scattering these holes through the file pins all of them.
+        var collectionState = CreateCollection(
+            collectionSize,
+            kind == AllocationKind.Metadata ? AllocationKind.Metadata : AllocationKind.DeferredRawData);
 
-            // Every open collection has just been written and dropped from the map, so none of them may
-            // take another object - anything added to one afterwards would never be encoded again.
-            _openCollections.Clear();
-        }
+        _pendingCollections.Add(collectionState);
 
+        return collectionState;
+    }
+
+    private GlobalHeapCollectionState CreateCollection(int collectionSize, AllocationKind allocationKind)
+    {
         // TODO make encoding and decoding of collection more symmetrical
 
         var collection = new GlobalHeapCollection(default!)
@@ -141,37 +300,57 @@ internal class GlobalHeapManager
             CollectionSize = (ulong)collectionSize
         };
 
-        // A collection is always allocated now and written later - filled progressively, flushed in
-        // batches - so a payload collection is clustered rather than bump-allocated. See
-        // AllocationKind.DeferredRawData: the gap between allocating and writing is what pins a
-        // streaming writer's buffers, and scattering these holes through the file pins all of them.
-        var baseAddress = _freeSpaceManager.Allocate(
-            collectionSize,
-            kind == AllocationKind.Metadata ? AllocationKind.Metadata : AllocationKind.DeferredRawData);
+        var baseAddress = _freeSpaceManager.Allocate(collectionSize, allocationKind);
 
-        var collectionState = new GlobalHeapCollectionState(
+        return new GlobalHeapCollectionState(
             Collection: collection,
             Memory: new byte[collectionSize - COLLECTION_HEADER_SIZE],
             BaseAddress: baseAddress);
-
-        _openCollections[kind] = collectionState;
-        _collectionMap[baseAddress] = collectionState;
-
-        return collectionState;
     }
 
+    /// <summary>
+    /// Writes the collections that are full or, all things considered, as full as they will get, if they hold
+    /// more than <see cref="H5WriteOptions.GlobalHeapFlushThreshold" />.
+    /// </summary>
+    /// <remarks>
+    /// Only to be called between top-level encodes. Flushing used to happen whenever a new collection was
+    /// opened, which can be in the middle of a nested variable-length value: the outer value's collection
+    /// was written while that value was still being filled, and dropped, so the rest of it never reached
+    /// the file.
+    /// </remarks>
+    public void FlushIfOverThreshold()
+    {
+        if (_pendingCollections.Sum(state => (long)state.Collection.CollectionSize) >= _options.GlobalHeapFlushThreshold)
+            Encode();
+    }
+
+    /// <summary>
+    /// Writes every collection allocated so far. Like <see cref="FlushIfOverThreshold" />, only to be called
+    /// between top-level encodes.
+    /// </summary>
     public void Encode()
+    {
+        WriteCollections(_pendingCollections);
+
+        _pendingCollections.Clear();
+
+        // Every open collection has just been written and dropped, so none of them may take another object -
+        // anything added to one afterwards would never be written.
+        _openCollections.Clear();
+    }
+
+    private void WriteCollections(List<GlobalHeapCollectionState> collections)
     {
         var driver = _driver;
 
         // capture current position
         var position = driver.Position;
 
-        foreach (var entry in _collectionMap)
+        foreach (var collectionState in collections)
         {
-            var address = entry.Key;
-            var (collection, memory, _) = entry.Value;
-            var consumed = entry.Value.Consumed;
+            var address = collectionState.BaseAddress;
+            var (collection, memory, _) = collectionState;
+            var consumed = collectionState.Consumed;
             var remainingSpace = (ulong)(memory.Length - consumed);
 
             driver.SeekRelativeToBaseAddress(address);

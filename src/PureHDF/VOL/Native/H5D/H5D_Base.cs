@@ -18,7 +18,7 @@ internal abstract class H5D_Base : IDisposable
 
     protected NativeReadContext ReadContext { get; }
 
-    protected NativeWriteContext WriteContext { get; }
+    internal NativeWriteContext WriteContext { get; }
 
     protected H5DatasetAccess DatasetAccess { get; }
 

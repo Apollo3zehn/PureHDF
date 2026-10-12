@@ -504,7 +504,11 @@ partial class H5NativeWriter
     {
         // Opaque data is counted in bytes rather than elements, and a scalar dataspace has no
         // dimensions to compare the data against - both are left to the general path.
-        if (target.Type.Class == DatatypeMessageClass.Opaque || target.FileDims.Length == 0)
+        // Variable-length values are left to it too, which measures them first and gives them a heap of
+        // their own.
+        if (target.Type.Class == DatatypeMessageClass.Opaque ||
+            target.Type.IsReferenceOrContainsReferences() ||
+            target.FileDims.Length == 0)
             return false;
 
         var (memoryData, _) = WriteUtils.ToMemory<T, TElement>(data);
@@ -937,10 +941,83 @@ partial class H5NativeWriter
         );
 
         /* encode data */
+        var context = h5d.WriteContext;
+
+        // Variable-length values are encoded twice: once to measure them, then into a heap sized exactly for
+        // them (see GlobalHeapManager.TryBeginPlanned). The measuring encode writes nothing - its target
+        // discards. Only for payload: structure shares its collections, see GlobalHeapManager.AddObject.
+        if (context.GlobalHeapManager.AllocationKind == AllocationKind.RawData &&
+            datatype.IsReferenceOrContainsReferences())
+        {
+            var heap = context.GlobalHeapManager;
+            List<int> objectSizes;
+
+            heap.BeginRecording();
+
+            try
+            {
+                SelectionHelper.Encode(
+                    memoryDims.Length,
+                    datasetChunkDims.Length,
+                    encodeInfo with
+                    {
+                        GetTargetStream = _ => DiscardWriteStream.Instance
+                    });
+            }
+
+            finally
+            {
+                objectSizes = heap.EndRecording();
+            }
+
+            if (heap.TryBeginPlanned(objectSizes))
+            {
+                try
+                {
+                    SelectionHelper.Encode(
+                        memoryDims.Length,
+                        datasetChunkDims.Length,
+                        encodeInfo);
+                }
+
+                catch
+                {
+                    heap.AbandonPlanned();
+                    throw;
+                }
+
+                heap.EndPlanned();
+
+                return;
+            }
+        }
+
         SelectionHelper.Encode(
             memoryDims.Length,
             datasetChunkDims.Length,
             encodeInfo);
+    }
+
+    /// <summary>
+    /// A target that accepts writes and keeps none of them, for an encode that is run only to measure it.
+    /// </summary>
+    private sealed class DiscardWriteStream : IH5WriteStream
+    {
+        public static DiscardWriteStream Instance { get; } = new();
+
+        public long Position => 0;
+
+        public void Seek(long offset, SeekOrigin origin)
+        {
+        }
+
+        public void WriteDataset(Span<byte> buffer)
+        {
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     private static void AppendAttributesToHeaderMessages(
