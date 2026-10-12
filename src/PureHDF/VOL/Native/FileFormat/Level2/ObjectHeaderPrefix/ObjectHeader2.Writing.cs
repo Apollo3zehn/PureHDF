@@ -1,54 +1,59 @@
-﻿using System.Buffers;
-using PureHDF.VFD;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
-    // Encoded into a pooled buffer and checksummed from it, then written to the file in one piece.
-    // Writing straight to the file and reading the header back for its checksum cost an async read
-    // per object header, and flushed a buffered stream's write buffer each time.
+    // Encoded into a buffer and checksummed from it, then written to the file in one piece. Writing
+    // straight to the file and reading the header back for its checksum would cost an async read per
+    // object header, and flush a buffered stream's write buffer each time.
     //
-    // Completes synchronously; the ValueTask keeps the signature its callers already bridge.
+    // Completes synchronously; its callers in H5NativeWriter block on the ValueTask it returns.
     public ValueTask<ulong> Encode(NativeWriteContext context)
     {
-        var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
-        var encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
+        var address = Allocate(context, out var encodeSize, out var headerMessagesEncodeSize);
 
-        var freeSpaceManager = context.FreeSpaceManager;
-        var address = freeSpaceManager.Allocate(encodeSize);
-
-        var rented = ArrayPool<byte>.Shared.Rent(encodeSize);
-
-        try
-        {
-            var buffer = rented.AsMemory(0, encodeSize);
-
-            // Cleared because a pooled array holds whatever its last user left, and anything an encoder
-            // skips over rather than writes would otherwise end up in the file.
-            buffer.Span.Clear();
-
-            using var driver = new H5SpanWriteDriver(
-                buffer,
-                origin: (long)context.Driver.BaseAddress + address);
-
-            EncodeCore(driver, headerMessagesEncodeSize);
-
-            var checksumData = buffer.Span[..(encodeSize - sizeof(uint))];
-            var checksum = ChecksumUtils.JenkinsLookup3(checksumData);
-
-            driver.Write(checksum);
-
-            context.Driver.SeekRelativeToBaseAddress(address);
-            context.Driver.Write(buffer.Span);
-        }
-
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(rented);
-        }
+        context.Driver.SeekRelativeToBaseAddress(address);
+        ChecksummedStructure.Write(
+            context.Driver,
+            encodeSize,
+            (Header: this, headerMessagesEncodeSize),
+            static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
 
         return new ValueTask<ulong>((ulong)address);
+    }
+
+    /// <summary>
+    /// Encodes the header like <see cref="Encode" />, and also returns the encoded bytes.
+    /// </summary>
+    /// <remarks>
+    /// For a header that has to be patched after it is written - a chunked dataset's, once its index is
+    /// known. Patching a copy and writing it again needs no read of the file, which a forward-only
+    /// stream cannot serve.
+    /// </remarks>
+    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context)
+    {
+        var address = Allocate(context, out var encodeSize, out var headerMessagesEncodeSize);
+        var encoded = new byte[encodeSize];
+
+        ChecksummedStructure.WriteToBuffer(
+            encoded,
+            origin: (long)context.Driver.BaseAddress + address,
+            (Header: this, headerMessagesEncodeSize),
+            static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
+
+        context.Driver.SeekRelativeToBaseAddress(address);
+        context.Driver.Write(encoded);
+
+        return ((ulong)address, encoded);
+    }
+
+    private long Allocate(NativeWriteContext context, out int encodeSize, out ulong headerMessagesEncodeSize)
+    {
+        headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
+        encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
+
+        return context.FreeSpaceManager.Allocate(encodeSize);
     }
 
     private void EncodeCore(H5DriverBase driver, ulong headerMessagesEncodeSize)

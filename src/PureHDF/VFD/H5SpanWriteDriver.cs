@@ -60,3 +60,66 @@ internal sealed class H5SpanWriteDriver(Memory<byte> buffer, long origin) : H5Dr
 
     public override ValueTask<ulong> ReadUInt64() => throw new NotSupportedException();
 }
+
+/// <summary>
+/// Writes a structure whose last four bytes are a Jenkins lookup3 checksum over everything before
+/// them, computing the checksum from the encoded bytes rather than reading them back from the file.
+/// </summary>
+internal static class ChecksummedStructure
+{
+    /// <summary>
+    /// Encodes <paramref name="encodeSize" /> bytes at <paramref name="driver" />'s position:
+    /// <paramref name="encodeBody" /> writes everything but the checksum, which is appended.
+    /// </summary>
+    /// <remarks>
+    /// Reading the bytes back would cost a read per structure and need a stream that can be read while it
+    /// is written - which a forward-only upload, holding only the part it is filling, cannot be.
+    /// </remarks>
+    public static void Write(H5DriverBase driver, int encodeSize, Action<H5DriverBase> encodeBody)
+        => Write(driver, encodeSize, encodeBody, static (driver, encodeBody) => encodeBody(driver));
+
+    /// <summary>
+    /// <see cref="Write(H5DriverBase, int, Action{H5DriverBase})" /> with the body's state passed in, so a
+    /// caller encoding many structures can use a static body and allocate no closure per structure.
+    /// </summary>
+    public static void Write<TState>(H5DriverBase driver, int encodeSize, TState state, Action<H5DriverBase, TState> encodeBody)
+    {
+        var rented = System.Buffers.ArrayPool<byte>.Shared.Rent(encodeSize);
+
+        try
+        {
+            var buffer = rented.AsMemory(0, encodeSize);
+
+            // Cleared because a pooled array holds whatever its last user left, and anything an encoder
+            // skips over rather than writes would otherwise end up in the file.
+            buffer.Span.Clear();
+
+            WriteToBuffer(buffer, driver.Position, state, encodeBody);
+            driver.Write(buffer.Span);
+        }
+
+        finally
+        {
+            System.Buffers.ArrayPool<byte>.Shared.Return(rented);
+        }
+    }
+
+    /// <summary>
+    /// Encodes into <paramref name="buffer" />, which is the whole structure including its checksum, and
+    /// fills in the checksum. <paramref name="origin" /> is the file position of the buffer's first byte.
+    /// </summary>
+    public static void WriteToBuffer<TState>(Memory<byte> buffer, long origin, TState state, Action<H5DriverBase, TState> encodeBody)
+    {
+        using var spanDriver = new H5SpanWriteDriver(buffer, origin);
+
+        encodeBody(spanDriver, state);
+        UpdateChecksum(buffer.Span);
+    }
+
+    /// <summary>Recomputes the checksum in the last four bytes of <paramref name="structure" />.</summary>
+    public static void UpdateChecksum(Span<byte> structure)
+    {
+        var checksum = ChecksumUtils.JenkinsLookup3(structure[..^sizeof(uint)]);
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(structure[^sizeof(uint)..], checksum);
+    }
+}
