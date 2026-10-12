@@ -180,7 +180,7 @@ internal sealed class StructureStagingStream(Stream inner, bool leaveOpen) : Str
 
         if (_stagedStart < _stagedEnd)
         {
-            inner.Seek(_stagedStart, SeekOrigin.Begin);
+            SeekInner(_stagedStart);
 
             var position = _stagedStart;
             var zeroes = default(byte[]);
@@ -210,7 +210,15 @@ internal sealed class StructureStagingStream(Stream inner, bool leaveOpen) : Str
         _segments.TrimExcess();
         _committed = true;
 
-        inner.Seek(_position, SeekOrigin.Begin);
+        SeekInner(_position);
+    }
+
+    // Not when already there: a buffered FileStream flushes its write buffer on every Seek, even one
+    // that does not move.
+    private void SeekInner(long position)
+    {
+        if (inner.Position != position)
+            inner.Seek(position, SeekOrigin.Begin);
     }
 
     protected override void Dispose(bool disposing)
