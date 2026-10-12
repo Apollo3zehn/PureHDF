@@ -138,8 +138,10 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                     Version = 0
                 };
 
+                // Allocated with the header when the layout was created (see DataLayoutMessage4.Create),
+                // so that all of the index is structure the reservation already covers.
                 var dataBlockEncodeSize = dataBlock.GetEncodeSize(pageCount, pageBitmapSize, entrySize);
-                var dataBlockAddress = WriteContext.FreeSpaceManager.Allocate((long)dataBlockEncodeSize, AllocationKind.Metadata);
+                var dataBlockAddress = (long)Chunked4.Address + FixedArrayHeader.ENCODE_SIZE;
 
                 var header = new FixedArrayHeader(
                     Superblock: default!,
@@ -183,7 +185,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    private static (ulong, ulong, ulong) GetInfo(byte pageBits, ulong entriesCount)
+    internal static (ulong, ulong, ulong) GetInfo(byte pageBits, ulong entriesCount)
     {
         // H5FAdblock.c (H5FA__dblock_alloc)
         var elementsPerPage = 1UL << pageBits;

@@ -5,22 +5,30 @@ namespace PureHDF.VOL.Native;
 internal partial record class FixedArrayDataBlock<T>
 {
     public ulong GetEncodeSize(ulong pageCount, ulong pageBitmapSize, byte entrySize)
+        => GetEncodeSize((ulong)Elements.Length, pageCount, pageBitmapSize, entrySize);
+
+    /// <summary>
+    /// The size of a data block holding <paramref name="elementCount" /> elements, known before any of
+    /// them is - which is what lets it be allocated with the index header rather than when the
+    /// elements are finally written.
+    /// </summary>
+    public static ulong GetEncodeSize(ulong elementCount, ulong pageCount, ulong pageBitmapSize, byte entrySize)
     {
         var encodeSize =
-            4 +
+            4UL +
             sizeof(byte) +
             sizeof(byte) +
             sizeof(ulong) +
             (pageCount > 0
-                ? (long)pageBitmapSize
-                : Elements.Length * entrySize) +
+                ? pageBitmapSize
+                : elementCount * entrySize) +
             sizeof(uint);
 
-        return (ulong)encodeSize;
+        return encodeSize;
     }
 
     /// <param name="driver">Positioned where the data block goes.</param>
-    /// <param name="encodeSize">From <see cref="GetEncodeSize" />, checksum included.</param>
+    /// <param name="encodeSize">From <see cref="GetEncodeSize(ulong, ulong, byte)" />, checksum included.</param>
     /// <param name="encode">Encodes one element.</param>
     internal void Encode(
         H5DriverBase driver,

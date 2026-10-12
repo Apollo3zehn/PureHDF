@@ -43,14 +43,26 @@ internal partial record class DataLayoutMessage4
 
             else
             {
+                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
+                var pageBits = (byte)Math.Ceiling(Math.Log2(chunkCount));
+
                 indexInfo = isFiltered
                     ?
                         (
                             new FixedArrayIndexingInformation(
-                                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
-                                PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
+                                PageBits: pageBits
                             ),
-                            FixedArrayHeader.ENCODE_SIZE,
+
+                            /* The header and its data block, together: the block's size follows from the
+                             * chunk count, so it need not wait until the chunks are written. Allocated at
+                             * Dispose, it would be structure that turns up after the structure has been
+                             * placed. See H5D_Chunk4_FixedArray.Dispose.
+                             */
+                            FixedArrayHeader.ENCODE_SIZE + (long)GetFixedArrayDataBlockEncodeSize(
+                                pageBits,
+                                chunkCount,
+                                chunkByteSize: chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * typeSize),
+
                             AllocationKind.Metadata,
                             ChunkedStoragePropertyFlags.None
                         )
@@ -171,6 +183,15 @@ internal partial record class DataLayoutMessage4
         }
 
         return dataLayout;
+    }
+
+    private static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
+    {
+        /* H5FA__cache_hdr_serialize (H5FAcache.c) */
+        var entrySize = FilteredDataBlockElement.GetEncodeSize(MathUtils.ComputeChunkSizeLength(chunkByteSize));
+        var (_, pageCount, pageBitmapSize) = H5D_Chunk4_FixedArray.GetInfo(pageBits, chunkCount);
+
+        return FixedArrayDataBlock<FilteredDataBlockElement>.GetEncodeSize(chunkCount, pageCount, pageBitmapSize, entrySize);
     }
 
     public override ushort GetEncodeSize()
