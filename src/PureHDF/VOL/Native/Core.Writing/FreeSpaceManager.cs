@@ -79,6 +79,9 @@ internal class FreeSpaceManager
     private Region _metadata;
     private Region _deferredRawData;
 
+    // Tails of replaced blocks, not yet written - see TakeAbandoned.
+    private readonly List<(long Address, long Length)> _abandoned = [];
+
     // How far provisional payload moved once the structure was placed; zero before then.
     private long _provisionalShift;
     private bool _isProvisional;
@@ -155,6 +158,26 @@ internal class FreeSpaceManager
     /// interleaved one does not.
     /// </remarks>
     public long PayloadAbandoned => _payloadAbandonedByReplacement + (_deferredRawData.End - _deferredRawData.Cursor);
+
+    /// <summary>
+    /// The unused tails of the blocks still open, as (address, length).
+    /// </summary>
+    /// <remarks>
+    /// The only space the writer leaves unwritten: every other gap is written with zeros once it can no
+    /// longer be allocated from, see <see cref="TakeAbandoned" />. These tails can still be allocated
+    /// from until the writer is disposed, and nothing names them.
+    /// </remarks>
+    public IEnumerable<(long Address, long Length)> OpenTails
+    {
+        get
+        {
+            if (_metadata.Cursor < _metadata.End)
+                yield return (_metadata.Cursor, _metadata.End - _metadata.Cursor);
+
+            if (_deferredRawData.Cursor < _deferredRawData.End)
+                yield return (_deferredRawData.Cursor, _deferredRawData.End - _deferredRawData.Cursor);
+        }
+    }
 
     /// <summary>
     /// Allocates metadata at the current end of the file, bypassing regions and blocks entirely.
@@ -256,6 +279,32 @@ internal class FreeSpaceManager
             ? address - (ulong)_provisionalShift
             : address;
 
+    /// <summary>
+    /// Removes and returns the tails of the blocks replaced so far, as (address, length), for the writer to
+    /// fill with zeros.
+    /// </summary>
+    /// <remarks>
+    /// Nothing is allocated from a replaced block again, so its tail is never written unless it is
+    /// filled - and a destination uploading the file in parts ships a part only once every byte of it is
+    /// written. A tail placed provisionally is kept until the payload has moved, since its final address
+    /// is not known before.
+    /// </remarks>
+    public List<(long Address, long Length)> TakeAbandoned()
+    {
+        var taken = new List<(long Address, long Length)>();
+
+        _abandoned.RemoveAll(range =>
+        {
+            if (IsProvisional((ulong)range.Address))
+                return false;
+
+            taken.Add(((long)Relocate((ulong)range.Address), range.Length));
+            return true;
+        });
+
+        return taken;
+    }
+
     public long Allocate(long length, AllocationKind kind)
     {
         if (length == 0)
@@ -332,6 +381,9 @@ internal class FreeSpaceManager
             var openedSize = Math.Max(region.NextBlockSize, length);
 
             abandoned = region.End - region.Cursor;
+
+            if (abandoned > 0)
+                _abandoned.Add((region.Cursor, abandoned));
 
             region.Cursor = _length;
             region.End = _length + openedSize;

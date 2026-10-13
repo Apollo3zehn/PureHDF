@@ -149,6 +149,32 @@ partial class H5NativeWriter
         _rootGroupAddress = EncodeGroup(File);
 
         PlaceStructure();
+        WriteAbandoned();
+    }
+
+    /// <summary>
+    /// Fills the tails of the blocks replaced so far with zeros. See <see cref="FreeSpaceManager.TakeAbandoned" />.
+    /// </summary>
+    internal void WriteAbandoned()
+    {
+        var abandoned = Context.FreeSpaceManager.TakeAbandoned();
+
+        if (abandoned.Count == 0)
+            return;
+
+        var driver = Context.Driver;
+        var position = driver.Position;
+        Span<byte> zeros = stackalloc byte[4096];
+
+        foreach (var (address, length) in abandoned)
+        {
+            driver.SeekRelativeToBaseAddress(address);
+
+            for (var remaining = length; remaining > 0; remaining -= zeros.Length)
+                driver.Write(zeros[..(int)Math.Min(remaining, zeros.Length)]);
+        }
+
+        driver.Seek(position, SeekOrigin.Begin);
     }
 
     /// <summary>

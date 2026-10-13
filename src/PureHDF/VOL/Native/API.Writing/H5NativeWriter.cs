@@ -69,6 +69,7 @@ public partial class H5NativeWriter : IDisposable
 
         // Between top-level encodes is the only safe point to write heap collections; see there.
         Context.GlobalHeapManager.WriteClosedCollections();
+        WriteAbandoned();
     }
 
     /// <summary>
@@ -103,6 +104,8 @@ public partial class H5NativeWriter : IDisposable
 
                 // global heap collections
                 Context.GlobalHeapManager.Encode();
+
+                WriteAbandoned();
 
                 // superblock
                 //
