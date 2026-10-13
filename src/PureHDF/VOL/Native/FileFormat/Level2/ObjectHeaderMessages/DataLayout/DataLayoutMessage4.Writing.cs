@@ -139,10 +139,6 @@ internal partial record class DataLayoutMessage4
             /* try to create compact dataset */
             if (preferCompact && fitsCompact && !isDeferred)
             {
-                // TODO avoid creation of system memory stream too often
-                var buffer = new byte[dataEncodeSize];
-                var localWriter = new SystemMemoryStream(buffer);
-
                 var properties = new CompactStoragePropertyDescription(
                     Data: dataEncodeSize == 0
                         ? Array.Empty<byte>()
