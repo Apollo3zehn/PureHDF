@@ -1,3 +1,4 @@
+using PureHDF.Selections;
 using Xunit;
 
 namespace PureHDF.Tests.Writing;
@@ -17,7 +18,10 @@ public class WriteOnceTests
 {
     private static readonly Dictionary<string, Func<Scenario>> Scenarios = new()
     {
-        ["large group"] = LargeGroup
+        ["variable-length strings"] = VariableLengthStrings,
+        ["many small groups"] = ManySmallGroups,
+        ["large group"] = LargeGroup,
+        ["deferred variable-length writes"] = DeferredVariableLengthWrites
     };
 
     public static TheoryData<string, H5MetadataPlacement> Cases()
@@ -105,6 +109,45 @@ public class WriteOnceTests
 
     #region Scenarios
 
+    private static string[] RandomStrings(int seed, int count)
+    {
+        var random = new Random(seed);
+
+        return Enumerable.Range(0, count)
+            .Select(_ => new string('a', random.Next(1, 50)))
+            .ToArray();
+    }
+
+    // Heap collections, given with the tree: their reserved fields, object 0 and their free space.
+    private static Scenario VariableLengthStrings()
+    {
+        var data = RandomStrings(1, 5_000);
+
+        return new(
+            new H5File
+            {
+                ["strings"] = new H5Dataset(data) { Attributes = new() { ["note"] = "a note" } }
+            },
+            file => Assert.Equal(data, file.Dataset("strings").Read<string[]>()));
+    }
+
+    // Shared collections of the minimum size, and metadata blocks replaced when a header does not fit.
+    private static Scenario ManySmallGroups()
+    {
+        var file = new H5File();
+
+        for (var i = 0; i < 2_000; i++)
+        {
+            file[$"group_{i:D4}"] = new H5Group
+            {
+                Attributes = new() { ["index"] = i },
+                ["name"] = new H5Dataset($"name {i}")
+            };
+        }
+
+        return new(file, actual => Assert.Equal("name 1999", actual.Dataset("group_1999/name").Read<string>()));
+    }
+
     // A header too large for what is left of a block abandons the rest of it.
     private static Scenario LargeGroup()
     {
@@ -114,6 +157,32 @@ public class WriteOnceTests
             group[$"dataset_{i:D4}"] = new H5Dataset(i);
 
         return new(new H5File { ["large"] = group }, file => Assert.Equal(4_999, file.Dataset("large/dataset_4999").Read<int>()));
+    }
+
+    // Collections of a dataset's own values are allocated in blocks of their own, which are replaced when
+    // a collection does not fit what is left - 5,000 bytes does not divide a block evenly.
+    private static Scenario DeferredVariableLengthWrites()
+    {
+        const int rows = 4_000;
+        const int batch = 100;
+
+        var data = RandomStrings(1, rows);
+        var dataset = new H5Dataset<string[]>(fileDims: [rows]);
+        var writes = new List<Action<H5NativeWriter>>();
+
+        for (var start = 0; start < rows; start += batch)
+        {
+            var begin = start;
+
+            writes.Add(writer => writer.Write(dataset, data[begin..(begin + batch)],
+                fileSelection: new HyperslabSelection((ulong)begin, batch)));
+        }
+
+        return new(
+            new H5File { ["strings"] = dataset },
+            file => Assert.Equal(data, file.Dataset("strings").Read<string[]>()),
+            writes,
+            new H5WriteOptions(MinimumGlobalHeapCollectionSize: 5_000));
     }
 
     #endregion

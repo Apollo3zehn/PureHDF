@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 ﻿using System.Runtime.CompilerServices;
 
 namespace PureHDF.VOL.Native;
@@ -365,6 +366,11 @@ internal class GlobalHeapManager
         // capture current position
         var position = driver.Position;
 
+        // Every byte of a collection is written, its reserved fields and free space included, rather than
+        // skipped: a destination uploading the file in parts ships a part once every byte of it is written,
+        // and a gap nothing ever fills holds its part until the end.
+        Span<byte> header = stackalloc byte[COLLECTION_HEADER_SIZE];
+
         foreach (var collectionState in collections)
         {
             var address = collectionState.BaseAddress;
@@ -372,37 +378,28 @@ internal class GlobalHeapManager
             var consumed = collectionState.Consumed;
             var remainingSpace = (ulong)(memory.Length - consumed);
 
-            driver.SeekRelativeToBaseAddress(address);
-
-            // signature
-            driver.Write(GlobalHeapCollection.Signature);
-
-            // version
-            driver.Write(collection.Version);
-
-            // reserved
-            driver.Seek(3, SeekOrigin.Current);
-
-            // collection size
-            driver.Write(collection.CollectionSize);
-
-            // collection
-            driver.Write(memory.Span[..consumed]);
+            // signature, version, reserved, collection size
+            header.Clear();
+            GlobalHeapCollection.Signature.CopyTo(header);
+            header[4] = collection.Version;
+            BinaryPrimitives.WriteUInt64LittleEndian(header[8..], collection.CollectionSize);
 
             // Global Heap Object 0
             if (remainingSpace >= OBJECT_HEADER_SIZE)
             {
-                /* The field Object Size for Object 0 indicates the amount of possible free space 
+                /* The field Object Size for Object 0 indicates the amount of possible free space
                    in the collection INCLUDING the 16-byte header size of Object 0.  */
-                driver.Seek(sizeof(ushort) + sizeof(ushort) + 4, SeekOrigin.Current);
-                driver.Write(remainingSpace);
-                remainingSpace -= OBJECT_HEADER_SIZE;
+                var object0 = memory.Span.Slice(consumed, OBJECT_HEADER_SIZE);
+
+                object0.Clear();
+                BinaryPrimitives.WriteUInt64LittleEndian(object0[8..], remainingSpace);
             }
 
-            var endAddress = driver.Position + (long)remainingSpace;
+            driver.SeekRelativeToBaseAddress(address);
+            driver.Write(header);
 
-            if (driver.Length < endAddress)
-                driver.SetLength(endAddress);
+            // the objects, object 0 and the free space it describes
+            driver.Write(memory.Span);
         }
 
         // restore original position
