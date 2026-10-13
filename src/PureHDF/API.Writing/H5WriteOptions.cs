@@ -9,7 +9,7 @@ namespace PureHDF;
 /// <param name="MinimumGlobalHeapCollectionSize">A value that indicates the minimum size of a global heap collection in bytes. The default value is 4096 bytes which is the absolute minimum allowed size.</param>
 /// <param name="GlobalHeapFlushThreshold">Unused. Global heap collections are written as soon as they can take no more objects, at the end of <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> and of each <see cref="H5NativeWriter.Write{T}" />. Kept so that code setting it still compiles.</param>
 /// <param name="UserBlockSize">Set the file user block size, in bytes. The default user block size is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024, 2048, etc.).</param>
-/// <param name="PreferCompactDatasetLayout">A value that indicates whether the writer tries to use the compact layout for datasets if the total data size is &lt; 64 kB and it should not be chunked.</param>
+/// <param name="PreferCompactDatasetLayout">A value that indicates whether the writer tries to use the compact layout for datasets whose data fits <see cref="MaximumCompactDatasetSize" /> and that should not be chunked.</param>
 /// <param name="IncludeStructFields">A value that indicates whether struct fields are handled during serialization. The default value is <see langword="true"/>.</param>
 /// <param name="IncludeStructProperties">A value that indicates whether struct properties are handled during serialization. The default value is <see langword="false"/>.</param>
 /// <param name="IncludeClassFields">A value that indicates whether class fields are handled during serialization. The default value is <see langword="false"/>.</param>
@@ -125,8 +125,8 @@ public record H5WriteOptions(
 
     /// <summary>
     /// The most data, in bytes, a dataset may hold and still be written compact when
-    /// <see cref="PreferCompactDatasetLayout" /> is set. The default is the most a compact layout can
-    /// hold, 65531 bytes.
+    /// <see cref="PreferCompactDatasetLayout" /> is set. The default is 256 bytes; a compact layout can
+    /// hold at most 65531.
     /// </summary>
     /// <remarks>
     /// A compact dataset's data is part of its object header, so it is file structure: a reader that
@@ -135,10 +135,16 @@ public record H5WriteOptions(
     /// for browsing. A variable-length dataset counts its values as well as their heap IDs, since its
     /// values are placed with it.
     /// <para>
+    /// The default keeps what compact is good for - a scalar, a few values, a short string, which a
+    /// reader gets with the header instead of with another request - while bounding what a file of many
+    /// such datasets adds to its structure: about twice the structure at most, where the 64 kB a compact
+    /// layout can hold turns a file of many datasets of a few kilobytes into structure entirely.
+    /// </para>
+    /// <para>
     /// Must not be negative. Zero writes no dataset compact.
     /// </para>
     /// </remarks>
-    public int MaximumCompactDatasetSize { get; init; } = MAXIMUM_COMPACT_DATASET_SIZE;
+    public int MaximumCompactDatasetSize { get; init; } = 256;
 
     // An object header message declares its size in two bytes, and a compact layout message spends four
     // of them on its version, layout class and data size.

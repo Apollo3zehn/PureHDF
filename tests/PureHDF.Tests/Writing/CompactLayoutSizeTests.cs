@@ -16,6 +16,19 @@ namespace PureHDF.Tests.Writing;
 public class CompactLayoutSizeTests
 {
     [Theory]
+    [InlineData(32, H5DataLayoutClass.Compact)]
+    [InlineData(33, H5DataLayoutClass.Contiguous)]
+    public void ByDefaultOnlySmallDataIsCompact(int count, H5DataLayoutClass expected)
+    {
+        // 256 bytes, then 264
+        var data = Enumerable.Range(0, count).Select(i => (double)i).ToArray();
+
+        var actual = WriteAndReadLayout(data, new H5WriteOptions());
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
     [InlineData(512, H5DataLayoutClass.Contiguous)]
     [InlineData(1024, H5DataLayoutClass.Compact)]
     public void FixedSizeDataIsCompactUpToTheMaximum(int maximum, H5DataLayoutClass expected)

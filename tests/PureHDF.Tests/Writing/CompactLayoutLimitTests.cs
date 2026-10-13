@@ -27,8 +27,8 @@ public class CompactLayoutLimitTests
 
         try
         {
-            // Act
-            file.Write(filePath);
+            // Act - the most the option allows, so that only the layout limits
+            file.Write(filePath, new H5WriteOptions { MaximumCompactDatasetSize = int.MaxValue });
 
             // Assert
             TestUtils.DumpH5File(filePath);
