@@ -169,10 +169,11 @@ public class RangeReadCostTests(ITestOutputHelper output)
     /// </summary>
     /// <remarks>
     /// Both clustered placements are measured, not just the best one. They answer different questions: a
-    /// reservation is sized by measuring the file first and gets the structure into one range, while
-    /// aggregation needs no such pass and settles for a handful. A caller choosing between them wants the
-    /// gap between the two, and a caller who cannot afford the sizing pass wants to know that aggregation
-    /// is still worth having - neither of which a two-way comparison against interleaving shows.
+    /// front-loaded write holds the structure in memory until it is complete and gets it into one range,
+    /// while aggregation writes it as it goes and settles for a handful. A caller choosing between them
+    /// wants the gap between the two, and a caller who cannot afford holding the structure wants to know
+    /// that aggregation is still worth having - neither of which a two-way comparison against
+    /// interleaving shows.
     /// </remarks>
     [Fact]
     public async Task EveryClusteredPlacementIsFarCheaperToWalkRemotelyThanInterleaving()
@@ -221,20 +222,20 @@ public class RangeReadCostTests(ITestOutputHelper output)
                 $"a front-loaded walk must hold fewer blocks, but it held {frontLoaded.Blocks} against "
                 + $"{interleaved.Blocks}");
 
-            // Aggregation has to earn its place without a sizing pass.
+            // Aggregation has to earn its place without holding the structure.
             Assert.True(
                 aggregated.Bytes < interleaved.Bytes / 2,
                 $"aggregation must at least halve what a remote walk transfers, but it fetched "
                 + $"{aggregated.Bytes:N0} B against {interleaved.Bytes:N0} B");
 
-            // Measuring the file cannot do worse than not measuring it.
+            // Holding the structure until it is complete cannot do worse than clustering it as it goes.
             Assert.True(
                 frontLoaded.Bytes <= aggregated.Bytes,
-                $"a measured reservation fetched {frontLoaded.Bytes:N0} B against aggregation's "
-                + $"{aggregated.Bytes:N0} B, so measuring the file bought nothing");
+                $"front loading fetched {frontLoaded.Bytes:N0} B against aggregation's "
+                + $"{aggregated.Bytes:N0} B, so holding the structure bought nothing");
 
             // Round trips, which is what the whole exercise is about and what every figure quoted for
-            // this feature is stated in. A measured reservation is one contiguous span, so walking the
+            // this feature is stated in. A front-loaded region is one contiguous span, so walking the
             // structure is one request; asserted as a number rather than a ratio because the number is
             // the claim. Aggregation clusters into a handful, and interleaving needs one per block it
             // spans.

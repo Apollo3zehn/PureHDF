@@ -105,17 +105,15 @@ public record H5WriteOptions(
     /// <summary>
     /// The size in bytes reserved at the front of the file for structure, used when
     /// <see cref="MetadataPlacement" /> is <see cref="H5MetadataPlacement.FrontLoaded" />. Zero, the
-    /// default, means the writer measures it.
+    /// default, means the region is exactly as large as the structure turns out to be.
     /// </summary>
     /// <remarks>
-    /// Measuring means encoding the file once against a stream that discards everything, which yields an
-    /// exact figure rather than an estimate because it is the same encoder and allocator. It does not
-    /// compress, so on a filtered write it adds a low single-digit percentage; on an unfiltered write the
-    /// share is larger, but an unfiltered write is cheap to begin with.
+    /// Without a reservation, the writer encodes the structure once, holds it in memory until it is
+    /// complete, and then writes it in one run, front to back. Holding it costs memory the size of the
+    /// structure until <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> returns.
     /// <para>
-    /// Set an explicit value only to skip that pass. It buys nothing else: a measured reservation is the
-    /// exact number of bytes that will be served from it, so it abandons nothing, while an explicit one
-    /// abandons whatever it over-reserved. Data written later through
+    /// An explicit value writes the structure as it is encoded instead, without holding it, at the cost of
+    /// guessing its size: one too large abandons whatever it over-reserved. Data written later through
     /// <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> needs no allowance either - a chunk
     /// index is sized from the chunk count, which comes from the dimensions rather than from the data,
     /// and a variable-length value's heap space is payload rather than structure, so writing more of it

@@ -113,11 +113,10 @@ internal class FreeSpaceManager
     /// Total bytes handed out for <see cref="AllocationKind.Metadata" />.
     /// </summary>
     /// <remarks>
-    /// This is what a sizing pass reads off to decide how much to reserve, and why it is a count of
-    /// ALLOCATIONS rather than of encoded bytes: a global heap collection is allocated at a 4 kB minimum
-    /// and usually left partly empty, so the space that has to be reserved exceeds the space that ends up
-    /// meaning anything. h5stat reports that difference as unaccounted space rather than as metadata,
-    /// which is what makes its "File metadata" figure too small to reserve against.
+    /// A count of ALLOCATIONS rather than of encoded bytes: a global heap collection is allocated at a
+    /// 4 kB minimum and usually left partly empty, so the space structure takes exceeds the space that
+    /// ends up meaning anything. h5stat reports that difference as unaccounted space rather than as
+    /// metadata, which is what makes its "File metadata" figure too small to reserve against.
     /// </remarks>
     public long MetadataAllocated { get; private set; }
 

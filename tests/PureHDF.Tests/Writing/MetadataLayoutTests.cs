@@ -47,10 +47,11 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         // files either - it would never be reached.
         MetadataBlockSize = 1024 * 1024,
 
-        // An explicit reservation, so these files exercise the path that skips the sizing pass. 1 MB
+        // An explicit reservation, so these files exercise the path that writes structure as it is
+        // encoded rather than holding it until it is complete. 1 MB
         // against a measured need of 878,158 bytes, which covers it with room to spare - and the room
         // is the point of the setting rather than a flaw in it: an explicit reservation abandons its
-        // unused tail, which is the price of not measuring. Size one against measured file growth
+        // unused tail, which is the price of guessing. Size one against measured file growth
         // rather than against h5stat's "File metadata" line, which reports 522,088 bytes here: global
         // heap collections are allocated at a 4 kB minimum each and mostly left partly empty, and
         // h5stat counts that as unaccounted space rather than as metadata.
@@ -285,15 +286,15 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// With no reservation given, the writer measures the file rather than estimating it - and a
-    /// measurement is exact, so front loading costs nothing at all rather than a little.
+    /// With no reservation given, the writer closes the region where the structure ends rather than
+    /// estimating it in advance - so front loading costs nothing at all rather than a little.
     /// </summary>
     /// <remarks>
-    /// This is the assertion that pins the reservation to a measurement rather than to a model of the
-    /// object graph. Two things put such a model out by multiples: a chunk index's size scales with chunk
-    /// count rather than being constant, and global heap collections are allocated at a 4 kB minimum each
-    /// and left partly empty. Encoding against a discarding stream sees both, because it is the same
-    /// encoder and the same allocator.
+    /// This is the assertion that pins the region to the structure actually encoded rather than to a model
+    /// of the object graph. Two things put such a model out by multiples: a chunk index's size scales with
+    /// chunk count rather than being constant, and global heap collections are allocated at a 4 kB minimum
+    /// each and left partly empty. The region is closed at the allocator's cursor, which sees both,
+    /// because it is the allocator that placed them.
     /// </remarks>
     [Fact]
     public void AutoSizedFrontLoadingCostsNothing()
@@ -321,16 +322,15 @@ public class MetadataLayoutTests(ITestOutputHelper output)
         // Locality: the whole point.
         Assert.True(after * 2 < afterTotal, $"structure touched {after} of {afterTotal} slots.");
 
-        // Size: a measured reservation is the exact number of bytes that will be served from it, so this
-        // costs nothing at all rather than a little. Asserted as equality, because "close enough" is what
-        // hid twelve kilobytes of slack that no test objected to.
+        // Size: the region ends where the structure does, so it is exactly the bytes served from it and
+        // this costs nothing at all rather than a little. Asserted as equality, because a tolerance would
+        // let slack in the region pass unnoticed.
         Assert.Equal(interleaved.Length, autoSized.Length);
         Assert.Equal(0, overhead);
 
-        // One region, nothing abandoned: the measurement was neither short (which spills into a second
-        // region and loses the locality) nor long (which pays for a tail nothing uses). This is the
-        // assertion that makes the two failure modes visible - MetadataRegionsOpened exists to report
-        // exactly this and was checked nowhere.
+        // One region, nothing abandoned: the region was neither short (which spills into a second region
+        // and loses the locality) nor long (which pays for a tail nothing uses). This is the assertion
+        // that makes the two failure modes visible.
         var probe = new H5File();
 
         for (int i = 0; i < GroupCount; i++)
@@ -380,7 +380,8 @@ public class MetadataLayoutTests(ITestOutputHelper output)
 
 
     /// <summary>
-    /// Every shape the writer can produce, so the sizing pass can be trusted across all of them.
+    /// Every shape the writer can produce, so that front loading can be checked across all of them - see
+    /// SinglePassFrontLoadingTests.
     /// </summary>
     public static TheoryData<string, Func<H5File>> Shapes => new()
     {
@@ -443,117 +444,6 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// The sizing pass must report the same total a real write allocates - exactly, for every shape.
-    /// </summary>
-    /// <remarks>
-    /// The load-bearing test for front loading, and the one that lets the pass take shortcuts. It takes
-    /// two: it does not compress, and for fixed-size elements it does not touch the data at all. Both
-    /// rest on the same claim - that no metadata size depends on a value - and this asserts that claim
-    /// per shape rather than arguing it. An inequality would not do: a pass that over-counts wastes the
-    /// reservation's tail and one that under-counts spills, so the number has to be the number.
-    /// </remarks>
-    [Theory]
-    [MemberData(nameof(Shapes))]
-    public void TheSizingPassMeasuresExactlyWhatAWriteAllocates(string label, Func<H5File> makeFile)
-    {
-        var options = new H5WriteOptions
-        {
-            PreferCompactDatasetLayout = false,
-            MetadataPlacement = H5MetadataPlacement.Interleaved
-        };
-
-        var measured = H5NativeWriter.MeasureMetadataSize(makeFile(), options);
-        var allocated = MetadataAllocatedByAWrite(makeFile(), options);
-
-        output.WriteLine($"{label,-24} measured {measured,10:N0}   allocated {allocated,10:N0}");
-
-        Assert.Equal(allocated, measured);
-    }
-
-    /// <summary>
-    /// Nothing a deferred write does outruns the sizing pass.
-    /// </summary>
-    /// <remarks>
-    /// The pass runs before the caller has written anything through the writer, so the question is which
-    /// metadata it can still account for. All of it, as it turns out. A chunk index's size follows from
-    /// the chunk count, and that follows from the dimensions, which are fixed when the dataset is
-    /// declared - <c>WriteChunkInfos</c> is sized to <c>TotalChunkCount</c> in
-    /// <c>H5D_Chunk4.Initialize</c>, and writing data later fills entries in an array whose length was
-    /// settled then. And a variable-length value's global heap space is allocated as payload rather than
-    /// as structure, so however much of it a caller writes later, the metadata total does not move.
-    /// <para>
-    /// That is what makes <see cref="H5WriteOptions.MetadataReservation" /> unnecessary for a deferred
-    /// write rather than advisable for some of them. Asserted rather than reasoned, because it is the
-    /// entire guidance given for deferred writes - and the guidance said the opposite twice before this
-    /// test existed.
-    /// </para>
-    /// </remarks>
-    [Fact]
-    public void NothingDeferredOutrunsTheSizingPass()
-    {
-        var options = new H5WriteOptions
-        {
-            PreferCompactDatasetLayout = false,
-            MetadataPlacement = H5MetadataPlacement.Interleaved
-        };
-
-        long Shortfall<T>(string label, Func<H5Dataset<T>> makeDataset, T data)
-        {
-            var measured = H5NativeWriter.MeasureMetadataSize(
-                new H5File { ["d"] = makeDataset() }, options);
-
-            var dataset = makeDataset();
-            var filePath = Path.GetTempFileName();
-
-            try
-            {
-                var writer = new H5File { ["d"] = dataset }.BeginWrite(filePath, options);
-                writer.Write(dataset, data);
-                writer.Dispose();
-
-                var allocated = writer.Context.FreeSpaceManager.MetadataAllocated;
-
-                output.WriteLine($"{label,-38} measured {measured,9:N0}   allocated {allocated,9:N0}   shortfall {allocated - measured,9:N0}");
-
-                return allocated - measured;
-            }
-
-            finally
-            {
-                if (File.Exists(filePath))
-                    File.Delete(filePath);
-            }
-        }
-
-        var ints = Enumerable.Range(0, 1 << 16).ToArray();
-
-        var filtered = Shortfall(
-            "filtered chunked int (fixed array)",
-            () => new H5Dataset<int[]>(fileDims: [(ulong)ints.Length], chunks: [4096], datasetCreation: new(Filters: [DeflateFilter.Id])),
-            ints);
-
-        var unfiltered = Shortfall(
-            "unfiltered chunked int (implicit index)",
-            () => new H5Dataset<int[]>(fileDims: [(ulong)ints.Length], chunks: [4096]),
-            ints);
-
-        var strings = Enumerable.Range(0, 2_000).Select(i => new string('x', 120) + i).ToArray();
-
-        var variableLength = Shortfall(
-            "contiguous strings (global heap)",
-            () => new H5Dataset<string[]>(fileDims: [(ulong)strings.Length]),
-            strings);
-
-        // A chunk index is fully accounted for, however the chunks are indexed.
-        Assert.Equal(0, filtered);
-        Assert.Equal(0, unfiltered);
-
-        // And so is variable-length data, now that its heap collections are payload. This was 294,912
-        // bytes short while they counted as structure.
-        Assert.Equal(0, variableLength);
-    }
-
-    /// <summary>
     /// A small file must not pay a whole metadata block.
     /// </summary>
     /// <remarks>
@@ -563,8 +453,8 @@ public class MetadataLayoutTests(ITestOutputHelper output)
     /// what is claimed at roughly twice what is used.
     /// <para>
     /// Deferred variable-length data is the case that provokes it hardest, and under every placement:
-    /// aggregation opens its first block, and a front-loaded reservation cannot have measured the global
-    /// heap these strings need, so it exhausts and spills into a block too.
+    /// its global heap collections are deferred payload, which both clustered placements gather into
+    /// blocks of their own, so the first value written opens one.
     /// </para>
     /// </remarks>
     [Theory]
@@ -768,7 +658,7 @@ public class MetadataLayoutTests(ITestOutputHelper output)
 
         double StructureShare(string label, Func<H5File> makeFile)
         {
-            var measured = H5NativeWriter.MeasureMetadataSize(makeFile(), options);
+            var measured = MetadataAllocatedByAWrite(makeFile(), options);
             var filePath = Path.GetTempFileName();
 
             try
@@ -832,7 +722,7 @@ public class MetadataLayoutTests(ITestOutputHelper output)
             ["chunked"] = new H5Dataset(Enumerable.Range(0, elementCount).ToArray(), chunks: [4096])
         };
 
-        var measured = H5NativeWriter.MeasureMetadataSize(file, new H5WriteOptions
+        var measured = MetadataAllocatedByAWrite(file, new H5WriteOptions
         {
             PreferCompactDatasetLayout = false,
             MetadataPlacement = H5MetadataPlacement.Interleaved

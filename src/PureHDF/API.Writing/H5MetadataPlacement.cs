@@ -37,8 +37,8 @@ public enum H5MetadataPlacement
     /// whatever its size. The cost is a handful of clusters rather than one: measured over a
     /// range-fetching reader on a 4 MB file of 600 groups, walking the structure took 3 requests and
     /// 19.4% of the file, against 16 requests and all of it under <see cref="Interleaved" />. Prefer
-    /// <see cref="FrontLoaded" /> where the round trips matter - it took 1 - and this where the sizing
-    /// pass is unwelcome.
+    /// <see cref="FrontLoaded" /> where the round trips matter - it took 1 - and this where holding the
+    /// structure in memory until it is complete is unwelcome.
     /// </para>
     /// </remarks>
     Aggregated = 1,
@@ -48,25 +48,24 @@ public enum H5MetadataPlacement
     /// fetch all of it in one range.
     /// </summary>
     /// <remarks>
-    /// The region is sized from <see cref="H5WriteOptions.MetadataReservation" /> when that is set, and
-    /// otherwise by measuring: the writer encodes the file once against a stream that discards
-    /// everything and reads the total off its allocator. That figure is exact, since it comes from the
-    /// same encoder and the same allocator, which is what lets it cover a chunk index's dependence on
-    /// chunk count and the global heap's 4 kB collection granularity - neither of which an estimate can
-    /// see, and both of which <c>h5stat</c> excludes from its "File metadata" figure.
+    /// The region is sized from <see cref="H5WriteOptions.MetadataReservation" /> when that is set.
+    /// Otherwise it is exactly as large as the structure: the writer encodes the structure once, places
+    /// the payload provisionally behind a region it leaves open, and holds the structure in memory until
+    /// it is complete. Then it closes the region where the structure ends, moves the payload behind it,
+    /// corrects the payload addresses the structure names, and writes the structure front to back.
     /// <para>
     /// A reservation too small for the file places the remainder as <see cref="Aggregated" /> would, which
     /// loses locality rather than failing. One too large wastes the unused tail, which <c>h5stat</c>
-    /// reports as unaccounted space. A measured reservation is neither: it is the exact number of bytes
-    /// that will be served from it, so a front-loaded file is the same size as an interleaved one rather
-    /// than merely close to it, and nothing is abandoned.
+    /// reports as unaccounted space. Without a reservation it is neither: the region is exactly what was
+    /// served from it, so no structure is abandoned. The price is memory the size of the structure, held
+    /// until the structure is written.
     /// A deferred write through <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> needs no
     /// allowance for this: nothing a caller writes later changes how much structure the file has.
     /// </para>
     /// <para>
     /// Suited to a file written once and then only read - which is every file this library produces, as
     /// the writer cannot add structure to an existing file at all. Prefer <see cref="Aggregated" /> where
-    /// the sizing pass is unwelcome and one range request per cluster is good enough.
+    /// holding the structure is unwelcome and one range request per cluster is good enough.
     /// </para>
     /// </remarks>
     FrontLoaded = 2

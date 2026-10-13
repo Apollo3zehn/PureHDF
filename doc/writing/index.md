@@ -94,14 +94,14 @@ file.Write("path/to/file.h5", options);
 Measured over a stream counting what an HTTP range client would transfer, walking a file of 600 groups of deflated measurement series at 256 kB ranges:
 
 ```
-interleaved    fetched 4,050,543 B of 4,050,543 B   100.0% of file   16 requests
-aggregated     fetched   786,432 B of 4,052,705 B    19.4% of file    3 requests
-front-loaded   fetched   262,144 B of 4,062,879 B     6.5% of file    1 request
+interleaved    fetched 4,058,242 B of 4,058,242 B   100.0% of file   16 requests
+aggregated     fetched   786,432 B of 4,060,404 B    19.4% of file    3 requests
+front-loaded   fetched   262,144 B of 4,058,242 B     6.5% of file    1 request
 ```
 
 Front loading ends at a single request whenever the reservation holds all the structure, since it is one contiguous span; a reservation that falls short spills into blocks and costs one request per block. The interleaved cost is the whole file however large it grows, so the gap widens with size.
 
-`FrontLoaded` sizes its reservation by measuring rather than estimating: the writer encodes the file once against a stream that discards everything and reads the total off its allocator. The pass does not compress and, for fixed-size data, does not touch the data at all, so it costs a fraction of the write it precedes. Because the figure is exact, a front-loaded file is the same size as an interleaved one rather than merely close to it. Set `MetadataReservation` to a byte count to skip the pass; nothing else requires it, including a deferred write through `BeginWrite`, since nothing written later changes how much structure the file has.
+Without a `MetadataReservation`, `FrontLoaded` sizes its region exactly: the writer encodes the structure once, holds it in memory until it is complete, then closes the region where the structure ends, moves the payload behind it and writes the structure front to back. Because the region is exactly what the structure uses, no structure is abandoned. The price is memory the size of the structure while it is held. Set `MetadataReservation` to a byte count to write the structure as it is encoded instead, at the cost of abandoning whatever the guess over-reserves. Nothing requires it, including a deferred write through `BeginWrite`, since nothing written later changes how much structure the file has.
 
 A reservation that turns out too small spills into blocks, so it loses locality rather than failing. All three placements produce valid HDF5 - the format imposes no ordering - and the choice costs nothing on read for a local file.
 

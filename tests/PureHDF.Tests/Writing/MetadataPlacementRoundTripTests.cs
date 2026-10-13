@@ -8,11 +8,11 @@ namespace PureHDF.Tests.Writing;
 /// </summary>
 /// <remarks>
 /// Variable-length data is what makes placement interesting and what makes it risky. Its global heap
-/// collections are metadata, so they move with the structure, and their size follows from the values
-/// rather than from the dataspace - which is the one thing a sizing pass cannot know in advance. So
-/// these are the writes where a region can be exhausted mid-file and the allocator has to fall back
-/// while addresses already encoded stay correct. A placement that loses locality is a disappointment;
-/// one that loses data is a catastrophe, and from a byte count the two look identical.
+/// collections are allocated as the values are encoded, sized from the values rather than from the
+/// dataspace, and an attribute's are structure while a dataset's are payload. So these are the writes
+/// where payload is placed around structure that is still growing, and addresses already encoded have
+/// to stay correct. A placement that loses locality is a disappointment; one that loses data is a
+/// catastrophe, and from a byte count the two look identical.
 /// </remarks>
 public class MetadataPlacementRoundTripTests(ITestOutputHelper output)
 {
@@ -77,12 +77,12 @@ public class MetadataPlacementRoundTripTests(ITestOutputHelper output)
     }
 
     /// <summary>
-    /// The same, written after the fact - where the sizing pass could not have seen the values.
+    /// The same, written after the fact - once the structure has been placed without seeing the values.
     /// </summary>
     /// <remarks>
-    /// The case a measured reservation cannot cover, so under a front-loaded placement this write is
-    /// guaranteed to exhaust its region and take the fallback path. It has to end in a correct file
-    /// regardless, which is the whole reason the fallback opens a new region rather than throwing.
+    /// A dataset's variable-length values are payload, so writing them later adds nothing to a region
+    /// that is already closed; they go behind it. The file has to read back regardless of when the values
+    /// arrive.
     /// </remarks>
     [Theory]
     [InlineData(H5MetadataPlacement.Interleaved)]

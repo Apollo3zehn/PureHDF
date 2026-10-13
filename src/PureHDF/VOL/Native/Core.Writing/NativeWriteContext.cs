@@ -38,19 +38,6 @@ internal record NativeWriteContext(
 )
 {
     /// <summary>
-    /// Set for the pass whose only purpose is to total up how much structure the file needs, so that a
-    /// front-loaded reservation can be sized exactly instead of estimated.
-    /// </summary>
-    /// <remarks>
-    /// Everything that decides a SIZE still runs: every object is encoded, every chunk is enumerated and
-    /// allocated, every heap collection is opened. What is skipped is compressing chunk payload, because
-    /// no metadata size depends on the compressed result - a filtered chunk index entry's size field is
-    /// sized from <c>ChunkByteSize</c>, the uncompressed chunk size - and compression is around 97% of a
-    /// filtered write, so running it would make the pass cost as much as the file it is measuring.
-    /// </remarks>
-    public bool SizeOnly { get; init; }
-
-    /// <summary>
     /// Holds the structure of a front-loaded write until its size is known; null otherwise, and once
     /// the structure is placed. See <see cref="StructureStaging" />.
     /// </summary>

@@ -14,47 +14,7 @@ partial class H5NativeWriter
 
     private ulong _rootGroupAddress;
 
-    /// <summary>
-    /// Totals up how many bytes of structure <paramref name="file" /> needs, by encoding it against a
-    /// stream that discards everything.
-    /// </summary>
-    /// <remarks>
-    /// Exact rather than estimated, because it is the same encoder and the same allocator - so it
-    /// accounts for the things an estimate cannot, above all the global heap's 4 kB collection
-    /// granularity and a chunk index's dependence on chunk count. It does not compress, since no
-    /// metadata size depends on compressed output; see <see cref="NativeWriteContext.SizeOnly" />.
-    /// <para>
-    /// Chunk indexes are allocated when the writer is disposed rather than during encoding, so the total
-    /// is only complete after Dispose has run - hence the explicit call rather than a using block.
-    /// </para>
-    /// </remarks>
-    internal static long MeasureMetadataSize(H5File file, H5WriteOptions options)
-    {
-        var sizingOptions = options with
-        {
-            // Interleaved, so that this pass allocates no region of its own and the total it reports is
-            // purely the sum of what the file needs.
-            MetadataPlacement = H5MetadataPlacement.Interleaved,
-            MetadataReservation = 0
-        };
-
-        using var stream = new SizingStream();
-
-        var writer = new H5NativeWriter(file, stream, sizingOptions, leaveOpen: true, sizeOnly: true);
-
-        writer.Write();
-        writer.Dispose();
-
-        return writer.Context.FreeSpaceManager.MetadataAllocated;
-    }
-
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
-        : this(file, stream, options, leaveOpen, sizeOnly: false)
-    {
-        //
-    }
-
-    private H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen, bool sizeOnly)
     {
         // TODO writing never reads from the stream (checksums are computed from the encoded bytes), so the
         // readable requirement could be lifted.
@@ -72,8 +32,7 @@ partial class H5NativeWriter
         // complete; until then it is held in memory. See StructureStaging.
         var stagesStructure =
             options.MetadataPlacement == H5MetadataPlacement.FrontLoaded &&
-            options.MetadataReservation == 0 &&
-            !sizeOnly;
+            options.MetadataReservation == 0;
 
         var stagingStream = stagesStructure
             ? new StructureStagingStream(stream, leaveOpen)
@@ -118,22 +77,9 @@ partial class H5NativeWriter
             freeSpaceManager.ReserveProvisionalRegion();
         }
 
-        else if (options.MetadataPlacement == H5MetadataPlacement.FrontLoaded && !sizeOnly)
+        else if (options.MetadataPlacement == H5MetadataPlacement.FrontLoaded)
         {
-            // No reservation given: measure the file instead of guessing at it. The sizing pass runs
-            // Interleaved, so it cannot recurse back into this branch.
-            //
-            // The superblock is subtracted because the measurement totals every metadata allocation
-            // INCLUDING it, while the superblock is allocated before the region exists and so is served
-            // from outside it - leaving the region longer than anything will ever ask of it by exactly
-            // that much. Subtracting makes the reservation the exact number of bytes that will be served
-            // from it, which is what lets a front-loaded file come out the same size as an interleaved
-            // one rather than merely close to it.
-            var reservation = options.MetadataReservation > 0
-                ? options.MetadataReservation
-                : MeasureMetadataSize(file, options) - Superblock23.ENCODE_SIZE;
-
-            freeSpaceManager.ReserveMetadataRegion(reservation);
+            freeSpaceManager.ReserveMetadataRegion(options.MetadataReservation);
         }
 
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
@@ -154,7 +100,6 @@ partial class H5NativeWriter
             ShortlivedStream: new(memory: default)
         )
         {
-            SizeOnly = sizeOnly,
             Staging = stagingStream is null ? null : new StructureStaging(stagingStream)
         };
 
@@ -644,7 +589,7 @@ partial class H5NativeWriter
 
         h5d.Initialize();
 
-        if (!memoryData.Equals(default) && (!Context.SizeOnly || SizingPassNeedsData<TElement>(dataLayout)))
+        if (!memoryData.Equals(default))
         {
             var fileSelection = dataset.FileSelection;
             var memorySelection = dataset.MemorySelection;
@@ -770,40 +715,6 @@ partial class H5NativeWriter
         {
             Context.GlobalHeapManager.AllocationKind = enclosing;
         }
-    }
-
-    /// <summary>
-    /// Whether a sizing pass has to encode this dataset's data, or can leave it alone.
-    /// </summary>
-    /// <remarks>
-    /// The pass exists to total up metadata, so it only has to do work that decides how much metadata
-    /// there is. Copying fixed-size payload into a layout decides nothing: a contiguous region and an
-    /// implicit chunk index are raw data, a fixed-array index is sized from the chunk count, and every
-    /// index's encoded width comes from the dataspace rather than from a value. So for fixed-size
-    /// elements the pass skips the whole data path - no selection walk, no chunk buffers, no byte
-    /// copying, no raw chunk allocation - on top of already skipping compression.
-    /// <para>
-    /// What it cannot skip is data whose encoding allocates. That is why the test is on TElement rather
-    /// than on the dataset type: an array is itself a reference, so asking this of the dataset type
-    /// answers yes for every array-backed dataset and the pass would skip nothing.
-    /// </para>
-    /// </remarks>
-    private static bool SizingPassNeedsData<TElement>(DataLayoutMessage4 dataLayout)
-    {
-        // A compact dataset's payload is embedded in its object header, so here the data IS metadata.
-        // Nothing to save either way - compact is capped at 64 kB.
-        if (dataLayout.Properties is CompactStoragePropertyDescription)
-            return true;
-
-        // Anything holding a reference goes through the per-element encoder, which allocates: a
-        // variable-length string or sequence takes global heap space sized from the values themselves,
-        // and an object reference encodes the object it points at, header and all.
-        if (DataUtils.IsReferenceOrContainsReferences(typeof(TElement)))
-            return true;
-
-        // Nullable<T> is encoded as a variable-length sequence of one, so it takes global heap space
-        // too - and contains no reference, so the check above does not see it.
-        return Nullable.GetUnderlyingType(typeof(TElement)) is not null;
     }
 
     private static void InternalWriteDataset<T, TElement>(
