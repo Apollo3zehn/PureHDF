@@ -52,12 +52,19 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
     {
         base.Dispose(disposing);
 
-        if (Chunked4.IsDirty)
+        if (WriteContext is null)
+            return;
+
+        var (objectHeaderAddress, objectHeader, isWritten) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+
+        // Read before patching, which encodes the layout and so clears it.
+        var isDirty = Chunked4.IsDirty;
+
+        if (isDirty)
         {
-            // Patched in the copy kept at encoding rather than in the file, then written whole: the
-            // storage properties changed, and with them the header's checksum, which is computed from
-            // the copy so that nothing is read from the file.
-            var (objectHeaderAddress, objectHeader) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+            // Patched in the copy kept at encoding rather than in the file: the storage properties
+            // changed, and with them the header's checksum, which is computed from the copy so that
+            // nothing is read from the file.
             var origin = (long)WriteContext.Driver.BaseAddress + objectHeaderAddress;
 
             using (var patchDriver = new H5SpanWriteDriver(objectHeader, origin))
@@ -67,7 +74,12 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             }
 
             ChecksummedStructure.UpdateChecksum(objectHeader);
+        }
 
+        // A header written at encoding is final unless its layout changed since; one held back for its
+        // chunk is written now, whether or not the chunk ever was.
+        if (isDirty || !isWritten)
+        {
             WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
             WriteContext.Driver.Write(objectHeader);
         }

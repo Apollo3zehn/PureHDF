@@ -32,11 +32,15 @@ internal partial record class ObjectHeader2
     /// Encodes the header like <see cref="Encode(NativeWriteContext, out int)" />, and also returns the encoded bytes.
     /// </summary>
     /// <remarks>
-    /// For a header that has to be patched after it is written - a chunked dataset's, once its index is
-    /// known. Patching a copy and writing it again needs no read of the file, which a forward-only
-    /// stream cannot serve.
+    /// For a header that may have to be patched after it is encoded - a chunked dataset's, once its index
+    /// is known. Patching a copy needs no read of the file, which a forward-only stream cannot serve.
     /// </remarks>
-    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context)
+    /// <param name="context">The write context.</param>
+    /// <param name="write">
+    /// Whether to write the header now. A header that will be patched is better allocated now and written
+    /// once it is final, since rewriting it would change bytes a destination may already have shipped.
+    /// </param>
+    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context, bool write)
     {
         var address = Allocate(context, out var encodeSize, out var headerMessagesEncodeSize);
         var encoded = new byte[encodeSize];
@@ -47,8 +51,11 @@ internal partial record class ObjectHeader2
             (Header: this, headerMessagesEncodeSize),
             static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
 
-        context.Driver.SeekRelativeToBaseAddress(address);
-        context.Driver.Write(encoded);
+        if (write)
+        {
+            context.Driver.SeekRelativeToBaseAddress(address);
+            context.Driver.Write(encoded);
+        }
 
         return ((ulong)address, encoded);
     }

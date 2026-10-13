@@ -827,12 +827,20 @@ partial class H5NativeWriter
 
         // encode object header
         //
-        // Only a chunked dataset rewrites its own object header later (H5D_Chunk4.Dispose, once its
-        // index is known), so only it keeps a copy of the header to patch.
+        // Only a chunked dataset patches its own object header later (H5D_Chunk4.Dispose, once its
+        // index is known), so only it keeps a copy of the header to patch. Of those, a single chunk
+        // written later is the one whose header changes: the chunk's address, and for a filtered one
+        // its size, are in the header and known only once it is written. Its header is written then,
+        // once, rather than now and again.
         if (isChunked)
         {
-            var (chunkedAddress, encoded) = objectHeader.EncodeAndKeep(Context);
-            Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)chunkedAddress, encoded);
+            var writesHeaderLater = h5d is null && dataLayout.Properties is ChunkedStoragePropertyDescription4
+            {
+                IndexingInformation: SingleChunkIndexingInformation
+            };
+
+            var (chunkedAddress, encoded) = objectHeader.EncodeAndKeep(Context, write: !writesHeaderLater);
+            Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)chunkedAddress, encoded, IsWritten: !writesHeaderLater);
 
             // The kept copy is not corrected along with the staged header: Dispose rewrites it from the
             // layout's own (relocated) address before it writes it anyway.

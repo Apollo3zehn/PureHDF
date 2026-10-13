@@ -163,7 +163,7 @@ internal record NativeWriteContext(
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
     Dictionary<H5Object, EncodedObject> Objects,
-    Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader)> DatasetInfoToObjectHeaderMap,
+    Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader, bool IsWritten)> DatasetInfoToObjectHeaderMap,
     Dictionary<DatatypeCacheKey, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, int> ObjectReferenceCountMap,
     Dictionary<object, H5Dataset> RawValueToDatasetMap,

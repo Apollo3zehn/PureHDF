@@ -1,3 +1,4 @@
+using PureHDF.Filters;
 using PureHDF.Selections;
 using Xunit;
 
@@ -16,11 +17,15 @@ namespace PureHDF.Tests.Writing;
 /// </remarks>
 public class WriteOnceTests
 {
+    private static readonly H5DatasetCreation Deflate = new(Filters: [DeflateFilter.Id]);
+
     private static readonly Dictionary<string, Func<Scenario>> Scenarios = new()
     {
         ["variable-length strings"] = VariableLengthStrings,
         ["many small groups"] = ManySmallGroups,
         ["large group"] = LargeGroup,
+        ["deferred single chunks"] = DeferredSingleChunks,
+        ["deferred single chunks never written"] = DeferredSingleChunksNeverWritten,
         ["deferred variable-length writes"] = DeferredVariableLengthWrites
     };
 
@@ -109,6 +114,12 @@ public class WriteOnceTests
 
     #region Scenarios
 
+    private static double[] RandomDoubles(int seed, int count)
+    {
+        var random = new Random(seed);
+        return Enumerable.Range(0, count).Select(_ => random.NextDouble()).ToArray();
+    }
+
     private static string[] RandomStrings(int seed, int count)
     {
         var random = new Random(seed);
@@ -157,6 +168,41 @@ public class WriteOnceTests
             group[$"dataset_{i:D4}"] = new H5Dataset(i);
 
         return new(new H5File { ["large"] = group }, file => Assert.Equal(4_999, file.Dataset("large/dataset_4999").Read<int>()));
+    }
+
+    // A single chunk's address, and for a filtered one its size, are known only once it is written.
+    private static Scenario DeferredSingleChunks()
+    {
+        var data = RandomDoubles(1, 2_000);
+        var unfiltered = new H5Dataset<double[]>(fileDims: [2_000], chunks: [2_000]);
+        var filtered = new H5Dataset<double[]>(fileDims: [2_000], chunks: [2_000], datasetCreation: Deflate);
+        var written = new H5Dataset(RandomDoubles(2, 50_000));
+
+        return new(
+            new H5File { ["unfiltered"] = unfiltered, ["filtered"] = filtered, ["written"] = written },
+            file =>
+            {
+                Assert.Equal(data, file.Dataset("unfiltered").Read<double[]>());
+                Assert.Equal(data, file.Dataset("filtered").Read<double[]>());
+            },
+            [
+                writer => writer.Write(unfiltered, data),
+                writer => writer.Write(filtered, data)
+            ]);
+    }
+
+    private static Scenario DeferredSingleChunksNeverWritten()
+    {
+        var unfiltered = new H5Dataset<double[]>(fileDims: [2_000], chunks: [2_000]);
+        var filtered = new H5Dataset<double[]>(fileDims: [2_000], chunks: [2_000], datasetCreation: Deflate);
+
+        return new(
+            new H5File { ["unfiltered"] = unfiltered, ["filtered"] = filtered },
+            file =>
+            {
+                Assert.Equal(new double[2_000], file.Dataset("unfiltered").Read<double[]>());
+                Assert.Equal(new double[2_000], file.Dataset("filtered").Read<double[]>());
+            });
     }
 
     // Collections of a dataset's own values are allocated in blocks of their own, which are replaced when
