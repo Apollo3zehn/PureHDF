@@ -69,6 +69,9 @@ partial class H5NativeWriter
                 throw new Exception("The user block size is invalid.");
         }
 
+        if (options.MaximumCompactDatasetSize < 0)
+            throw new Exception("The maximum compact dataset size must not be negative.");
+
         if (options.MetadataReservation < 0)
             throw new Exception("The metadata reservation must not be negative.");
 
@@ -633,6 +636,24 @@ partial class H5NativeWriter
             }
         }
 
+        // Variable-length values are placed with a compact header, so whether it can be compact
+        // depends on them too. Measured only where that can decide anything.
+        var objectSizes = chunkDimensions is null &&
+            !memoryData.Equals(default) &&
+            datatype.IsReferenceOrContainsReferences() &&
+            Context.WriteOptions.PreferCompactDatasetLayout &&
+            (ulong)memoryData.Length * datatype.Size <= (ulong)Context.WriteOptions.MaximumCompactDatasetSize
+                ? MeasureVariableLengthValues(encode, memoryData)
+                : null;
+
+        var variableLengthSize = 0L;
+
+        if (objectSizes is not null)
+        {
+            foreach (var objectSize in objectSizes)
+                variableLengthSize += GlobalHeapManager.GetStoredSize(objectSize);
+        }
+
         var dataLayout = DataLayoutMessage4.Create(
             Context,
             typeSize: datatype.Size,
@@ -640,7 +661,8 @@ partial class H5NativeWriter
             /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
             isDeferred: dataspace.Type == DataspaceType.Null ? false : data is null,
             dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
-            chunkDimensions: chunkDimensions);
+            chunkDimensions: chunkDimensions,
+            variableLengthSize: variableLengthSize);
 
         // fill value
         var fillValueMessage = DefaultFillValueMessage;
@@ -700,6 +722,13 @@ partial class H5NativeWriter
 
             var dims = memoryDims ?? throw new Exception("This should never happen.");
 
+            // The values were measured in memory order above. A write of all of them, unselected, adds them
+            // to the heap in that same order, so the measurement can plan its heap rather than be repeated.
+            var plannedObjectSizes =
+                (fileSelection is null or AllSelection) && (memorySelection is null or AllSelection)
+                    ? objectSizes
+                    : null;
+
             // A compact dataset's data is part of its header, so it is structure, and so are the
             // variable-length values it points at. Placed as payload, they would also be named by a
             // staged header with an address that is still provisional.
@@ -709,10 +738,10 @@ partial class H5NativeWriter
             // Payload has nowhere final to go while the structure is staged, so it is written once the
             // structure is placed.
             else if (Context.Staging is { } staging)
-                PostponeData(staging, h5d, encode, memoryData, fileSelection, memorySelection, dims);
+                PostponeData(staging, h5d, encode, memoryData, fileSelection, memorySelection, dims, plannedObjectSizes);
 
             else
-                WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData);
+                WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData, plannedObjectSizes);
         }
 
         DeferredDataset deferred = h5d switch
@@ -778,6 +807,34 @@ partial class H5NativeWriter
     }
 
     /// <summary>
+    /// How much global heap space the variable-length values in <paramref name="data" /> would take,
+    /// found by encoding them against a target that keeps nothing while the heap only counts.
+    /// </summary>
+    private List<int> MeasureVariableLengthValues<TElement>(EncodeDelegate<TElement> encode, Memory<TElement> data)
+    {
+        var heap = Context.GlobalHeapManager;
+        var enclosing = heap.AllocationKind;
+        List<int> objectSizes;
+
+        // Recording counts a dataset's own values, which are what is being sized here.
+        heap.AllocationKind = AllocationKind.RawData;
+        heap.BeginRecording();
+
+        try
+        {
+            encode(data, DiscardWriteStream.Instance);
+        }
+
+        finally
+        {
+            objectSizes = heap.EndRecording();
+            heap.AllocationKind = enclosing;
+        }
+
+        return objectSizes;
+    }
+
+    /// <summary>
     /// Notes where a staged header names provisional payload, so that it is corrected before it is
     /// written. See <see cref="PlaceStructure" />.
     /// </summary>
@@ -803,13 +860,14 @@ partial class H5NativeWriter
         Memory<TElement> memoryData,
         Selection? fileSelection,
         Selection? memorySelection,
-        ulong[] memoryDims)
+        ulong[] memoryDims,
+        List<int>? objectSizes)
     {
         staging.PostponedWrites.Add(() =>
         {
             DeferredDataset.RelocateLayout(h5d.Dataset, Context.FreeSpaceManager);
 
-            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, AllocationKind.RawData);
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, AllocationKind.RawData, objectSizes);
 
             if (h5d is H5D_Chunk chunk)
                 chunk.FlushChunkCache();
@@ -823,7 +881,8 @@ partial class H5NativeWriter
         Selection? fileSelection,
         Selection? memorySelection,
         ulong[] memoryDims,
-        AllocationKind heapAllocationKind)
+        AllocationKind heapAllocationKind,
+        List<int>? objectSizes = null)
     {
         // Variable-length elements encoded from here belong to the dataset: payload, unless the dataset
         // is compact and its data is part of its header. Restored rather than left set, because an
@@ -833,7 +892,7 @@ partial class H5NativeWriter
 
         try
         {
-            WriteData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims);
+            WriteData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, objectSizes);
         }
 
         finally
@@ -863,13 +922,17 @@ partial class H5NativeWriter
         }
     }
 
+    // objectSizes: the sizes of the variable-length values the write adds to the heap, in the order it
+    // adds them, when they were already measured. Otherwise they are measured here, by a first encode
+    // that keeps nothing.
     private static void WriteData<TElement>(
         H5D_Base h5d,
         EncodeDelegate<TElement> encode,
         Memory<TElement> memoryData,
         Selection? fileSelection,
         Selection? memorySelection,
-        ulong[] memoryDims)
+        ulong[] memoryDims,
+        List<int>? objectSizes = null)
     {
         var datasetInfo = h5d.Dataset;
         var dataspace = datasetInfo.Space;
@@ -946,28 +1009,31 @@ partial class H5NativeWriter
         // Variable-length values are encoded twice: once to measure them, then into a heap sized exactly for
         // them (see GlobalHeapManager.TryBeginPlanned). The measuring encode writes nothing - its target
         // discards. Only for payload: structure shares its collections, see GlobalHeapManager.AddObject.
+        // And not when the caller measured them already.
         if (context.GlobalHeapManager.AllocationKind == AllocationKind.RawData &&
             datatype.IsReferenceOrContainsReferences())
         {
             var heap = context.GlobalHeapManager;
-            List<int> objectSizes;
 
-            heap.BeginRecording();
-
-            try
+            if (objectSizes is null)
             {
-                SelectionHelper.Encode(
-                    memoryDims.Length,
-                    datasetChunkDims.Length,
-                    encodeInfo with
-                    {
-                        GetTargetStream = _ => DiscardWriteStream.Instance
-                    });
-            }
+                heap.BeginRecording();
 
-            finally
-            {
-                objectSizes = heap.EndRecording();
+                try
+                {
+                    SelectionHelper.Encode(
+                        memoryDims.Length,
+                        datasetChunkDims.Length,
+                        encodeInfo with
+                        {
+                            GetTargetStream = _ => DiscardWriteStream.Instance
+                        });
+                }
+
+                finally
+                {
+                    objectSizes = heap.EndRecording();
+                }
             }
 
             if (heap.TryBeginPlanned(objectSizes))

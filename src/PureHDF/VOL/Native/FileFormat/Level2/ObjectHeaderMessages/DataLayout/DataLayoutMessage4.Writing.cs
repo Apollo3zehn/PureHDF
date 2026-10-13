@@ -8,7 +8,8 @@ internal partial record class DataLayoutMessage4
         bool isFiltered,
         bool isDeferred,
         ulong[]? dataDimensions,
-        uint[]? chunkDimensions)
+        uint[]? chunkDimensions,
+        long variableLengthSize = 0)
     {
         var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
         var dataLayout = default(DataLayoutMessage4);
@@ -128,10 +129,15 @@ internal partial record class DataLayoutMessage4
             // See also H5Dcompact.c (H5D__compact_construct): "Verify data size is 
             // smaller than maximum header message size (64KB) minus other layout 
             // message fields."
-            const int compactLayoutFieldsSize = sizeof(byte) + sizeof(byte) + sizeof(ushort);
+            //
+            // Within that, the caller's maximum, against which the variable-length values the data
+            // names count too: they are placed with the header.
+            var fitsCompact =
+                dataEncodeSize <= H5WriteOptions.MAXIMUM_COMPACT_DATASET_SIZE &&
+                dataEncodeSize + variableLengthSize <= context.WriteOptions.MaximumCompactDatasetSize;
 
             /* try to create compact dataset */
-            if (preferCompact && dataEncodeSize <= ushort.MaxValue - compactLayoutFieldsSize && !isDeferred)
+            if (preferCompact && fitsCompact && !isDeferred)
             {
                 // TODO avoid creation of system memory stream too often
                 var buffer = new byte[dataEncodeSize];

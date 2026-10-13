@@ -122,4 +122,25 @@ public record H5WriteOptions(
     /// </para>
     /// </remarks>
     public long MetadataReservation { get; init; }
+
+    /// <summary>
+    /// The most data, in bytes, a dataset may hold and still be written compact when
+    /// <see cref="PreferCompactDatasetLayout" /> is set. The default is the most a compact layout can
+    /// hold, 65531 bytes.
+    /// </summary>
+    /// <remarks>
+    /// A compact dataset's data is part of its object header, so it is file structure: a reader that
+    /// opens the dataset has its data without another request, but one that browses the structure fetches
+    /// it too, and a front-loaded file places it with the structure. Lower this to keep structure compact
+    /// for browsing. A variable-length dataset counts its values as well as their heap IDs, since its
+    /// values are placed with it.
+    /// <para>
+    /// Must not be negative. Zero writes no dataset compact.
+    /// </para>
+    /// </remarks>
+    public int MaximumCompactDatasetSize { get; init; } = MAXIMUM_COMPACT_DATASET_SIZE;
+
+    // An object header message declares its size in two bytes, and a compact layout message spends four
+    // of them on its version, layout class and data size.
+    internal const int MAXIMUM_COMPACT_DATASET_SIZE = ushort.MaxValue - 4;
 }

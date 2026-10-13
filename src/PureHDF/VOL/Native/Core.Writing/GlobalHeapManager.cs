@@ -268,8 +268,15 @@ internal class GlobalHeapManager
         );
     }
 
+    /// <summary>
+    /// What an object of <paramref name="objectSize" /> bytes takes up in a collection: its header and its
+    /// data, aligned.
+    /// </summary>
+    public static int GetStoredSize(int objectSize)
+        => OBJECT_HEADER_SIZE + AlignSize(objectSize);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int AlignSize(int objectSize)
+    private static int AlignSize(int objectSize)
     {
         /* H5HGpkg.h #define H5HG_ALIGN(X) */
         return ALIGNMENT * ((objectSize + ALIGNMENT - 1) / ALIGNMENT);

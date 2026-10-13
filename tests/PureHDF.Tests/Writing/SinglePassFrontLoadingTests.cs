@@ -160,6 +160,40 @@ public class SinglePassFrontLoadingTests
         }
     }
 
+    [Theory]
+    [InlineData(H5MetadataPlacement.FrontLoaded)]
+    [InlineData(H5MetadataPlacement.Interleaved)]
+    public void ACompactDatasetsLargeValuesStayOutOfTheStructure(H5MetadataPlacement placement)
+    {
+        // Arrange - few enough values that their heap IDs fit a compact layout, each far larger than that
+        const int valueLength = 256 * 1024;
+
+        var data = Enumerable.Range(0, 32).Select(i => new string((char)('a' + i % 26), valueLength)).ToArray();
+        var file = new H5File { ["blobs"] = new H5Dataset(data) };
+        var filePath = Path.GetTempFileName();
+
+        try
+        {
+            // Act
+            var writer = file.BeginWrite(filePath, new H5WriteOptions { MetadataPlacement = placement });
+            writer.Dispose();
+
+            // Assert - 8 MB of values, but the structure is a header and little else
+            var metadata = writer.Context.FreeSpaceManager.MetadataAllocated;
+
+            Assert.True(metadata < valueLength, $"{metadata:N0} bytes of structure for one dataset.");
+
+            using var actual = H5File.OpenRead(filePath);
+            Assert.Equal(data, actual.Dataset("blobs").Read<string[]>());
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     private static void AssertSameContent(MemoryStream expected, string actualPath)
     {
         expected.Position = 0;
