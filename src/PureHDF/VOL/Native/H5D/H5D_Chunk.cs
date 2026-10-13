@@ -21,8 +21,10 @@ internal abstract class H5D_Chunk : H5D_Base
     private readonly bool _readingChunkIndexAddressIsUndefined;
 
     // Writing: how many elements each partly written chunk has received, and which chunks are finished.
-    private readonly Dictionary<ulong, ulong> _elementsWritten = new();
-    private readonly HashSet<ulong> _finishedChunks = new();
+    // Created on the first write that needs them, so that the layouts a writer of many chunked datasets
+    // holds are not mostly empty collections.
+    private Dictionary<ulong, ulong>? _elementsWritten;
+    private HashSet<ulong>? _finishedChunks;
 
     // Chunk buffers are pooled only with the default cache, which is known to drop a chunk once it has
     // handed it to the chunk writer. A caller's cache might keep it, and a returned buffer would then be
@@ -212,7 +214,7 @@ internal abstract class H5D_Chunk : H5D_Base
             return new OffsetStream(WriteContext.Driver);
         }
 
-        if (_finishedChunks.Contains(chunkIndex))
+        if (_finishedChunks is not null && _finishedChunks.Contains(chunkIndex))
             throw new InvalidOperationException(
                 $"Chunk {chunkIndex} has already been written. Each element of a chunked dataset can be written " +
                 "once: a chunk is compressed and written as soon as all of its elements have arrived.");
@@ -240,15 +242,15 @@ internal abstract class H5D_Chunk : H5D_Base
         if (stream is not ChunkWriteStream chunkStream)
             return;
 
-        var written = _elementsWritten.GetValueOrDefault(chunkIndex) + (ulong)elementCount;
+        var written = (_elementsWritten?.GetValueOrDefault(chunkIndex) ?? 0) + (ulong)elementCount;
 
         if (written < GetElementCount(chunkIndex))
         {
-            _elementsWritten[chunkIndex] = written;
+            (_elementsWritten ??= [])[chunkIndex] = written;
             return;
         }
 
-        _elementsWritten.Remove(chunkIndex);
+        _elementsWritten?.Remove(chunkIndex);
 
         // A cache that cannot give the chunk up keeps it until it is flushed.
         if (!_writingChunkCache.TryRemove(chunkIndex, out var chunk))
@@ -312,7 +314,7 @@ internal abstract class H5D_Chunk : H5D_Base
     private void WriteAndReleaseChunk(ulong chunkIndex, Memory<byte> chunk)
     {
         WriteChunk(chunkIndex, chunk);
-        _finishedChunks.Add(chunkIndex);
+        (_finishedChunks ??= []).Add(chunkIndex);
 
         if (_poolChunks && MemoryMarshal.TryGetArray<byte>(chunk, out var segment) && segment.Array is not null)
             ArrayPool<byte>.Shared.Return(segment.Array);
